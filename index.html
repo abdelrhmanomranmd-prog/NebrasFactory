@@ -1,0 +1,2446 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> شركة مصنع نبراس للبلاستيك</title>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary-blue: #0d2840;
+            --accent-blue: #00a8ff;
+            --pvc-bg: url('images/pvc-background.avif'); /* صورة الحبيبات */
+            --wpc-bg: url('images/wpc-background.avif'); /* صورة الأبواب */
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body { 
+            font-family: 'Cairo', sans-serif; 
+            background-color: #f0f2f5; 
+        }
+
+        .top-contact-bar {
+            background: linear-gradient(90deg, #071a2b, #0d2840);
+            color: #fff;
+            padding: 8px 5%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+            border-bottom: 2px solid rgba(0, 168, 255, 0.35);
+        }
+
+        .top-contact-bar .numbers {
+            display: flex;
+            gap: 16px;
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+
+        .top-contact-bar .actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .top-contact-bar button {
+            border: none;
+            border-radius: 14px;
+            padding: 8px 12px;
+            font-weight: 700;
+            cursor: pointer;
+            background: #00a8ff;
+            color: #062038;
+        }
+
+        /* الهيدر مع مبدل اللغة */
+        header { 
+            background: var(--primary-blue); 
+            color: white; 
+            padding: 12px 5%; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            position: sticky; 
+            top: 0; 
+            z-index: 1000;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.2);
+        }
+
+        .logo-container { display: flex; align-items: center; }
+        .logo-container img { 
+            height: 78px; 
+            width: auto; 
+            display: block;
+            border-radius: 8px;
+        }
+
+        /* Navigation */
+        nav ul { 
+            list-style: none; 
+            display: flex; 
+            gap: 20px; 
+            margin: 0; 
+            padding: 0; 
+            align-items: center; 
+        }
+        nav ul li a { 
+            color: white; 
+            text-decoration: none; 
+            font-weight: bold; 
+            font-size: 0.95rem; 
+            transition: 0.3s; 
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        nav ul li a:hover { color: var(--accent-blue); }
+        
+        nav ul li a i { font-size: 0.9rem; }
+
+        /* زر اللغة */
+        .lang-dropdown {
+            position: relative;
+        }
+        .lang-btn {
+            background: none;
+            border: 1px solid white; 
+            padding: 8px 12px; 
+            border-radius: 20px;
+            font-size: 0.9rem; 
+            cursor: pointer; 
+            transition: 0.3s;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .lang-btn:hover { background: white; color: var(--primary-blue); }
+        .lang-menu {
+            display: none;
+            opacity: 0;
+            visibility: hidden;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            min-width: 120px;
+            z-index: 1001;
+            transition: opacity 0.3s, visibility 0.3s;
+        }
+        .lang-menu a {
+            display: block;
+            padding: 10px 15px;
+            text-decoration: none;
+            color: var(--primary-blue);
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        .lang-menu a:hover {
+            background: var(--accent-blue);
+            color: white;
+        }
+        .lang-menu.show { 
+            display: block; 
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Mobile Menu Button */
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        /* قسم الترحيب */
+        .hero { 
+            background: linear-gradient(rgba(13,40,64,0.8), rgba(13,40,64,0.8)), 
+                        url('images/background.png');
+            background-size: cover; 
+            background-position: center;
+            color: white; 
+            padding: 100px 5%; 
+            text-align: center;
+            min-height: 60vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .complaint-form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .complaint-form-grid textarea,
+        .complaint-form-grid input {
+            width: 100%;
+        }
+
+        .complaint-form-grid .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .hero h1 { font-size: 2.5rem; margin-bottom: 15px; }
+        .hero p { font-size: 1.1rem; opacity: 0.9; }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 35px;
+            color: var(--primary-blue);
+        }
+
+        .section-title span {
+            display: inline-block;
+            margin-top: 10px;
+            color: var(--accent-blue);
+            font-size: 0.95rem;
+        }
+
+        .about-grid,
+        .services-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(260px, 1fr));
+            gap: 25px;
+            margin-bottom: 60px;
+        }
+
+        .about-card,
+        .service-card {
+            background: white;
+            border-radius: 25px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.08);
+            padding: 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .about-card::before,
+        .service-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(0,168,255,0.08), rgba(13,40,64,0.06));
+            pointer-events: none;
+        }
+
+        .about-card h3,
+        .service-card h3 {
+            position: relative;
+            z-index: 1;
+            margin-bottom: 15px;
+            color: var(--primary-blue);
+        }
+
+        .about-card p,
+        .service-card p {
+            position: relative;
+            z-index: 1;
+            color: #333;
+            line-height: 1.75;
+        }
+
+        .services-grid .service-card {
+            min-height: 220px;
+        }
+
+        @media (max-width: 900px) {
+            .about-grid,
+            .services-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* أقسام المنتجات */
+        .products-grid { 
+            display: grid;
+            grid-template-columns: repeat(3, minmax(300px, 1fr));
+            gap: 30px; 
+            justify-items: center; 
+            padding: 60px 5%; 
+        }
+        
+        .product-card { 
+            width: 350px; 
+            height: 450px; 
+            border-radius: 25px; 
+            overflow: hidden;
+            position: relative; 
+            cursor: pointer; 
+            transition: 0.5s;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2);
+        }
+
+        .product-card::before {
+            content: ""; 
+            position: absolute; 
+            inset: 0;
+            background-size: cover; 
+            background-position: center; 
+            transition: 0.5s;
+            z-index: 0;
+        }
+
+        /* خلفية صورة لـ PVC */
+        .card-pvc::before { 
+            background: linear-gradient(135deg, rgba(45, 112, 170, 0.72), rgba(25, 76, 130, 0.82)),
+                        url('images/pvc-background.avif');
+            background-size: cover;
+            background-position: center;
+        }
+
+        /* خلفية صورة لـ WPC */
+        .card-wpc::before { 
+            background: linear-gradient(135deg, rgba(126, 79, 34, 0.72), rgba(94, 54, 21, 0.84)),
+                        url('images/wpc-background.avif');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .product-card:hover::before { transform: scale(1.1); }
+
+        .card-content {
+            position: absolute; 
+            bottom: 0; 
+            width: 100%; 
+            padding: 30px;
+            background: linear-gradient(transparent, rgba(0,0,0,0.9));
+            color: white; 
+            box-sizing: border-box; 
+            text-align: right;
+            z-index: 1;
+        }
+
+        .card-content h3 { 
+            font-size: 1.8rem; 
+            margin: 0 0 10px; 
+            color: var(--accent-blue); 
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .card-content p { 
+            font-size: 0.95rem; 
+            line-height: 1.6; 
+            margin: 0; 
+        }
+
+        /* Icon badge on cards */
+        .card-icon {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: linear-gradient(135deg, #0d2840 0%, #0a1f2e 50%, #0066cc 100%);
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            z-index: 2;
+            box-shadow: 0 15px 30px rgba(0,102,204,0.3);
+            border: 2px solid rgba(0,168,255,0.3);
+        }
+
+        .card-icon i {
+            color: white;
+        }
+
+        .card-icon:hover {
+            transform: scale(1.08);
+            box-shadow: 0 18px 35px rgba(0,102,204,0.5);
+            border-color: rgba(0,168,255,0.6);
+        }
+
+        .hero-logo {
+            position: relative;
+        }
+
+        .admin-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.75);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            z-index: 2000;
+            visibility: hidden;
+            opacity: 0;
+            transition: 0.25s ease;
+        }
+
+        .admin-overlay.show {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .admin-modal {
+            background: #0d2840;
+            border-radius: 18px;
+            padding: 30px;
+            width: 100%;
+            max-width: 420px;
+            color: white;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.45);
+            position: relative;
+        }
+
+        .admin-modal h2 {
+            margin-bottom: 20px;
+            font-size: 1.6rem;
+        }
+
+        .admin-modal input {
+            width: 100%;
+            margin-bottom: 15px;
+            padding: 14px 16px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.15);
+            background: rgba(255,255,255,0.08);
+            color: white;
+            font-size: 1rem;
+        }
+
+        .admin-modal input::placeholder {
+            color: rgba(255,255,255,0.65);
+        }
+
+        .admin-modal button {
+            width: 100%;
+            margin-bottom: 10px;
+            padding: 14px 16px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 1rem;
+            transition: 0.25s;
+        }
+
+        .admin-modal button.primary {
+            background: #00a8ff;
+            color: #0d2840;
+        }
+
+        .admin-modal button.secondary {
+            background: rgba(255,255,255,0.12);
+            color: white;
+        }
+
+        .admin-modal p.status {
+            min-height: 24px;
+            margin-bottom: 15px;
+            color: #ffd700;
+        }
+
+        .admin-dashboard {
+            display: none;
+            padding: 60px 5%;
+            background: rgba(13,40,64,0.04);
+        }
+
+        .admin-dashboard.show {
+            display: block;
+        }
+
+        .admin-dashboard .dashboard-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 35px;
+        }
+
+        .admin-dashboard .dashboard-header h2 {
+            margin: 0;
+            color: var(--primary-blue);
+            font-size: 2rem;
+        }
+
+        .admin-dashboard .admin-action {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            background: var(--accent-blue);
+            padding: 12px 18px;
+            border-radius: 14px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .dashboard-actions {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(240px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .quick-card {
+            border-radius: 25px;
+            overflow: hidden;
+            box-shadow: 0 20px 45px rgba(0,0,0,0.1);
+            background: #ffffff;
+            position: relative;
+            padding: 25px;
+            min-height: 170px;
+        }
+
+        .quick-card .card-icon {
+            top: 18px;
+            right: 18px;
+            width: 54px;
+            height: 54px;
+        }
+
+        .quick-card h3 {
+            margin: 0 0 12px;
+            color: var(--primary-blue);
+        }
+
+        .quick-card p {
+            margin: 0;
+            color: #333;
+            line-height: 1.75;
+        }
+
+        .admin-section {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.75);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+            z-index: 2000;
+            visibility: hidden;
+            opacity: 0;
+            transition: 0.25s ease;
+        }
+
+        .admin-section.show {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        .admin-section .admin-modal {
+            background: #0d2840;
+            border-radius: 18px;
+            padding: 30px;
+            width: 100%;
+            max-width: 600px;
+            color: white;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.45);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .admin-section .admin-modal h2 {
+            margin-bottom: 20px;
+        }
+
+        .admin-section .admin-modal ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .admin-section .admin-modal li {
+            padding: 10px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .admin-section .admin-modal li small {
+            display: block;
+            opacity: 0.8;
+            margin-top: 4px;
+        }
+
+        .admin-section .admin-modal button {
+            margin: 10px 5px;
+            padding: 10px 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background: #00a8ff;
+            color: #0d2840;
+            font-weight: bold;
+        }
+
+        .clickable-card {
+            cursor: pointer;
+        }
+
+        .branch-card {
+            background: linear-gradient(135deg, rgba(12, 66, 110, 0.8), rgba(8, 40, 67, 0.9));
+            background-size: cover;
+            background-position: center;
+            border-radius: 18px;
+            box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+            padding: 18px;
+            border: 1px solid rgba(12, 66, 110, 0.12);
+            min-height: 180px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .branch-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(0deg, rgba(0, 0, 0, 0.62), rgba(0, 0, 0, 0.18));
+            z-index: 0;
+        }
+
+        .branch-card h3 {
+            margin: 0 0 10px;
+            color: #ffffff;
+            position: relative;
+            z-index: 1;
+        }
+
+        .branch-card p {
+            margin: 6px 0;
+            color: #ffffff;
+            position: relative;
+            z-index: 1;
+        }
+
+        .branch-card .branch-actions {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            gap: 8px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .branch-card .branch-actions a {
+            text-decoration: none;
+            background: rgba(0, 168, 255, 0.9);
+            color: #07243c;
+            padding: 6px 10px;
+            border-radius: 10px;
+            font-size: 0.85rem;
+            font-weight: 700;
+        }
+
+        .visitor-icons-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 18px;
+            margin-top: 20px;
+        }
+
+        .visitor-icon-card {
+            position: relative;
+            min-height: 190px;
+            background: linear-gradient(135deg, rgba(12, 66, 110, 0.8), rgba(8, 40, 67, 0.9));
+            background-size: cover;
+            background-position: center;
+            border-radius: 16px;
+            padding: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.12);
+            cursor: pointer;
+            border: 1px solid rgba(13,40,64,0.08);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            isolation: isolate;
+        }
+
+        .visitor-icon-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(0deg, rgba(0, 0, 0, 0.62), rgba(0, 0, 0, 0.18));
+            z-index: 0;
+        }
+
+        .visitor-icon-card i {
+            font-size: 1.5rem;
+            color: #ffffff;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .visitor-icon-card h3,
+        .visitor-icon-card p {
+            position: relative;
+            z-index: 1;
+            color: #ffffff;
+            text-shadow: 0 2px 6px rgba(0,0,0,0.35);
+        }
+
+        /* قسم جديد: تقارير المبيعات */
+        .card-sales-reports::before {
+            background: linear-gradient(135deg, rgba(41, 128, 185, 0.82), rgba(52, 152, 219, 0.86)),
+                        url('images/background-basic.png');
+            background-size: cover;
+            background-position: center;
+        }
+
+        /* قسم جديد: إدارة المخزون */
+        .card-inventory-management::before {
+            background: linear-gradient(135deg, rgba(46, 204, 113, 0.78), rgba(39, 174, 96, 0.84)),
+                        url('images/pvc-background.avif');
+            background-size: cover;
+            background-position: center;
+        }
+
+        /* قسم جديد: إدارة العملاء */
+        .card-customer-management::before {
+            background: linear-gradient(135deg, rgba(155, 89, 182, 0.7), rgba(142, 68, 173, 0.8)),
+                        url('images/customer-complaints-background.jpeg');
+            background-size: cover;
+            background-position: center;
+        }
+
+        /* قسم جديد: الإحصائيات والتحليلات */
+        .card-analytics::before {
+            background: linear-gradient(135deg, rgba(230, 126, 34, 0.75), rgba(211, 84, 0, 0.85)),
+                        url('images/other-products-background.jpeg');
+            background-size: cover;
+            background-position: center;
+        }
+
+        /* خلفية صورة لـ الألومنيوم */
+        .card-aluminum::before { 
+            background: linear-gradient(135deg, rgba(160, 170, 185, 0.66), rgba(95, 108, 128, 0.78)),
+                        url('images/aluminum-background.webp');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .card-other-products::before {
+            background: linear-gradient(135deg, rgba(52, 73, 94, 0.68), rgba(44, 62, 80, 0.82)),
+                        url('images/other-products-background.jpeg');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .card-customer-complaints::before {
+            background: linear-gradient(135deg, rgba(98, 112, 138, 0.62), rgba(52, 73, 94, 0.8)),
+                        url('images/customer-complaints-background.jpeg');
+            background-size: cover;
+            background-position: center;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .menu-toggle { display: block; }
+            
+            nav ul {
+                position: absolute;
+                top: 100%;
+                right: 0;
+                left: 0;
+                background: var(--primary-blue);
+                flex-direction: column;
+                padding: 20px;
+                gap: 15px;
+                display: none;
+            }
+            
+            nav ul.active { display: flex; }
+            
+            .products-grid { 
+                grid-template-columns: 1fr; 
+                padding: 30px 5%; 
+            }
+            .product-card { width: 100%; max-width: 350px; height: 350px; }
+            .hero h1 { font-size: 1.8rem; }
+            .dashboard-actions {
+                grid-template-columns: 1fr;
+            }
+            .dashboard-actions {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="top-contact-bar">
+        <div class="numbers">
+            <span id="top-sales-number"><i class="fas fa-phone-alt"></i> مبيعات: 0555092383</span>
+            <span id="top-customer-number"><i class="fas fa-headset"></i> خدمة العملاء والشكاوى: 0579394158</span>
+        </div>
+        <div class="actions">
+            <button id="top-call-sales-btn" onclick="dialNumber(systemSettings.mainSalesPhone)">اتصال المبيعات</button>
+            <button id="top-call-customer-btn" onclick="dialNumber(systemSettings.customerServicePhone)">اتصال خدمة العملاء</button>
+            <button id="top-smart-routing-btn" onclick="smartRouteToSales()">اتصال بالمندوب الأقرب</button>
+        </div>
+    </div>
+
+    <header>
+        <div class="logo-container">
+            <a href="index.html">
+                <img src="images/logo.jpg" alt=" شركة مصنع نبراس للبلاستيك" onerror="this.style.display='none'">
+            </a>
+        </div>
+        
+        <button class="menu-toggle" onclick="toggleMenu()" aria-label="القائمة">
+            <i class="fas fa-bars"></i>
+        </button>
+        
+        <nav>
+            <ul id="nav-menu">
+                <li><a href="#" id="nav-home"><i class="fas fa-home"></i> الرئيسية</a></li>
+                <li><a href="#" onclick="openAdminPanel(event)" id="nav-admin"><i class="fas fa-user-shield"></i> الإدارة</a></li>
+                <li><a href="#about" id="nav-about"><i class="fas fa-info-circle"></i> من نحن</a></li>
+                <li><a href="#services" id="nav-services"><i class="fas fa-concierge-bell"></i> خدماتنا</a></li>
+                <li><a href="#doors" id="nav-doors"><i class="fas fa-door-open"></i> أبواب WPC</a></li>
+                <li><a href="#products" id="nav-nebOther"><i class="fas fa-box-open"></i> منتجات نبراس الأخرى</a></li>
+                <li><a href="#aluminum" id="nav-aluminum"><i class="fas fa-cog"></i> الألومنيوم</a></li>
+                <li><a href="#products" id="nav-products"><i class="fas fa-industry"></i> منتجات PVC</a></li>
+                <li><a href="#branches" id="nav-branches"><i class="fas fa-map-marker-alt"></i> فروع نبراس</a></li>
+                <li><a href="#" id="nav-sales"><i class="fas fa-phone-alt"></i> تواصل مع خدمة المبيعات</a></li>
+                <li><a href="#" id="nav-customer"><i class="fas fa-headset"></i> تواصل مع خدمة العملاء</a></li>
+                <li>
+                    <div class="lang-dropdown">
+                        <button class="lang-btn">
+                            <i class="fas fa-language"></i>
+                        </button>
+                        <div class="lang-menu" id="lang-menu">
+                            <a href="#" data-lang="ar">العربية</a>
+                            <a href="#" data-lang="en">English</a>
+                            <a href="#" data-lang="zh">中文</a>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+        </nav>
+    </header>
+
+    <section class="hero"></section>
+
+    <section class="site-structure">
+        <div class="section-title">
+            <h2 id="quick-services-title">خدمات سريعة للزائر</h2>
+            <span id="quick-services-subtitle">الأيقونات الخارجية والألبومات تدار من داخل لوحة الإدارة.</span>
+        </div>
+        <div id="visitor-icons-grid" class="visitor-icons-grid"></div>
+    </section>
+
+    <section id="about" class="about-grid">
+        <div class="about-card">
+            <h3 id="about-title-1">من نحن</h3>
+            <p id="about-text-1">نحن شركة مصنع نبراس للبلاستيك، نقدم حلولاً متكاملة للصناعة والمقاولات بشفافية وجودة سعودية أصيلة. هدفنا تطوير منتجات مبتكرة وتوفير تجربة سلسة لكل عميل وزائر.</p>
+        </div>
+        <div class="about-card">
+            <h3 id="about-title-2">رؤيتنا</h3>
+            <p id="about-text-2">أن نصنع موقعاً عملاقاً ينظم الأعمال ويسهل العمليات، ويوفر مساحات واضحة للزائرين وصلاحيات دقيقة للإدارة، مع تجربة رقمية محترفة.</p>
+        </div>
+    </section>
+
+    <section id="services" class="services-grid">
+        <div class="service-card">
+            <h3 id="service-title-1"><i class="fas fa-tools"></i> خدمات التصنيع</h3>
+            <p id="service-text-1">تصنيع منتجات بلاستيكية عالية الجودة مع مراعاة أعلى معايير الأمان والاستدامة المناسبة للمشاريع الكبيرة.</p>
+        </div>
+        <div class="service-card">
+            <h3 id="service-title-2"><i class="fas fa-shield-alt"></i> الدعم الفني</h3>
+            <p id="service-text-2">فريق دعم متكامل لمتابعة الطلبات وحل المشكلات بسرعة، مع تقديم الدعم الفني للعملاء والمشاريع بحرفية.</p>
+        </div>
+        <div class="service-card">
+            <h3 id="service-title-3"><i class="fas fa-chart-line"></i> إدارة الجودة</h3>
+            <p id="service-text-3">مراقبة جودة دقيقة لكل منتج ومرحلة إنتاجية، لضمان منتج نهائي يناسب متطلبات السوق ورضا العملاء.</p>
+        </div>
+    </section>
+
+    <section class="site-structure">
+        <div class="section-title">
+            <h2 id="structure-title">هيكل الموقع وتنظيمه</h2>
+            <span id="structure-subtitle">أقسام واضحة للزوار، وصلاحيات منفصلة للإدارة.</span>
+        </div>
+        <div class="about-grid">
+            <div class="about-card">
+                <h3 id="visitor-role-title">الزوار</h3>
+                <p id="visitor-role-text">يستطيع الزائر مشاهدة المنتجات والخدمات والتواصل، لكن لا يمكنه الوصول إلى إدارة المحتوى أو أدوات الإدارة.</p>
+            </div>
+            <div class="about-card">
+                <h3 id="admin-role-title">الإدارة</h3>
+                <p id="admin-role-text">الإدارة لديها لوحة تحكم خاصة، متعددة المستخدمين، وصلاحيات محددة للتحكم في المحتوى وتقارير الأداء.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="products" class="products-grid">
+        <!-- كارت الـ PVC مع أيقونة -->
+        <div class="product-card card-pvc clickable-card" onclick="openIconDetails('pvc')">
+            <div class="card-icon">
+                <i class="fas fa-cube"></i>
+            </div>
+            <div class="card-content">
+                <h3 id="pvc-title"><i class="fas fa-layer-group"></i> حبيبات PVC</h3>
+                <p id="pvc-text">تركيبات مخصصة للصناعات المتطورة، جودة تضمن استمرارية خطوط إنتاجكم.</p>
+            </div>
+        </div>
+
+        <!-- كارت الـ WPC مع أيقونة -->
+        <div id="doors" class="product-card card-wpc clickable-card" onclick="openIconDetails('wpc')">
+            <div class="card-icon">
+                <i class="fas fa-door-closed"></i>
+            </div>
+            <div class="card-content">
+                <h3 id="wpc-title"><i class="fas fa-door-open"></i> أبواب WPC</h3>
+                <p id="wpc-text">أبواب تجمع بين فخامة الخشب وصمود البلاستيك، الحل الأمثل للمنازل العصرية.</p>
+            </div>
+        </div>
+
+        <div id="aluminum" class="product-card card-aluminum clickable-card" onclick="openIconDetails('aluminum')">
+            <div class="card-icon">
+                <i class="fas fa-industry"></i>
+            </div>
+            <div class="card-content">
+                <h3 id="aluminum-title"><i class="fas fa-cog"></i> الألومنيوم</h3>
+                <p id="aluminum-text">منتجات ألومنيوم متينة وتصميمات ذكية تناسب مشاريع البناء والتشطيب.</p>
+            </div>
+        </div>
+
+        <div class="product-card card-other-products" onclick="openOtherProducts()">
+            <div class="card-icon">
+                <i class="fas fa-boxes"></i>
+            </div>
+            <div class="card-content">
+                <h3 id="other-products-title"><i class="fas fa-boxes"></i> منتجات أخرى</h3>
+                <p id="other-products-text">مجموعة متنوعة من المنتجات الإضافية والحلول المبتكرة.</p>
+            </div>
+        </div>
+
+        <div class="product-card card-customer-complaints" onclick="openCustomerComplaints()">
+            <div class="card-icon">
+                <i class="fas fa-search"></i>
+            </div>
+            <div class="card-content">
+                <h3 id="customer-complaints-title"><i class="fas fa-search"></i> استفسار عن الشكاوى</h3>
+                <p id="customer-complaints-text">تحقق من حالة شكواك بإدخال رقم الشكوى.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="branches" class="site-structure">
+        <div class="section-title">
+            <h2 id="branches-title">فروع نبراس في المملكة</h2>
+            <span id="branches-subtitle">فروع نبراس بالمملكة مع رقم المبيعات لكل فرع.</span>
+        </div>
+        <div class="about-grid" id="branches-grid"></div>
+    </section>
+
+    <div class="admin-overlay" id="admin-overlay">
+        <div class="admin-modal">
+            <h2>تسجيل دخول الإدارة</h2>
+            <p class="status" id="admin-status-message"></p>
+            <input id="admin-username" type="text" placeholder="اسم المستخدم" autocomplete="username">
+            <input id="admin-password" type="password" placeholder="كلمة المرور" autocomplete="current-password">
+            <button class="primary" onclick="loginAdmin()">دخول</button>
+            <button class="secondary" onclick="closeAdminOverlay()">إلغاء</button>
+        </div>
+    </div>
+
+    <div class="admin-overlay" id="complaint-overlay">
+        <div class="admin-modal">
+            <h2 id="complaint-inquiry-title">استفسار عن الشكوى</h2>
+            <p id="complaint-inquiry-text">أدخل رقم الشكوى لمعرفة الحالة الحالية.</p>
+            <div class="complaint-form-grid">
+                <input class="full-width" id="complaint-customer-name" type="text" placeholder="اسم العميل">
+                <input id="complaint-customer-phone" type="text" placeholder="رقم الهاتف">
+                <input id="complaint-customer-branch" type="text" placeholder="الفرع">
+                <textarea class="full-width" id="complaint-description" rows="3" placeholder="تفاصيل الشكوى"></textarea>
+            </div>
+            <button class="primary" onclick="submitComplaint()">إرسال شكوى جديدة</button>
+            <input id="complaint-number" type="text" placeholder="رقم الشكوى">
+            <p class="status" id="complaint-status-message"></p>
+            <button class="primary" onclick="checkComplaintStatus()">استعلام</button>
+            <button class="secondary" onclick="closeComplaintOverlay()">إلغاء</button>
+        </div>
+    </div>
+
+    <section class="admin-dashboard" id="admin-dashboard">
+        <div class="dashboard-header">
+            <div>
+                <h2 id="admin-dashboard-title">لوحة تحكم الإدارة</h2>
+                <p class="admin-role" id="admin-role-name"></p>
+            </div>
+            <a class="admin-action" href="#" id="admin-logout-label" onclick="logoutAdmin()"><i class="fas fa-sign-out-alt"></i> تسجيل خروج</a>
+        </div>
+        <div class="dashboard-actions">
+            <div class="quick-card" onclick="openUserManagement()">
+                <div class="card-icon">
+                    <i class="fas fa-users-cog"></i>
+                </div>
+                <h3>إدارة المستخدمين</h3>
+                <p>إضافة وحذف وتعديل المستخدمين والأدوار.</p>
+            </div>
+            <div class="quick-card" onclick="openSalesManagement()">
+                <div class="card-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <h3>إدارة المبيعات</h3>
+                <p>مراقبة وإضافة بيانات المبيعات والتقارير.</p>
+            </div>
+            <div class="quick-card" onclick="openCustomerServiceManagement()">
+                <div class="card-icon">
+                    <i class="fas fa-headset"></i>
+                </div>
+                <h3>خدمة العملاء</h3>
+                <p>إدارة استفسارات العملاء والردود.</p>
+            </div>
+            <div class="quick-card" onclick="openComplaintsManagement()">
+                <div class="card-icon">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+                <h3>إدارة الشكاوى</h3>
+                <p>مراجعة وحل الشكاوى المقدمة.</p>
+            </div>
+            <div class="quick-card" onclick="openBranchesManagement()">
+                <div class="card-icon">
+                    <i class="fas fa-map-marked-alt"></i>
+                </div>
+                <h3>إدارة الفروع</h3>
+                <p>إضافة وتعديل وحذف بيانات فروع المملكة.</p>
+            </div>
+            <div class="quick-card" onclick="openAuditLog()">
+                <div class="card-icon">
+                    <i class="fas fa-clipboard-check"></i>
+                </div>
+                <h3>سجل العمليات</h3>
+                <p>متابعة كل إجراء إداري على النظام.</p>
+            </div>
+        </div>
+        <div class="dashboard-grid">
+            <div class="product-card card-sales-reports" onclick="openSalesManagement()">
+                <div class="card-icon">
+                    <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="card-content">
+                    <h3><i class="fas fa-file-alt"></i> تقارير المبيعات</h3>
+                    <p>تحليل شامل لمبيعاتك مع تقارير دقيقة تساعدك على اتخاذ القرارات.</p>
+                </div>
+            </div>
+
+            <div class="product-card card-inventory-management clickable-card" onclick="openIconDetails('inventory')">
+                <div class="card-icon">
+                    <i class="fas fa-warehouse"></i>
+                </div>
+                <div class="card-content">
+                    <h3><i class="fas fa-boxes"></i> إدارة المخزون</h3>
+                    <p>إدارة فعالة للمخزون لضمان توافر المنتجات وتقليل التكاليف.</p>
+                </div>
+            </div>
+
+            <div class="product-card card-customer-management" onclick="openCustomerServiceManagement()">
+                <div class="card-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div class="card-content">
+                    <h3><i class="fas fa-user-friends"></i> إدارة العملاء</h3>
+                    <p>تواصل مع عملائك بسهولة وقدم لهم أفضل تجربة ممكنة.</p>
+                </div>
+            </div>
+
+            <div class="product-card card-analytics clickable-card" onclick="openIconDetails('analytics')">
+                <div class="card-icon">
+                    <i class="fas fa-chart-pie"></i>
+                </div>
+                <div class="card-content">
+                    <h3><i class="fas fa-chart-bar"></i> الإحصائيات والتحليلات</h3>
+                    <p>احصل على رؤى دقيقة حول أداء عملك من خلال التحليلات المتقدمة.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Admin Sections -->
+    <div class="admin-section" id="user-management">
+        <div class="admin-modal">
+            <h2>إدارة المستخدمين</h2>
+            <button onclick="addNewUser()">إضافة مستخدم جديد</button>
+            <button onclick="openAccountSecurity()">أمان الحساب (تغيير اليوزر/الباسورد)</button>
+            <button onclick="openIconManagement()">إدارة الأيقونات والألبومات</button>
+            <button id="open-system-settings-btn" onclick="openSystemSettings()">إعدادات النظام (Super Admin)</button>
+            <ul id="users-list"></ul>
+            <button onclick="closeAdminSection('user-management')">إغلاق</button>
+        </div>
+    </div>
+
+    <div class="admin-section" id="sales-management">
+        <div class="admin-modal">
+            <h2>إدارة المبيعات</h2>
+            <button onclick="addNewSale()">إضافة بيع جديد</button>
+            <ul id="sales-list"></ul>
+            <button onclick="closeAdminSection('sales-management')">إغلاق</button>
+        </div>
+    </div>
+
+    <div class="admin-section" id="customer-service-management">
+        <div class="admin-modal">
+            <h2>خدمة العملاء</h2>
+            <ul id="customer-service-list"></ul>
+            <button onclick="closeAdminSection('customer-service-management')">إغلاق</button>
+        </div>
+    </div>
+
+    <div class="admin-section" id="complaints-management">
+        <div class="admin-modal">
+            <h2>إدارة الشكاوى</h2>
+            <ul id="complaints-list"></ul>
+            <button onclick="closeAdminSection('complaints-management')">إغلاق</button>
+        </div>
+    </div>
+
+    <div class="admin-section" id="branches-management">
+        <div class="admin-modal">
+            <h2>إدارة فروع المملكة</h2>
+            <button onclick="addBranch()">إضافة فرع جديد</button>
+            <ul id="branches-admin-list"></ul>
+            <button onclick="closeAdminSection('branches-management')">إغلاق</button>
+        </div>
+    </div>
+
+    <div class="admin-section" id="audit-log">
+        <div class="admin-modal">
+            <h2>سجل العمليات الإدارية</h2>
+            <ul id="audit-log-list"></ul>
+            <button onclick="closeAdminSection('audit-log')">إغلاق</button>
+        </div>
+    </div>
+
+    <div class="admin-section" id="system-settings">
+        <div class="admin-modal">
+            <h2>إعدادات النظام</h2>
+            <input id="setting-sales-phone" type="text" placeholder="رقم المبيعات العام">
+            <input id="setting-customer-phone" type="text" placeholder="رقم خدمة العملاء والشكاوى">
+            <input id="setting-recovery-email" type="email" placeholder="إيميل استرجاع الإدارة">
+            <button onclick="saveSystemSettings()">حفظ الإعدادات</button>
+            <button onclick="closeAdminSection('system-settings')">إغلاق</button>
+        </div>
+    </div>
+
+    <div class="admin-section" id="account-security">
+        <div class="admin-modal">
+            <h2>أمان حساب الإدارة</h2>
+            <button onclick="changeAdminCredentialsByOldPassword()">تغيير البيانات بكلمة المرور القديمة</button>
+            <button onclick="sendRecoveryCodeToEmail()">استرجاع/تغيير عبر الإيميل</button>
+            <p id="account-security-status" class="status"></p>
+            <button onclick="closeAdminSection('account-security')">إغلاق</button>
+        </div>
+    </div>
+
+    <div class="admin-section" id="icon-management">
+        <div class="admin-modal">
+            <h2>إدارة الأيقونات والألبومات</h2>
+            <button onclick="addVisitorIcon()">إضافة أيقونة جديدة</button>
+            <ul id="icons-admin-list"></ul>
+            <button onclick="closeAdminSection('icon-management')">إغلاق</button>
+        </div>
+    </div>
+
+    <div class="admin-overlay" id="icon-overlay">
+        <div class="admin-modal">
+            <h2 id="icon-overlay-title">تفاصيل القسم</h2>
+            <p id="icon-overlay-text">معلومات القسم ستظهر هنا.</p>
+            <button class="secondary" onclick="closeIconOverlay()">إغلاق</button>
+        </div>
+    </div>
+
+    <script>
+        let adminUsers = [
+            { id: 'base-admin', username: 'NEBRASBASIC', password: 'NEBRASBASIC123', role: 'superadmin' }
+        ];
+        const rolePermissions = {
+            superadmin: ['users', 'sales', 'customerService', 'complaints', 'branches', 'audit'],
+            manager: ['sales', 'customerService', 'complaints', 'branches', 'audit'],
+            hr: ['users', 'audit']
+        };
+        const allowedRoles = Object.keys(rolePermissions);
+        let systemSettings = {
+            mainSalesPhone: '0555092383',
+            customerServicePhone: '0579394158',
+            recoveryEmail: 'admin@nebrasfactory.com'
+        };
+        let currentAdmin = null;
+        let currentLang = 'ar';
+        let auditLogs = [];
+        let passwordRecoveryCode = null;
+        let visitorIcons = [
+            {
+                id: 1,
+                title: 'كتالوج المنتجات',
+                iconClass: 'fas fa-images',
+                target: '#products',
+                album: ['images/pvc-background.avif', 'images/wpc-background.avif']
+            },
+            {
+                id: 2,
+                title: 'فروع نبراس',
+                iconClass: 'fas fa-map-marked-alt',
+                target: '#branches',
+                album: ['images/branch-qassim-main.jpg']
+            }
+        ];
+
+        // Helper Functions - Define at the top
+        function toggleLangMenu(event) {
+            if (event) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            const menu = document.getElementById('lang-menu');
+            menu.classList.toggle('show');
+        }
+
+        function toggleMenu() {
+            const navMenu = document.getElementById('nav-menu');
+            const icon = document.querySelector('.menu-toggle i');
+            
+            navMenu.classList.toggle('active');
+            
+            // Toggle between bars and times
+            if (navMenu.classList.contains('active')) {
+                icon.classList.remove('fa-bars');
+                icon.classList.add('fa-times');
+            } else {
+                icon.classList.remove('fa-times');
+                icon.classList.add('fa-bars');
+            }
+        }
+
+        // Sample complaints data (in real app, this would come from server)
+        let complaints = {
+            '12345': { status: 'pending', description: 'شكوى تجريبية' },
+            '67890': { status: 'inProgress', description: 'شكوى أخرى' },
+            '11111': { status: 'resolved', description: 'شكوى محلولة' }
+        };
+
+        // Sample sales data
+        let salesData = [
+            { id: 1, product: 'PVC Granules', amount: 5000, date: '2026-05-01' },
+            { id: 2, product: 'WPC Doors', amount: 12000, date: '2026-05-02' }
+        ];
+
+        // Sample customer service data
+        let customerServiceData = [
+            { id: 1, inquiry: 'استفسار عن المنتجات', response: 'تم الرد' },
+            { id: 2, inquiry: 'شكوى من الجودة', response: 'قيد المراجعة' }
+        ];
+
+        let branchesData = [
+            { id: 1, city: 'القصيم - الفرع الرئيسي', salesPhone: '0555092383', image: 'branch-qassim-main.jpg' },
+            { id: 2, city: 'الرياض', salesPhone: '0536694464', image: 'branch-riyadh.jpg' },
+            { id: 3, city: 'المدينة', salesPhone: '0558358306', image: 'branch-madinah.webp' },
+            { id: 4, city: 'الأحساء', salesPhone: '0558818530', image: 'branch-ahsa.jpg' },
+            { id: 5, city: 'خميس مشيط', salesPhone: '0554501661', image: 'branch-khamis-mushait.jpg' },
+            { id: 6, city: 'تبوك', salesPhone: '0555278214', image: 'branch-tabuk.jpg' },
+            { id: 7, city: 'جدة', salesPhone: '96655710226', image: 'branch-jeddah.jpg' }
+        ];
+
+        function normalizeBranchImagePath(imagePath) {
+            if (!imagePath) return '';
+            const trimmed = imagePath.trim();
+            if (/^(https?:|data:|blob:)/i.test(trimmed) || trimmed.startsWith('images/')) {
+                return trimmed;
+            }
+            return `images/${trimmed}`;
+        }
+
+        function normalizeVisitorIconImagePath(icon) {
+            if (!icon || !Array.isArray(icon.album) || !icon.album.length) return '';
+            const firstImage = icon.album.find(item => typeof item === 'string' && item.trim());
+            if (!firstImage) return '';
+            const trimmed = firstImage.trim();
+            if (/^(https?:|data:|blob:)/i.test(trimmed) || trimmed.startsWith('images/')) {
+                return trimmed;
+            }
+            return `images/${trimmed}`;
+        }
+
+        const iconDetails = {
+            pvc: {
+                ar: { title: 'حبيبات PVC', text: 'تفاصيل تصنيع وتوريد حبيبات PVC للمصانع والمشاريع.' },
+                en: { title: 'PVC Granules', text: 'Manufacturing and supply details for PVC granules.' },
+                zh: { title: 'PVC 颗粒', text: 'PVC 颗粒制造与供应详情。' }
+            },
+            wpc: {
+                ar: { title: 'أبواب WPC', text: 'تصاميم متعددة لأبواب WPC مع جودة عالية ومقاومة ممتازة.' },
+                en: { title: 'WPC Doors', text: 'High-quality WPC doors with multiple design options.' },
+                zh: { title: 'WPC 门', text: '高质量 WPC 门，支持多种设计。' }
+            },
+            aluminum: {
+                ar: { title: 'الألومنيوم', text: 'حلول ألومنيوم للمشاريع السكنية والتجارية والتشطيبات.' },
+                en: { title: 'Aluminum', text: 'Aluminum solutions for residential and commercial projects.' },
+                zh: { title: '铝制品', text: '住宅与商业项目的铝制品解决方案。' }
+            },
+            inventory: {
+                ar: { title: 'إدارة المخزون', text: 'متابعة المخزون، الكميات، والتحديثات الداخلية بشكل فوري.' },
+                en: { title: 'Inventory Management', text: 'Track stock levels, quantities, and internal updates instantly.' },
+                zh: { title: '库存管理', text: '实时跟踪库存水平、数量和内部更新。' }
+            },
+            analytics: {
+                ar: { title: 'الإحصائيات والتحليلات', text: 'مؤشرات أداء وتقارير تساعد الإدارة في اتخاذ القرار.' },
+                en: { title: 'Analytics', text: 'Performance metrics and reports that support decision-making.' },
+                zh: { title: '数据分析', text: '用于支持决策的绩效指标与报告。' }
+            },
+            sales: {
+                ar: { title: 'خدمة المبيعات', text: 'يمكنك التواصل مع فريق المبيعات للحصول على أفضل العروض.' },
+                en: { title: 'Sales Support', text: 'Contact our sales team for quotes and offers.' },
+                zh: { title: '销售支持', text: '联系销售团队获取报价和优惠。' }
+            },
+            customer: {
+                ar: { title: 'خدمة العملاء', text: 'دعم واستقبال استفسارات العملاء ومتابعة طلباتهم.' },
+                en: { title: 'Customer Service', text: 'Support and follow-up for customer inquiries and requests.' },
+                zh: { title: '客户服务', text: '客户咨询与请求的支持和跟进。' }
+            }
+        };
+
+        function openAdminPanel(event) {
+            event.preventDefault();
+            if (currentAdmin) {
+                showAdminDashboard(currentAdmin);
+                return;
+            }
+            document.getElementById('admin-overlay').classList.add('show');
+            document.getElementById('admin-status-message').textContent = '';
+            document.getElementById('admin-username').value = '';
+            document.getElementById('admin-password').value = '';
+        }
+
+        function canManage(permissionKey) {
+            if (!currentAdmin) return false;
+            const allowed = rolePermissions[currentAdmin.role] || [];
+            return allowed.includes(permissionKey);
+        }
+
+        function requirePermission(permissionKey, message) {
+            if (!canManage(permissionKey)) {
+                alert(message || 'لا تملك الصلاحية لهذا الإجراء.');
+                return false;
+            }
+            return true;
+        }
+
+        function addAuditLog(action, details) {
+            const actor = currentAdmin ? `${currentAdmin.username} (${currentAdmin.role})` : 'system';
+            auditLogs.unshift({
+                id: Date.now(),
+                action,
+                details,
+                actor,
+                at: new Date().toLocaleString('ar-SA')
+            });
+            if (auditLogs.length > 200) {
+                auditLogs = auditLogs.slice(0, 200);
+            }
+            saveSystemData();
+            displayAuditLog();
+        }
+
+        function closeAdminOverlay() {
+            document.getElementById('admin-overlay').classList.remove('show');
+        }
+
+        function loginAdmin() {
+            const username = document.getElementById('admin-username').value.trim();
+            const password = document.getElementById('admin-password').value.trim();
+            const status = document.getElementById('admin-status-message');
+            const user = adminUsers.find(user => user.username === username && user.password === password);
+
+            if (!username || !password) {
+                status.textContent = 'يرجى إدخال اسم المستخدم وكلمة المرور.';
+                return;
+            }
+
+            if (user) {
+                currentAdmin = user;
+                status.textContent = 'تم تسجيل الدخول بنجاح.';
+                closeAdminOverlay();
+                showAdminDashboard(user);
+                addAuditLog('تسجيل دخول', `دخول ناجح بواسطة ${user.username}`);
+            } else {
+                status.textContent = 'بيانات الدخول غير صحيحة. حاول مرة أخرى.';
+            }
+        }
+
+        function showAdminDashboard(user) {
+            document.getElementById('admin-dashboard').classList.add('show');
+            document.getElementById('admin-role-name').textContent = `المستخدم: ${user.username} - الدور: ${user.role}`;
+            // Initialize data displays
+            displayUsers();
+            displaySales();
+            displayCustomerService();
+            displayComplaints();
+        }
+
+        function logoutAdmin() {
+            if (currentAdmin) {
+                addAuditLog('تسجيل خروج', `خروج المستخدم ${currentAdmin.username}`);
+            }
+            currentAdmin = null;
+            document.getElementById('admin-dashboard').classList.remove('show');
+            return false;
+        }
+
+        function openCustomerComplaints() {
+            console.log('Opening customer complaints inquiry');
+            document.getElementById('complaint-overlay').classList.add('show');
+        }
+
+        function closeComplaintOverlay() {
+            document.getElementById('complaint-overlay').classList.remove('show');
+            document.getElementById('complaint-number').value = '';
+            document.getElementById('complaint-customer-name').value = '';
+            document.getElementById('complaint-customer-phone').value = '';
+            document.getElementById('complaint-customer-branch').value = '';
+            document.getElementById('complaint-description').value = '';
+            document.getElementById('complaint-status-message').textContent = '';
+        }
+
+        function dialNumber(phoneNumber) {
+            if (!phoneNumber) return;
+            window.location.href = `tel:${phoneNumber}`;
+        }
+
+        function normalizeText(value) {
+            return String(value || '').trim().toLowerCase().replace(/\s+/g, '');
+        }
+
+        function getNearestSalesNumber(branchName) {
+            const normalizedBranch = normalizeText(branchName);
+            if (!normalizedBranch) {
+                return { phone: systemSettings.mainSalesPhone, city: 'المبيعات العامة' };
+            }
+            const matchedBranch = branchesData.find(branch => normalizeText(branch.city).includes(normalizedBranch) || normalizedBranch.includes(normalizeText(branch.city)));
+            if (matchedBranch && matchedBranch.salesPhone) {
+                return { phone: matchedBranch.salesPhone, city: matchedBranch.city };
+            }
+            return { phone: systemSettings.mainSalesPhone, city: 'المبيعات العامة' };
+        }
+
+        function smartRouteToSales() {
+            const requestedBranch = prompt('اكتب اسم الفرع أو المدينة للتحويل لأقرب مندوب:');
+            const routedContact = getNearestSalesNumber(requestedBranch);
+            alert(`سيتم التحويل إلى: ${routedContact.city} - ${routedContact.phone}`);
+            dialNumber(routedContact.phone);
+        }
+
+        function submitComplaint() {
+            const name = document.getElementById('complaint-customer-name').value.trim();
+            const phone = document.getElementById('complaint-customer-phone').value.trim();
+            const branch = document.getElementById('complaint-customer-branch').value.trim();
+            const description = document.getElementById('complaint-description').value.trim();
+            const statusEl = document.getElementById('complaint-status-message');
+
+            if (!name || !phone || !description) {
+                statusEl.textContent = 'يرجى إدخال الاسم ورقم الهاتف وتفاصيل الشكوى.';
+                return;
+            }
+
+            const complaintId = String(Date.now()).slice(-6);
+            const routedContact = getNearestSalesNumber(branch);
+            complaints[complaintId] = {
+                status: 'pending',
+                description,
+                customerName: name,
+                phone,
+                branch: branch || 'غير محدد',
+                routedSalesPhone: routedContact.phone,
+                routedSalesBranch: routedContact.city,
+                createdAt: new Date().toISOString()
+            };
+
+            statusEl.textContent = `تم تسجيل الشكوى بنجاح. رقم الشكوى: ${complaintId} - التحويل: ${routedContact.city} (${routedContact.phone})`;
+            document.getElementById('complaint-number').value = complaintId;
+            document.getElementById('complaint-description').value = '';
+            saveSystemData();
+            displayComplaints();
+            addAuditLog('شكوى جديدة', `تم تسجيل شكوى رقم ${complaintId} وتحويلها إلى ${routedContact.city}`);
+        }
+
+        function checkComplaintStatus() {
+            const number = document.getElementById('complaint-number').value.trim();
+            const statusEl = document.getElementById('complaint-status-message');
+            const text = siteText[currentLang || 'ar'];
+
+            if (!number) {
+                statusEl.textContent = text.complaintEnterNumber;
+                return;
+            }
+
+            const complaint = complaints[number];
+            if (complaint) {
+                let statusText = '';
+                switch (complaint.status) {
+                    case 'pending':
+                        statusText = text.complaintStatusPending;
+                        break;
+                    case 'inProgress':
+                        statusText = text.complaintStatusInProgress;
+                        break;
+                    case 'resolved':
+                        statusText = text.complaintStatusResolved;
+                        break;
+                    default:
+                        statusText = text.complaintUnknownStatus; // TODO: translate
+                }
+                statusEl.textContent = `${text.complaintStatusLabel} ${statusText}`;
+            } else {
+                statusEl.textContent = text.complaintNotFound;
+            }
+        }
+
+        function openOtherProducts() {
+            console.log('Opening other products');
+            // افتح قسم المنتجات الأخرى
+            alert(siteText[currentLang || 'ar'].otherProductsAlert);
+            // يمكن إضافة نافذة داخلية هنا
+        }
+
+        function openIconDetails(iconKey) {
+            const lang = currentLang || 'ar';
+            const details = iconDetails[iconKey] && iconDetails[iconKey][lang] ? iconDetails[iconKey][lang] : iconDetails[iconKey].ar;
+            if (!details) return;
+            document.getElementById('icon-overlay-title').textContent = details.title;
+            document.getElementById('icon-overlay-text').textContent = details.text;
+            document.getElementById('icon-overlay').classList.add('show');
+        }
+
+        function closeIconOverlay() {
+            document.getElementById('icon-overlay').classList.remove('show');
+        }
+
+        // Admin functions
+        function openUserManagement() {
+            if (!requirePermission('users')) return;
+            const settingsBtn = document.getElementById('open-system-settings-btn');
+            if (settingsBtn) {
+                settingsBtn.style.display = currentAdmin && currentAdmin.role === 'superadmin' ? 'inline-block' : 'none';
+            }
+            document.getElementById('user-management').classList.add('show');
+        }
+
+        function openSalesManagement() {
+            if (!requirePermission('sales')) return;
+            document.getElementById('sales-management').classList.add('show');
+        }
+
+        function openCustomerServiceManagement() {
+            if (!requirePermission('customerService')) return;
+            document.getElementById('customer-service-management').classList.add('show');
+        }
+
+        function openComplaintsManagement() {
+            if (!requirePermission('complaints')) return;
+            document.getElementById('complaints-management').classList.add('show');
+        }
+
+        function openBranchesManagement() {
+            if (!requirePermission('branches')) return;
+            document.getElementById('branches-management').classList.add('show');
+            displayBranchesAdmin();
+        }
+
+        function openAuditLog() {
+            if (!requirePermission('audit')) return;
+            document.getElementById('audit-log').classList.add('show');
+            displayAuditLog();
+        }
+
+        function openSystemSettings() {
+            if (!currentAdmin || currentAdmin.role !== 'superadmin') {
+                alert('هذه الإعدادات متاحة فقط للمسؤول الأعلى Super Admin.');
+                return;
+            }
+            renderSystemSettings();
+            document.getElementById('system-settings').classList.add('show');
+        }
+
+        function renderSystemSettings() {
+            const salesInput = document.getElementById('setting-sales-phone');
+            const customerInput = document.getElementById('setting-customer-phone');
+            const recoveryInput = document.getElementById('setting-recovery-email');
+            if (!salesInput || !customerInput || !recoveryInput) return;
+            salesInput.value = systemSettings.mainSalesPhone || '';
+            customerInput.value = systemSettings.customerServicePhone || '';
+            recoveryInput.value = systemSettings.recoveryEmail || '';
+        }
+
+        function saveSystemSettings() {
+            if (!currentAdmin || currentAdmin.role !== 'superadmin') {
+                alert('هذه الإعدادات متاحة فقط للمسؤول الأعلى Super Admin.');
+                return;
+            }
+            const salesPhone = document.getElementById('setting-sales-phone').value.trim();
+            const customerPhone = document.getElementById('setting-customer-phone').value.trim();
+            const recoveryEmail = document.getElementById('setting-recovery-email').value.trim();
+            if (!salesPhone || !customerPhone || !recoveryEmail) {
+                alert('يرجى إدخال جميع الأرقام.');
+                return;
+            }
+            systemSettings.mainSalesPhone = salesPhone;
+            systemSettings.customerServicePhone = customerPhone;
+            systemSettings.recoveryEmail = recoveryEmail;
+            saveSystemData();
+            setLanguage(currentLang || 'ar');
+            addAuditLog('تحديث إعدادات النظام', `تعديل الأرقام الرئيسية بواسطة ${currentAdmin.username}`);
+            alert('تم حفظ إعدادات النظام بنجاح.');
+        }
+
+        function openAccountSecurity() {
+            if (!requirePermission('users')) return;
+            document.getElementById('account-security-status').textContent = '';
+            document.getElementById('account-security').classList.add('show');
+        }
+
+        function changeAdminCredentialsByOldPassword() {
+            if (!currentAdmin) return;
+            const oldPassword = prompt('أدخل كلمة المرور الحالية:');
+            if (!oldPassword || oldPassword !== currentAdmin.password) {
+                alert('كلمة المرور الحالية غير صحيحة.');
+                return;
+            }
+            const newUsername = prompt('اسم المستخدم الجديد:', currentAdmin.username);
+            const newPassword = prompt('كلمة المرور الجديدة:');
+            if (!newUsername || !newPassword) return;
+            currentAdmin.username = newUsername.trim();
+            currentAdmin.password = newPassword.trim();
+            saveSystemData();
+            displayUsers();
+            addAuditLog('تغيير بيانات الدخول', `تم تغيير بيانات حساب ${currentAdmin.username} بالطريقة المباشرة`);
+            alert('تم تحديث اسم المستخدم وكلمة المرور بنجاح.');
+        }
+
+        function sendRecoveryCodeToEmail() {
+            if (!currentAdmin) return;
+            const enteredEmail = prompt('أدخل الإيميل المرتبط بالموقع:');
+            if (!enteredEmail || enteredEmail.trim().toLowerCase() !== (systemSettings.recoveryEmail || '').toLowerCase()) {
+                alert('الإيميل غير مطابق للإيميل المعتمد.');
+                return;
+            }
+            passwordRecoveryCode = String(Math.floor(100000 + Math.random() * 900000));
+            alert(`تم إرسال رمز التحقق إلى ${systemSettings.recoveryEmail} (محاكاة): ${passwordRecoveryCode}`);
+            const enteredCode = prompt('أدخل رمز التحقق المرسل للإيميل:');
+            if (enteredCode !== passwordRecoveryCode) {
+                alert('رمز التحقق غير صحيح.');
+                return;
+            }
+            const newPassword = prompt('أدخل كلمة المرور الجديدة:');
+            if (!newPassword) return;
+            currentAdmin.password = newPassword.trim();
+            passwordRecoveryCode = null;
+            saveSystemData();
+            addAuditLog('استرجاع كلمة المرور', `تم تغيير كلمة المرور عبر الإيميل لحساب ${currentAdmin.username}`);
+            alert('تم تغيير كلمة المرور عبر الإيميل بنجاح.');
+        }
+
+        function openIconManagement() {
+            if (!requirePermission('users')) return;
+            document.getElementById('icon-management').classList.add('show');
+            displayVisitorIconsAdmin();
+        }
+
+        function addVisitorIcon() {
+            if (!requirePermission('users')) return;
+            const title = prompt('اسم الأيقونة:');
+            const iconClass = prompt('كلاس الأيقونة FontAwesome (مثال: fas fa-star):', 'fas fa-star');
+            const target = prompt('الوجهة عند الضغط (#section أو رابط):', '#products');
+            const albumRaw = prompt('ألبوم الصور (مسارات مفصولة بفاصلة):', 'images/logo.jpg');
+            if (!title || !iconClass || !target) return;
+            const album = (albumRaw || '')
+                .split(',')
+                .map(item => item.trim())
+                .filter(Boolean);
+            visitorIcons.push({ id: Date.now(), title: title.trim(), iconClass: iconClass.trim(), target: target.trim(), album });
+            saveSystemData();
+            renderVisitorIcons();
+            displayVisitorIconsAdmin();
+            addAuditLog('إضافة أيقونة زائر', `تمت إضافة أيقونة ${title}`);
+        }
+
+        function editVisitorIcon(iconId) {
+            if (!requirePermission('users')) return;
+            const icon = visitorIcons.find(item => item.id === iconId);
+            if (!icon) return;
+            const title = prompt('تعديل اسم الأيقونة:', icon.title);
+            const iconClass = prompt('تعديل كلاس الأيقونة:', icon.iconClass);
+            const target = prompt('تعديل الوجهة:', icon.target);
+            const albumRaw = prompt('تعديل ألبوم الصور (مفصول بفاصلة):', icon.album.join(', '));
+            if (!title || !iconClass || !target) return;
+            icon.title = title.trim();
+            icon.iconClass = iconClass.trim();
+            icon.target = target.trim();
+            icon.album = (albumRaw || '').split(',').map(item => item.trim()).filter(Boolean);
+            saveSystemData();
+            renderVisitorIcons();
+            displayVisitorIconsAdmin();
+            addAuditLog('تعديل أيقونة زائر', `تم تعديل أيقونة ${icon.title}`);
+        }
+
+        function deleteVisitorIcon(iconId) {
+            if (!requirePermission('users')) return;
+            const icon = visitorIcons.find(item => item.id === iconId);
+            if (!icon) return;
+            if (!confirm(`هل تريد حذف الأيقونة ${icon.title}؟`)) return;
+            visitorIcons = visitorIcons.filter(item => item.id !== iconId);
+            saveSystemData();
+            renderVisitorIcons();
+            displayVisitorIconsAdmin();
+            addAuditLog('حذف أيقونة زائر', `تم حذف أيقونة ${icon.title}`);
+        }
+
+        function displayVisitorIconsAdmin() {
+            const list = document.getElementById('icons-admin-list');
+            if (!list) return;
+            list.innerHTML = visitorIcons.map(icon => `
+                <li>
+                    ${icon.title} - ${icon.iconClass} - ${icon.target}
+                    <small>Album: ${icon.album.join(' | ') || 'بدون صور'}</small>
+                    <button onclick="editVisitorIcon(${icon.id})">تعديل</button>
+                    <button onclick="deleteVisitorIcon(${icon.id})">حذف</button>
+                </li>
+            `).join('');
+        }
+
+        function openVisitorIcon(iconId) {
+            const icon = visitorIcons.find(item => item.id === iconId);
+            if (!icon) return;
+            const albumText = icon.album && icon.album.length ? `\nالصور:\n- ${icon.album.join('\n- ')}` : '\nلا توجد صور مرتبطة.';
+            alert(`${icon.title}${albumText}`);
+            if (icon.target.startsWith('#')) {
+                scrollToSection(icon.target);
+            } else {
+                window.open(icon.target, '_blank');
+            }
+        }
+
+        function renderVisitorIcons() {
+            const container = document.getElementById('visitor-icons-grid');
+            if (!container) return;
+            container.innerHTML = visitorIcons.map(icon => `
+                <div class="visitor-icon-card" style="background-image: url('${normalizeVisitorIconImagePath(icon)}')" onclick="openVisitorIcon(${icon.id})">
+                    <i class="${icon.iconClass}"></i>
+                    <h3>${icon.title}</h3>
+                    <p>${icon.target}</p>
+                </div>
+            `).join('');
+        }
+
+        function closeAdminSection(sectionId) {
+            document.getElementById(sectionId).classList.remove('show');
+        }
+
+        function addNewUser() {
+            if (!requirePermission('users', 'هذه العملية متاحة فقط لمسؤولي المستخدمين.')) return;
+            const username = prompt('أدخل اسم المستخدم الجديد:');
+            const password = prompt('أدخل كلمة المرور:');
+            const role = prompt('أدخل الدور (superadmin/manager/hr):');
+            if (username && password && role) {
+                const normalizedRole = role.trim().toLowerCase();
+                if (!allowedRoles.includes(normalizedRole)) {
+                    alert('الدور غير صحيح. الأدوار المسموحة: superadmin / manager / hr');
+                    return;
+                }
+                adminUsers.push({ id: `user-${Date.now()}`, username: username.trim(), password: password.trim(), role: normalizedRole });
+                alert('تم إضافة المستخدم بنجاح');
+                displayUsers();
+                addAuditLog('إضافة مستخدم', `تمت إضافة ${username} بدور ${role}`);
+            }
+        }
+
+        function displayUsers() {
+            const list = document.getElementById('users-list');
+            list.innerHTML = adminUsers.map((user, index) => `
+                <li>
+                    ${user.username} - ${user.role}
+                    <button onclick="editUser(${index})">تعديل</button>
+                    <button onclick="deleteUser(${index})">حذف</button>
+                </li>
+            `).join('');
+        }
+
+        function editUser(index) {
+            if (!requirePermission('users', 'هذه العملية متاحة فقط لمسؤولي المستخدمين.')) return;
+            const user = adminUsers[index];
+            if (!user) return;
+            const username = prompt('تعديل اسم المستخدم:', user.username);
+            const password = prompt('تعديل كلمة المرور:', user.password);
+            const role = prompt('تعديل الدور (superadmin/manager/hr):', user.role);
+            if (username && password && role) {
+                const normalizedRole = role.trim().toLowerCase();
+                if (!allowedRoles.includes(normalizedRole)) {
+                    alert('الدور غير صحيح. الأدوار المسموحة: superadmin / manager / hr');
+                    return;
+                }
+                if (user.id === 'base-admin' && normalizedRole !== 'superadmin') {
+                    alert('لا يمكن تغيير دور الحساب الأساسي Base Admin.');
+                    return;
+                }
+                adminUsers[index] = { ...user, username: username.trim(), password: password.trim(), role: normalizedRole };
+                displayUsers();
+                addAuditLog('تعديل مستخدم', `تم تعديل المستخدم ${username}`);
+            }
+        }
+
+        function deleteUser(index) {
+            if (!requirePermission('users', 'هذه العملية متاحة فقط لمسؤولي المستخدمين.')) return;
+            const user = adminUsers[index];
+            if (!user) return;
+            if (user.id === 'base-admin') {
+                alert('لا يمكن حذف الحساب الأساسي Base Admin.');
+                return;
+            }
+            if (confirm(`هل تريد حذف المستخدم ${user.username}؟`)) {
+                adminUsers.splice(index, 1);
+                displayUsers();
+                addAuditLog('حذف مستخدم', `تم حذف المستخدم ${user.username}`);
+            }
+        }
+
+        function displaySales() {
+            const list = document.getElementById('sales-list');
+            list.innerHTML = salesData.map(sale => `<li>${sale.product} - ${sale.amount} SAR - ${sale.date}</li>`).join('');
+        }
+
+        function addNewSale() {
+            if (!requirePermission('sales')) return;
+            const product = prompt('أدخل اسم المنتج:');
+            const amount = prompt('أدخل المبلغ:');
+            const date = prompt('أدخل التاريخ:');
+            if (product && amount && date) {
+                salesData.push({ id: salesData.length + 1, product, amount: parseFloat(amount), date });
+                alert('تم إضافة البيع بنجاح');
+                displaySales();
+                addAuditLog('إضافة بيع', `${product} بقيمة ${amount}`);
+            }
+        }
+
+        function displayComplaints() {
+            const list = document.getElementById('complaints-list');
+            list.innerHTML = Object.entries(complaints).map(([id, comp]) => `
+                <li>
+                    <strong>#${id}</strong> - ${comp.description}<br>
+                    العميل: ${comp.customerName || '-'} | الهاتف: ${comp.phone || '-'} | الفرع: ${comp.branch || '-'}<br>
+                    التحويل: ${comp.routedSalesBranch || 'المبيعات العامة'} - ${comp.routedSalesPhone || systemSettings.mainSalesPhone}<br>
+                    الحالة: ${comp.status}
+                    <button onclick="updateComplaintStatus('${id}')">تحديث الحالة</button>
+                </li>
+            `).join('');
+        }
+
+        function updateComplaintStatus(complaintId) {
+            if (!requirePermission('complaints')) return;
+            const complaint = complaints[complaintId];
+            if (!complaint) return;
+            const newStatus = prompt('أدخل الحالة الجديدة (pending/inProgress/resolved):', complaint.status);
+            if (!newStatus) return;
+            if (!['pending', 'inProgress', 'resolved'].includes(newStatus)) {
+                alert('الحالة غير صحيحة');
+                return;
+            }
+            complaint.status = newStatus;
+            saveSystemData();
+            displayComplaints();
+            addAuditLog('تحديث شكوى', `تم تحديث الشكوى ${complaintId} إلى ${newStatus}`);
+        }
+
+        function displayCustomerService() {
+            const list = document.getElementById('customer-service-list');
+            list.innerHTML = customerServiceData.map(item => `<li>${item.inquiry} - ${item.response}</li>`).join('');
+        }
+
+        function displayBranches() {
+            const grid = document.getElementById('branches-grid');
+            if (!grid) return;
+            grid.innerHTML = branchesData.map(branch => `
+                <div class="branch-card" style="background-image: url('${normalizeBranchImagePath(branch.image)}')">
+                    <h3><i class="fas fa-map-marker-alt"></i> ${branch.city}</h3>
+                    <p><strong>مبيعات الفرع:</strong> ${branch.salesPhone}</p>
+                    <div class="branch-actions">
+                        <a href="tel:${branch.salesPhone}"><i class="fas fa-phone-alt"></i> اتصال مباشر</a>
+                        <a href="#" onclick="event.preventDefault(); dialNumber(getNearestSalesNumber('${branch.city}').phone);"><i class="fas fa-route"></i> تحويل ذكي</a>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function displayBranchesAdmin() {
+            const list = document.getElementById('branches-admin-list');
+            list.innerHTML = branchesData.map((branch, index) => `
+                <li>
+                    ${branch.city} - ${branch.salesPhone} - ${branch.image}
+                    <button onclick="editBranch(${index})">تعديل</button>
+                    <button onclick="deleteBranch(${index})">حذف</button>
+                </li>
+            `).join('');
+        }
+
+        function addBranch() {
+            if (!requirePermission('branches')) return;
+            const city = prompt('اسم المدينة:');
+            const salesPhone = prompt('رقم مبيعات الفرع:');
+            const image = prompt('اسم أو مسار الصورة (مثال: images/branch-riyadh.jpg):');
+            if (city && salesPhone && image) {
+                branchesData.push({ id: Date.now(), city: city.trim(), salesPhone: salesPhone.trim(), image: image.trim() });
+                displayBranches();
+                displayBranchesAdmin();
+                saveSystemData();
+                addAuditLog('إضافة فرع', `${city} - ${salesPhone}`);
+            }
+        }
+
+        function editBranch(index) {
+            if (!requirePermission('branches')) return;
+            const branch = branchesData[index];
+            if (!branch) return;
+            const city = prompt('تعديل المدينة:', branch.city);
+            const salesPhone = prompt('تعديل رقم المبيعات:', branch.salesPhone);
+            const image = prompt('تعديل مسار الصورة:', branch.image);
+            if (city && salesPhone && image) {
+                branchesData[index] = { ...branch, city: city.trim(), salesPhone: salesPhone.trim(), image: image.trim() };
+                displayBranches();
+                displayBranchesAdmin();
+                saveSystemData();
+                addAuditLog('تعديل فرع', `${city} - ${salesPhone}`);
+            }
+        }
+
+        function deleteBranch(index) {
+            if (!requirePermission('branches')) return;
+            const branch = branchesData[index];
+            if (!branch) return;
+            if (confirm(`هل تريد حذف فرع ${branch.city}؟`)) {
+                branchesData.splice(index, 1);
+                displayBranches();
+                displayBranchesAdmin();
+                saveSystemData();
+                addAuditLog('حذف فرع', branch.city);
+            }
+        }
+
+        function displayAuditLog() {
+            const list = document.getElementById('audit-log-list');
+            if (!list) return;
+            if (!auditLogs.length) {
+                list.innerHTML = '<li>لا توجد عمليات مسجلة حتى الآن.</li>';
+                return;
+            }
+            list.innerHTML = auditLogs.map(log => `
+                <li>
+                    <strong>${log.action}</strong> - ${log.details}
+                    <small>بواسطة: ${log.actor} | الوقت: ${log.at}</small>
+                </li>
+            `).join('');
+        }
+
+        function scrollToSection(selector) {
+            const target = document.querySelector(selector);
+            if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }
+
+        function saveSystemData() {
+            localStorage.setItem('nebrasComplaints', JSON.stringify(complaints));
+            localStorage.setItem('nebrasBranches', JSON.stringify(branchesData));
+            localStorage.setItem('nebrasAuditLogs', JSON.stringify(auditLogs));
+            localStorage.setItem('nebrasSystemSettings', JSON.stringify(systemSettings));
+            localStorage.setItem('nebrasAdminUsers', JSON.stringify(adminUsers));
+            localStorage.setItem('nebrasVisitorIcons', JSON.stringify(visitorIcons));
+        }
+
+        function loadSystemData() {
+            const savedComplaints = localStorage.getItem('nebrasComplaints');
+            const savedBranches = localStorage.getItem('nebrasBranches');
+            const savedAuditLogs = localStorage.getItem('nebrasAuditLogs');
+            const savedSystemSettings = localStorage.getItem('nebrasSystemSettings');
+            if (savedComplaints) {
+                try { complaints = JSON.parse(savedComplaints); } catch (error) { console.warn('Invalid complaints data in localStorage', error); }
+            }
+            if (savedBranches) {
+                try { branchesData = JSON.parse(savedBranches); } catch (error) { console.warn('Invalid branches data in localStorage', error); }
+            }
+            if (savedAuditLogs) {
+                try { auditLogs = JSON.parse(savedAuditLogs); } catch (error) { console.warn('Invalid audit logs data in localStorage', error); }
+            }
+            if (savedSystemSettings) {
+                try { systemSettings = JSON.parse(savedSystemSettings); } catch (error) { console.warn('Invalid settings data in localStorage', error); }
+            }
+            const savedAdminUsers = localStorage.getItem('nebrasAdminUsers');
+            const savedVisitorIcons = localStorage.getItem('nebrasVisitorIcons');
+            if (savedAdminUsers) {
+                try { adminUsers = JSON.parse(savedAdminUsers); } catch (error) { console.warn('Invalid admin users data in localStorage', error); }
+            }
+            if (savedVisitorIcons) {
+                try { visitorIcons = JSON.parse(savedVisitorIcons); } catch (error) { console.warn('Invalid visitor icons data in localStorage', error); }
+            }
+            adminUsers = (Array.isArray(adminUsers) ? adminUsers : []).map((user, index) => ({
+                id: user && user.id ? user.id : `user-${Date.now()}-${index}`,
+                username: user && user.username ? user.username : `user${index + 1}`,
+                password: user && user.password ? user.password : 'ChangeMe123',
+                role: user && allowedRoles.includes(String(user.role || '').toLowerCase()) ? String(user.role).toLowerCase() : 'manager'
+            }));
+            if (!Array.isArray(visitorIcons)) {
+                visitorIcons = [];
+            }
+            if (!adminUsers.some(user => user.id === 'base-admin')) {
+                adminUsers.unshift({ id: 'base-admin', username: 'NEBRASBASIC', password: 'NEBRASBASIC123', role: 'superadmin' });
+            }
+        }
+
+        // Toggle Mobile Menu - Already defined above
+
+        // Language switch: one menu toggle, link clicks, close on outside click
+        document.addEventListener('DOMContentLoaded', function() {
+            loadSystemData();
+            renderVisitorIcons();
+            const langBtn = document.querySelector('.lang-btn');
+            if (langBtn) {
+                langBtn.addEventListener('click', toggleLangMenu);
+            }
+
+            const navHome = document.getElementById('nav-home');
+            const navAbout = document.getElementById('nav-about');
+            const navServices = document.getElementById('nav-services');
+            const navDoors = document.getElementById('nav-doors');
+            const navNebOther = document.getElementById('nav-nebOther');
+            const navAluminum = document.getElementById('nav-aluminum');
+            const navProducts = document.getElementById('nav-products');
+            const navBranches = document.getElementById('nav-branches');
+
+            if (navHome) {
+                navHome.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                });
+            }
+            if (navAbout) {
+                navAbout.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    scrollToSection('#about');
+                });
+            }
+            if (navServices) {
+                navServices.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    scrollToSection('#services');
+                });
+            }
+            if (navDoors) {
+                navDoors.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    scrollToSection('#doors');
+                });
+            }
+            if (navNebOther) {
+                navNebOther.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    openOtherProducts();
+                });
+            }
+            if (navAluminum) {
+                navAluminum.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    scrollToSection('#aluminum');
+                });
+            }
+            if (navProducts) {
+                navProducts.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    scrollToSection('#products');
+                });
+            }
+            if (navBranches) {
+                navBranches.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    scrollToSection('#branches');
+                });
+            }
+
+            const salesLink = document.getElementById('nav-sales');
+            const customerLink = document.getElementById('nav-customer');
+            if (salesLink) {
+                salesLink.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    dialNumber(systemSettings.mainSalesPhone);
+                });
+            }
+            if (customerLink) {
+                customerLink.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    dialNumber(systemSettings.customerServicePhone);
+                });
+            }
+
+            document.querySelectorAll('.lang-menu a').forEach(function(link) {
+                link.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    const lang = link.getAttribute('data-lang');
+                    if (lang) {
+                        setLanguage(lang);
+                    }
+                });
+            });
+
+            document.addEventListener('click', function(event) {
+                const langDropdown = document.querySelector('.lang-dropdown');
+                const langMenu = document.getElementById('lang-menu');
+                if (langDropdown && langMenu && !langDropdown.contains(event.target)) {
+                    langMenu.classList.remove('show');
+                }
+
+                const iconOverlay = document.getElementById('icon-overlay');
+                if (event.target === iconOverlay) {
+                    closeIconOverlay();
+                }
+            });
+
+            displayBranches();
+            displayComplaints();
+        });
+
+        // Close complaint overlay when clicking outside
+        document.addEventListener('click', function(event) {
+            const complaintOverlay = document.getElementById('complaint-overlay');
+            if (event.target === complaintOverlay) {
+                closeComplaintOverlay();
+            }
+        });
+
+        const siteText = {
+            ar: {
+                dir: 'rtl',
+                lang: 'ar',
+                nav: {
+                    home: '<i class="fas fa-home"></i> الرئيسية',
+                    services: '<i class="fas fa-concierge-bell"></i> خدماتنا',
+                    admin: '<i class="fas fa-user-shield"></i> الإدارة - صلاحيات وشكاوى',
+                    about: '<i class="fas fa-info-circle"></i> من نحن',
+                    doors: '<i class="fas fa-door-open"></i> أبواب WPC',
+                    products: '<i class="fas fa-industry"></i> منتجات PVC',
+                    aluminum: '<i class="fas fa-cog"></i> الألومنيوم',
+                    branches: '<i class="fas fa-map-marker-alt"></i> فروع نبراس',
+                    nebOther: '<i class="fas fa-box-open"></i> منتجات نبراس الأخرى',
+                    sales: '<i class="fas fa-phone-alt"></i> تواصل مع خدمة المبيعات',
+                    customer: '<i class="fas fa-headset"></i> تواصل مع خدمة العملاء'
+                },
+                heroTitle: '<i class="fas fa-star"></i> شركة مصنع نبراس للبلاستيك',
+                heroText: 'من قلب المملكة العربية السعودية، نقدم حلولاً بلاستيكية عالمية بمعايير وجودة عالية.',
+                aboutTitle1: 'من نحن',
+                aboutText1: 'نحن شركة مصنع نبراس للبلاستيك، نقدم حلولاً متكاملة للصناعة والمقاولات بشفافية وجودة سعودية أصيلة. هدفنا تطوير منتجات مبتكرة وتوفير تجربة سلسة لكل عميل وزائر.',
+                aboutTitle2: 'رؤيتنا',
+                aboutText2: 'أن نصنع موقعاً عملاقاً ينظم الأعمال ويسهل العمليات، ويوفر مساحات واضحة للزائرين وصلاحيات دقيقة للإدارة، مع تجربة رقمية محترفة.',
+                serviceTitle1: '<i class="fas fa-tools"></i> خدمات التصنيع',
+                serviceText1: 'تصنيع منتجات بلاستيكية عالية الجودة مع مراعاة أعلى معايير الأمان والاستدامة المناسبة للمشاريع الكبيرة.',
+                serviceTitle2: '<i class="fas fa-shield-alt"></i> الدعم الفني',
+                serviceText2: 'فريق دعم متكامل لمتابعة الطلبات وحل المشكلات بسرعة، مع تقديم الدعم الفني للعملاء والمشاريع بحرفية.',
+                serviceTitle3: '<i class="fas fa-chart-line"></i> إدارة الجودة',
+                serviceText3: 'مراقبة جودة دقيقة لكل منتج ومرحلة إنتاجية، لضمان منتج نهائي يناسب متطلبات السوق ورضا العملاء.',
+                sectionTitle: 'هيكل الموقع وتنظيمه',
+                sectionSubtitle: 'أقسام واضحة للزوار، وصلاحيات منفصلة للإدارة.',
+                quickServicesTitle: 'خدمات سريعة للزائر',
+                quickServicesSubtitle: 'الأيقونات الخارجية والألبومات تدار من داخل لوحة الإدارة.',
+                visitorTitle: 'الزوار',
+                visitorText: 'يستطيع الزائر مشاهدة المنتجات والخدمات والتواصل، لكن لا يمكنه الوصول إلى إدارة المحتوى أو أدوات الإدارة.',
+                adminTitle: 'الإدارة',
+                adminText: 'الإدارة لديها لوحة تحكم خاصة، متعددة المستخدمين، وصلاحيات محددة للتحكم في المحتوى وتقارير الأداء.',
+                pvcTitle: '<i class="fas fa-layer-group"></i> حبيبات PVC',
+                pvcText: 'تركيبات مخصصة للصناعات المتطورة، جودة تضمن استمرارية خطوط إنتاجكم.',
+                wpcTitle: '<i class="fas fa-door-open"></i> أبواب WPC',
+                wpcText: 'أبواب تجمع بين فخامة الخشب وصمود البلاستيك، الحل الأمثل للمنازل العصرية.',
+                aluminumTitle: '<i class="fas fa-cog"></i> الألومنيوم',
+                aluminumText: 'منتجات ألومنيوم متينة وتصميمات ذكية تناسب مشاريع البناء والتشطيب.',
+                otherProductsAlert: 'قسم المنتجات الأخرى مفتوح. هنا يمكن عرض منتجات إضافية.',
+                adminComplaintsTitle: '<i class="fas fa-user-shield"></i> إدارة الشكاوى والصلاحيات',
+                adminComplaintsText: 'قسم محمي لإدارة الشكاوى وتعديل صلاحيات الموقع والأقسام.',
+                customerComplaintsTitle: '<i class="fas fa-search"></i> استفسار عن الشكاوى',
+                customerComplaintsText: 'تحقق من حالة شكواك بإدخال رقم الشكوى.',
+                complaintInquiryTitle: 'استفسار عن الشكوى',
+                complaintInquiryText: 'أدخل رقم الشكوى لمعرفة الحالة الحالية.',
+                complaintNumberLabel: 'رقم الشكوى:',
+                complaintStatusLabel: 'حالة الشكوى:',
+                complaintStatusPending: 'قيد المراجعة',
+                complaintStatusInProgress: 'جاري العمل عليها',
+                complaintStatusResolved: 'تم الحل',
+                complaintNotFound: 'لم يتم العثور على شكوى بهذا الرقم.',
+                complaintEnterNumber: 'يرجى إدخال رقم الشكوى.',
+                complaintUnknownStatus: 'حالة غير معروفة',
+                otherProductsTitle: '<i class="fas fa-boxes"></i> منتجات أخرى',
+                otherProductsText: 'مجموعة متنوعة من المنتجات الإضافية والحلول المبتكرة.',
+                adminAccessMessage: 'يجب تسجيل الدخول كمدير للوصول إلى هذا القسم.',
+                adminComplaintsAlert: 'قسم إدارة الشكاوى والصلاحيات مفتوح. هنا يمكن تعديل الموقع والأقسام.',
+                quickOtherTitle: 'منتجات نبراس الأخرى',
+                quickOtherText: 'اختيار سريع للوصول إلى منتجات نبراس المتعددة وإدارة خطوط الإنتاج المضافة.',
+                quickAluminumTitle: 'قسم الألومنيوم',
+                quickAluminumText: 'إدارة فورية لقسم الألومنيوم الجديد وإضافة المنتجات المخصصة له بسهولة.',
+                quickComplaintsTitle: 'قسم الشكاوى',
+                quickComplaintsText: 'مراقبة الشكاوى وإدارتها بسرعة مع متابعة لكل طلب.',
+                branchesTitle: 'فروع نبراس في المملكة',
+                branchesSubtitle: 'فروع نبراس بالمملكة مع رقم المبيعات لكل فرع.',
+                topSalesLabel: '<i class="fas fa-phone-alt"></i> مبيعات:',
+                topCustomerLabel: '<i class="fas fa-headset"></i> خدمة العملاء والشكاوى:',
+                topSalesButton: 'اتصال المبيعات',
+                topCustomerButton: 'اتصال خدمة العملاء',
+                topSmartButton: 'اتصال بالمندوب الأقرب',
+                adminDashboardTitle: 'لوحة تحكم الإدارة',
+                logoutText: '<i class="fas fa-sign-out-alt"></i> تسجيل خروج'
+            },
+            en: {
+                dir: 'ltr',
+                lang: 'en',
+                nav: {
+                    home: '<i class="fas fa-home"></i> Home',
+                    services: '<i class="fas fa-concierge-bell"></i> Services',
+                    admin: '<i class="fas fa-user-shield"></i> Admin - access & complaints',
+                    about: '<i class="fas fa-info-circle"></i> About',
+                    doors: '<i class="fas fa-door-open"></i> WPC Doors',
+                    nebOther: '<i class="fas fa-box-open"></i> Other Nebras Products',
+                    aluminum: '<i class="fas fa-cog"></i> Aluminum',
+                    products: '<i class="fas fa-industry"></i> PVC Products',
+                    branches: '<i class="fas fa-map-marker-alt"></i> Nebras Branches',
+                    sales: '<i class="fas fa-phone-alt"></i> Sales Support',
+                    customer: '<i class="fas fa-headset"></i> Customer Service'
+                },
+                heroTitle: '<i class="fas fa-star"></i> Nebras Plastic Factory Company',
+                heroText: 'From the heart of the Kingdom, we offer global plastic solutions with authentic Saudi standards.',
+                aboutTitle1: 'About Us',
+                aboutText1: 'Nebras Plastic Factory Company delivers integrated industrial and contracting solutions with transparency and premium Saudi quality. Our mission is to innovate products and create a smooth experience for every client and visitor.',
+                aboutTitle2: 'Our Vision',
+                aboutText2: 'To build a giant website that organizes work and simplifies operations, creating clear visitor areas and precise admin permissions with a professional digital experience.',
+                serviceTitle1: '<i class="fas fa-tools"></i> Manufacturing Services',
+                serviceText1: 'Manufacturing high-quality plastic products while observing the highest safety and sustainability standards for large projects.',
+                serviceTitle2: '<i class="fas fa-shield-alt"></i> Technical Support',
+                serviceText2: 'A full support team to track orders and resolve issues quickly, providing technical support to customers and projects professionally.',
+                serviceTitle3: '<i class="fas fa-chart-line"></i> Quality Management',
+                serviceText3: 'Precise quality control for every product and production stage to ensure a final product that meets market demands and customer satisfaction.',
+                sectionTitle: 'Site Structure and Organization',
+                sectionSubtitle: 'Clear sections for visitors, with separate permissions for administration.',
+                quickServicesTitle: 'Quick Visitor Services',
+                quickServicesSubtitle: 'External icons and albums are managed from the admin dashboard.',
+                visitorTitle: 'Visitors',
+                visitorText: 'Visitors can see products, services and contact information, but cannot access content management or admin tools.',
+                adminTitle: 'Administration',
+                adminText: 'Admin users have a private dashboard with multiple accounts and specific permissions to control content and performance reports.',
+                pvcTitle: '<i class="fas fa-layer-group"></i> PVC Granules',
+                pvcText: 'Custom compositions for advanced industries, ensuring the continuity of your production lines.',
+                wpcTitle: '<i class="fas fa-door-open"></i> WPC Doors',
+                wpcText: 'Doors that combine the elegance of wood and the durability of plastic, the perfect solution for modern homes.',
+                aluminumTitle: '<i class="fas fa-cog"></i> Aluminum',
+                aluminumText: 'Durable aluminum products and smart designs for construction and finishing projects.',
+                otherProductsAlert: 'Other Products section is open. Here you can display additional products.',
+                adminComplaintsTitle: '<i class="fas fa-user-shield"></i> Complaints & Permissions Management',
+                adminComplaintsText: 'Protected section for managing complaints and editing site permissions and sections.',
+                customerComplaintsTitle: '<i class="fas fa-search"></i> Complaint Inquiry',
+                customerComplaintsText: 'Check your complaint status by entering the complaint number.',
+                complaintInquiryTitle: 'Complaint Inquiry',
+                complaintInquiryText: 'Enter the complaint number to know the current status.',
+                complaintNumberLabel: 'Complaint Number:',
+                complaintStatusLabel: 'Complaint Status:',
+                complaintStatusPending: 'Under Review',
+                complaintStatusInProgress: 'In Progress',
+                complaintStatusResolved: 'Resolved',
+                complaintNotFound: 'No complaint found with this number.',
+                complaintEnterNumber: 'Please enter a complaint number.',
+                complaintUnknownStatus: 'Unknown status',
+                otherProductsTitle: '<i class="fas fa-boxes"></i> Other Products',
+                otherProductsText: 'A diverse range of additional products and innovative solutions.',
+                adminAccessMessage: 'You must log in as an admin to access this section.',
+                adminComplaintsAlert: 'Complaints and Permissions Management section is open. Here you can edit the site and sections.',
+                quickOtherTitle: 'Other Nebras Products',
+                quickOtherText: 'Quick access to multiple Nebras products and management of added production lines.',
+                quickAluminumTitle: 'Aluminum Section',
+                quickAluminumText: 'Instant management for the new aluminum section and easy product additions.',
+                quickComplaintsTitle: 'Complaints Section',
+                quickComplaintsText: 'Monitor complaints and manage requests quickly with clear tracking.',
+                branchesTitle: 'Nebras Branches in KSA',
+                branchesSubtitle: 'Nebras branches in KSA with a dedicated sales phone for each branch.',
+                topSalesLabel: '<i class="fas fa-phone-alt"></i> Sales:',
+                topCustomerLabel: '<i class="fas fa-headset"></i> Customer Service & Complaints:',
+                topSalesButton: 'Call Sales',
+                topCustomerButton: 'Call Customer Service',
+                topSmartButton: 'Nearest Sales Rep',
+                adminDashboardTitle: 'Admin Dashboard',
+                logoutText: '<i class="fas fa-sign-out-alt"></i> Logout'
+            },
+            zh: {
+                dir: 'ltr',
+                lang: 'zh',
+                nav: {
+                    home: '<i class="fas fa-home"></i> 首页',
+                    services: '<i class="fas fa-concierge-bell"></i> 服务',
+                    admin: '<i class="fas fa-user-shield"></i> 管理 - 权限与投诉',
+                    about: '<i class="fas fa-info-circle"></i> 关于我们',
+                    doors: '<i class="fas fa-door-open"></i> WPC 门',
+                    nebOther: '<i class="fas fa-box-open"></i> 其他 Nebras 产品',
+                    aluminum: '<i class="fas fa-cog"></i> 铝制品',
+                    products: '<i class="fas fa-industry"></i> PVC 产品',
+                    branches: '<i class="fas fa-map-marker-alt"></i> Nebras 分支',
+                    sales: '<i class="fas fa-phone-alt"></i> 销售支持',
+                    customer: '<i class="fas fa-headset"></i> 客户服务'
+                },
+                heroTitle: '<i class="fas fa-star"></i> Nebras 塑料工厂公司',
+                heroText: '我们来自沙特王国，为您提供符合沙特标准的全球塑料解决方案。',
+                aboutTitle1: '关于我们',
+                aboutText1: 'Nebras 塑料工厂公司提供一体化工业和承包解决方案，透明、高品质，旨在为每位客户和访客打造顺畅体验。',
+                aboutTitle2: '我们的愿景',
+                aboutText2: '建立一个大型网站，组织工作、简化流程，创建清晰的访客区域和精确的管理权限。',
+                serviceTitle1: '<i class="fas fa-tools"></i> 制造服务',
+                serviceText1: '制造高品质塑料产品，遵循最高安全和可持续标准。',
+                serviceTitle2: '<i class="fas fa-shield-alt"></i> 技术支持',
+                serviceText2: '全面支持团队快速跟进订单并解决问题，为客户和项目提供专业技术支持。',
+                serviceTitle3: '<i class="fas fa-chart-line"></i> 质量管理',
+                serviceText3: '对每个产品和生产阶段进行精确质量控制，确保最终产品满足市场需求。',
+                sectionTitle: '网站结构与组织',
+                sectionSubtitle: '为访客设置清晰区域，并分离管理权限。',
+                quickServicesTitle: '访客快速服务',
+                quickServicesSubtitle: '外部图标和相册可在管理面板中维护。',
+                visitorTitle: '访客',
+                visitorText: '访客可以查看产品、服务和联系信息，但无法访问内容管理或管理工具。',
+                adminTitle: '管理',
+                adminText: '管理员拥有私人仪表板、多账户和特定权限来控制内容和性能报告。',
+                pvcTitle: '<i class="fas fa-layer-group"></i> PVC 颗粒',
+                pvcText: '为先进行业定制，确保生产线持续运行。',
+                wpcTitle: '<i class="fas fa-door-open"></i> WPC 门',
+                wpcText: '结合木材优雅与塑料耐久性的门，为现代家居提供理想解决方案。',
+                aluminumTitle: '<i class="fas fa-cog"></i> 铝制品',
+                aluminumText: '耐用铝制产品和智能设计，适合建筑和装饰项目。',
+                adminComplaintsTitle: '<i class="fas fa-user-shield"></i> 投诉与权限管理',
+                adminComplaintsText: '受保护的部分，用于管理投诉和编辑网站权限和部分。',
+                customerComplaintsTitle: '<i class="fas fa-search"></i> 投诉查询',
+                customerComplaintsText: '输入投诉编号检查投诉状态。',
+                complaintInquiryTitle: '投诉查询',
+                complaintInquiryText: '输入投诉编号了解当前状态。',
+                complaintNumberLabel: '投诉编号：',
+                complaintStatusLabel: '投诉状态：',
+                complaintStatusPending: '审核中',
+                complaintStatusInProgress: '处理中',
+                complaintStatusResolved: '已解决',
+                complaintNotFound: '未找到此编号的投诉。',
+                otherProductsTitle: '<i class="fas fa-boxes"></i> 其他产品',
+                otherProductsText: '各种附加产品和创新解决方案的多样化范围。',
+                adminAccessMessage: '您必须以管理员身份登录才能访问此部分。',
+                adminComplaintsAlert: '投诉与权限管理部分已打开。在这里，您可以编辑网站和部分。',
+                otherProductsAlert: '其他产品部分已打开。在这里，您可以显示附加产品。',
+                quickOtherTitle: '其他 Nebras 产品',
+                quickOtherText: '快速访问多个 Nebras 产品并管理新增生产线。',
+                quickAluminumTitle: '铝制品部分',
+                quickAluminumText: '即时管理新的铝制品部分，轻松添加产品。',
+                quickComplaintsTitle: '投诉部分',
+                quickComplaintsText: '快速监控投诉并高效处理客户请求。',
+                branchesTitle: 'Nebras 在沙特的分支',
+                branchesSubtitle: '沙特各分支均提供独立销售电话。',
+                topSalesLabel: '<i class="fas fa-phone-alt"></i> 销售:',
+                topCustomerLabel: '<i class="fas fa-headset"></i> 客服与投诉:',
+                topSalesButton: '联系销售',
+                topCustomerButton: '联系客服',
+                topSmartButton: '最近销售代表',
+                adminDashboardTitle: '管理员仪表板',
+                logoutText: '<i class="fas fa-sign-out-alt"></i> 登出'
+            }
+        };
+
+        function setLanguage(lang) {
+            console.log('Setting language to:', lang);
+            currentLang = lang;
+            const text = siteText[lang] || siteText.ar;
+            console.log('Text object keys:', Object.keys(text));
+            document.documentElement.lang = text.lang;
+            document.documentElement.dir = text.dir;
+            console.log('Lang and dir set to:', text.lang, text.dir);
+
+            document.getElementById('nav-home').innerHTML = text.nav.home;
+            document.getElementById('nav-services').innerHTML = text.nav.services;
+            document.getElementById('nav-admin').innerHTML = text.nav.admin;
+            document.getElementById('nav-about').innerHTML = text.nav.about;
+            document.getElementById('nav-doors').innerHTML = text.nav.doors;
+            document.getElementById('nav-nebOther').innerHTML = text.nav.nebOther;
+            document.getElementById('nav-aluminum').innerHTML = text.nav.aluminum;
+            document.getElementById('nav-products').innerHTML = text.nav.products;
+            document.getElementById('nav-branches').innerHTML = text.nav.branches;
+            document.getElementById('nav-sales').innerHTML = text.nav.sales;
+            document.getElementById('nav-customer').innerHTML = text.nav.customer;
+
+            const heroTitle = document.getElementById('hero-title');
+            const heroText = document.getElementById('hero-text');
+            if (heroTitle) heroTitle.innerHTML = text.heroTitle;
+            if (heroText) heroText.textContent = text.heroText;
+            document.getElementById('admin-dashboard-title').textContent = text.adminDashboardTitle;
+            document.getElementById('admin-logout-label').innerHTML = text.logoutText;
+            document.getElementById('complaint-inquiry-title').textContent = text.complaintInquiryTitle;
+            document.getElementById('complaint-inquiry-text').textContent = text.complaintInquiryText;
+
+            document.getElementById('about-title-1').textContent = text.aboutTitle1;
+            document.getElementById('about-text-1').textContent = text.aboutText1;
+            document.getElementById('about-title-2').textContent = text.aboutTitle2;
+            document.getElementById('about-text-2').textContent = text.aboutText2;
+
+            document.getElementById('service-title-1').innerHTML = text.serviceTitle1;
+            document.getElementById('service-text-1').textContent = text.serviceText1;
+            document.getElementById('service-title-2').innerHTML = text.serviceTitle2;
+            document.getElementById('service-text-2').textContent = text.serviceText2;
+            document.getElementById('service-title-3').innerHTML = text.serviceTitle3;
+            document.getElementById('service-text-3').textContent = text.serviceText3;
+
+            document.getElementById('quick-services-title').textContent = text.quickServicesTitle;
+            document.getElementById('quick-services-subtitle').textContent = text.quickServicesSubtitle;
+            document.getElementById('structure-title').textContent = text.sectionTitle;
+            document.getElementById('structure-subtitle').textContent = text.sectionSubtitle;
+            document.getElementById('visitor-role-title').textContent = text.visitorTitle;
+            document.getElementById('visitor-role-text').textContent = text.visitorText;
+            document.getElementById('admin-role-title').textContent = text.adminTitle;
+            document.getElementById('admin-role-text').textContent = text.adminText;
+
+            document.getElementById('pvc-title').innerHTML = text.pvcTitle;
+            document.getElementById('pvc-text').textContent = text.pvcText;
+            document.getElementById('wpc-title').innerHTML = text.wpcTitle;
+            document.getElementById('wpc-text').textContent = text.wpcText;
+            document.getElementById('aluminum-title').innerHTML = text.aluminumTitle;
+            document.getElementById('aluminum-text').textContent = text.aluminumText;
+            document.getElementById('other-products-title').innerHTML = text.otherProductsTitle;
+            document.getElementById('other-products-text').textContent = text.otherProductsText;
+            document.getElementById('customer-complaints-title').innerHTML = text.customerComplaintsTitle;
+            document.getElementById('customer-complaints-text').textContent = text.customerComplaintsText;
+            document.getElementById('quick-other-title').textContent = text.quickOtherTitle;
+            document.getElementById('quick-other-text').textContent = text.quickOtherText;
+            document.getElementById('quick-aluminum-title').textContent = text.quickAluminumTitle;
+            document.getElementById('quick-aluminum-text').textContent = text.quickAluminumText;
+            document.getElementById('quick-complaints-title').textContent = text.quickComplaintsTitle;
+            document.getElementById('quick-complaints-text').textContent = text.quickComplaintsText;
+            document.getElementById('branches-title').textContent = text.branchesTitle;
+            document.getElementById('branches-subtitle').textContent = text.branchesSubtitle;
+            document.getElementById('top-sales-number').innerHTML = `${text.topSalesLabel} ${systemSettings.mainSalesPhone}`;
+            document.getElementById('top-customer-number').innerHTML = `${text.topCustomerLabel} ${systemSettings.customerServicePhone}`;
+            document.getElementById('top-call-sales-btn').textContent = text.topSalesButton;
+            document.getElementById('top-call-customer-btn').textContent = text.topCustomerButton;
+            document.getElementById('top-smart-routing-btn').textContent = text.topSmartButton;
+
+            document.getElementById('lang-menu').classList.remove('show');
+            displayBranches();
+        }
+
+    </script>
+
+</body>
+</html>
