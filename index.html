@@ -1167,7 +1167,12 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
+        const SUPABASE_URL = 'https://oedldllrjavofpeaputz.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_bt6rlHxu_pjc1xpkKEWOcg_HZ43JMR0';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
         let adminUsers = [
             { id: 'base-admin', username: 'NEBRASBASIC', password: 'NEBRASBASIC123', role: 'superadmin' }
         ];
@@ -1185,6 +1190,7 @@
         let currentAdmin = null;
         let currentLang = 'ar';
         let auditLogs = [];
+        let dynamicContentBlocks = {};
         let passwordRecoveryCode = null;
         let visitorIcons = [
             {
@@ -2009,12 +2015,66 @@
             }
         }
 
+        async function fetchDynamicContentBlocks() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('content_blocks')
+                    .select('key, title_ar, title_en, title_zh, body_ar, body_en, body_zh, is_active')
+                    .eq('is_active', true)
+                    .order('sort_order', { ascending: true });
+
+                if (error) {
+                    console.warn('Failed to fetch content blocks:', error.message || error);
+                    return;
+                }
+
+                dynamicContentBlocks = {};
+                (data || []).forEach(function(block) {
+                    if (block && block.key) {
+                        dynamicContentBlocks[block.key] = block;
+                    }
+                });
+            } catch (error) {
+                console.warn('Unexpected error while fetching content blocks:', error);
+            }
+        }
+
+        function getLocalizedBlockField(block, fieldPrefix, lang) {
+            if (!block) return '';
+            const normalizedLang = lang === 'en' || lang === 'zh' ? lang : 'ar';
+            const preferred = block[`${fieldPrefix}_${normalizedLang}`];
+            if (preferred && String(preferred).trim()) return preferred;
+            return block[`${fieldPrefix}_ar`] || '';
+        }
+
+        function applyDynamicAboutContent(lang) {
+            const introBlock = dynamicContentBlocks.about_intro;
+            const visionBlock = dynamicContentBlocks.about_vision;
+
+            const introTitle = document.getElementById('about-title-1');
+            const introText = document.getElementById('about-text-1');
+            const visionTitle = document.getElementById('about-title-2');
+            const visionText = document.getElementById('about-text-2');
+
+            if (introBlock) {
+                if (introTitle) introTitle.textContent = getLocalizedBlockField(introBlock, 'title', lang);
+                if (introText) introText.textContent = getLocalizedBlockField(introBlock, 'body', lang);
+            }
+            if (visionBlock) {
+                if (visionTitle) visionTitle.textContent = getLocalizedBlockField(visionBlock, 'title', lang);
+                if (visionText) visionText.textContent = getLocalizedBlockField(visionBlock, 'body', lang);
+            }
+        }
+
         // Toggle Mobile Menu - Already defined above
 
         // Language switch: one menu toggle, link clicks, close on outside click
         document.addEventListener('DOMContentLoaded', function() {
             loadSystemData();
             renderVisitorIcons();
+            fetchDynamicContentBlocks().then(function() {
+                applyDynamicAboutContent(currentLang || 'ar');
+            });
             const langBtn = document.querySelector('.lang-btn');
             if (langBtn) {
                 langBtn.addEventListener('click', toggleLangMenu);
@@ -2370,6 +2430,16 @@
             document.documentElement.dir = text.dir;
             console.log('Lang and dir set to:', text.lang, text.dir);
 
+            function setElementText(id, value, useHtml = false) {
+                const element = document.getElementById(id);
+                if (!element) return;
+                if (useHtml) {
+                    element.innerHTML = value;
+                } else {
+                    element.textContent = value;
+                }
+            }
+
             document.getElementById('nav-home').innerHTML = text.nav.home;
             document.getElementById('nav-services').innerHTML = text.nav.services;
             document.getElementById('nav-admin').innerHTML = text.nav.admin;
@@ -2386,57 +2456,59 @@
             const heroText = document.getElementById('hero-text');
             if (heroTitle) heroTitle.innerHTML = text.heroTitle;
             if (heroText) heroText.textContent = text.heroText;
-            document.getElementById('admin-dashboard-title').textContent = text.adminDashboardTitle;
-            document.getElementById('admin-logout-label').innerHTML = text.logoutText;
-            document.getElementById('complaint-inquiry-title').textContent = text.complaintInquiryTitle;
-            document.getElementById('complaint-inquiry-text').textContent = text.complaintInquiryText;
+            setElementText('admin-dashboard-title', text.adminDashboardTitle);
+            setElementText('admin-logout-label', text.logoutText, true);
+            setElementText('complaint-inquiry-title', text.complaintInquiryTitle);
+            setElementText('complaint-inquiry-text', text.complaintInquiryText);
 
-            document.getElementById('about-title-1').textContent = text.aboutTitle1;
-            document.getElementById('about-text-1').textContent = text.aboutText1;
-            document.getElementById('about-title-2').textContent = text.aboutTitle2;
-            document.getElementById('about-text-2').textContent = text.aboutText2;
+            setElementText('about-title-1', text.aboutTitle1);
+            setElementText('about-text-1', text.aboutText1);
+            setElementText('about-title-2', text.aboutTitle2);
+            setElementText('about-text-2', text.aboutText2);
+            applyDynamicAboutContent(lang);
 
-            document.getElementById('service-title-1').innerHTML = text.serviceTitle1;
-            document.getElementById('service-text-1').textContent = text.serviceText1;
-            document.getElementById('service-title-2').innerHTML = text.serviceTitle2;
-            document.getElementById('service-text-2').textContent = text.serviceText2;
-            document.getElementById('service-title-3').innerHTML = text.serviceTitle3;
-            document.getElementById('service-text-3').textContent = text.serviceText3;
+            setElementText('service-title-1', text.serviceTitle1, true);
+            setElementText('service-text-1', text.serviceText1);
+            setElementText('service-title-2', text.serviceTitle2, true);
+            setElementText('service-text-2', text.serviceText2);
+            setElementText('service-title-3', text.serviceTitle3, true);
+            setElementText('service-text-3', text.serviceText3);
 
-            document.getElementById('quick-services-title').textContent = text.quickServicesTitle;
-            document.getElementById('quick-services-subtitle').textContent = text.quickServicesSubtitle;
-            document.getElementById('structure-title').textContent = text.sectionTitle;
-            document.getElementById('structure-subtitle').textContent = text.sectionSubtitle;
-            document.getElementById('visitor-role-title').textContent = text.visitorTitle;
-            document.getElementById('visitor-role-text').textContent = text.visitorText;
-            document.getElementById('admin-role-title').textContent = text.adminTitle;
-            document.getElementById('admin-role-text').textContent = text.adminText;
+            setElementText('quick-services-title', text.quickServicesTitle);
+            setElementText('quick-services-subtitle', text.quickServicesSubtitle);
+            setElementText('structure-title', text.sectionTitle);
+            setElementText('structure-subtitle', text.sectionSubtitle);
+            setElementText('visitor-role-title', text.visitorTitle);
+            setElementText('visitor-role-text', text.visitorText);
+            setElementText('admin-role-title', text.adminTitle);
+            setElementText('admin-role-text', text.adminText);
 
-            document.getElementById('pvc-title').innerHTML = text.pvcTitle;
-            document.getElementById('pvc-text').textContent = text.pvcText;
-            document.getElementById('wpc-title').innerHTML = text.wpcTitle;
-            document.getElementById('wpc-text').textContent = text.wpcText;
-            document.getElementById('aluminum-title').innerHTML = text.aluminumTitle;
-            document.getElementById('aluminum-text').textContent = text.aluminumText;
-            document.getElementById('other-products-title').innerHTML = text.otherProductsTitle;
-            document.getElementById('other-products-text').textContent = text.otherProductsText;
-            document.getElementById('customer-complaints-title').innerHTML = text.customerComplaintsTitle;
-            document.getElementById('customer-complaints-text').textContent = text.customerComplaintsText;
-            document.getElementById('quick-other-title').textContent = text.quickOtherTitle;
-            document.getElementById('quick-other-text').textContent = text.quickOtherText;
-            document.getElementById('quick-aluminum-title').textContent = text.quickAluminumTitle;
-            document.getElementById('quick-aluminum-text').textContent = text.quickAluminumText;
-            document.getElementById('quick-complaints-title').textContent = text.quickComplaintsTitle;
-            document.getElementById('quick-complaints-text').textContent = text.quickComplaintsText;
-            document.getElementById('branches-title').textContent = text.branchesTitle;
-            document.getElementById('branches-subtitle').textContent = text.branchesSubtitle;
-            document.getElementById('top-sales-number').innerHTML = `${text.topSalesLabel} ${systemSettings.mainSalesPhone}`;
-            document.getElementById('top-customer-number').innerHTML = `${text.topCustomerLabel} ${systemSettings.customerServicePhone}`;
-            document.getElementById('top-call-sales-btn').textContent = text.topSalesButton;
-            document.getElementById('top-call-customer-btn').textContent = text.topCustomerButton;
-            document.getElementById('top-smart-routing-btn').textContent = text.topSmartButton;
+            setElementText('pvc-title', text.pvcTitle, true);
+            setElementText('pvc-text', text.pvcText);
+            setElementText('wpc-title', text.wpcTitle, true);
+            setElementText('wpc-text', text.wpcText);
+            setElementText('aluminum-title', text.aluminumTitle, true);
+            setElementText('aluminum-text', text.aluminumText);
+            setElementText('other-products-title', text.otherProductsTitle, true);
+            setElementText('other-products-text', text.otherProductsText);
+            setElementText('customer-complaints-title', text.customerComplaintsTitle, true);
+            setElementText('customer-complaints-text', text.customerComplaintsText);
+            setElementText('quick-other-title', text.quickOtherTitle);
+            setElementText('quick-other-text', text.quickOtherText);
+            setElementText('quick-aluminum-title', text.quickAluminumTitle);
+            setElementText('quick-aluminum-text', text.quickAluminumText);
+            setElementText('quick-complaints-title', text.quickComplaintsTitle);
+            setElementText('quick-complaints-text', text.quickComplaintsText);
+            setElementText('branches-title', text.branchesTitle);
+            setElementText('branches-subtitle', text.branchesSubtitle);
+            setElementText('top-sales-number', `${text.topSalesLabel} ${systemSettings.mainSalesPhone}`, true);
+            setElementText('top-customer-number', `${text.topCustomerLabel} ${systemSettings.customerServicePhone}`, true);
+            setElementText('top-call-sales-btn', text.topSalesButton);
+            setElementText('top-call-customer-btn', text.topCustomerButton);
+            setElementText('top-smart-routing-btn', text.topSmartButton);
 
-            document.getElementById('lang-menu').classList.remove('show');
+            const langMenu = document.getElementById('lang-menu');
+            if (langMenu) langMenu.classList.remove('show');
             displayBranches();
         }
 
