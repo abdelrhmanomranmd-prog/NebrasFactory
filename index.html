@@ -1191,6 +1191,7 @@
         let currentLang = 'ar';
         let auditLogs = [];
         let dynamicContentBlocks = {};
+        let dynamicSiteSections = {};
         let passwordRecoveryCode = null;
         let visitorIcons = [
             {
@@ -2066,6 +2067,80 @@
             }
         }
 
+        async function fetchDynamicSiteSections() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('site_sections')
+                    .select('key, title_ar, title_en, title_zh, description_ar, description_en, description_zh, icon_class, is_active')
+                    .eq('is_active', true)
+                    .order('sort_order', { ascending: true });
+
+                if (error) {
+                    console.warn('Failed to fetch site sections:', error.message || error);
+                    return;
+                }
+
+                dynamicSiteSections = {};
+                (data || []).forEach(function(section) {
+                    if (section && section.key) {
+                        dynamicSiteSections[section.key] = section;
+                    }
+                });
+            } catch (error) {
+                console.warn('Unexpected error while fetching site sections:', error);
+            }
+        }
+
+        function getLocalizedSectionField(section, fieldPrefix, lang) {
+            if (!section) return '';
+            const normalizedLang = lang === 'en' || lang === 'zh' ? lang : 'ar';
+            const preferred = section[`${fieldPrefix}_${normalizedLang}`];
+            if (preferred && String(preferred).trim()) return preferred;
+            return section[`${fieldPrefix}_ar`] || '';
+        }
+
+        function applyDynamicSectionContent(lang) {
+            const sectionBindings = [
+                { key: 'pvc', titleId: 'pvc-title', textId: 'pvc-text', fallbackIcon: 'fas fa-layer-group' },
+                { key: 'wpc', titleId: 'wpc-title', textId: 'wpc-text', fallbackIcon: 'fas fa-door-open' },
+                { key: 'aluminum', titleId: 'aluminum-title', textId: 'aluminum-text', fallbackIcon: 'fas fa-cog' },
+                { key: 'complaints', titleId: 'customer-complaints-title', textId: 'customer-complaints-text', fallbackIcon: 'fas fa-search' }
+            ];
+
+            sectionBindings.forEach(function(binding) {
+                const section = dynamicSiteSections[binding.key];
+                if (!section) return;
+
+                const titleElement = document.getElementById(binding.titleId);
+                const textElement = document.getElementById(binding.textId);
+                const iconClass = section.icon_class || binding.fallbackIcon;
+                const localizedTitle = getLocalizedSectionField(section, 'title', lang);
+                const localizedDescription = getLocalizedSectionField(section, 'description', lang);
+
+                if (titleElement && localizedTitle) {
+                    titleElement.innerHTML = `<i class="${iconClass}"></i> ${localizedTitle}`;
+                }
+                if (textElement && localizedDescription) {
+                    textElement.textContent = localizedDescription;
+                }
+            });
+
+            const branchesSection = dynamicSiteSections.branches;
+            if (branchesSection) {
+                const branchesTitleElement = document.getElementById('branches-title');
+                const branchesSubtitleElement = document.getElementById('branches-subtitle');
+                const localizedTitle = getLocalizedSectionField(branchesSection, 'title', lang);
+                const localizedDescription = getLocalizedSectionField(branchesSection, 'description', lang);
+
+                if (branchesTitleElement && localizedTitle) {
+                    branchesTitleElement.textContent = localizedTitle;
+                }
+                if (branchesSubtitleElement && localizedDescription) {
+                    branchesSubtitleElement.textContent = localizedDescription;
+                }
+            }
+        }
+
         // Toggle Mobile Menu - Already defined above
 
         // Language switch: one menu toggle, link clicks, close on outside click
@@ -2074,6 +2149,9 @@
             renderVisitorIcons();
             fetchDynamicContentBlocks().then(function() {
                 applyDynamicAboutContent(currentLang || 'ar');
+            });
+            fetchDynamicSiteSections().then(function() {
+                applyDynamicSectionContent(currentLang || 'ar');
             });
             const langBtn = document.querySelector('.lang-btn');
             if (langBtn) {
@@ -2501,6 +2579,7 @@
             setElementText('quick-complaints-text', text.quickComplaintsText);
             setElementText('branches-title', text.branchesTitle);
             setElementText('branches-subtitle', text.branchesSubtitle);
+            applyDynamicSectionContent(lang);
             setElementText('top-sales-number', `${text.topSalesLabel} ${systemSettings.mainSalesPhone}`, true);
             setElementText('top-customer-number', `${text.topCustomerLabel} ${systemSettings.customerServicePhone}`, true);
             setElementText('top-call-sales-btn', text.topSalesButton);
