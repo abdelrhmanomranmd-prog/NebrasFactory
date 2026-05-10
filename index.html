@@ -152,6 +152,37 @@
             visibility: visible;
         }
 
+        [dir="rtl"] .lang-menu {
+            left: auto;
+            right: 0;
+        }
+
+        [dir="ltr"] .lang-menu {
+            left: 0;
+            right: auto;
+        }
+
+        #lang-current-label {
+            font-weight: 700;
+            margin-inline-start: 4px;
+        }
+
+        .site-footer {
+            background: #0d2840;
+            color: rgba(255, 255, 255, 0.92);
+            padding: 26px 5%;
+            text-align: center;
+            font-size: 0.95rem;
+            line-height: 1.75;
+            border-top: 2px solid rgba(0, 168, 255, 0.35);
+        }
+
+        .site-footer p {
+            margin: 0;
+            max-width: 960px;
+            margin-inline: auto;
+        }
+
         /* Mobile Menu Button */
         .menu-toggle {
             display: none;
@@ -821,8 +852,9 @@
                 <li><a href="#" id="nav-customer"><i class="fas fa-headset"></i> تواصل مع خدمة العملاء</a></li>
                 <li>
                     <div class="lang-dropdown">
-                        <button class="lang-btn">
-                            <i class="fas fa-language"></i>
+                        <button type="button" class="lang-btn" id="lang-toggle-btn" aria-haspopup="true" aria-expanded="false" title="اختيار اللغة / Language">
+                            <i class="fas fa-language" aria-hidden="true"></i>
+                            <span id="lang-current-label">العربية</span>
                         </button>
                         <div class="lang-menu" id="lang-menu">
                             <a href="#" data-lang="ar">العربية</a>
@@ -949,6 +981,10 @@
         </div>
         <div class="about-grid" id="branches-grid"></div>
     </section>
+
+    <footer class="site-footer" id="site-footer">
+        <p id="footer-designer-line">التصميم والتطوير والبرمجة: المهندس عبدالرحمن عمران طرش</p>
+    </footer>
 
     <div class="admin-overlay" id="admin-overlay">
         <div class="admin-modal">
@@ -1218,6 +1254,10 @@
             }
             const menu = document.getElementById('lang-menu');
             menu.classList.toggle('show');
+            const btn = document.getElementById('lang-toggle-btn');
+            if (btn) {
+                btn.setAttribute('aria-expanded', menu.classList.contains('show') ? 'true' : 'false');
+            }
         }
 
         function toggleMenu() {
@@ -2147,11 +2187,13 @@
         document.addEventListener('DOMContentLoaded', function() {
             loadSystemData();
             renderVisitorIcons();
-            fetchDynamicContentBlocks().then(function() {
-                applyDynamicAboutContent(currentLang || 'ar');
-            });
-            fetchDynamicSiteSections().then(function() {
-                applyDynamicSectionContent(currentLang || 'ar');
+            Promise.all([
+                fetchDynamicContentBlocks(),
+                fetchDynamicSiteSections()
+            ]).then(function() {
+                setLanguage(currentLang || 'ar');
+            }).catch(function() {
+                setLanguage(currentLang || 'ar');
             });
             const langBtn = document.querySelector('.lang-btn');
             if (langBtn) {
@@ -2247,6 +2289,8 @@
                 const langMenu = document.getElementById('lang-menu');
                 if (langDropdown && langMenu && !langDropdown.contains(event.target)) {
                     langMenu.classList.remove('show');
+                    const tb = document.getElementById('lang-toggle-btn');
+                    if (tb) tb.setAttribute('aria-expanded', 'false');
                 }
 
                 const iconOverlay = document.getElementById('icon-overlay');
@@ -2343,7 +2387,9 @@
                 topCustomerButton: 'اتصال خدمة العملاء',
                 topSmartButton: 'اتصال بالمندوب الأقرب',
                 adminDashboardTitle: 'لوحة تحكم الإدارة',
-                logoutText: '<i class="fas fa-sign-out-alt"></i> تسجيل خروج'
+                logoutText: '<i class="fas fa-sign-out-alt"></i> تسجيل خروج',
+                currentLangLabel: 'العربية',
+                footerDesigner: 'التصميم والتطوير والبرمجة: المهندس عبدالرحمن عمران طرش'
             },
             en: {
                 dir: 'ltr',
@@ -2420,7 +2466,9 @@
                 topCustomerButton: 'Call Customer Service',
                 topSmartButton: 'Nearest Sales Rep',
                 adminDashboardTitle: 'Admin Dashboard',
-                logoutText: '<i class="fas fa-sign-out-alt"></i> Logout'
+                logoutText: '<i class="fas fa-sign-out-alt"></i> Logout',
+                currentLangLabel: 'English',
+                footerDesigner: 'Design & development: Eng. Abdelrahman Omran Tarash'
             },
             zh: {
                 dir: 'ltr',
@@ -2495,18 +2543,17 @@
                 topCustomerButton: '联系客服',
                 topSmartButton: '最近销售代表',
                 adminDashboardTitle: '管理员仪表板',
-                logoutText: '<i class="fas fa-sign-out-alt"></i> 登出'
+                logoutText: '<i class="fas fa-sign-out-alt"></i> 登出',
+                currentLangLabel: '中文',
+                footerDesigner: '网站设计与开发：Abdelrahman Omran Tarash 工程师'
             }
         };
 
         function setLanguage(lang) {
-            console.log('Setting language to:', lang);
             currentLang = lang;
             const text = siteText[lang] || siteText.ar;
-            console.log('Text object keys:', Object.keys(text));
             document.documentElement.lang = text.lang;
             document.documentElement.dir = text.dir;
-            console.log('Lang and dir set to:', text.lang, text.dir);
 
             function setElementText(id, value, useHtml = false) {
                 const element = document.getElementById(id);
@@ -2586,8 +2633,13 @@
             setElementText('top-call-customer-btn', text.topCustomerButton);
             setElementText('top-smart-routing-btn', text.topSmartButton);
 
+            setElementText('lang-current-label', text.currentLangLabel);
+            setElementText('footer-designer-line', text.footerDesigner);
+
             const langMenu = document.getElementById('lang-menu');
             if (langMenu) langMenu.classList.remove('show');
+            const langToggleBtn = document.getElementById('lang-toggle-btn');
+            if (langToggleBtn) langToggleBtn.setAttribute('aria-expanded', 'false');
             displayBranches();
         }
 
