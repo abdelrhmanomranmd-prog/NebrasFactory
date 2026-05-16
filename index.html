@@ -4,8 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title> شركة مصنع نبراس للبلاستيك</title>
-    <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!--
+      خلفيات الداشبورد — مجلد images/؛ الأسماء كما في ملفاتك بدون الامتداد في الشرح (الكود يجرّب تلقائياً jpg jpeg png webp avif).
+      بطاقات: background-about-us | background-our-vision | background-Manufacturing-services | customer-complaints-background | background-quality-management (بديل إملاء: backround-Quality-Management)
+      أيقونات زائر: pvc-background | background-nebras-branches | كتالوج رولات (اسم بدون أقواس أو مع أقواس)
+      منتجات أخرى: background-other-products
+    -->
+    <!-- Font Awesome — jsDelivr (إذا ظهرت مربعات بدل الأيقونات جرّب شبكة أخرى أو عطّل حظر الخطوط في المتصفح) -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -171,16 +178,183 @@
             background: #0d2840;
             color: rgba(255, 255, 255, 0.92);
             padding: 26px 5%;
-            text-align: center;
             font-size: 0.95rem;
             line-height: 1.75;
             border-top: 2px solid rgba(0, 168, 255, 0.35);
         }
 
-        .site-footer p {
-            margin: 0;
-            max-width: 960px;
+        .footer-designer-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: center;
+            gap: 14px 22px;
+            max-width: 1100px;
             margin-inline: auto;
+            text-align: center;
+        }
+
+        .footer-designer-text {
+            margin: 0;
+            flex: 1 1 260px;
+            max-width: 640px;
+        }
+
+        .footer-designer-actions {
+            display: inline-flex;
+            align-items: stretch;
+            gap: 10px;
+            flex-shrink: 0;
+        }
+
+        .footer-contact-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 10px 16px;
+            border-radius: 14px;
+            text-decoration: none;
+            font-weight: 700;
+            transition: transform 0.2s, filter 0.2s, opacity 0.2s;
+            border: none;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 1rem;
+        }
+
+        .footer-contact-btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.06);
+        }
+
+        .footer-contact-wa {
+            background: #25d366;
+            color: #fff;
+            font-size: 1.45rem;
+            min-width: 52px;
+            padding-inline: 14px;
+        }
+
+        .footer-contact-phone {
+            background: rgba(0, 168, 255, 0.18);
+            color: #fff;
+            border: 1px solid rgba(0, 168, 255, 0.45);
+        }
+
+        .footer-phone-num {
+            font-size: 0.95rem;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+
+        /* منصة التواصل الاجتماعي للشركة (روابط من لوحة الإدارة) */
+        .company-social-section {
+            padding: 36px 5% 44px;
+            background: linear-gradient(180deg, rgba(13, 40, 64, 0.06), rgba(0, 168, 255, 0.06));
+            border-top: 1px solid rgba(13, 40, 64, 0.08);
+        }
+
+        .company-social-links {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 14px;
+            margin-top: 18px;
+            max-width: 720px;
+            margin-inline: auto;
+        }
+
+        .company-social-btn {
+            display: inline-flex;
+            width: 54px;
+            height: 54px;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            font-size: 1.38rem;
+            text-decoration: none;
+            color: #fff;
+            transition: transform 0.2s, box-shadow 0.2s, filter 0.2s;
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.18);
+        }
+
+        .company-social-btn:hover {
+            transform: translateY(-3px);
+            filter: brightness(1.08);
+        }
+
+        .company-social-btn.soc-wa { background: #25d366; }
+        .company-social-btn.soc-fb { background: #1877f2; }
+        .company-social-btn.soc-ig {
+            background: linear-gradient(35deg, #f58529, #dd2a7b, #8134af);
+        }
+        .company-social-btn.soc-tt { background: #000000; }
+        .company-social-btn.soc-sn { background: #fffc00; color: #000; }
+
+        /* يظهر فقط عند وجود جلسة إدارة (body.admin-session) */
+        .only-admin-block {
+            display: none !important;
+        }
+
+        body.admin-session .only-admin-block {
+            display: block !important;
+        }
+
+        .dashboard-channels-panel {
+            margin: 8px 0 28px;
+            padding: 22px 24px;
+            border-radius: 16px;
+            background: rgba(13, 40, 64, 0.06);
+            border: 1px solid rgba(13, 40, 64, 0.1);
+            max-width: 920px;
+        }
+
+        .dashboard-channels-head h3 {
+            margin: 0 0 8px;
+            font-size: 1.15rem;
+            color: var(--primary-blue);
+        }
+
+        .dashboard-channels-hint {
+            margin: 0 0 14px;
+            font-size: 0.92rem;
+            color: rgba(13, 40, 64, 0.78);
+            line-height: 1.55;
+        }
+
+        .dashboard-channels-list {
+            list-style: none;
+            margin: 0 0 16px;
+            padding: 0;
+        }
+
+        .dashboard-channels-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+            font-size: 0.95rem;
+            display: flex;
+            align-items: baseline;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .dashboard-channels-list .ch-mark {
+            font-weight: 800;
+            min-width: 1.2em;
+        }
+
+        .dashboard-channels-list .ch-mark.ok { color: #1e8449; }
+        .dashboard-channels-list .ch-mark.no { color: #c0392b; }
+
+        .dashboard-channels-list small {
+            opacity: 0.85;
+            font-size: 0.85rem;
+        }
+
+        .dashboard-channels-edit-btn {
+            max-width: 280px;
         }
 
         /* Mobile Menu Button */
@@ -196,7 +370,8 @@
 
         /* قسم الترحيب */
         .hero { 
-            background: linear-gradient(rgba(13,40,64,0.8), rgba(13,40,64,0.8)), 
+            background-color: #152f48;
+            background-image: linear-gradient(rgba(13,40,64,0.82), rgba(13,40,64,0.82)),
                         url('images/background.png');
             background-size: cover; 
             background-position: center;
@@ -242,12 +417,30 @@
             font-size: 0.95rem;
         }
 
+        .site-structure {
+            padding: 44px 5% 24px;
+            box-sizing: border-box;
+        }
+
         .about-grid,
         .services-grid {
             display: grid;
             grid-template-columns: repeat(2, minmax(260px, 1fr));
-            gap: 25px;
-            margin-bottom: 60px;
+            gap: 38px;
+            margin-bottom: 72px;
+        }
+
+        #about.about-grid {
+            margin-top: 36px;
+            padding: 0 5%;
+            box-sizing: border-box;
+        }
+
+        #services.services-grid {
+            margin-top: 44px;
+            margin-bottom: 80px;
+            padding: 0 5%;
+            box-sizing: border-box;
         }
 
         .about-card,
@@ -481,6 +674,39 @@
             color: #ffd700;
         }
 
+        .admin-modal.icon-detail-modal {
+            max-width: 640px;
+        }
+
+        .icon-overlay-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+            gap: 10px;
+            margin: 16px 0 6px;
+            max-height: 220px;
+            overflow-y: auto;
+        }
+
+        .icon-overlay-gallery:empty,
+        .icon-overlay-gallery.grid-empty {
+            display: none;
+        }
+
+        .icon-overlay-gallery img {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+        }
+
+        .icon-overlay-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 6px;
+        }
+
         .admin-dashboard {
             display: none;
             padding: 60px 5%;
@@ -679,50 +905,168 @@
         .visitor-icons-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 18px;
-            margin-top: 20px;
+            gap: 32px;
+            margin-top: 28px;
         }
 
-        .visitor-icon-card {
+        /* بطاقات spotlight: خلفية صورة + أيقونة دائرية أعلى اليمين + نص أبيض أسفل التدرج */
+        .spotlight-card {
             position: relative;
-            min-height: 190px;
-            background: linear-gradient(135deg, rgba(12, 66, 110, 0.8), rgba(8, 40, 67, 0.9));
+            min-height: 200px;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.12);
             background-size: cover;
             background-position: center;
-            border-radius: 16px;
-            padding: 16px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.12);
-            cursor: pointer;
             border: 1px solid rgba(13,40,64,0.08);
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
             isolation: isolate;
         }
 
-        .visitor-icon-card::before {
+        .spotlight-card::before {
             content: '';
             position: absolute;
             inset: 0;
-            background: linear-gradient(0deg, rgba(0, 0, 0, 0.62), rgba(0, 0, 0, 0.18));
+            background: linear-gradient(0deg, rgba(0, 0, 0, 0.72), rgba(0, 0, 0, 0.22));
             z-index: 0;
+            pointer-events: none;
         }
 
-        .visitor-icon-card i {
-            font-size: 1.5rem;
+        .spotlight-card .card-icon {
+            top: 18px;
+            right: 18px;
+            width: 56px;
+            height: 56px;
+            font-size: 1.35rem;
+            transition: transform 0.22s ease, filter 0.22s ease, box-shadow 0.22s ease;
+        }
+
+        /* دوائر الأيقونات — لون وتدرج يعبّران عن معنى كل بطاقة */
+        .spotlight-card--about-who .card-icon {
+            background: linear-gradient(148deg, #1a252f 0%, #3d566e 42%, #95a5a6 100%);
+            border-color: rgba(236, 240, 241, 0.38);
+            box-shadow: 0 14px 34px rgba(26, 37, 47, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+        }
+
+        .spotlight-card--about-vision .card-icon {
+            background: linear-gradient(148deg, #1a0a2e 0%, #5b21b6 48%, #22d3ee 100%);
+            border-color: rgba(165, 243, 252, 0.42);
+            box-shadow: 0 16px 38px rgba(91, 33, 182, 0.48), 0 0 28px rgba(34, 211, 238, 0.22);
+        }
+
+        .spotlight-card--service-mfg .card-icon {
+            background: linear-gradient(148deg, #4a2808 0%, #c2410c 46%, #fbbf24 100%);
+            border-color: rgba(254, 215, 170, 0.45);
+            box-shadow: 0 14px 36px rgba(194, 65, 12, 0.48);
+        }
+
+        .spotlight-card--service-support .card-icon {
+            background: linear-gradient(148deg, #042f2e 0%, #0f766e 50%, #5eead4 100%);
+            border-color: rgba(167, 243, 208, 0.48);
+            box-shadow: 0 14px 34px rgba(15, 118, 110, 0.45);
+        }
+
+        .spotlight-card--service-quality .card-icon {
+            background: linear-gradient(148deg, #1e1b4b 0%, #4338ca 46%, #a5b4fc 100%);
+            border-color: rgba(199, 210, 254, 0.42);
+            box-shadow: 0 16px 38px rgba(67, 56, 202, 0.46);
+        }
+
+        .visitor-icon-card.spotlight-card .card-icon {
+            background: linear-gradient(148deg, #0a1628 0%, #155e94 48%, #38bdf8 100%);
+            border-color: rgba(125, 211, 252, 0.4);
+            box-shadow: 0 14px 34px rgba(21, 94, 148, 0.48);
+        }
+
+        .spotlight-card .card-icon:hover {
+            transform: scale(1.09);
+            filter: brightness(1.07);
+        }
+
+        .spotlight-card .card-content {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            padding: 20px 18px 22px;
+            background: linear-gradient(transparent, rgba(0,0,0,0.9));
             color: #ffffff;
-            margin-bottom: 8px;
-            position: relative;
+            box-sizing: border-box;
+            text-align: start;
             z-index: 1;
         }
 
-        .visitor-icon-card h3,
-        .visitor-icon-card p {
-            position: relative;
-            z-index: 1;
+        .spotlight-card .card-content h3 {
+            font-size: 1.28rem;
+            margin: 0 0 8px;
             color: #ffffff;
-            text-shadow: 0 2px 6px rgba(0,0,0,0.35);
+            font-weight: 700;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.45);
+        }
+
+        .spotlight-card .card-content p {
+            font-size: 0.92rem;
+            line-height: 1.65;
+            margin: 0;
+            color: rgba(255,255,255,0.94);
+        }
+
+        .spotlight-card .visitor-target-caption {
+            font-size: 0.88rem;
+            font-weight: 600;
+            opacity: 0.94;
+            margin-top: 6px;
+            line-height: 1.4;
+        }
+
+        .services-grid .spotlight-card {
+            min-height: 240px;
+        }
+
+        #about.about-grid .spotlight-card {
+            min-height: 220px;
+        }
+
+        .spotlight-card--about-who {
+            background-image: url("images/background-about-us.jpg");
+        }
+
+        .spotlight-card--about-vision {
+            background-image: url("images/background-our-vision.jpg");
+        }
+
+        .spotlight-card--service-mfg {
+            background-image: url("images/background-Manufacturing-services.jpg");
+        }
+
+        .spotlight-card--service-support {
+            background-image: url("images/customer-complaints-background.jpg");
+        }
+
+        .spotlight-card--service-quality {
+            background-image: url("images/background-quality-management.jpg");
+        }
+
+        .color-catalog-section {
+            margin-bottom: 48px;
+        }
+
+        .color-catalog-inner {
+            max-width: 920px;
+            margin: 12px auto 0;
+            padding: 26px 24px;
+            background: #ffffff;
+            border-radius: 18px;
+            box-shadow: 0 14px 42px rgba(13, 40, 64, 0.1);
+            border: 1px solid rgba(13, 40, 64, 0.06);
+            line-height: 1.85;
+            color: #2c3e50;
+            font-size: 1rem;
+        }
+
+        .visitor-icon-card.spotlight-card {
+            cursor: pointer;
+            min-height: 190px;
         }
 
         /* قسم جديد: تقارير المبيعات */
@@ -765,9 +1109,13 @@
             background-position: center;
         }
 
+        .card-other-products {
+            --other-products-bg: none;
+        }
+
         .card-other-products::before {
             background: linear-gradient(135deg, rgba(52, 73, 94, 0.68), rgba(44, 62, 80, 0.82)),
-                        url('images/other-products-background.jpeg');
+                        var(--other-products-bg);
             background-size: cover;
             background-position: center;
         }
@@ -878,32 +1226,57 @@
     </section>
 
     <section id="about" class="about-grid">
-        <div class="about-card">
-            <h3 id="about-title-1">من نحن</h3>
-            <p id="about-text-1">نحن شركة مصنع نبراس للبلاستيك، نقدم حلولاً متكاملة للصناعة والمقاولات بشفافية وجودة سعودية أصيلة. هدفنا تطوير منتجات مبتكرة وتوفير تجربة سلسة لكل عميل وزائر.</p>
+        <div class="spotlight-card spotlight-card--about-who">
+            <div class="card-icon" aria-hidden="true"><i class="fas fa-industry"></i></div>
+            <div class="card-content">
+                <h3 id="about-title-1">من نحن</h3>
+                <p id="about-text-1">نحن شركة مصنع نبراس للبلاستيك، نقدم حلولاً متكاملة للصناعة والمقاولات بشفافية وجودة سعودية أصيلة. هدفنا تطوير منتجات مبتكرة وتوفير تجربة سلسة لكل عميل وزائر.</p>
+            </div>
         </div>
-        <div class="about-card">
-            <h3 id="about-title-2">رؤيتنا</h3>
-            <p id="about-text-2">أن نصنع موقعاً عملاقاً ينظم الأعمال ويسهل العمليات، ويوفر مساحات واضحة للزائرين وصلاحيات دقيقة للإدارة، مع تجربة رقمية محترفة.</p>
+        <div class="spotlight-card spotlight-card--about-vision">
+            <div class="card-icon" aria-hidden="true"><i class="fas fa-eye"></i></div>
+            <div class="card-content">
+                <h3 id="about-title-2">رؤيتنا</h3>
+                <p id="about-text-2">أن نصنع موقعاً عملاقاً ينظم الأعمال ويسهل العمليات، ويوفر مساحات واضحة للزائرين وصلاحيات دقيقة للإدارة، مع تجربة رقمية محترفة.</p>
+            </div>
         </div>
     </section>
 
     <section id="services" class="services-grid">
-        <div class="service-card">
-            <h3 id="service-title-1"><i class="fas fa-tools"></i> خدمات التصنيع</h3>
-            <p id="service-text-1">تصنيع منتجات بلاستيكية عالية الجودة مع مراعاة أعلى معايير الأمان والاستدامة المناسبة للمشاريع الكبيرة.</p>
+        <div class="spotlight-card spotlight-card--service-mfg">
+            <div class="card-icon" aria-hidden="true"><i class="fas fa-tools"></i></div>
+            <div class="card-content">
+                <h3 id="service-title-1">خدمات التصنيع</h3>
+                <p id="service-text-1">تصنيع منتجات بلاستيكية عالية الجودة مع مراعاة أعلى معايير الأمان والاستدامة المناسبة للمشاريع الكبيرة.</p>
+            </div>
         </div>
-        <div class="service-card">
-            <h3 id="service-title-2"><i class="fas fa-shield-alt"></i> الدعم الفني</h3>
-            <p id="service-text-2">فريق دعم متكامل لمتابعة الطلبات وحل المشكلات بسرعة، مع تقديم الدعم الفني للعملاء والمشاريع بحرفية.</p>
+        <div class="spotlight-card spotlight-card--service-support">
+            <div class="card-icon" aria-hidden="true"><i class="fas fa-shield-alt"></i></div>
+            <div class="card-content">
+                <h3 id="service-title-2">الدعم الفني</h3>
+                <p id="service-text-2">فريق دعم متكامل لمتابعة الطلبات وحل المشكلات بسرعة، مع تقديم الدعم الفني للعملاء والمشاريع بحرفية.</p>
+            </div>
         </div>
-        <div class="service-card">
-            <h3 id="service-title-3"><i class="fas fa-chart-line"></i> إدارة الجودة</h3>
-            <p id="service-text-3">مراقبة جودة دقيقة لكل منتج ومرحلة إنتاجية، لضمان منتج نهائي يناسب متطلبات السوق ورضا العملاء.</p>
+        <div class="spotlight-card spotlight-card--service-quality">
+            <div class="card-icon" aria-hidden="true"><i class="fas fa-chart-line"></i></div>
+            <div class="card-content">
+                <h3 id="service-title-3">إدارة الجودة</h3>
+                <p id="service-text-3">مراقبة جودة دقيقة لكل منتج ومرحلة إنتاجية، لضمان منتج نهائي يناسب متطلبات السوق ورضا العملاء.</p>
+            </div>
         </div>
     </section>
 
-    <section class="site-structure">
+    <section id="color-catalog" class="site-structure color-catalog-section">
+        <div class="section-title">
+            <h2 id="color-catalog-title">كتالوج ألوان نبراس — رولات</h2>
+            <span id="color-catalog-subtitle">ألوان وتشطيبات متوفرة ضمن خط إنتاج نبراس للبلاستيك.</span>
+        </div>
+        <div class="color-catalog-inner" id="color-catalog-body">
+            يعرض هذا القسم دليل ألوان ورولات المنتجات المتاحة للطلب والاستعلام من المبيعات. للحصول على عينات أو كود لون محدد، تواصل مع فريق المبيعات أو أقرب فرع.
+        </div>
+    </section>
+
+    <section class="site-structure only-admin-block" id="section-site-governance">
         <div class="section-title">
             <h2 id="structure-title">هيكل الموقع وتنظيمه</h2>
             <span id="structure-subtitle">أقسام واضحة للزوار، وصلاحيات منفصلة للإدارة.</span>
@@ -982,8 +1355,27 @@
         <div class="about-grid" id="branches-grid"></div>
     </section>
 
+    <section id="company-social" class="company-social-section site-structure" style="display: none;">
+        <div class="section-title">
+            <h2 id="company-social-title">منصة التواصل — مصنع نبراس للبلاستيك</h2>
+            <span id="company-social-subtitle">تابعوا قنوات مصنع نبراس الرسمية.</span>
+        </div>
+        <div id="company-social-links" class="company-social-links" aria-label="وسائل التواصل"></div>
+    </section>
+
     <footer class="site-footer" id="site-footer">
-        <p id="footer-designer-line">التصميم والتطوير والبرمجة: المهندس عبدالرحمن عمران طرش</p>
+        <div class="footer-designer-row">
+            <p id="footer-designer-line" class="footer-designer-text">التصميم والتطوير والبرمجة: المهندس عبدالرحمن عمران طرش — للتواصل:</p>
+            <div class="footer-designer-actions">
+                <a id="footer-designer-wa" class="footer-contact-btn footer-contact-wa" href="#" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp المهندس">
+                    <i class="fab fa-whatsapp" aria-hidden="true"></i>
+                </a>
+                <a id="footer-designer-tel" class="footer-contact-btn footer-contact-phone" href="tel:" aria-label="اتصال بالمهندس">
+                    <i class="fas fa-mobile-screen-button" aria-hidden="true"></i>
+                    <span id="footer-designer-phone-display" class="footer-phone-num">0535336185</span>
+                </a>
+            </div>
+        </div>
     </footer>
 
     <div class="admin-overlay" id="admin-overlay">
@@ -1022,6 +1414,15 @@
                 <p class="admin-role" id="admin-role-name"></p>
             </div>
             <a class="admin-action" href="#" id="admin-logout-label" onclick="logoutAdmin()"><i class="fas fa-sign-out-alt"></i> تسجيل خروج</a>
+        </div>
+        <div class="dashboard-channels-panel" id="dashboard-channels-panel">
+            <div class="dashboard-channels-head">
+                <h3 id="dashboard-channels-title">حالة قنوات التواصل الاجتماعي</h3>
+                <p id="dashboard-channels-hint" class="dashboard-channels-hint"></p>
+            </div>
+            <ul id="dashboard-channels-list" class="dashboard-channels-list"></ul>
+            <button type="button" class="primary dashboard-channels-edit-btn" id="dashboard-channels-edit-btn" onclick="openSystemSettingsForChannels()">تعديل روابط التواصل</button>
+            <p id="dashboard-channels-superadmin-note" class="status" style="display: none;"></p>
         </div>
         <div class="dashboard-actions">
             <div class="quick-card" onclick="openUserManagement()">
@@ -1168,9 +1569,18 @@
     <div class="admin-section" id="system-settings">
         <div class="admin-modal">
             <h2>إعدادات النظام</h2>
+            <p class="status">الأرقام الإلزامية للعرض والاتصال:</p>
             <input id="setting-sales-phone" type="text" placeholder="رقم المبيعات العام">
             <input id="setting-customer-phone" type="text" placeholder="رقم خدمة العملاء والشكاوى">
             <input id="setting-recovery-email" type="email" placeholder="إيميل استرجاع الإدارة">
+            <hr style="margin:14px 0;border:none;border-top:1px solid rgba(0,0,0,0.12);">
+            <p class="status">التذييل والمنصات (اختياري — يُحفظ مع الموقع):</p>
+            <input id="setting-designer-phone" type="text" placeholder="رقم المهندس المعروض في التذييل (مثال: 0535336185)">
+            <input id="setting-social-whatsapp" type="url" placeholder="رابط واتساب كامل (اتركه فارغًا ليُستخدم الرقم أعلاه)">
+            <input id="setting-social-tiktok" type="url" placeholder="رابط TikTok">
+            <input id="setting-social-facebook" type="url" placeholder="رابط Facebook">
+            <input id="setting-social-instagram" type="url" placeholder="رابط Instagram">
+            <input id="setting-social-snapchat" type="url" placeholder="رابط Snapchat">
             <button onclick="saveSystemSettings()">حفظ الإعدادات</button>
             <button onclick="closeAdminSection('system-settings')">إغلاق</button>
         </div>
@@ -1196,10 +1606,14 @@
     </div>
 
     <div class="admin-overlay" id="icon-overlay">
-        <div class="admin-modal">
+        <div class="admin-modal icon-detail-modal">
             <h2 id="icon-overlay-title">تفاصيل القسم</h2>
             <p id="icon-overlay-text">معلومات القسم ستظهر هنا.</p>
-            <button class="secondary" onclick="closeIconOverlay()">إغلاق</button>
+            <div id="icon-overlay-gallery" class="icon-overlay-gallery"></div>
+            <div class="icon-overlay-actions">
+                <button type="button" class="primary" id="icon-overlay-go-btn" onclick="iconOverlayPrimaryClick()">انتقل إلى القسم</button>
+                <button type="button" class="secondary" onclick="closeIconOverlay()">إغلاق</button>
+            </div>
         </div>
     </div>
 
@@ -1218,41 +1632,160 @@
             hr: ['users', 'audit']
         };
         const allowedRoles = Object.keys(rolePermissions);
-        let systemSettings = {
+        const DEFAULT_SYSTEM_SETTINGS = {
             mainSalesPhone: '0555092383',
             customerServicePhone: '0579394158',
-            recoveryEmail: 'admin@nebrasfactory.com'
+            recoveryEmail: 'admin@nebrasfactory.com',
+            designerPhone: '0535336185',
+            socialWhatsApp: '',
+            socialTiktok: '',
+            socialFacebook: '',
+            socialInstagram: '',
+            socialSnapchat: ''
         };
+        let systemSettings = Object.assign({}, DEFAULT_SYSTEM_SETTINGS);
         let currentAdmin = null;
         let currentLang = 'ar';
         let auditLogs = [];
         let dynamicContentBlocks = {};
         let dynamicSiteSections = {};
         let passwordRecoveryCode = null;
-        let visitorIcons = [
+        /** أيقونات الزوار المدمجة — العناوين تُعرض من siteText عبر titleKey عند تغيير اللغة */
+        const DEFAULT_VISITOR_ICONS = [
             {
                 id: 1,
+                titleKey: 'visitorQuickCatalogProducts',
                 title: 'كتالوج المنتجات',
                 iconClass: 'fas fa-images',
                 target: '#products',
-                album: ['images/pvc-background.avif', 'images/wpc-background.avif']
+                album: ['images/pvc-background.jpg']
             },
             {
                 id: 2,
+                titleKey: 'visitorQuickBranches',
                 title: 'فروع نبراس',
                 iconClass: 'fas fa-map-marked-alt',
                 target: '#branches',
-                album: ['images/branch-qassim-main.jpg']
+                album: ['images/background-nebras-branches.jpg']
+            },
+            {
+                id: 3,
+                titleKey: 'visitorQuickColorRolls',
+                title: 'كتالوج ألوان نبراس (رولات)',
+                iconClass: 'fas fa-swatchbook',
+                target: '#color-catalog',
+                album: ['images/background-Nebras-colour-catalogue-rolls.jpg']
             }
         ];
 
-        // Helper Functions - Define at the top
+        let visitorIcons = [];
+
+        function ensureBuiltinVisitorIcons() {
+            if (!Array.isArray(visitorIcons)) visitorIcons = [];
+            const byId = {};
+            visitorIcons.forEach(function(i) {
+                if (i && i.id != null) byId[i.id] = i;
+            });
+            DEFAULT_VISITOR_ICONS.forEach(function(def) {
+                if (!byId[def.id]) {
+                    visitorIcons.push(Object.assign({}, def));
+                    byId[def.id] = visitorIcons[visitorIcons.length - 1];
+                } else {
+                    const cur = byId[def.id];
+                    if (def.titleKey && !cur.titleKey) cur.titleKey = def.titleKey;
+                    if (def.id >= 1 && def.id <= 3 && def.album && def.album.length) {
+                        cur.album = def.album.slice();
+                    }
+                }
+            });
+            visitorIcons.sort(function(a, b) { return (a.id || 0) - (b.id || 0); });
+        }
+
+        function getVisitorIconDisplayTitle(icon) {
+            if (!icon) return '';
+            const lang = currentLang || 'ar';
+            const t = siteText[lang] || siteText.ar;
+            if (icon.titleKey && t[icon.titleKey]) return String(t[icon.titleKey]);
+            return String(icon.title || '');
+        }
+
+        /** أسماء الملفات بدون مسار ولا امتداد — نجرّب jpg/png/webp… تلقائياً */
+        const VISITOR_ICON_BG_BASES = {
+            1: ['pvc-background'],
+            2: ['background-nebras-branches'],
+            3: ['background-Nebras-colour-catalogue-rolls', 'background-Nebras-colour-catalogue-(rolls)']
+        };
+
+        function buildUrlList(baseNames) {
+            const exts = ['jpg', 'jpeg', 'png', 'webp', 'avif'];
+            const urls = [];
+            (baseNames || []).forEach(function(base) {
+                const clean = String(base || '').trim();
+                if (!clean) return;
+                exts.forEach(function(ext) {
+                    urls.push('images/' + clean + '.' + ext);
+                });
+            });
+            return urls;
+        }
+
+        function tryUrls(el, urls, index) {
+            if (!el || !urls || index >= urls.length) return;
+            const url = urls[index];
+            const img = new Image();
+            img.onload = function() {
+                el.style.backgroundImage = 'url("' + url.replace(/\\/g, '/') + '")';
+                el.style.backgroundSize = 'cover';
+                el.style.backgroundPosition = 'center';
+            };
+            img.onerror = function() {
+                tryUrls(el, urls, index + 1);
+            };
+            img.src = url;
+        }
+
+        function tryUrlsOtherProducts(el, urls, index) {
+            if (!el || !urls || index >= urls.length) return;
+            const url = urls[index];
+            const img = new Image();
+            img.onload = function() {
+                el.style.setProperty('--other-products-bg', 'url("' + url.replace(/\\/g, '/') + '")');
+            };
+            img.onerror = function() {
+                tryUrlsOtherProducts(el, urls, index + 1);
+            };
+            img.src = url;
+        }
+
+        function resolveDashboardBackgrounds() {
+            const spotlightList = [
+                ['.spotlight-card--about-who', ['background-about-us']],
+                ['.spotlight-card--about-vision', ['background-our-vision']],
+                ['.spotlight-card--service-mfg', ['background-Manufacturing-services', 'background-manufacturing-services']],
+                ['.spotlight-card--service-support', ['customer-complaints-background']],
+                ['.spotlight-card--service-quality', ['background-quality-management', 'backround-Quality-Management']]
+            ];
+            spotlightList.forEach(function(row) {
+                const node = document.querySelector(row[0]);
+                if (node) tryUrls(node, buildUrlList(row[1]), 0);
+            });
+
+            document.querySelectorAll('.visitor-icon-card[data-icon-id]').forEach(function(node) {
+                const id = parseInt(node.getAttribute('data-icon-id'), 10);
+                const bases = VISITOR_ICON_BG_BASES[id];
+                if (bases && bases.length) tryUrls(node, buildUrlList(bases), 0);
+            });
+
+            const otherCard = document.querySelector('.product-card.card-other-products');
+            if (otherCard) tryUrlsOtherProducts(otherCard, buildUrlList(['background-other-products']), 0);
+        }
         function toggleLangMenu(event) {
             if (event) {
                 event.preventDefault();
                 event.stopPropagation();
             }
             const menu = document.getElementById('lang-menu');
+            if (!menu) return;
             menu.classList.toggle('show');
             const btn = document.getElementById('lang-toggle-btn');
             if (btn) {
@@ -1296,14 +1829,28 @@
         ];
 
         let branchesData = [
-            { id: 1, city: 'القصيم - الفرع الرئيسي', salesPhone: '0555092383', image: 'branch-qassim-main.jpg' },
-            { id: 2, city: 'الرياض', salesPhone: '0536694464', image: 'branch-riyadh.jpg' },
-            { id: 3, city: 'المدينة', salesPhone: '0558358306', image: 'branch-madinah.webp' },
-            { id: 4, city: 'الأحساء', salesPhone: '0558818530', image: 'branch-ahsa.jpg' },
-            { id: 5, city: 'خميس مشيط', salesPhone: '0554501661', image: 'branch-khamis-mushait.jpg' },
-            { id: 6, city: 'تبوك', salesPhone: '0555278214', image: 'branch-tabuk.jpg' },
-            { id: 7, city: 'جدة', salesPhone: '96655710226', image: 'branch-jeddah.jpg' }
+            { id: 1, city: 'القصيم - الفرع الرئيسي', city_en: 'Qassim — Main Branch', city_zh: '盖西姆（总部）', salesPhone: '0555092383', image: 'branch-qassim-main.jpg' },
+            { id: 2, city: 'الرياض', city_en: 'Riyadh', city_zh: '利雅得', salesPhone: '0536694464', image: 'branch-riyadh.jpg' },
+            { id: 3, city: 'المدينة', city_en: 'Madinah', city_zh: '麦地那', salesPhone: '0558358306', image: 'branch-madinah.webp' },
+            { id: 4, city: 'الأحساء', city_en: 'Al-Ahsa', city_zh: '艾赫萨', salesPhone: '0558818530', image: 'branch-ahsa.jpg' },
+            { id: 5, city: 'خميس مشيط', city_en: 'Khamis Mushait', city_zh: '海米斯穆谢特', salesPhone: '0554501661', image: 'branch-khamis-mushait.jpg' },
+            { id: 6, city: 'تبوك', city_en: 'Tabuk', city_zh: '塔布克', salesPhone: '0555278214', image: 'branch-tabuk.jpg' },
+            { id: 7, city: 'جدة', city_en: 'Jeddah', city_zh: '吉达', salesPhone: '96655710226', image: 'branch-jeddah.jpg' }
         ];
+
+        function getBranchDisplayName(branch, lang) {
+            if (!branch) return '';
+            const l = lang === 'en' || lang === 'zh' ? lang : 'ar';
+            if (l === 'en' && branch.city_en && String(branch.city_en).trim()) return String(branch.city_en).trim();
+            if (l === 'zh' && branch.city_zh && String(branch.city_zh).trim()) return String(branch.city_zh).trim();
+            return String(branch.city || '').trim();
+        }
+
+        function branchSmartDial(branchId) {
+            const branch = branchesData.find(function(b) { return b.id === branchId; });
+            if (!branch) return;
+            dialNumber(getNearestSalesNumber(branch.city).phone);
+        }
 
         function normalizeBranchImagePath(imagePath) {
             if (!imagePath) return '';
@@ -1314,15 +1861,172 @@
             return `images/${trimmed}`;
         }
 
-        function normalizeVisitorIconImagePath(icon) {
-            if (!icon || !Array.isArray(icon.album) || !icon.album.length) return '';
-            const firstImage = icon.album.find(item => typeof item === 'string' && item.trim());
-            if (!firstImage) return '';
-            const trimmed = firstImage.trim();
-            if (/^(https?:|data:|blob:)/i.test(trimmed) || trimmed.startsWith('images/')) {
-                return trimmed;
+        function escapeHtmlAttr(value) {
+            return String(value || '')
+                .replace(/&/g, '&amp;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;')
+                .replace(/</g, '&lt;');
+        }
+
+        /** رابط واتساب للمهندس من رقم التذييل فقط (ديناميكي من الإعدادات) */
+        function designerFooterWhatsAppHref() {
+            const raw = String(systemSettings.designerPhone || '').replace(/\D/g, '');
+            if (raw.length < 9) return '';
+            let n = raw;
+            if (n.startsWith('0')) n = '966' + n.slice(1);
+            else if (!n.startsWith('966')) n = '966' + n;
+            return 'https://wa.me/' + n;
+        }
+
+        function designerFooterTelHref() {
+            const p = String(systemSettings.designerPhone || '').trim();
+            if (!p) return '#';
+            return 'tel:' + p.replace(/\s+/g, '');
+        }
+
+        function applyFooterContent(text) {
+            const intro = text.footerDesignerIntro || '';
+            const phone = String(systemSettings.designerPhone || '').trim();
+            const contactLab = text.footerContactLabel || '';
+            let line = intro;
+            if (phone) line = intro + ' — ' + contactLab + ':';
+            else line = intro;
+
+            const designerEl = document.getElementById('footer-designer-line');
+            if (designerEl) designerEl.textContent = line;
+
+            const waHref = designerFooterWhatsAppHref();
+            const waEl = document.getElementById('footer-designer-wa');
+            const telEl = document.getElementById('footer-designer-tel');
+            const phoneDisp = document.getElementById('footer-designer-phone-display');
+
+            if (waEl) {
+                waEl.href = waHref || '#';
+                waEl.setAttribute('aria-label', text.footerDesignerWhatsAppAria || 'WhatsApp');
+                waEl.style.opacity = waHref ? '1' : '0.42';
+                waEl.style.pointerEvents = waHref ? '' : 'none';
+                waEl.setAttribute('tabindex', waHref ? '0' : '-1');
             }
-            return `images/${trimmed}`;
+            if (telEl) {
+                const telHref = phone ? designerFooterTelHref() : '#';
+                telEl.href = telHref;
+                telEl.setAttribute('aria-label', (text.footerDesignerCallAria || '') + (phone ? ' ' + phone : ''));
+                telEl.style.opacity = phone ? '1' : '0.42';
+                telEl.style.pointerEvents = phone ? '' : 'none';
+                telEl.setAttribute('tabindex', phone ? '0' : '-1');
+            }
+            if (phoneDisp) phoneDisp.textContent = phone || '';
+        }
+
+        function sanitizeExternalUrl(url) {
+            const u = String(url || '').trim();
+            if (!u) return '';
+            const lower = u.toLowerCase();
+            if (lower.indexOf('javascript:') === 0 || lower.indexOf('data:') === 0) return '';
+            if (/^https?:\/\//i.test(u)) return u;
+            return 'https://' + u.replace(/^\/+/, '');
+        }
+
+        /** واتساب الشركة في المنصة: الحقل من الإدارة أولًا، ثم الرقم العام للمهندس إن وُجد */
+        function resolveCompanyWhatsAppHref() {
+            const explicit = String(systemSettings.socialWhatsApp || '').trim();
+            if (explicit) return sanitizeExternalUrl(explicit);
+            return designerFooterWhatsAppHref();
+        }
+
+        function renderCompanySocialSection(text) {
+            const ui = text || siteText[currentLang || 'ar'];
+            const container = document.getElementById('company-social-links');
+            const section = document.getElementById('company-social');
+            const titleEl = document.getElementById('company-social-title');
+            const subEl = document.getElementById('company-social-subtitle');
+            if (titleEl) titleEl.textContent = ui.companySocialTitle || '';
+            if (subEl) subEl.textContent = ui.companySocialSubtitlePublic || '';
+            if (!container || !section) return;
+
+            const wa = resolveCompanyWhatsAppHref();
+            const fb = sanitizeExternalUrl(systemSettings.socialFacebook);
+            const ig = sanitizeExternalUrl(systemSettings.socialInstagram);
+            const tt = sanitizeExternalUrl(systemSettings.socialTiktok);
+            const sn = sanitizeExternalUrl(systemSettings.socialSnapchat);
+
+            const items = [];
+            if (wa) items.push({ href: wa, icon: 'fab fa-whatsapp', label: 'WhatsApp', cls: 'soc-wa' });
+            if (fb) items.push({ href: fb, icon: 'fab fa-facebook-f', label: 'Facebook', cls: 'soc-fb' });
+            if (ig) items.push({ href: ig, icon: 'fab fa-instagram', label: 'Instagram', cls: 'soc-ig' });
+            if (tt) items.push({ href: tt, icon: 'fab fa-tiktok', label: 'TikTok', cls: 'soc-tt' });
+            if (sn) items.push({ href: sn, icon: 'fab fa-snapchat', label: 'Snapchat', cls: 'soc-sn' });
+
+            if (!items.length) {
+                section.style.display = 'none';
+                container.innerHTML = '';
+                return;
+            }
+            section.style.display = '';
+            container.innerHTML = items.map(function(it) {
+                return '<a class="company-social-btn ' + escapeHtmlAttr(it.cls) + '" href="' + escapeHtmlAttr(it.href) + '" target="_blank" rel="noopener noreferrer" aria-label="' + escapeHtmlAttr(it.label) + '"><i class="' + escapeHtmlAttr(it.icon) + '" aria-hidden="true"></i></a>';
+            }).join('');
+        }
+
+        function syncAdminSessionClass() {
+            document.body.classList.toggle('admin-session', !!currentAdmin);
+        }
+
+        function openSystemSettingsForChannels() {
+            if (!currentAdmin) return;
+            const t = siteText[currentLang || 'ar'];
+            if (currentAdmin.role !== 'superadmin') {
+                alert(t.channelsSettingsSuperAdminOnly || '');
+                return;
+            }
+            openSystemSettings();
+        }
+
+        function renderDashboardChannelsStatus() {
+            if (!currentAdmin) return;
+            const t = siteText[currentLang || 'ar'];
+            const titleEl = document.getElementById('dashboard-channels-title');
+            const hintEl = document.getElementById('dashboard-channels-hint');
+            const listEl = document.getElementById('dashboard-channels-list');
+            const btn = document.getElementById('dashboard-channels-edit-btn');
+            const note = document.getElementById('dashboard-channels-superadmin-note');
+            if (titleEl) titleEl.textContent = t.dashboardChannelsTitle || '';
+            if (hintEl) hintEl.textContent = t.dashboardChannelsHint || '';
+            if (!listEl) return;
+
+            const explicitWa = String(systemSettings.socialWhatsApp || '').trim();
+            const waHref = resolveCompanyWhatsAppHref();
+            const fb = sanitizeExternalUrl(systemSettings.socialFacebook);
+            const ig = sanitizeExternalUrl(systemSettings.socialInstagram);
+            const tt = sanitizeExternalUrl(systemSettings.socialTiktok);
+            const sn = sanitizeExternalUrl(systemSettings.socialSnapchat);
+
+            function row(ok, label, detail) {
+                return '<li><span class="ch-mark ' + (ok ? 'ok' : 'no') + '">' + (ok ? '✓' : '—') + '</span><span>' + label + ' <small>' + detail + '</small></span></li>';
+            }
+
+            const parts = [];
+            parts.push(row(!!waHref, t.channelWhatsApp, explicitWa ? t.channelDetailExplicitWa : (waHref ? t.channelDetailWaFallback : t.channelDetailMissing)));
+            parts.push(row(!!fb, t.channelFacebook, fb ? t.channelDetailOn : t.channelDetailMissing));
+            parts.push(row(!!ig, t.channelInstagram, ig ? t.channelDetailOn : t.channelDetailMissing));
+            parts.push(row(!!tt, t.channelTikTok, tt ? t.channelDetailOn : t.channelDetailMissing));
+            parts.push(row(!!sn, t.channelSnapchat, sn ? t.channelDetailOn : t.channelDetailMissing));
+
+            listEl.innerHTML = parts.join('');
+
+            if (btn) {
+                btn.textContent = t.dashboardChannelsEditBtn || '';
+                btn.style.display = currentAdmin.role === 'superadmin' ? 'inline-block' : 'none';
+            }
+            if (note) {
+                if (currentAdmin.role !== 'superadmin') {
+                    note.style.display = 'block';
+                    note.textContent = t.channelsSettingsSuperAdminOnly || '';
+                } else {
+                    note.style.display = 'none';
+                }
+            }
         }
 
         const iconDetails = {
@@ -1360,8 +2064,86 @@
                 ar: { title: 'خدمة العملاء', text: 'دعم واستقبال استفسارات العملاء ومتابعة طلباتهم.' },
                 en: { title: 'Customer Service', text: 'Support and follow-up for customer inquiries and requests.' },
                 zh: { title: '客户服务', text: '客户咨询与请求的支持和跟进。' }
+            },
+            otherProducts: {
+                ar: { title: 'منتجات نبراس الأخرى', text: 'مجموعة منتجات وحلول إضافية يمكن عرضها وتوسيعها من لوحة الإدارة. هذا القسم للزوار؛ التحرير الكامل للمحتوى يتم من الداخل بعد الصلاحيات.' },
+                en: { title: 'Other Nebras Products', text: 'Additional products and solutions expandable from the admin dashboard. Visitors see this showcase; full editing remains internal.' },
+                zh: { title: '其他 Nebras 产品', text: '可从管理后台扩展的附加产品与解决方案。访客在此浏览；完整编辑在内部权限下进行。' }
             }
         };
+
+        let iconOverlayPrimary = { type: 'none', value: '' };
+
+        function showRichIconOverlay(title, bodyText, imageUrls, primary) {
+            const ui = siteText[currentLang || 'ar'];
+            const titleEl = document.getElementById('icon-overlay-title');
+            const textEl = document.getElementById('icon-overlay-text');
+            const gallery = document.getElementById('icon-overlay-gallery');
+            const goBtn = document.getElementById('icon-overlay-go-btn');
+            if (titleEl) titleEl.textContent = title || '';
+            if (textEl) textEl.textContent = bodyText || '';
+            const imgs = (imageUrls || []).filter(Boolean);
+            if (gallery) {
+                if (imgs.length) {
+                    gallery.classList.remove('grid-empty');
+                    gallery.innerHTML = imgs.map(function(src) {
+                        return '<img src="' + escapeHtmlAttr(src) + '" alt="" loading="lazy" decoding="async" onerror="this.style.opacity=\'0.35\'">';
+                    }).join('');
+                    gallery.style.display = 'grid';
+                } else {
+                    gallery.innerHTML = '';
+                    gallery.classList.add('grid-empty');
+                    gallery.style.display = 'none';
+                }
+            }
+            iconOverlayPrimary = primary && primary.type && primary.type !== 'none'
+                ? { type: primary.type, value: primary.value || '' }
+                : { type: 'none', value: '' };
+            if (goBtn) {
+                const active = iconOverlayPrimary.type !== 'none';
+                goBtn.style.display = active ? 'block' : 'none';
+                if (active) {
+                    if (iconOverlayPrimary.type === 'scroll') goBtn.textContent = ui.overlayGoSection;
+                    else if (iconOverlayPrimary.type === 'external') goBtn.textContent = ui.overlayOpenLink;
+                    else if (iconOverlayPrimary.type === 'tel_sales') goBtn.textContent = ui.overlayDialSales;
+                    else if (iconOverlayPrimary.type === 'tel_customer') goBtn.textContent = ui.overlayDialCustomer;
+                }
+            }
+            document.getElementById('icon-overlay').classList.add('show');
+        }
+
+        function iconOverlayPrimaryClick() {
+            const p = iconOverlayPrimary;
+            if (p.type === 'scroll' && p.value) {
+                closeIconOverlay();
+                scrollToSection(p.value);
+            } else if (p.type === 'external' && p.value) {
+                window.open(p.value, '_blank', 'noopener,noreferrer');
+            } else if (p.type === 'tel_sales') {
+                dialNumber(systemSettings.mainSalesPhone);
+            } else if (p.type === 'tel_customer') {
+                dialNumber(systemSettings.customerServicePhone);
+            }
+        }
+
+        function getVisitorTargetCaption(icon) {
+            if (!icon || !icon.target) return '';
+            const ui = siteText[currentLang || 'ar'];
+            const t = String(icon.target).trim();
+            if (t.startsWith('#')) {
+                const map = {
+                    '#products': ui.visitorJumpProducts,
+                    '#branches': ui.visitorJumpBranches,
+                    '#services': ui.visitorJumpServices,
+                    '#about': ui.visitorJumpAbout,
+                    '#doors': ui.visitorJumpDoors,
+                    '#aluminum': ui.visitorJumpAluminum,
+                    '#color-catalog': ui.visitorJumpColorCatalog
+                };
+                return map[t] || ui.visitorJumpInside;
+            }
+            return ui.visitorJumpExternal;
+        }
 
         function openAdminPanel(event) {
             event.preventDefault();
@@ -1425,6 +2207,7 @@
                 status.textContent = 'تم تسجيل الدخول بنجاح.';
                 closeAdminOverlay();
                 showAdminDashboard(user);
+                setLanguage(currentLang || 'ar');
                 addAuditLog('تسجيل دخول', `دخول ناجح بواسطة ${user.username}`);
             } else {
                 status.textContent = 'بيانات الدخول غير صحيحة. حاول مرة أخرى.';
@@ -1447,6 +2230,7 @@
             }
             currentAdmin = null;
             document.getElementById('admin-dashboard').classList.remove('show');
+            setLanguage(currentLang || 'ar');
             return false;
         }
 
@@ -1550,7 +2334,7 @@
                         statusText = text.complaintStatusResolved;
                         break;
                     default:
-                        statusText = text.complaintUnknownStatus; // TODO: translate
+                        statusText = text.complaintUnknownStatus;
                 }
                 statusEl.textContent = `${text.complaintStatusLabel} ${statusText}`;
             } else {
@@ -1559,23 +2343,50 @@
         }
 
         function openOtherProducts() {
-            console.log('Opening other products');
-            // افتح قسم المنتجات الأخرى
-            alert(siteText[currentLang || 'ar'].otherProductsAlert);
-            // يمكن إضافة نافذة داخلية هنا
+            openIconDetails('otherProducts');
         }
 
         function openIconDetails(iconKey) {
             const lang = currentLang || 'ar';
-            const details = iconDetails[iconKey] && iconDetails[iconKey][lang] ? iconDetails[iconKey][lang] : iconDetails[iconKey].ar;
+            const ui = siteText[lang] || siteText.ar;
+            const pack = iconDetails[iconKey];
+            const details = pack ? (pack[lang] || pack.ar) : null;
             if (!details) return;
-            document.getElementById('icon-overlay-title').textContent = details.title;
-            document.getElementById('icon-overlay-text').textContent = details.text;
-            document.getElementById('icon-overlay').classList.add('show');
+
+            const albums = {
+                pvc: ['images/pvc-background.avif'],
+                wpc: ['images/wpc-background.avif'],
+                aluminum: ['images/aluminum-background.webp'],
+                otherProducts: ['images/other-products-background.jpeg'],
+                inventory: [],
+                analytics: [],
+                sales: [],
+                customer: []
+            };
+
+            let primary = { type: 'none', value: '' };
+            let body = details.text;
+
+            if (iconKey === 'pvc') primary = { type: 'scroll', value: '#products' };
+            else if (iconKey === 'wpc') primary = { type: 'scroll', value: '#doors' };
+            else if (iconKey === 'aluminum') primary = { type: 'scroll', value: '#aluminum' };
+            else if (iconKey === 'otherProducts') primary = { type: 'scroll', value: '#products' };
+            else if (iconKey === 'inventory' || iconKey === 'analytics') {
+                body += ui.adminPreviewHint || '';
+            } else if (iconKey === 'sales') {
+                primary = { type: 'tel_sales', value: '' };
+                body += '\n\n' + ui.salesHotlineLabel + ' ' + (systemSettings.mainSalesPhone || '');
+            } else if (iconKey === 'customer') {
+                primary = { type: 'tel_customer', value: '' };
+                body += '\n\n' + ui.customerHotlineLabel + ' ' + (systemSettings.customerServicePhone || '');
+            }
+
+            showRichIconOverlay(details.title, body, albums[iconKey] || [], primary);
         }
 
         function closeIconOverlay() {
             document.getElementById('icon-overlay').classList.remove('show');
+            iconOverlayPrimary = { type: 'none', value: '' };
         }
 
         // Admin functions
@@ -1632,6 +2443,18 @@
             salesInput.value = systemSettings.mainSalesPhone || '';
             customerInput.value = systemSettings.customerServicePhone || '';
             recoveryInput.value = systemSettings.recoveryEmail || '';
+            const designerInput = document.getElementById('setting-designer-phone');
+            const waInput = document.getElementById('setting-social-whatsapp');
+            const ttInput = document.getElementById('setting-social-tiktok');
+            const fbInput = document.getElementById('setting-social-facebook');
+            const igInput = document.getElementById('setting-social-instagram');
+            const snInput = document.getElementById('setting-social-snapchat');
+            if (designerInput) designerInput.value = systemSettings.designerPhone || '';
+            if (waInput) waInput.value = systemSettings.socialWhatsApp || '';
+            if (ttInput) ttInput.value = systemSettings.socialTiktok || '';
+            if (fbInput) fbInput.value = systemSettings.socialFacebook || '';
+            if (igInput) igInput.value = systemSettings.socialInstagram || '';
+            if (snInput) snInput.value = systemSettings.socialSnapchat || '';
         }
 
         function saveSystemSettings() {
@@ -1649,6 +2472,18 @@
             systemSettings.mainSalesPhone = salesPhone;
             systemSettings.customerServicePhone = customerPhone;
             systemSettings.recoveryEmail = recoveryEmail;
+            const designerPhoneEl = document.getElementById('setting-designer-phone');
+            const waEl = document.getElementById('setting-social-whatsapp');
+            const ttEl = document.getElementById('setting-social-tiktok');
+            const fbEl = document.getElementById('setting-social-facebook');
+            const igEl = document.getElementById('setting-social-instagram');
+            const snEl = document.getElementById('setting-social-snapchat');
+            if (designerPhoneEl) systemSettings.designerPhone = designerPhoneEl.value.trim();
+            if (waEl) systemSettings.socialWhatsApp = waEl.value.trim();
+            if (ttEl) systemSettings.socialTiktok = ttEl.value.trim();
+            if (fbEl) systemSettings.socialFacebook = fbEl.value.trim();
+            if (igEl) systemSettings.socialInstagram = igEl.value.trim();
+            if (snEl) systemSettings.socialSnapchat = snEl.value.trim();
             saveSystemData();
             setLanguage(currentLang || 'ar');
             addAuditLog('تحديث إعدادات النظام', `تعديل الأرقام الرئيسية بواسطة ${currentAdmin.username}`);
@@ -1736,6 +2571,7 @@
             const albumRaw = prompt('تعديل ألبوم الصور (مفصول بفاصلة):', icon.album.join(', '));
             if (!title || !iconClass || !target) return;
             icon.title = title.trim();
+            delete icon.titleKey;
             icon.iconClass = iconClass.trim();
             icon.target = target.trim();
             icon.album = (albumRaw || '').split(',').map(item => item.trim()).filter(Boolean);
@@ -1762,7 +2598,7 @@
             if (!list) return;
             list.innerHTML = visitorIcons.map(icon => `
                 <li>
-                    ${icon.title} - ${icon.iconClass} - ${icon.target}
+                    ${escapeHtmlAttr(getVisitorIconDisplayTitle(icon) || icon.title)} - ${icon.iconClass} - ${icon.target}
                     <small>Album: ${icon.album.join(' | ') || 'بدون صور'}</small>
                     <button onclick="editVisitorIcon(${icon.id})">تعديل</button>
                     <button onclick="deleteVisitorIcon(${icon.id})">حذف</button>
@@ -1773,25 +2609,37 @@
         function openVisitorIcon(iconId) {
             const icon = visitorIcons.find(item => item.id === iconId);
             if (!icon) return;
-            const albumText = icon.album && icon.album.length ? `\nالصور:\n- ${icon.album.join('\n- ')}` : '\nلا توجد صور مرتبطة.';
-            alert(`${icon.title}${albumText}`);
-            if (icon.target.startsWith('#')) {
-                scrollToSection(icon.target);
-            } else {
-                window.open(icon.target, '_blank');
-            }
+            const ui = siteText[currentLang || 'ar'];
+            const albumUrls = (icon.album || []).map(function(p) {
+                const t = String(p || '').trim();
+                if (/^(https?:|data:|blob:)/i.test(t) || t.startsWith('images/')) return t;
+                return 'images/' + t.replace(/^\/+/, '');
+            }).filter(Boolean);
+            const caption = getVisitorTargetCaption(icon);
+            const body = caption + '\n\n' + (ui.visitorOverlayIntro || '');
+            let primary = { type: 'none', value: '' };
+            const tg = String(icon.target || '').trim();
+            if (tg.startsWith('#')) primary = { type: 'scroll', value: tg };
+            else if (/^https?:\/\//i.test(tg)) primary = { type: 'external', value: tg };
+            showRichIconOverlay(getVisitorIconDisplayTitle(icon), body, albumUrls, primary);
         }
 
         function renderVisitorIcons() {
             const container = document.getElementById('visitor-icons-grid');
-            if (!container) return;
+            if (!container) {
+                resolveDashboardBackgrounds();
+                return;
+            }
             container.innerHTML = visitorIcons.map(icon => `
-                <div class="visitor-icon-card" style="background-image: url('${normalizeVisitorIconImagePath(icon)}')" onclick="openVisitorIcon(${icon.id})">
-                    <i class="${icon.iconClass}"></i>
-                    <h3>${icon.title}</h3>
-                    <p>${icon.target}</p>
+                <div class="spotlight-card visitor-icon-card" data-icon-id="${icon.id}" onclick="openVisitorIcon(${icon.id})">
+                    <div class="card-icon" aria-hidden="true"><i class="${icon.iconClass}"></i></div>
+                    <div class="card-content">
+                        <h3>${escapeHtmlAttr(getVisitorIconDisplayTitle(icon))}</h3>
+                        <p class="visitor-target-caption">${escapeHtmlAttr(getVisitorTargetCaption(icon))}</p>
+                    </div>
                 </div>
             `).join('');
+            resolveDashboardBackgrounds();
         }
 
         function closeAdminSection(sectionId) {
@@ -1920,16 +2768,21 @@
         function displayBranches() {
             const grid = document.getElementById('branches-grid');
             if (!grid) return;
-            grid.innerHTML = branchesData.map(branch => `
+            const lang = currentLang || 'ar';
+            const t = siteText[lang] || siteText.ar;
+            grid.innerHTML = branchesData.map(function(branch) {
+                const name = getBranchDisplayName(branch, lang);
+                return `
                 <div class="branch-card" style="background-image: url('${normalizeBranchImagePath(branch.image)}')">
-                    <h3><i class="fas fa-map-marker-alt"></i> ${branch.city}</h3>
-                    <p><strong>مبيعات الفرع:</strong> ${branch.salesPhone}</p>
+                    <h3><i class="fas fa-map-marker-alt"></i> ${escapeHtmlAttr(name)}</h3>
+                    <p><strong>${escapeHtmlAttr(t.branchCardSalesLabel)}</strong> ${escapeHtmlAttr(branch.salesPhone)}</p>
                     <div class="branch-actions">
-                        <a href="tel:${branch.salesPhone}"><i class="fas fa-phone-alt"></i> اتصال مباشر</a>
-                        <a href="#" onclick="event.preventDefault(); dialNumber(getNearestSalesNumber('${branch.city}').phone);"><i class="fas fa-route"></i> تحويل ذكي</a>
+                        <a href="tel:${escapeHtmlAttr(branch.salesPhone)}"><i class="fas fa-phone-alt"></i> ${t.branchCallDirect}</a>
+                        <a href="#" onclick="event.preventDefault(); branchSmartDial(${branch.id});"><i class="fas fa-route"></i> ${t.branchSmartRoute}</a>
                     </div>
                 </div>
-            `).join('');
+            `;
+            }).join('');
         }
 
         function displayBranchesAdmin() {
@@ -2032,7 +2885,10 @@
                 try { auditLogs = JSON.parse(savedAuditLogs); } catch (error) { console.warn('Invalid audit logs data in localStorage', error); }
             }
             if (savedSystemSettings) {
-                try { systemSettings = JSON.parse(savedSystemSettings); } catch (error) { console.warn('Invalid settings data in localStorage', error); }
+                try {
+                    const parsed = JSON.parse(savedSystemSettings);
+                    systemSettings = Object.assign({}, DEFAULT_SYSTEM_SETTINGS, parsed && typeof parsed === 'object' ? parsed : {});
+                } catch (error) { console.warn('Invalid settings data in localStorage', error); }
             }
             const savedAdminUsers = localStorage.getItem('nebrasAdminUsers');
             const savedVisitorIcons = localStorage.getItem('nebrasVisitorIcons');
@@ -2186,6 +3042,11 @@
         // Language switch: one menu toggle, link clicks, close on outside click
         document.addEventListener('DOMContentLoaded', function() {
             loadSystemData();
+            if (!visitorIcons.length) {
+                visitorIcons = DEFAULT_VISITOR_ICONS.map(function(d) { return Object.assign({}, d); });
+            }
+            ensureBuiltinVisitorIcons();
+            saveSystemData();
             renderVisitorIcons();
             Promise.all([
                 fetchDynamicContentBlocks(),
@@ -2318,7 +3179,8 @@
                 nav: {
                     home: '<i class="fas fa-home"></i> الرئيسية',
                     services: '<i class="fas fa-concierge-bell"></i> خدماتنا',
-                    admin: '<i class="fas fa-user-shield"></i> الإدارة - صلاحيات وشكاوى',
+                    adminVisitor: '<i class="fas fa-user-shield"></i> الإدارة',
+                    adminStaff: '<i class="fas fa-user-shield"></i> لوحة التحكم',
                     about: '<i class="fas fa-info-circle"></i> من نحن',
                     doors: '<i class="fas fa-door-open"></i> أبواب WPC',
                     products: '<i class="fas fa-industry"></i> منتجات PVC',
@@ -2333,17 +3195,20 @@
                 aboutTitle1: 'من نحن',
                 aboutText1: 'نحن شركة مصنع نبراس للبلاستيك، نقدم حلولاً متكاملة للصناعة والمقاولات بشفافية وجودة سعودية أصيلة. هدفنا تطوير منتجات مبتكرة وتوفير تجربة سلسة لكل عميل وزائر.',
                 aboutTitle2: 'رؤيتنا',
-                aboutText2: 'أن نصنع موقعاً عملاقاً ينظم الأعمال ويسهل العمليات، ويوفر مساحات واضحة للزائرين وصلاحيات دقيقة للإدارة، مع تجربة رقمية محترفة.',
-                serviceTitle1: '<i class="fas fa-tools"></i> خدمات التصنيع',
+                aboutText2: 'نسعى لتوسيع حضورنا الصناعي وتقديم تجربة رقمية احترافية، مع التزام عميق بالجودة والشراكة مع عملائنا داخل المملكة وخارجها.',
+                serviceTitle1: 'خدمات التصنيع',
                 serviceText1: 'تصنيع منتجات بلاستيكية عالية الجودة مع مراعاة أعلى معايير الأمان والاستدامة المناسبة للمشاريع الكبيرة.',
-                serviceTitle2: '<i class="fas fa-shield-alt"></i> الدعم الفني',
+                serviceTitle2: 'الدعم الفني',
                 serviceText2: 'فريق دعم متكامل لمتابعة الطلبات وحل المشكلات بسرعة، مع تقديم الدعم الفني للعملاء والمشاريع بحرفية.',
-                serviceTitle3: '<i class="fas fa-chart-line"></i> إدارة الجودة',
+                serviceTitle3: 'إدارة الجودة',
                 serviceText3: 'مراقبة جودة دقيقة لكل منتج ومرحلة إنتاجية، لضمان منتج نهائي يناسب متطلبات السوق ورضا العملاء.',
                 sectionTitle: 'هيكل الموقع وتنظيمه',
                 sectionSubtitle: 'أقسام واضحة للزوار، وصلاحيات منفصلة للإدارة.',
                 quickServicesTitle: 'خدمات سريعة للزائر',
-                quickServicesSubtitle: 'الأيقونات الخارجية والألبومات تدار من داخل لوحة الإدارة.',
+                quickServicesSubtitle: 'بوابة سريعة لكتالوج الأقسام والمنتجات وأهم روابط المصنع.',
+                visitorQuickCatalogProducts: 'كتالوج المنتجات',
+                visitorQuickBranches: 'فروع نبراس',
+                visitorQuickColorRolls: 'كتالوج ألوان نبراس (رولات)',
                 visitorTitle: 'الزوار',
                 visitorText: 'يستطيع الزائر مشاهدة المنتجات والخدمات والتواصل، لكن لا يمكنه الوصول إلى إدارة المحتوى أو أدوات الإدارة.',
                 adminTitle: 'الإدارة',
@@ -2379,8 +3244,14 @@
                 quickAluminumText: 'إدارة فورية لقسم الألومنيوم الجديد وإضافة المنتجات المخصصة له بسهولة.',
                 quickComplaintsTitle: 'قسم الشكاوى',
                 quickComplaintsText: 'مراقبة الشكاوى وإدارتها بسرعة مع متابعة لكل طلب.',
+                colorCatalogTitle: 'كتالوج ألوان نبراس — رولات',
+                colorCatalogSubtitle: 'ألوان وتشطيبات متوفرة ضمن خط إنتاج نبراس للبلاستيك.',
+                colorCatalogBody: 'يعرض هذا القسم دليل ألوان ورولات المنتجات المتاحة للطلب والاستعلام من المبيعات. للحصول على عينات أو كود لون محدد، تواصل مع فريق المبيعات أو أقرب فرع.',
                 branchesTitle: 'فروع نبراس في المملكة',
                 branchesSubtitle: 'فروع نبراس بالمملكة مع رقم المبيعات لكل فرع.',
+                branchCardSalesLabel: 'مبيعات الفرع:',
+                branchCallDirect: 'اتصال مباشر',
+                branchSmartRoute: 'تحويل ذكي',
                 topSalesLabel: '<i class="fas fa-phone-alt"></i> مبيعات:',
                 topCustomerLabel: '<i class="fas fa-headset"></i> خدمة العملاء والشكاوى:',
                 topSalesButton: 'اتصال المبيعات',
@@ -2389,7 +3260,42 @@
                 adminDashboardTitle: 'لوحة تحكم الإدارة',
                 logoutText: '<i class="fas fa-sign-out-alt"></i> تسجيل خروج',
                 currentLangLabel: 'العربية',
-                footerDesigner: 'التصميم والتطوير والبرمجة: المهندس عبدالرحمن عمران طرش'
+                footerDesignerIntro: 'التصميم والتطوير والبرمجة: المهندس عبدالرحمن عمران طرش',
+                footerContactLabel: 'للتواصل',
+                footerDesignerWhatsAppAria: 'مراسلة المهندس عبر واتساب',
+                footerDesignerCallAria: 'الاتصال بالمهندس',
+                companySocialTitle: 'منصة التواصل — مصنع نبراس للبلاستيك',
+                companySocialSubtitlePublic: 'تابعوا أخبارنا وقنوات مصنع نبراس الرسمية.',
+                dashboardChannelsTitle: 'حالة قنوات التواصل (إشعار للإدارة)',
+                dashboardChannelsHint: 'يُحدَّث هذا الجدول من «إعدادات النظام». الرابط الفارغ يخفي أيقونة القناة على الصفحة العامة. يُنصح بمراجعة القنوات بعد أي تغيير على المنصات الخارجية.',
+                dashboardChannelsEditBtn: 'فتح إعدادات روابط التواصل',
+                channelsSettingsSuperAdminOnly: 'تعديل روابط التواصل متاح لمسؤول النظام (Super Admin) فقط.',
+                channelWhatsApp: 'واتساب',
+                channelFacebook: 'فيسبوك',
+                channelInstagram: 'إنستغرام',
+                channelTikTok: 'تيك توك',
+                channelSnapchat: 'سناب شات',
+                channelDetailExplicitWa: 'رابط واتساب محفوظ في الإعدادات',
+                channelDetailWaFallback: 'لا يوجد رابط مخصص؛ يُستخدم رقم التواصل للعرض العام',
+                channelDetailMissing: 'غير مضبوط — الأيقونة مخفية للزائر',
+                channelDetailOn: 'رابط مفعّل',
+                overlayGoSection: 'انتقل إلى القسم',
+                overlayOpenLink: 'فتح الرابط',
+                overlayDialSales: 'اتصال المبيعات',
+                overlayDialCustomer: 'اتصال خدمة العملاء',
+                salesHotlineLabel: 'خط المبيعات:',
+                customerHotlineLabel: 'خدمة العملاء:',
+                adminPreviewHint: '\n\nتنويه للزائر: أقسام المخزون والإحصائيات هنا للعرض التعريفي؛ التشغيل الكامل والموافقات من لوحة الإدارة فقط.',
+                visitorOverlayIntro: 'معرض صور من الألبوم — ثم انتقل للقسم أو افتح الرابط الخارجي إن وُجد.',
+                visitorJumpProducts: 'ينتقل إلى منتجات وأقسام المصنع',
+                visitorJumpBranches: 'ينتقل إلى دليل فروع المملكة',
+                visitorJumpServices: 'ينتقل إلى خدمات المنشأة',
+                visitorJumpAbout: 'ينتقل إلى التعريف بالشركة',
+                visitorJumpDoors: 'ينتقل إلى قسم أبواب WPC',
+                visitorJumpAluminum: 'ينتقل إلى قسم الألومنيوم',
+                visitorJumpColorCatalog: 'ينتقل إلى كتالوج ألوان نبراس (رولات)',
+                visitorJumpInside: 'انتقال داخل الموقع',
+                visitorJumpExternal: 'رابط خارجي (يفتح في نافذة جديدة)'
             },
             en: {
                 dir: 'ltr',
@@ -2397,7 +3303,8 @@
                 nav: {
                     home: '<i class="fas fa-home"></i> Home',
                     services: '<i class="fas fa-concierge-bell"></i> Services',
-                    admin: '<i class="fas fa-user-shield"></i> Admin - access & complaints',
+                    adminVisitor: '<i class="fas fa-user-shield"></i> Admin',
+                    adminStaff: '<i class="fas fa-user-shield"></i> Dashboard',
                     about: '<i class="fas fa-info-circle"></i> About',
                     doors: '<i class="fas fa-door-open"></i> WPC Doors',
                     nebOther: '<i class="fas fa-box-open"></i> Other Nebras Products',
@@ -2412,17 +3319,20 @@
                 aboutTitle1: 'About Us',
                 aboutText1: 'Nebras Plastic Factory Company delivers integrated industrial and contracting solutions with transparency and premium Saudi quality. Our mission is to innovate products and create a smooth experience for every client and visitor.',
                 aboutTitle2: 'Our Vision',
-                aboutText2: 'To build a giant website that organizes work and simplifies operations, creating clear visitor areas and precise admin permissions with a professional digital experience.',
-                serviceTitle1: '<i class="fas fa-tools"></i> Manufacturing Services',
+                aboutText2: 'We aim to grow our industrial presence and deliver a professional digital experience, with strong commitment to quality and partnership across Saudi Arabia and beyond.',
+                serviceTitle1: 'Manufacturing Services',
                 serviceText1: 'Manufacturing high-quality plastic products while observing the highest safety and sustainability standards for large projects.',
-                serviceTitle2: '<i class="fas fa-shield-alt"></i> Technical Support',
+                serviceTitle2: 'Technical Support',
                 serviceText2: 'A full support team to track orders and resolve issues quickly, providing technical support to customers and projects professionally.',
-                serviceTitle3: '<i class="fas fa-chart-line"></i> Quality Management',
+                serviceTitle3: 'Quality Management',
                 serviceText3: 'Precise quality control for every product and production stage to ensure a final product that meets market demands and customer satisfaction.',
                 sectionTitle: 'Site Structure and Organization',
                 sectionSubtitle: 'Clear sections for visitors, with separate permissions for administration.',
                 quickServicesTitle: 'Quick Visitor Services',
-                quickServicesSubtitle: 'External icons and albums are managed from the admin dashboard.',
+                quickServicesSubtitle: 'Quick access to sections, catalogue highlights, and essential factory links.',
+                visitorQuickCatalogProducts: 'Product catalogue',
+                visitorQuickBranches: 'Nebras branches',
+                visitorQuickColorRolls: 'Nebras colour catalogue (rolls)',
                 visitorTitle: 'Visitors',
                 visitorText: 'Visitors can see products, services and contact information, but cannot access content management or admin tools.',
                 adminTitle: 'Administration',
@@ -2458,8 +3368,14 @@
                 quickAluminumText: 'Instant management for the new aluminum section and easy product additions.',
                 quickComplaintsTitle: 'Complaints Section',
                 quickComplaintsText: 'Monitor complaints and manage requests quickly with clear tracking.',
+                colorCatalogTitle: 'Nebras colour catalogue — rolls',
+                colorCatalogSubtitle: 'Finishes and colour lines available across Nebras Plastic production.',
+                colorCatalogBody: 'This section outlines colour rolls and finishes available to order. Contact sales or your nearest branch for samples or a specific colour code.',
                 branchesTitle: 'Nebras Branches in KSA',
                 branchesSubtitle: 'Nebras branches in KSA with a dedicated sales phone for each branch.',
+                branchCardSalesLabel: 'Branch sales:',
+                branchCallDirect: 'Direct call',
+                branchSmartRoute: 'Smart routing',
                 topSalesLabel: '<i class="fas fa-phone-alt"></i> Sales:',
                 topCustomerLabel: '<i class="fas fa-headset"></i> Customer Service & Complaints:',
                 topSalesButton: 'Call Sales',
@@ -2468,7 +3384,42 @@
                 adminDashboardTitle: 'Admin Dashboard',
                 logoutText: '<i class="fas fa-sign-out-alt"></i> Logout',
                 currentLangLabel: 'English',
-                footerDesigner: 'Design & development: Eng. Abdelrahman Omran Tarash'
+                footerDesignerIntro: 'Design & development: Eng. Abdelrahman Omran Tarash',
+                footerContactLabel: 'Contact',
+                footerDesignerWhatsAppAria: 'WhatsApp the engineer',
+                footerDesignerCallAria: 'Call the engineer',
+                companySocialTitle: 'Social hub — Nebras Plastic Factory',
+                companySocialSubtitlePublic: 'Follow Nebras Plastic Factory official channels for updates.',
+                dashboardChannelsTitle: 'Social channels status (admin)',
+                dashboardChannelsHint: 'Synced from System Settings. Empty URL hides the icon on the public page. Review after changes on social platforms.',
+                dashboardChannelsEditBtn: 'Open social links settings',
+                channelsSettingsSuperAdminOnly: 'Editing social links is limited to the Super Admin account.',
+                channelWhatsApp: 'WhatsApp',
+                channelFacebook: 'Facebook',
+                channelInstagram: 'Instagram',
+                channelTikTok: 'TikTok',
+                channelSnapchat: 'Snapchat',
+                channelDetailExplicitWa: 'Custom WhatsApp URL saved in settings',
+                channelDetailWaFallback: 'No custom URL; public fallback uses the configured contact number',
+                channelDetailMissing: 'Not set — hidden from visitors',
+                channelDetailOn: 'Link active',
+                overlayGoSection: 'Go to section',
+                overlayOpenLink: 'Open link',
+                overlayDialSales: 'Call sales',
+                overlayDialCustomer: 'Call customer service',
+                salesHotlineLabel: 'Sales line:',
+                customerHotlineLabel: 'Customer service:',
+                adminPreviewHint: '\n\nVisitor note: inventory and analytics here are introductory; full operations require the admin dashboard.',
+                visitorOverlayIntro: 'Album preview — then jump to the section or open the external link.',
+                visitorJumpProducts: 'Opens products & factory sections',
+                visitorJumpBranches: 'Opens the KSA branches directory',
+                visitorJumpServices: 'Opens company services',
+                visitorJumpAbout: 'Opens about the company',
+                visitorJumpDoors: 'Opens the WPC doors section',
+                visitorJumpAluminum: 'Opens the aluminum section',
+                visitorJumpColorCatalog: 'Opens the Nebras colour rolls catalogue',
+                visitorJumpInside: 'In-site navigation',
+                visitorJumpExternal: 'External link (new tab)'
             },
             zh: {
                 dir: 'ltr',
@@ -2476,7 +3427,8 @@
                 nav: {
                     home: '<i class="fas fa-home"></i> 首页',
                     services: '<i class="fas fa-concierge-bell"></i> 服务',
-                    admin: '<i class="fas fa-user-shield"></i> 管理 - 权限与投诉',
+                    adminVisitor: '<i class="fas fa-user-shield"></i> 管理',
+                    adminStaff: '<i class="fas fa-user-shield"></i> 控制台',
                     about: '<i class="fas fa-info-circle"></i> 关于我们',
                     doors: '<i class="fas fa-door-open"></i> WPC 门',
                     nebOther: '<i class="fas fa-box-open"></i> 其他 Nebras 产品',
@@ -2491,17 +3443,20 @@
                 aboutTitle1: '关于我们',
                 aboutText1: 'Nebras 塑料工厂公司提供一体化工业和承包解决方案，透明、高品质，旨在为每位客户和访客打造顺畅体验。',
                 aboutTitle2: '我们的愿景',
-                aboutText2: '建立一个大型网站，组织工作、简化流程，创建清晰的访客区域和精确的管理权限。',
-                serviceTitle1: '<i class="fas fa-tools"></i> 制造服务',
+                aboutText2: '我们致力于扩大工业影响力，提供专业数字体验，并以质量与合作贯穿沙特及更广泛的市场。',
+                serviceTitle1: '制造服务',
                 serviceText1: '制造高品质塑料产品，遵循最高安全和可持续标准。',
-                serviceTitle2: '<i class="fas fa-shield-alt"></i> 技术支持',
+                serviceTitle2: '技术支持',
                 serviceText2: '全面支持团队快速跟进订单并解决问题，为客户和项目提供专业技术支持。',
-                serviceTitle3: '<i class="fas fa-chart-line"></i> 质量管理',
+                serviceTitle3: '质量管理',
                 serviceText3: '对每个产品和生产阶段进行精确质量控制，确保最终产品满足市场需求。',
                 sectionTitle: '网站结构与组织',
                 sectionSubtitle: '为访客设置清晰区域，并分离管理权限。',
                 quickServicesTitle: '访客快速服务',
-                quickServicesSubtitle: '外部图标和相册可在管理面板中维护。',
+                quickServicesSubtitle: '快速抵达目录、产品与工厂重点内容的入口。',
+                visitorQuickCatalogProducts: '产品目录',
+                visitorQuickBranches: 'Nebras 分支机构',
+                visitorQuickColorRolls: 'Nebras 卷材色卡目录',
                 visitorTitle: '访客',
                 visitorText: '访客可以查看产品、服务和联系信息，但无法访问内容管理或管理工具。',
                 adminTitle: '管理',
@@ -2535,8 +3490,14 @@
                 quickAluminumText: '即时管理新的铝制品部分，轻松添加产品。',
                 quickComplaintsTitle: '投诉部分',
                 quickComplaintsText: '快速监控投诉并高效处理客户请求。',
+                colorCatalogTitle: 'Nebras 卷材色卡目录',
+                colorCatalogSubtitle: 'Nebras 塑料产线可选的颜色与饰面。',
+                colorCatalogBody: '本版块介绍可订购的卷材颜色与饰面。如需样品或色号，请联系销售或就近分支机构。',
                 branchesTitle: 'Nebras 在沙特的分支',
                 branchesSubtitle: '沙特各分支均提供独立销售电话。',
+                branchCardSalesLabel: '分部销售：',
+                branchCallDirect: '直拨',
+                branchSmartRoute: '智能转接',
                 topSalesLabel: '<i class="fas fa-phone-alt"></i> 销售:',
                 topCustomerLabel: '<i class="fas fa-headset"></i> 客服与投诉:',
                 topSalesButton: '联系销售',
@@ -2545,7 +3506,42 @@
                 adminDashboardTitle: '管理员仪表板',
                 logoutText: '<i class="fas fa-sign-out-alt"></i> 登出',
                 currentLangLabel: '中文',
-                footerDesigner: '网站设计与开发：Abdelrahman Omran Tarash 工程师'
+                footerDesignerIntro: '网站设计与开发：Abdelrahman Omran Tarash 工程师',
+                footerContactLabel: '联系方式',
+                footerDesignerWhatsAppAria: '通过 WhatsApp 联系工程师',
+                footerDesignerCallAria: '致电工程师',
+                companySocialTitle: '社交平台 — Nebras 塑料工厂',
+                companySocialSubtitlePublic: '关注 Nebras 塑料工厂的官方渠道与动态。',
+                dashboardChannelsTitle: '社交渠道状态（管理端提示）',
+                dashboardChannelsHint: '数据来自「系统设置」。留空链接则公开页不显示对应图标。平台变更后请及时核对。',
+                dashboardChannelsEditBtn: '打开社交链接设置',
+                channelsSettingsSuperAdminOnly: '仅超级管理员（Super Admin）可修改社交链接。',
+                channelWhatsApp: 'WhatsApp',
+                channelFacebook: 'Facebook',
+                channelInstagram: 'Instagram',
+                channelTikTok: 'TikTok',
+                channelSnapchat: 'Snapchat',
+                channelDetailExplicitWa: '已在设置中保存 WhatsApp 链接',
+                channelDetailWaFallback: '未填专属链接；公开页使用配置的联系电话生成入口',
+                channelDetailMissing: '未配置 — 访客不可见',
+                channelDetailOn: '链接已启用',
+                overlayGoSection: '前往板块',
+                overlayOpenLink: '打开链接',
+                overlayDialSales: '拨打销售热线',
+                overlayDialCustomer: '拨打客服热线',
+                salesHotlineLabel: '销售热线:',
+                customerHotlineLabel: '客服热线:',
+                adminPreviewHint: '\n\n访客提示：此处库存与分析仅供展示；完整操作需在管理后台进行。',
+                visitorOverlayIntro: '相册预览 — 然后前往页面板块或打开外部链接。',
+                visitorJumpProducts: '前往产品与工厂相关板块',
+                visitorJumpBranches: '前往沙特分支机构指南',
+                visitorJumpServices: '前往企业服务介绍',
+                visitorJumpAbout: '前往公司简介',
+                visitorJumpDoors: '前往 WPC 门类产品板块',
+                visitorJumpAluminum: '前往铝制品板块',
+                visitorJumpColorCatalog: '前往 Nebras 卷材色卡版块',
+                visitorJumpInside: '站内跳转',
+                visitorJumpExternal: '外部链接（新窗口）'
             }
         };
 
@@ -2567,7 +3563,7 @@
 
             document.getElementById('nav-home').innerHTML = text.nav.home;
             document.getElementById('nav-services').innerHTML = text.nav.services;
-            document.getElementById('nav-admin').innerHTML = text.nav.admin;
+            document.getElementById('nav-admin').innerHTML = currentAdmin ? text.nav.adminStaff : text.nav.adminVisitor;
             document.getElementById('nav-about').innerHTML = text.nav.about;
             document.getElementById('nav-doors').innerHTML = text.nav.doors;
             document.getElementById('nav-nebOther').innerHTML = text.nav.nebOther;
@@ -2592,15 +3588,18 @@
             setElementText('about-text-2', text.aboutText2);
             applyDynamicAboutContent(lang);
 
-            setElementText('service-title-1', text.serviceTitle1, true);
+            setElementText('service-title-1', text.serviceTitle1);
             setElementText('service-text-1', text.serviceText1);
-            setElementText('service-title-2', text.serviceTitle2, true);
+            setElementText('service-title-2', text.serviceTitle2);
             setElementText('service-text-2', text.serviceText2);
-            setElementText('service-title-3', text.serviceTitle3, true);
+            setElementText('service-title-3', text.serviceTitle3);
             setElementText('service-text-3', text.serviceText3);
 
             setElementText('quick-services-title', text.quickServicesTitle);
             setElementText('quick-services-subtitle', text.quickServicesSubtitle);
+            setElementText('color-catalog-title', text.colorCatalogTitle);
+            setElementText('color-catalog-subtitle', text.colorCatalogSubtitle);
+            setElementText('color-catalog-body', text.colorCatalogBody);
             setElementText('structure-title', text.sectionTitle);
             setElementText('structure-subtitle', text.sectionSubtitle);
             setElementText('visitor-role-title', text.visitorTitle);
@@ -2634,13 +3633,17 @@
             setElementText('top-smart-routing-btn', text.topSmartButton);
 
             setElementText('lang-current-label', text.currentLangLabel);
-            setElementText('footer-designer-line', text.footerDesigner);
+            applyFooterContent(text);
+            renderCompanySocialSection(text);
 
             const langMenu = document.getElementById('lang-menu');
             if (langMenu) langMenu.classList.remove('show');
             const langToggleBtn = document.getElementById('lang-toggle-btn');
             if (langToggleBtn) langToggleBtn.setAttribute('aria-expanded', 'false');
+            renderVisitorIcons();
             displayBranches();
+            syncAdminSessionClass();
+            renderDashboardChannelsStatus();
         }
 
     </script>
