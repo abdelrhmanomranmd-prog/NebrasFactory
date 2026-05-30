@@ -1,0 +1,19 @@
+.DS_Store
+Thumbs.db
+desktop.ini
+*.log
+.cursor/
+
+# مجلدات مؤقتة (لا تُرفع)
+.tmp_video_frames/
+.tmp-video-frames/
+
+# Python / أدوات تطوير
+tools/__pycache__/
+*.pyc
+__pycache__/
+
+# بيئة محلية (لا ترفعي مفاتيح سرية)
+.env
+.env.local
+.env.*.local

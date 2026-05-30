@@ -1,0 +1,106 @@
+:root {
+    --primary-blue: #0d2840;
+    --accent-blue: #00a8ff;
+    --pvc-bg: url('/images/pvc-background.avif'); /* صورة الحبيبات */
+    --wpc-bg: url('/images/wpc-background.avif'); /* صورة الأبواب */
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body { 
+    font-family: 'Cairo', sans-serif; 
+    background-color: #f0f2f5; 
+}
+
+.top-contact-bar {
+    background: linear-gradient(90deg, #071a2b, #0d2840);
+    color: #fff;
+    padding: 8px 5%;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    border-bottom: 2px solid rgba(0, 168, 255, 0.35);
+}
+
+.top-contact-bar .numbers {
+    display: flex;
+    gap: 16px;
+    font-weight: 700;
+    font-size: 0.95rem;
+    flex-wrap: wrap;
+}
+
+.top-bar-brand-col {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.header-occasion-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid var(--occasion-accent, #d4af37);
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #fff;
+    white-space: nowrap;
+}
+
+.header-occasion-chip[hidden] { display: none !important; }
+
+.header-occasion-chip .header-occasion-icon {
+    font-size: 1rem;
+    color: var(--occasion-accent, #00d4ff);
+}
+
+.header-campaign-title {
+    margin: 0;
+    font-size: clamp(1.15rem, 2.4vw, 1.75rem);
+    font-weight: 800;
+    line-height: 1.35;
+    color: #fff;
+    text-shadow: 0 2px 12px rgba(0, 0, 0, 0.85);
+}
+
+.header-campaign-title i {
+    color: var(--accent-blue);
+    margin-inline-end: 6px;
+}
+
+.hero-copy .hero-tagline-removed,
+#hero-text {
+    display: none !important;
+}
+
+.hero-content-wrap.hero-visual-only {
+    min-height: min(72vh, 640px);
+    pointer-events: none;
+}
+
+.hero-content-wrap.hero-visual-only .hero-copy {
+    display: none;
+}
+
+.top-contact-bar .actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.top-contact-bar button {
+    border: none;
+    border-radius: 14px;
+    padding: 8px 12px;
+    font-weight: 700;
+    cursor: pointer;
+    background: #00a8ff;
+    color: #062038;
+}
+

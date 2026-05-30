@@ -1,0 +1,108 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 920" class="wpc-door-svg" aria-hidden="true">
+  <defs>
+    <linearGradient id="wpcFrameGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7a828a"/>
+      <stop offset="45%" stop-color="#525960"/>
+      <stop offset="100%" stop-color="#3a4046"/>
+    </linearGradient>
+    <linearGradient id="wpcLeafGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="var(--door-light, #d8dce2)"/>
+      <stop offset="42%" stop-color="var(--door-face, #b8bcc4)"/>
+      <stop offset="100%" stop-color="var(--door-dark, #7a828a)"/>
+    </linearGradient>
+    <linearGradient id="wpcGlassGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="rgba(210,230,245,0.85)"/>
+      <stop offset="50%" stop-color="rgba(140,175,200,0.55)"/>
+      <stop offset="100%" stop-color="rgba(230,240,250,0.75)"/>
+    </linearGradient>
+    <linearGradient id="wpcThresholdGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#4a5056"/>
+      <stop offset="100%" stop-color="#1a1e22"/>
+    </linearGradient>
+    <filter id="wpcDoorShadow" x="-15%" y="-8%" width="130%" height="115%">
+      <feDropShadow dx="10" dy="16" stdDeviation="14" flood-color="#000" flood-opacity="0.5"/>
+    </filter>
+    <pattern id="wpcDoorTexture" patternUnits="userSpaceOnUse" width="120" height="120">
+      <image id="wpcDoorTextureImg" href="" width="120" height="120" preserveAspectRatio="xMidYMid slice"/>
+    </pattern>
+  </defs>
+  <g filter="url(#wpcDoorShadow)">
+    <rect x="18" y="8" width="404" height="892" rx="4" fill="url(#wpcFrameGrad)" stroke="#2e3338" stroke-width="2"/>
+    <rect x="38" y="38" width="364" height="832" fill="#3a4046"/>
+    <rect x="18" y="878" width="404" height="22" rx="2" fill="url(#wpcThresholdGrad)"/>
+    <g id="wpcSvgSidelite" opacity="0">
+      <rect x="318" y="48" width="72" height="780" fill="url(#wpcFrameGrad)" stroke="#2e3338" stroke-width="1"/>
+      <rect x="328" y="58" width="52" height="760" fill="url(#wpcGlassGrad)" stroke="rgba(255,255,255,0.35)" stroke-width="2"/>
+    </g>
+    <g id="wpcSvgLeafA">
+      <rect id="wpcSvgFaceA" x="52" y="48" width="248" height="772" rx="3" fill="url(#wpcLeafGrad)" stroke="rgba(0,0,0,0.15)" stroke-width="1"/>
+      <g class="wpc-svg-detail wpc-svg-shaker" opacity="0">
+        <rect x="68" y="68" width="102" height="360" fill="rgba(0,0,0,0.04)" stroke="rgba(255,255,255,0.2)" stroke-width="2" rx="2"/>
+        <rect x="182" y="68" width="102" height="360" fill="rgba(0,0,0,0.04)" stroke="rgba(255,255,255,0.2)" stroke-width="2" rx="2"/>
+        <rect x="68" y="448" width="102" height="352" fill="rgba(0,0,0,0.04)" stroke="rgba(255,255,255,0.2)" stroke-width="2" rx="2"/>
+        <rect x="182" y="448" width="102" height="352" fill="rgba(0,0,0,0.04)" stroke="rgba(255,255,255,0.2)" stroke-width="2" rx="2"/>
+      </g>
+      <g class="wpc-svg-detail wpc-svg-grooves" opacity="0">
+        <rect x="58" y="268" width="236" height="7" rx="2" fill="rgba(0,0,0,0.2)"/>
+        <rect x="58" y="418" width="236" height="7" rx="2" fill="rgba(0,0,0,0.18)"/>
+        <rect x="58" y="568" width="236" height="7" rx="2" fill="rgba(0,0,0,0.16)"/>
+      </g>
+      <g class="wpc-svg-detail wpc-svg-vision" opacity="0">
+        <rect x="88" y="110" width="176" height="210" rx="6" fill="url(#wpcGlassGrad)" stroke="#5a6269" stroke-width="3"/>
+        <rect x="98" y="120" width="156" height="190" rx="4" fill="none" stroke="rgba(255,255,255,0.4)" stroke-width="1"/>
+      </g>
+      <g class="wpc-svg-detail wpc-svg-louver" opacity="0">
+        <rect x="62" y="100" width="228" height="660" fill="rgba(0,0,0,0.08)" stroke="rgba(0,0,0,0.1)" stroke-width="1"/>
+        <path d="M62 120h228M62 145h228M62 170h228M62 195h228M62 220h228M62 245h228M62 270h228M62 295h228M62 320h228M62 345h228M62 370h228M62 395h228M62 420h228M62 445h228M62 470h228M62 495h228M62 520h228M62 545h228M62 570h228M62 595h228M62 620h228M62 645h228M62 670h228M62 695h228M62 720h228M62 745h228" stroke="rgba(0,0,0,0.22)" stroke-width="3"/>
+      </g>
+      <rect x="268" y="398" width="20" height="76" rx="3" fill="#3d4349" stroke="#2a2e33" stroke-width="1"/>
+      <circle cx="278" cy="436" r="7" fill="#111" stroke="#999" stroke-width="1.5"/>
+      <g id="wpcSvgHandleA" transform="translate(248, 408)">
+        <g class="wpc-hw-lever-black">
+          <rect x="18" y="0" width="12" height="52" rx="3" fill="#2a2a2a"/>
+          <rect x="0" y="22" width="36" height="9" rx="3" fill="#333"/>
+        </g>
+        <g class="wpc-hw-lever-chrome" opacity="0">
+          <rect x="18" y="0" width="12" height="52" rx="3" fill="url(#wpcFrameGrad)"/>
+          <rect x="0" y="22" width="36" height="9" rx="3" fill="#e8ecf0"/>
+        </g>
+        <g class="wpc-hw-pull-inox" opacity="0">
+          <rect x="20" y="0" width="8" height="58" rx="4" fill="#b8c0c8"/>
+        </g>
+        <g class="wpc-hw-knob-gold" opacity="0">
+          <circle cx="24" cy="28" r="14" fill="#d4af37" stroke="#8b6914" stroke-width="2"/>
+          <circle cx="20" cy="24" r="4" fill="rgba(255,255,255,0.35)"/>
+        </g>
+      </g>
+      <g id="wpcSvgHingesA">
+        <rect x="44" y="120" width="10" height="36" rx="2" fill="#8a929a" stroke="#5a6269" stroke-width="1"/>
+        <rect x="44" y="400" width="10" height="36" rx="2" fill="#8a929a" stroke="#5a6269" stroke-width="1"/>
+        <rect x="44" y="680" width="10" height="36" rx="2" fill="#8a929a" stroke="#5a6269" stroke-width="1"/>
+      </g>
+    </g>
+    <g id="wpcSvgLeafB" opacity="0">
+      <rect id="wpcSvgFaceB" x="308" y="48" width="248" height="772" rx="3" fill="url(#wpcLeafGrad)" stroke="rgba(0,0,0,0.15)" stroke-width="1"/>
+      <g class="wpc-svg-detail wpc-svg-shaker" opacity="0">
+        <rect x="324" y="68" width="102" height="360" fill="rgba(0,0,0,0.04)" stroke="rgba(255,255,255,0.2)" stroke-width="2" rx="2"/>
+        <rect x="438" y="68" width="102" height="360" fill="rgba(0,0,0,0.04)" stroke="rgba(255,255,255,0.2)" stroke-width="2" rx="2"/>
+        <rect x="324" y="448" width="102" height="352" fill="rgba(0,0,0,0.04)" stroke="rgba(255,255,255,0.2)" stroke-width="2" rx="2"/>
+        <rect x="438" y="448" width="102" height="352" fill="rgba(0,0,0,0.04)" stroke="rgba(255,255,255,0.2)" stroke-width="2" rx="2"/>
+      </g>
+      <g class="wpc-svg-detail wpc-svg-grooves" opacity="0">
+        <rect x="314" y="268" width="236" height="7" rx="2" fill="rgba(0,0,0,0.2)"/>
+        <rect x="314" y="418" width="236" height="7" rx="2" fill="rgba(0,0,0,0.18)"/>
+        <rect x="314" y="568" width="236" height="7" rx="2" fill="rgba(0,0,0,0.16)"/>
+      </g>
+      <g class="wpc-svg-detail wpc-svg-vision" opacity="0">
+        <rect x="344" y="110" width="176" height="210" rx="6" fill="url(#wpcGlassGrad)" stroke="#5a6269" stroke-width="3"/>
+      </g>
+      <rect x="524" y="398" width="20" height="76" rx="3" fill="#3d4349"/>
+      <g id="wpcSvgHandleB" transform="translate(504, 408)">
+        <g class="wpc-hw-lever-black">
+          <rect x="18" y="0" width="12" height="52" rx="3" fill="#2a2a2a"/>
+          <rect x="0" y="22" width="36" height="9" rx="3" fill="#333"/>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>

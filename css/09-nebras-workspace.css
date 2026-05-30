@@ -1,0 +1,619 @@
+/* مساحة العمل الداخلية — منصة + معرض + متجر */
+
+body.nebras-workspace-active {
+    overflow: hidden;
+}
+
+body.nebras-workspace-active .top-contact-bar,
+body.nebras-workspace-active .company-legal-bar,
+body.nebras-workspace-active header {
+    display: none !important;
+}
+
+body.nebras-workspace-active .nebras-storefront {
+    display: none !important;
+}
+
+body.nebras-workspace-active #nebras-workspace {
+    display: block;
+}
+
+.nebras-workspace {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    background: linear-gradient(165deg, #f4f8fc 0%, #e8f0f8 45%, #f8fafc 100%);
+    animation: workspaceFadeIn 0.38s ease;
+}
+
+@keyframes workspaceFadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.workspace-shell {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 16px 20px;
+    box-sizing: border-box;
+}
+
+.workspace-shell.workspace-shell--door-designer {
+    max-width: min(1560px, 100%);
+}
+
+.workspace-topbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 16px;
+    padding: 14px 0 12px;
+    border-bottom: 1px solid rgba(13, 40, 64, 0.1);
+}
+
+.workspace-back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: none;
+    border-radius: 999px;
+    padding: 10px 18px;
+    font-weight: 700;
+    cursor: pointer;
+    background: rgba(13, 40, 64, 0.08);
+    color: var(--primary-blue, #0d2840);
+    transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.workspace-back-btn:hover {
+    background: rgba(13, 40, 64, 0.14);
+    transform: translateX(2px);
+}
+
+.workspace-topbar-center {
+    flex: 1 1 200px;
+    min-width: 0;
+}
+
+.workspace-layer-badge {
+    display: inline-block;
+    font-size: 0.75rem;
+    font-weight: 800;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(21, 94, 148, 0.12);
+    color: var(--accent-blue, #155e94);
+    margin-bottom: 4px;
+}
+
+.workspace-page-title {
+    margin: 0;
+    font-size: clamp(1.15rem, 2.5vw, 1.45rem);
+    color: var(--primary-blue, #0d2840);
+    line-height: 1.35;
+}
+
+.workspace-topbar-actions {
+    display: flex;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.workspace-action-btn {
+    border: 1px solid rgba(13, 40, 64, 0.18);
+    border-radius: 12px;
+    padding: 10px 14px;
+    background: #fff;
+    cursor: pointer;
+    color: var(--primary-blue, #0d2840);
+    font-weight: 600;
+}
+
+.workspace-action-btn--primary {
+    background: linear-gradient(135deg, #0d2840, #155e94);
+    color: #fff;
+    border-color: transparent;
+}
+
+.workspace-pillar-nav {
+    display: flex;
+    gap: 8px;
+    padding: 12px 0;
+    overflow-x: auto;
+}
+
+.workspace-pillar-btn {
+    flex: 1 1 0;
+    min-width: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 2px solid rgba(13, 40, 64, 0.1);
+    background: rgba(255, 255, 255, 0.75);
+    cursor: pointer;
+    font-weight: 700;
+    color: var(--primary-blue, #0d2840);
+    transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+}
+
+.workspace-pillar-btn.is-active {
+    border-color: var(--accent-blue, #155e94);
+    background: #fff;
+    box-shadow: 0 8px 24px rgba(21, 94, 148, 0.18);
+}
+
+.workspace-main {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 8px 4px 24px;
+    -webkit-overflow-scrolling: touch;
+    min-height: 0;
+}
+
+.workspace-intro {
+    margin: 0 0 20px;
+    line-height: 1.75;
+    color: #334155;
+    white-space: pre-wrap;
+}
+
+.workspace-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 14px;
+    margin-bottom: 22px;
+}
+
+.workspace-gallery img {
+    width: 100%;
+    min-height: 160px;
+    max-height: 280px;
+    object-fit: cover;
+    border-radius: 16px;
+    box-shadow: 0 12px 32px rgba(13, 40, 64, 0.12);
+}
+
+.workspace-docs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.workspace-docs a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: 12px;
+    background: rgba(13, 40, 64, 0.06);
+    color: var(--primary-blue, #0d2840);
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.workspace-actions-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(13, 40, 64, 0.08);
+}
+
+.workspace-branches-layout {
+    display: grid;
+    grid-template-columns: 1fr 1.2fr;
+    gap: 20px;
+    min-height: 420px;
+}
+
+.workspace-branches-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    max-height: 520px;
+    overflow-y: auto;
+}
+
+.workspace-branch-card {
+    text-align: start;
+    border: 2px solid rgba(13, 40, 64, 0.1);
+    border-radius: 16px;
+    padding: 16px 18px;
+    background: #fff;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.workspace-branch-card.is-active {
+    border-color: #c0392b;
+    box-shadow: 0 10px 28px rgba(192, 57, 43, 0.15);
+}
+
+.workspace-branch-card h3 {
+    margin: 0 0 8px;
+    font-size: 1.05rem;
+    color: var(--primary-blue, #0d2840);
+}
+
+.workspace-branch-card p {
+    margin: 4px 0;
+    font-size: 0.9rem;
+    color: #475569;
+}
+
+.workspace-branch-map {
+    border-radius: 18px;
+    background: #e2e8f0;
+    min-height: 360px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    text-align: center;
+}
+
+.workspace-branch-map iframe {
+    width: 100%;
+    height: 100%;
+    min-height: 360px;
+    border: 0;
+    border-radius: 14px;
+}
+
+.workspace-product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 18px;
+}
+
+.workspace-product-tile {
+    border: none;
+    padding: 0;
+    background: #fff;
+    border-radius: 18px;
+    overflow: hidden;
+    cursor: pointer;
+    text-align: inherit;
+    box-shadow: 0 14px 36px rgba(13, 40, 64, 0.1);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.workspace-product-tile:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 48px rgba(21, 94, 148, 0.2);
+}
+
+.workspace-product-tile img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.workspace-product-tile h3 {
+    margin: 0;
+    padding: 14px 16px;
+    font-size: 1rem;
+    color: var(--primary-blue, #0d2840);
+}
+
+.workspace-variants-wrap {
+    margin-top: 16px;
+}
+
+.workspace-section-mount {
+    background: #fff;
+    border-radius: 20px;
+    padding: 22px 20px;
+    box-shadow: 0 14px 40px rgba(13, 40, 64, 0.08);
+}
+
+.workspace-section-mount .section-title {
+    margin-top: 0;
+}
+
+@media (max-width: 768px) {
+    .workspace-branches-layout {
+        grid-template-columns: 1fr;
+    }
+    .workspace-branch-map {
+        min-height: 240px;
+        order: -1;
+    }
+    .workspace-gallery {
+        grid-template-columns: 1fr;
+    }
+    .workspace-gallery img {
+        min-height: 200px;
+        max-height: none;
+    }
+}
+
+/* Nebras Color Collection — workspace version */
+.nebras-color-collection-head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 16px;
+}
+
+.nebras-color-collection-pill {
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid #d5dde6;
+    color: #31465b;
+    background: #f4f7fb;
+}
+
+.nebras-color-collection-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px 12px;
+}
+
+.nebras-color-workspace .is-hidden {
+    display: none !important;
+}
+
+.nebras-color-cover {
+    border-radius: 18px;
+    padding: 26px 18px 22px;
+    text-align: center;
+    background: linear-gradient(180deg, #0f4564 0%, #125678 55%, #1f7194 100%);
+    color: #e9f7ff;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05), 0 16px 34px rgba(13, 40, 64, 0.22);
+    margin-bottom: 16px;
+}
+
+.nebras-color-cover-logo {
+    width: 78px;
+    height: 78px;
+    margin: 0 auto 12px;
+    border-radius: 20px;
+    display: grid;
+    place-items: center;
+    font-size: 1.9rem;
+    color: #fff;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.nebras-color-cover-brand { margin: 0; font-size: 0.72rem; letter-spacing: 0.12em; opacity: 0.86; }
+.nebras-color-cover-title { margin: 10px 0 4px; font-size: 2rem; font-weight: 500; letter-spacing: 0.02em; }
+.nebras-color-cover-title em { font-style: italic; color: #e4be67; font-weight: 600; }
+.nebras-color-cover-sub { margin: 0 0 14px; font-size: 0.86rem; opacity: 0.9; }
+.nebras-color-cover-sales { margin: 10px 0 14px; font-size: 0.84rem; font-weight: 700; opacity: 0.96; }
+
+.nebras-color-open-btn,
+.nebras-color-back-btn {
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 0.86rem;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.nebras-color-open-btn:hover,
+.nebras-color-back-btn:hover { background: rgba(255, 255, 255, 0.2); }
+
+.nebras-color-deck-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    gap: 10px;
+}
+
+.nebras-color-deck-count {
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: #36516b;
+    letter-spacing: 0.06em;
+}
+
+.nebras-color-deck-foot {
+    margin: 14px 0 0;
+    text-align: center;
+    font-size: 0.8rem;
+    color: #607890;
+    font-weight: 600;
+}
+
+.nebras-color-tile {
+    border: 1px solid #dfe5ec;
+    border-radius: 12px;
+    background: #f7fafc;
+    padding: 8px 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    cursor: pointer;
+    font-family: inherit;
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+}
+
+.nebras-color-tile:hover {
+    border-color: #b8c7d8;
+    box-shadow: 0 8px 20px rgba(13, 40, 64, 0.08);
+    transform: translateY(-1px);
+}
+
+.nebras-color-tile-swatch { display: block; width: 100%; aspect-ratio: 1 / 1; border-radius: 10px; overflow: hidden; background: #e9eef4; }
+.nebras-color-tile-swatch img { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
+.nebras-color-tile-code { text-align: center; font-size: 0.78rem; font-weight: 800; color: #112133; margin-top: 2px; }
+.nebras-color-tile-name-ar { text-align: center; font-size: 0.82rem; font-weight: 700; color: #1f354b; line-height: 1.2; }
+.nebras-color-tile-name-en { text-align: center; font-size: 0.72rem; color: #60778f; line-height: 1.2; }
+
+.nebras-color-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 2400;
+    display: grid;
+    place-items: center;
+    padding: 14px;
+}
+
+.nebras-color-overlay.is-hidden { display: none; }
+.nebras-color-overlay-backdrop { position: absolute; inset: 0; background: rgba(10, 20, 30, 0.62); backdrop-filter: blur(2px); }
+.nebras-color-overlay-dialog {
+    position: relative;
+    width: min(560px, 100%);
+    border-radius: 16px;
+    background: #ffffff;
+    border: 1px solid #d6e0eb;
+    box-shadow: 0 24px 54px rgba(0, 0, 0, 0.32);
+    padding: 14px 14px 12px;
+    text-align: center;
+}
+
+.nebras-color-overlay-close {
+    position: absolute;
+    top: 6px;
+    right: 8px;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1px solid #d4dbe3;
+    background: #fff;
+    font-size: 1.35rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.nebras-color-overlay-swatch { width: 100%; max-width: 360px; margin: 8px auto; border-radius: 14px; overflow: hidden; border: 1px solid #d3dce6; background: #edf2f7; }
+.nebras-color-overlay-swatch img { width: 100%; display: block; aspect-ratio: 1/1; object-fit: cover; }
+.nebras-color-overlay-code { font-size: 0.92rem; font-weight: 800; color: #10243a; letter-spacing: 0.04em; }
+.nebras-color-overlay-name-ar { margin-top: 4px; font-size: 1.05rem; font-weight: 800; color: #1a3049; }
+.nebras-color-overlay-name-en { margin-top: 2px; font-size: 0.9rem; color: #607890; }
+.nebras-color-overlay-desc { margin: 8px auto 0; max-width: 92%; font-size: 0.84rem; color: #334e68; line-height: 1.55; }
+
+.nebras-color-overlay-footer {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.nebras-color-nav-btn {
+    border: 1px solid #d4deea;
+    background: #f9fbfd;
+    color: #1c334b;
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 0.84rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.nebras-color-overlay-count { font-size: 0.84rem; font-weight: 700; color: #405973; }
+.nebras-color-overlay-share-wrap { margin-top: 8px; display: flex; justify-content: center; }
+
+@media (max-width: 768px) {
+    .nebras-color-collection-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .nebras-color-cover-title { font-size: 1.55rem; }
+}
+
+/* حسابات بنكية — مساحة العمل */
+.nebras-bank-workspace {
+    display: grid;
+    gap: 18px;
+}
+
+.nebras-bank-workspace-hero {
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 14px 36px rgba(13, 40, 64, 0.12);
+    border: 1px solid rgba(13, 40, 64, 0.08);
+    background: #1a120c;
+}
+
+.nebras-bank-workspace-hero-img {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: contain;
+    object-position: center;
+}
+
+.nebras-bank-workspace-head {
+    text-align: center;
+}
+
+.nebras-bank-workspace-title {
+    margin: 0 0 6px;
+    font-size: 1.15rem;
+    color: #0d2840;
+}
+
+.nebras-bank-workspace-meta {
+    margin: 2px 0;
+    font-size: 0.86rem;
+    color: #405973;
+}
+
+.nebras-bank-workspace-plaques .bank-card {
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .nebras-bank-workspace-plaques { grid-template-columns: 1fr; }
+    .visitor-bank-plates { inset: 48px 8px 54px; gap: 4px; }
+}
+
+.workspace-mode-hint {
+    margin: 0 0 14px;
+    padding: 12px 16px;
+    border-radius: 14px;
+    font-size: 0.92rem;
+    line-height: 1.65;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.workspace-mode-hint i {
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.workspace-mode-hint--browse {
+    background: rgba(21, 94, 148, 0.08);
+    border: 1px solid rgba(21, 94, 148, 0.18);
+    color: #0d2840;
+}
+
+.workspace-mode-hint--shop {
+    background: rgba(34, 139, 34, 0.08);
+    border: 1px solid rgba(34, 139, 34, 0.2);
+    color: #14532d;
+}
+
+.variant-preview-only {
+    display: inline-block;
+    margin-top: 8px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #155e94;
+    opacity: 0.9;
+}

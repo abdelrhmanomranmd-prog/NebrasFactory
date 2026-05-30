@@ -1,0 +1,131 @@
+/* حملة الهيدر — بجوار اسم الشركة */
+.header-top-row--campaign {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: clamp(12px, 2.5vw, 28px);
+    flex-wrap: wrap;
+}
+
+.header-brand-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    flex: 0 1 auto;
+    max-width: min(420px, 42vw);
+}
+
+[dir="ltr"] .header-brand-stack {
+    align-items: flex-end;
+}
+
+.header-campaign-panel {
+    flex: 1 1 360px;
+    max-width: min(720px, 58vw);
+    padding: 4px 0 2px;
+}
+
+.header-campaign-headline {
+    margin: 0 0 6px;
+    font-size: clamp(1.05rem, 2vw, 1.45rem);
+    font-weight: 800;
+    line-height: 1.3;
+    color: #fff;
+    letter-spacing: -0.02em;
+}
+
+.header-campaign-tagline {
+    margin: 0 0 12px;
+    font-size: clamp(0.78rem, 1.35vw, 0.92rem);
+    line-height: 1.55;
+    color: rgba(255, 255, 255, 0.88);
+    max-width: 52ch;
+}
+
+.header-campaign-cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.header-cta {
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 700;
+    padding: 9px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
+    border: none;
+}
+
+.header-cta--primary {
+    background: var(--accent-red, #c41e3a);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(196, 30, 58, 0.35);
+}
+
+.header-cta--primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(196, 30, 58, 0.45);
+}
+
+.header-cta--ghost {
+    background: transparent;
+    color: #fff;
+    border: 1.5px solid rgba(255, 255, 255, 0.75);
+}
+
+.header-cta--ghost:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.header-campaign-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px 22px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.header-stat {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 72px;
+}
+
+.header-stat strong {
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.1;
+}
+
+.header-stat span {
+    font-size: 0.72rem;
+    color: rgba(255, 255, 255, 0.78);
+    line-height: 1.3;
+}
+
+@media (max-width: 900px) {
+    .header-top-row--campaign {
+        flex-direction: column;
+    }
+    .header-brand-stack,
+    .header-campaign-panel {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 520px) {
+    .header-campaign-cta {
+        flex-direction: column;
+    }
+    .header-cta {
+        width: 100%;
+        text-align: center;
+    }
+}

@@ -1,0 +1,569 @@
+/* منصة نبراس — بوابة الزائر + داشبورد + شركاء */
+
+.nebras-gateway {
+    padding-top: 8px;
+}
+
+.nebras-gateway-head {
+    margin-bottom: 8px;
+}
+
+.visitor-icons-lanes {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+}
+
+.visitor-lane {
+    padding: 22px 20px 24px;
+    border-radius: 24px;
+    background: rgba(255, 255, 255, 0.72);
+    border: 1px solid rgba(21, 94, 148, 0.1);
+    box-shadow: 0 16px 44px rgba(13, 40, 64, 0.08);
+}
+
+.visitor-lane--store {
+    border-top: 4px solid #155e94;
+}
+
+.visitor-lane--showroom {
+    border-top: 4px solid #7c3aed;
+}
+
+.visitor-lane--platform {
+    border-top: 4px solid #0d2840;
+}
+
+.visitor-lane-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+.visitor-lane-head > i {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 14px;
+    background: linear-gradient(145deg, #0d2840, #155e94);
+    color: #fff;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+}
+
+.visitor-lane--showroom .visitor-lane-head > i {
+    background: linear-gradient(145deg, #5b21b6, #7c3aed);
+}
+
+.visitor-lane--platform .visitor-lane-head > i {
+    background: linear-gradient(145deg, #1e293b, #334155);
+}
+
+.visitor-lane-title {
+    margin: 0 0 6px;
+    font-size: 1.2rem;
+    color: var(--primary-blue, #0d2840);
+}
+
+.visitor-lane-hint {
+    margin: 0;
+    font-size: 0.9rem;
+    opacity: 0.82;
+    line-height: 1.55;
+    color: #475569;
+}
+
+.dashboard-zone-label {
+    margin: 28px 0 14px;
+    padding: 0 4px;
+    font-size: 1.05rem;
+    color: var(--primary-blue, #0d2840);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.dashboard-zone-label i {
+    color: var(--accent-blue, #155e94);
+}
+
+.nebras-storefront-block .section-title {
+    margin-bottom: 20px;
+}
+
+@media (max-width: 768px) {
+    .visitor-lane {
+        padding: 16px 14px 18px;
+    }
+    .visitor-lane-head > i {
+        width: 42px;
+        height: 42px;
+    }
+}
+
+/* منصة نبراس — داشبورد مبدع + شركاء + اعتمادات */
+
+.nebras-partners-section {
+    padding: 48px 5% 56px;
+    background: linear-gradient(180deg, rgba(13, 40, 64, 0.04) 0%, rgba(255, 255, 255, 0) 100%);
+    overflow: hidden;
+}
+
+.nebras-partners-section .section-title h2 {
+    color: var(--primary-blue, #0d2840);
+}
+
+.nebras-partners-marquee {
+    position: relative;
+    margin-top: 28px;
+    mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+    -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+
+.nebras-partners-track {
+    display: flex;
+    align-items: center;
+    gap: 42px;
+    width: max-content;
+    animation: nebras-partners-scroll 42s linear infinite;
+}
+
+.nebras-partners-marquee:hover .nebras-partners-track:not(.nebras-partners-track--static) {
+    animation-play-state: paused;
+}
+
+.nebras-partners-track--static {
+    animation: none;
+    width: 100%;
+    justify-content: center;
+}
+
+.nebras-partners-empty {
+    padding: 28px 20px;
+    text-align: center;
+    color: var(--primary-blue, #0d2840);
+    opacity: 0.88;
+}
+
+.nebras-partners-empty i {
+    font-size: 2rem;
+    margin-bottom: 10px;
+    color: var(--accent-blue, #155e94);
+}
+
+.nebras-partners-empty p {
+    margin: 0;
+    font-size: 0.95rem;
+    line-height: 1.65;
+}
+
+@keyframes nebras-partners-scroll {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+
+html[dir="rtl"] .nebras-partners-marquee .nebras-partners-track:not(.nebras-partners-track--static) {
+    animation-direction: reverse;
+}
+
+.nebras-partners-section .section-title--partners h2 {
+    font-size: clamp(1.35rem, 2.5vw, 1.75rem);
+    letter-spacing: 0.02em;
+}
+
+.nebras-partners-section .section-title--partners span {
+    display: block;
+    margin-top: 6px;
+    font-size: 1.05rem;
+    font-weight: 600;
+    opacity: 0.88;
+}
+
+.nebras-partners-marquee--premium .nebras-partner-logo span:empty {
+    display: none;
+}
+
+.nebras-partner-logo {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    min-width: 140px;
+    padding: 18px 22px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 12px 36px rgba(13, 40, 64, 0.12);
+    border: 1px solid rgba(21, 94, 148, 0.12);
+    transition: transform 0.35s ease, box-shadow 0.35s ease;
+    text-decoration: none;
+    color: inherit;
+}
+
+.nebras-partner-logo:hover {
+    transform: translateY(-6px) scale(1.03);
+    box-shadow: 0 20px 48px rgba(21, 94, 148, 0.22);
+}
+
+.nebras-partner-logo img {
+    height: 56px;
+    width: auto;
+    max-width: 160px;
+    object-fit: contain;
+}
+
+.nebras-partner-logo span {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: var(--primary-blue, #0d2840);
+    text-align: center;
+}
+
+.admin-dashboard .dashboard-partners-block {
+    margin: 0 0 32px;
+    padding: 32px 28px 36px;
+    border-radius: 24px;
+    background: linear-gradient(145deg, rgba(13, 40, 64, 0.94) 0%, rgba(21, 94, 148, 0.88) 52%, rgba(56, 189, 248, 0.22) 100%);
+    border: 1px solid rgba(56, 189, 248, 0.28);
+    box-shadow: 0 22px 56px rgba(13, 40, 64, 0.28);
+    overflow: hidden;
+}
+
+.admin-dashboard .dashboard-partners-block h3,
+.admin-dashboard .dashboard-partners-block .dashboard-partners-subtitle {
+    color: #fff;
+}
+
+.admin-dashboard .dashboard-partners-block .scm-hint {
+    color: rgba(255, 255, 255, 0.88);
+}
+
+.dashboard-partners-block h3 {
+    margin: 0 0 8px;
+    color: var(--primary-blue, #0d2840);
+    font-size: 1.35rem;
+}
+
+.dashboard-partners-block .nebras-partners-marquee {
+    margin-top: 18px;
+}
+
+.nebras-partners-showcase .dashboard-partners-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 10px 16px;
+    margin-bottom: 4px;
+}
+
+.nebras-partners-showcase .dashboard-partners-subtitle {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--accent-blue, #155e94);
+    opacity: 0.95;
+}
+
+.nebras-partners-stage {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    margin-top: 8px;
+}
+
+.nebras-partners-stage--dashboard {
+    margin-top: 4px;
+}
+
+.nebras-partners-stage--empty .nebras-partners-marquee {
+    display: none;
+}
+
+.nebras-partners-marquee--row1 .nebras-partners-track:not(.nebras-partners-track--static) {
+    animation-duration: 32s;
+}
+
+.nebras-partners-marquee--row2 .nebras-partners-track:not(.nebras-partners-track--static) {
+    animation-duration: 38s;
+}
+
+.nebras-partners-track--reverse:not(.nebras-partners-track--static) {
+    animation-direction: reverse;
+}
+
+html[dir="rtl"] .nebras-partners-track--reverse:not(.nebras-partners-track--static) {
+    animation-direction: normal;
+}
+
+.nebras-partner-logo--logo-only span {
+    display: none;
+}
+
+.nebras-partners-marquee--premium {
+    margin-top: 20px;
+    padding: 8px 0;
+}
+
+.nebras-partners-marquee--premium .nebras-partners-track {
+    animation: nebras-partners-scroll 28s linear infinite;
+    gap: 36px;
+}
+
+.nebras-partners-marquee--premium .nebras-partner-logo {
+    min-width: 150px;
+    padding: 20px 26px;
+    border-radius: 22px;
+    background: rgba(255, 255, 255, 0.96);
+    backdrop-filter: blur(8px);
+}
+
+.nebras-partners-marquee--premium .nebras-partner-logo img {
+    height: 72px;
+    max-width: 200px;
+    filter: grayscale(0.08);
+    transition: filter 0.3s ease, transform 0.35s ease;
+}
+
+.admin-dashboard .dashboard-partners-block .nebras-partner-logo img {
+    height: 80px;
+    max-width: 220px;
+}
+
+.admin-dashboard .dashboard-partners-block .nebras-partner-logo {
+    min-width: 168px;
+    padding: 22px 28px;
+}
+
+.nebras-partners-marquee--premium .nebras-partner-logo:hover img {
+    filter: grayscale(0);
+    transform: scale(1.05);
+}
+
+.dashboard-hub-intro {
+    margin: 0 0 24px;
+    padding: 20px 22px;
+    border-radius: 20px;
+    background: linear-gradient(120deg, rgba(13, 40, 64, 0.92) 0%, rgba(21, 94, 148, 0.88) 55%, rgba(56, 189, 248, 0.35) 100%);
+    color: #fff;
+    box-shadow: 0 18px 40px rgba(13, 40, 64, 0.2);
+}
+
+.dashboard-hub-intro p {
+    margin: 8px 0 0;
+    opacity: 0.92;
+    line-height: 1.7;
+    font-size: 0.95rem;
+}
+
+.dashboard-actions.dashboard-tiles-bento {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 22px;
+}
+
+.dashboard-grid.dashboard-tiles-bento {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 22px;
+}
+
+.dashboard-tile-card {
+    position: relative;
+    border-radius: 22px;
+    padding: 26px 22px 24px;
+    min-height: 168px;
+    cursor: pointer;
+    overflow: hidden;
+    background: linear-gradient(145deg, #ffffff 0%, #f0f7fc 100%);
+    border: 1px solid rgba(21, 94, 148, 0.14);
+    box-shadow: 0 14px 38px rgba(13, 40, 64, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+    animation: dashboard-tile-in 0.55s ease backwards;
+    animation-delay: calc(var(--tile-i, 0) * 0.06s);
+}
+
+@keyframes dashboard-tile-in {
+    from {
+        opacity: 0;
+        transform: translateY(18px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.dashboard-tile-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 22px 50px rgba(21, 94, 148, 0.22);
+    border-color: rgba(56, 189, 248, 0.45);
+}
+
+.dashboard-tile-glow {
+    position: absolute;
+    inset: -40% -20% auto auto;
+    width: 120px;
+    height: 120px;
+    background: radial-gradient(circle, rgba(56, 189, 248, 0.35) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.dashboard-tile-card .dashboard-tile-icon {
+    width: 58px;
+    height: 58px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.45rem;
+    color: #fff;
+    background: linear-gradient(148deg, #0a1628 0%, #155e94 48%, #38bdf8 100%);
+    box-shadow: 0 12px 28px rgba(21, 94, 148, 0.4);
+    margin-bottom: 14px;
+}
+
+.dashboard-tile-card--certs .dashboard-tile-icon {
+    background: linear-gradient(148deg, #1e1b4b 0%, #4338ca 46%, #a5b4fc 100%);
+}
+
+.dashboard-tile-card h3 {
+    margin: 0 0 10px;
+    color: var(--primary-blue, #0d2840);
+    font-size: 1.15rem;
+}
+
+.dashboard-tile-card p {
+    margin: 0;
+    color: #444;
+    line-height: 1.65;
+    font-size: 0.9rem;
+}
+
+.dashboard-tile-card .dashboard-tile-arrow {
+    position: absolute;
+    left: 18px;
+    bottom: 16px;
+    opacity: 0.5;
+    font-size: 0.85rem;
+}
+
+.dashboard-main-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 28px;
+    padding: 12px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.7);
+    border: 1px solid rgba(21, 94, 148, 0.1);
+}
+
+.dashboard-main-nav button {
+    border: none;
+    border-radius: 12px;
+    padding: 10px 16px;
+    font-family: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    background: rgba(13, 40, 64, 0.06);
+    color: var(--primary-blue, #0d2840);
+    transition: background 0.2s, color 0.2s, transform 0.2s;
+}
+
+.dashboard-main-nav button:hover {
+    background: var(--accent-blue, #155e94);
+    color: #fff;
+    transform: translateY(-2px);
+}
+
+.icon-detail-modal.icon-inner-certifications {
+    max-width: 920px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.nebras-cert-grid.icon-overlay-gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 18px;
+    max-height: none;
+    margin: 20px 0 8px;
+}
+
+.nebras-cert-card {
+    border-radius: 16px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    text-align: center;
+}
+
+.nebras-cert-card img {
+    width: 100%;
+    height: 160px;
+    object-fit: cover;
+    display: block;
+}
+
+.nebras-cert-card--pdf {
+    padding: 28px 16px 12px;
+}
+
+.nebras-cert-card--pdf .nebras-cert-pdf-icon {
+    font-size: 2.8rem;
+    color: #f87171;
+    margin-bottom: 12px;
+}
+
+.nebras-cert-card h4 {
+    margin: 0;
+    padding: 12px 14px 4px;
+    font-size: 0.95rem;
+    color: #fff;
+}
+
+.nebras-cert-card p {
+    margin: 0;
+    padding: 0 14px 14px;
+    font-size: 0.82rem;
+    line-height: 1.55;
+    color: rgba(255, 255, 255, 0.82);
+}
+
+.nebras-cert-card a.nebras-cert-open {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 14px 14px;
+    padding: 8px 14px;
+    border-radius: 10px;
+    background: rgba(56, 189, 248, 0.25);
+    color: #e0f2fe;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+@media (max-width: 768px) {
+    .dashboard-actions.dashboard-tiles-bento,
+    .dashboard-grid.dashboard-tiles-bento {
+        grid-template-columns: 1fr;
+    }
+    .nebras-partner-logo {
+        min-width: 128px;
+        padding: 16px 18px;
+    }
+    .nebras-partner-logo img {
+        height: 68px;
+        max-width: 140px;
+    }
+}
+
+.nebras-partners-empty--admin {
+    border: 1px dashed rgba(21, 94, 148, 0.35);
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.6);
+}

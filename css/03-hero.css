@@ -1,0 +1,184 @@
+/* قسم الترحيب — صورة حقيقية، النص فوق الأبواب (يمين الشاشة في العربية) */
+:root {
+    --hero-banner-image: url('/images/hero-nebras-banner.png');
+}
+
+.hero.hero-real {
+    position: relative;
+    min-height: min(88vh, 760px);
+    padding: 0;
+    display: block;
+    text-align: start;
+    color: #fff;
+    overflow: hidden;
+    background: #0a0a0a;
+}
+
+.hero.hero-real .hero-bg-layer {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background-image: var(--hero-banner-image, url('/images/hero-nebras-banner.png'));
+    background-size: cover;
+    background-position: 82% 42%;
+    background-repeat: no-repeat;
+}
+
+/* إخفاء النص المطبوع على الحائط في الصورة — التركيز على الباب والنص البرمجي فقط */
+.hero.hero-real .hero-bg-layer::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: linear-gradient(
+        105deg,
+        rgba(8, 8, 12, 0.92) 0%,
+        rgba(8, 8, 12, 0.55) 28%,
+        transparent 48%
+    );
+}
+
+/* تظليل خفيف أسفل فقط — بدون طبقة لون برتقالي/زرقاء على الصورة */
+.hero.hero-real::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background: linear-gradient(
+        to top,
+        rgba(0, 0, 0, 0.78) 0%,
+        rgba(0, 0, 0, 0.25) 14%,
+        transparent 38%
+    );
+}
+
+.hero-content-wrap {
+    position: relative;
+    z-index: 2;
+    min-height: min(88vh, 760px);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: flex-start;
+    padding: 40px 5% 88px;
+    box-sizing: border-box;
+}
+
+.hero-content-wrap.hero-visual-only {
+    min-height: min(72vh, 620px);
+    padding: 0;
+    pointer-events: none;
+}
+
+.hero-copy {
+    max-width: 520px;
+    margin-inline-start: auto;
+    margin-inline-end: 2%;
+    margin-bottom: 6%;
+    text-align: start;
+}
+
+.hero-copy h1 {
+    font-size: clamp(1.65rem, 3.2vw, 2.65rem);
+    margin: 0 0 12px;
+    line-height: 1.25;
+    font-weight: 800;
+    color: #fff;
+    text-shadow: 0 3px 20px rgba(0, 0, 0, 0.9), 0 0 40px rgba(0, 0, 0, 0.5);
+}
+
+.hero-copy p {
+    font-size: clamp(0.95rem, 1.6vw, 1.12rem);
+    line-height: 1.65;
+    margin: 0;
+    opacity: 1;
+    color: #f0f4f8;
+    text-shadow: 0 2px 14px rgba(0, 0, 0, 0.85);
+}
+
+.hero-location-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px 20px;
+    background: rgba(0, 0, 0, 0.62);
+    border-top: 2px solid rgba(201, 162, 39, 0.75);
+    font-size: 0.92rem;
+    color: #f5e6c8;
+}
+
+.hero-location-bar i {
+    color: #d4af37;
+}
+
+[dir="ltr"] .hero-copy {
+    margin-inline-start: 2%;
+    margin-inline-end: auto;
+}
+
+[dir="ltr"] .hero-content-wrap {
+    align-items: flex-end;
+}
+
+@media (max-width: 900px) {
+    .hero.hero-real .hero-bg-layer {
+        background-position: 70% center;
+    }
+    .hero-copy {
+        max-width: 92%;
+        margin-inline: auto;
+        margin-bottom: 10%;
+    }
+    .hero-content-wrap {
+        align-items: center;
+        text-align: center;
+    }
+    .hero-copy {
+        text-align: center;
+    }
+}
+
+/* توافق قديم */
+.hero:not(.hero-real) {
+    background-color: #152f48;
+    background-image: linear-gradient(rgba(13,40,64,0.82), rgba(13,40,64,0.82)),
+                url('/images/background.png');
+    background-size: cover;
+    background-position: center;
+    color: white;
+    padding: 100px 5%;
+    text-align: center;
+    min-height: 60vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+.complaint-form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.complaint-form-grid textarea,
+.complaint-form-grid input {
+    width: 100%;
+}
+
+.complaint-form-grid .full-width {
+    grid-column: 1 / -1;
+}
+
+.hero:not(.hero-real) h1 { font-size: 2.5rem; margin-bottom: 15px; }
+.hero:not(.hero-real) p { font-size: 1.1rem; opacity: 0.9; }
+
+/* شريط المناسبة نُقل للهيدر — انظر .header-occasion-chip */

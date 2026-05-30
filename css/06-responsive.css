@@ -1,0 +1,385 @@
+
+.spotlight-card--about-vision .card-icon {
+    background: linear-gradient(148deg, #1a0a2e 0%, #5b21b6 48%, #22d3ee 100%);
+    border-color: rgba(165, 243, 252, 0.42);
+    box-shadow: 0 16px 38px rgba(91, 33, 182, 0.48), 0 0 28px rgba(34, 211, 238, 0.22);
+}
+
+.spotlight-card--service-mfg .card-icon {
+    background: linear-gradient(148deg, #4a2808 0%, #c2410c 46%, #fbbf24 100%);
+    border-color: rgba(254, 215, 170, 0.45);
+    box-shadow: 0 14px 36px rgba(194, 65, 12, 0.48);
+}
+
+.spotlight-card--service-support .card-icon {
+    background: linear-gradient(148deg, #042f2e 0%, #0f766e 50%, #5eead4 100%);
+    border-color: rgba(167, 243, 208, 0.48);
+    box-shadow: 0 14px 34px rgba(15, 118, 110, 0.45);
+}
+
+.spotlight-card--service-quality .card-icon {
+    background: linear-gradient(148deg, #1e1b4b 0%, #4338ca 46%, #a5b4fc 100%);
+    border-color: rgba(199, 210, 254, 0.42);
+    box-shadow: 0 16px 38px rgba(67, 56, 202, 0.46);
+}
+
+.visitor-icon-card.spotlight-card .card-icon {
+    background: linear-gradient(148deg, #0a1628 0%, #155e94 48%, #38bdf8 100%);
+    border-color: rgba(125, 211, 252, 0.4);
+    box-shadow: 0 14px 34px rgba(21, 94, 148, 0.48);
+}
+
+.spotlight-card .card-icon:hover {
+    transform: scale(1.09);
+    filter: brightness(1.07);
+}
+
+.spotlight-card .card-content {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    padding: 20px 18px 22px;
+    background: linear-gradient(transparent, rgba(0,0,0,0.9));
+    color: #ffffff;
+    box-sizing: border-box;
+    text-align: start;
+    z-index: 1;
+}
+
+.spotlight-card .card-content h3 {
+    font-size: 1.28rem;
+    margin: 0 0 8px;
+    color: #ffffff;
+    font-weight: 700;
+    text-shadow: 0 2px 8px rgba(0,0,0,0.45);
+}
+
+.spotlight-card .card-content p {
+    font-size: 0.92rem;
+    line-height: 1.65;
+    margin: 0;
+    color: rgba(255,255,255,0.94);
+}
+
+.spotlight-card .visitor-target-caption {
+    font-size: 0.88rem;
+    font-weight: 600;
+    opacity: 0.94;
+    margin-top: 6px;
+    line-height: 1.4;
+}
+
+.services-grid .spotlight-card {
+    min-height: 240px;
+}
+
+#about.about-grid .spotlight-card {
+    min-height: 220px;
+}
+
+.spotlight-card--about-who {
+    background-image: url("/images/background-about-us.png");
+}
+
+.spotlight-card--about-vision {
+    background-image: url("/images/background-our-vision.jpg");
+}
+
+#about .about-page-card {
+    cursor: pointer;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+#about .about-page-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 40px rgba(0, 168, 255, 0.25);
+}
+
+#about .about-card-hint {
+    display: inline-block;
+    margin-top: 10px;
+    font-size: 0.82rem;
+    opacity: 0.9;
+    color: #7dd3fc;
+    font-weight: 600;
+}
+
+.spotlight-card--service-mfg {
+    background-image: url("../images/nebras-service-manufacturing-bg.png");
+}
+
+.spotlight-card--service-support {
+    background-image: url("../images/customer-complaints-background.jpeg");
+}
+
+.spotlight-card--service-quality {
+    background-image: url("../images/nebras-service-quality-bg.png");
+}
+
+.spotlight-card--service-install {
+    background-image: url("../images/nebras-service-install-warranty-bg.png");
+}
+
+.color-catalog-section {
+    margin-bottom: 48px;
+}
+
+.color-catalog-inner {
+    max-width: 920px;
+    margin: 12px auto 0;
+    padding: 26px 24px;
+    background: #ffffff;
+    border-radius: 18px;
+    box-shadow: 0 14px 42px rgba(13, 40, 64, 0.1);
+    border: 1px solid rgba(13, 40, 64, 0.06);
+    line-height: 1.85;
+    color: #2c3e50;
+    font-size: 1rem;
+}
+
+.visitor-icon-card.spotlight-card {
+    cursor: pointer;
+    min-height: 190px;
+}
+
+.visitor-icon-card--bank-accounts {
+    min-height: 300px;
+    background-color: #1a120c;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center top;
+}
+
+.visitor-icon-card--bank-accounts::before {
+    background: linear-gradient(0deg, rgba(0, 0, 0, 0.82) 0%, rgba(0, 0, 0, 0.25) 38%, transparent 62%);
+}
+
+.visitor-icon-card--bank-accounts .card-icon {
+    display: none;
+}
+
+.visitor-bank-plates {
+    position: absolute;
+    left: 10px;
+    right: 10px;
+    top: 38%;
+    bottom: 58px;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    pointer-events: none;
+}
+
+.visitor-bank-plates img {
+    width: 100%;
+    flex: 1 1 0;
+    min-height: 0;
+    object-fit: contain;
+    object-position: center;
+    filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.45));
+    border-radius: 8px;
+}
+
+.visitor-icon-card--bank-accounts .card-content {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2;
+    padding: 10px 12px 12px;
+}
+
+.visitor-icon-card--bank-accounts .card-content h3,
+.visitor-icon-card--bank-accounts .visitor-target-caption {
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.85);
+}
+
+.visitor-icon-card--certifications,
+.visitor-icon-card--door-designer,
+.visitor-icon-card--hero-bg {
+    min-height: 220px;
+    background-color: #2a2a2a;
+    background-repeat: no-repeat;
+}
+
+.visitor-icon-card--certifications::before,
+.visitor-icon-card--door-designer::before,
+.visitor-icon-card--hero-bg::before {
+    background: linear-gradient(0deg, rgba(0, 0, 0, 0.78) 0%, rgba(0, 0, 0, 0.22) 45%, transparent 70%);
+}
+
+.visitor-icon-card--certifications .card-content,
+.visitor-icon-card--door-designer .card-content,
+.visitor-icon-card--hero-bg .card-content {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2;
+    padding: 10px 12px 12px;
+}
+
+.visitor-icon-card--certifications .card-content h3,
+.visitor-icon-card--certifications .visitor-target-caption,
+.visitor-icon-card--door-designer .card-content h3,
+.visitor-icon-card--door-designer .visitor-target-caption,
+.visitor-icon-card--hero-bg .card-content h3,
+.visitor-icon-card--hero-bg .visitor-target-caption {
+    text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
+}
+
+/* قسم جديد: تقارير المبيعات */
+.card-sales-reports::before {
+    background: linear-gradient(135deg, rgba(41, 128, 185, 0.82), rgba(52, 152, 219, 0.86)),
+                url('/images/background.png');
+    background-size: cover;
+    background-position: center;
+}
+
+/* قسم جديد: إدارة المخزون */
+.card-inventory-management::before {
+    background: linear-gradient(135deg, rgba(46, 204, 113, 0.78), rgba(39, 174, 96, 0.84)),
+                url('/images/pvc-background.avif');
+    background-size: cover;
+    background-position: center;
+}
+
+/* قسم جديد: إدارة العملاء */
+.card-customer-management::before {
+    background: linear-gradient(135deg, rgba(155, 89, 182, 0.7), rgba(142, 68, 173, 0.8)),
+                url('/images/customer-complaints-background.jpeg');
+    background-size: cover;
+    background-position: center;
+}
+
+/* قسم جديد: الإحصائيات والتحليلات */
+.card-analytics::before {
+    background: linear-gradient(135deg, rgba(230, 126, 34, 0.75), rgba(211, 84, 0, 0.85)),
+                url('/images/background-other-products.jpeg');
+    background-size: cover;
+    background-position: center;
+}
+
+/* خلفية صورة لـ الألومنيوم */
+.card-aluminum::before { 
+    background: linear-gradient(135deg, rgba(160, 170, 185, 0.66), rgba(95, 108, 128, 0.78)),
+                url('/images/aluminum-background.webp');
+    background-size: cover;
+    background-position: center;
+}
+
+.card-other-products {
+    --other-products-bg: none;
+}
+
+.card-other-products::before {
+    background: linear-gradient(135deg, rgba(52, 73, 94, 0.68), rgba(44, 62, 80, 0.82)),
+                var(--other-products-bg);
+    background-size: cover;
+    background-position: center;
+}
+
+.card-customer-complaints::before {
+    background: linear-gradient(135deg, rgba(98, 112, 138, 0.62), rgba(52, 73, 94, 0.8)),
+                url('/images/customer-complaints-background.jpeg');
+    background-size: cover;
+    background-position: center;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .header-lang-campaign {
+        max-width: 100%;
+    }
+
+    .header-campaign-title {
+        font-size: 1.05rem;
+    }
+
+    .header-main-row {
+        flex-wrap: wrap;
+    }
+
+    .menu-toggle {
+        display: block;
+        margin-inline-start: auto;
+        z-index: 1002;
+    }
+
+    nav {
+        flex: 1 1 100%;
+        order: 3;
+        width: 100%;
+    }
+
+    nav ul,
+    #nav-menu {
+        position: absolute;
+        top: 100%;
+        right: 0;
+        left: 0;
+        z-index: 1001;
+        background: var(--primary-blue);
+        flex-direction: column;
+        padding: 16px 20px 20px;
+        gap: 12px;
+        display: none;
+        box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+        max-height: min(70vh, 520px);
+        overflow-y: auto;
+        list-style: none;
+    }
+
+    nav ul.active,
+    #nav-menu.active {
+        display: flex;
+    }
+
+    nav ul li a {
+        display: block;
+        padding: 10px 4px;
+        font-size: 1rem;
+    }
+
+    .products-grid,
+    #site-products-grid {
+        grid-template-columns: 1fr; 
+        padding: 30px 5%; 
+    }
+    .product-card { width: 100%; max-width: 350px; height: 350px; }
+    .hero h1 { font-size: 1.8rem; }
+
+    #icon-overlay-gallery:not(.nebras-cert-grid) img {
+        width: 100%;
+        max-height: min(52vh, 420px);
+        min-height: 200px;
+        object-fit: contain;
+        object-position: center;
+        background: rgba(13, 40, 64, 0.06);
+        border-radius: 12px;
+    }
+
+    .nebras-cert-grid .nebras-cert-card img {
+        min-height: 140px;
+        max-height: 220px;
+        object-fit: contain;
+    }
+
+    .visitor-icons-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+    }
+
+    .visitor-icon-card.spotlight-card {
+        min-height: 168px;
+    }
+    .dashboard-actions {
+        grid-template-columns: 1fr;
+    }
+    .dashboard-actions {
+        grid-template-columns: 1fr;
+    }
+}

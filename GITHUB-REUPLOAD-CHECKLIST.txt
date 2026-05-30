@@ -1,0 +1,89 @@
+═══════════════════════════════════════════════════════════════
+  منصة نبراس — قائمة التحقق قبل الرفع على GitHub (محدّث)
+  تاريخ المراجعة: 2026-05-29
+═══════════════════════════════════════════════════════════════
+
+✅ المجلد كامل — 206 ملف جاهز للرفع (بعد git add -A)
+✅ لا ملفات ناقصة من index.html (css/js/images كلها موجودة)
+✅ .gitignore يستثني فقط: .tmp_video_frames / .env / .cursor
+
+───────────────────────────────────────────────────────────────
+1) الجذر
+───────────────────────────────────────────────────────────────
+[✓] index.html
+[✓] vercel.json
+[✓] .gitignore
+[✓] GITHUB-REUPLOAD-CHECKLIST.txt
+[✓] STABILITY-FIX-REPORT.txt
+
+───────────────────────────────────────────────────────────────
+2) css/ — 18 ملف (الموقع يحمّل 16 منها + احتياط)
+───────────────────────────────────────────────────────────────
+[✓] 01-variables-base.css … 16-storefront-premium.css
+[✓] 15-admin-analytics.css      — حوكمة التقارير + موبايل
+[✓] 16-storefront-premium.css   — متجر + شريط موبايل
+[—] nebras-platform.css / index.scss — احتياط (غير مربوط في index)
+
+───────────────────────────────────────────────────────────────
+3) js/ — 5 ملفات (كلها مربوطة في index.html)
+───────────────────────────────────────────────────────────────
+[✓] nebras-platform.js          — المنصة + Supabase + Super Admin
+[✓] nebras-media-admin.js       — رفع صور/PDF/فيديو من الإدارة
+[✓] nebras-door-compositor.js   — مصمم الأبواب
+[✓] nebras-door-3d.js           — عرض 3D
+[✓] vendor/three.min.js         — مكتبة Three.js
+
+───────────────────────────────────────────────────────────────
+4) images/ — 158 ملف
+───────────────────────────────────────────────────────────────
+[✓] خلفيات الأقسام + الفروع + البنوك + الشعار
+[✓] partners/ — 14 شعار شريك
+[✓] rolls/ — N-1…N-21 (jpg + svg) + NEB-*
+[✓] doors/overlays/ — 10 SVG
+[✓] doors/presets/ — قوالب مصمم الأبواب
+[✓] video-frames/ — 5 إطارات
+[✓] wpc-door-real-base.png + قوالب WPC
+
+───────────────────────────────────────────────────────────────
+5) supabase/ — 8 ملفات (بالترتيب على Supabase)
+───────────────────────────────────────────────────────────────
+[✓] 000-wipe-public-fresh-start.sql   — اختياري
+[✓] 001-nebras-platform-v2.sql        — إلزامي
+[✓] 002-storage-nebras-media.sql      — إلزامي (bucket)
+[✓] 002-showroom-gallery.sql          — معرض/سينما
+[✓] 003-verify-setup.sql
+[✓] 004-grant-anon-authenticated.sql
+[✓] 005-site-partners-certifications.sql
+[✓] SUPABASE-LAUNCH-STEPS.txt
+
+───────────────────────────────────────────────────────────────
+6) scripts/ + tools/ — تطوير (يُرفع مع المشروع)
+───────────────────────────────────────────────────────────────
+[✓] scripts/upload-to-github.ps1
+[✓] scripts/serve-local.ps1
+[—] tools/ — سكربتات Python/JS للتطوير فقط
+
+───────────────────────────────────────────────────────────────
+7) ما لا يُرفع (طبيعي)
+───────────────────────────────────────────────────────────────
+[—] .tmp_video_frames/ — مؤقت
+[—] .env — أسرار (لا ترفعي أبداً)
+
+───────────────────────────────────────────────────────────────
+8) أوامر GitHub (PowerShell)
+───────────────────────────────────────────────────────────────
+cd "C:\Users\abdel\OneDrive\Desktop\NebrasFactory"
+.\scripts\upload-to-github.ps1
+
+git commit -m "Nebras platform: Super Admin governance, analytics, mobile, showroom"
+
+git push -u origin main
+
+───────────────────────────────────────────────────────────────
+9) بعد GitHub → Vercel → Supabase
+───────────────────────────────────────────────────────────────
+• Vercel: Redeploy من main
+• Supabase: نفّذي SQL بالترتيب (001 → 002-storage → 004 → 005)
+• اختبار: NEBRASFACTORY / NEBRASFACTORYCOMPANYBASIC
+
+═══════════════════════════════════════════════════════════════

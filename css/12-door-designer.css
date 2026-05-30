@@ -1,0 +1,2895 @@
+/* مصمم أبواب WPC — أسلوب Keybab: اختيارات يسار + معاينة باب كبيرة يمين */
+
+.door-designer--keybab {
+    background: #f3f4f6;
+    margin: 0 -4px;
+    padding: 4px 0 20px;
+    border-radius: 12px;
+}
+
+.door-designer-layout {
+    display: grid;
+    grid-template-columns: minmax(300px, 400px) minmax(0, 1fr);
+    gap: 0;
+    align-items: stretch;
+    min-height: min(82vh, 860px);
+    background: #f3f4f6;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+}
+
+/* لوحة الاختيارات — يسار في RTL */
+.door-designer-panel {
+    background: #fff;
+    padding: 28px 24px 32px;
+    border-inline-end: 1px solid #e5e7eb;
+    max-height: min(86vh, 900px);
+    overflow-y: auto;
+    position: sticky;
+    top: 0;
+}
+
+.door-designer-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+}
+
+.door-designer-panel-title {
+    margin: 0;
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #111827;
+    letter-spacing: -0.02em;
+}
+
+.door-designer-reset-btn {
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #6b7280;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 6px 10px;
+    border-radius: 6px;
+    transition: color 0.2s, background 0.2s;
+}
+
+.door-designer-reset-btn:hover {
+    color: #c41e3a;
+    background: rgba(196, 30, 58, 0.06);
+}
+
+.door-designer-intro {
+    margin: 0 0 22px;
+    font-size: 0.88rem;
+    line-height: 1.65;
+    color: #6b7280;
+}
+
+.door-designer-group {
+    margin-bottom: 22px;
+}
+
+.door-designer-group > label {
+    display: block;
+    font-weight: 700;
+    font-size: 0.92rem;
+    color: #111827;
+    margin-bottom: 10px;
+}
+
+.door-designer-catalog-hint {
+    font-weight: 500;
+    font-size: 0.75rem;
+    color: #9ca3af;
+}
+
+.door-designer-opts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.door-designer-opt {
+    font-family: inherit;
+    font-size: 0.88rem;
+    font-weight: 500;
+    padding: 10px 18px;
+    border-radius: 6px;
+    border: 1.5px solid #d1d5db;
+    background: #fff;
+    color: #374151;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s, color 0.2s;
+    min-width: 88px;
+    text-align: center;
+}
+
+.door-designer-opt:hover {
+    border-color: #9ca3af;
+}
+
+.door-designer-opt.is-active {
+    border-color: #c41e3a;
+    color: #111827;
+    font-weight: 600;
+    box-shadow: 0 0 0 1px rgba(196, 30, 58, 0.15);
+    background: #fff;
+}
+
+.door-designer-group--colors .door-color-catalog {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+    max-height: min(38vh, 300px);
+    overflow-y: auto;
+    padding: 2px;
+}
+
+.door-color-swatch {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 8px 6px;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 8px;
+    background: #fff;
+    cursor: pointer;
+    font-family: inherit;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.door-color-swatch.is-active {
+    border-color: #c41e3a;
+    box-shadow: 0 0 0 2px rgba(196, 30, 58, 0.2);
+}
+
+.door-color-swatch-chip {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 5px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    background-size: cover;
+    background-position: center;
+}
+
+.door-color-swatch-code {
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: #111827;
+}
+
+.door-color-swatch-name {
+    font-size: 0.6rem;
+    color: #6b7280;
+    text-align: center;
+    line-height: 1.2;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.door-designer-quote-btn {
+    width: 100%;
+    margin-top: 16px;
+    padding: 14px 20px !important;
+    font-size: 0.95rem !important;
+    border-radius: 8px !important;
+}
+
+/* معاينة الباب — يمين، خلفية فاتحة مثل Keybab */
+.door-designer-preview-col {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    background: #eceff1;
+}
+
+.door-designer-preview-wrap {
+    position: relative;
+    flex: 1;
+    width: 100%;
+    min-height: min(82vh, 860px);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.door-designer-preview-wrap--keybab {
+    background: linear-gradient(180deg, #eef1f3 0%, #e8ecef 50%, #e2e6ea 100%);
+}
+
+.door-designer-scene {
+    position: relative;
+    z-index: 1;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 24px 64px;
+    min-height: min(78vh, 820px);
+}
+
+.wpc-door-stage--keybab {
+    position: relative;
+    width: 100%;
+    max-width: min(520px, 92%);
+    min-height: min(70vh, 720px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.28s ease, transform 0.28s ease;
+}
+
+.wpc-door-stage--keybab.wpc-door-stage--updating {
+    opacity: 0.88;
+    transform: scale(0.985);
+}
+
+.wpc-door-photo-stack {
+    position: relative;
+    width: 100%;
+    height: min(72vh, 760px);
+    max-height: 760px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.wpc-door-base-photo {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center center;
+    z-index: 1;
+    filter: drop-shadow(0 20px 48px rgba(0, 0, 0, 0.12));
+    transition: opacity 0.35s ease;
+}
+
+.wpc-door-color-layer {
+    position: absolute;
+    inset: 8% 12%;
+    z-index: 2;
+    border-radius: 4px;
+    pointer-events: none;
+    transition: background-color 0.35s ease, opacity 0.35s ease, background-image 0.35s ease;
+}
+
+.wpc-door-photo-stack--has-photo .wpc-door-svg-host {
+    opacity: 0;
+    pointer-events: none;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+}
+
+.wpc-door-photo-stack:not(.wpc-door-photo-stack--has-photo):not(.wpc-door-photo-stack--photoreal) .wpc-door-color-layer {
+    display: none;
+}
+
+/* معاينة واقعية — صورة باب + ملمس رولّة (مثل Keybab) */
+.wpc-door-preview-unit {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    min-height: min(68vh, 700px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.wpc-door-stage--photoreal .wpc-door-photo-stack {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.wpc-door-stage--photoreal .wpc-door-base-photo {
+    position: relative;
+    width: auto;
+    height: min(72vh, 760px);
+    max-width: 92%;
+    object-fit: contain;
+    z-index: 1;
+    filter: drop-shadow(0 18px 42px rgba(0, 0, 0, 0.2));
+}
+
+.wpc-door-roll-texture {
+    position: absolute;
+    z-index: 2;
+    pointer-events: none;
+    clip-path: var(--door-leaf-clip, polygon(18% 14%, 82% 14%, 82% 88%, 18% 88%));
+    inset: 8% 14% 10% 14%;
+    border-radius: 2px;
+    transition: background-image 0.4s ease, opacity 0.35s ease, clip-path 0.35s ease;
+}
+
+.wpc-door-stage--photoreal .wpc-door-svg-host {
+    position: absolute;
+    inset: 0;
+    z-index: 4;
+    width: 100%;
+    height: 100%;
+    min-height: min(68vh, 700px);
+    pointer-events: none;
+}
+
+.wpc-door-svg--photoreal-overlay {
+    opacity: 1;
+}
+
+.wpc-door-stage--photoreal .wpc-door-svg #wpcSvgFaceA,
+.wpc-door-stage--photoreal .wpc-door-svg #wpcSvgFaceB,
+.wpc-door-stage--photoreal .wpc-door-svg #wpcSvgFaceB2 {
+    fill: transparent !important;
+}
+
+.wpc-door-stage--photoreal.wpc-door-stage--dynamic-render .wpc-door-svg #wpcSvgFaceA,
+.wpc-door-stage--photoreal.wpc-door-stage--dynamic-render .wpc-door-svg #wpcSvgFaceB,
+.wpc-door-stage--photoreal.wpc-door-stage--dynamic-render .wpc-door-svg #wpcSvgFaceB2,
+.wpc-door-stage--photoreal.wpc-door-stage--dynamic-render .wpc-door-svg #wpcSvgSlidingLeafB > rect:first-child,
+.wpc-door-stage--photoreal.wpc-door-stage--dynamic-render .wpc-door-svg #wpcSvgTransom > rect:first-child {
+    fill: url(#wpcDoorTexture) !important;
+}
+
+.wpc-door-stage--photoreal.wpc-door-stage--decor-transom .wpc-door-roll-texture {
+    clip-path: polygon(20% 24%, 80% 24%, 80% 86%, 20% 86%);
+}
+
+.wpc-door-stage--photoreal .wpc-door-svg .wpc-svg-louver {
+    mix-blend-mode: multiply;
+}
+
+/* سواشات الرولات — مربعات ذهبية مثل الكتالوج */
+.door-color-catalog--circles,
+.door-color-catalog--catalog {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    max-height: min(44vh, 380px);
+}
+
+.door-color-swatch--catalog .door-color-swatch-chip {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 10px;
+    border: 2px solid #c9a227;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.35), 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.door-color-swatch--catalog.is-active .door-color-swatch-chip {
+    border-color: #c41e3a;
+    box-shadow: 0 0 0 2px rgba(196, 30, 58, 0.35), inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+}
+
+.wpc-door-svg-host {
+    position: relative;
+    z-index: 3;
+    width: 100%;
+    height: 100%;
+    min-height: min(68vh, 700px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.wpc-door-svg {
+    width: auto;
+    height: min(72vh, 780px);
+    max-width: 100%;
+    max-height: min(72vh, 780px);
+    display: block;
+    filter: drop-shadow(0 16px 40px rgba(0, 0, 0, 0.18));
+    transition: filter 0.3s ease;
+}
+
+.wpc-door-stage--double .wpc-door-svg {
+    max-width: min(560px, 98%);
+}
+
+.door-active-color-label,
+.door-spec-label {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    margin: 0;
+    padding: 8px 20px;
+    border-radius: 6px;
+    color: #374151;
+    z-index: 10;
+    max-width: 90%;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+}
+
+.door-active-color-label {
+    bottom: 52px;
+    font-size: 0.88rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+.door-spec-label {
+    bottom: 16px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: #6b7280;
+}
+
+.workspace-shell--door-designer {
+    max-width: min(1680px, 100%) !important;
+}
+
+.workspace-shell--door-designer .workspace-main {
+    overflow-y: auto;
+    background: #f9fafb;
+}
+
+@media (max-width: 1024px) {
+    .door-designer-layout {
+        grid-template-columns: 1fr;
+        min-height: auto;
+    }
+
+    .door-designer-panel {
+        position: static;
+        max-height: none;
+        border-inline-end: none;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .door-designer-preview-col {
+        order: -1;
+    }
+
+    .door-designer-preview-wrap {
+        min-height: min(65vh, 640px);
+    }
+
+    .door-designer-scene {
+        min-height: min(62vh, 600px);
+    }
+
+    .wpc-door-svg {
+        height: min(58vh, 560px);
+        max-height: min(58vh, 560px);
+    }
+
+    .door-designer-group--colors .door-color-catalog {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        max-height: none;
+    }
+}
+
+@media (max-width: 520px) {
+    .door-designer-panel {
+        padding: 20px 16px;
+    }
+
+    .door-designer-opts {
+        gap: 8px;
+    }
+
+    .door-designer-opt {
+        min-width: 0;
+        flex: 1 1 calc(50% - 8px);
+        font-size: 0.82rem;
+        padding: 9px 12px;
+    }
+
+    .door-designer-group--colors .door-color-catalog {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+/* ——— استوديو Pro (Keybab+) ——— */
+.door-designer--pro {
+    padding: 0;
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 8px 40px rgba(0, 0, 0, 0.08);
+}
+
+.door-designer-hero {
+    position: relative;
+    min-height: 140px;
+    background-size: cover;
+    background-position: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 28px 24px;
+    text-align: center;
+}
+
+.door-designer-hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.72) 0%, rgba(30, 41, 59, 0.55) 100%);
+}
+
+.door-designer-hero-title {
+    position: relative;
+    z-index: 1;
+    margin: 0;
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.02em;
+}
+
+.door-designer-hero-sub {
+    position: relative;
+    z-index: 1;
+    margin: 8px 0 0;
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.88);
+}
+
+.door-designer--pro .door-designer-layout {
+    grid-template-columns: minmax(320px, 420px) minmax(0, 1fr);
+    min-height: min(78vh, 820px);
+    border: none;
+    border-radius: 0;
+}
+
+.door-designer-section {
+    margin-bottom: 20px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.door-designer-section-title {
+    margin: 0 0 10px;
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: #111827;
+}
+
+.door-designer-section.is-hidden,
+.door-designer-section--glass.is-hidden {
+    display: none;
+}
+
+.door-designer-type-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.door-designer-type-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 8px;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 10px;
+    background: #fff;
+    cursor: pointer;
+    font-family: inherit;
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+    color: #4b5563;
+}
+
+.door-designer-type-card:hover {
+    border-color: #9ca3af;
+    transform: translateY(-1px);
+}
+
+.door-designer-type-card.is-active {
+    border-color: #c41e3a;
+    color: #111827;
+    box-shadow: 0 0 0 2px rgba(196, 30, 58, 0.15);
+}
+
+.door-designer-type-card-icon {
+    width: 36px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.door-designer-type-card-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+.door-designer-type-card-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-align: center;
+    line-height: 1.25;
+}
+
+.door-designer-model-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.door-designer-model-card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    padding: 10px 12px;
+    border: 1.5px solid #e5e7eb;
+    border-radius: 10px;
+    background: #fff;
+    cursor: pointer;
+    font-family: inherit;
+    transition: border-color 0.2s, box-shadow 0.2s, transform 0.15s;
+    color: #4b5563;
+}
+
+.door-designer-model-card:hover {
+    border-color: #9ca3af;
+    transform: translateY(-1px);
+}
+
+.door-designer-model-card.is-active {
+    border-color: #c41e3a;
+    color: #111827;
+    box-shadow: 0 0 0 2px rgba(196, 30, 58, 0.15);
+}
+
+.door-designer-model-card-label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-align: center;
+    line-height: 1.3;
+}
+
+.door-designer-opt.is-hidden,
+.door-designer-hidden-sync {
+    display: none !important;
+}
+
+.door-designer-opt.is-disabled,
+.door-designer-opt:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
+.door-color-catalog--circles {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 10px;
+    max-height: min(42vh, 340px);
+}
+
+.door-color-swatch--circle {
+    padding: 6px 4px 8px;
+    border-radius: 12px;
+}
+
+.door-color-swatch--circle .door-color-swatch-chip {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    margin: 0 auto;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.door-color-swatch-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+    width: 100%;
+}
+
+.door-color-swatch-roll-tag {
+    font-size: 0.58rem;
+    font-weight: 700;
+    color: #c41e3a;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.door-designer-preview-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 10px 16px;
+    background: rgba(255, 255, 255, 0.95);
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.door-preview-tool {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    color: #374151;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.door-preview-tool:hover {
+    border-color: #c41e3a;
+    color: #c41e3a;
+}
+
+.door-preview-zoom-label {
+    min-width: 48px;
+    text-align: center;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: #6b7280;
+}
+
+.door-designer-preview-wrap--studio {
+    background: linear-gradient(180deg, #f8f9fa 0%, #eceff2 45%, #e4e8ec 100%);
+    position: relative;
+}
+
+.door-designer-preview-wrap--studio::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 70% 50% at 50% 85%, rgba(0, 0, 0, 0.06) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.wpc-door-stage--studio {
+    perspective: 1200px;
+    transform-style: preserve-3d;
+}
+
+.wpc-door-stage--studio .wpc-door-photo-stack {
+    transform: scale(
+        calc(var(--door-zoom, 1) * var(--door-size-scale-x, 1)),
+        calc(var(--door-zoom, 1) * var(--door-size-scale-y, 1))
+    );
+    transform-origin: center center;
+    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.wpc-door-studio-floor {
+    position: absolute;
+    bottom: 12%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(420px, 75%);
+    height: 24px;
+    background: radial-gradient(ellipse, rgba(0, 0, 0, 0.18) 0%, transparent 72%);
+    z-index: 0;
+    pointer-events: none;
+}
+
+.wpc-door-stage--sliding .wpc-door-svg {
+    transform: translateX(8px);
+}
+
+.wpc-door-stage--sliding-2.wpc-door-stage--photoreal .wpc-door-photo-stack {
+    filter: none;
+}
+
+.wpc-door-stage--sliding-2 .wpc-door-sliding-gap {
+    opacity: 1;
+}
+
+.wpc-door-sliding-gap {
+    position: absolute;
+    top: 14%;
+    bottom: 12%;
+    left: 50%;
+    width: 3px;
+    transform: translateX(-50%);
+    z-index: 4;
+    opacity: 0;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.5), rgba(0, 0, 0, 0.35), rgba(255, 255, 255, 0.4));
+    pointer-events: none;
+    transition: opacity 0.35s ease;
+}
+
+.wpc-door-uchannel-overlay {
+    position: absolute;
+    inset: 14% 20% 12% 20%;
+    z-index: 4;
+    opacity: 0;
+    pointer-events: none;
+    background:
+        linear-gradient(90deg, transparent 22%, rgba(0, 0, 0, 0.16) 22.4%, transparent 23%),
+        linear-gradient(90deg, transparent 76%, rgba(0, 0, 0, 0.16) 76.4%, transparent 77%);
+    mix-blend-mode: multiply;
+    transition: opacity 0.35s ease;
+}
+
+.wpc-door-uchannel-overlay.is-visible {
+    opacity: 1;
+}
+
+.wpc-door-glass-strips-overlay {
+    position: absolute;
+    inset: 16% 22% 14% 22%;
+    z-index: 5;
+    opacity: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+        180deg,
+        rgba(180, 210, 230, 0.55) 0,
+        rgba(180, 210, 230, 0.55) 11%,
+        rgba(0, 0, 0, 0.08) 11%,
+        rgba(0, 0, 0, 0.08) 13.5%,
+        transparent 13.5%,
+        transparent 22%
+    );
+    border-radius: 4px;
+    box-shadow: inset 0 0 24px rgba(255, 255, 255, 0.35);
+    mix-blend-mode: soft-light;
+    transition: opacity 0.35s ease;
+}
+
+.wpc-door-glass-strips-overlay.is-visible {
+    opacity: 0.92;
+}
+
+.wpc-door-glass-grid-overlay {
+    position: absolute;
+    inset: 18% 24% 28% 24%;
+    z-index: 5;
+    opacity: 0;
+    pointer-events: none;
+    background:
+        linear-gradient(90deg, rgba(0, 0, 0, 0.12) 49.2%, transparent 49.5%, transparent 50.5%, rgba(0, 0, 0, 0.12) 50.8%),
+        linear-gradient(0deg, rgba(0, 0, 0, 0.1) 49%, transparent 49.5%, transparent 50.5%, rgba(0, 0, 0, 0.1) 51%),
+        linear-gradient(135deg, rgba(200, 225, 240, 0.7), rgba(140, 175, 200, 0.45));
+    border: 3px solid rgba(90, 98, 105, 0.5);
+    border-radius: 6px;
+    box-shadow: inset 0 0 30px rgba(255, 255, 255, 0.4);
+    mix-blend-mode: soft-light;
+    transition: opacity 0.35s ease;
+}
+
+.wpc-door-glass-grid-overlay.is-visible {
+    opacity: 0.95;
+}
+
+.wpc-door-glass-tall-overlay {
+    position: absolute;
+    inset: 16% 26% 18% 26%;
+    z-index: 5;
+    opacity: 0;
+    pointer-events: none;
+    background: linear-gradient(160deg, rgba(210, 235, 250, 0.75) 0%, rgba(150, 185, 210, 0.5) 50%, rgba(230, 245, 252, 0.8) 100%);
+    border: 3px solid rgba(90, 98, 105, 0.45);
+    border-radius: 5px;
+    box-shadow: inset 0 0 40px rgba(255, 255, 255, 0.45);
+    mix-blend-mode: soft-light;
+    transition: opacity 0.35s ease;
+}
+
+.wpc-door-glass-tall-overlay.is-visible {
+    opacity: 0.9;
+}
+
+.door-designer-presets {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.door-preset-btn {
+    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 600;
+    line-height: 1.35;
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1.5px solid #e0e3e8;
+    background: #fafbfc;
+    color: #374151;
+    cursor: pointer;
+    text-align: center;
+    transition: border-color 0.2s, background 0.2s, color 0.2s, box-shadow 0.2s;
+}
+
+.door-preset-btn:hover {
+    border-color: #c41e3a;
+    color: #111827;
+}
+
+.door-preset-btn.is-active {
+    border-color: #c41e3a;
+    background: #fff;
+    color: #111827;
+    box-shadow: 0 0 0 1px rgba(196, 30, 58, 0.15);
+}
+
+.door-designer-section--presets {
+    margin-bottom: 20px;
+}
+
+.door-preset-reference {
+    margin: 12px 0 0;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    background: #fafafa;
+    overflow: hidden;
+}
+
+.door-preset-reference.is-hidden {
+    display: none;
+}
+
+.door-preset-reference img {
+    width: 100%;
+    display: block;
+    object-fit: cover;
+    max-height: 220px;
+}
+
+.door-designer-section.is-hidden {
+    display: none;
+}
+
+.wpc-door-stage--photoreal.wpc-door-stage--sliding .wpc-door-svg-overlay.is-active,
+.wpc-door-stage--photoreal.wpc-door-stage--sliding-2 .wpc-door-svg-overlay.is-active {
+    opacity: 0.58;
+}
+
+.wpc-door-stage--photoreal.wpc-door-stage--surface-u-glass .wpc-door-svg-overlay.is-active,
+.wpc-door-stage--photoreal.wpc-door-stage--surface-full-glass .wpc-door-svg-overlay.is-active,
+.wpc-door-stage--photoreal.wpc-door-stage--surface-u-classic .wpc-door-svg-overlay.is-active {
+    opacity: 0.52;
+}
+
+.wpc-door-stage--photoreal.wpc-door-stage--decor-transom .wpc-door-transom-roll.is-visible {
+    opacity: 0.95;
+}
+
+.wpc-door-stage--double.wpc-door-stage--photoreal .wpc-door-svg-overlay.is-active {
+    opacity: 0.55;
+}
+
+.wpc-door-stage--outer-curve .wpc-door-svg {
+    filter: drop-shadow(0 20px 48px rgba(0, 0, 0, 0.22));
+}
+
+.wpc-door-stage--model-slim .wpc-door-svg #wpcSvgOuterFrame {
+    stroke-width: 1;
+}
+
+.wpc-door-stage--model-profile .wpc-door-svg #wpcSvgOuterFrame {
+    filter: brightness(1.05);
+}
+
+.door-designer-summary {
+    position: absolute;
+    top: 56px;
+    inset-inline-start: 16px;
+    z-index: 12;
+    background: rgba(255, 255, 255, 0.94);
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    padding: 10px 14px;
+    max-width: min(220px, 42%);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+    font-size: 0.75rem;
+}
+
+.door-summary-dl {
+    margin: 0;
+    display: grid;
+    gap: 6px;
+}
+
+.door-summary-dl div {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 8px;
+}
+
+.door-summary-dl dt {
+    margin: 0;
+    font-weight: 600;
+    color: #9ca3af;
+}
+
+.door-summary-dl dd {
+    margin: 0;
+    font-weight: 700;
+    color: #111827;
+}
+
+.door-designer--pro .door-designer-panel-head {
+    justify-content: flex-start;
+    margin-bottom: 4px;
+}
+
+.door-designer--pro .door-designer-reset-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid #e5e7eb;
+    padding: 8px 14px;
+    border-radius: 8px;
+    background: #fafafa;
+}
+
+@media (max-width: 1024px) {
+    .door-designer-type-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .door-color-catalog--circles {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .door-designer-summary {
+        position: static;
+        max-width: 100%;
+        margin: 12px 16px 0;
+    }
+}
+
+/* ═══ استوديو «صمّم بابك» — نموذج باب واقعي + رولات NEB ═══ */
+.door-designer--studio {
+    background: #f5f6f7;
+    margin: 0;
+    padding: 0;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+.workspace-main.workspace-main--door-designer {
+    padding: 8px 8px 24px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    display: block;
+    flex: 1;
+    min-height: 0;
+    -webkit-overflow-scrolling: touch;
+}
+
+.workspace-main.workspace-main--door-designer.workspace-main--door-data-only {
+    padding-top: 4px;
+}
+
+.workspace-shell.workspace-shell--door-designer .workspace-pillar-nav {
+    display: none;
+}
+
+.workspace-shell.workspace-shell--door-designer .workspace-topbar {
+    padding: 10px 0 8px;
+    flex-shrink: 0;
+}
+
+.workspace-shell.workspace-shell--door-designer .workspace-page-title {
+    font-size: clamp(1rem, 2.2vw, 1.2rem);
+}
+
+.workspace-shell.workspace-shell--door-designer,
+.workspace-shell.workspace-shell--door-data-only {
+    max-width: min(720px, 100%);
+    padding: 0 12px 16px;
+}
+
+.workspace-shell.workspace-shell--door-data-only {
+    max-width: min(720px, 100%);
+}
+
+.workspace-main.workspace-main--door-designer {
+    padding: 0 0 20px;
+}
+
+.door-designer-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    width: 100%;
+    padding-bottom: 8px;
+}
+
+.door-designer-flow .door-designer-section {
+    margin-bottom: 20px;
+}
+
+.door-designer-flow .door-studio-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 4px;
+    padding-top: 4px;
+}
+
+.door-designer-type-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.door-designer-type-card--text {
+    flex-direction: row;
+    justify-content: center;
+    min-height: 48px;
+    padding: 12px 16px;
+}
+
+.door-designer-type-card--text .door-designer-type-card-label {
+    font-size: 0.9rem;
+}
+
+.door-designer--data-only .door-color-catalog--keybab,
+.door-designer-flow .door-color-catalog--keybab {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px 10px;
+    max-height: none;
+    overflow: visible;
+}
+
+/* رولات نبراس — شكل عمودي مثل عينات الرول (صورة المصنع الآخر) */
+.door-color-catalog--catalog.door-color-catalog--nebras-rolls {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 12px 10px;
+    max-height: none;
+    overflow: visible;
+}
+
+@media (min-width: 1100px) {
+    .door-color-catalog--catalog.door-color-catalog--nebras-rolls {
+        grid-template-columns: repeat(7, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 520px) {
+    .door-color-catalog--catalog.door-color-catalog--nebras-rolls {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+.door-color-swatch--catalog.door-color-swatch--nebras-roll .door-color-roll-tile {
+    border: 2px solid #c9a227;
+    box-shadow:
+        inset 0 0 0 1px rgba(255, 255, 255, 0.35),
+        0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.door-color-swatch--catalog.door-color-swatch--nebras-roll.is-active .door-color-roll-tile {
+    border-color: #c41e3a;
+    box-shadow:
+        0 0 0 2px rgba(196, 30, 58, 0.35),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+}
+
+@media (min-width: 960px) {
+    .door-color-catalog--nebras-rolls {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 520px) {
+    .door-color-catalog--nebras-rolls {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px 10px;
+    }
+}
+
+.door-color-swatch--nebras-roll {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0;
+    border: none;
+    border-radius: 0;
+    background: transparent;
+    gap: 8px;
+    box-shadow: none;
+    min-width: 0;
+}
+
+.door-color-swatch--nebras-roll .door-color-roll-tile {
+    width: 100%;
+    aspect-ratio: 1 / 1;
+    min-height: 96px;
+    max-height: 170px;
+    margin: 0 auto;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    background: #eceff1;
+    box-shadow:
+        0 2px 8px rgba(0, 0, 0, 0.1),
+        0 1px 2px rgba(0, 0, 0, 0.06);
+    transition: box-shadow 0.2s, border-color 0.2s, transform 0.15s;
+}
+
+.door-color-swatch--nebras-roll:hover .door-color-roll-tile {
+    box-shadow:
+        0 4px 14px rgba(0, 0, 0, 0.14),
+        0 2px 4px rgba(0, 0, 0, 0.08);
+    transform: translateY(-1px);
+}
+
+.door-color-swatch--nebras-roll.is-active .door-color-roll-tile {
+    border-color: #c41e3a;
+    box-shadow:
+        0 0 0 2px #fff,
+        0 0 0 4px #c41e3a,
+        0 4px 16px rgba(196, 30, 58, 0.28);
+}
+
+.door-color-swatch--nebras-roll .door-color-roll-tile .door-color-swatch-img,
+.door-color-swatch--nebras-roll .door-color-roll-tile .door-color-swatch-fallback {
+    width: 100%;
+    height: 100%;
+    min-height: 0;
+    object-fit: cover;
+    object-position: center;
+    background: #eceff1;
+}
+
+.door-color-swatch--nebras-roll .door-color-swatch-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    width: 100%;
+    padding: 0 2px;
+}
+
+.door-color-swatch--nebras-roll .door-color-swatch-code {
+    font-size: 0.82rem;
+    font-weight: 800;
+    color: #111827;
+    letter-spacing: 0.05em;
+    line-height: 1.2;
+}
+
+.door-color-swatch--nebras-roll .door-color-swatch-name {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #4b5563;
+    text-align: center;
+    line-height: 1.3;
+    max-width: 100%;
+    -webkit-line-clamp: 2;
+}
+
+.door-color-swatch--extracted {
+    padding: 0;
+    border: 2px solid #e5e7eb;
+    border-radius: 10px;
+    background: #fff;
+    gap: 6px;
+    padding-bottom: 8px;
+}
+
+.door-color-swatch--extracted .door-color-swatch-chip {
+    width: 100%;
+    aspect-ratio: 1;
+    min-height: 72px;
+    border-radius: 8px 8px 0 0;
+    border: none;
+    box-shadow: none;
+    overflow: hidden;
+    display: block;
+    background: #e5e7eb;
+}
+
+.door-color-swatch--extracted .door-color-swatch-chip .door-color-swatch-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+}
+
+.door-color-swatch--extracted .door-color-swatch-chip .door-color-swatch-fallback {
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-height: 72px;
+}
+
+.door-color-swatch--extracted.is-active {
+    border-color: #c41e3a;
+    box-shadow: 0 0 0 2px rgba(196, 30, 58, 0.22);
+}
+
+.door-color-swatch--extracted .door-color-swatch-code {
+    font-size: 0.88rem;
+    font-weight: 800;
+    color: #111827;
+    padding: 0 4px;
+    letter-spacing: 0.04em;
+}
+
+.door-color-swatch--extracted .door-color-swatch-name {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #4b5563;
+    text-align: center;
+    line-height: 1.25;
+    padding: 0 4px 2px;
+    max-width: 100%;
+}
+
+.door-designer-section-desc {
+    margin: -6px 0 8px;
+    font-size: 0.84rem;
+    color: #4b5563;
+    line-height: 1.5;
+}
+
+.door-designer-section--colors .door-designer-catalog-hint {
+    margin: 0 0 12px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #9ca3af;
+}
+
+.door-designer--data-only {
+    height: auto;
+    min-height: auto;
+    width: 100%;
+}
+
+.door-designer--data-only .door-studio-layout {
+    grid-template-columns: 1fr;
+    width: 100%;
+    max-width: 100%;
+    margin: 0;
+    height: auto;
+    min-height: auto;
+}
+
+.door-designer--data-only .door-studio-panel {
+    height: auto;
+    max-height: none;
+    overflow: visible;
+    padding: 8px 4px 20px;
+}
+
+.door-designer--data-only .door-studio-panel-scroll {
+    flex: none;
+    overflow: visible;
+    padding: 0;
+}
+
+.door-designer--data-only .door-studio-head {
+    margin-bottom: 8px;
+}
+
+.door-studio-head--compact {
+    margin-bottom: 10px !important;
+}
+
+.door-studio-head--compact .door-studio-title {
+    font-size: 1.15rem;
+}
+
+.door-designer--data-only .door-designer-section:first-child {
+    margin-top: 0;
+}
+
+.door-designer-section--types {
+    scroll-margin-top: 8px;
+}
+
+.door-designer--data-only .door-color-catalog--keybab {
+    max-height: none;
+    overflow: visible;
+}
+
+.door-designer--data-only .door-studio-quote {
+    position: static;
+    box-shadow: none;
+    margin-top: 16px;
+}
+
+.door-data-entry-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin: 0 0 16px;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: rgba(21, 94, 148, 0.08);
+    border: 1px solid rgba(21, 94, 148, 0.18);
+    color: #0d2840;
+    font-size: 0.88rem;
+    line-height: 1.55;
+}
+
+.door-data-entry-notice i {
+    margin-top: 2px;
+    color: #155e94;
+    flex-shrink: 0;
+}
+
+.door-data-entry-notice p {
+    margin: 0;
+}
+
+.door-data-entry-notice--foot {
+    margin: 12px 0 0;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    color: #4b5563;
+    font-size: 0.8rem;
+    line-height: 1.5;
+}
+
+.door-color-swatch--extracted .door-color-swatch-chip {
+    display: block;
+    overflow: hidden;
+    background: #e5e7eb;
+}
+
+.door-color-swatch-img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    min-height: 56px;
+    object-fit: cover;
+    object-position: center;
+}
+
+.door-color-swatch-fallback {
+    display: block;
+    width: 100%;
+    min-height: 56px;
+}
+
+.door-studio-data-summary {
+    margin: 16px 0 0;
+    padding: 12px 14px;
+    border-radius: 10px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    font-size: 0.85rem;
+}
+
+.door-studio-data-summary .door-summary-dl {
+    margin: 0;
+    display: grid;
+    gap: 8px;
+}
+
+.door-studio-data-summary .door-summary-dl div {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.door-studio-data-summary dt {
+    font-weight: 600;
+    color: #6b7280;
+}
+
+.door-studio-data-summary dd {
+    margin: 0;
+    font-weight: 700;
+    color: #111827;
+    text-align: end;
+}
+
+.door-studio-reset--panel {
+    flex-shrink: 0;
+    padding: 8px 14px;
+    font-size: 0.82rem;
+}
+
+.door-designer--studio {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+
+.door-designer--studio .door-studio-layout {
+    flex: 1;
+    min-height: 0;
+    height: 100%;
+    max-height: none;
+    display: grid;
+    grid-template-columns: minmax(300px, 400px) minmax(0, 1fr);
+    background: #fff;
+}
+
+.door-studio-panel {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    max-height: none;
+    height: 100%;
+    overflow: hidden;
+    padding: 20px 22px 12px;
+    border-inline-end: 1px solid #e8eaed;
+    padding-bottom: 16px;
+}
+
+.door-studio-panel-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-inline-end: 4px;
+    -webkit-overflow-scrolling: touch;
+}
+
+.door-studio-preview {
+    min-height: 0;
+    height: 100%;
+    overflow-y: auto;
+}
+
+.door-designer--studio .door-designer-section--colors .door-designer-section-title {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.door-designer--studio .door-designer-catalog-hint {
+    font-size: 0.72rem;
+    font-weight: 500;
+    color: #9ca3af;
+}
+
+.door-color-swatch--vertical .door-color-swatch-code {
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: #111827;
+    letter-spacing: 0.02em;
+}
+
+.door-color-catalog--keybab {
+    max-height: min(42vh, 380px);
+    overflow-y: auto;
+    padding: 2px;
+}
+
+.door-studio-quote {
+    flex-shrink: 0;
+    margin-top: 12px;
+    position: sticky;
+    bottom: 0;
+    z-index: 2;
+    background: #fff;
+    box-shadow: 0 -8px 20px rgba(255, 255, 255, 0.92);
+}
+
+.door-studio-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    gap: 12px;
+}
+
+.door-studio-reset {
+    font-family: inherit;
+    font-size: 0.88rem;
+    font-weight: 500;
+    color: #6b7280;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 4px 0;
+}
+
+.door-studio-reset:hover {
+    color: #c41e3a;
+}
+
+.door-studio-title {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #111827;
+    letter-spacing: -0.02em;
+}
+
+.door-designer--studio .door-designer-section {
+    margin-bottom: 24px;
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.door-designer--studio .door-designer-section-title {
+    font-size: 1rem;
+    font-weight: 700;
+    margin-bottom: 12px;
+    color: #111827;
+}
+
+.door-designer--studio .door-designer-opt {
+    min-width: 100px;
+    padding: 11px 20px;
+    border-radius: 8px;
+    border: 1.5px solid #e0e3e8;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.door-designer--studio .door-designer-opt.is-active {
+    border-color: #c41e3a;
+    border-width: 2px;
+    box-shadow: 0 0 0 1px rgba(196, 30, 58, 0.12);
+}
+
+.door-color-catalog--keybab {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 10px 8px;
+    max-height: none;
+}
+
+.door-color-swatch--vertical {
+    flex-direction: column;
+    padding: 0;
+    border: none;
+    background: transparent;
+    gap: 6px;
+    align-items: center;
+}
+
+.door-color-swatch--vertical .door-color-swatch-chip {
+    width: 100%;
+    height: 52px;
+    border-radius: 8px;
+    border: 2px solid #c9a227;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.25);
+}
+
+.door-color-swatch--vertical.is-active .door-color-swatch-chip {
+    border-color: #c41e3a;
+    border-width: 2.5px;
+    box-shadow: 0 0 0 2px rgba(196, 30, 58, 0.25);
+}
+
+.door-color-swatch--vertical .door-color-swatch-label {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: #6b7280;
+    text-align: center;
+    line-height: 1.2;
+    max-width: 100%;
+}
+
+/* رولّات مستخرجة من صورة الكتالوج — شكل اللون + كود N- فقط */
+.door-color-swatch--extracted {
+    flex-direction: column;
+    padding: 0;
+    border: none;
+    background: transparent;
+    gap: 5px;
+    align-items: center;
+    min-width: 0;
+}
+
+.door-color-swatch--extracted .door-color-swatch-chip {
+    width: 100%;
+    aspect-ratio: 1;
+    min-height: 56px;
+    border-radius: 8px;
+    border: 2px solid #c9a227;
+    box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+}
+
+.door-color-swatch--extracted.is-active .door-color-swatch-chip {
+    border-color: #c41e3a;
+    border-width: 2.5px;
+    box-shadow: 0 0 0 2px rgba(196, 30, 58, 0.28);
+}
+
+.door-color-swatch--extracted .door-color-swatch-code {
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: #111827;
+    letter-spacing: 0.03em;
+}
+
+.door-studio-advanced {
+    margin: 16px 0 20px;
+    border: 1px solid #e8eaed;
+    border-radius: 10px;
+    padding: 0 14px;
+}
+
+.door-studio-advanced summary {
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.88rem;
+    color: #6b7280;
+    padding: 12px 0;
+}
+
+.door-studio-advanced-inner {
+    padding-bottom: 16px;
+}
+
+.door-studio-quote {
+    width: 100%;
+    margin-top: 8px;
+    padding: 14px !important;
+    border-radius: 10px !important;
+}
+
+/* معاينة الباب الواقعي */
+.door-studio-preview {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    background: linear-gradient(180deg, #f8f9fa 0%, #eef0f2 100%);
+    min-height: 0;
+    padding: 16px 20px 48px;
+}
+
+.door-studio-canvas-wrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+.wpc-door-stage--photoreal .wpc-door-canvas {
+    position: relative;
+    width: min(420px, 88vw);
+    height: min(72vh, 720px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.wpc-door-stage--photoreal .wpc-door-photo-stack {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.wpc-door-stage--photoreal .wpc-door-base-photo {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+    z-index: 1;
+    filter: drop-shadow(0 22px 48px rgba(0, 0, 0, 0.18));
+}
+
+.wpc-door-stage--photoreal .wpc-door-roll-texture {
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    transition: background-image 0.45s ease, opacity 0.35s ease;
+}
+
+.wpc-door-panel-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    pointer-events: none;
+    opacity: 0;
+    background:
+        linear-gradient(90deg, transparent 18%, rgba(0, 0, 0, 0.06) 18.5%, transparent 19%),
+        linear-gradient(90deg, transparent 49%, rgba(0, 0, 0, 0.06) 49.5%, transparent 50%),
+        linear-gradient(0deg, transparent 32%, rgba(0, 0, 0, 0.05) 32.5%, transparent 33%),
+        linear-gradient(0deg, transparent 62%, rgba(0, 0, 0, 0.05) 62.5%, transparent 63%);
+    mix-blend-mode: multiply;
+    transition: opacity 0.3s ease;
+}
+
+.wpc-door-panel-overlay.is-visible {
+    opacity: 0.85;
+}
+
+.wpc-door-slats-overlay {
+    position: absolute;
+    inset: 14% 18% 12% 18%;
+    z-index: 4;
+    pointer-events: none;
+    opacity: 0;
+    background: repeating-linear-gradient(
+        180deg,
+        transparent 0,
+        transparent 14px,
+        rgba(0, 0, 0, 0.14) 14px,
+        rgba(0, 0, 0, 0.14) 17px,
+        transparent 17px,
+        transparent 32px
+    );
+    mix-blend-mode: multiply;
+    transition: opacity 0.3s ease;
+}
+
+.wpc-door-slats-overlay.is-visible {
+    opacity: 1;
+}
+
+.wpc-door-transom-roll {
+    position: absolute;
+    top: 8%;
+    left: 22%;
+    right: 22%;
+    height: 10%;
+    z-index: 3;
+    opacity: 0;
+    background-size: cover;
+    background-position: center;
+    mix-blend-mode: multiply;
+    border-radius: 2px;
+    transition: opacity 0.35s ease;
+}
+
+.wpc-door-transom-roll.is-visible {
+    opacity: 0.9;
+}
+
+.wpc-door-svg-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    pointer-events: none;
+    opacity: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.wpc-door-svg-overlay.is-active {
+    opacity: 0.35;
+}
+
+.wpc-door-stage--outer-curve.wpc-door-stage--photoreal .wpc-door-svg-overlay.is-active {
+    opacity: 0.55;
+}
+
+.wpc-door-stage--style-slats.wpc-door-stage--photoreal .wpc-door-svg-overlay.is-active {
+    opacity: 0.5;
+}
+
+.door-studio-floating-spec {
+    position: absolute;
+    top: 20px;
+    inset-inline-end: 24px;
+    z-index: 20;
+    pointer-events: none;
+    background: rgba(255, 255, 255, 0.96);
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 12px 16px;
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.08);
+    font-size: 0.78rem;
+    max-width: min(240px, 40vw);
+}
+
+.door-designer--studio .door-active-color-label {
+    bottom: 48px;
+    background: rgba(255, 255, 255, 0.95);
+    font-size: 0.9rem;
+}
+
+.door-designer--studio .door-spec-label {
+    bottom: 16px;
+    font-size: 0.8rem;
+}
+
+.wpc-door-stage--photoreal.wpc-door-stage--updating .wpc-door-canvas {
+    transform: scale(0.99);
+    opacity: 0.92;
+    transition: transform 0.28s ease, opacity 0.28s ease;
+}
+
+@media (max-width: 1024px) {
+    .door-studio-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .door-studio-preview {
+        order: -1;
+        min-height: min(58vh, 560px);
+    }
+
+    .door-studio-panel {
+        max-height: none;
+    }
+
+    .door-color-catalog--keybab {
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+}
+
+/* ═══ Keybab — نموذج درفة واقعي: texture HTML + SVG إطار وتفاصيل ═══ */
+.wpc-door-stage--keybab .wpc-door-canvas {
+    position: relative;
+    width: min(400px, 82vw);
+    height: min(78vh, 740px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.wpc-door-keybab-textures {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.wpc-door-leaf-texture {
+    position: absolute;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    border-radius: 3px;
+    opacity: 0;
+    transition: opacity 0.35s ease, background-image 0.35s ease, background-color 0.25s ease;
+    box-shadow:
+        inset 0 0 50px rgba(0, 0, 0, 0.1),
+        inset 0 2px 0 rgba(255, 255, 255, 0.18),
+        inset -3px 0 12px rgba(0, 0, 0, 0.06);
+}
+
+.wpc-door-struct-texture {
+    position: absolute;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    border-radius: 3px;
+    opacity: 0;
+    transition: opacity 0.35s ease, background-image 0.35s ease, transform 0.3s ease;
+    box-shadow:
+        inset 0 0 30px rgba(0, 0, 0, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.16);
+    z-index: 0;
+}
+
+.wpc-door-struct-texture.is-visible {
+    opacity: 1;
+}
+
+.wpc-door-struct-texture--left {
+    left: 15%;
+    top: 5.2%;
+    width: 6.2%;
+    height: 83.9%;
+}
+
+.wpc-door-struct-texture--right {
+    right: 15%;
+    top: 5.2%;
+    width: 6.2%;
+    height: 83.9%;
+}
+
+.wpc-door-struct-texture--top {
+    left: 15%;
+    top: 5.2%;
+    width: 70%;
+    height: 5.3%;
+}
+
+.wpc-door-struct-texture--top-clad {
+    left: 21.82%;
+    top: 5.2%;
+    width: 56.36%;
+    height: 7.8%;
+    z-index: 1;
+}
+
+.wpc-door-leaf-texture.is-visible {
+    opacity: 1;
+}
+
+.wpc-door-leaf-texture--a {
+    left: 21.82%;
+    width: 56.36%;
+    top: 5.22%;
+    height: 83.91%;
+}
+
+.wpc-door-leaf-texture--b {
+    left: 51.82%;
+    width: 38.18%;
+    top: 5.22%;
+    height: 83.91%;
+}
+
+.wpc-door-keybab-transom {
+    left: 21.82%;
+    width: 56.36%;
+    top: 5.22%;
+    height: 7.83%;
+}
+
+.wpc-door-stage--decor-transom .wpc-door-leaf-texture--a {
+    top: 14.35%;
+    height: 74.78%;
+}
+
+.wpc-door-stage--decor-transom .wpc-door-struct-texture--left,
+.wpc-door-stage--decor-transom .wpc-door-struct-texture--right {
+    top: 5.2%;
+    height: 83.9%;
+}
+
+.wpc-door-stage--outer-curve .wpc-door-struct-texture--left {
+    border-top-left-radius: 12px;
+}
+
+.wpc-door-stage--outer-curve .wpc-door-struct-texture--right {
+    border-top-right-radius: 12px;
+}
+
+.wpc-door-stage--frame-curve .wpc-door-struct-texture--top,
+.wpc-door-stage--frame-curve .wpc-door-struct-texture--top-clad {
+    border-top-left-radius: 12px;
+    border-top-right-radius: 12px;
+}
+
+.wpc-door-stage--double .wpc-door-leaf-texture--a {
+    left: 10.91%;
+    width: 38.18%;
+}
+
+.wpc-door-stage--sliding:not(.wpc-door-stage--sliding-2) .wpc-door-leaf-texture--a {
+    left: 16.36%;
+    width: 50%;
+}
+
+.wpc-door-stage--sliding-2 .wpc-door-leaf-texture--a {
+    left: 21.82%;
+    width: 26.36%;
+}
+
+.wpc-door-stage--sliding-2 .wpc-door-leaf-texture--b {
+    left: 51.82%;
+    width: 26.36%;
+}
+
+/* دلفة واحدة = باب كامل | دلفتان = بابان متجاوران مع فاصل */
+.wpc-door-center-mullion {
+    display: none;
+    position: absolute;
+    z-index: 3;
+    left: 49.05%;
+    width: 1.9%;
+    top: 5.22%;
+    height: 83.91%;
+    border-radius: 2px;
+    box-shadow:
+        inset 0 0 0 1px rgba(0, 0, 0, 0.14),
+        inset 2px 0 6px rgba(0, 0, 0, 0.08),
+        inset -2px 0 6px rgba(255, 255, 255, 0.06);
+}
+
+.wpc-door-stage--leaf-double:not(.wpc-door-stage--sliding) .wpc-door-center-mullion.is-visible {
+    display: block;
+}
+
+.wpc-door-stage--leaf-single:not(.wpc-door-stage--sliding) .wpc-door-leaf-texture--a {
+    left: 16%;
+    width: 68%;
+}
+
+.wpc-door-stage--leaf-single:not(.wpc-door-stage--sliding) .wpc-door-leaf-texture--b {
+    display: none !important;
+    opacity: 0 !important;
+}
+
+.wpc-door-stage--leaf-double:not(.wpc-door-stage--sliding) .wpc-door-leaf-texture--a {
+    left: 10.5%;
+    width: 38.5%;
+}
+
+.wpc-door-stage--leaf-double:not(.wpc-door-stage--sliding) .wpc-door-leaf-texture--b.is-visible {
+    left: 51.5%;
+    width: 38.5%;
+}
+
+/* لون الرولّة الحقيقي من كتالوج نبراس — يختلف عن اللون العادي المسطح */
+.wpc-door-leaf-texture--roll.is-visible {
+    z-index: 1;
+    background-repeat: no-repeat !important;
+    background-size: cover !important;
+    background-position: center !important;
+    box-shadow:
+        inset 0 0 40px rgba(0, 0, 0, 0.08),
+        inset 0 2px 0 rgba(255, 255, 255, 0.2),
+        inset -4px 0 14px rgba(0, 0, 0, 0.07),
+        0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.wpc-door-leaf-texture--roll.is-visible::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: linear-gradient(
+        105deg,
+        rgba(255, 255, 255, 0.14) 0%,
+        transparent 38%,
+        rgba(0, 0, 0, 0.05) 100%
+    );
+}
+
+.wpc-door-leaf-texture.has-door-roll-tint,
+.wpc-door-struct-texture.has-door-roll-tint {
+    overflow: hidden;
+}
+
+.wpc-door-leaf-texture.has-door-roll-tint.is-visible::before,
+.wpc-door-struct-texture.has-door-roll-tint.is-visible::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    z-index: 1;
+    background-color: var(--door-roll-tint, #b8bcc4);
+    mix-blend-mode: color;
+    opacity: var(--door-roll-tint-opacity, 0.9);
+    pointer-events: none;
+}
+
+.wpc-door-leaf-texture--flat.is-visible {
+    z-index: 1;
+    box-shadow:
+        inset 0 0 30px rgba(0, 0, 0, 0.06),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.wpc-door-stage--roll-finish .wpc-door-svg-overlay.is-active .wpc-door-svg {
+    filter: drop-shadow(0 20px 44px rgba(0, 0, 0, 0.18)) contrast(1.02) saturate(1.04);
+}
+
+.wpc-door-stage--keybab .wpc-door-photo-stack--keybab-base {
+    display: none;
+}
+
+.wpc-door-stage--keybab .wpc-door-svg-overlay {
+    opacity: 1;
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
+.wpc-door-stage--keybab .wpc-door-svg-overlay.is-active {
+    opacity: 1;
+}
+
+.wpc-door-stage--keybab .wpc-door-svg {
+    width: 100%;
+    height: 100%;
+    filter: drop-shadow(0 20px 44px rgba(0, 0, 0, 0.18));
+    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    transform: scale(
+        calc(var(--door-zoom, 1) * var(--door-size-scale-x, 1)),
+        calc(var(--door-zoom, 1) * var(--door-size-scale-y, 1))
+    );
+    transform-origin: center center;
+}
+
+.wpc-door-stage--keybab .wpc-door-svg-overlay::after {
+    content: '';
+    position: absolute;
+    left: 77.8%;
+    top: 8.1%;
+    width: calc(var(--door-thickness-cm, 4) * 1.35px);
+    height: 79.2%;
+    border-radius: 0 3px 3px 0;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(0, 0, 0, 0.24));
+    box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.28), inset 1px 0 0 rgba(0, 0, 0, 0.2);
+    opacity: 0.72;
+    pointer-events: none;
+    z-index: 3;
+}
+
+.wpc-door-stage--keybab #wpcSvgFaceA,
+.wpc-door-stage--keybab #wpcSvgFaceB,
+.wpc-door-stage--keybab #wpcSvgFaceB2,
+.wpc-door-stage--keybab #wpcSvgSlidingLeafB > rect:first-child,
+.wpc-door-stage--keybab #wpcSvgTransom > rect:first-child {
+    fill: transparent !important;
+    stroke: rgba(0, 0, 0, 0.08);
+}
+
+/* 20 رولّة — نسيج WPC مباشرة على الضلفة (مثل أبنوس N-13) */
+.wpc-door-stage--keybab.wpc-door-stage--roll-color-active #wpcSvgFaceA,
+.wpc-door-stage--keybab.wpc-door-stage--roll-color-active #wpcSvgFaceB,
+.wpc-door-stage--keybab.wpc-door-stage--roll-color-active #wpcSvgFaceB2,
+.wpc-door-stage--keybab.wpc-door-stage--roll-color-active #wpcSvgSlidingLeafB > rect:first-child,
+.wpc-door-stage--keybab.wpc-door-stage--roll-color-active #wpcSvgTransom > rect:first-child {
+    fill: url(#wpcDoorTexture) !important;
+    stroke: rgba(0, 0, 0, 0.1);
+}
+
+.wpc-door-stage--roll-color-active .wpc-door-keybab-textures .wpc-door-leaf-texture.is-visible {
+    opacity: 0 !important;
+    pointer-events: none;
+}
+
+.wpc-door-stage--keybab #wpcSvgOuterFrame {
+    stroke: var(--door-frame-tint, #2e3338);
+}
+
+/* Profiles for the 8 main door models */
+.wpc-door-stage--profile-edge-1 .wpc-door-svg #wpcSvgLeafB2,
+.wpc-door-stage--profile-edge-1 .wpc-door-svg #wpcSvgSlidingLeafB {
+    opacity: 0 !important;
+}
+
+.wpc-door-stage--profile-edge-2 .wpc-door-svg #wpcSvgLeafB2 {
+    opacity: 1 !important;
+}
+
+.wpc-door-stage--profile-u-plain .wpc-door-svg .wpc-svg-uchannel-v {
+    opacity: 0.6 !important;
+}
+
+.wpc-door-stage--profile-u-slats .wpc-door-svg .wpc-svg-louver {
+    opacity: 1 !important;
+}
+
+.wpc-door-stage--profile-u-classic .wpc-door-svg .wpc-svg-shaker {
+    opacity: 1 !important;
+}
+
+.wpc-door-stage--profile-u-glass .wpc-door-svg .wpc-svg-glass-strips,
+.wpc-door-stage--profile-u-glass .wpc-door-svg .wpc-svg-glass-tall {
+    opacity: 1 !important;
+}
+
+.wpc-door-stage--profile-slide-1 .wpc-door-svg #wpcSvgSlidingLeafB {
+    opacity: 0 !important;
+}
+
+.wpc-door-stage--profile-slide-2 .wpc-door-svg #wpcSvgSlidingLeafB {
+    opacity: 1 !important;
+}
+
+.wpc-door-stage--studio-live.wpc-door-stage--sliding-2 .wpc-door-leaf-texture--b.is-visible {
+    opacity: 1;
+}
+
+.wpc-door-stage--profile-slide-1 .wpc-door-svg #wpcSvgHingesA,
+.wpc-door-stage--profile-slide-2 .wpc-door-svg #wpcSvgHingesA {
+    opacity: 0 !important;
+}
+
+/* Strong visual separation per model in photoreal mode */
+.wpc-door-stage--photoreal.wpc-door-stage--profile-u-classic .wpc-door-svg #wpcSvgFrameBevel {
+    stroke-width: 3.2px;
+}
+
+.wpc-door-stage--photoreal.wpc-door-stage--profile-u-slats .wpc-door-svg .wpc-svg-louver path {
+    stroke-width: 3.8;
+}
+
+.wpc-door-stage--photoreal.wpc-door-stage--profile-u-glass .wpc-door-svg .wpc-svg-glass-strips rect,
+.wpc-door-stage--photoreal.wpc-door-stage--profile-u-glass .wpc-door-svg .wpc-svg-glass-tall rect {
+    fill-opacity: 0.95;
+}
+
+.wpc-door-stage--photoreal.wpc-door-stage--profile-edge-2 .wpc-door-sliding-gap {
+    opacity: 0.5;
+}
+
+.wpc-door-stage--keybab .wpc-door-studio-floor {
+    bottom: 6%;
+    width: min(360px, 72%);
+    z-index: 0;
+}
+
+.wpc-door-stage--keybab.wpc-door-stage--reset-flash .wpc-door-svg {
+    animation: wpcDoorResetFlash 0.42s ease;
+}
+
+@keyframes wpcDoorResetFlash {
+    0% { opacity: 0.55; transform: scale(calc(var(--door-zoom, 1) * 0.96)); }
+    100% { opacity: 1; transform: scale(var(--door-zoom, 1)); }
+}
+
+.door-studio-preview-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    max-width: min(520px, 92vw);
+    margin: 0 auto 12px;
+    padding: 0 8px;
+    gap: 12px;
+}
+
+.door-studio-reset--primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-family: inherit;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #374151;
+    background: #fff;
+    border: 1.5px solid #e0e3e8;
+    border-radius: 8px;
+    padding: 10px 16px;
+    cursor: pointer;
+    transition: border-color 0.2s, color 0.2s, box-shadow 0.2s;
+}
+
+.door-studio-reset--primary:hover {
+    border-color: #c41e3a;
+    color: #c41e3a;
+    box-shadow: 0 2px 10px rgba(196, 30, 58, 0.12);
+}
+
+.door-studio-preview-zoom {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.door-studio-hint {
+    margin: -12px 0 20px;
+    font-size: 0.82rem;
+    line-height: 1.55;
+    color: #6b7280;
+}
+
+.door-designer--keybab .door-studio-head {
+    margin-bottom: 8px;
+}
+
+.wpc-door-svg--keybab-canvas {
+    display: block;
+}
+
+/* استوديو حي — SVG + رولّات + دوران 360° (الحل المستقر) */
+.wpc-door-stage--studio-live {
+    background: linear-gradient(165deg, #dce1e8 0%, #c5ccd6 48%, #b8c0cc 100%);
+    min-height: min(72vh, 640px);
+    display: grid;
+    grid-template-rows: 1fr auto;
+    position: relative;
+    perspective: 1400px;
+    isolation: isolate;
+}
+
+.wpc-door-stage--studio-live .wpc-door-turntable {
+    grid-row: 1;
+    position: relative;
+    z-index: 4;
+    min-height: min(68vh, 580px);
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform-style: preserve-3d;
+    transform: rotateX(6deg) rotateY(var(--turntable-rotate-y, -14deg));
+    touch-action: none;
+    cursor: grab;
+    pointer-events: auto;
+    will-change: transform;
+}
+
+.wpc-door-stage--studio-live .wpc-door-turntable:active {
+    cursor: grabbing;
+}
+
+.wpc-door-stage--studio-live .wpc-door-canvas {
+    position: relative;
+    width: min(92%, 360px);
+    height: min(72vh, 560px);
+    margin: 0 auto;
+}
+
+.wpc-door-stage--studio-live .wpc-door-svg-overlay {
+    opacity: 1 !important;
+}
+
+.wpc-door-stage--roll-color-active .wpc-door-svg--keybab-canvas #wpcDoorTextureImg {
+    opacity: 1;
+}
+
+.wpc-door-stage--roll-color-active.wpc-door-stage--studio-live .wpc-door-svg-overlay.is-active {
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+.wpc-door-stage--studio-live .wpc-door-leaf-texture.is-visible {
+    opacity: 1;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+/* معاينة بصورة المصنع — لكل اختيار صورة جاهزة */
+.wpc-door-photo-preset-wrap {
+    display: none;
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+}
+
+.wpc-door-photo-preset-wrap.is-active {
+    display: flex;
+}
+
+.wpc-door-photo-preset-wrap.is-composite-transom {
+    flex-direction: column;
+    justify-content: flex-end;
+    padding-bottom: 2%;
+}
+
+.wpc-door-photo-preset-transom-cap {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(92%, 340px);
+    max-height: 100%;
+    object-fit: contain;
+    object-position: center top;
+    z-index: 2;
+    filter: drop-shadow(0 12px 28px rgba(0, 0, 0, 0.12));
+    pointer-events: none;
+}
+
+.wpc-door-photo-preset-transom-cap.has-roll-texture {
+    position: absolute;
+}
+
+.wpc-door-photo-preset-transom-cap.has-roll-texture::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: var(--door-cap-roll-url, none);
+    background-size: cover;
+    background-position: center;
+    mix-blend-mode: multiply;
+    opacity: 0.66;
+    pointer-events: none;
+}
+
+.wpc-door-photo-preset-wrap.is-composite-transom .wpc-door-photo-preset-transom-cap {
+    display: block;
+}
+
+.wpc-door-photo-preset-stack {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    max-width: min(92%, 340px);
+    max-height: min(72vh, 560px);
+    line-height: 0;
+    isolation: isolate;
+}
+
+/* طبقة لون فورية — تتغير مباشرة مع كل رولّة من الـ20 */
+.wpc-door-photo-preset-stack.has-door-roll-tint::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    background-color: var(--door-roll-tint, #b8bcc4);
+    mix-blend-mode: multiply;
+    opacity: calc(var(--door-roll-tint-opacity, 0.92) * 0.88);
+    pointer-events: none;
+}
+
+.wpc-door-photo-preset-stack.has-door-roll-tint.has-roll-texture::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    background-image: var(--door-roll-texture-url, none);
+    background-size: cover;
+    background-position: center;
+    mix-blend-mode: multiply;
+    opacity: 0.42;
+    pointer-events: none;
+    -webkit-mask-image: var(--door-roll-mask, none);
+    mask-image: var(--door-roll-mask, none);
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+}
+
+.wpc-door-photo-preset-wrap.is-composite-transom .wpc-door-photo-preset-stack {
+    max-height: min(58vh, 480px);
+    margin-top: auto;
+}
+
+.wpc-door-photo-preset-img {
+    display: block;
+    max-width: min(92vw, 340px);
+    max-height: min(72vh, 560px);
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    filter: drop-shadow(0 22px 48px rgba(0, 0, 0, 0.22));
+    transition: opacity 0.28s ease;
+}
+
+.wpc-door-photo-preset-roll {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center center;
+    mix-blend-mode: color;
+    opacity: 0;
+    pointer-events: none;
+    border-radius: 2px;
+    transition: opacity 0.25s ease;
+    -webkit-mask-image: var(--door-roll-mask, none);
+    mask-image: var(--door-roll-mask, none);
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+}
+
+.wpc-door-photo-preset-roll.is-active {
+    opacity: var(--door-roll-layer-opacity, 0.92);
+}
+
+.wpc-door-photo-preset-stack.has-roll-texture .wpc-door-photo-preset-img {
+    filter: drop-shadow(0 22px 48px rgba(0, 0, 0, 0.22)) grayscale(1) contrast(var(--door-roll-base-contrast, 1.12)) brightness(var(--door-roll-base-brightness, 1.06));
+    transition: filter 0.28s ease, opacity 0.28s ease;
+}
+
+.wpc-door-photo-preset-stack.has-roll-texture .wpc-door-photo-preset-img:not(.has-roll-composite) {
+    filter: drop-shadow(0 22px 48px rgba(0, 0, 0, 0.22)) grayscale(1) contrast(var(--door-roll-base-contrast, 1.12)) brightness(var(--door-roll-base-brightness, 1.06));
+    transition: filter 0.28s ease, opacity 0.28s ease;
+}
+
+.wpc-door-photo-preset-img.has-roll-composite {
+    filter: drop-shadow(0 22px 48px rgba(0, 0, 0, 0.22));
+}
+
+.wpc-door-photo-preset-transom-cap.has-roll-texture:not(.has-roll-composite) {
+    filter: drop-shadow(0 12px 28px rgba(0, 0, 0, 0.12)) grayscale(1) contrast(1.1) brightness(1.05);
+}
+
+.wpc-door-photo-preset-transom-cap.has-roll-texture::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: var(--door-cap-roll, none);
+    background-size: cover;
+    background-position: center;
+    mix-blend-mode: color;
+    opacity: 0.9;
+    pointer-events: none;
+    -webkit-mask-image: var(--door-roll-mask, none);
+    mask-image: var(--door-roll-mask, none);
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center top;
+    mask-position: center top;
+}
+
+.wpc-door-stage--photo-roll-tint .wpc-door-photo-preset-img {
+    filter: drop-shadow(0 22px 48px rgba(0, 0, 0, 0.22))
+        saturate(1.08)
+        contrast(1.03)
+        brightness(0.98);
+}
+
+.wpc-door-stage--photo-preset .wpc-door-keybab-textures,
+.wpc-door-stage--photo-preset .wpc-door-svg-overlay,
+.wpc-door-stage--photo-preset .wpc-door-photo-stack {
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+.wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-svg-overlay,
+.wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-leaf-texture,
+.wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-struct-texture,
+.wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-keybab-transom,
+.wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-center-mullion {
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+.wpc-door-stage--photo-preset.wpc-door-stage--updating .wpc-door-photo-preset-img {
+    opacity: 0.88;
+    transform: scale(0.99);
+}
+
+.wpc-door-stage--studio-live .nebras-door-studio-badge {
+    position: absolute;
+    top: 12px;
+    inset-inline-start: 12px;
+    z-index: 6;
+}
+
+.wpc-door-stage--studio-live .wpc-door-stage--engine-compositor,
+.wpc-door-stage--studio-live .nebras-door-compositor-viewport {
+    display: none !important;
+}
+
+/* محرك الطبقات الديناميكي — Studio · 360° */
+.wpc-door-stage--engine-compositor {
+    background: linear-gradient(165deg, #dce1e8 0%, #c5ccd6 50%, #b8c0cc 100%);
+    min-height: min(72vh, 640px);
+    display: grid;
+    grid-template-rows: 1fr auto;
+    position: relative;
+    isolation: isolate;
+    perspective: 1200px;
+}
+
+.nebras-door-compositor-viewport {
+    grid-row: 1;
+    position: relative;
+    z-index: 2;
+    min-height: min(68vh, 600px);
+    width: 100%;
+    border-radius: 10px;
+    overflow: hidden;
+    touch-action: none;
+    cursor: grab;
+    background: linear-gradient(180deg, #e8ecf2 0%, #d4dae2 45%, #c8ced6 100%);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08), 0 16px 48px rgba(0, 0, 0, 0.16);
+}
+
+.nebras-door-compositor-viewport:active {
+    cursor: grabbing;
+}
+
+.ndc-scene {
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(ellipse 80% 50% at 50% 100%, rgba(0, 0, 0, 0.12), transparent 55%),
+        linear-gradient(180deg, #eef1f5 0%, #d8dde5 100%);
+    pointer-events: none;
+}
+
+.ndc-stage-wrap {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform-style: preserve-3d;
+}
+
+.ndc-stage {
+    position: relative;
+    width: min(42vw, 280px);
+    height: min(72vh, 560px);
+    max-height: 85%;
+    transform-style: preserve-3d;
+    transition: transform 0.05s linear;
+    filter: drop-shadow(0 24px 48px rgba(0, 0, 0, 0.28));
+}
+
+.ndc-layer--base {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+    pointer-events: none;
+}
+
+.ndc-layer--leaf,
+.ndc-layer--leaf-b,
+.ndc-layer--transom {
+    position: absolute;
+    inset: 8% 14% 10%;
+    opacity: 0;
+    pointer-events: none;
+    mix-blend-mode: multiply;
+    transition: opacity 0.25s ease;
+}
+
+.ndc-layer--leaf.is-visible,
+.ndc-layer--leaf-b.is-visible,
+.ndc-layer--transom.is-visible {
+    opacity: 0.94;
+}
+
+.ndc-layer--transom {
+    inset: 4% 18% auto;
+    height: 14%;
+}
+
+.ndc-overlays {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.ndc-overlay {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+    pointer-events: none;
+}
+
+.ndc-layer--shade {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(105deg, rgba(255, 255, 255, 0.08) 0%, transparent 42%, rgba(0, 0, 0, 0.06) 100%);
+    pointer-events: none;
+}
+
+.wpc-door-stage--engine-compositor .wpc-door-canvas {
+    display: none !important;
+}
+
+/* محرك 3D — استوديو صمّم بابك */
+.wpc-door-stage--engine-3d {
+    background: linear-gradient(165deg, #dce1e8 0%, #c5ccd6 50%, #b8c0cc 100%);
+    min-height: min(72vh, 640px);
+    display: grid;
+    grid-template-rows: 1fr auto;
+    align-items: stretch;
+    justify-items: stretch;
+    position: relative;
+    isolation: isolate;
+}
+
+.wpc-door-stage--engine-3d .wpc-door-canvas,
+.wpc-door-stage--engine-3d .wpc-door-canvas--legacy-hidden {
+    display: none !important;
+}
+
+.nebras-door-3d-viewport {
+    grid-row: 1;
+    position: relative;
+    z-index: 2;
+    min-height: min(68vh, 600px);
+    width: 100%;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08), 0 16px 48px rgba(0, 0, 0, 0.18);
+    touch-action: none;
+    cursor: grab;
+    background: linear-gradient(180deg, #e4e8ee 0%, #d0d6de 100%);
+}
+
+.nebras-door-3d-loading {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #4b5563;
+    background: rgba(255, 255, 255, 0.72);
+    z-index: 3;
+}
+
+.nebras-door-3d-badge {
+    position: absolute;
+    top: 12px;
+    inset-inline-start: 12px;
+    z-index: 4;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    color: #fff;
+    background: linear-gradient(135deg, #c41e3a, #9a1830);
+    padding: 5px 10px;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(196, 30, 58, 0.35);
+}
+
+.nebras-door-3d-viewport:active {
+    cursor: grabbing;
+}
+
+.nebras-door-3d-viewport canvas {
+    display: block;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.nebras-door-3d-hint {
+    grid-row: 2;
+    margin: 10px 0 0;
+    text-align: center;
+    font-size: 0.82rem;
+    color: #4b5563;
+    font-weight: 600;
+}
+
+.nebras-door-3d-hint i {
+    margin-inline-end: 6px;
+    color: #c41e3a;
+}
+
+.wpc-door-stage--engine-3d.wpc-door-stage--updating .nebras-door-3d-viewport {
+    opacity: 0.92;
+    transition: opacity 0.2s;
+}
+
+.nebras-door-3d-error {
+    margin: 0;
+    padding: 24px 20px;
+    text-align: center;
+    font-size: 0.9rem;
+    line-height: 1.65;
+    color: #92400e;
+    background: #fffbeb;
+    border: 1px solid #fcd34d;
+    border-radius: 10px;
+    max-width: 420px;
+}
+
+.nebras-door-3d-error i {
+    margin-inline-end: 6px;
+    color: #d97706;
+}
+
+.wpc-door-stage--engine-3d .wpc-door-canvas:not(.wpc-door-canvas--legacy-hidden) {
+    position: relative;
+    z-index: 0;
+}
+
+@media (max-width: 900px) {
+    .nebras-door-3d-viewport {
+        min-height: 52vh;
+    }
+}

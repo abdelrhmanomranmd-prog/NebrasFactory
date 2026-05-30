@@ -1,0 +1,937 @@
+﻿<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <title>منصة نبراس الرقمية — مصنع نبراس للبلاستيك</title>
+    <meta name="description" content="منصة مصنع نبراس للبلاستيك — معرض منتجات، طلب عروض أسعار، فروع المملكة، ونظام إدارة داخلي محكوم.">
+    <!--
+      منصة نبراس (Nebras Platform) — ثلاث طبقات:
+        1) Storefront: واجهة عالمية للزوار والعملاء
+        2) Command Center: حوكمة، صلاحيات، محتوى، احتفالات
+        3) NEBRAS ERP SYSTEM: مخزون، مبيعات، طلبات، مشتريات، CRM (داخل المنصة)
+      خلفيات الداشبورد — مجلد images/؛ الأسماء كما في ملفاتك بدون الامتداد في الشرح (الكود يجرّب تلقائياً jpg jpeg png webp avif).
+      بطاقات: background-about-us | background-our-vision | background-Manufacturing-services | customer-complaints-background | background-quality-management (بديل إملاء: backround-Quality-Management)
+      أيقونات زائر: pvc-background | background-nebras-branches | كتالوج رولات (اسم بدون أقواس أو مع أقواس)
+      منتجات أخرى: background-other-products
+    -->
+    <!-- Font Awesome — jsDelivr (إذا ظهرت مربعات بدل الأيقونات جرّب شبكة أخرى أو عطّل حظر الخطوط في المتصفح) -->
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="css/01-variables-base.css">
+    <link rel="stylesheet" href="css/02-header-nav.css">
+    <link rel="stylesheet" href="css/03-hero.css">
+    <link rel="stylesheet" href="css/04-occasion.css">
+    <link rel="stylesheet" href="css/05-products-cards.css">
+    <link rel="stylesheet" href="css/06-responsive.css">
+    <link rel="stylesheet" href="css/07-admin-storefront.css">
+    <link rel="stylesheet" href="css/08-dashboard-creative.css">
+    <link rel="stylesheet" href="css/14-showroom-hub.css">
+    <link rel="stylesheet" href="css/09-nebras-workspace.css">
+    <link rel="stylesheet" href="css/10-brand-intro.css">
+    <link rel="stylesheet" href="css/11-media-lightbox.css">
+    <link rel="stylesheet" href="css/12-door-designer.css">
+    <link rel="stylesheet" href="css/13-header-campaign.css">
+    <link rel="stylesheet" href="css/15-admin-analytics.css">
+    <link rel="stylesheet" href="css/16-storefront-premium.css">
+</head>
+<body id="nebras-platform" class="platform-storefront" data-platform-layer="storefront">
+
+    <div id="nebras-brand-intro" class="nebras-brand-intro" hidden aria-hidden="true">
+        <div class="nebras-brand-intro-backdrop" aria-hidden="true"></div>
+        <div class="nebras-brand-intro-inner">
+            <div class="nebras-brand-intro-logo-ring" aria-hidden="true">
+                <img src="images/logo.png" alt="" class="nebras-brand-intro-logo" onerror="siteLogoImgFallback(this)">
+            </div>
+            <p class="nebras-brand-intro-eyebrow" id="intro-eyebrow"></p>
+            <h2 class="nebras-brand-intro-title" id="intro-brand-title" aria-live="polite"></h2>
+            <p class="nebras-brand-intro-tagline" id="intro-tagline"></p>
+            <div class="nebras-brand-intro-progress" aria-hidden="true"><span></span></div>
+            <button type="button" class="nebras-brand-intro-skip" id="intro-skip-btn"></button>
+        </div>
+    </div>
+
+    <div id="site-celebration-overlay" class="site-celebration-overlay" aria-hidden="true"></div>
+
+    <div class="company-legal-bar" id="public-legal-bar" aria-label="بيانات الشركة الرسمية"></div>
+
+    <div class="top-contact-bar">
+        <div class="top-bar-brand-col">
+            <div class="numbers">
+                <span id="top-sales-number"><i class="fas fa-phone-alt"></i> مبيعات: 0555092383</span>
+                <span id="top-customer-number"><i class="fas fa-headset"></i> خدمة العملاء والشكاوى: 0579394158</span>
+            </div>
+        </div>
+        <div class="actions">
+            <button type="button" class="top-commerce-btn" id="top-open-cart-btn" onclick="openCartDrawer()" title="سلة التسوق">
+                <i class="fas fa-shopping-cart" aria-hidden="true"></i>
+                <span class="top-cart-count" id="top-cart-count" hidden>0</span>
+            </button>
+            <button type="button" class="top-commerce-btn quote-top-btn" id="top-quote-btn" onclick="confirmAndOpenQuote()">اطلب عرض سعر</button>
+            <button id="top-call-sales-btn" onclick="dialNumber(systemSettings.mainSalesPhone)">اتصال المبيعات</button>
+            <button id="top-call-customer-btn" onclick="dialNumber(systemSettings.customerServicePhone)">اتصال خدمة العملاء</button>
+            <button id="top-smart-routing-btn" onclick="smartRouteToSales()">اتصال بالمندوب الأقرب</button>
+        </div>
+    </div>
+    <header>
+        <div class="header-top-row header-top-row--campaign">
+            <div class="header-brand-stack">
+                <div class="lang-dropdown">
+                    <button type="button" class="lang-btn" id="lang-toggle-btn" aria-haspopup="true" aria-expanded="false" title="اختيار اللغة / Language">
+                        <i class="fas fa-language" aria-hidden="true"></i>
+                        <span id="lang-current-label">العربية</span>
+                    </button>
+                    <div class="lang-menu" id="lang-menu">
+                        <a href="#" data-lang="ar">العربية</a>
+                        <a href="#" data-lang="en">English</a>
+                        <a href="#" data-lang="zh">中文</a>
+                    </div>
+                </div>
+                <h1 class="header-campaign-title" id="hero-title"></h1>
+            </div>
+            <div class="header-campaign-panel" id="header-campaign-panel" aria-label="حملة نبراس">
+                <h2 class="header-campaign-headline" id="header-campaign-headline"></h2>
+                <p class="header-campaign-tagline" id="header-campaign-tagline"></p>
+                <div class="header-campaign-cta">
+                    <button type="button" class="header-cta header-cta--primary" id="header-explore-btn" onclick="openNebrasWorkspace({pillar:'store',view:'catalog-all'})"></button>
+                    <button type="button" class="header-cta header-cta--ghost" id="header-quote-btn" onclick="confirmAndOpenQuote()"></button>
+                </div>
+                <div class="header-campaign-stats" id="header-campaign-stats" aria-label="إنجازات المصنع"></div>
+            </div>
+        </div>
+        <div class="header-main-row">
+            <div class="header-logo-occasion-wrap">
+                <div class="logo-container">
+                    <a href="index.html" class="site-logo-link" aria-label="شركة مصنع نبراس للبلاستيك">
+                        <img src="images/logo.png" alt="شركة مصنع نبراس للبلاستيك" class="site-logo-img" onerror="siteLogoImgFallback(this)">
+                    </a>
+                </div>
+                <div class="header-occasion-chip" id="header-occasion-chip" role="status" hidden>
+                    <i class="fas fa-star header-occasion-icon" id="header-occasion-icon" aria-hidden="true"></i>
+                    <span id="header-occasion-message"></span>
+                </div>
+            </div>
+            <button class="menu-toggle" type="button" onclick="toggleMenu()" aria-label="القائمة" aria-expanded="false" aria-controls="nav-menu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <nav>
+                <ul id="nav-menu">
+                    <li><a href="#" id="nav-home"><i class="fas fa-home"></i> الرئيسية</a></li>
+                    <li><a href="#" id="nav-store"><i class="fas fa-store"></i> المتجر</a></li>
+                    <li><a href="#" id="nav-showroom"><i class="fas fa-images"></i> المعرض</a></li>
+                    <li><a href="#" id="nav-platform"><i class="fas fa-globe"></i> المنصة</a></li>
+                    <li><a href="#about" id="nav-about"><i class="fas fa-info-circle"></i> من نحن</a></li>
+                    <li><a href="#" id="nav-branches"><i class="fas fa-map-marker-alt"></i> الفروع</a></li>
+                    <li><a href="#" onclick="openAdminPanel(event)" id="nav-admin"><i class="fas fa-user-shield"></i> الإدارة</a></li>
+                    <li><a href="#" id="nav-sales"><i class="fas fa-phone-alt"></i> المبيعات <span class="nav-sales-badge" id="nav-sales-badge" hidden></span></a></li>
+                    <li><a href="#" id="nav-customer"><i class="fas fa-headset"></i> خدمة العملاء</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <div id="nebras-storefront" class="nebras-storefront">
+
+    <section class="hero hero-real" id="site-hero" aria-label="الترحيب">
+        <div class="hero-bg-layer" id="hero-bg-layer" aria-hidden="true"></div>
+        <div class="hero-content-wrap hero-visual-only" id="hero-content-wrap" aria-hidden="true"></div>
+        <div class="hero-location-bar" id="hero-location-bar">
+            <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
+            <span id="hero-address-text">القصيم - عنيزة - طريق الزلفي</span>
+        </div>
+    </section>
+
+    <section class="nebras-trust-strip" id="nebras-trust-strip" aria-label="مزايا مصنع نبراس">
+        <div class="nebras-trust-strip-inner">
+            <div class="nebras-trust-item">
+                <i class="fas fa-industry" aria-hidden="true"></i>
+                <strong id="trust-item-1-title">مصنع سعودي</strong>
+                <span id="trust-item-1-sub">جودة صناعية من القصيم</span>
+            </div>
+            <div class="nebras-trust-item">
+                <i class="fas fa-shield-alt" aria-hidden="true"></i>
+                <strong id="trust-item-2-title">ضمان وثقة</strong>
+                <span id="trust-item-2-sub">منتجات WPC معتمدة</span>
+            </div>
+            <div class="nebras-trust-item">
+                <i class="fas fa-file-invoice-dollar" aria-hidden="true"></i>
+                <strong id="trust-item-3-title">عرض سعر رسمي</strong>
+                <span id="trust-item-3-sub">فاتورة A4 + ضريبة</span>
+            </div>
+            <div class="nebras-trust-item">
+                <i class="fas fa-pencil-ruler" aria-hidden="true"></i>
+                <strong id="trust-item-4-title">صمّم بابك</strong>
+                <span id="trust-item-4-sub">استوديو تفاعلي 3D</span>
+            </div>
+        </div>
+    </section>
+
+    <section class="nebras-occasion-promo" id="nebras-occasion-promo" hidden role="button" tabindex="0" aria-label="المناسبة الحالية">
+        <div class="nebras-occasion-promo-inner">
+            <div class="nebras-occasion-promo-thumb" id="nebras-occasion-promo-thumb" hidden aria-hidden="true"></div>
+            <div class="nebras-occasion-promo-text-wrap">
+                <strong id="nebras-occasion-promo-title"></strong>
+                <p id="nebras-occasion-promo-body"></p>
+            </div>
+            <span class="nebras-occasion-promo-arrow" aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
+        </div>
+    </section>
+
+    <section class="site-structure nebras-gateway" id="nebras-gateway" aria-label="بوابة نبراس">
+        <div class="section-title nebras-gateway-head">
+            <h2 id="quick-services-title">بوابة نبراس الرقمية</h2>
+            <span id="quick-services-subtitle">متجر إلكتروني · معرض منتجات · منصة المصنع — اختر القسم للدخول إلى الصفحة الداخلية.</span>
+        </div>
+        <div id="visitor-icons-lanes" class="visitor-icons-lanes"></div>
+        <div class="nebras-gateway-cta-row" id="nebras-gateway-cta-row">
+            <button type="button" class="nebras-gateway-cta-btn" id="gateway-explore-store-btn" onclick="openNebrasWorkspace({pillar:'store',view:'catalog-all'})">
+                <i class="fas fa-store"></i> استكشف المتجر الكامل
+            </button>
+            <button type="button" class="nebras-gateway-cta-btn nebras-gateway-cta-btn--ghost" id="gateway-door-designer-btn" onclick="openDoorDesignerFromGateway()">
+                <i class="fas fa-pencil-ruler"></i> صمّم بابك
+            </button>
+        </div>
+    </section>
+
+    <section class="nebras-partners-section site-structure" id="nebras-partners-section" aria-label="شركاؤنا">
+        <div class="section-title section-title--partners">
+            <h2 id="partners-public-title">شركاؤنا</h2>
+            <span id="partners-public-subtitle">شركاؤنا في النجاح — نفخر بثقة الشركات والجهات الرائدة</span>
+        </div>
+        <div class="nebras-partners-stage" id="nebras-partners-stage-public">
+            <div class="nebras-partners-marquee nebras-partners-marquee--premium nebras-partners-marquee--row1">
+                <div class="nebras-partners-track" id="nebras-partners-track-public-a"></div>
+            </div>
+            <div class="nebras-partners-marquee nebras-partners-marquee--premium nebras-partners-marquee--row2">
+                <div class="nebras-partners-track nebras-partners-track--reverse" id="nebras-partners-track-public-b"></div>
+            </div>
+        </div>
+    </section>
+
+    <section id="about" class="about-grid">
+        <div class="spotlight-card spotlight-card--about-who clickable-card about-page-card" data-about-page="who" role="button" tabindex="0" onclick="openAboutPage('who')" onkeydown="if(event.key==='Enter')openAboutPage('who')">
+            <div class="card-icon" aria-hidden="true"><i class="fas fa-industry" id="about-icon-who"></i></div>
+            <div class="card-content">
+                <h3 id="about-title-1">من نحن</h3>
+                <p id="about-text-1">نحن شركة مصنع نبراس للبلاستيك، نقدم حلولاً متكاملة للصناعة والمقاولات بشفافية وجودة سعودية أصيلة. هدفنا تطوير منتجات مبتكرة وتوفير تجربة سلسة لكل عميل وزائر.</p>
+                <span class="about-card-hint" id="about-hint-who">اضغط للتفاصيل والشهادات</span>
+            </div>
+        </div>
+        <div class="spotlight-card spotlight-card--about-vision clickable-card about-page-card" data-about-page="vision" role="button" tabindex="0" onclick="openAboutPage('vision')" onkeydown="if(event.key==='Enter')openAboutPage('vision')">
+            <div class="card-icon" aria-hidden="true"><i class="fas fa-eye" id="about-icon-vision"></i></div>
+            <div class="card-content">
+                <h3 id="about-title-2">رؤيتنا</h3>
+                <p id="about-text-2">نسعى لتوسيع حضورنا الصناعي وتقديم تجربة رقمية احترافية، مع التزام عميق بالجودة والشراكة مع عملائنا داخل المملكة وخارجها.</p>
+                <span class="about-card-hint" id="about-hint-vision">اضغط لرؤية الرؤية والوثائق</span>
+            </div>
+        </div>
+    </section>
+
+    <section id="services" class="services-grid" aria-label="خدمات المصنع">
+        <div id="site-services-grid" class="site-services-grid"></div>
+    </section>
+
+    <section class="site-structure only-admin-block" id="section-site-governance">
+        <div class="section-title">
+                <h2 id="structure-title">منصة نبراس — هيكل عالمي</h2>
+            <span id="structure-subtitle">واجهة عامة (معرض ومتجر) ومركز قيادة داخلي — تحكم كامل من الإدارة دون تعديل الكود.</span>
+        </div>
+        <div class="about-grid">
+            <div class="about-card">
+                <h3 id="visitor-role-title">الزوار</h3>
+                <p id="visitor-role-text">يستطيع الزائر تصفح المنتجات ومعارض الأصناف وطلب عرض السعر عبر سلته الخاصة، دون الوصول لأدوات الإدارة.</p>
+            </div>
+            <div class="about-card">
+                <h3 id="admin-role-title">الإدارة</h3>
+                <p id="admin-role-text">الإدارة لديها لوحة تحكم خاصة، متعددة المستخدمين، وصلاحيات محددة للتحكم في المحتوى وتقارير الأداء.</p>
+            </div>
+        </div>
+    </section>
+
+    <div id="site-custom-sections-root"></div>
+
+    <section id="branches" class="site-structure">
+        <div class="section-title">
+            <h2 id="branches-title">فروع نبراس في المملكة</h2>
+            <span id="branches-subtitle">فروع نبراس بالمملكة مع رقم المبيعات لكل فرع.</span>
+        </div>
+        <div class="about-grid" id="branches-grid"></div>
+    </section>
+
+    <section id="company-social" class="company-social-section site-structure" style="display: none;">
+        <div class="section-title">
+            <h2 id="company-social-title">منصة التواصل — مصنع نبراس للبلاستيك</h2>
+            <span id="company-social-subtitle">تابعوا قنوات مصنع نبراس الرسمية.</span>
+        </div>
+        <div id="company-social-links" class="company-social-links" aria-label="وسائل التواصل"></div>
+    </section>
+
+    <footer class="site-footer" id="site-footer">
+        <p class="nebras-site-clock" id="nebras-site-clock" aria-live="polite"></p>
+        <div class="company-legal-bar" id="footer-legal-bar" style="margin-bottom:16px;border-radius:12px;"></div>
+        <div class="footer-designer-row">
+            <p id="footer-designer-line" class="footer-designer-text">التصميم والتطوير والبرمجة: المهندس عبدالرحمن عمران طرش — للتواصل:</p>
+            <div class="footer-designer-actions">
+                <a id="footer-designer-wa" class="footer-contact-btn footer-contact-wa" href="#" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp المهندس">
+                    <i class="fab fa-whatsapp" aria-hidden="true"></i>
+                </a>
+                <a id="footer-designer-tel" class="footer-contact-btn footer-contact-phone" href="tel:" aria-label="اتصال بالمهندس">
+                    <i class="fas fa-mobile-screen-button" aria-hidden="true"></i>
+                    <span id="footer-designer-phone-display" class="footer-phone-num">0535336185</span>
+                </a>
+            </div>
+        </div>
+    </footer>
+
+    </div><!-- /nebras-storefront -->
+
+    <div id="nebras-workspace" class="nebras-workspace" hidden aria-hidden="true">
+        <div class="workspace-shell">
+            <header class="workspace-topbar" aria-label="التنقل الداخلي">
+                <button type="button" class="workspace-back-btn" id="workspace-back-btn" onclick="closeNebrasWorkspace()">
+                    <i class="fas fa-arrow-right" aria-hidden="true"></i>
+                    <span id="workspace-back-label">الواجهة الرئيسية</span>
+                </button>
+                <div class="workspace-topbar-center">
+                    <span class="workspace-layer-badge" id="workspace-layer-badge"></span>
+                    <h1 class="workspace-page-title" id="workspace-page-title"></h1>
+                </div>
+                <div class="workspace-topbar-actions">
+                    <button type="button" class="workspace-action-btn" onclick="openCartDrawer()" title="السلة">
+                        <i class="fas fa-shopping-cart" aria-hidden="true"></i>
+                    </button>
+                    <button type="button" class="workspace-action-btn workspace-action-btn--primary" onclick="confirmAndOpenQuote()" id="workspace-quote-btn">عرض سعر</button>
+                </div>
+            </header>
+            <nav class="workspace-pillar-nav" id="workspace-pillar-nav" aria-label="طبقات المنصة">
+                <button type="button" class="workspace-pillar-btn" data-pillar="platform" id="workspace-pillar-platform">
+                    <i class="fas fa-globe" aria-hidden="true"></i><span id="workspace-pillar-platform-label">منصة</span>
+                </button>
+                <button type="button" class="workspace-pillar-btn" data-pillar="showroom" id="workspace-pillar-showroom">
+                    <i class="fas fa-images" aria-hidden="true"></i><span id="workspace-pillar-showroom-label">معرض</span>
+                </button>
+                <button type="button" class="workspace-pillar-btn" data-pillar="store" id="workspace-pillar-store">
+                    <i class="fas fa-store" aria-hidden="true"></i><span id="workspace-pillar-store-label">متجر</span>
+                </button>
+            </nav>
+            <main id="workspace-main" class="workspace-main" tabindex="-1"></main>
+        </div>
+    </div>
+
+    <div class="admin-overlay" id="admin-overlay">
+        <div class="admin-modal">
+            <h2 id="admin-login-title">تسجيل دخول الإدارة</h2>
+            <p class="status" id="admin-status-message"></p>
+            <input id="admin-username" type="text" placeholder="اسم المستخدم" autocomplete="username">
+            <input id="admin-password" type="password" placeholder="كلمة المرور" autocomplete="current-password">
+            <button class="primary" id="admin-login-btn" onclick="loginAdmin()">دخول</button>
+            <button class="secondary" id="admin-login-cancel" onclick="closeAdminOverlay()">إلغاء</button>
+        </div>
+    </div>
+
+    <div class="admin-overlay" id="complaint-overlay">
+        <div class="admin-modal">
+            <h2 id="complaint-inquiry-title">استفسار عن الشكوى</h2>
+            <p id="complaint-inquiry-text">أدخل رقم الشكوى لمعرفة الحالة الحالية.</p>
+            <div class="complaint-form-grid">
+                <input class="full-width" id="complaint-customer-name" type="text" placeholder="اسم العميل">
+                <input id="complaint-customer-phone" type="text" placeholder="رقم الهاتف">
+                <input id="complaint-customer-branch" type="text" placeholder="الفرع">
+                <textarea class="full-width" id="complaint-description" rows="3" placeholder="تفاصيل الشكوى"></textarea>
+            </div>
+            <button class="primary" onclick="submitComplaint()">إرسال شكوى جديدة</button>
+            <input id="complaint-number" type="text" placeholder="رقم الشكوى">
+            <p class="status" id="complaint-status-message"></p>
+            <button class="primary" onclick="checkComplaintStatus()">استعلام</button>
+            <button class="secondary" onclick="closeComplaintOverlay()">إلغاء</button>
+        </div>
+    </div>
+
+    <button type="button" class="cart-fab" id="cart-fab" onclick="openCartDrawer()" aria-label="سلة التسوق">
+        <i class="fas fa-shopping-cart" aria-hidden="true"></i>
+        <span class="cart-badge-count" id="cart-badge-count" hidden>0</span>
+    </button>
+    <button type="button" class="fab-send-quote-sales" id="fab-send-quote-sales" onclick="submitQuoteToSales()" title="إرسال عرض السعر للمبيعات" aria-label="إرسال عرض السعر للمبيعات">
+        <i class="fas fa-paper-plane" aria-hidden="true"></i>
+    </button>
+    <button type="button" class="fab-send-transfer-receipt" id="fab-send-transfer-receipt" onclick="openCartDrawer();document.getElementById('cart-payment-block')&&document.getElementById('cart-payment-block').scrollIntoView({behavior:'smooth'})" title="إرسال صورة الحوالة للمبيعات" aria-label="إرسال صورة الحوالة للمبيعات">
+        <i class="fas fa-receipt" aria-hidden="true"></i>
+    </button>
+
+    <nav class="nebras-mobile-commerce-bar" id="nebras-mobile-commerce-bar" aria-label="تسوق سريع">
+        <button type="button" class="nebras-mobile-bar-btn" id="mob-bar-store" onclick="openNebrasWorkspace({pillar:'store',view:'catalog-all'})">
+            <i class="fas fa-store" aria-hidden="true"></i>
+            <span id="mob-bar-store-label">المتجر</span>
+        </button>
+        <button type="button" class="nebras-mobile-bar-btn nebras-mobile-bar-btn--cart" id="mob-bar-cart" onclick="openCartDrawer()">
+            <i class="fas fa-shopping-cart" aria-hidden="true"></i>
+            <span class="mob-cart-count" id="mob-cart-count" hidden>0</span>
+            <span id="mob-bar-cart-label">السلة</span>
+        </button>
+        <button type="button" class="nebras-mobile-bar-btn nebras-mobile-bar-btn--primary" id="mob-bar-quote" onclick="confirmAndOpenQuote()">
+            <i class="fas fa-file-invoice-dollar" aria-hidden="true"></i>
+            <span id="mob-bar-quote-label">عرض سعر</span>
+        </button>
+    </nav>
+
+    <div class="cart-drawer-overlay" id="cart-drawer-overlay" onclick="if(event.target===this)closeCartDrawer()">
+        <div class="cart-drawer" role="dialog" aria-labelledby="cart-drawer-title">
+            <h2 id="cart-drawer-title">سلة التسوق</h2>
+            <ol class="cart-checkout-steps" id="cart-checkout-steps" aria-label="خطوات الطلب"></ol>
+            <p class="cart-commerce-hint" id="cart-commerce-hint"></p>
+            <p class="cart-session-hint" id="cart-session-hint" hidden></p>
+            <div class="cart-checkout-form" id="cart-checkout-form">
+                <h3 id="cart-checkout-title">بيانات العميل</h3>
+                <p class="cart-checkout-sub" id="cart-checkout-sub">سلتك خاصة بهذه الجلسة — أكمل بيانات التواصل لطلب عرض سعر رسمي من مصنع نبراس.</p>
+                <label for="checkout-customer-name" id="lbl-checkout-name">الاسم / الشركة <span class="req">*</span></label>
+                <input type="text" id="checkout-customer-name" name="customerName" autocomplete="name" required>
+                <label for="checkout-customer-phone" id="lbl-checkout-phone">رقم الجوال <span class="req">*</span></label>
+                <input type="tel" id="checkout-customer-phone" name="phone" autocomplete="tel" inputmode="tel" required>
+                <label for="checkout-customer-email" id="lbl-checkout-email">البريد الإلكتروني</label>
+                <input type="email" id="checkout-customer-email" name="email" autocomplete="email">
+                <label for="checkout-customer-city" id="lbl-checkout-city">المدينة / الفرع</label>
+                <input type="text" id="checkout-customer-city" name="city" autocomplete="address-level2">
+                <label for="checkout-customer-address" id="lbl-checkout-address">العنوان / موقع التسليم</label>
+                <input type="text" id="checkout-customer-address" name="address" autocomplete="street-address">
+                <label for="checkout-customer-note" id="lbl-checkout-note">ملاحظات للمبيعات</label>
+                <textarea id="checkout-customer-note" name="note" rows="2" placeholder="أي تفاصيل إضافية للمبيعات…"></textarea>
+                <div class="cart-transfer-confirm-block" id="cart-transfer-confirm-block">
+                    <h4 class="cart-transfer-block-title" id="cart-transfer-block-title"><i class="fas fa-building-columns"></i> تأكيد الحوالة البنكية</h4>
+                    <p class="cart-transfer-hint" id="cart-transfer-hint">بعد التحويل: ارفع صورة إيصال الحوالة هنا — تُرسل تلقائياً للمبيعات مع عرض السعر وتظهر في تقرير الإدارة.</p>
+                    <div class="cart-bank-quick-list" id="cart-bank-quick-list" aria-label="حسابات الحوالة"></div>
+                    <label class="cart-payment-declared-label" for="cart-payment-declared">
+                        <input type="checkbox" id="cart-payment-declared" onchange="onTransferDeclaredChanged(event)">
+                        <span id="lbl-cart-payment-declared">أؤكد أنني حوّلت المبلغ (أو سأحوّله خلال 24 ساعة)</span>
+                    </label>
+                    <label class="cart-receipt-upload-label" for="cart-transfer-receipt" id="lbl-cart-transfer-receipt">صورة إيصال الحوالة البنكية</label>
+                    <input type="file" id="cart-transfer-receipt" accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.avif" onchange="onCartReceiptSelected(event)">
+                    <div class="cart-receipt-preview" id="cart-receipt-preview" hidden></div>
+                    <p class="cart-receipt-status" id="cart-receipt-status" role="status" hidden></p>
+                </div>
+                <p class="cart-checkout-status" id="cart-checkout-status" role="status"></p>
+            </div>
+            <div id="cart-drawer-lines"></div>
+            <div class="cart-totals-vat-block" id="cart-totals-vat-block">
+                <div class="cart-subtotal-ex-row" id="cart-subtotal-ex-row" hidden></div>
+                <div class="cart-vat-row" id="cart-vat-row" hidden></div>
+                <div class="cart-total-inc-row" id="cart-total-inc-row" hidden></div>
+            </div>
+            <div class="cart-total-row" id="cart-total-row" hidden>المجموع: 0 ر.س</div>
+            <div id="cart-payment-mount"></div>
+            <div class="cart-drawer-actions">
+                <button type="button" class="primary" id="cart-request-quote-btn" onclick="confirmAndOpenQuote()">اطلب عرض سعر</button>
+                <button type="button" class="primary" id="cart-send-sales-btn" onclick="submitQuoteToSales()">إرسال السلة للمبيعات</button>
+                <button type="button" class="secondary" id="cart-close-btn" onclick="closeCartDrawer()">إغلاق</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="product-shop-overlay" id="product-shop-overlay" onclick="if(event.target===this)closeProductShop()">
+        <div class="product-shop-modal" id="product-shop-modal"></div>
+    </div>
+
+    <div class="quote-print-overlay" id="quote-print-overlay">
+        <div class="quote-print-actions" style="text-align:center;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:10px;justify-content:center;">
+            <button type="button" class="primary" onclick="window.print()">طباعة / PDF</button>
+            <button type="button" class="primary" id="quote-send-sales-btn" onclick="submitQuoteToSales()">إرسال عرض السعر للمبيعات</button>
+            <button type="button" class="secondary" id="quote-mark-finalized-btn" onclick="markCurrentQuoteFinalized()">تسجيل عرض السعر كمنفّذ</button>
+            <button type="button" class="secondary" onclick="closeQuotePreview()">إغلاق</button>
+        </div>
+        <div class="quote-a4" id="quote-a4-document"></div>
+    </div>
+
+    <section class="admin-dashboard" id="admin-dashboard">
+        <div class="celebration-deco-layer" id="celebration-deco-layer" aria-hidden="true"></div>
+        <div class="dashboard-celebration-banner" id="dashboard-celebration-banner" role="status" hidden>
+            <div class="celebration-bunting" aria-hidden="true"></div>
+            <div class="dashboard-celebration-inner">
+                <i class="fas fa-star" id="dashboard-celebration-icon" aria-hidden="true"></i>
+                <div>
+                    <span class="celebration-badge" id="dashboard-celebration-badge">وضع احتفالي</span>
+                    <p id="dashboard-celebration-message"></p>
+                </div>
+            </div>
+        </div>
+        <div class="dashboard-company-identity" id="dashboard-company-identity">
+            <h3 id="dashboard-legal-title" class="admin-only-ui">بيانات مصنع نبراس الرسمية (داخلية + خارجية)</h3>
+            <div class="legal-grid" id="dashboard-legal-grid"></div>
+        </div>
+        <nav class="dashboard-main-nav" id="dashboard-main-nav" aria-label="تنقل الداشبورد">
+            <button type="button" id="dash-nav-analytics" onclick="openAdminAnalytics()">التحليلات</button>
+            <button type="button" id="dash-nav-partners" onclick="scrollToDashboardSection('dashboard-partners-block')">الشركاء</button>
+            <button type="button" id="dash-nav-ops" onclick="scrollToDashboardSection('dashboard-actions-grid')">العمليات</button>
+            <button type="button" id="dash-nav-modules" onclick="scrollToDashboardSection('dashboard-secondary-grid')">الوحدات</button>
+            <button type="button" id="dash-nav-erp" onclick="scrollToDashboardSection('erp-hub-panel')">ERP</button>
+            <button type="button" id="dash-nav-platform" onclick="scrollToDashboardSection('platform-hub-panel')">المنصة</button>
+            <button type="button" id="dash-nav-content" onclick="openSiteContentManager()">المحتوى</button>
+            <button type="button" id="dash-nav-settings" onclick="openDashboardNavSettings()">الإعدادات</button>
+        </nav>
+        <div class="dashboard-hub-intro admin-only-ui" id="dashboard-hub-intro">
+            <h3 id="dashboard-hub-intro-title">مركز التحكم — نبراس</h3>
+            <p id="dashboard-hub-intro-text">منصة · معرض · متجر — كل أيقونة إدارية تفتح نظامها. المحتوى والصور والـ PDF من إدارة المحتوى دون برمجة.</p>
+        </div>
+        <section class="admin-analytics-hub admin-only-ui" id="admin-analytics-hub" aria-labelledby="admin-analytics-title" hidden>
+            <div class="admin-analytics-head">
+                <h3 id="admin-analytics-title"><i class="fas fa-chart-line" aria-hidden="true"></i> التحليلات والتقارير الداخلية</h3>
+                <p class="scm-hint admin-only-ui" id="admin-analytics-hint">تقارير حية للإدارة فقط — لا تظهر للزوار: المنتجات الأكثر طلباً، الألوان، الشكاوى، زوار الموقع، وترتيب عروض الأسعار.</p>
+                <button type="button" class="admin-analytics-refresh-btn" id="admin-analytics-refresh-btn" onclick="renderAdminAnalyticsPanel()"><i class="fas fa-sync-alt"></i> تحديث التقارير</button>
+            </div>
+            <div id="analytics-governance-toolbar"></div>
+            <div class="admin-analytics-kpis" id="admin-analytics-kpis" aria-live="polite"></div>
+            <div class="admin-analytics-charts" id="admin-analytics-charts">
+                <article class="admin-analytics-chart-card" id="chart-top-products" aria-labelledby="chart-top-products-title"></article>
+                <article class="admin-analytics-chart-card" id="chart-top-colors" aria-labelledby="chart-top-colors-title"></article>
+                <article class="admin-analytics-chart-card" id="chart-complaints" aria-labelledby="chart-complaints-title"></article>
+            </div>
+            <div class="admin-analytics-tables">
+                <article class="admin-analytics-table-card" id="complaints-report-panel" aria-labelledby="complaints-report-title"></article>
+                <article class="admin-analytics-table-card" id="sales-crm-panel" aria-labelledby="sales-crm-title"></article>
+                <article class="admin-analytics-table-card" id="quote-ranking-panel" aria-labelledby="quote-ranking-title"></article>
+                <article class="admin-analytics-table-card" id="quote-catalog-panel" aria-labelledby="quote-catalog-title"></article>
+                <article class="admin-analytics-table-card" id="bank-transfers-panel" aria-labelledby="bank-transfers-title"></article>
+                <article class="admin-analytics-table-card" id="visitor-report-panel" aria-labelledby="visitor-report-title"></article>
+                <div id="analytics-restore-mount"></div>
+            </div>
+        </section>
+        <div class="dashboard-partners-block nebras-partners-showcase" id="dashboard-partners-block">
+            <div class="dashboard-partners-head">
+                <h3 id="dashboard-partners-title"><i class="fas fa-handshake"></i> شركاؤنا</h3>
+                <p class="dashboard-partners-subtitle" id="dashboard-partners-subtitle">شركاؤنا في النجاح</p>
+            </div>
+            <p class="scm-hint admin-only-ui" id="dashboard-partners-hint">أضيفوا شعارات الشركاء أو احذفوها من إدارة المحتوى → تبويب الشركاء.</p>
+            <div class="nebras-partners-stage nebras-partners-stage--dashboard" id="nebras-partners-stage-dashboard">
+                <div class="nebras-partners-marquee nebras-partners-marquee--premium nebras-partners-marquee--row1">
+                    <div class="nebras-partners-track" id="nebras-partners-track-dashboard-a"></div>
+                </div>
+                <div class="nebras-partners-marquee nebras-partners-marquee--premium nebras-partners-marquee--row2">
+                    <div class="nebras-partners-track nebras-partners-track--reverse" id="nebras-partners-track-dashboard-b"></div>
+                </div>
+            </div>
+        </div>
+        <div class="dashboard-header">
+            <div>
+                <h2 id="admin-dashboard-title">مركز قيادة منصة نبراس</h2>
+                <p class="admin-role" id="admin-role-name"></p>
+                <p class="platform-hub-tagline admin-only-ui" id="platform-hub-tagline" style="margin:8px 0 0;opacity:0.88;font-size:0.92rem;"></p>
+            </div>
+            <a class="admin-action" href="#" id="admin-account-security-link" onclick="openAccountSecurity(); return false;"><i class="fas fa-user-lock"></i> أمان حسابي</a>
+            <a class="admin-action" href="#" id="admin-logout-label" onclick="logoutAdmin()"><i class="fas fa-sign-out-alt"></i> تسجيل خروج</a>
+        </div>
+        <div class="dashboard-section-block">
+        <div class="erp-hub-panel" id="erp-hub-panel">
+            <span class="erp-badge-main" id="erp-badge-main"><i class="fas fa-cubes" aria-hidden="true"></i> NEBRAS ERP SYSTEM</span>
+            <div class="platform-hub-head">
+                <div>
+                    <h3 id="erp-hub-title">نظام تخطيط موارد المؤسسة — داخل المنصة</h3>
+                    <p id="erp-hub-subtitle" class="admin-only-ui"></p>
+                </div>
+                <span class="platform-version-badge" id="erp-version-badge"></span>
+            </div>
+            <div class="erp-kpi-row" id="erp-kpi-row"></div>
+            <div class="erp-pillars-row" id="erp-pillars-row" aria-label="ركائز ERP"></div>
+            <div class="erp-modules-grid" id="erp-modules-grid" role="list"></div>
+            <details class="erp-benchmark-details" id="erp-benchmark-details">
+                <summary id="erp-benchmark-summary">مقارنة مع المنصات العالمية (أمازون · علي بابا · جرير …)</summary>
+                <table class="erp-benchmark-table" id="erp-benchmark-table">
+                    <thead>
+                        <tr>
+                            <th id="erp-bench-col-area">المجال</th>
+                            <th id="erp-bench-col-global">العالمية</th>
+                            <th id="erp-bench-col-nebras">نبراس</th>
+                        </tr>
+                    </thead>
+                    <tbody id="erp-benchmark-body"></tbody>
+                </table>
+            </details>
+        </div>
+        </div>
+        <div class="dashboard-section-block">
+        <div class="platform-hub-panel" id="platform-hub-panel">
+            <div class="platform-hub-head">
+                <div>
+                    <h3 id="platform-hub-title">منصة نبراس — التحكم الداخلي والخارجي</h3>
+                    <p id="platform-hub-subtitle"></p>
+                </div>
+                <span class="platform-version-badge" id="platform-version-badge"></span>
+            </div>
+            <div class="platform-layers-row" id="platform-layers-row" aria-label="طبقات المنصة"></div>
+            <div class="platform-modules-grid" id="platform-modules-grid" role="list"></div>
+        </div>
+        </div>
+        <div class="dashboard-channels-panel" id="dashboard-channels-panel">
+            <div class="dashboard-channels-head">
+                <h3 id="dashboard-channels-title">حالة قنوات التواصل الاجتماعي</h3>
+                <p id="dashboard-channels-hint" class="dashboard-channels-hint admin-only-ui"></p>
+            </div>
+            <ul id="dashboard-channels-list" class="dashboard-channels-list"></ul>
+            <button type="button" class="primary dashboard-channels-edit-btn" id="dashboard-channels-edit-btn" onclick="openSystemSettingsForChannels()">تعديل روابط التواصل</button>
+            <p id="dashboard-channels-superadmin-note" class="status" style="display: none;"></p>
+        </div>
+        <div class="dashboard-occasion-panel" id="dashboard-occasion-panel">
+            <h3 id="dashboard-occasion-title">الوضع الاحتفالي للمناسبات</h3>
+            <p class="dashboard-occasion-status" id="dashboard-occasion-status"></p>
+            <div class="dashboard-occasion-preview" id="dashboard-occasion-preview" aria-hidden="true"></div>
+            <button type="button" class="primary dashboard-channels-edit-btn" id="dashboard-occasion-edit-btn" onclick="openSystemSettingsForOccasion()">تهيئة شكل الاحتفال</button>
+            <p id="dashboard-occasion-superadmin-note" class="status" style="display: none;"></p>
+        </div>
+        <h3 class="dashboard-zone-label" id="dash-zone-command"><i class="fas fa-sliders"></i> قيادة المحتوى والحوكمة</h3>
+        <div class="dashboard-actions" id="dashboard-actions-grid"></div>
+        <h3 class="dashboard-zone-label" id="dash-zone-operations"><i class="fas fa-cubes"></i> ERP والعمليات والتحليلات</h3>
+        <div class="dashboard-grid" id="dashboard-secondary-grid"></div>
+    </section>
+
+    <!-- Admin Sections -->
+    <div class="admin-section" id="user-management">
+        <div class="admin-modal">
+            <h2>إدارة المستخدمين والصلاحيات</h2>
+            <p class="scm-hint admin-only-ui">الإدارة الرئيسية تنشئ مستخدمين فرعيين وتحدد صلاحياتهم (محتوى · مبيعات · تقارير …). حذف/Restore التقارير للإدارة الرئيسية فقط.</p>
+            <button onclick="addNewUser()">إضافة مستخدم جديد</button>
+            <button onclick="openAccountSecurity()">أمان الحساب (تغيير اليوزر/الباسورد)</button>
+            <button onclick="openSiteContentManager()">إدارة محتوى الموقع بالكامل</button>
+            <button onclick="openIconManagement()">أيقونات الزوار (سريع)</button>
+            <button id="open-system-settings-btn" onclick="openSystemSettings()">إعدادات النظام (Super Admin)</button>
+            <ul id="users-list"></ul>
+            <button onclick="closeAdminSection('user-management')">إغلاق</button>
+        </div>
+    </div>
+
+    <div class="admin-section" id="erp-inventory">
+        <div class="admin-modal site-content-modal">
+            <h2 id="erp-inventory-title">ERP — إدارة المخزون والمواد</h2>
+            <p class="scm-hint admin-only-ui" id="erp-inventory-hint">مثل أنظمة WMS في أمازون وجرير: أكواد SKU، كميات، مستودعات، وتنبيهات الحد الأدنى.</p>
+            <button class="primary" type="button" onclick="addErpInventoryItem()">+ صنف مخزون</button>
+            <ul id="erp-inventory-list" class="scm-list erp-inventory-list"></ul>
+            <button type="button" onclick="closeAdminSection('erp-inventory')">إغلاق</button>
+        </div>
+    </div>
+
+    <div class="admin-section" id="erp-orders">
+        <div class="admin-modal">
+            <h2 id="erp-orders-title">ERP — الطلبات والتنفيذ (OMS)</h2>
+            <p class="scm-hint admin-only-ui" id="erp-orders-hint">مرحلة قادمة: طلبات زوار، حالات الشحن، ربط الفروع — كمنصات التجارة العالمية.</p>
+            <ul id="erp-orders-list" class="scm-list"></ul>
+            <button type="button" onclick="addErpOrderStub()">+ تسجيل طلب تجريبي</button>
+            <button type="button" onclick="closeAdminSection('erp-orders')">إغلاق</button>
+        </div>
+    </div>
+
+    <div class="admin-section" id="erp-procurement">
+        <div class="admin-modal">
+            <h2 id="erp-procurement-title">ERP — المشتريات والتوريد</h2>
+            <p class="scm-hint admin-only-ui" id="erp-procurement-hint">مرحلة قادمة: موردون، أوامر شراء، استلام — كسلاسل توريد علي بابا B2B.</p>
+            <ul id="erp-procurement-list" class="scm-list"></ul>
+            <button type="button" onclick="closeAdminSection('erp-procurement')">إغلاق</button>
+        </div>
+    </div>
+
+    <div class="admin-section" id="sales-management">
+        <div class="admin-modal">
+            <h2 id="erp-sales-modal-title">ERP — المبيعات والفوترة</h2>
+            <div class="sales-quotes-inbox-wrap admin-only-ui" data-perm="sales">
+                <h3 id="sales-quotes-inbox-title">طلبات عروض الأسعار الواردة (من السلة)</h3>
+                <p class="scm-hint admin-only-ui" id="sales-quotes-inbox-hint">يصل هنا كل عرض سعر يرسله العميل من أيقونة الإرسال أو من السلة — مراجعة وردّ المبيعات.</p>
+                <ul id="sales-quotes-inbox-list" class="scm-list"></ul>
+            </div>
+            <button onclick="addNewSale()">إضافة عملية بيع</button>
+            <ul id="sales-list"></ul>
+            <button onclick="closeAdminSection('sales-management')">إغلاق</button>
+        </div>
+    </div>
+
+    <div class="admin-section" id="customer-service-management">
+        <div class="admin-modal">
+            <h2>خدمة العملاء</h2>
+            <ul id="customer-service-list"></ul>
+            <button onclick="closeAdminSection('customer-service-management')">إغلاق</button>
+        </div>
+    </div>
+
+    <div class="admin-section" id="complaints-management">
+        <div class="admin-modal">
+            <h2>إدارة الشكاوى</h2>
+            <ul id="complaints-list"></ul>
+            <button onclick="closeAdminSection('complaints-management')">إغلاق</button>
+        </div>
+    </div>
+
+    <div class="admin-section" id="branches-management">
+        <div class="admin-modal">
+            <h2>إدارة فروع المملكة</h2>
+            <button onclick="addBranch()">إضافة فرع جديد</button>
+            <ul id="branches-admin-list"></ul>
+            <button onclick="closeAdminSection('branches-management')">إغلاق</button>
+        </div>
+    </div>
+
+    <div class="admin-section" id="audit-log">
+        <div class="admin-modal">
+            <h2>سجل العمليات الإدارية</h2>
+            <ul id="audit-log-list"></ul>
+            <button onclick="closeAdminSection('audit-log')">إغلاق</button>
+        </div>
+    </div>
+
+    <div class="admin-section" id="system-settings">
+        <div class="admin-modal">
+            <h2>إعدادات النظام</h2>
+            <p class="status">الأرقام الإلزامية للعرض والاتصال:</p>
+            <input id="setting-sales-phone" type="text" placeholder="رقم المبيعات العام">
+            <input id="setting-customer-phone" type="text" placeholder="رقم خدمة العملاء والشكاوى">
+            <input id="setting-recovery-email" type="email" placeholder="إيميل استرجاع الإدارة">
+            <hr style="margin:14px 0;border:none;border-top:1px solid rgba(0,0,0,0.12);">
+            <p class="status">البيانات الرسمية (تظهر في الموقع والداشبورد وعرض السعر):</p>
+            <input id="setting-commercial-register" type="text" placeholder="السجل التجاري (مثال: 1128185177)">
+            <input id="setting-tax-number" type="text" placeholder="الرقم الضريبي (مثال: 312765384700003)">
+            <input id="setting-vat-rate" type="number" min="0" max="100" step="0.01" placeholder="نسبة ضريبة القيمة المضافة % (افتراضي 15)">
+            <input id="setting-company-address-ar" type="text" placeholder="العنوان بالعربية — القصيم - عنيزة - طريق الزلفي">
+            <input id="setting-company-address-en" type="text" placeholder="Address in English">
+            <input id="setting-hero-banner-url" type="text" placeholder="صورة بانر الرئيسية (مثال: images/hero-nebras-banner.png)">
+            <button type="button" class="admin-only-ui" onclick="pickHeroBannerFromSettings()">رفع / اختيار صورة بانر الرئيسية</button>
+            <p class="status">حسابات بنكية (صور/شعارات — تُعرض في الموقع):</p>
+            <div id="setting-bank-accounts-list" class="scm-list"></div>
+            <button type="button" onclick="addBankAccountFromSettings()">+ حساب بنكي</button>
+            <hr style="margin:14px 0;border:none;border-top:1px solid rgba(0,0,0,0.12);">
+            <p class="status">التذييل والمنصات (اختياري — يُحفظ مع الموقع):</p>
+            <input id="setting-designer-phone" type="text" placeholder="رقم المهندس المعروض في التذييل (مثال: 0535336185)">
+            <input id="setting-social-whatsapp" type="url" placeholder="رابط واتساب كامل (اتركه فارغًا ليُستخدم الرقم أعلاه)">
+            <input id="setting-social-tiktok" type="url" placeholder="رابط TikTok">
+            <input id="setting-social-facebook" type="url" placeholder="رابط Facebook">
+            <input id="setting-social-instagram" type="url" placeholder="رابط Instagram">
+            <input id="setting-social-snapchat" type="url" placeholder="رابط Snapchat">
+            <hr style="margin:14px 0;border:none;border-top:1px solid rgba(255,255,255,0.15);">
+            <div class="occasion-settings-block">
+                <p class="status" id="setting-occasion-section-title">تهيئة الوضع الاحتفالي — النظام الداخلي يغيّر شكل المناسبة</p>
+                <p class="occasion-hint" id="setting-occasion-hint">اختر مناسبة رسمية أو عرضًا مخصصًا: الداشبورد والموقع يتحولان لمظهر احتفالي كامل (ألوان، زينة، بانر). جدولة اختيارية بالتواريخ.</p>
+                <label class="occasion-check">
+                    <input type="checkbox" id="setting-occasion-enabled">
+                    <span id="setting-occasion-enabled-label">تفعيل الوضع الاحتفالي (الموقع + الداشبورد)</span>
+                </label>
+                <label class="occasion-check">
+                    <input type="checkbox" id="setting-occasion-site-wide" checked>
+                    <span id="setting-occasion-site-wide-label">زينة شاملة لكل الموقع والداشبورد (ألوان، حدود، بطاقات)</span>
+                </label>
+                <select id="setting-occasion-theme" aria-label="اختيار المناسبة"></select>
+                <input id="setting-occasion-custom-label-ar" type="text" placeholder="اسم العرض المخصص (عربي) — عند اختيار «عرض مخصص»">
+                <input id="setting-occasion-custom-label-en" type="text" placeholder="Custom display name (English)">
+                <input id="setting-occasion-start" type="date" title="بداية التفعيل">
+                <input id="setting-occasion-end" type="date" title="نهاية التفعيل">
+                <input id="setting-occasion-hero-url" type="url" placeholder="صورة المناسبة للزائر (رابط أو رفع من الوسائط — تظهر في الشريط وصفحة التفاصيل)">
+                <button type="button" class="admin-only-ui" onclick="pickOccasionHeroFromSettings()">رفع / اختيار صورة المناسبة للزائر</button>
+                <input id="setting-occasion-dash-url" type="url" placeholder="صورة/خلفية احتفالية للداشبورد (رابط — اختياري)">
+                <input id="setting-occasion-msg-ar" type="text" placeholder="شرح المناسبة للزائر بالعربية (يظهر عند الضغط على المناسبة)">
+                <input id="setting-occasion-msg-en" type="text" placeholder="Occasion description for visitors (English)">
+                <input id="setting-occasion-promo-discount" type="text" placeholder="سطر العرض المختصر تحت اسم المناسبة (مثال: خصم 15% على أبواب WPC)">
+                <div class="occasion-preview-strip" id="setting-occasion-preview" aria-hidden="true"></div>
+            </div>
+            <button onclick="saveSystemSettings()">حفظ الإعدادات</button>
+            <button onclick="closeAdminSection('system-settings')">إغلاق</button>
+        </div>
+    </div>
+
+    <div class="admin-section" id="account-security">
+        <div class="admin-modal">
+            <h2>أمان حساب الإدارة</h2>
+            <button type="button" id="account-security-direct-btn" onclick="changeAdminCredentialsByOldPassword()">تغيير البيانات بكلمة المرور القديمة</button>
+            <button type="button" id="account-security-email-btn" onclick="sendRecoveryCodeToEmail()">استرجاع/تغيير عبر الإيميل</button>
+            <p id="account-security-status" class="status"></p>
+            <button onclick="closeAdminSection('account-security')">إغلاق</button>
+        </div>
+    </div>
+
+    <div class="admin-section" id="site-content-management">
+        <div class="admin-modal site-content-modal">
+            <h2 id="scm-main-title">إدارة محتوى الموقع — بدون تعديل الكود</h2>
+            <p class="scm-hint admin-only-ui" id="scm-main-hint">صلاحية <strong>المحتوى</strong> (مدير الإدارة / Super Admin): تحكم كامل بالموقع — منتجات، أيقونات (صور · PDF · أصناف)، <strong>معرض نبراس</strong> (منتجات + مشاريع)، شركاء، شهادات، بانر الهيدر. متجر = سلة وعرض سعر.</p>
+            <div id="scm-governance-status" class="scm-governance-status" aria-live="polite"></div>
+            <button type="button" class="primary admin-only-ui" style="margin:0 0 12px" onclick="openDoorDesignerAdmin()"><i class="fas fa-pencil-ruler"></i> إعداد «صمّم بابك مع نبراس» (3D)</button>
+            <div class="scm-tabs" role="tablist">
+                <button type="button" class="active" id="scm-tab-products" data-scm-tab="products" onclick="switchScmTab('products')">المنتجات</button>
+                <button type="button" id="scm-tab-visitor" data-scm-tab="visitor" onclick="switchScmTab('visitor')">أيقونات الزوار</button>
+                <button type="button" id="scm-tab-dashboard" data-scm-tab="dashboard" onclick="switchScmTab('dashboard')">داشبورد الإدارة</button>
+                <button type="button" id="scm-tab-sections" data-scm-tab="sections" onclick="switchScmTab('sections')">أقسام إضافية</button>
+                <button type="button" id="scm-tab-about" data-scm-tab="about" onclick="switchScmTab('about')">من نحن ورؤيتنا</button>
+                <button type="button" id="scm-tab-partners" data-scm-tab="partners" onclick="switchScmTab('partners')">الشركاء</button>
+                <button type="button" id="scm-tab-certifications" data-scm-tab="certifications" onclick="switchScmTab('certifications')">اعتمادات وشهادات</button>
+                <button type="button" id="scm-tab-showroom" data-scm-tab="showroom" onclick="switchScmTab('showroom')">معرض نبراس</button>
+            </div>
+            <div id="scm-panel-products" class="scm-panel active">
+                <p class="scm-hint admin-only-ui" id="scm-products-hint">الأيقونات الأربع للمتجر (WPC عضم · WPC جاهز · ألومنيوم · منتجات أخرى) تعرض أصنافها من هنا. «أصناف المنتج»: صورة + شكل/مقاس/لون + <strong>السعر قبل الضريبة</strong> — يظهر للزائر قبل وبعد 15% في السلة وعرض السعر.</p>
+                <button class="primary" type="button" onclick="addSiteProduct()">+ منتج جديد</button>
+                <ul id="scm-products-list" class="scm-list"></ul>
+            </div>
+            <div id="scm-panel-visitor" class="scm-panel">
+                <p class="scm-hint admin-only-ui" id="scm-visitor-hint">كل أيقونة: خلفية البطاقة + ألبوم معرض داخلي + PDF. اختر <strong>معرض</strong> (تصفح فقط) أو <strong>معرض + متجر</strong> (صور + أصناف + سلة). رفع الصور من «رفع / اختيار صورة» و«إضافة صورة للألبوم».</p>
+                <h4 class="scm-subhead admin-only-ui">بطاقات الخدمات (خدمات التصنيع · الدعم الفني · إدارة الجودة)</h4>
+                <ul id="scm-service-icons-list" class="scm-list scm-list--compact"></ul>
+                <h4 class="scm-subhead admin-only-ui">أيقونات بوابة الزائر</h4>
+                <button class="primary" type="button" onclick="addVisitorIcon()">+ أيقونة زائر</button>
+                <ul id="icons-admin-list" class="scm-list"></ul>
+            </div>
+            <div id="scm-panel-dashboard" class="scm-panel">
+                <p class="scm-hint admin-only-ui" id="scm-dashboard-hint">كل أيقونة: «محتوى داخل الأيقونة» (نصوص · صور · وثائق · شروحات) + الإجراء (فتح ERP أو قسم). التعديل فوري بدون كود.</p>
+                <button class="primary" type="button" onclick="addDashboardTile()">+ أيقونة داشبورد</button>
+                <ul id="scm-dashboard-list" class="scm-list"></ul>
+            </div>
+            <div id="scm-panel-sections" class="scm-panel">
+                <button class="primary" type="button" onclick="addCustomSiteSection()">+ قسم صفحة جديد</button>
+                <ul id="scm-sections-list" class="scm-list"></ul>
+            </div>
+            <div id="scm-panel-about" class="scm-panel">
+                <p class="scm-hint admin-only-ui" id="scm-about-hint">محتوى «من نحن» و«رؤيتنا»: نصوص تفصيلية، صور، شهادات معتمدة ووثائق — تظهر للزائر عند الضغط على الأيقونة.</p>
+                <ul id="scm-about-list" class="scm-list"></ul>
+            </div>
+            <div id="scm-panel-partners" class="scm-panel">
+                <p class="scm-hint admin-only-ui">شعارات الشركاء (صورة + رابط اختياري) — شريط متحرك في الموقع وداخل الداشبورد مثل موقع مرجعي. ابدأوا فارغين ثم أضيفوا من هنا.</p>
+                <button class="primary" type="button" onclick="addSitePartner()">+ شريك جديد</button>
+                <ul id="scm-partners-list" class="scm-list"></ul>
+            </div>
+            <div id="scm-panel-certifications" class="scm-panel">
+                <p class="scm-hint admin-only-ui">اعتمادات وشهادات نبراس — صور أو PDF مع شرح تحت كل عنصر. تُفتح من أيقونة الداشبورد «اعتمادات وشهادات نبراس».</p>
+                <button class="primary" type="button" onclick="addSiteCertification()">+ اعتماد / شهادة</button>
+                <ul id="scm-certifications-list" class="scm-list"></ul>
+            </div>
+            <div id="scm-panel-showroom" class="scm-panel">
+                <p class="scm-hint admin-only-ui" id="scm-showroom-hint">معرض نبراس — استوديو وسينما لأعمال ومشاريع نبراس: ارفعي <strong>صور · فيديو · PDF</strong> من الإدارة. قسمان: منتجات نبراس ومشاريع نبراس المنفّذة.</p>
+                <div class="scm-showroom-admin-block">
+                    <h4 class="scm-subhead">منتجات نبراس</h4>
+                    <button type="button" onclick="editShowroomSectionMeta('products')">تعديل عنوان القسم</button>
+                    <button class="primary" type="button" onclick="addShowroomItem('products')">+ صورة منتج</button>
+                    <ul id="scm-showroom-products-list" class="scm-list"></ul>
+                </div>
+                <div class="scm-showroom-admin-block">
+                    <h4 class="scm-subhead">مشاريع نبراس</h4>
+                    <button type="button" onclick="editShowroomSectionMeta('projects')">تعديل عنوان القسم</button>
+                    <button class="primary" type="button" onclick="addShowroomItem('projects')">+ صورة مشروع</button>
+                    <ul id="scm-showroom-projects-list" class="scm-list"></ul>
+                </div>
+            </div>
+            <button type="button" onclick="closeAdminSection('site-content-management')">إغلاق</button>
+        </div>
+    </div>
+
+    <div class="admin-section" id="icon-management">
+        <div class="admin-modal">
+            <h2>إدارة الأيقونات والألبومات</h2>
+            <button onclick="addVisitorIcon()">إضافة أيقونة جديدة</button>
+            <ul id="icons-admin-list-legacy"></ul>
+            <button onclick="closeAdminSection('icon-management')">إغلاق</button>
+        </div>
+    </div>
+
+    <!-- مركز الوسائط — رفع صور وPDF من الإدارة -->
+    <div class="admin-section" id="nebras-media-hub-overlay">
+        <div class="admin-modal nebras-media-hub-modal">
+            <h2 id="nebras-media-hub-title">رفع وسائط</h2>
+            <p class="scm-hint admin-only-ui" id="nebras-media-hub-hint">ارفع صورة أو PDF إلى السحابة، أو أدخل مساراً يدوياً.</p>
+            <div class="nebras-media-hub-tabs" role="tablist">
+                <button type="button" class="active" id="nebras-media-tab-upload" onclick="nebrasMediaHubSwitchTab('upload')"><i class="fas fa-cloud-upload-alt"></i> رفع من الجهاز</button>
+                <button type="button" id="nebras-media-tab-manual" onclick="nebrasMediaHubSwitchTab('manual')"><i class="fas fa-link"></i> مسار / رابط</button>
+            </div>
+            <div id="nebras-media-hub-upload-panel" class="nebras-media-hub-panel">
+                <div class="nebras-media-hub-preview" id="nebras-media-hub-preview"><i class="fas fa-file-image"></i><span>لم يُرفع ملف بعد</span></div>
+                <button type="button" class="primary" id="nebras-media-hub-pick-btn" onclick="nebrasMediaHubPickFile()"><i class="fas fa-folder-open"></i> اختر ملفاً</button>
+                <p class="nebras-media-hub-status" id="nebras-media-hub-status"></p>
+            </div>
+            <div id="nebras-media-hub-manual-panel" class="nebras-media-hub-panel" hidden>
+                <label for="nebras-media-hub-manual-input">مسار images/... أو رابط https://</label>
+                <input type="text" id="nebras-media-hub-manual-input" class="nebras-media-hub-input" placeholder="images/wpc-background.jpg">
+            </div>
+            <div class="nebras-media-hub-actions">
+                <button type="button" class="primary" onclick="nebrasMediaHubConfirm()"><i class="fas fa-check"></i> تأكيد</button>
+                <button type="button" class="secondary" onclick="closeNebrasMediaHub(null)">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- محرر أيقونة الزائر -->
+    <div class="admin-section" id="nebras-vicon-editor-overlay">
+        <div class="admin-modal nebras-vicon-editor-modal site-content-modal">
+            <h2 id="nebras-vicon-editor-title">تحرير أيقونة الزائر</h2>
+            <input type="hidden" id="nebras-vicon-editor-id">
+            <div class="nebras-vicon-editor-grid">
+                <div class="nebras-vicon-field"><label for="nebras-vicon-title-ar">العنوان (عربي) *</label><input id="nebras-vicon-title-ar" type="text"></div>
+                <div class="nebras-vicon-field"><label for="nebras-vicon-title-en">العنوان (إنجليزي)</label><input id="nebras-vicon-title-en" type="text"></div>
+                <div class="nebras-vicon-field nebras-vicon-field--full"><label for="nebras-vicon-text-ar">الشرح داخل الأيقونة (عربي)</label><textarea id="nebras-vicon-text-ar" rows="3"></textarea></div>
+                <div class="nebras-vicon-field"><label for="nebras-vicon-icon-class">أيقونة FontAwesome</label><input id="nebras-vicon-icon-class" type="text" placeholder="fas fa-door-open"></div>
+                <div class="nebras-vicon-field"><label for="nebras-vicon-target">الوجهة (#products أو رابط)</label><input id="nebras-vicon-target" type="text" placeholder="#products"></div>
+                <div class="nebras-vicon-field"><label for="nebras-vicon-placement">مكان العرض</label>
+                    <select id="nebras-vicon-placement">
+                        <option value="gateway">بوابة الزائر (أعلى الصفحة)</option>
+                        <option value="services">بطاقات الخدمات (قسم الخدمات)</option>
+                    </select>
+                </div>
+                <div class="nebras-vicon-field"><label for="nebras-vicon-mode">وظيفة الأيقونة</label>
+                    <select id="nebras-vicon-mode">
+                        <option value="browse">معرض — صور ووثائق</option>
+                        <option value="shop">معرض + متجر (صور + أضف للسلة)</option>
+                        <option value="link">انتقال سريع فقط</option>
+                    </select>
+                </div>
+                <div class="nebras-vicon-field"><label><input type="checkbox" id="nebras-vicon-catalog-hub"> كتالوج منتجات (مدخل كل الأقسام)</label></div>
+                <div class="nebras-vicon-field"><label for="nebras-vicon-linked-product">منتج مرتبط (prod-...) — اختياري</label><input id="nebras-vicon-linked-product" type="text"></div>
+                <div class="nebras-vicon-field nebras-vicon-field--full">
+                    <label>خلفية البطاقة</label>
+                    <div class="nebras-vicon-bg-row">
+                        <div class="nebras-media-thumb" id="nebras-vicon-bg-preview"><i class="fas fa-image"></i></div>
+                        <input type="hidden" id="nebras-vicon-background">
+                        <button type="button" class="secondary" onclick="nebrasViconEditorPickBg()"><i class="fas fa-upload"></i> رفع / اختيار صورة</button>
+                    </div>
+                </div>
+            </div>
+            <div class="nebras-vicon-media-section">
+                <h3><i class="fas fa-images"></i> ألبوم الصور</h3>
+                <ul id="nebras-vicon-album-list" class="nebras-media-item-list"></ul>
+                <button type="button" class="secondary" onclick="nebrasViconEditorAddAlbum()"><i class="fas fa-plus"></i> إضافة صورة للألبوم</button>
+            </div>
+            <div class="nebras-vicon-media-section">
+                <h3><i class="fas fa-file-pdf"></i> وثائق وPDF</h3>
+                <ul id="nebras-vicon-docs-list" class="nebras-media-item-list"></ul>
+                <button type="button" class="secondary" onclick="nebrasViconEditorAddDocument()"><i class="fas fa-plus"></i> إضافة وثيقة / PDF</button>
+            </div>
+            <div class="nebras-media-hub-actions">
+                <button type="button" class="primary" onclick="saveVisitorIconEditor()"><i class="fas fa-save"></i> حفظ الأيقونة</button>
+                <button type="button" class="secondary" onclick="previewVisitorIconEditor()"><i class="fas fa-eye"></i> معاينة للزائر</button>
+                <button type="button" class="secondary" onclick="closeVisitorIconEditor()">إلغاء</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="nebras-media-lightbox" class="nebras-media-lightbox" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-label="عرض الوسائط">
+        <button type="button" class="nebras-lightbox-close" onclick="closeNebrasMediaLightbox()" aria-label="إغلاق">&times;</button>
+        <button type="button" class="nebras-lightbox-prev" onclick="nebrasLightboxStep(-1)" aria-label="السابق">&#10094;</button>
+        <div class="nebras-lightbox-stage">
+            <img id="nebras-lightbox-img" class="nebras-lightbox-img" alt="" hidden>
+            <iframe id="nebras-lightbox-pdf" class="nebras-lightbox-pdf" title="PDF" hidden></iframe>
+        </div>
+        <button type="button" class="nebras-lightbox-next" onclick="nebrasLightboxStep(1)" aria-label="التالي">&#10095;</button>
+    </div>
+
+    <div class="admin-overlay" id="icon-overlay">
+        <div class="admin-modal icon-detail-modal">
+            <h2 id="icon-overlay-title">تفاصيل القسم</h2>
+            <p id="icon-overlay-text">معلومات القسم ستظهر هنا.</p>
+            <p id="icon-overlay-mode-hint" class="icon-overlay-mode-hint" hidden></p>
+            <div id="icon-overlay-documents" class="icon-overlay-documents"></div>
+            <div id="icon-overlay-gallery" class="icon-overlay-gallery"></div>
+            <div id="icon-overlay-variants" class="icon-overlay-variants" hidden></div>
+            <div class="icon-overlay-actions">
+                <button type="button" class="primary" id="icon-overlay-go-btn" onclick="iconOverlayPrimaryClick()">انتقل إلى القسم</button>
+                <button type="button" class="primary icon-overlay-shop-btn" id="icon-overlay-shop-btn" onclick="iconOverlayShopClick()" hidden>تسوق — اختر المقاس والسعر</button>
+                <button type="button" class="secondary" onclick="closeIconOverlay()">إغلاق</button>
+            </div>
+        </div>
+    </div>
+
+<script src="js/vendor/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/nebras-door-compositor.js"></script>
+    <script src="js/nebras-door-3d.js"></script>
+    <script src="js/nebras-platform.js"></script>
+    <script src="js/nebras-media-admin.js"></script>
+
+</body>
+</html>
