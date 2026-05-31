@@ -2689,6 +2689,27 @@
     pointer-events: none !important;
 }
 
+.wpc-door-stage--studio-live .wpc-door-svg-overlay.is-active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.wpc-door-stage--studio-live .wpc-door-leaf-texture.is-visible {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+}
+
+@media (max-width: 768px) {
+    .wpc-door-stage--keybab .wpc-door-canvas {
+        width: min(300px, 86vw);
+        height: min(36vh, 380px);
+    }
+
+    .wpc-door-stage--studio-live .wpc-door-svg-overlay svg {
+        max-height: min(36vh, 380px);
+    }
+}
+
 .wpc-door-stage--photo-preset.wpc-door-stage--updating .wpc-door-photo-preset-img {
     opacity: 0.88;
     transform: scale(0.99);

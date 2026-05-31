@@ -426,6 +426,19 @@
 
         const DOOR_PHOTO_PRESET_ROOT = 'images/doors/presets/';
         const DOOR_PHOTO_PRESET_CACHE = '24';
+        /** معاينة حية = SVG + رولّات (واضح). صور المصنع فقط لتصدير عرض السعر. */
+        const DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS = false;
+        let doorDesignerPreviewRaf = 0;
+
+        function scheduleDoorDesignerPreviewUpdate(root) {
+            root = root || document.getElementById('nebras-door-designer');
+            if (!root) return;
+            if (doorDesignerPreviewRaf) cancelAnimationFrame(doorDesignerPreviewRaf);
+            doorDesignerPreviewRaf = requestAnimationFrame(function() {
+                doorDesignerPreviewRaf = 0;
+                updateDoorDesignerPreview(root);
+            });
+        }
 
         function hexLuminance(hex) {
             const h = String(hex || '#808080').replace('#', '');
@@ -1121,11 +1134,14 @@
                 dragging = true;
                 autoSpin = false;
                 lastX = e.clientX;
+                stopSpinLoop();
                 if (tt.setPointerCapture) tt.setPointerCapture(e.pointerId);
             }
             function onUp() {
                 dragging = false;
-                autoSpin = true;
+                autoSpin = !reduceMotion && !isMobileView;
+                if (autoSpin && visible) startSpinLoop();
+                else stopSpinLoop();
             }
             function onMove(e) {
                 if (!dragging) return;
@@ -1133,21 +1149,33 @@
                 lastX = e.clientX;
                 applyRot();
             }
+            function startSpinLoop() {
+                if (rafId) return;
+                function tick() {
+                    if (autoSpin && !dragging && visible) {
+                        rotY += 0.42;
+                        applyRot();
+                        rafId = requestAnimationFrame(tick);
+                    } else {
+                        rafId = 0;
+                    }
+                }
+                rafId = requestAnimationFrame(tick);
+            }
+            function stopSpinLoop() {
+                if (rafId) {
+                    cancelAnimationFrame(rafId);
+                    rafId = 0;
+                }
+            }
             tt.addEventListener('pointerdown', onDown);
             tt.addEventListener('pointerup', onUp);
             tt.addEventListener('pointercancel', onUp);
             tt.addEventListener('pointermove', onMove);
             tt.addEventListener('lostpointercapture', onUp);
-            function spin() {
-                if (autoSpin && !dragging && visible) {
-                    rotY += 0.42;
-                    applyRot();
-                }
-                rafId = requestAnimationFrame(spin);
-            }
-            rafId = requestAnimationFrame(spin);
+            if (autoSpin) startSpinLoop();
             tt._nebrasTurntableDispose = function() {
-                cancelAnimationFrame(rafId);
+                stopSpinLoop();
                 if (tt._nebrasVisObs) {
                     tt._nebrasVisObs.disconnect();
                     tt._nebrasVisObs = null;
@@ -1179,27 +1207,30 @@
             const isRoll = rollColor.isRoll;
             const catalogIndex = rollColor.catalogIndex;
             const swatchUrl = rollColor.swatchUrl;
-            const preset = resolveDoorDesignerPhotoPreset(state);
-            const presetSkipKey = getDoorPhotoPresetStateKey(state);
-            const skipPhotoPreset = stage.getAttribute('data-door-photo-preset-skip') === presetSkipKey;
-            if (preset && !skipPhotoPreset && applyDoorDesignerPhotoPreset(stage, preset, swatchUrl, hex, isRoll, state.decor, catalogIndex, state, { composeRoll: false })) {
-                applyDoorRollColorFinish(stage, rollColor);
-                syncDoorDesignerOptionStates(root);
-                const rollSuffix = isRoll ? (' (' + (ui.doorDesignerRollTag || 'رولّة') + ')') : '';
-                const labelEl = document.getElementById('door-active-color-label');
-                if (labelEl) labelEl.textContent = code ? (code + ' — ' + colorName + rollSuffix) : colorName;
-                const size = state.size || pick('size');
-                const specEl = document.getElementById('door-spec-label');
-                if (specEl) {
-                    const sizeObj = (cfg.sizes || []).find(function(s) { return s && s.id === size; }) || null;
-                    const sizeDim = sizeObj ? [sizeObj.widthCm, sizeObj.thicknessCm, sizeObj.heightCm].filter(Boolean).join('×') + ' سم' : pickLabel('size');
-                    const decor = state.decor;
-                    const parts = [pickLabel('type'), pickLabel('model'), pickLabel('outerShape'), decor === 'transom' ? pickLabel('decor') : '', sizeDim].filter(Boolean);
-                    specEl.textContent = parts.join(' · ');
-                }
-                return;
-            }
             clearDoorDesignerPhotoPreset(stage);
+            if (DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS) {
+                const preset = resolveDoorDesignerPhotoPreset(state);
+                const presetSkipKey = getDoorPhotoPresetStateKey(state);
+                const skipPhotoPreset = stage.getAttribute('data-door-photo-preset-skip') === presetSkipKey;
+                if (preset && !skipPhotoPreset && applyDoorDesignerPhotoPreset(stage, preset, swatchUrl, hex, isRoll, state.decor, catalogIndex, state, { composeRoll: false })) {
+                    applyDoorRollColorFinish(stage, rollColor);
+                    syncDoorDesignerOptionStates(root);
+                    const rollSuffixP = isRoll ? (' (' + (ui.doorDesignerRollTag || 'رولّة') + ')') : '';
+                    const labelElP = document.getElementById('door-active-color-label');
+                    if (labelElP) labelElP.textContent = code ? (code + ' — ' + colorName + rollSuffixP) : colorName;
+                    const sizeP = state.size || pick('size');
+                    const specElP = document.getElementById('door-spec-label');
+                    if (specElP) {
+                        const sizeObjP = (cfg.sizes || []).find(function(s) { return s && s.id === sizeP; }) || null;
+                        const sizeDimP = sizeObjP ? [sizeObjP.widthCm, sizeObjP.thicknessCm, sizeObjP.heightCm].filter(Boolean).join('×') + ' سم' : pickLabel('size');
+                        const decorP = state.decor;
+                        const partsP = [pickLabel('type'), pickLabel('model'), pickLabel('outerShape'), decorP === 'transom' ? pickLabel('decor') : '', sizeDimP].filter(Boolean);
+                        specElP.textContent = partsP.join(' · ');
+                    }
+                    return;
+                }
+                clearDoorDesignerPhotoPreset(stage);
+            }
             const frame = state.frame;
             const outerShape = state.outerShape;
             const decor = state.decor;
@@ -9773,21 +9804,24 @@
                         setTimeout(function() { stage.classList.remove('wpc-door-stage--updating'); }, 320);
                     }
                     syncDoorDesignerOptionStates(root);
-                    updateDoorDesignerPreview(root);
+                    scheduleDoorDesignerPreviewUpdate(root);
                 });
             });
-            function preloadDoorRollSwatches() {
-                NEBRAS_ROLL_CODES.forEach(function(n, i) {
-                    const colors = getNebrasDoorCatalogColors();
-                    const hex = colors[i] ? colors[i].hex : '#b8bcc4';
-                    const pre = new Image();
-                    pre.src = doorDesignerMediaUrl(getRollSwatchImageUrl(i)) + '?ri=' + i + '&h=' + encodeURIComponent(hex) + '&v=' + DOOR_PHOTO_PRESET_CACHE;
-                });
-            }
-            if (typeof requestIdleCallback === 'function') {
-                requestIdleCallback(preloadDoorRollSwatches, { timeout: 2500 });
-            } else {
-                setTimeout(preloadDoorRollSwatches, 500);
+            const isMobileBind = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+            if (!isMobileBind) {
+                function preloadDoorRollSwatches() {
+                    NEBRAS_ROLL_CODES.forEach(function(n, i) {
+                        const colors = getNebrasDoorCatalogColors();
+                        const hex = colors[i] ? colors[i].hex : '#b8bcc4';
+                        const pre = new Image();
+                        pre.src = doorDesignerMediaUrl(getRollSwatchImageUrl(i)) + '?ri=' + i + '&h=' + encodeURIComponent(hex) + '&v=' + DOOR_PHOTO_PRESET_CACHE;
+                    });
+                }
+                if (typeof requestIdleCallback === 'function') {
+                    requestIdleCallback(preloadDoorRollSwatches, { timeout: 4000 });
+                } else {
+                    setTimeout(preloadDoorRollSwatches, 800);
+                }
             }
             applyDoorDesignerStateValues(root, DOOR_DESIGNER_ZERO_STATE);
             normalizeDoorDesignerConflicts(root, 'type');
@@ -9855,8 +9889,11 @@
             const safe = hex || '#b8bcc4';
             const rollFinish = isRoll !== false;
             const url = rollFinish ? resolveDoorRollTextureUrl(swatchUrl) : '';
-            const absUrl = url ? doorDesignerMediaUrl(url) : '';
+            const absUrl = url ? doorDesignerMediaUrl(url.split('?')[0]) : '';
             const bgImage = absUrl ? ('url("' + absUrl.replace(/"/g, '') + '")') : 'none';
+            const mobileFx = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+            const faceFilter = mobileFx ? 'none' : 'contrast(1.08) saturate(1.1) brightness(0.98)';
+            const structFilter = mobileFx ? 'none' : 'contrast(1.04) saturate(1.05) brightness(0.94)';
             applyDoorRollTintToElements(stage, { hex: safe, isRoll: rollFinish, swatchUrl: swatchUrl, profile: getRollBlendProfile(safe) });
             stage.classList.toggle('wpc-door-stage--roll-finish', rollFinish);
             stage.classList.toggle('wpc-door-stage--flat-finish', !rollFinish);
@@ -9876,7 +9913,7 @@
                     el.style.backgroundAttachment = 'scroll';
                     el.style.setProperty('--door-roll-tint', safe);
                     el.style.setProperty('--door-roll-texture-url', bgImage);
-                    el.style.filter = isDoorFace ? 'contrast(1.08) saturate(1.1) brightness(0.98)' : 'contrast(1.05) saturate(1.06)';
+                    el.style.filter = isDoorFace ? faceFilter : structFilter;
                 } else {
                     el.style.backgroundColor = safe;
                     el.style.backgroundImage = 'none';
@@ -9903,7 +9940,7 @@
                     el.style.backgroundImage = bgImage;
                     el.style.backgroundSize = 'cover';
                     el.style.backgroundPosition = 'center';
-                    el.style.filter = 'contrast(1.04) saturate(1.05) brightness(0.94)';
+                    el.style.filter = structFilter;
                 } else {
                     el.style.backgroundImage = 'none';
                     el.style.filter = 'none';
@@ -12634,25 +12671,29 @@
         }
 
         function cloudLoadWithTimeout(ms) {
+            const mobile = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+            const budget = ms || (mobile ? 1800 : 3000);
             return Promise.race([
                 loadFromNebrasCloud(),
                 new Promise(function(resolve) {
-                    setTimeout(function() { resolve(false); }, ms || 3500);
+                    setTimeout(function() { resolve(false); }, budget);
                 })
             ]);
         }
 
         function syncNebrasCloudInBackground() {
-            cloudLoadWithTimeout(3500).then(function(loaded) {
+            cloudLoadWithTimeout().then(function(loaded) {
                 if (!loaded) return;
                 finalizePlatformDataAfterLoad();
                 renderAllPublicCatalog();
                 if (nebrasWorkspaceState.route && nebrasWorkspaceState.route.view === 'door-designer') {
                     renderNebrasWorkspace();
                 }
-                if (currentAdmin) showAdminDashboard(currentAdmin);
-                saveSystemData({ skipCloud: true });
-                pushToNebrasCloud();
+                if (currentAdmin) {
+                    showAdminDashboard(currentAdmin);
+                    saveSystemData({ skipCloud: true });
+                    pushToNebrasCloud();
+                }
             }).catch(function(err) {
                 console.warn('Background cloud sync:', err);
             });
@@ -12676,8 +12717,8 @@
                 applySiteLogoImages();
                 renderAllPublicCatalog();
                 syncNebrasCloudInBackground();
-                await fetchDynamicContentBlocks();
-                await fetchDynamicSiteSections();
+                fetchDynamicContentBlocks().catch(function(e) { console.warn('content blocks:', e); });
+                fetchDynamicSiteSections().catch(function(e) { console.warn('site sections:', e); });
                 trackVisitorSession();
             } catch (err) {
                 console.warn('Platform bootstrap error:', err);
