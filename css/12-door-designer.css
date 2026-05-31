@@ -1089,14 +1089,14 @@
     font-size: clamp(1rem, 2.2vw, 1.2rem);
 }
 
-.workspace-shell.workspace-shell--door-designer,
-.workspace-shell.workspace-shell--door-data-only {
-    max-width: min(720px, 100%);
+.workspace-shell.workspace-shell--door-designer:not(.workspace-shell--door-data-only) {
+    max-width: min(1560px, 100%);
     padding: 0 12px 16px;
 }
 
 .workspace-shell.workspace-shell--door-data-only {
     max-width: min(720px, 100%);
+    padding: 0 12px 16px;
 }
 
 .workspace-main.workspace-main--door-designer {
@@ -1914,19 +1914,57 @@
 @media (max-width: 1024px) {
     .door-studio-layout {
         grid-template-columns: 1fr;
+        grid-template-rows: minmax(280px, 42vh) minmax(0, 1fr);
     }
 
     .door-studio-preview {
         order: -1;
-        min-height: min(58vh, 560px);
+        min-height: min(42vh, 420px);
+        max-height: 48vh;
+        position: sticky;
+        top: 0;
+        z-index: 3;
+        background: linear-gradient(180deg, #f8f9fa 0%, #eef0f2 100%);
+        border-bottom: 1px solid #e5e7eb;
     }
 
     .door-studio-panel {
         max-height: none;
+        min-height: 0;
+    }
+
+    .door-studio-panel-scroll {
+        max-height: none;
     }
 
     .door-color-catalog--keybab {
-        grid-template-columns: repeat(5, minmax(0, 1fr));
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        max-height: min(36vh, 320px);
+    }
+
+    .wpc-door-stage--keybab .wpc-door-canvas {
+        width: min(340px, 78vw);
+        height: min(38vh, 400px);
+    }
+}
+
+@media (min-width: 600px) and (max-width: 1024px) and (orientation: landscape) {
+    .door-designer--studio .door-studio-layout {
+        grid-template-columns: minmax(260px, 340px) minmax(0, 1fr);
+        grid-template-rows: none;
+    }
+
+    .door-studio-preview {
+        order: 1;
+        min-height: 0;
+        max-height: none;
+        position: relative;
+        border-bottom: none;
+        border-inline-start: 1px solid #e5e7eb;
+    }
+
+    .door-studio-panel {
+        order: 0;
     }
 }
 

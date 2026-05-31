@@ -1091,8 +1091,16 @@
             let rotY = parseFloat(tt.dataset.turntableRotY || '-14') || -14;
             let dragging = false;
             let lastX = 0;
-            let autoSpin = true;
+            let autoSpin = !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
             let rafId = 0;
+            let visible = true;
+            if (typeof IntersectionObserver !== 'undefined') {
+                const visObs = new IntersectionObserver(function(entries) {
+                    visible = !!(entries[0] && entries[0].isIntersecting);
+                }, { threshold: 0.08 });
+                visObs.observe(tt);
+                tt._nebrasVisObs = visObs;
+            }
             function applyRot() {
                 const deg = rotY + 'deg';
                 tt.style.setProperty('--turntable-rotate-y', deg);
@@ -1123,7 +1131,7 @@
             tt.addEventListener('pointermove', onMove);
             tt.addEventListener('lostpointercapture', onUp);
             function spin() {
-                if (autoSpin && !dragging) {
+                if (autoSpin && !dragging && visible) {
                     rotY += 0.42;
                     applyRot();
                 }
@@ -1132,11 +1140,16 @@
             rafId = requestAnimationFrame(spin);
             tt._nebrasTurntableDispose = function() {
                 cancelAnimationFrame(rafId);
+                if (tt._nebrasVisObs) {
+                    tt._nebrasVisObs.disconnect();
+                    tt._nebrasVisObs = null;
+                }
                 tt.removeEventListener('pointerdown', onDown);
                 tt.removeEventListener('pointerup', onUp);
                 tt.removeEventListener('pointercancel', onUp);
                 tt.removeEventListener('pointermove', onMove);
                 tt.removeEventListener('lostpointercapture', onUp);
+                tt.dataset.turntableBound = '';
             };
             tt.dataset.turntableBound = '1';
         }
@@ -8920,7 +8933,13 @@
             } else if (cfg.designCanvasMode !== '3d' && cfg.use3dPreview !== true) {
                 cfg.usePhotorealPreview = cfg.usePhotorealPreview !== false;
             }
-            if (cfg.previewModelEnabled == null || DEFAULT_DOOR_DESIGNER.previewModelEnabled === false) {
+            if (cfg.enabled !== false) {
+                cfg.previewModelEnabled = true;
+                cfg.designCanvasMode = 'studio';
+                cfg.useCompositorPreview = false;
+                cfg.use3dPreview = false;
+                cfg.usePhotorealPreview = false;
+            } else if (cfg.previewModelEnabled == null) {
                 cfg.previewModelEnabled = DEFAULT_DOOR_DESIGNER.previewModelEnabled !== false;
             }
             return cfg;
@@ -9701,12 +9720,19 @@
                     updateDoorDesignerPreview(root);
                 });
             });
-            NEBRAS_ROLL_CODES.forEach(function(n, i) {
-                const colors = getNebrasDoorCatalogColors();
-                const hex = colors[i] ? colors[i].hex : '#b8bcc4';
-                const pre = new Image();
-                pre.src = doorDesignerMediaUrl(getRollSwatchImageUrl(i)) + '?ri=' + i + '&h=' + encodeURIComponent(hex) + '&v=' + DOOR_PHOTO_PRESET_CACHE;
-            });
+            function preloadDoorRollSwatches() {
+                NEBRAS_ROLL_CODES.forEach(function(n, i) {
+                    const colors = getNebrasDoorCatalogColors();
+                    const hex = colors[i] ? colors[i].hex : '#b8bcc4';
+                    const pre = new Image();
+                    pre.src = doorDesignerMediaUrl(getRollSwatchImageUrl(i)) + '?ri=' + i + '&h=' + encodeURIComponent(hex) + '&v=' + DOOR_PHOTO_PRESET_CACHE;
+                });
+            }
+            if (typeof requestIdleCallback === 'function') {
+                requestIdleCallback(preloadDoorRollSwatches, { timeout: 2500 });
+            } else {
+                setTimeout(preloadDoorRollSwatches, 500);
+            }
             applyDoorDesignerStateValues(root, DOOR_DESIGNER_ZERO_STATE);
             normalizeDoorDesignerConflicts(root, 'type');
             updateDoorPresetReferencePreview(root, null);
@@ -10242,7 +10268,8 @@
 
             if (isDoorDesignerStudioLiveMode(cfg)) {
                 paintDoorDesignerLivePreview(root, stage, cfg, state, ui);
-                bindDoorDesignerTurntable();
+                const tt = document.getElementById('wpc-door-turntable');
+                if (!tt || tt.dataset.turntableBound !== '1') bindDoorDesignerTurntable();
                 return;
             }
 
@@ -12059,7 +12086,16 @@
             { key: 'dashboard_tiles', get: function() { return dashboardTiles; }, set: function(v) { dashboardTiles = Array.isArray(v) ? v : []; } },
             { key: 'site_custom_sections', get: function() { return siteCustomSections; }, set: function(v) { siteCustomSections = Array.isArray(v) ? v : []; } },
             { key: 'about_pages', get: function() { return aboutPages; }, set: function(v) { aboutPages = v && typeof v === 'object' && !Array.isArray(v) ? v : {}; } },
-            { key: 'system_settings', get: function() { return systemSettings; }, set: function(v) { systemSettings = Object.assign({}, DEFAULT_SYSTEM_SETTINGS, v && typeof v === 'object' && !Array.isArray(v) ? v : {}); } },
+            { key: 'system_settings', get: function() { return systemSettings; }, set: function(v) {
+                const incoming = v && typeof v === 'object' && !Array.isArray(v) ? v : {};
+                systemSettings = Object.assign({}, DEFAULT_SYSTEM_SETTINGS, incoming);
+                if (incoming.doorDesigner && typeof incoming.doorDesigner === 'object' && !Array.isArray(incoming.doorDesigner)) {
+                    systemSettings.doorDesigner = Object.assign(
+                        JSON.parse(JSON.stringify(DEFAULT_DOOR_DESIGNER)),
+                        incoming.doorDesigner
+                    );
+                }
+            } },
             { key: 'admin_users', get: function() { return adminUsers; }, set: function(v) { adminUsers = Array.isArray(v) ? v : []; } },
             { key: 'branches', get: function() { return branchesData; }, set: function(v) { branchesData = Array.isArray(v) ? v : []; } },
             { key: 'complaints', get: function() { return complaints; }, set: function(v) {
@@ -12555,6 +12591,9 @@
                 if (!loaded) return;
                 finalizePlatformDataAfterLoad();
                 renderAllPublicCatalog();
+                if (nebrasWorkspaceState.route && nebrasWorkspaceState.route.view === 'door-designer') {
+                    renderNebrasWorkspace();
+                }
                 if (currentAdmin) showAdminDashboard(currentAdmin);
                 saveSystemData({ skipCloud: true });
                 pushToNebrasCloud();
