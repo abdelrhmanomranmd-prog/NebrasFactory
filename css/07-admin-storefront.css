@@ -1056,6 +1056,54 @@ body:not(.admin-session) .admin-only-ui {
     padding-right: 10px;
 }
 
+.sales-inbox-format-badge {
+    display: inline-block;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: rgba(100, 116, 139, 0.18);
+    color: #334155;
+    font-size: 0.68rem;
+    font-weight: 800;
+    vertical-align: middle;
+}
+
+.sales-inbox-format-badge--a4 {
+    background: rgba(0, 168, 255, 0.18);
+    color: #0369a1;
+}
+
+.sales-quote-admin-stats {
+    color: #64748b;
+    font-size: 0.78rem;
+}
+
+.sales-quote-doc-inline {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.sales-quote-doc-inline img {
+    width: 56px;
+    height: 72px;
+    object-fit: cover;
+    object-position: top;
+    border-radius: 6px;
+    border: 1px solid rgba(13, 40, 64, 0.12);
+    cursor: pointer;
+}
+
+.sales-quote-detail-doc img {
+    max-width: 100%;
+    border-radius: 8px;
+    border: 1px solid rgba(13, 40, 64, 0.12);
+}
+
+.quote-daily-stats {
+    display: none !important;
+}
+
 .cart-drawer-actions {
     display: flex;
     flex-direction: column;

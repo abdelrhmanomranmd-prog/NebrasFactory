@@ -4179,6 +4179,23 @@
             if (cloudEntry.doorDesignerImage && String(cloudEntry.doorDesignerImage).startsWith('data:') && cloudEntry.doorDesignerImage.length > 120000) {
                 cloudEntry.doorDesignerImage = '';
             }
+            if (cloudEntry.quoteDocumentDataUrl && String(cloudEntry.quoteDocumentDataUrl).startsWith('data:')) {
+                const qFile = dataUrlToUploadFile(cloudEntry.quoteDocumentDataUrl, (cloudEntry.quoteNo || 'quote') + '-a4.png');
+                if (qFile && supabaseClient) {
+                    const qUrl = await uploadNebrasMediaFile(qFile);
+                    if (qUrl) {
+                        cloudEntry.quoteDocumentDataUrl = qUrl;
+                        cloudEntry.quoteDocumentCloudUrl = qUrl;
+                        entry.quoteDocumentCloudUrl = qUrl;
+                    } else {
+                        cloudEntry.quoteDocumentDataUrl = '';
+                        cloudEntry.quoteDocumentOmittedFromCloud = true;
+                    }
+                } else {
+                    cloudEntry.quoteDocumentDataUrl = '';
+                    cloudEntry.quoteDocumentOmittedFromCloud = true;
+                }
+            }
             return cloudEntry;
         }
 
@@ -5085,17 +5102,125 @@
             return buildCartOrderWhatsAppMessage(entry, ui, lang);
         }
 
-        /** فتح واتساب لقناة واحدة — فوراً (قبل await) لتفادي حظر النوافذ على الموبايل */
-        function deliverQuoteViaWhatsApp(message, channel) {
+        /** فتح واتساب لقناة واحدة — مع صورة A4 عند الإرسال (مشاركة أو رابط + تحميل) */
+        async function deliverQuoteViaWhatsApp(message, channel, options) {
             if (!channel) return [];
-            let url = '';
-            if (channel === 'customer-service') {
-                url = customerServiceWhatsAppHref(message);
-            } else {
-                url = salesPhoneWhatsAppHref(message);
+            options = options || {};
+            let fullMessage = message || '';
+            const imageCloudUrl = options.imageCloudUrl || '';
+            const imageDataUrl = options.imageDataUrl || '';
+            const ui = siteText[currentLang || 'ar'] || siteText.ar;
+            if (imageCloudUrl) {
+                fullMessage += '\n\n📄 ' + (options.imageLinkLabel || ui.quoteImageLinkLabel || 'صورة عرض السعر A4:') + '\n' + imageCloudUrl;
             }
+            if (imageDataUrl) {
+                const shared = await tryShareQuoteDocument(fullMessage, imageDataUrl, options.fileName || 'nebras-quote-a4.png');
+                if (shared) return [channel];
+            }
+            const url = channel === 'customer-service'
+                ? customerServiceWhatsAppHref(fullMessage)
+                : salesPhoneWhatsAppHref(fullMessage);
             if (url) openExternalMessagingUrl(url);
+            if (imageDataUrl) {
+                triggerQuoteImageDownload(imageDataUrl, options.fileName || 'nebras-quote-a4.png');
+            }
             return url ? [channel] : [];
+        }
+
+        function loadHtml2CanvasLib() {
+            return new Promise(function(resolve, reject) {
+                if (typeof window.html2canvas === 'function') {
+                    resolve(window.html2canvas);
+                    return;
+                }
+                const existing = document.querySelector('script[data-nebras-html2canvas]');
+                if (existing) {
+                    existing.addEventListener('load', function() { resolve(window.html2canvas); });
+                    existing.addEventListener('error', reject);
+                    return;
+                }
+                const s = document.createElement('script');
+                s.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
+                s.defer = true;
+                s.setAttribute('data-nebras-html2canvas', '1');
+                s.onload = function() { resolve(window.html2canvas); };
+                s.onerror = reject;
+                document.head.appendChild(s);
+            });
+        }
+
+        function waitForQuoteDocumentImages(doc, timeoutMs) {
+            timeoutMs = timeoutMs || 4000;
+            const imgs = doc ? Array.prototype.slice.call(doc.querySelectorAll('img')) : [];
+            if (!imgs.length) return Promise.resolve();
+            return Promise.race([
+                Promise.all(imgs.map(function(img) {
+                    if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+                    return new Promise(function(res) {
+                        img.onload = res;
+                        img.onerror = res;
+                    });
+                })),
+                new Promise(function(res) { setTimeout(res, timeoutMs); })
+            ]);
+        }
+
+        async function captureQuoteA4AsPngDataUrl() {
+            const doc = document.getElementById('quote-a4-document');
+            if (!doc || !doc.innerHTML.trim()) return '';
+            await waitForQuoteDocumentImages(doc);
+            try {
+                const html2canvas = await loadHtml2CanvasLib();
+                const canvas = await html2canvas(doc, {
+                    scale: Math.min(2, window.devicePixelRatio || 1.5),
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: '#ffffff',
+                    logging: false,
+                    width: doc.scrollWidth,
+                    height: doc.scrollHeight,
+                    windowWidth: doc.scrollWidth,
+                    windowHeight: doc.scrollHeight
+                });
+                return canvas.toDataURL('image/png', 0.92);
+            } catch (capErr) {
+                console.warn('Quote A4 capture failed:', capErr);
+                return '';
+            }
+        }
+
+        async function tryShareQuoteDocument(text, dataUrl, fileName) {
+            if (!dataUrl || typeof navigator.share !== 'function') return false;
+            try {
+                const blob = await fetch(dataUrl).then(function(r) { return r.blob(); });
+                if (!blob) return false;
+                const file = new File([blob], fileName || 'nebras-quote-a4.png', { type: 'image/png' });
+                const payload = { text: text || '', title: fileName || 'Nebras Quote A4' };
+                if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                    payload.files = [file];
+                } else if (!navigator.canShare) {
+                    payload.files = [file];
+                } else {
+                    return false;
+                }
+                await navigator.share(payload);
+                return true;
+            } catch (shareErr) {
+                return false;
+            }
+        }
+
+        function triggerQuoteImageDownload(dataUrl, fileName) {
+            if (!dataUrl || String(dataUrl).indexOf('data:') !== 0) return;
+            try {
+                const a = document.createElement('a');
+                a.href = dataUrl;
+                a.download = (fileName || 'nebras-quote-a4').replace(/[^\w\-.\u0600-\u06FF]+/g, '_') + '.png';
+                a.rel = 'noopener';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            } catch (dlErr) { /* ignore */ }
         }
 
         function renderCartOrderPreview() {
@@ -5158,7 +5283,8 @@
                     : (channel === 'sales' ? ui.sendOrderSalesConfirm : ui.sendOrderCsConfirm);
                 confirmMsg = (confirmMsg || ('إرسال إلى ' + channelLabel + '؟')) + '\n\n';
                 if (isA4) {
-                    confirmMsg += (ui.sendQuoteA4Hint || 'سيتم إرسال عرض السعر بصيغة A4') + '\n\n';
+                    confirmMsg += (ui.sendQuoteA4Hint || 'سيتم إرسال عرض السعر بصيغة A4') + '\n';
+                    confirmMsg += (ui.sendQuoteA4ImageHint || 'مع صورة المستند A4 (نفس المعاينة)') + '\n\n';
                 } else {
                     confirmMsg += (ui.sendOrderHint || 'سيتم إرسال أوردر تحت التنفيذ') + '\n\n';
                 }
@@ -5199,6 +5325,8 @@
                 quoteType: isA4 ? 'quote' : 'order',
                 messageFormat: messageFormat,
                 sentToChannel: channel,
+                adminDailyIssued: currentQuoteIssue ? currentQuoteIssue.todayIssued : null,
+                adminDailyFinalized: currentQuoteIssue ? currentQuoteIssue.todayFinalized : null,
                 catalogProductCount: (siteProducts || []).filter(function(p) { return p && p.visible !== false && productHasShop(p); }).length,
                 catalogVariantCount: (siteProducts || []).reduce(function(n, p) {
                     return n + (productHasShop(p) ? (p.variants || []).length : 0);
@@ -5221,8 +5349,34 @@
                 alert('تعذّر حفظ الطلب — جرّبي صورة أصغر للحوالة أو أعدي المحاولة.');
                 return;
             }
+            let quoteImageDataUrl = '';
+            let quoteImageCloudUrl = '';
+            if (isA4) {
+                const quoteDoc = document.getElementById('quote-a4-document');
+                if (!quoteDoc || !quoteDoc.innerHTML.trim()) {
+                    openQuotePreview();
+                    await new Promise(function(r) { setTimeout(r, 700); });
+                }
+                quoteImageDataUrl = await captureQuoteA4AsPngDataUrl();
+                if (quoteImageDataUrl) {
+                    entry.quoteDocumentDataUrl = quoteImageDataUrl;
+                    const qFile = dataUrlToUploadFile(quoteImageDataUrl, (entry.quoteNo || 'quote') + '-a4.png');
+                    if (qFile && supabaseClient) {
+                        quoteImageCloudUrl = await uploadNebrasMediaFile(qFile);
+                        if (quoteImageCloudUrl) {
+                            entry.quoteDocumentCloudUrl = quoteImageCloudUrl;
+                            entry.quoteDocumentDataUrl = quoteImageCloudUrl;
+                        }
+                    }
+                }
+            }
             const msg = buildQuoteWhatsAppMessage(entry, ui, currentLang, messageFormat);
-            const waChannels = deliverQuoteViaWhatsApp(msg, channel);
+            const waChannels = await deliverQuoteViaWhatsApp(msg, channel, {
+                imageDataUrl: isA4 ? quoteImageDataUrl : '',
+                imageCloudUrl: isA4 ? quoteImageCloudUrl : '',
+                fileName: (entry.quoteNo || 'quote') + '-a4.png',
+                imageLinkLabel: ui.quoteImageLinkLabel
+            });
             entry.notifyChannels = waChannels;
             entry.notifiedSalesPhone = channel === 'sales' ? (systemSettings.mainSalesPhone || '') : '';
             entry.notifiedCustomerServicePhone = channel === 'customer-service' ? (systemSettings.customerServicePhone || '') : '';
@@ -5251,6 +5405,9 @@
             let doneMsg = doneBase + ' ' + entry.quoteNo;
             if (isA4) {
                 doneMsg += '\n📄 ' + (ui.sendQuoteA4Sent || 'صيغة A4');
+                if (quoteImageDataUrl || quoteImageCloudUrl) {
+                    doneMsg += '\n🖼️ ' + (ui.quoteImageSentHint || 'تم إرفاق/تحميل صورة المستند — أرفقيها في واتساب إن لم تظهر تلقائياً.');
+                }
             } else {
                 doneMsg += '\n🛒 ' + (ui.sendOrderSent || 'أوردر تحت التنفيذ');
             }
@@ -5304,24 +5461,39 @@
                 const when = formatNebrasDateTime(e.at, currentLang);
                 const linesSummary = (e.lines || []).length + ' ' + (ui.salesInboxLines || 'صنف');
                 const isDesigner = (e.quoteChannel || '') === 'door-designer';
+                const entryKey = String(e.id).replace(/'/g, "\\'");
                 const channelBadge = isDesigner ? ' <span style="display:inline-block;padding:2px 8px;border-radius:999px;background:#0f766e;color:#fff;font-size:0.72rem;">صمّم بابك</span>' : '';
+                const formatBadge = e.messageFormat === 'a4-quote'
+                    ? ' <span class="sales-inbox-format-badge sales-inbox-format-badge--a4">A4</span>'
+                    : (e.messageFormat === 'cart-order' ? ' <span class="sales-inbox-format-badge">ORDER</span>' : '');
+                const adminStats = (e.adminDailyIssued != null)
+                    ? ('<br><small class="sales-quote-admin-stats">📊 ' + escapeHtmlAttr(ui.salesInboxAdminStats || 'إداري اليوم:') + ' ' +
+                        escapeHtmlAttr(String(e.adminDailyIssued)) + ' ' + escapeHtmlAttr(ui.salesInboxAdminIssued || 'صادر') + ' · ' +
+                        escapeHtmlAttr(String(e.adminDailyFinalized != null ? e.adminDailyFinalized : 0)) + ' ' +
+                        escapeHtmlAttr(ui.salesInboxAdminFinalized || 'منفّذ') + '</small>')
+                    : '';
+                const quoteDocUrl = e.quoteDocumentCloudUrl || e.quoteDocumentDataUrl || '';
+                const quoteDocThumb = quoteDocUrl && (e.messageFormat === 'a4-quote' || e.quoteType === 'quote')
+                    ? ('<br><div class="sales-quote-doc-inline"><img src="' + escapeHtmlAttr(quoteDocUrl) + '" alt="" loading="lazy" onclick="event.preventDefault();viewSalesQuoteDocument(\'' + entryKey + '\')"><a href="#" onclick="event.preventDefault();viewSalesQuoteDocument(\'' + entryKey + '\')">' + escapeHtmlAttr(ui.salesInboxQuoteDoc || 'عرض مستند A4') + '</a></div>')
+                    : '';
                 const transferBadge = e.transferReceiptDataUrl
                     ? ' <span class="sales-inbox-transfer-badge sales-inbox-transfer-badge--receipt"><i class="fas fa-receipt"></i> ' + escapeHtmlAttr(ui.salesInboxTransferReceipt || 'حوالة + إيصال') + '</span>'
                     : (e.transferDeclared ? ' <span class="sales-inbox-transfer-badge"><i class="fas fa-check"></i> ' + escapeHtmlAttr(ui.salesInboxTransferDeclared || 'تحويل مُعلَن') + '</span>' : '');
                 const doorThumb = (isDesigner && e.doorDesignerImage)
                     ? ('<div class="sales-quote-door-thumb"><img src="' + escapeHtmlAttr(e.doorDesignerImage) + '" alt="" loading="lazy"></div>')
                     : '';
-                const entryKey = String(e.id).replace(/'/g, "\\'");
                 const cloudAttr = e.cloudId ? ' data-cloud-id="' + escapeHtmlAttr(e.cloudId) + '"' : '';
                 return '<li class="sales-quote-inbox-item" data-status="' + escapeHtmlAttr(e.status || 'new') + '"' + cloudAttr + ' data-entry-id="' + escapeHtmlAttr(e.id) + '">' +
                     doorThumb +
-                    '<strong>' + escapeHtmlAttr(e.quoteNo) + '</strong>' + channelBadge + transferBadge + ' · ' + escapeHtmlAttr(when) + ' · ' + escapeHtmlAttr(linesSummary) + '<br>' +
+                    '<strong>' + escapeHtmlAttr(e.quoteNo) + '</strong>' + formatBadge + channelBadge + transferBadge + ' · ' + escapeHtmlAttr(when) + ' · ' + escapeHtmlAttr(linesSummary) + '<br>' +
                     escapeHtmlAttr(e.customerName || '—') + ' · ' + escapeHtmlAttr(e.phone || '—') +
+                    adminStats +
                     (e.address ? '<br><small>' + escapeHtmlAttr(e.address) + '</small>' : '') +
                     (e.city ? ' · ' + escapeHtmlAttr(e.city) : '') +
                     (e.note ? '<br><small>' + escapeHtmlAttr(e.note) + '</small>' : '') +
                     (e.paymentBankIban ? '<br><small><strong>IBAN:</strong> <code dir="ltr">' + escapeHtmlAttr(e.paymentBankIban) + '</code></small>' : '') +
                     (e.transferReceiptDataUrl ? '<br><div class="sales-quote-receipt-inline"><img src="' + escapeHtmlAttr(e.transferReceiptDataUrl) + '" alt="" loading="lazy" onclick="event.preventDefault();viewSalesQuoteReceipt(\'' + entryKey + '\')"><a href="#" onclick="event.preventDefault();viewSalesQuoteReceipt(\'' + entryKey + '\')">' + escapeHtmlAttr(ui.salesInboxReceipt || 'عرض إيصال الحوالة') + '</a></div>' : '') +
+                    quoteDocThumb +
                     (isDesigner && e.doorDesignerImage ? '<br><a href="#" onclick="event.preventDefault();viewSalesQuoteDoorDesign(\'' + entryKey + '\')">' + escapeHtmlAttr(ui.salesInboxDoorDesign || 'عرض تصميم الباب') + '</a>' : '') +
                     '<div class="scm-row-actions" style="margin-top:8px;">' +
                     '<button type="button" onclick="markSalesQuoteStatus(\'' + entryKey + '\',\'reviewed\')">' + escapeHtmlAttr(ui.salesInboxReviewed || 'تمت المراجعة') + '</button>' +
@@ -5418,6 +5590,12 @@
                         escapeHtmlAttr(ui.salesInboxTransferDeclared || 'تحويل مُعلَن — بانتظار الإيصال') + '</p>'
                     : '');
             bodyEl.innerHTML = '<h3>' + escapeHtmlAttr(entry.quoteNo || '—') + '</h3>' +
+                (entry.adminDailyIssued != null
+                    ? ('<p class="sales-quote-admin-stats"><small>📊 ' + escapeHtmlAttr(ui.salesInboxAdminStats || 'إداري اليوم:') + ' ' +
+                        escapeHtmlAttr(String(entry.adminDailyIssued)) + ' ' + escapeHtmlAttr(ui.salesInboxAdminIssued || 'صادر') + ' · ' +
+                        escapeHtmlAttr(String(entry.adminDailyFinalized != null ? entry.adminDailyFinalized : 0)) + ' ' +
+                        escapeHtmlAttr(ui.salesInboxAdminFinalized || 'منفّذ') + '</small></p>')
+                    : '') +
                 '<p class="sales-quote-detail-customer"><strong>' + escapeHtmlAttr(entry.customerName || '—') + '</strong> · ' +
                 escapeHtmlAttr(entry.phone || '—') +
                 (entry.email ? '<br>' + escapeHtmlAttr(entry.email) : '') +
@@ -5426,6 +5604,11 @@
                 (entry.note ? '<p class="sales-quote-detail-note">' + escapeHtmlAttr(entry.note) + '</p>' : '') +
                 (entry.paymentBankIban ? '<p class="sales-quote-detail-bank"><strong>IBAN:</strong> <code dir="ltr">' + escapeHtmlAttr(entry.paymentBankIban) + '</code></p>' : '') +
                 transferHtml +
+                ((entry.quoteDocumentCloudUrl || entry.quoteDocumentDataUrl)
+                    ? ('<figure class="sales-quote-detail-doc"><img src="' + escapeHtmlAttr(entry.quoteDocumentCloudUrl || entry.quoteDocumentDataUrl) + '" alt="A4">' +
+                        '<figcaption><button type="button" class="analytics-receipt-thumb-btn" onclick="viewSalesQuoteDocument(\'' + escapeHtmlAttr(String(entry.id).replace(/'/g, "\\'")) + '\')">' +
+                        escapeHtmlAttr(ui.salesInboxQuoteDoc || 'عرض مستند A4') + '</button></figcaption></figure>')
+                    : '') +
                 (linesHtml ? ('<ul class="sales-quote-detail-lines">' + linesHtml + '</ul>') : '') +
                 (entry.totalIncVat > 0 ? '<p class="sales-quote-detail-total"><strong>' + escapeHtmlAttr(ui.cartProductsTotalInc || 'إجمالي المنتجات شامل الضريبة: ') + '</strong> ' + formatSar(entry.totalIncVat) + '</p>' : '');
             overlay.classList.add('show');
@@ -5434,6 +5617,21 @@
         function closeSalesQuoteDetail() {
             const overlay = document.getElementById('sales-quote-detail-overlay');
             if (overlay) overlay.classList.remove('show');
+        }
+
+        async function viewSalesQuoteDocument(entryId) {
+            let entry = loadSalesQuotesInbox().find(function(e) { return e.id === entryId; });
+            if (!entry) {
+                const cloudInbox = await fetchSalesQuotesFromCloud();
+                entry = cloudInbox.find(function(e) { return e.id === entryId; });
+            }
+            if (!entry) return;
+            const img = entry.quoteDocumentCloudUrl || entry.quoteDocumentDataUrl || '';
+            if (!img) {
+                alert('لا توجد صورة مستند A4 لهذا الطلب.');
+                return;
+            }
+            openNebrasMediaLightbox([img], 0);
         }
 
         async function viewSalesQuoteDoorDesign(entryId) {
@@ -5544,17 +5742,6 @@
             }
             saveQuoteRegistry(reg);
             currentQuoteIssue.todayFinalized = day.finalized.length;
-            const doc = document.getElementById('quote-a4-document');
-            const statsEl = doc && doc.querySelector('.quote-daily-stats');
-            if (statsEl) {
-                const isEn = (currentLang || 'ar') === 'en';
-                const isZh = currentLang === 'zh';
-                statsEl.textContent = isEn
-                    ? ('Today: ' + currentQuoteIssue.todayIssued + ' quote(s) issued · ' + currentQuoteIssue.todayFinalized + ' finalized')
-                    : isZh
-                        ? ('今日：已出具 ' + currentQuoteIssue.todayIssued + ' 份 · 已执行 ' + currentQuoteIssue.todayFinalized + ' 份')
-                        : ('اليوم: ' + currentQuoteIssue.todayIssued + ' عرض صادر · ' + currentQuoteIssue.todayFinalized + ' منفّذ');
-            }
             alert((ui.quoteFinalizedOk || 'تم تسجيل') + ' ' + currentQuoteIssue.quoteNo);
         }
 
@@ -5883,11 +6070,6 @@
             const now = new Date();
             const dateStr = formatNebrasDateTime(now, lang, { dateStyle: 'long', timeStyle: 'short' });
             const quoteNo = currentQuoteIssue.quoteNo;
-            const statsLine = isEn
-                ? ('Today: ' + currentQuoteIssue.todayIssued + ' quote(s) issued · ' + currentQuoteIssue.todayFinalized + ' finalized')
-                : isZh
-                    ? ('今日：已出具 ' + currentQuoteIssue.todayIssued + ' 份 · 已执行 ' + currentQuoteIssue.todayFinalized + ' 份')
-                    : ('اليوم: ' + currentQuoteIssue.todayIssued + ' عرض صادر · ' + currentQuoteIssue.todayFinalized + ' منفّذ');
             const pct = getNebrasVatPercentLabel();
             const priceExHdr = isEn ? 'Price (ex VAT)' : (isZh ? '价格(不含税)' : 'السعر قبل الضريبة');
             const priceIncHdr = isEn ? 'Price (inc VAT)' : (isZh ? '价格(含税)' : 'السعر بعد الضريبة');
@@ -5937,7 +6119,6 @@
                 '<div class="quote-title-center">' +
                 '<h1>' + (isEn ? 'Price Quotation' : (isZh ? '报价单' : 'عرض سعر')) + '</h1>' +
                 '<div class="quote-number-big">' + escapeHtmlAttr(quoteNo) + '</div>' +
-                '<div class="quote-daily-stats">' + escapeHtmlAttr(statsLine) + '</div>' +
                 '<div class="quote-date-line">' + (isEn ? 'Date: ' : (isZh ? '日期: ' : 'التاريخ: ')) + escapeHtmlAttr(dateStr) + '</div>' +
                 '</div></header>' +
                 doorDesignBlock +
@@ -13628,6 +13809,13 @@
                 sendQuoteA4CsConfirm: 'إرسال عرض السعر A4 لخدمة العملاء؟',
                 sendOrderHint: 'سيتم إرسال أوردر تحت التنفيذ',
                 sendQuoteA4Hint: 'سيتم إرسال عرض السعر بصيغة A4 الرسمية',
+                sendQuoteA4ImageHint: 'مع صورة المستند A4 (نفس المعاينة على الشاشة)',
+                quoteImageLinkLabel: 'صورة عرض السعر A4:',
+                quoteImageSentHint: 'تم إرفاق/تحميل صورة المستند — أرفقيها في واتساب إن لم تظهر تلقائياً.',
+                salesInboxAdminStats: 'إداري اليوم:',
+                salesInboxAdminIssued: 'صادر',
+                salesInboxAdminFinalized: 'منفّذ',
+                salesInboxQuoteDoc: 'عرض مستند A4',
                 sendQuoteDoneSales: 'تم حفظ الطلب وإرساله للمبيعات. الرقم:',
                 sendQuoteDoneCs: 'تم حفظ الطلب وإرساله لخدمة العملاء. الرقم:',
                 sendQuoteA4Sent: 'صيغة A4',
@@ -14125,6 +14313,13 @@
                 sendQuoteA4CsConfirm: 'Send A4 quotation to customer service?',
                 sendOrderHint: 'An in-progress order will be sent',
                 sendQuoteA4Hint: 'Official A4 quotation format will be sent',
+                sendQuoteA4ImageHint: 'With A4 document image (same as on-screen preview)',
+                quoteImageLinkLabel: 'A4 quotation image:',
+                quoteImageSentHint: 'Document image attached/downloaded — add it in WhatsApp if it did not appear automatically.',
+                salesInboxAdminStats: 'Admin today:',
+                salesInboxAdminIssued: 'issued',
+                salesInboxAdminFinalized: 'finalized',
+                salesInboxQuoteDoc: 'View A4 document',
                 sendQuoteDoneSales: 'Saved and sent to sales. Ref:',
                 sendQuoteDoneCs: 'Saved and sent to customer service. Ref:',
                 sendQuoteA4Sent: 'A4 format',
@@ -14583,6 +14778,13 @@
                 sendQuoteA4CsConfirm: '将 A4 报价单发送给客服？',
                 sendOrderHint: '将发送处理中订单',
                 sendQuoteA4Hint: '将发送正式 A4 报价格式',
+                sendQuoteA4ImageHint: '附带 A4 文档图片（与屏幕预览相同）',
+                quoteImageLinkLabel: 'A4 报价图片：',
+                quoteImageSentHint: '文档图片已附加/下载 — 若未自动显示请在 WhatsApp 中手动添加。',
+                salesInboxAdminStats: '管理统计（今日）：',
+                salesInboxAdminIssued: '已出具',
+                salesInboxAdminFinalized: '已执行',
+                salesInboxQuoteDoc: '查看 A4 文档',
                 sendQuoteDoneSales: '已保存并发送至销售。编号：',
                 sendQuoteDoneCs: '已保存并发送至客服。编号：',
                 sendQuoteA4Sent: 'A4 格式',
@@ -14888,6 +15090,7 @@
         window.closeSalesQuoteDoorDesign = closeSalesQuoteDoorDesign;
         window.openAdminAnalytics = openAdminAnalytics;
         window.renderAdminAnalyticsPanel = renderAdminAnalyticsPanel;
+        window.viewSalesQuoteDocument = viewSalesQuoteDocument;
         window.submitCartOrQuote = submitCartOrQuote;
         window.submitQuoteToSales = function() { submitCartOrQuote('sales'); };
         window.deleteAnalyticsQuote = deleteAnalyticsQuote;
