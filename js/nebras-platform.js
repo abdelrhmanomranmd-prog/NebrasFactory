@@ -1287,31 +1287,37 @@
             if (!isDoorDesigner3dMode() || !root) return;
             const viewport = document.getElementById('nebras-door-3d-viewport');
             if (!viewport) return;
-            if (isDoorDesigner3dEngineReady()) {
-                const ok = NebrasDoor3D.mount(viewport);
-                if (ok) {
+            loadNebrasThreeJs().then(function() {
+                if (isDoorDesigner3dEngineReady()) {
+                    const ok = NebrasDoor3D.mount(viewport);
+                    if (ok) {
+                        const loading = document.getElementById('nebras-door-3d-loading');
+                        if (loading) loading.remove();
+                        showDoorDesigner3dReadyBadge();
+                    }
+                    updateDoorDesignerPreview(root);
+                    return;
+                }
+                if ((attempt || 0) < 24) {
+                    setTimeout(function() { tryMountDoorDesigner3d(root, (attempt || 0) + 1); }, 120);
+                } else {
                     const loading = document.getElementById('nebras-door-3d-loading');
-                    if (loading) loading.remove();
-                    showDoorDesigner3dReadyBadge();
+                    const lang = currentLang || 'ar';
+                    const ui = siteText[lang] || siteText.ar;
+                    const failMsg = ui.doorDesigner3dFail || 'تعذّر تحميل المعاينة ثلاثية الأبعاد. تحقّق من الاتصال أو أعد تحميل الصفحة (Ctrl+F5).';
+                    if (loading) {
+                        loading.className = 'nebras-door-3d-error';
+                        loading.innerHTML = '<i class="fas fa-triangle-exclamation" aria-hidden="true"></i> ' + failMsg;
+                    } else if (viewport) {
+                        viewport.innerHTML = '<p class="nebras-door-3d-error"><i class="fas fa-triangle-exclamation"></i> ' + failMsg + '</p>';
+                    }
+                    updateDoorDesignerPreview(root);
                 }
-                updateDoorDesignerPreview(root);
-                return;
-            }
-            if ((attempt || 0) < 24) {
-                setTimeout(function() { tryMountDoorDesigner3d(root, (attempt || 0) + 1); }, 120);
-            } else {
-                const loading = document.getElementById('nebras-door-3d-loading');
-                const lang = currentLang || 'ar';
-                const ui = siteText[lang] || siteText.ar;
-                const failMsg = ui.doorDesigner3dFail || 'تعذّر تحميل المعاينة ثلاثية الأبعاد. تحقّق من الاتصال أو أعد تحميل الصفحة (Ctrl+F5).';
-                if (loading) {
-                    loading.className = 'nebras-door-3d-error';
-                    loading.innerHTML = '<i class="fas fa-triangle-exclamation" aria-hidden="true"></i> ' + failMsg;
-                } else if (viewport) {
-                    viewport.innerHTML = '<p class="nebras-door-3d-error"><i class="fas fa-triangle-exclamation"></i> ' + failMsg + '</p>';
+            }).catch(function() {
+                if ((attempt || 0) < 8) {
+                    setTimeout(function() { tryMountDoorDesigner3d(root, (attempt || 0) + 1); }, 200);
                 }
-                updateDoorDesignerPreview(root);
-            }
+            });
         }
 
         function setDoorDesignerGroupValue(root, group, value) {
@@ -1658,7 +1664,7 @@
             { id: 13, lane: 'showroom', sortOrder: 28, titleKey: 'visitorQuickDoorDesigner', title: 'صمّم بابك مع نبراس', iconClass: 'fas fa-pencil-ruler', visitorMode: 'browse', openHandler: 'door-designer', target: '', backgroundImage: NEBRAS_SHOWROOM_ICON_MEDIA.doorDesignerBg, album: [NEBRAS_SHOWROOM_ICON_MEDIA.doorDesignerBg] }
         ];
 
-        const SITE_PARTNERS_SEED_VERSION = 1;
+        const SITE_PARTNERS_SEED_VERSION = 2;
         const DEFAULT_SITE_PARTNERS = [
             { id: 'partner-amana-qassim', nameAr: 'أمانة منطقة القصيم', nameEn: 'Al-Qassim Municipality', logoUrl: 'images/partners/partner-amana-qassim.png', linkUrl: '', sortOrder: 1, visible: true, logoOnly: true },
             { id: 'partner-najd-chemicals', nameAr: 'كيمياء نجد التجارية', nameEn: 'Najd Chemicals Trading', logoUrl: 'images/partners/partner-najd-chemicals.png', linkUrl: '', sortOrder: 2, visible: true, logoOnly: true },
@@ -1784,10 +1790,10 @@
             { id: 'dash-complaints', zone: 'quick', dashGroup: 'command', sortOrder: 8, iconClass: 'fas fa-exclamation-triangle', titleAr: 'الشكاوى', titleEn: 'Complaints', textAr: 'متابعة وحل الشكاوى.', textEn: 'Complaint resolution.', handler: 'openComplaintsManagement', permission: 'complaints', visible: true },
             { id: 'dash-branches', zone: 'quick', dashGroup: 'command', sortOrder: 9, iconClass: 'fas fa-map-marked-alt', titleAr: 'الفروع', titleEn: 'Branches', textAr: 'شبكة فروع المملكة.', textEn: 'KSA branch network.', handler: 'openBranchesManagement', permission: 'branches', visible: true },
             { id: 'dash-erp', zone: 'grid', dashGroup: 'erp', sortOrder: 1, iconClass: 'fas fa-cubes', titleAr: 'لوحة ERP', titleEn: 'ERP Console', textAr: 'نظام تخطيط موارد المصنع.', textEn: 'Factory ERP hub.', handler: 'scrollErpHub', permission: 'erp', visible: true },
-            { id: 'dash-inventory', zone: 'grid', dashGroup: 'erp', sortOrder: 2, iconClass: 'fas fa-warehouse', titleAr: 'مخزون ERP', titleEn: 'Inventory WMS', textAr: 'SKU ومستودعات وتنبيهات.', textEn: 'SKU and warehouses.', cssClass: 'card-inventory-management', handler: 'openErpInventory', permission: 'inventory', visible: true },
-            { id: 'dash-sales-report', zone: 'grid', dashGroup: 'erp', sortOrder: 3, iconClass: 'fas fa-file-invoice-dollar', titleAr: 'تقارير المبيعات', titleEn: 'Sales Reports', textAr: 'تحليل أداء المبيعات.', textEn: 'Sales performance.', cssClass: 'card-sales-reports', handler: 'openSalesManagement', permission: 'sales', visible: true },
-            { id: 'dash-customers', zone: 'grid', dashGroup: 'erp', sortOrder: 4, iconClass: 'fas fa-user-friends', titleAr: 'إدارة العملاء', titleEn: 'CRM', textAr: 'علاقات العملاء.', textEn: 'Customer relationships.', cssClass: 'card-customer-management', handler: 'openCustomerServiceManagement', permission: 'customerService', visible: true },
-            { id: 'dash-analytics', zone: 'grid', dashGroup: 'erp', sortOrder: 5, iconClass: 'fas fa-chart-pie', titleAr: 'التحليلات', titleEn: 'Analytics', textAr: 'منتجات · ألوان · شكاوى · زوار.', textEn: 'Live BI insights.', cssClass: 'card-analytics', handler: 'openAdminAnalytics', permission: 'audit', visible: true },
+            { id: 'dash-inventory', zone: 'grid', dashGroup: 'erp', sortOrder: 2, iconClass: 'fas fa-warehouse', titleAr: 'مخزون ERP', titleEn: 'Inventory WMS', textAr: 'SKU ومستودعات وتنبيهات.', textEn: 'SKU and warehouses.', cssClass: 'card-inventory-management', backgroundImage: 'pvc-background', handler: 'openErpInventory', permission: 'inventory', visible: true },
+            { id: 'dash-sales-report', zone: 'grid', dashGroup: 'erp', sortOrder: 3, iconClass: 'fas fa-file-invoice-dollar', titleAr: 'تقارير المبيعات', titleEn: 'Sales Reports', textAr: 'تحليل أداء المبيعات.', textEn: 'Sales performance.', cssClass: 'card-sales-reports', backgroundImage: 'background', handler: 'openSalesManagement', permission: 'sales', visible: true },
+            { id: 'dash-customers', zone: 'grid', dashGroup: 'erp', sortOrder: 4, iconClass: 'fas fa-user-friends', titleAr: 'إدارة العملاء', titleEn: 'CRM', textAr: 'علاقات العملاء.', textEn: 'Customer relationships.', cssClass: 'card-customer-management', backgroundImage: 'customer-complaints-background', handler: 'openCustomerServiceManagement', permission: 'customerService', visible: true },
+            { id: 'dash-analytics', zone: 'grid', dashGroup: 'erp', sortOrder: 5, iconClass: 'fas fa-chart-pie', titleAr: 'التحليلات', titleEn: 'Analytics', textAr: 'منتجات · ألوان · شكاوى · زوار.', textEn: 'Live BI insights.', cssClass: 'card-analytics', backgroundImage: 'background-other-products', handler: 'openAdminAnalytics', permission: 'audit', visible: true },
             { id: 'dash-settings', zone: 'quick', dashGroup: 'command', sortOrder: 11, iconClass: 'fas fa-sliders-h', titleAr: 'إعدادات المنصة', titleEn: 'Platform Settings', textAr: 'بانر، بنوك، ضريبة، احتفال — Super Admin.', textEn: 'Banner, banks, VAT, occasions.', handler: 'openSystemSettings', permission: 'users', superadminOnly: true, visible: true }
         ];
 
@@ -1999,7 +2005,7 @@
         }
 
         function buildUrlList(baseNames) {
-            const exts = ['jpg', 'jpeg', 'png', 'webp', 'avif'];
+            const exts = ['webp', 'avif', 'jpg', 'jpeg', 'png'];
             const urls = [];
             (baseNames || []).forEach(function(base) {
                 const clean = stripImageBaseName(base);
@@ -2011,27 +2017,42 @@
             return urls;
         }
 
+        const nebrasImageUrlCache = {};
+        function tryUrls(el, urls, index) {
+            if (!el || !urls || index >= urls.length) return;
+            const url = urls[index];
+            const cached = nebrasImageUrlCache[url];
+            if (cached === false) {
+                tryUrls(el, urls, index + 1);
+                return;
+            }
+            if (cached) {
+                el.style.backgroundImage = 'url("' + cached + '")';
+                el.style.backgroundSize = 'cover';
+                el.style.backgroundPosition = 'center';
+                return;
+            }
+            const img = new Image();
+            img.onload = function() {
+                const safe = url.replace(/\\/g, '/');
+                nebrasImageUrlCache[url] = safe;
+                el.style.backgroundImage = 'url("' + safe + '")';
+                el.style.backgroundSize = 'cover';
+                el.style.backgroundPosition = 'center';
+            };
+            img.onerror = function() {
+                nebrasImageUrlCache[url] = false;
+                tryUrls(el, urls, index + 1);
+            };
+            img.src = url;
+        }
+
         function branchImageUrls(imagePath) {
             const file = String(imagePath || '').trim();
             if (!file) return [];
             if (/^https?:\/\//i.test(file)) return [file];
             if (NEBRAS_IMAGE_EXT_RE.test(file)) return [normalizeMediaPath(file)];
             return buildUrlList([file]);
-        }
-
-        function tryUrls(el, urls, index) {
-            if (!el || !urls || index >= urls.length) return;
-            const url = urls[index];
-            const img = new Image();
-            img.onload = function() {
-                el.style.backgroundImage = 'url("' + url.replace(/\\/g, '/') + '")';
-                el.style.backgroundSize = 'cover';
-                el.style.backgroundPosition = 'center';
-            };
-            img.onerror = function() {
-                tryUrls(el, urls, index + 1);
-            };
-            img.src = url;
         }
 
         function tryUrlsOtherProducts(el, urls, index) {
@@ -2297,6 +2318,11 @@
             dashboardTiles.sort(function(a, b) { return (a.sortOrder || 0) - (b.sortOrder || 0); });
             dashboardTiles.forEach(function(t) {
                 if (!t.inner) t.inner = { enabled: false, album: [], documents: [] };
+                const def = DEFAULT_DASHBOARD_TILES.find(function(d) { return d.id === t.id; });
+                if (def) {
+                    if (!t.backgroundImage && def.backgroundImage) t.backgroundImage = def.backgroundImage;
+                    if (!t.cssClass && def.cssClass) t.cssClass = def.cssClass;
+                }
             });
 
             if (!Array.isArray(siteCustomSections)) siteCustomSections = [];
@@ -5731,7 +5757,7 @@
             sitePartners.forEach(function(p) {
                 if (p && p.id) byId[p.id] = p;
             });
-            const shouldMergeDefaults = !sitePartners.length || seedVer < SITE_PARTNERS_SEED_VERSION;
+            const shouldMergeDefaults = !sitePartners.length || seedVer < SITE_PARTNERS_SEED_VERSION || !getVisibleSitePartners().length;
             if (!shouldMergeDefaults) return;
             DEFAULT_SITE_PARTNERS.forEach(function(def) {
                 if (!byId[def.id]) {
@@ -7894,7 +7920,9 @@
             const username = document.getElementById('admin-username').value.trim();
             const password = document.getElementById('admin-password').value.trim();
             const status = document.getElementById('admin-status-message');
-            const user = adminUsers.find(user => user.username === username && user.password === password);
+            const user = adminUsers.find(function(u) {
+                return String(u.username || '').toUpperCase() === username.toUpperCase() && u.password === password;
+            });
 
             const ui = siteText[currentLang || 'ar'] || siteText.ar;
             if (!username || !password) {
@@ -12069,10 +12097,31 @@
         function applyNebrasCloudRow(storeKey, payload) {
             const spec = NEBRAS_CLOUD_STORE_SPECS.find(function(s) { return s.key === storeKey; });
             if (!spec || payload === undefined || payload === null) return;
-            if (storeKey === 'branches' && Array.isArray(payload) && !payload.length) {
-                return;
+            if (Array.isArray(payload) && !payload.length) {
+                if (storeKey === 'branches' || storeKey === 'site_partners' || storeKey === 'site_certifications' ||
+                    storeKey === 'admin_users' || storeKey === 'visitor_icons' || storeKey === 'dashboard_tiles' ||
+                    storeKey === 'site_products') {
+                    return;
+                }
             }
             spec.set(payload);
+        }
+
+        let nebrasThreeLoadPromise = null;
+        function loadNebrasThreeJs() {
+            if (typeof globalThis.THREE !== 'undefined' || typeof window.THREE !== 'undefined') {
+                return Promise.resolve();
+            }
+            if (nebrasThreeLoadPromise) return nebrasThreeLoadPromise;
+            nebrasThreeLoadPromise = new Promise(function(resolve, reject) {
+                const s = document.createElement('script');
+                s.src = 'js/vendor/three.min.js';
+                s.async = true;
+                s.onload = function() { resolve(); };
+                s.onerror = function() { reject(new Error('three.min.js load failed')); };
+                document.head.appendChild(s);
+            });
+            return nebrasThreeLoadPromise;
         }
 
         function finalizePlatformDataAfterLoad() {
@@ -12286,21 +12335,31 @@
             }
             ensureVisitorAnalytics();
             ensureShowroomGallery();
-            adminUsers = (Array.isArray(adminUsers) ? adminUsers : []).map((user, index) => ({
-                id: user && user.id ? user.id : `user-${Date.now()}-${index}`,
-                username: user && user.username ? user.username : `user${index + 1}`,
-                password: user && user.password ? user.password : 'ChangeMe123',
-                role: user && allowedRoles.includes(String(user.role || '').toLowerCase()) ? String(user.role).toLowerCase() : 'manager'
-            }));
+            adminUsers = (Array.isArray(adminUsers) ? adminUsers : []).map((user, index) => {
+                const role = user && allowedRoles.includes(String(user.role || '').toLowerCase()) ? String(user.role).toLowerCase() : 'manager';
+                const isPrimary = user && (user.isPrimary === true || PRIMARY_GOVERNANCE_ADMIN_IDS.indexOf(user.id) >= 0 ||
+                    PRIMARY_GOVERNANCE_USERNAMES.indexOf(String(user.username || '').toUpperCase()) >= 0);
+                return {
+                    id: user && user.id ? user.id : `user-${Date.now()}-${index}`,
+                    username: user && user.username ? user.username : `user${index + 1}`,
+                    password: user && user.password ? user.password : 'ChangeMe123',
+                    role: role,
+                    permissions: Array.isArray(user && user.permissions) ? user.permissions.filter(Boolean) : null,
+                    isPrimary: !!isPrimary
+                };
+            });
             if (!Array.isArray(visitorIcons)) {
                 visitorIcons = [];
             }
             if (!adminUsers.some(user => user.id === 'base-admin')) {
-                adminUsers.unshift({ id: 'base-admin', username: 'NEBRASBASIC', password: 'NEBRASBASIC123', role: 'superadmin' });
+                adminUsers.unshift({ id: 'base-admin', username: 'NEBRASBASIC', password: 'NEBRASBASIC123', role: 'superadmin', isPrimary: true });
             }
             if (!adminUsers.some(function(user) { return String(user.username || '').toUpperCase() === 'NEBRASFACTORY'; })) {
-                adminUsers.unshift({ id: 'nebras-factory-admin', username: 'NEBRASFACTORY', password: 'NEBRASFACTORYCOMPANYBASIC', role: 'superadmin' });
+                adminUsers.unshift({ id: 'nebras-factory-admin', username: 'NEBRASFACTORY', password: 'NEBRASFACTORYCOMPANYBASIC', role: 'superadmin', isPrimary: true });
             }
+            adminUsers.forEach(function(u) {
+                if (u.isPrimary) u.role = 'superadmin';
+            });
         }
 
         async function fetchDynamicContentBlocks() {
@@ -12486,16 +12545,28 @@
             return Promise.race([
                 loadFromNebrasCloud(),
                 new Promise(function(resolve) {
-                    setTimeout(function() { resolve(false); }, ms || 7000);
+                    setTimeout(function() { resolve(false); }, ms || 3500);
                 })
             ]);
+        }
+
+        function syncNebrasCloudInBackground() {
+            cloudLoadWithTimeout(3500).then(function(loaded) {
+                if (!loaded) return;
+                finalizePlatformDataAfterLoad();
+                renderAllPublicCatalog();
+                if (currentAdmin) showAdminDashboard(currentAdmin);
+                saveSystemData({ skipCloud: true });
+                pushToNebrasCloud();
+            }).catch(function(err) {
+                console.warn('Background cloud sync:', err);
+            });
         }
 
         async function bootstrapNebrasPlatform() {
             dismissBrandIntro();
             try {
                 loadSystemData();
-                await cloudLoadWithTimeout(7000);
                 finalizePlatformDataAfterLoad();
                 loadNebrasCart();
                 updateSalesQuoteFab();
@@ -12509,6 +12580,7 @@
                 saveSystemData({ skipCloud: true });
                 applySiteLogoImages();
                 renderAllPublicCatalog();
+                syncNebrasCloudInBackground();
                 await fetchDynamicContentBlocks();
                 await fetchDynamicSiteSections();
                 trackVisitorSession();

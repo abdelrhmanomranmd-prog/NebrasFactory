@@ -450,6 +450,47 @@ html[dir="rtl"] .nebras-partners-track--reverse:not(.nebras-partners-track--stat
     font-size: 0.85rem;
 }
 
+/* ERP tiles — خلفيات صور (كانت ::before بدون content فلا تظهر) */
+.dashboard-tile-card.card-inventory-management::before,
+.dashboard-tile-card.card-sales-reports::before,
+.dashboard-tile-card.card-customer-management::before,
+.dashboard-tile-card.card-analytics::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    border-radius: inherit;
+    opacity: 0.32;
+    pointer-events: none;
+    background-size: cover;
+    background-position: center;
+}
+
+.dashboard-tile-card.card-inventory-management::before {
+    background-image: linear-gradient(135deg, rgba(46, 204, 113, 0.78), rgba(39, 174, 96, 0.84)),
+        url('../images/pvc-background.avif');
+}
+
+.dashboard-tile-card.card-sales-reports::before {
+    background-image: linear-gradient(135deg, rgba(41, 128, 185, 0.82), rgba(52, 152, 219, 0.86)),
+        url('../images/background.png');
+}
+
+.dashboard-tile-card.card-customer-management::before {
+    background-image: linear-gradient(135deg, rgba(155, 89, 182, 0.7), rgba(142, 68, 173, 0.8)),
+        url('../images/customer-complaints-background.jpeg');
+}
+
+.dashboard-tile-card.card-analytics::before {
+    background-image: linear-gradient(135deg, rgba(230, 126, 34, 0.75), rgba(211, 84, 0, 0.85)),
+        url('../images/background-other-products.jpeg');
+}
+
+.dashboard-tile-card[class*="card-"] > * {
+    position: relative;
+    z-index: 1;
+}
+
 .dashboard-main-nav {
     display: flex;
     flex-wrap: wrap;
