@@ -1028,6 +1028,104 @@ body.platform-erp-active { --platform-layer: erp; }
     z-index: 1;
 }
 
+.quote-doc-header--premium {
+    display: block;
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: 12px;
+}
+
+.quote-doc-top-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 20px;
+    align-items: start;
+    margin-bottom: 14px;
+    padding-bottom: 14px;
+    border-bottom: 2px solid #0d2840;
+}
+
+[dir="rtl"] .quote-doc-top-row {
+    grid-template-columns: 1fr auto;
+}
+
+.quote-customer-block--top {
+    position: relative;
+    z-index: 1;
+    margin: 0;
+    padding: 14px 16px;
+    border: 1px solid rgba(13, 40, 64, 0.12);
+    border-radius: 10px;
+    background: rgba(0, 168, 255, 0.04);
+    font-size: 0.88rem;
+    line-height: 1.65;
+}
+
+.quote-customer-block--top h3 {
+    margin: 0 0 8px;
+    font-size: 1rem;
+    color: #0d2840;
+}
+
+.quote-customer-block--top p {
+    margin: 4px 0;
+}
+
+.quote-brand-block--hero {
+    align-items: center;
+    text-align: center;
+    min-width: min(220px, 38vw);
+}
+
+.quote-brand-block--hero .quote-brand-logo {
+    max-height: 96px;
+    max-width: 240px;
+    margin-inline: auto;
+}
+
+.quote-terms-block {
+    position: relative;
+    z-index: 1;
+}
+
+.quote-terms-title {
+    margin: 0 0 10px;
+    font-size: 1rem;
+    color: #0d2840;
+}
+
+.quote-terms-list {
+    margin: 0;
+    padding-inline-start: 1.25rem;
+    font-size: 0.82rem;
+    line-height: 1.75;
+    color: #333;
+}
+
+.quote-copyright-line {
+    position: relative;
+    z-index: 1;
+    margin: 14px 0 0;
+    padding-top: 12px;
+    border-top: 1px dashed rgba(13, 40, 64, 0.18);
+    text-align: center;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #0d2840;
+    letter-spacing: 0.02em;
+}
+
+@media (max-width: 640px) {
+    .quote-doc-top-row {
+        grid-template-columns: 1fr;
+    }
+
+    .quote-brand-block--hero {
+        order: -1;
+        width: 100%;
+    }
+}
+
 [dir="rtl"] .quote-doc-header {
     grid-template-columns: 1.1fr 1fr;
 }

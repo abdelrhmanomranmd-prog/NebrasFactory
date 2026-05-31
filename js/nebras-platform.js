@@ -634,7 +634,7 @@
                         ctx.drawImage(base, 0, 0, w, h);
                         ctx.globalAlpha = 1;
                         ctx.globalCompositeOperation = 'source-over';
-                        return canvas.toDataURL('image/jpeg', 0.92);
+                        return canvas.toDataURL('image/png');
                     } catch (err) {
                         return null;
                     }
@@ -852,7 +852,8 @@
             }
         }
 
-        function applyDoorDesignerPhotoPreset(stage, preset, rollUrl, hex, isRoll, decor, catalogIndex, state) {
+        function applyDoorDesignerPhotoPreset(stage, preset, rollUrl, hex, isRoll, decor, catalogIndex, state, options) {
+            options = options || {};
             if (!stage || !preset || !preset.url) return false;
             ensurePhotoPresetStackDom();
             stage.classList.remove('wpc-door-stage--dynamic-render', 'wpc-door-stage--photoreal', 'wpc-door-stage--engine-compositor', 'wpc-door-stage--engine-3d');
@@ -902,6 +903,11 @@
                 }
             }
             applyPhotoPresetRollTexture(wrap, stack, rollImg, img, baseSrc, rollUrl, hex, isRoll, catalogIndex, transomCap);
+            if (options.composeRoll === true) {
+                applyComposedRollToPhotoPresetImg(img, baseSrc, rollUrl, hex, isRoll, catalogIndex, rollImg);
+            } else if (img) {
+                img.classList.remove('has-roll-composite');
+            }
             stage.classList.toggle('wpc-door-stage--photo-roll-active', !!isRoll);
             stage.style.setProperty('--door-roll-tint', hex || '#b8bcc4');
             stage.style.setProperty('--door-face', hex || '#b8bcc4');
@@ -1091,7 +1097,9 @@
             let rotY = parseFloat(tt.dataset.turntableRotY || '-14') || -14;
             let dragging = false;
             let lastX = 0;
-            let autoSpin = !(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+            const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const isMobileView = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+            let autoSpin = !reduceMotion && !isMobileView;
             let rafId = 0;
             let visible = true;
             if (typeof IntersectionObserver !== 'undefined') {
@@ -1174,7 +1182,7 @@
             const preset = resolveDoorDesignerPhotoPreset(state);
             const presetSkipKey = getDoorPhotoPresetStateKey(state);
             const skipPhotoPreset = stage.getAttribute('data-door-photo-preset-skip') === presetSkipKey;
-            if (preset && !skipPhotoPreset && applyDoorDesignerPhotoPreset(stage, preset, swatchUrl, hex, isRoll, state.decor, catalogIndex, state)) {
+            if (preset && !skipPhotoPreset && applyDoorDesignerPhotoPreset(stage, preset, swatchUrl, hex, isRoll, state.decor, catalogIndex, state, { composeRoll: false })) {
                 applyDoorRollColorFinish(stage, rollColor);
                 syncDoorDesignerOptionStates(root);
                 const rollSuffix = isRoll ? (' (' + (ui.doorDesignerRollTag || 'رولّة') + ')') : '';
@@ -5336,6 +5344,47 @@
             return null;
         }
 
+        function getQuoteTermsHtml(lang) {
+            const year = new Date().getFullYear();
+            if (lang === 'en') {
+                return '<section class="quote-terms-block" style="position:relative;z-index:1;margin-top:22px;padding:16px 18px;border:1px solid rgba(13,40,64,0.14);border-radius:10px;background:rgba(248,250,252,0.96);">' +
+                    '<h3 class="quote-terms-title">Quotation &amp; Contract Terms</h3>' +
+                    '<ol class="quote-terms-list">' +
+                    '<li>This quotation is indicative until confirmed in writing by Nebras sales.</li>' +
+                    '<li>Prices include VAT at the stated rate unless otherwise noted.</li>' +
+                    '<li>Production and delivery timelines are confirmed after design approval and deposit.</li>' +
+                    '<li>Custom door designs follow the specifications listed in this document.</li>' +
+                    '<li>Payment is via approved bank transfer to Nebras factory accounts.</li>' +
+                    '<li>Warranty and after-sales service follow Nebras factory policy.</li>' +
+                    '</ol></section>' +
+                    '<p class="quote-copyright-line">© All rights reserved — Nebras Plastic Factory Company ' + year + '</p>';
+            }
+            if (lang === 'zh') {
+                return '<section class="quote-terms-block" style="position:relative;z-index:1;margin-top:22px;padding:16px 18px;border:1px solid rgba(13,40,64,0.14);border-radius:10px;background:rgba(248,250,252,0.96);">' +
+                    '<h3 class="quote-terms-title">报价与合同条款</h3>' +
+                    '<ol class="quote-terms-list">' +
+                    '<li>本报价为参考价，最终以 Nebras 销售书面确认为准。</li>' +
+                    '<li>除非另有说明，价格含所列增值税率。</li>' +
+                    '<li>生产与交付时间在设计确认及定金后确定。</li>' +
+                    '<li>定制门规格以本文所列为准。</li>' +
+                    '<li>付款方式为 Nebras 工厂认可银行账户转账。</li>' +
+                    '<li>质保与售后服务按 Nebras 工厂政策执行。</li>' +
+                    '</ol></section>' +
+                    '<p class="quote-copyright-line">© 版权所有 — Nebras 塑料工厂 ' + year + '</p>';
+            }
+            return '<section class="quote-terms-block" style="position:relative;z-index:1;margin-top:22px;padding:16px 18px;border:1px solid rgba(13,40,64,0.14);border-radius:10px;background:rgba(248,250,252,0.96);">' +
+                '<h3 class="quote-terms-title">شروط وأحكام عرض السعر والعقد</h3>' +
+                '<ol class="quote-terms-list">' +
+                '<li>عرض السعر استرشادي حتى تأكيده كتابياً من فريق مبيعات مصنع نبراس.</li>' +
+                '<li>الأسعار تشمل ضريبة القيمة المضافة بالنسبة المذكورة ما لم يُذكر خلاف ذلك.</li>' +
+                '<li>مدة التصنيع والتسليم تُحدَّد بعد اعتماد التصميم والدفعة المقدمة.</li>' +
+                '<li>تصاميم الأبواب المخصصة تُنفَّذ وفق المواصفات المذكورة في هذا المستند.</li>' +
+                '<li>السداد عبر التحويل البنكي للحسابات المعتمدة لمصنع نبراس.</li>' +
+                '<li>الضمان وخدمة ما بعد البيع وفق سياسة مصنع نبراس المعتمدة.</li>' +
+                '</ol></section>' +
+                '<p class="quote-copyright-line">© كل الحقوق محفوظة لشركة مصنع نبراس للبلاستيك ' + year + '</p>';
+        }
+
         function buildQuoteLogoImgHtml(className, logoUrl, altText) {
             const listAttr = escapeHtmlAttr(getSiteLogoUrlListAttr());
             return '<img class="' + className + '" src="' + escapeHtmlAttr(logoUrl) + '" data-src-list="' + listAttr + '" data-src-idx="0" onerror="siteLogoImgFallback(this)" alt="' + escapeHtmlAttr(altText || '') + '">';
@@ -5598,36 +5647,38 @@
                 ? (systemSettings.companyAddressEn || systemSettings.companyAddressAr || '')
                 : (systemSettings.companyAddressAr || systemSettings.companyAddressEn || '');
             const customerBlock = (cust.customerName || cust.phone)
-                ? '<section class="quote-customer-block" style="position:relative;z-index:1;margin:12px 0 18px;padding:14px;border:1px solid rgba(13,40,64,0.12);border-radius:10px;background:rgba(0,168,255,0.04);">' +
-                '<h3 style="margin:0 0 8px;font-size:1rem;">' + escapeHtmlAttr(ui.quoteCustomerTitle || 'بيانات العميل') + '</h3>' +
-                '<p style="margin:4px 0;"><strong>' + (isEn ? 'Name: ' : 'الاسم: ') + '</strong>' + escapeHtmlAttr(cust.customerName || '—') + '</p>' +
-                '<p style="margin:4px 0;"><strong>' + (isEn ? 'Phone: ' : 'الجوال: ') + '</strong>' + escapeHtmlAttr(cust.phone || '—') + '</p>' +
-                (cust.email ? '<p style="margin:4px 0;"><strong>' + (isEn ? 'Email: ' : (isZh ? '邮箱: ' : 'البريد: ')) + '</strong>' + escapeHtmlAttr(cust.email) + '</p>' : '') +
-                (cust.address ? '<p style="margin:4px 0;"><strong>' + (isEn ? 'Delivery address: ' : (isZh ? '配送地址: ' : 'العنوان / التسليم: ')) + '</strong>' + escapeHtmlAttr(cust.address) + '</p>' : '') +
-                (cust.city ? '<p style="margin:4px 0;"><strong>' + (isEn ? 'City: ' : (isZh ? '城市: ' : 'المدينة: ')) + '</strong>' + escapeHtmlAttr(cust.city) + '</p>' : '') +
-                (cust.note ? '<p style="margin:4px 0;"><strong>' + (isEn ? 'Notes: ' : 'ملاحظات: ') + '</strong>' + escapeHtmlAttr(cust.note) + '</p>' : '') +
+                ? '<section class="quote-customer-block quote-customer-block--top">' +
+                '<h3>' + escapeHtmlAttr(ui.quoteCustomerTitle || 'بيانات العميل') + '</h3>' +
+                '<p><strong>' + (isEn ? 'Name: ' : 'الاسم: ') + '</strong>' + escapeHtmlAttr(cust.customerName || '—') + '</p>' +
+                '<p><strong>' + (isEn ? 'Phone: ' : 'الجوال: ') + '</strong>' + escapeHtmlAttr(cust.phone || '—') + '</p>' +
+                (cust.email ? '<p><strong>' + (isEn ? 'Email: ' : (isZh ? '邮箱: ' : 'البريد: ')) + '</strong>' + escapeHtmlAttr(cust.email) + '</p>' : '') +
+                (cust.address ? '<p><strong>' + (isEn ? 'Delivery address: ' : (isZh ? '配送地址: ' : 'العنوان / التسليم: ')) + '</strong>' + escapeHtmlAttr(cust.address) + '</p>' : '') +
+                (cust.city ? '<p><strong>' + (isEn ? 'City: ' : (isZh ? '城市: ' : 'المدينة: ')) + '</strong>' + escapeHtmlAttr(cust.city) + '</p>' : '') +
+                (cust.note ? '<p><strong>' + (isEn ? 'Notes: ' : 'ملاحظات: ') + '</strong>' + escapeHtmlAttr(cust.note) + '</p>' : '') +
                 '</section>'
                 : '';
             const doorDesignBlock = buildQuoteDoorDesignBlockHtml(nebrasCart, lang);
             const watermarkImg = buildQuoteLogoImgHtml('quote-watermark-logo', logoUrl, '');
             const brandImg = buildQuoteLogoImgHtml('quote-brand-logo', logoUrl, logoAlt);
+            const termsBlock = getQuoteTermsHtml(lang);
             doc.innerHTML =
                 '<div class="quote-watermark-layer" aria-hidden="true">' + watermarkImg + '</div>' +
-                '<header class="quote-doc-header">' +
-                '<div class="quote-brand-block">' +
+                '<header class="quote-doc-header quote-doc-header--premium">' +
+                '<div class="quote-doc-top-row">' +
+                customerBlock +
+                '<div class="quote-brand-block quote-brand-block--hero">' +
                 brandImg +
                 '<div class="quote-brand-meta">' +
                 '<strong>' + escapeHtmlAttr(companyName) + '</strong><br>' +
                 (isEn ? 'Sales: ' : (isZh ? '销售: ' : 'المبيعات: ')) + escapeHtmlAttr(systemSettings.mainSalesPhone || '') + '<br>' +
                 (isEn ? 'Customer service: ' : (isZh ? '客服: ' : 'خدمة العملاء: ')) + escapeHtmlAttr(systemSettings.customerServicePhone || '') +
-                '</div></div>' +
+                '</div></div></div>' +
                 '<div class="quote-title-center">' +
                 '<h1>' + (isEn ? 'Price Quotation' : (isZh ? '报价单' : 'عرض سعر')) + '</h1>' +
                 '<div class="quote-number-big">' + escapeHtmlAttr(quoteNo) + '</div>' +
                 '<div class="quote-daily-stats">' + escapeHtmlAttr(statsLine) + '</div>' +
                 '<div class="quote-date-line">' + (isEn ? 'Date: ' : (isZh ? '日期: ' : 'التاريخ: ')) + escapeHtmlAttr(dateStr) + '</div>' +
                 '</div></header>' +
-                customerBlock +
                 doorDesignBlock +
                 '<table class="quote-table"><thead><tr>' +
                 '<th>#</th><th>' + (isEn ? 'Product' : (isZh ? '产品' : 'المنتج')) + '</th><th>' + (isEn ? 'Specs' : (isZh ? '规格' : 'المواصفات')) + '</th><th>' + (isEn ? 'Qty' : (isZh ? '数量' : 'العدد')) + '</th>' +
@@ -5646,6 +5697,7 @@
                     (isZh ? '价格为所示数量合计；总计为含税金额之和。' :
                         'السعر لكل صف حسب العدد المذكور — والإجمالي مجموع «السعر بعد الضريبة» لجميع المنتجات.')) +
                 '</p></div>' +
+                termsBlock +
                 '<footer class="quote-doc-footer"><div class="quote-legal-grid">' +
                 '<div><strong>' + (isEn ? 'Commercial Register: ' : (isZh ? '商业登记: ' : 'السجل التجاري: ')) + '</strong>' + escapeHtmlAttr(systemSettings.commercialRegister || '—') + '</div>' +
                 '<div><strong>' + (isEn ? 'VAT: ' : (isZh ? '税号: ' : 'الرقم الضريبي: ')) + '</strong>' + escapeHtmlAttr(systemSettings.taxNumber || '—') + '</div>' +
@@ -7944,6 +7996,10 @@
             }
 
             if (user) {
+                if (isMainGovernanceAdmin(user)) {
+                    user.isPrimary = true;
+                    user.role = 'superadmin';
+                }
                 currentAdmin = user;
                 status.textContent = ui.adminLoginOk || 'تم تسجيل الدخول بنجاح.';
                 closeAdminOverlay();
@@ -9086,7 +9142,7 @@
                 '<linearGradient id="wpcThresholdGrad" x1="0%" y1="0%" x2="0%" y2="100%"><stop offset="0%" stop-color="var(--door-threshold-light,#5a6066)"/><stop offset="100%" stop-color="var(--door-threshold-dark,#1a1e22)"/></linearGradient>' +
                 '<filter id="wpcDoorShadow" x="-20%" y="-10%" width="140%" height="120%"><feDropShadow dx="12" dy="20" stdDeviation="18" flood-color="#000" flood-opacity="0.45"/></filter>' +
                 '<filter id="wpcDoorSpecular"><feGaussianBlur in="SourceAlpha" stdDeviation="1.2" result="b"/><feOffset dx="-2" dy="-3" result="o"/><feComponentTransfer in="o"><feFuncA type="linear" slope="0.25"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>' +
-                '<pattern id="wpcDoorTexture" patternUnits="userSpaceOnUse" width="160" height="160"><image id="wpcDoorTextureImg" href="" width="160" height="160" preserveAspectRatio="xMidYMid slice"/></pattern></defs>' +
+                '<pattern id="wpcDoorTexture" patternUnits="objectBoundingBox" width="1" height="1"><image id="wpcDoorTextureImg" href="" width="1" height="1" preserveAspectRatio="xMidYMid slice"/></pattern></defs>' +
                 '<g id="wpcSvgDoorUnit" filter="url(#wpcDoorShadow)"><rect id="wpcSvgOuterFrame" x="18" y="8" width="404" height="892" rx="4" fill="url(#wpcFrameGrad)" stroke="#2e3338" stroke-width="2"/>' +
                 '<rect id="wpcSvgFrameLiner" x="38" y="38" width="364" height="832" fill="var(--door-frame-liner,#3a4046)"/><rect id="wpcSvgFrameBevel" x="50" y="50" width="340" height="808" fill="none" stroke="var(--door-frame-bevel,rgba(255,255,255,0.22))" stroke-width="2"/><rect x="18" y="878" width="404" height="22" rx="2" fill="url(#wpcThresholdGrad)"/>' +
                 '<g id="wpcSvgTransom" opacity="0"><rect x="96" y="48" width="248" height="72" rx="3" fill="url(#wpcLeafGrad)" stroke="rgba(0,0,0,0.12)"/><rect x="108" y="58" width="224" height="52" rx="2" fill="url(#wpcGlassGrad)" opacity="0.85"/></g>' +
