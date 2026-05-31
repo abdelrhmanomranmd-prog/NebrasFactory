@@ -3,10 +3,8 @@ header {
     background: var(--primary-blue);
     color: white;
     padding: 0;
-    position: sticky;
-    top: 0;
+    position: relative;
     z-index: 1000;
-    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.2);
 }
 
 .header-top-row {
@@ -42,7 +40,11 @@ header {
     align-items: center;
     padding: 10px 5% 12px;
     gap: 16px;
-    position: relative;
+    position: sticky;
+    top: 0;
+    z-index: 1001;
+    background: var(--primary-blue);
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.2);
 }
 
 .header-logo-occasion-wrap {

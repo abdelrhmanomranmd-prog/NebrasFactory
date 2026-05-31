@@ -120,6 +120,54 @@
     }
 }
 
+@media (max-width: 768px) {
+    /* الحملة تظهر مرة عند الأعلى ثم تختفي مع التمرير — لا تثبت */
+    .header-top-row--campaign {
+        padding: 8px 4% 6px;
+    }
+
+    .header-campaign-headline {
+        font-size: 1.05rem;
+    }
+
+    .header-campaign-tagline {
+        font-size: 0.8rem;
+        margin-bottom: 8px;
+    }
+
+    .header-campaign-stats {
+        gap: 10px 14px;
+        padding-top: 8px;
+    }
+
+    .header-stat strong {
+        font-size: 1rem;
+    }
+
+    .header-main-row {
+        padding: 6px 4% 8px;
+        min-height: 52px;
+    }
+
+    .logo-container img,
+    .site-logo-img {
+        height: 46px;
+        max-width: min(180px, 48vw);
+    }
+
+    .header-logo-occasion-wrap {
+        gap: 8px;
+    }
+
+    .header-logo-occasion-wrap .header-occasion-chip {
+        padding: 4px 10px;
+        font-size: 0.72rem;
+        max-width: min(140px, 38vw);
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+}
+
 @media (max-width: 520px) {
     .header-campaign-cta {
         flex-direction: column;

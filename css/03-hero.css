@@ -147,17 +147,21 @@
 
 @media (max-width: 768px) {
     .hero.hero-real {
-        min-height: min(58vh, 480px);
+        min-height: min(42vh, 360px);
     }
 
     .hero-content-wrap {
-        min-height: min(58vh, 480px);
-        padding: 24px 5% 56px;
+        min-height: min(42vh, 360px);
+        padding: 16px 4% 44px;
+    }
+
+    .hero-content-wrap.hero-visual-only {
+        min-height: min(38vh, 320px);
     }
 
     .hero-location-bar {
-        font-size: 0.82rem;
-        padding: 10px 12px;
+        font-size: 0.78rem;
+        padding: 8px 10px;
     }
 }
 
