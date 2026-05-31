@@ -9655,9 +9655,7 @@
                     '<p class="nebras-door-3d-hint"><i class="fas fa-arrows-rotate" aria-hidden="true"></i> ' + escapeHtmlAttr(hint3d) + '</p>'
                 ) : buildDoorDesignerLegacyCanvasHtml(doorPhoto, photoreal, leafMask)))) +
                 '</div>' +
-                '<div class="door-studio-floating-spec" id="door-designer-summary"></div>' +
                 '<p class="door-active-color-label" id="door-active-color-label"></p>' +
-                '<p class="door-spec-label" id="door-spec-label"></p>' +
                 '</main>'
             ) : '';
             if (!showPreview) {
@@ -9676,16 +9674,21 @@
             }
             return '<div class="door-designer door-designer--studio door-designer--keybab" id="nebras-door-designer">' +
                 '<div class="door-studio-layout">' +
+                previewHtml +
                 '<aside class="door-studio-panel">' +
                 '<header class="door-studio-head door-studio-head--compact">' +
                 '<h2 class="door-studio-title">' + escapeHtmlAttr(studioTitle) + '</h2>' +
+                '<button type="button" class="door-studio-reset door-studio-reset--panel" id="door-designer-reset-btn-panel" title="' + escapeHtmlAttr(resetLbl) + '">' +
+                '<i class="fas fa-rotate-left" aria-hidden="true"></i> ' + escapeHtmlAttr(resetLbl) + '</button>' +
                 '</header>' +
                 '<p class="door-studio-hint">' + escapeHtmlAttr(ui.doorDesignerCanvasHint || '') + '</p>' +
-                '<div class="door-studio-panel-scroll">' + panelOptionsHtml + '</div>' +
+                '<div class="door-studio-panel-scroll">' +
+                '<div class="door-studio-panel-summary" id="door-designer-summary" aria-live="polite"></div>' +
+                panelOptionsHtml +
+                '</div>' +
                 '<button type="button" class="door-studio-quote workspace-action-btn workspace-action-btn--primary" onclick="addDoorDesignToCartAndQuote()">' +
                 '<i class="fas fa-file-invoice"></i> ' + escapeHtmlAttr(ui.doorDesignerQuoteBtn || 'طلب عرض سعر') + '</button>' +
                 '</aside>' +
-                previewHtml +
                 '</div></div>';
         }
 
@@ -9757,7 +9760,9 @@
             const root = document.getElementById('nebras-door-designer');
             if (!root) return;
             const resetBtn = document.getElementById('door-designer-reset-btn');
+            const resetBtnPanel = document.getElementById('door-designer-reset-btn-panel');
             if (resetBtn) resetBtn.onclick = resetDoorDesignerWorkspace;
+            if (resetBtnPanel) resetBtnPanel.onclick = resetDoorDesignerWorkspace;
             let zoom = 100;
             const stage = document.getElementById('door-3d-preview');
             const zoomLbl = document.getElementById('door-preview-zoom-label');
