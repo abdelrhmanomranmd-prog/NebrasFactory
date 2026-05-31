@@ -358,9 +358,14 @@
         <i class="fas fa-shopping-cart" aria-hidden="true"></i>
         <span class="cart-badge-count" id="cart-badge-count" hidden>0</span>
     </button>
-    <button type="button" class="fab-send-quote-sales" id="fab-send-quote-sales" onclick="submitQuoteToSales()" title="إرسال عرض السعر للمبيعات وخدمة العملاء" aria-label="إرسال عرض السعر للمبيعات وخدمة العملاء">
-        <i class="fas fa-paper-plane" aria-hidden="true"></i>
-    </button>
+    <div class="fab-send-channel-group" id="fab-send-channel-group" aria-label="إرسال اختياري">
+        <button type="button" class="fab-send-channel fab-send-channel--sales" id="fab-send-sales" onclick="submitCartOrQuote('sales')" title="إرسال للمبيعات" aria-label="إرسال للمبيعات">
+            <i class="fas fa-store" aria-hidden="true"></i>
+        </button>
+        <button type="button" class="fab-send-channel fab-send-channel--cs" id="fab-send-cs" onclick="submitCartOrQuote('customer-service')" title="إرسال لخدمة العملاء" aria-label="إرسال لخدمة العملاء">
+            <i class="fas fa-headset" aria-hidden="true"></i>
+        </button>
+    </div>
     <button type="button" class="fab-send-transfer-receipt" id="fab-send-transfer-receipt" onclick="openCartDrawer();document.getElementById('cart-payment-block')&&document.getElementById('cart-payment-block').scrollIntoView({behavior:'smooth'})" title="إرسال صورة الحوالة للمبيعات" aria-label="إرسال صورة الحوالة للمبيعات">
         <i class="fas fa-receipt" aria-hidden="true"></i>
     </button>
@@ -425,9 +430,22 @@
             </div>
             <div class="cart-total-row" id="cart-total-row" hidden>المجموع: 0 ر.س</div>
             <div id="cart-payment-mount"></div>
+            <div class="cart-order-preview" id="cart-order-preview" hidden aria-live="polite"></div>
+            <div class="cart-send-channel-row" id="cart-send-channel-row">
+                <p class="cart-send-channel-label" id="cart-send-channel-label">إرسال اختياري — اختر القسم</p>
+                <div class="cart-send-channel-btns">
+                    <button type="button" class="cart-send-icon-btn cart-send-icon-btn--sales" id="cart-send-sales-btn" onclick="submitCartOrQuote('sales')" title="إرسال أوردر للمبيعات">
+                        <i class="fas fa-store" aria-hidden="true"></i>
+                        <span id="cart-send-sales-label">المبيعات</span>
+                    </button>
+                    <button type="button" class="cart-send-icon-btn cart-send-icon-btn--cs" id="cart-send-cs-btn" onclick="submitCartOrQuote('customer-service')" title="إرسال أوردر لخدمة العملاء">
+                        <i class="fas fa-headset" aria-hidden="true"></i>
+                        <span id="cart-send-cs-label">خدمة العملاء</span>
+                    </button>
+                </div>
+            </div>
             <div class="cart-drawer-actions">
-                <button type="button" class="primary" id="cart-request-quote-btn" onclick="confirmAndOpenQuote()">اطلب عرض سعر</button>
-                <button type="button" class="primary" id="cart-send-sales-btn" onclick="submitQuoteToSales()">إرسال للمبيعات وخدمة العملاء</button>
+                <button type="button" class="primary" id="cart-request-quote-btn" onclick="confirmAndOpenQuote()">اطلب عرض سعر A4</button>
                 <button type="button" class="secondary" id="cart-close-btn" onclick="closeCartDrawer()">إغلاق</button>
             </div>
         </div>
@@ -438,11 +456,23 @@
     </div>
 
     <div class="quote-print-overlay" id="quote-print-overlay">
-        <div class="quote-print-actions" style="text-align:center;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:10px;justify-content:center;">
+        <div class="quote-print-actions">
             <button type="button" class="primary" onclick="window.print()">طباعة / PDF</button>
-            <button type="button" class="primary" id="quote-send-sales-btn" onclick="submitQuoteToSales()">إرسال للمبيعات وخدمة العملاء</button>
             <button type="button" class="secondary" id="quote-mark-finalized-btn" onclick="markCurrentQuoteFinalized()">تسجيل عرض السعر كمنفّذ</button>
             <button type="button" class="secondary" onclick="closeQuotePreview()">إغلاق</button>
+        </div>
+        <div class="quote-send-channel-row" id="quote-send-channel-row">
+            <p class="quote-send-channel-label" id="quote-send-channel-label">إرسال عرض السعر A4 — اختياري</p>
+            <div class="quote-send-channel-btns">
+                <button type="button" class="quote-send-icon-btn quote-send-icon-btn--sales" id="quote-send-sales-btn" onclick="submitCartOrQuote('sales')" title="إرسال A4 للمبيعات">
+                    <i class="fas fa-store" aria-hidden="true"></i>
+                    <span id="quote-send-sales-label">المبيعات</span>
+                </button>
+                <button type="button" class="quote-send-icon-btn quote-send-icon-btn--cs" id="quote-send-cs-btn" onclick="submitCartOrQuote('customer-service')" title="إرسال A4 لخدمة العملاء">
+                    <i class="fas fa-headset" aria-hidden="true"></i>
+                    <span id="quote-send-cs-label">خدمة العملاء</span>
+                </button>
+            </div>
         </div>
         <div class="quote-a4" id="quote-a4-document"></div>
     </div>

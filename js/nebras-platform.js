@@ -3754,6 +3754,7 @@
             const payMount = document.getElementById('cart-payment-mount');
             if (payMount) payMount.innerHTML = nebrasCart.length ? buildCartBankPaymentHtml(lang) : '';
             applyStaticUiTranslations(ui);
+            renderCartOrderPreview();
             overlay.classList.add('show');
             updateCartBadge();
             updateSalesQuoteFab();
@@ -4954,40 +4955,191 @@
             }
         }
 
-        function buildQuoteWhatsAppMessage(entry, ui, lang) {
+        function isQuotePreviewOpen() {
+            const overlay = document.getElementById('quote-print-overlay');
+            return !!(overlay && overlay.classList.contains('show'));
+        }
+
+        function buildQuoteA4WhatsAppMessage(entry, ui, lang) {
             if (!entry) return '';
-            return (ui.sendQuoteWaIntro || 'طلب عرض سعر نبراس') + '\n' + entry.quoteNo + '\n' +
-                entry.customerName + '\n' + entry.phone + '\n' +
-                (entry.address ? entry.address + '\n' : '') +
-                (entry.city ? entry.city + '\n' : '') +
-                formatQuoteLinesForMessage(entry.lines, lang) +
-                (entry.totalIncVat > 0 ? '\n' + (ui.cartProductsTotalInc || 'إجمالي المنتجات شامل الضريبة: ') + formatSar(entry.totalIncVat) : '') +
-                (entry.note ? '\n' + entry.note : '');
+            const isEn = lang === 'en';
+            const isZh = lang === 'zh';
+            const now = new Date(entry.at || Date.now());
+            const dateStr = formatNebrasDateTime(now, lang, { dateStyle: 'long', timeStyle: 'short' });
+            const pct = getNebrasVatPercentLabel();
+            const companyName = isEn ? 'Nebras Plastic Factory Company' : (isZh ? 'Nebras 塑料工厂公司' : 'شركة مصنع نبراس للبلاستيك');
+            const divider = '━━━━━━━━━━━━━━━━━━━━━━━━';
+            const thin = '────────────────────────';
+            let msg = divider + '\n';
+            msg += '🏭 ' + companyName + '\n';
+            msg += (isEn ? '📋 PRICE QUOTATION — A4 DOCUMENT' : (isZh ? '📋 报价单 — A4 文档' : '📋 عرض سعر — مستند A4')) + '\n';
+            msg += (isEn ? 'Quote No: ' : (isZh ? '报价编号: ' : 'رقم العرض: ')) + entry.quoteNo + '\n';
+            msg += divider + '\n\n';
+            msg += '📅 ' + (isEn ? 'Date: ' : (isZh ? '日期: ' : 'التاريخ: ')) + dateStr + '\n';
+            msg += '\n👤 ' + (ui.quoteCustomerTitle || (isEn ? 'Customer details' : (isZh ? '客户信息' : 'بيانات العميل'))) + '\n';
+            msg += (isEn ? 'Name: ' : (isZh ? '姓名: ' : 'الاسم: ')) + (entry.customerName || '—') + '\n';
+            msg += (isEn ? 'Phone: ' : (isZh ? '电话: ' : 'الجوال: ')) + (entry.phone || '—') + '\n';
+            if (entry.email) msg += (isEn ? 'Email: ' : (isZh ? '邮箱: ' : 'البريد: ')) + entry.email + '\n';
+            if (entry.city) msg += (isEn ? 'City: ' : (isZh ? '城市: ' : 'المدينة: ')) + entry.city + '\n';
+            if (entry.address) msg += (isEn ? 'Delivery: ' : (isZh ? '地址: ' : 'العنوان / التسليم: ')) + entry.address + '\n';
+            if (entry.note) msg += (isEn ? 'Notes: ' : (isZh ? '备注: ' : 'ملاحظات: ')) + entry.note + '\n';
+            const designer = extractDoorDesignerPayload(entry.lines);
+            if (designer && designer.spec) {
+                msg += '\n🚪 ' + (isEn ? 'Custom door design — Nebras Studio' : (isZh ? '定制门 — Nebras 工作室' : 'تصميم الباب — استوديو نبراس')) + '\n';
+                msg += designer.spec + '\n';
+            }
+            msg += '\n' + thin + '\n';
+            msg += (isEn ? 'PRODUCTS TABLE' : (isZh ? '产品明细表' : 'جدول المنتجات')) + '\n';
+            msg += thin + '\n';
+            (entry.lines || []).forEach(function(line, n) {
+                const specs = [line.color, line.size, line.type].filter(Boolean).join(' / ');
+                const unit = Number(line.unitPrice) || 0;
+                const qty = Number(line.qty) || 1;
+                const lineEx = unit * qty;
+                const lineInc = unit > 0 ? priceIncVat(unit) * qty : 0;
+                msg += (n + 1) + ') ' + line.productTitle + '\n';
+                if (specs) msg += '   ' + (isEn ? 'Specs: ' : (isZh ? '规格: ' : 'المواصفات: ')) + specs + '\n';
+                msg += '   ' + (isEn ? 'Qty: ' : (isZh ? '数量: ' : 'الكمية: ')) + qty;
+                if (lineEx > 0) {
+                    msg += ' | ' + (isEn ? 'Ex VAT: ' : (isZh ? '不含税: ' : 'قبل الضريبة: ')) + formatSar(lineEx);
+                    msg += ' | ' + (isEn ? 'Inc VAT: ' : (isZh ? '含税: ' : 'شامل الضريبة: ')) + formatSar(lineInc);
+                }
+                msg += '\n';
+            });
+            msg += '\n' + thin + '\n';
+            msg += '💰 ' + (isEn ? 'TOTALS' : (isZh ? '合计' : 'الإجماليات')) + '\n';
+            if (entry.subtotalExVat > 0) {
+                msg += (isEn ? 'Subtotal (ex VAT): ' : (isZh ? '小计(不含税): ' : 'المجموع قبل الضريبة: ')) + formatSar(entry.subtotalExVat) + '\n';
+                msg += (isEn ? 'VAT (' + pct + '%): ' : (isZh ? '增值税(' + pct + '%): ' : 'ضريبة (' + pct + '%): ')) + formatSar(entry.vatAmount) + '\n';
+                msg += '★ ' + (isEn ? 'Total (inc VAT): ' : (isZh ? '总计(含税): ' : 'إجمالي شامل الضريبة: ')) + formatSar(entry.totalIncVat) + '\n';
+            } else {
+                msg += (isEn ? 'Pricing: On request' : (isZh ? '价格：询价' : 'الأسعار: عند الطلب')) + '\n';
+            }
+            if (entry.paymentBankIban) {
+                msg += '\n🏦 ' + (isEn ? 'Payment IBAN: ' : (isZh ? '转账 IBAN: ' : 'حساب التحويل: ')) + entry.paymentBankIban + '\n';
+            }
+            if (entry.transferDeclared) {
+                msg += '✓ ' + (isEn ? 'Transfer declared' : (isZh ? '已声明转账' : 'تم تأكيد التحويل')) + '\n';
+            }
+            msg += '\n' + divider + '\n';
+            msg += (isEn ? 'Indicative A4 quotation — final confirmation by Nebras sales team.' :
+                (isZh ? 'A4 参考报价 — 最终以销售团队确认为准。' : 'عرض سعر A4 استرشادي — التأكيد النهائي عبر فريق المبيعات.'));
+            msg += '\n© ' + companyName;
+            return msg;
         }
 
-        /** فتح واتساب المبيعات + خدمة العملاء — فوراً (قبل await) لتفادي حظر النوافذ على الموبايل */
-        function deliverQuoteViaWhatsApp(message, ui) {
-            const salesWa = salesPhoneWhatsAppHref(message);
-            const csWa = customerServiceWhatsAppHref(message);
-            const sameNumber = salesWa && csWa && salesWa === csWa;
-            let channels = [];
-            if (salesWa) {
-                openExternalMessagingUrl(salesWa);
-                channels.push('sales');
+        function buildCartOrderWhatsAppMessage(entry, ui, lang) {
+            if (!entry) return '';
+            const isEn = lang === 'en';
+            const isZh = lang === 'zh';
+            const now = new Date(entry.at || Date.now());
+            const dateStr = formatNebrasDateTime(now, lang, { dateStyle: 'medium', timeStyle: 'short' });
+            const companyName = isEn ? 'Nebras Plastic Factory' : (isZh ? 'Nebras 工厂' : 'مصنع نبراس للبلاستيك');
+            let msg = '╔══════════════════════════════╗\n';
+            msg += isEn ? '║   🛒 PURCHASE ORDER — IN PROGRESS   ║\n' :
+                isZh ? '║      🛒 采购订单 — 处理中      ║\n' :
+                '║    🛒 طلب شراء — تحت التنفيذ     ║\n';
+            msg += '╚══════════════════════════════╝\n\n';
+            msg += '🏭 ' + companyName + '\n';
+            msg += '🆔 ' + (isEn ? 'Order ref: ' : (isZh ? '订单号: ' : 'مرجع الطلب: ')) + entry.quoteNo + '\n';
+            msg += '⏱️ ' + dateStr + '\n';
+            msg += '📌 ' + (isEn ? 'Status: Pending sales confirmation' :
+                (isZh ? '状态：待销售确认' : 'الحالة: بانتظار تأكيد المبيعات')) + '\n\n';
+            msg += '━━━━ ' + (isEn ? 'CUSTOMER' : (isZh ? '客户' : 'العميل')) + ' ━━━━\n';
+            msg += '👤 ' + (entry.customerName || '—') + '\n';
+            msg += '📱 ' + (entry.phone || '—') + '\n';
+            if (entry.city) msg += '📍 ' + entry.city + '\n';
+            if (entry.address) msg += '🚚 ' + entry.address + '\n';
+            msg += '\n━━━━ ' + (isEn ? 'ORDER ITEMS' : (isZh ? '订单明细' : 'أصناف الطلب')) + ' ━━━━\n';
+            (entry.lines || []).forEach(function(line, n) {
+                const specs = [line.color, line.size, line.type].filter(Boolean).join(' · ');
+                const qty = Number(line.qty) || 1;
+                const sku = line.sku || line.productId || '';
+                msg += '\n[' + String(n + 1).padStart(2, '0') + '] ' + line.productTitle + '\n';
+                if (sku) msg += '    SKU: ' + sku + '\n';
+                if (specs) msg += '    ↳ ' + specs + '\n';
+                msg += '    ↳ ' + (isEn ? 'Qty: ' : (isZh ? '数量: ' : 'الكمية: ')) + qty;
+                const unit = Number(line.unitPrice) || 0;
+                if (unit > 0) {
+                    msg += ' · ' + formatSar(priceIncVat(unit) * qty) + (isEn ? ' inc VAT' : (isZh ? ' 含税' : ' شامل الضريبة'));
+                }
+                msg += '\n';
+            });
+            if (entry.totalIncVat > 0) {
+                msg += '\n━━━━ ' + (isEn ? 'TOTAL' : (isZh ? '合计' : 'الإجمالي')) + ' ━━━━\n';
+                msg += '💵 ' + formatSar(entry.totalIncVat) + (isEn ? ' (inc VAT)' : (isZh ? ' (含税)' : ' (شامل الضريبة)')) + '\n';
             }
-            if (csWa && !sameNumber) {
-                setTimeout(function() {
-                    openExternalMessagingUrl(csWa);
-                }, 900);
-                channels.push('customer-service');
-            } else if (csWa && sameNumber) {
-                channels.push('customer-service');
-            }
-            return channels;
+            if (entry.note) msg += '\n📝 ' + entry.note + '\n';
+            if (entry.paymentBankIban) msg += '\n🏦 IBAN: ' + entry.paymentBankIban + '\n';
+            if (entry.transferDeclared) msg += '✓ ' + (isEn ? 'Transfer declared' : (isZh ? '已声明转账' : 'تم تأكيد التحويل')) + '\n';
+            msg += '\n⚡ ' + (isEn ? 'Sent for processing & fulfillment' :
+                (isZh ? '已发送以供跟进与执行' : 'يُرسل للمتابعة والتنفيذ')) + '\n';
+            msg += '— Nebras';
+            return msg;
         }
 
-        async function submitQuoteToSales() {
+        function buildQuoteWhatsAppMessage(entry, ui, lang, format) {
+            if (format === 'a4-quote' || isQuotePreviewOpen()) {
+                return buildQuoteA4WhatsAppMessage(entry, ui, lang);
+            }
+            return buildCartOrderWhatsAppMessage(entry, ui, lang);
+        }
+
+        /** فتح واتساب لقناة واحدة — فوراً (قبل await) لتفادي حظر النوافذ على الموبايل */
+        function deliverQuoteViaWhatsApp(message, channel) {
+            if (!channel) return [];
+            let url = '';
+            if (channel === 'customer-service') {
+                url = customerServiceWhatsAppHref(message);
+            } else {
+                url = salesPhoneWhatsAppHref(message);
+            }
+            if (url) openExternalMessagingUrl(url);
+            return url ? [channel] : [];
+        }
+
+        function renderCartOrderPreview() {
+            const el = document.getElementById('cart-order-preview');
+            if (!el) return;
+            const lang = currentLang || 'ar';
+            const ui = siteText[lang] || siteText.ar;
+            if (!nebrasCart.length) {
+                el.hidden = true;
+                el.innerHTML = '';
+                return;
+            }
+            const profile = readCheckoutFormToProfile();
+            const totals = calcCartTotals();
+            const isEn = lang === 'en';
+            const isZh = lang === 'zh';
+            const statusText = isEn ? 'In progress — pending confirmation' : (isZh ? '处理中 — 待确认' : 'تحت التنفيذ — بانتظار التأكيد');
+            const itemsHtml = nebrasCart.map(function(line, n) {
+                return '<li class="cart-order-preview-item">' +
+                    '<span class="cart-order-preview-num">' + String(n + 1).padStart(2, '0') + '</span>' +
+                    '<span class="cart-order-preview-name">' + escapeHtmlAttr(line.productTitle) + '</span>' +
+                    '<span class="cart-order-preview-qty">×' + (line.qty || 1) + '</span></li>';
+            }).join('');
+            el.innerHTML =
+                '<div class="cart-order-preview-head">' +
+                '<span class="cart-order-preview-badge"><i class="fas fa-clipboard-list"></i> ' +
+                escapeHtmlAttr(ui.cartOrderPreviewTitle || 'طلب شراء — تحت التنفيذ') + '</span>' +
+                '<span class="cart-order-preview-status">' + escapeHtmlAttr(statusText) + '</span></div>' +
+                (profile.customerName ? '<p class="cart-order-preview-customer"><i class="fas fa-user"></i> ' +
+                    escapeHtmlAttr(profile.customerName) + '</p>' : '') +
+                '<ul class="cart-order-preview-list">' + itemsHtml + '</ul>' +
+                (totals.totalInc > 0 ? '<p class="cart-order-preview-total">' +
+                    escapeHtmlAttr(ui.cartProductsTotalInc || 'إجمالي المنتجات شامل الضريبة: ') + formatSar(totals.totalInc) + '</p>' : '');
+            el.hidden = false;
+        }
+
+        async function submitCartOrQuote(channel) {
+            if (channel !== 'sales' && channel !== 'customer-service') return;
             const ui = siteText[currentLang || 'ar'] || siteText.ar;
+            const isA4 = isQuotePreviewOpen();
+            const messageFormat = isA4 ? 'a4-quote' : 'cart-order';
+            const channelLabel = channel === 'customer-service'
+                ? (ui.cartSendCsBtn || 'خدمة العملاء')
+                : (ui.cartSendSalesBtn || 'المبيعات');
             if (!nebrasCart.length) {
                 alert(ui.cartEmpty || 'أضف منتجات إلى السلة أولاً.');
                 return;
@@ -5001,17 +5153,23 @@
             const profile = validation.profile;
             const payment = readCartPaymentFromForm();
             if (!currentQuoteIssue || !currentQuoteIssue.quoteNo) {
-                let confirmMsg = (ui.sendQuoteConfirm || 'إرسال الطلب للمبيعات وخدمة العملاء؟') + '\n\n' +
-                    (ui.sendQuoteConfirmChannels || 'سيتم فتح واتساب: المبيعات + خدمة العملاء') + '\n\n' +
-                    formatQuoteLinesForMessage(nebrasCart, currentLang);
+                let confirmMsg = isA4
+                    ? (channel === 'sales' ? ui.sendQuoteA4SalesConfirm : ui.sendQuoteA4CsConfirm)
+                    : (channel === 'sales' ? ui.sendOrderSalesConfirm : ui.sendOrderCsConfirm);
+                confirmMsg = (confirmMsg || ('إرسال إلى ' + channelLabel + '؟')) + '\n\n';
+                if (isA4) {
+                    confirmMsg += (ui.sendQuoteA4Hint || 'سيتم إرسال عرض السعر بصيغة A4') + '\n\n';
+                } else {
+                    confirmMsg += (ui.sendOrderHint || 'سيتم إرسال أوردر تحت التنفيذ') + '\n\n';
+                }
+                confirmMsg += formatQuoteLinesForMessage(nebrasCart, currentLang);
                 if (payment.bankIban) {
                     confirmMsg += '\n\n' + (ui.cartPaymentConfirmBank || 'الحساب: ') + payment.bankIban;
                 }
                 if (payment.receiptDataUrl) {
                     confirmMsg += '\n' + (ui.cartPaymentReceiptAttached || '✓ مرفق: صورة الحوالة');
                 }
-                const ok = confirm(confirmMsg);
-                if (!ok) return;
+                if (!confirm(confirmMsg)) return;
                 currentQuoteIssue = issueNextQuoteNumber();
             }
             const cartTotals = calcCartTotals();
@@ -5038,7 +5196,9 @@
                 vatRate: cartTotals.vatRate,
                 quoteChannel: quoteChannel,
                 quoteKind: quoteChannel === 'door-designer' ? 'custom-door-design' : 'store-cart',
-                quoteType: 'quote',
+                quoteType: isA4 ? 'quote' : 'order',
+                messageFormat: messageFormat,
+                sentToChannel: channel,
                 catalogProductCount: (siteProducts || []).filter(function(p) { return p && p.visible !== false && productHasShop(p); }).length,
                 catalogVariantCount: (siteProducts || []).reduce(function(n, p) {
                     return n + (productHasShop(p) ? (p.variants || []).length : 0);
@@ -5061,11 +5221,11 @@
                 alert('تعذّر حفظ الطلب — جرّبي صورة أصغر للحوالة أو أعدي المحاولة.');
                 return;
             }
-            const msg = buildQuoteWhatsAppMessage(entry, ui, currentLang);
-            const waChannels = deliverQuoteViaWhatsApp(msg, ui);
+            const msg = buildQuoteWhatsAppMessage(entry, ui, currentLang, messageFormat);
+            const waChannels = deliverQuoteViaWhatsApp(msg, channel);
             entry.notifyChannels = waChannels;
-            entry.notifiedSalesPhone = systemSettings.mainSalesPhone || '';
-            entry.notifiedCustomerServicePhone = systemSettings.customerServicePhone || '';
+            entry.notifiedSalesPhone = channel === 'sales' ? (systemSettings.mainSalesPhone || '') : '';
+            entry.notifiedCustomerServicePhone = channel === 'customer-service' ? (systemSettings.customerServicePhone || '') : '';
             const cloudOk = await pushQuoteToNebrasCloud(entry);
             if (entry.transferReceiptCloudUrl) {
                 const refreshed = loadSalesQuotesInbox();
@@ -5083,15 +5243,21 @@
                 renderAdminAnalyticsPanel();
             }
             if (currentAdmin) {
-                addAuditLog('عرض سعر وارد', entry.quoteNo);
+                addAuditLog(isA4 ? 'عرض سعر A4 وارد' : 'طلب سلة وارد', entry.quoteNo + ' → ' + channelLabel);
             }
-            let doneMsg = (ui.sendQuoteDone || 'تم حفظ الطلب وإرساله للمبيعات وخدمة العملاء. الرقم:') + ' ' + entry.quoteNo;
-            if (waChannels.indexOf('sales') >= 0) {
-                doneMsg += '\n\n📞 ' + (ui.salesHotlineLabel || 'المبيعات:') + ' ' + (systemSettings.mainSalesPhone || '');
+            const doneBase = channel === 'customer-service'
+                ? (ui.sendQuoteDoneCs || 'تم حفظ الطلب وإرساله لخدمة العملاء. الرقم:')
+                : (ui.sendQuoteDoneSales || 'تم حفظ الطلب وإرساله للمبيعات. الرقم:');
+            let doneMsg = doneBase + ' ' + entry.quoteNo;
+            if (isA4) {
+                doneMsg += '\n📄 ' + (ui.sendQuoteA4Sent || 'صيغة A4');
+            } else {
+                doneMsg += '\n🛒 ' + (ui.sendOrderSent || 'أوردر تحت التنفيذ');
             }
-            if (waChannels.indexOf('customer-service') >= 0) {
-                doneMsg += '\n📞 ' + (ui.customerHotlineLabel || 'خدمة العملاء:') + ' ' + (systemSettings.customerServicePhone || '');
-            }
+            const phoneShown = channel === 'customer-service'
+                ? systemSettings.customerServicePhone
+                : systemSettings.mainSalesPhone;
+            doneMsg += '\n📞 ' + channelLabel + ': ' + (phoneShown || '');
             doneMsg += '\n\n' + (ui.sendQuoteWaHint || 'اضغط «إرسال» في واتساب لإتمام الطلب.');
             if (entry.transferReceiptDataUrl) {
                 doneMsg += '\n\n' + (ui.sendQuoteReceiptSent || '✓ تم إرسال صورة إيصال الحوالة مع الطلب — ستظهر في تقرير الإدارة.');
@@ -5107,9 +5273,11 @@
         }
 
         function updateSalesQuoteFab() {
-            const fab = document.getElementById('fab-send-quote-sales');
-            if (!fab) return;
-            fab.classList.toggle('show', nebrasCart.length > 0);
+            const group = document.getElementById('fab-send-channel-group');
+            const legacyFab = document.getElementById('fab-send-quote-sales');
+            const show = nebrasCart.length > 0;
+            if (group) group.classList.toggle('show', show);
+            if (legacyFab) legacyFab.classList.toggle('show', show);
         }
 
         async function displaySalesQuotesInbox() {
@@ -13452,18 +13620,39 @@
                 bankIbanCopied: 'تم نسخ رقم الآيبان',
                 bankIbanCopyPrompt: 'انسخ رقم الآيبان:',
                 scmDashboardHint: 'كل أيقونة: «محتوى داخل الأيقونة» (نصوص · صور · وثائق) + الإجراء. التعديل فوري بدون كود.',
-                sendQuoteConfirm: 'إرسال الطلب للمبيعات وخدمة العملاء؟',
-                sendQuoteConfirmChannels: 'سيتم فتح واتساب: المبيعات + خدمة العملاء (اضغط إرسال في كل محادثة)',
+                sendQuoteConfirm: 'إرسال الطلب؟',
+                sendQuoteConfirmChannels: 'اختر المبيعات أو خدمة العملاء',
+                sendOrderSalesConfirm: 'إرسال أوردر السلة (تحت التنفيذ) للمبيعات؟',
+                sendOrderCsConfirm: 'إرسال أوردر السلة (تحت التنفيذ) لخدمة العملاء؟',
+                sendQuoteA4SalesConfirm: 'إرسال عرض السعر A4 للمبيعات؟',
+                sendQuoteA4CsConfirm: 'إرسال عرض السعر A4 لخدمة العملاء؟',
+                sendOrderHint: 'سيتم إرسال أوردر تحت التنفيذ',
+                sendQuoteA4Hint: 'سيتم إرسال عرض السعر بصيغة A4 الرسمية',
+                sendQuoteDoneSales: 'تم حفظ الطلب وإرساله للمبيعات. الرقم:',
+                sendQuoteDoneCs: 'تم حفظ الطلب وإرساله لخدمة العملاء. الرقم:',
+                sendQuoteA4Sent: 'صيغة A4',
+                sendOrderSent: 'أوردر تحت التنفيذ',
+                cartSendOptionalLabel: 'إرسال اختياري — اختر القسم',
+                cartSendSalesBtn: 'المبيعات',
+                cartSendCsBtn: 'خدمة العملاء',
+                cartSendSalesTitle: 'إرسال أوردر للمبيعات',
+                cartSendCsTitle: 'إرسال أوردر لخدمة العملاء',
+                quoteSendOptionalLabel: 'إرسال عرض السعر A4 — اختياري',
+                quoteSendSalesTitle: 'إرسال A4 للمبيعات',
+                quoteSendCsTitle: 'إرسال A4 لخدمة العملاء',
+                cartOrderPreviewTitle: 'طلب شراء — تحت التنفيذ',
+                cartRequestQuoteA4: 'اطلب عرض سعر A4',
                 sendQuoteNamePrompt: 'اسم الشركة / العميل (اختياري):',
                 sendQuotePhonePrompt: 'رقم التواصل:',
                 sendQuoteNotePrompt: 'ملاحظات للمبيعات:',
-                sendQuoteDone: 'تم حفظ الطلب وإرساله للمبيعات وخدمة العملاء. الرقم:',
+                sendQuoteDone: 'تم حفظ الطلب. الرقم:',
                 sendQuoteOpenWa: 'فتح واتساب المبيعات؟',
                 sendQuoteWaHint: 'اضغط «إرسال» في واتساب لإتمام الطلب.',
                 sendQuoteCloudOk: 'الطلب محفوظ ويظهر في: المبيعات → طلبات عروض الأسعار + التحليلات.',
                 sendQuoteWaIntro: 'طلب عرض سعر — مصنع نبراس',
-                cartSendSales: 'إرسال للمبيعات وخدمة العملاء',
-                fabSendQuoteSales: 'إرسال عرض السعر للمبيعات وخدمة العملاء',
+                cartSendSales: 'المبيعات',
+                fabSendSales: 'إرسال للمبيعات',
+                fabSendCs: 'إرسال لخدمة العملاء',
                 salesInboxTitle: 'طلبات عروض الأسعار الواردة (من السلة)',
                 salesInboxHint: 'كل عرض سعر يرسله العميل من الموقع يصل هنا للمراجعة.',
                 salesInboxEmpty: 'لا طلبات عروض أسعار بعد.',
@@ -13928,18 +14117,39 @@
                 bankIbanCopied: 'IBAN copied to clipboard',
                 bankIbanCopyPrompt: 'Copy IBAN:',
                 scmDashboardHint: 'Each tile: inner content (text, images, documents) + action. No code edits.',
-                sendQuoteConfirm: 'Send this quote to sales and customer service?',
-                sendQuoteConfirmChannels: 'WhatsApp will open for sales + customer service (tap Send in each chat)',
+                sendQuoteConfirm: 'Send this request?',
+                sendQuoteConfirmChannels: 'Choose sales or customer service',
+                sendOrderSalesConfirm: 'Send cart order (in progress) to sales?',
+                sendOrderCsConfirm: 'Send cart order (in progress) to customer service?',
+                sendQuoteA4SalesConfirm: 'Send A4 quotation to sales?',
+                sendQuoteA4CsConfirm: 'Send A4 quotation to customer service?',
+                sendOrderHint: 'An in-progress order will be sent',
+                sendQuoteA4Hint: 'Official A4 quotation format will be sent',
+                sendQuoteDoneSales: 'Saved and sent to sales. Ref:',
+                sendQuoteDoneCs: 'Saved and sent to customer service. Ref:',
+                sendQuoteA4Sent: 'A4 format',
+                sendOrderSent: 'Order in progress',
+                cartSendOptionalLabel: 'Optional send — choose department',
+                cartSendSalesBtn: 'Sales',
+                cartSendCsBtn: 'Customer service',
+                cartSendSalesTitle: 'Send order to sales',
+                cartSendCsTitle: 'Send order to customer service',
+                quoteSendOptionalLabel: 'Send A4 quote — optional',
+                quoteSendSalesTitle: 'Send A4 to sales',
+                quoteSendCsTitle: 'Send A4 to customer service',
+                cartOrderPreviewTitle: 'Purchase order — in progress',
+                cartRequestQuoteA4: 'Request A4 quote',
                 sendQuoteNamePrompt: 'Company / customer name (optional):',
                 sendQuotePhonePrompt: 'Contact phone:',
                 sendQuoteNotePrompt: 'Notes for sales:',
-                sendQuoteDone: 'Quote saved and sent to sales & customer service. Ref:',
+                sendQuoteDone: 'Request saved. Ref:',
                 sendQuoteOpenWa: 'Open sales WhatsApp?',
                 sendQuoteWaHint: 'Tap Send in WhatsApp to complete the request.',
                 sendQuoteCloudOk: 'Saved — visible under Sales → Quote requests + Analytics.',
                 sendQuoteWaIntro: 'Nebras price quote request',
-                cartSendSales: 'Send to sales & customer service',
-                fabSendQuoteSales: 'Send quote to sales & customer service',
+                cartSendSales: 'Sales',
+                fabSendSales: 'Send to sales',
+                fabSendCs: 'Send to customer service',
                 salesInboxTitle: 'Incoming quote requests (from cart)',
                 salesInboxHint: 'Customer quote submissions from the storefront appear here.',
                 salesInboxEmpty: 'No quote requests yet.',
@@ -14365,18 +14575,39 @@
                 bankIbanCopied: '已复制 IBAN',
                 bankIbanCopyPrompt: '复制 IBAN：',
                 scmDashboardHint: '每个图标：内部内容（文字、图片、文档）+ 操作，无需改代码。',
-                sendQuoteConfirm: '将报价请求发送给销售和客服？',
-                sendQuoteConfirmChannels: '将打开 WhatsApp：销售 + 客服（请在每个对话中点击发送）',
+                sendQuoteConfirm: '发送此请求？',
+                sendQuoteConfirmChannels: '选择销售或客服',
+                sendOrderSalesConfirm: '将购物车订单（处理中）发送给销售？',
+                sendOrderCsConfirm: '将购物车订单（处理中）发送给客服？',
+                sendQuoteA4SalesConfirm: '将 A4 报价单发送给销售？',
+                sendQuoteA4CsConfirm: '将 A4 报价单发送给客服？',
+                sendOrderHint: '将发送处理中订单',
+                sendQuoteA4Hint: '将发送正式 A4 报价格式',
+                sendQuoteDoneSales: '已保存并发送至销售。编号：',
+                sendQuoteDoneCs: '已保存并发送至客服。编号：',
+                sendQuoteA4Sent: 'A4 格式',
+                sendOrderSent: '处理中订单',
+                cartSendOptionalLabel: '可选发送 — 选择部门',
+                cartSendSalesBtn: '销售',
+                cartSendCsBtn: '客服',
+                cartSendSalesTitle: '发送订单给销售',
+                cartSendCsTitle: '发送订单给客服',
+                quoteSendOptionalLabel: '发送 A4 报价 — 可选',
+                quoteSendSalesTitle: '发送 A4 给销售',
+                quoteSendCsTitle: '发送 A4 给客服',
+                cartOrderPreviewTitle: '采购订单 — 处理中',
+                cartRequestQuoteA4: '申请 A4 报价',
                 sendQuoteNamePrompt: '公司/客户名称（可选）：',
                 sendQuotePhonePrompt: '联系电话：',
                 sendQuoteNotePrompt: '给销售的备注：',
-                sendQuoteDone: '已保存并发送至销售与客服。编号：',
+                sendQuoteDone: '已保存。编号：',
                 sendQuoteOpenWa: '打开销售 WhatsApp？',
                 sendQuoteWaHint: '请在 WhatsApp 中点击「发送」以完成请求。',
                 sendQuoteCloudOk: '已保存 — 可在销售 → 报价请求 + 分析中查看。',
                 sendQuoteWaIntro: 'Nebras 报价请求',
-                cartSendSales: '发送至销售与客服',
-                fabSendQuoteSales: '发送报价给销售与客服',
+                cartSendSales: '销售',
+                fabSendSales: '发送至销售',
+                fabSendCs: '发送至客服',
                 salesInboxTitle: '收到的报价请求（来自购物车）',
                 salesInboxHint: '客户从网站提交的报价会显示在这里。',
                 salesInboxEmpty: '暂无报价请求。',
@@ -14493,13 +14724,31 @@
             setTxt('scm-visitor-hint', text.scmVisitorHint);
             setTxt('sales-quotes-inbox-title', text.salesInboxTitle);
             setTxt('sales-quotes-inbox-hint', text.salesInboxHint);
-            setTxt('cart-send-sales-btn', text.cartSendSales);
-            setTxt('quote-send-sales-btn', text.cartSendSales);
-            const fabQuote = document.getElementById('fab-send-quote-sales');
-            if (fabQuote && text.fabSendQuoteSales) {
-                fabQuote.title = text.fabSendQuoteSales;
-                fabQuote.setAttribute('aria-label', text.fabSendQuoteSales);
+            setTxt('cart-send-channel-label', text.cartSendOptionalLabel);
+            setTxt('quote-send-channel-label', text.quoteSendOptionalLabel);
+            setTxt('cart-send-sales-label', text.cartSendSalesBtn);
+            setTxt('cart-send-cs-label', text.cartSendCsBtn);
+            setTxt('quote-send-sales-label', text.cartSendSalesBtn);
+            setTxt('quote-send-cs-label', text.cartSendCsBtn);
+            setTxt('cart-request-quote-btn', text.cartRequestQuoteA4 || text.quoteConfirmProceed);
+            const fabSales = document.getElementById('fab-send-sales');
+            const fabCs = document.getElementById('fab-send-cs');
+            if (fabSales && text.fabSendSales) {
+                fabSales.title = text.fabSendSales;
+                fabSales.setAttribute('aria-label', text.fabSendSales);
             }
+            if (fabCs && text.fabSendCs) {
+                fabCs.title = text.fabSendCs;
+                fabCs.setAttribute('aria-label', text.fabSendCs);
+            }
+            const cartSalesBtn = document.getElementById('cart-send-sales-btn');
+            const cartCsBtn = document.getElementById('cart-send-cs-btn');
+            const quoteSalesBtn = document.getElementById('quote-send-sales-btn');
+            const quoteCsBtn = document.getElementById('quote-send-cs-btn');
+            if (cartSalesBtn && text.cartSendSalesTitle) cartSalesBtn.title = text.cartSendSalesTitle;
+            if (cartCsBtn && text.cartSendCsTitle) cartCsBtn.title = text.cartSendCsTitle;
+            if (quoteSalesBtn && text.quoteSendSalesTitle) quoteSalesBtn.title = text.quoteSendSalesTitle;
+            if (quoteCsBtn && text.quoteSendCsTitle) quoteCsBtn.title = text.quoteSendCsTitle;
             const scmAboutTab = document.querySelector('.scm-tabs button[data-scm-tab="about"]');
             if (scmAboutTab) scmAboutTab.textContent = text.scmTabAbout;
             renderAboutCards(currentLang || 'ar');
@@ -14639,7 +14888,8 @@
         window.closeSalesQuoteDoorDesign = closeSalesQuoteDoorDesign;
         window.openAdminAnalytics = openAdminAnalytics;
         window.renderAdminAnalyticsPanel = renderAdminAnalyticsPanel;
-        window.submitQuoteToSales = submitQuoteToSales;
+        window.submitCartOrQuote = submitCartOrQuote;
+        window.submitQuoteToSales = function() { submitCartOrQuote('sales'); };
         window.deleteAnalyticsQuote = deleteAnalyticsQuote;
         window.deleteAnalyticsVisitor = deleteAnalyticsVisitor;
         window.deleteAnalyticsComplaint = deleteAnalyticsComplaint;

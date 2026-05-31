@@ -422,12 +422,14 @@ img, video, canvas, svg {
         padding-inline: 4%;
     }
 
+    .fab-send-channel-group,
     .fab-send-quote-sales,
     .fab-cart,
     .fab-send-transfer-receipt {
         bottom: calc(14px + env(safe-area-inset-bottom, 0px));
     }
 
+    [dir="rtl"] .fab-send-channel-group,
     [dir="rtl"] .fab-send-quote-sales,
     [dir="rtl"] .fab-cart {
         right: calc(12px + env(safe-area-inset-right, 0px));
@@ -438,6 +440,13 @@ img, video, canvas, svg {
         max-width: 100%;
         border-radius: 16px 16px 0 0;
         max-height: min(92vh, 92dvh);
+    }
+
+    .cart-send-icon-btn,
+    .quote-send-icon-btn {
+        min-width: calc(50% - 8px);
+        flex: 1;
+        min-height: 64px;
     }
 
     .cart-drawer-actions .primary,

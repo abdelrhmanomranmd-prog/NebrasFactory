@@ -40,10 +40,12 @@ def main():
             if fn + '(' not in js[js.find('function setLanguage'):js.find('function setLanguage') + 8000]:
                 warn(f'setLanguage may not call {fn}')
 
-    if 'deliverQuoteViaWhatsApp' not in js:
-        err('deliverQuoteViaWhatsApp missing — quote may not reach customer service')
-    if 'customerServiceWhatsAppHref' not in js:
-        warn('customerServiceWhatsAppHref missing')
+    if 'submitCartOrQuote' not in js:
+        err('submitCartOrQuote missing — optional sales/CS send broken')
+    if 'buildQuoteA4WhatsAppMessage' not in js:
+        err('buildQuoteA4WhatsAppMessage missing — A4 WhatsApp format broken')
+    if 'buildCartOrderWhatsAppMessage' not in js:
+        err('buildCartOrderWhatsAppMessage missing — cart order format broken')
     if 'PRIMARY_GOVERNANCE_USERNAMES' not in js:
         err('PRIMARY_GOVERNANCE_USERNAMES missing')
 
