@@ -582,13 +582,13 @@
                 z-index: 1002;
             }
 
-            nav {
+            header nav {
                 flex: 1 1 100%;
                 order: 3;
                 width: 100%;
             }
 
-            nav ul,
+            header nav ul,
             #nav-menu {
                 position: absolute;
                 top: 100%;
@@ -606,12 +606,12 @@
                 list-style: none;
             }
 
-            nav ul.active,
+            header nav ul.active,
             #nav-menu.active {
                 display: flex;
             }
 
-            nav ul li a {
+            header nav ul li a {
                 display: block;
                 padding: 10px 4px;
                 font-size: 1rem;

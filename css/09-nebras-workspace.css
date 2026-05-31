@@ -322,6 +322,32 @@ body.nebras-workspace-active #nebras-workspace {
 }
 
 @media (max-width: 768px) {
+    /* لا تورّث قواعد header nav — أزرار المنصة/المعرض/المتجر أفقية فقط */
+    .workspace-pillar-nav {
+        flex: 0 0 auto;
+        order: unset;
+        width: auto;
+        flex-shrink: 0;
+    }
+
+    .workspace-pillar-btn {
+        flex: 1 1 0;
+        min-height: auto;
+        align-self: auto;
+        min-width: 0;
+        padding: 10px 8px;
+        font-size: 0.82rem;
+    }
+
+    .workspace-topbar {
+        flex-shrink: 0;
+    }
+
+    .workspace-main {
+        flex: 1 1 auto;
+        min-height: 0;
+    }
+
     .workspace-branches-layout {
         grid-template-columns: 1fr;
     }

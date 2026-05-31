@@ -362,6 +362,10 @@ body.nebras-mobile-bar-active.admin-session .nebras-mobile-commerce-bar {
 }
 
 @media (max-width: 768px) {
+    body.nebras-mobile-bar-active:not(.nebras-workspace-active):not(.admin-session) {
+        padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+    }
+
     .nebras-trust-strip {
         margin: -16px 4% 24px;
     }
@@ -375,6 +379,15 @@ body.nebras-mobile-bar-active.admin-session .nebras-mobile-commerce-bar {
         width: 38px;
         height: 38px;
         font-size: 0.95rem;
+    }
+
+    .visitor-icons-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+    }
+
+    .visitor-icon-card.spotlight-card {
+        min-height: 160px;
     }
 }
 

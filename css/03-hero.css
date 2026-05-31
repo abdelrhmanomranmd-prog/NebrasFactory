@@ -145,6 +145,22 @@
     }
 }
 
+@media (max-width: 768px) {
+    .hero.hero-real {
+        min-height: min(58vh, 480px);
+    }
+
+    .hero-content-wrap {
+        min-height: min(58vh, 480px);
+        padding: 24px 5% 56px;
+    }
+
+    .hero-location-bar {
+        font-size: 0.82rem;
+        padding: 10px 12px;
+    }
+}
+
 /* توافق قديم */
 .hero:not(.hero-real) {
     background-color: #152f48;
