@@ -379,7 +379,114 @@
     .dashboard-actions {
         grid-template-columns: 1fr;
     }
-    .dashboard-actions {
+}
+
+/* ——— موبايل شامل: وضوح + بدون تمرير أفقي + أداء ——— */
+html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
+body {
+    overflow-x: hidden;
+    max-width: 100%;
+    min-height: 100vh;
+    min-height: 100dvh;
+}
+
+img, video, canvas, svg {
+    max-width: 100%;
+}
+
+.nebras-workspace-root,
+#nebras-workspace,
+.workspace-shell,
+.door-studio-layout,
+.cart-drawer,
+.product-shop-modal {
+    max-width: 100%;
+}
+
+@media (max-width: 768px) {
+    .hero.hero-real {
+        min-height: min(52vh, 480px);
+    }
+
+    .hero-content-wrap.hero-visual-only {
+        min-height: min(48vh, 420px);
+    }
+
+    .site-structure,
+    .nebras-partners-section,
+    .nebras-storefront-block {
+        padding-inline: 4%;
+    }
+
+    .fab-send-quote-sales,
+    .fab-cart,
+    .fab-send-transfer-receipt {
+        bottom: calc(14px + env(safe-area-inset-bottom, 0px));
+    }
+
+    [dir="rtl"] .fab-send-quote-sales,
+    [dir="rtl"] .fab-cart {
+        right: calc(12px + env(safe-area-inset-right, 0px));
+    }
+
+    .cart-drawer-overlay.show .cart-drawer {
+        width: 100%;
+        max-width: 100%;
+        border-radius: 16px 16px 0 0;
+        max-height: min(92vh, 92dvh);
+    }
+
+    .cart-drawer-actions .primary,
+    .cart-drawer-actions .secondary {
+        min-height: 48px;
+        font-size: 1rem;
+    }
+
+    .quote-print-overlay {
+        padding: 10px 6px calc(10px + env(safe-area-inset-bottom, 0px));
+        align-items: flex-start;
+    }
+
+    .quote-a4 {
+        width: 100%;
+        max-width: 100%;
+        padding: 14px 12px;
+        font-size: 0.88rem;
+    }
+
+    .quote-print-actions {
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        background: rgba(240, 242, 245, 0.96);
+        padding: 8px 4px;
+    }
+
+    .nebras-mobile-commerce-bar {
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    .door-designer--studio .door-studio-panel-scroll {
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .admin-dashboard.show {
+        padding-inline: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .visitor-icons-grid {
         grid-template-columns: 1fr;
+    }
+
+    .product-card {
+        max-width: 100%;
+        height: auto;
+        min-height: 280px;
     }
 }

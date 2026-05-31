@@ -40,8 +40,10 @@ def main():
             if fn + '(' not in js[js.find('function setLanguage'):js.find('function setLanguage') + 8000]:
                 warn(f'setLanguage may not call {fn}')
 
-    if 'isMainGovernanceAdmin' not in js:
-        err('isMainGovernanceAdmin missing')
+    if 'deliverQuoteViaWhatsApp' not in js:
+        err('deliverQuoteViaWhatsApp missing — quote may not reach customer service')
+    if 'customerServiceWhatsAppHref' not in js:
+        warn('customerServiceWhatsAppHref missing')
     if 'PRIMARY_GOVERNANCE_USERNAMES' not in js:
         err('PRIMARY_GOVERNANCE_USERNAMES missing')
 

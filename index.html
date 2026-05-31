@@ -358,7 +358,7 @@
         <i class="fas fa-shopping-cart" aria-hidden="true"></i>
         <span class="cart-badge-count" id="cart-badge-count" hidden>0</span>
     </button>
-    <button type="button" class="fab-send-quote-sales" id="fab-send-quote-sales" onclick="submitQuoteToSales()" title="إرسال عرض السعر للمبيعات" aria-label="إرسال عرض السعر للمبيعات">
+    <button type="button" class="fab-send-quote-sales" id="fab-send-quote-sales" onclick="submitQuoteToSales()" title="إرسال عرض السعر للمبيعات وخدمة العملاء" aria-label="إرسال عرض السعر للمبيعات وخدمة العملاء">
         <i class="fas fa-paper-plane" aria-hidden="true"></i>
     </button>
     <button type="button" class="fab-send-transfer-receipt" id="fab-send-transfer-receipt" onclick="openCartDrawer();document.getElementById('cart-payment-block')&&document.getElementById('cart-payment-block').scrollIntoView({behavior:'smooth'})" title="إرسال صورة الحوالة للمبيعات" aria-label="إرسال صورة الحوالة للمبيعات">
@@ -427,7 +427,7 @@
             <div id="cart-payment-mount"></div>
             <div class="cart-drawer-actions">
                 <button type="button" class="primary" id="cart-request-quote-btn" onclick="confirmAndOpenQuote()">اطلب عرض سعر</button>
-                <button type="button" class="primary" id="cart-send-sales-btn" onclick="submitQuoteToSales()">إرسال السلة للمبيعات</button>
+                <button type="button" class="primary" id="cart-send-sales-btn" onclick="submitQuoteToSales()">إرسال للمبيعات وخدمة العملاء</button>
                 <button type="button" class="secondary" id="cart-close-btn" onclick="closeCartDrawer()">إغلاق</button>
             </div>
         </div>
@@ -440,7 +440,7 @@
     <div class="quote-print-overlay" id="quote-print-overlay">
         <div class="quote-print-actions" style="text-align:center;margin-bottom:16px;display:flex;flex-wrap:wrap;gap:10px;justify-content:center;">
             <button type="button" class="primary" onclick="window.print()">طباعة / PDF</button>
-            <button type="button" class="primary" id="quote-send-sales-btn" onclick="submitQuoteToSales()">إرسال عرض السعر للمبيعات</button>
+            <button type="button" class="primary" id="quote-send-sales-btn" onclick="submitQuoteToSales()">إرسال للمبيعات وخدمة العملاء</button>
             <button type="button" class="secondary" id="quote-mark-finalized-btn" onclick="markCurrentQuoteFinalized()">تسجيل عرض السعر كمنفّذ</button>
             <button type="button" class="secondary" onclick="closeQuotePreview()">إغلاق</button>
         </div>

@@ -4918,13 +4918,72 @@
             };
         }
 
-        function salesPhoneWhatsAppHref(message) {
-            const raw = String(systemSettings.mainSalesPhone || '').replace(/\D/g, '');
+        function normalizeSaPhoneE164(phone) {
+            const raw = String(phone || '').replace(/\D/g, '');
             if (raw.length < 9) return '';
-            let n = raw;
-            if (n.startsWith('0')) n = '966' + n.slice(1);
-            else if (!n.startsWith('966')) n = '966' + n;
+            if (raw.startsWith('0')) return '966' + raw.slice(1);
+            if (!raw.startsWith('966')) return '966' + raw;
+            return raw;
+        }
+
+        function phoneWhatsAppHref(phone, message) {
+            const n = normalizeSaPhoneE164(phone);
+            if (!n) return '';
             return 'https://wa.me/' + n + '?text=' + encodeURIComponent(message || '');
+        }
+
+        function salesPhoneWhatsAppHref(message) {
+            return phoneWhatsAppHref(systemSettings.mainSalesPhone, message);
+        }
+
+        function customerServiceWhatsAppHref(message) {
+            return phoneWhatsAppHref(systemSettings.customerServicePhone, message);
+        }
+
+        function openExternalMessagingUrl(url) {
+            if (!url) return false;
+            try {
+                const w = window.open(url, '_blank', 'noopener,noreferrer');
+                if (!w || w.closed) {
+                    window.location.href = url;
+                }
+                return true;
+            } catch (e) {
+                window.location.href = url;
+                return true;
+            }
+        }
+
+        function buildQuoteWhatsAppMessage(entry, ui, lang) {
+            if (!entry) return '';
+            return (ui.sendQuoteWaIntro || 'طلب عرض سعر نبراس') + '\n' + entry.quoteNo + '\n' +
+                entry.customerName + '\n' + entry.phone + '\n' +
+                (entry.address ? entry.address + '\n' : '') +
+                (entry.city ? entry.city + '\n' : '') +
+                formatQuoteLinesForMessage(entry.lines, lang) +
+                (entry.totalIncVat > 0 ? '\n' + (ui.cartProductsTotalInc || 'إجمالي المنتجات شامل الضريبة: ') + formatSar(entry.totalIncVat) : '') +
+                (entry.note ? '\n' + entry.note : '');
+        }
+
+        /** فتح واتساب المبيعات + خدمة العملاء — فوراً (قبل await) لتفادي حظر النوافذ على الموبايل */
+        function deliverQuoteViaWhatsApp(message, ui) {
+            const salesWa = salesPhoneWhatsAppHref(message);
+            const csWa = customerServiceWhatsAppHref(message);
+            const sameNumber = salesWa && csWa && salesWa === csWa;
+            let channels = [];
+            if (salesWa) {
+                openExternalMessagingUrl(salesWa);
+                channels.push('sales');
+            }
+            if (csWa && !sameNumber) {
+                setTimeout(function() {
+                    openExternalMessagingUrl(csWa);
+                }, 900);
+                channels.push('customer-service');
+            } else if (csWa && sameNumber) {
+                channels.push('customer-service');
+            }
+            return channels;
         }
 
         async function submitQuoteToSales() {
@@ -4942,7 +5001,9 @@
             const profile = validation.profile;
             const payment = readCartPaymentFromForm();
             if (!currentQuoteIssue || !currentQuoteIssue.quoteNo) {
-                let confirmMsg = (ui.sendQuoteConfirm || 'إرسال طلب عرض سعر للمبيعات؟') + '\n\n' + formatQuoteLinesForMessage(nebrasCart, currentLang);
+                let confirmMsg = (ui.sendQuoteConfirm || 'إرسال الطلب للمبيعات وخدمة العملاء؟') + '\n\n' +
+                    (ui.sendQuoteConfirmChannels || 'سيتم فتح واتساب: المبيعات + خدمة العملاء') + '\n\n' +
+                    formatQuoteLinesForMessage(nebrasCart, currentLang);
                 if (payment.bankIban) {
                     confirmMsg += '\n\n' + (ui.cartPaymentConfirmBank || 'الحساب: ') + payment.bankIban;
                 }
@@ -5000,6 +5061,11 @@
                 alert('تعذّر حفظ الطلب — جرّبي صورة أصغر للحوالة أو أعدي المحاولة.');
                 return;
             }
+            const msg = buildQuoteWhatsAppMessage(entry, ui, currentLang);
+            const waChannels = deliverQuoteViaWhatsApp(msg, ui);
+            entry.notifyChannels = waChannels;
+            entry.notifiedSalesPhone = systemSettings.mainSalesPhone || '';
+            entry.notifiedCustomerServicePhone = systemSettings.customerServicePhone || '';
             const cloudOk = await pushQuoteToNebrasCloud(entry);
             if (entry.transferReceiptCloudUrl) {
                 const refreshed = loadSalesQuotesInbox();
@@ -5019,15 +5085,14 @@
             if (currentAdmin) {
                 addAuditLog('عرض سعر وارد', entry.quoteNo);
             }
-            const msg = (ui.sendQuoteWaIntro || 'طلب عرض سعر نبراس') + '\n' + entry.quoteNo + '\n' +
-                entry.customerName + '\n' + entry.phone + '\n' +
-                (entry.address ? entry.address + '\n' : '') +
-                (entry.city ? entry.city + '\n' : '') +
-                formatQuoteLinesForMessage(entry.lines, currentLang) +
-                (entry.totalIncVat > 0 ? '\n' + (ui.cartProductsTotalInc || 'إجمالي المنتجات شامل الضريبة: ') + formatSar(entry.totalIncVat) : '') +
-                (entry.note ? '\n' + entry.note : '');
-            const wa = salesPhoneWhatsAppHref(msg);
-            let doneMsg = (ui.sendQuoteDone || 'تم إرسال الطلب للمبيعات.') + ' ' + entry.quoteNo;
+            let doneMsg = (ui.sendQuoteDone || 'تم حفظ الطلب وإرساله للمبيعات وخدمة العملاء. الرقم:') + ' ' + entry.quoteNo;
+            if (waChannels.indexOf('sales') >= 0) {
+                doneMsg += '\n\n📞 ' + (ui.salesHotlineLabel || 'المبيعات:') + ' ' + (systemSettings.mainSalesPhone || '');
+            }
+            if (waChannels.indexOf('customer-service') >= 0) {
+                doneMsg += '\n📞 ' + (ui.customerHotlineLabel || 'خدمة العملاء:') + ' ' + (systemSettings.customerServicePhone || '');
+            }
+            doneMsg += '\n\n' + (ui.sendQuoteWaHint || 'اضغط «إرسال» في واتساب لإتمام الطلب.');
             if (entry.transferReceiptDataUrl) {
                 doneMsg += '\n\n' + (ui.sendQuoteReceiptSent || '✓ تم إرسال صورة إيصال الحوالة مع الطلب — ستظهر في تقرير الإدارة.');
             } else if (entry.transferDeclared) {
@@ -5036,12 +5101,9 @@
             if (!cloudOk) {
                 doneMsg += '\n\n' + (ui.sendQuoteCloudWarn || '(تم الحفظ محلياً — تحققي من اتصال Supabase لظهور الطلب عند كل الإدارة.)');
             } else {
-                doneMsg += '\n\n✓ الطلب محفوظ ويظهر في: المبيعات → طلبات عروض الأسعار + التحليلات.';
+                doneMsg += '\n\n✓ ' + (ui.sendQuoteCloudOk || 'الطلب محفوظ ويظهر في: المبيعات → طلبات عروض الأسعار + التحليلات.');
             }
             alert(doneMsg);
-            if (wa && confirm(ui.sendQuoteOpenWa || 'فتح واتساب المبيعات؟')) {
-                window.open(wa, '_blank', 'noopener,noreferrer');
-            }
         }
 
         function updateSalesQuoteFab() {
@@ -13390,14 +13452,18 @@
                 bankIbanCopied: 'تم نسخ رقم الآيبان',
                 bankIbanCopyPrompt: 'انسخ رقم الآيبان:',
                 scmDashboardHint: 'كل أيقونة: «محتوى داخل الأيقونة» (نصوص · صور · وثائق) + الإجراء. التعديل فوري بدون كود.',
-                sendQuoteConfirm: 'إرسال طلب عرض السعر لفريق المبيعات؟',
+                sendQuoteConfirm: 'إرسال الطلب للمبيعات وخدمة العملاء؟',
+                sendQuoteConfirmChannels: 'سيتم فتح واتساب: المبيعات + خدمة العملاء (اضغط إرسال في كل محادثة)',
                 sendQuoteNamePrompt: 'اسم الشركة / العميل (اختياري):',
                 sendQuotePhonePrompt: 'رقم التواصل:',
                 sendQuoteNotePrompt: 'ملاحظات للمبيعات:',
-                sendQuoteDone: 'تم إرسال طلب عرض السعر للمبيعات. الرقم:',
+                sendQuoteDone: 'تم حفظ الطلب وإرساله للمبيعات وخدمة العملاء. الرقم:',
                 sendQuoteOpenWa: 'فتح واتساب المبيعات؟',
+                sendQuoteWaHint: 'اضغط «إرسال» في واتساب لإتمام الطلب.',
+                sendQuoteCloudOk: 'الطلب محفوظ ويظهر في: المبيعات → طلبات عروض الأسعار + التحليلات.',
                 sendQuoteWaIntro: 'طلب عرض سعر — مصنع نبراس',
-                cartSendSales: 'إرسال السلة للمبيعات',
+                cartSendSales: 'إرسال للمبيعات وخدمة العملاء',
+                fabSendQuoteSales: 'إرسال عرض السعر للمبيعات وخدمة العملاء',
                 salesInboxTitle: 'طلبات عروض الأسعار الواردة (من السلة)',
                 salesInboxHint: 'كل عرض سعر يرسله العميل من الموقع يصل هنا للمراجعة.',
                 salesInboxEmpty: 'لا طلبات عروض أسعار بعد.',
@@ -13862,14 +13928,18 @@
                 bankIbanCopied: 'IBAN copied to clipboard',
                 bankIbanCopyPrompt: 'Copy IBAN:',
                 scmDashboardHint: 'Each tile: inner content (text, images, documents) + action. No code edits.',
-                sendQuoteConfirm: 'Send this quote request to sales?',
+                sendQuoteConfirm: 'Send this quote to sales and customer service?',
+                sendQuoteConfirmChannels: 'WhatsApp will open for sales + customer service (tap Send in each chat)',
                 sendQuoteNamePrompt: 'Company / customer name (optional):',
                 sendQuotePhonePrompt: 'Contact phone:',
                 sendQuoteNotePrompt: 'Notes for sales:',
-                sendQuoteDone: 'Quote request sent to sales. Ref:',
+                sendQuoteDone: 'Quote saved and sent to sales & customer service. Ref:',
                 sendQuoteOpenWa: 'Open sales WhatsApp?',
+                sendQuoteWaHint: 'Tap Send in WhatsApp to complete the request.',
+                sendQuoteCloudOk: 'Saved — visible under Sales → Quote requests + Analytics.',
                 sendQuoteWaIntro: 'Nebras price quote request',
-                cartSendSales: 'Send cart to sales',
+                cartSendSales: 'Send to sales & customer service',
+                fabSendQuoteSales: 'Send quote to sales & customer service',
                 salesInboxTitle: 'Incoming quote requests (from cart)',
                 salesInboxHint: 'Customer quote submissions from the storefront appear here.',
                 salesInboxEmpty: 'No quote requests yet.',
@@ -14295,14 +14365,18 @@
                 bankIbanCopied: '已复制 IBAN',
                 bankIbanCopyPrompt: '复制 IBAN：',
                 scmDashboardHint: '每个图标：内部内容（文字、图片、文档）+ 操作，无需改代码。',
-                sendQuoteConfirm: '将报价请求发送给销售？',
+                sendQuoteConfirm: '将报价请求发送给销售和客服？',
+                sendQuoteConfirmChannels: '将打开 WhatsApp：销售 + 客服（请在每个对话中点击发送）',
                 sendQuoteNamePrompt: '公司/客户名称（可选）：',
                 sendQuotePhonePrompt: '联系电话：',
                 sendQuoteNotePrompt: '给销售的备注：',
-                sendQuoteDone: '已发送给销售。编号：',
+                sendQuoteDone: '已保存并发送至销售与客服。编号：',
                 sendQuoteOpenWa: '打开销售 WhatsApp？',
+                sendQuoteWaHint: '请在 WhatsApp 中点击「发送」以完成请求。',
+                sendQuoteCloudOk: '已保存 — 可在销售 → 报价请求 + 分析中查看。',
                 sendQuoteWaIntro: 'Nebras 报价请求',
-                cartSendSales: '发送购物车给销售',
+                cartSendSales: '发送至销售与客服',
+                fabSendQuoteSales: '发送报价给销售与客服',
                 salesInboxTitle: '收到的报价请求（来自购物车）',
                 salesInboxHint: '客户从网站提交的报价会显示在这里。',
                 salesInboxEmpty: '暂无报价请求。',
@@ -14421,6 +14495,11 @@
             setTxt('sales-quotes-inbox-hint', text.salesInboxHint);
             setTxt('cart-send-sales-btn', text.cartSendSales);
             setTxt('quote-send-sales-btn', text.cartSendSales);
+            const fabQuote = document.getElementById('fab-send-quote-sales');
+            if (fabQuote && text.fabSendQuoteSales) {
+                fabQuote.title = text.fabSendQuoteSales;
+                fabQuote.setAttribute('aria-label', text.fabSendQuoteSales);
+            }
             const scmAboutTab = document.querySelector('.scm-tabs button[data-scm-tab="about"]');
             if (scmAboutTab) scmAboutTab.textContent = text.scmTabAbout;
             renderAboutCards(currentLang || 'ar');
