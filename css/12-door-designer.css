@@ -2015,6 +2015,30 @@
         height: min(300px, 38vh);
     }
 
+    .wpc-door-stage--photo-preset .wpc-door-photo-preset-wrap.is-active {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+    }
+
+    .wpc-door-stage--photo-preset .wpc-door-photo-preset-img {
+        max-width: min(90vw, 320px);
+        max-height: min(40vh, 380px);
+        width: auto;
+        height: auto;
+        object-fit: contain;
+    }
+
+    .wpc-door-stage--photo-preset .wpc-door-photo-preset-stack {
+        max-width: min(90vw, 320px);
+        max-height: min(40vh, 380px);
+    }
+
+    .wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-svg-overlay {
+        display: none !important;
+    }
+
     .door-designer--studio .door-active-color-label {
         position: static;
         transform: none;

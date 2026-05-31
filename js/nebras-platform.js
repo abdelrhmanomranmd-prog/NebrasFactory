@@ -425,9 +425,9 @@
         }
 
         const DOOR_PHOTO_PRESET_ROOT = 'images/doors/presets/';
-        const DOOR_PHOTO_PRESET_CACHE = '24';
-        /** معاينة حية = SVG + رولّات (واضح). صور المصنع فقط لتصدير عرض السعر. */
-        const DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS = false;
+        const DOOR_PHOTO_PRESET_CACHE = '25';
+        /** صور أبواب المصنع الحقيقية في المعاينة — SVG احتياطي عند غياب الصورة */
+        const DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS = true;
         let doorDesignerPreviewRaf = 0;
 
         function scheduleDoorDesignerPreviewUpdate(root) {
@@ -1207,30 +1207,19 @@
             const isRoll = rollColor.isRoll;
             const catalogIndex = rollColor.catalogIndex;
             const swatchUrl = rollColor.swatchUrl;
-            clearDoorDesignerPhotoPreset(stage);
-            if (DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS) {
-                const preset = resolveDoorDesignerPhotoPreset(state);
-                const presetSkipKey = getDoorPhotoPresetStateKey(state);
-                const skipPhotoPreset = stage.getAttribute('data-door-photo-preset-skip') === presetSkipKey;
-                if (preset && !skipPhotoPreset && applyDoorDesignerPhotoPreset(stage, preset, swatchUrl, hex, isRoll, state.decor, catalogIndex, state, { composeRoll: false })) {
-                    applyDoorRollColorFinish(stage, rollColor);
-                    syncDoorDesignerOptionStates(root);
-                    const rollSuffixP = isRoll ? (' (' + (ui.doorDesignerRollTag || 'رولّة') + ')') : '';
-                    const labelElP = document.getElementById('door-active-color-label');
-                    if (labelElP) labelElP.textContent = code ? (code + ' — ' + colorName + rollSuffixP) : colorName;
-                    const sizeP = state.size || pick('size');
-                    const specElP = document.getElementById('door-spec-label');
-                    if (specElP) {
-                        const sizeObjP = (cfg.sizes || []).find(function(s) { return s && s.id === sizeP; }) || null;
-                        const sizeDimP = sizeObjP ? [sizeObjP.widthCm, sizeObjP.thicknessCm, sizeObjP.heightCm].filter(Boolean).join('×') + ' سم' : pickLabel('size');
-                        const decorP = state.decor;
-                        const partsP = [pickLabel('type'), pickLabel('model'), pickLabel('outerShape'), decorP === 'transom' ? pickLabel('decor') : '', sizeDimP].filter(Boolean);
-                        specElP.textContent = partsP.join(' · ');
-                    }
-                    return;
-                }
-                clearDoorDesignerPhotoPreset(stage);
+            const preset = resolveDoorDesignerPhotoPreset(state);
+            const presetSkipKey = getDoorPhotoPresetStateKey(state);
+            const skipPhotoPreset = stage.getAttribute('data-door-photo-preset-skip') === presetSkipKey;
+            if (DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS && preset && !skipPhotoPreset &&
+                applyDoorDesignerPhotoPreset(stage, preset, swatchUrl, hex, isRoll, state.decor, catalogIndex, state, { composeRoll: false })) {
+                applyDoorRollColorFinish(stage, rollColor);
+                syncDoorDesignerOptionStates(root);
+                const rollSuffixP = isRoll ? (' (' + (ui.doorDesignerRollTag || 'رولّة') + ')') : '';
+                const labelElP = document.getElementById('door-active-color-label');
+                if (labelElP) labelElP.textContent = code ? (code + ' — ' + colorName + rollSuffixP) : colorName;
+                return;
             }
+            clearDoorDesignerPhotoPreset(stage);
             const frame = state.frame;
             const outerShape = state.outerShape;
             const decor = state.decor;
