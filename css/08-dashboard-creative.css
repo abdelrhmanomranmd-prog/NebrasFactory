@@ -342,6 +342,50 @@ html[dir="rtl"] .nebras-partners-track--reverse:not(.nebras-partners-track--stat
     transform: scale(1.05);
 }
 
+/* شبكة ثابتة — شعارات واضحة بدون حركة */
+.nebras-partners-marquee--static {
+    mask-image: none;
+    -webkit-mask-image: none;
+    overflow: visible;
+    margin-top: 16px;
+}
+
+.nebras-partners-marquee--static .nebras-partners-track {
+    animation: none !important;
+    width: 100%;
+    max-width: 1100px;
+    margin: 0 auto;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 16px 22px;
+    padding: 4px 8px;
+}
+
+.nebras-partners-marquee--static.nebras-partners-marquee--row2 {
+    margin-top: 8px;
+}
+
+.nebras-partners-marquee--static .nebras-partner-logo {
+    flex: 0 1 auto;
+}
+
+@media (max-width: 768px) {
+    .nebras-partners-marquee--static .nebras-partners-track {
+        gap: 12px 14px;
+        padding: 0 4px;
+    }
+
+    .nebras-partners-marquee--premium .nebras-partner-logo {
+        min-width: 120px;
+        padding: 14px 16px;
+    }
+
+    .nebras-partners-marquee--premium .nebras-partner-logo img {
+        height: 56px;
+        max-width: 140px;
+    }
+}
+
 .dashboard-hub-intro {
     margin: 0 0 24px;
     padding: 20px 22px;

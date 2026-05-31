@@ -425,7 +425,7 @@
         }
 
         const DOOR_PHOTO_PRESET_ROOT = 'images/doors/presets/';
-        const DOOR_PHOTO_PRESET_CACHE = '25';
+        const DOOR_PHOTO_PRESET_CACHE = '26';
         /** صور أبواب المصنع الحقيقية في المعاينة — SVG احتياطي عند غياب الصورة */
         const DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS = true;
         let doorDesignerPreviewRaf = 0;
@@ -490,7 +490,7 @@
             const hex = rollState.hex || '#b8bcc4';
             const isRoll = rollState.isRoll !== false;
             const texUrl = rollState.swatchUrl ? resolveDoorRollTextureUrl(rollState.swatchUrl) : '';
-            const absTex = texUrl ? doorDesignerMediaUrl(texUrl) : '';
+            const absTex = texUrl ? doorDesignerMediaUrl(texUrl.split('?')[0]) + '?h=' + encodeURIComponent(hex) + '&v=' + DOOR_PHOTO_PRESET_CACHE : '';
             const list = els ? (els.length ? els : [els]) : [];
             list.forEach(function(el) {
                 if (!el) return;
@@ -724,8 +724,8 @@
         };
 
         const DOOR_PHOTO_TRANSOM_CAP = {
-            flat: DOOR_PHOTO_PRESET_ROOT + '_shared/transom-cladding-flat.png',
-            curve: DOOR_PHOTO_PRESET_ROOT + '_shared/transom-cladding-curve.png'
+            flat: DOOR_PHOTO_PRESET_ROOT + 'u-channel/_shared/transom-cladding-flat.png',
+            curve: DOOR_PHOTO_PRESET_ROOT + 'u-channel/_shared/transom-cladding-curve.png'
         };
 
         function doorPhotoPresetUrl(path) {
@@ -916,11 +916,6 @@
                 }
             }
             applyPhotoPresetRollTexture(wrap, stack, rollImg, img, baseSrc, rollUrl, hex, isRoll, catalogIndex, transomCap);
-            if (options.composeRoll === true) {
-                applyComposedRollToPhotoPresetImg(img, baseSrc, rollUrl, hex, isRoll, catalogIndex, rollImg);
-            } else if (img) {
-                img.classList.remove('has-roll-composite');
-            }
             stage.classList.toggle('wpc-door-stage--photo-roll-active', !!isRoll);
             stage.style.setProperty('--door-roll-tint', hex || '#b8bcc4');
             stage.style.setProperty('--door-face', hex || '#b8bcc4');
@@ -1211,12 +1206,20 @@
             const presetSkipKey = getDoorPhotoPresetStateKey(state);
             const skipPhotoPreset = stage.getAttribute('data-door-photo-preset-skip') === presetSkipKey;
             if (DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS && preset && !skipPhotoPreset &&
-                applyDoorDesignerPhotoPreset(stage, preset, swatchUrl, hex, isRoll, state.decor, catalogIndex, state, { composeRoll: false })) {
+                applyDoorDesignerPhotoPreset(stage, preset, swatchUrl, hex, isRoll, state.decor, catalogIndex, state)) {
                 applyDoorRollColorFinish(stage, rollColor);
                 syncDoorDesignerOptionStates(root);
                 const rollSuffixP = isRoll ? (' (' + (ui.doorDesignerRollTag || 'رولّة') + ')') : '';
                 const labelElP = document.getElementById('door-active-color-label');
                 if (labelElP) labelElP.textContent = code ? (code + ' — ' + colorName + rollSuffixP) : colorName;
+                const size = state.size || pick('size');
+                const specElP = document.getElementById('door-spec-label');
+                if (specElP) {
+                    const sizeObjP = (cfg.sizes || []).find(function(s) { return s && s.id === size; }) || null;
+                    const sizeDimP = sizeObjP ? [sizeObjP.widthCm, sizeObjP.thicknessCm, sizeObjP.heightCm].filter(Boolean).join('×') + ' سم' : pickLabel('size');
+                    const partsP = [pickLabel('type'), pickLabel('model'), pickLabel('outerShape'), state.decor === 'transom' ? pickLabel('decor') : '', sizeDimP].filter(Boolean);
+                    specElP.textContent = partsP.join(' · ');
+                }
                 return;
             }
             clearDoorDesignerPhotoPreset(stage);
@@ -5821,15 +5824,30 @@
             return out;
         }
 
-        function applyPartnersTrack(el, html, staticFallback) {
+        function applyPartnersTrack(el, html, staticFallback, forceStatic) {
             if (!el) return;
             if (html) {
                 el.innerHTML = html;
-                el.classList.remove('nebras-partners-track--static');
+                if (forceStatic) {
+                    el.classList.add('nebras-partners-track--static');
+                } else {
+                    el.classList.remove('nebras-partners-track--static');
+                }
             } else {
                 el.innerHTML = staticFallback || '';
                 el.classList.add('nebras-partners-track--static');
             }
+        }
+
+        function markPartnersMarqueesStatic(root) {
+            if (!root) return;
+            root.querySelectorAll('.nebras-partners-marquee').forEach(function(m) {
+                m.classList.add('nebras-partners-marquee--static');
+            });
+            root.querySelectorAll('.nebras-partners-marquee--row2').forEach(function(row) {
+                const track = row.querySelector('.nebras-partners-track');
+                row.hidden = !(track && track.children.length);
+            });
         }
 
         function ensureBuiltinSitePartners() {
@@ -5870,16 +5888,17 @@
             const ui = siteText[lang] || siteText.ar;
             const visible = getVisibleSitePartners();
             const split = splitPartnersForMarqueeRows(visible);
-            const htmlA = buildPartnersTrackHtml(split.rowA, lang, 2);
-            const htmlB = buildPartnersTrackHtml(split.rowB, lang, 2);
+            const htmlA = buildPartnersTrackHtml(split.rowA, lang, 1);
+            const htmlB = buildPartnersTrackHtml(split.rowB, lang, 1);
             const hasPartners = !!(htmlA || htmlB);
             const isAdmin = document.body.classList.contains('admin-session');
             const adminEmptyHint = '<div class="nebras-partners-empty nebras-partners-empty--admin"><i class="fas fa-handshake"></i><p>' +
                 escapeHtmlAttr(ui.partnersEmptyHintAdmin || ui.partnersEmptyHint || '') + '</p></div>';
             const publicSection = document.getElementById('nebras-partners-section');
             const publicStage = document.getElementById('nebras-partners-stage-public');
-            applyPartnersTrack(document.getElementById('nebras-partners-track-public-a'), htmlA);
-            applyPartnersTrack(document.getElementById('nebras-partners-track-public-b'), htmlB);
+            applyPartnersTrack(document.getElementById('nebras-partners-track-public-a'), htmlA, '', true);
+            applyPartnersTrack(document.getElementById('nebras-partners-track-public-b'), htmlB, '', true);
+            markPartnersMarqueesStatic(publicStage);
             if (publicSection) {
                 publicSection.hidden = !hasPartners;
                 publicSection.style.display = hasPartners ? '' : 'none';
@@ -5887,9 +5906,11 @@
             if (publicStage) publicStage.hidden = !hasPartners;
             const dashTrackA = document.getElementById('nebras-partners-track-dashboard-a');
             const dashTrackB = document.getElementById('nebras-partners-track-dashboard-b');
+            const dashStage = document.getElementById('nebras-partners-stage-dashboard');
             if (hasPartners) {
-                applyPartnersTrack(dashTrackA, htmlA);
-                applyPartnersTrack(dashTrackB, htmlB);
+                applyPartnersTrack(dashTrackA, htmlA, '', true);
+                applyPartnersTrack(dashTrackB, htmlB, '', true);
+                markPartnersMarqueesStatic(dashStage);
             } else if (isAdmin) {
                 applyPartnersTrack(dashTrackA, '', adminEmptyHint);
                 applyPartnersTrack(dashTrackB, '');
@@ -5897,7 +5918,6 @@
                 applyPartnersTrack(dashTrackA, '');
                 applyPartnersTrack(dashTrackB, '');
             }
-            const dashStage = document.getElementById('nebras-partners-stage-dashboard');
             if (dashStage) dashStage.classList.toggle('nebras-partners-stage--empty', !hasPartners && isAdmin);
             const dashHint = document.getElementById('dashboard-partners-hint');
             if (dashHint) dashHint.style.display = hasPartners ? 'none' : '';
@@ -9663,7 +9683,6 @@
             }
             return '<div class="door-designer door-designer--studio door-designer--keybab" id="nebras-door-designer">' +
                 '<div class="door-studio-layout">' +
-                previewHtml +
                 '<aside class="door-studio-panel">' +
                 '<header class="door-studio-head door-studio-head--compact">' +
                 '<h2 class="door-studio-title">' + escapeHtmlAttr(studioTitle) + '</h2>' +
@@ -9678,6 +9697,7 @@
                 '<button type="button" class="door-studio-quote workspace-action-btn workspace-action-btn--primary" onclick="addDoorDesignToCartAndQuote()">' +
                 '<i class="fas fa-file-invoice"></i> ' + escapeHtmlAttr(ui.doorDesignerQuoteBtn || 'طلب عرض سعر') + '</button>' +
                 '</aside>' +
+                previewHtml +
                 '</div></div>';
         }
 
@@ -9878,6 +9898,53 @@
             }
         }
 
+        function applyWpcKeybabStructRollFinish(stage, state, swatchUrl, hex, isRoll) {
+            if (!stage || !stage.classList.contains('wpc-door-stage--keybab') || !state) return;
+            const safe = hex || '#b8bcc4';
+            const rollFinish = isRoll !== false;
+            const url = rollFinish ? resolveDoorRollTextureUrl(swatchUrl) : '';
+            const absUrl = url ? doorDesignerMediaUrl(url.split('?')[0]) : '';
+            const bgImage = absUrl ? ('url("' + absUrl.replace(/"/g, '') + '")') : 'none';
+            const mobileFx = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+            const structFilter = mobileFx ? 'none' : 'contrast(1.04) saturate(1.05) brightness(0.94)';
+            const structLeft = document.getElementById('wpc-door-struct-left');
+            const structRight = document.getElementById('wpc-door-struct-right');
+            const structTop = document.getElementById('wpc-door-struct-top');
+            const structTopClad = document.getElementById('wpc-door-struct-top-clad');
+            const leafA = document.getElementById('wpc-door-leaf-texture-a');
+            const leafB = document.getElementById('wpc-door-leaf-texture-b');
+            const transom = document.getElementById('wpc-door-keybab-transom');
+            const mullion = document.getElementById('wpc-door-center-mullion');
+            function paintStruct(el, visible, shade) {
+                if (!el) return;
+                const base = shadeDoorHex(safe, shade);
+                el.style.backgroundColor = base;
+                el.classList.toggle('has-door-roll-tint', rollFinish);
+                el.style.setProperty('--door-roll-tint', safe);
+                if (rollFinish && absUrl) {
+                    el.style.backgroundImage = bgImage;
+                    el.style.backgroundSize = 'cover';
+                    el.style.backgroundPosition = 'center';
+                    el.style.filter = structFilter;
+                } else {
+                    el.style.backgroundImage = 'none';
+                    el.style.filter = 'none';
+                }
+                el.classList.toggle('is-visible', !!visible);
+            }
+            if (stage.classList.contains('wpc-door-stage--photo-preset')) {
+                [leafA, leafB, transom, mullion].forEach(function(el) {
+                    if (el) el.classList.remove('is-visible');
+                });
+            }
+            paintStruct(structLeft, true, -20);
+            paintStruct(structRight, true, -20);
+            paintStruct(structTop, true, -24);
+            paintStruct(structTopClad, state.decor === 'transom' && !state.isSliding, -8);
+            stage.classList.toggle('wpc-door-stage--struct-transom', state.decor === 'transom' && !state.isSliding);
+            stage.style.setProperty('--door-frame-tint', shadeDoorHex(safe, -28));
+        }
+
         function applyWpcKeybabLeafTextures(stage, state, swatchUrl, hex, isRoll) {
             if (!stage || !stage.classList.contains('wpc-door-stage--keybab')) return;
             const safe = hex || '#b8bcc4';
@@ -9920,27 +9987,6 @@
             const leafB = document.getElementById('wpc-door-leaf-texture-b');
             const transom = document.getElementById('wpc-door-keybab-transom');
             const mullion = document.getElementById('wpc-door-center-mullion');
-            const structLeft = document.getElementById('wpc-door-struct-left');
-            const structRight = document.getElementById('wpc-door-struct-right');
-            const structTop = document.getElementById('wpc-door-struct-top');
-            const structTopClad = document.getElementById('wpc-door-struct-top-clad');
-            function paintStruct(el, visible, shade) {
-                if (!el) return;
-                const base = shadeDoorHex(safe, shade);
-                el.style.backgroundColor = base;
-                el.classList.toggle('has-door-roll-tint', rollFinish);
-                el.style.setProperty('--door-roll-tint', safe);
-                if (rollFinish && absUrl) {
-                    el.style.backgroundImage = bgImage;
-                    el.style.backgroundSize = 'cover';
-                    el.style.backgroundPosition = 'center';
-                    el.style.filter = structFilter;
-                } else {
-                    el.style.backgroundImage = 'none';
-                    el.style.filter = 'none';
-                }
-                el.classList.toggle('is-visible', !!visible);
-            }
             const showB = !!state.isDouble;
             paintLeaf(leafA, true, true);
             paintLeaf(leafB, showB, true);
@@ -9959,12 +10005,7 @@
                     mullion.style.backgroundImage = 'none';
                 }
             }
-            paintStruct(structLeft, true, -20);
-            paintStruct(structRight, true, -20);
-            paintStruct(structTop, true, -24);
-            paintStruct(structTopClad, state.decor === 'transom' && !state.isSliding, -8);
-            stage.classList.toggle('wpc-door-stage--struct-transom', state.decor === 'transom' && !state.isSliding);
-            stage.style.setProperty('--door-frame-tint', shadeDoorHex(safe, -28));
+            applyWpcKeybabStructRollFinish(stage, state, swatchUrl, hex, isRoll);
             stage.style.setProperty('--door-roll-url', url ? ('url("' + url.replace(/"/g, '') + '")') : 'none');
         }
 
