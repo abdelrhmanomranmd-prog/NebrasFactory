@@ -1283,6 +1283,19 @@ body:not(.admin-session) .admin-only-ui {
     justify-content: center;
 }
 
+.quote-send-pdf-both-btn {
+    width: 100%;
+    max-width: 420px;
+    margin: 0 auto 12px;
+    min-height: 48px;
+    font-size: 0.95rem;
+    font-weight: 800;
+}
+
+.quote-print-overlay .quote-send-pdf-both-btn {
+    display: block;
+}
+
 .quote-print-overlay .quote-send-channel-row {
     text-align: center;
     margin-bottom: 16px;

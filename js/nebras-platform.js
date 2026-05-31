@@ -4196,6 +4196,9 @@
                     cloudEntry.quoteDocumentOmittedFromCloud = true;
                 }
             }
+            if (cloudEntry.quoteDocumentPdfDataUrl && String(cloudEntry.quoteDocumentPdfDataUrl).startsWith('data:')) {
+                cloudEntry.quoteDocumentPdfDataUrl = '';
+            }
             return cloudEntry;
         }
 
@@ -5102,29 +5105,137 @@
             return buildCartOrderWhatsAppMessage(entry, ui, lang);
         }
 
-        /** فتح واتساب لقناة واحدة — مع صورة A4 عند الإرسال (مشاركة أو رابط + تحميل) */
+        /** فتح واتساب — قناة واحدة أو أكثر — مع PDF/صورة A4 */
         async function deliverQuoteViaWhatsApp(message, channel, options) {
-            if (!channel) return [];
             options = options || {};
-            let fullMessage = message || '';
-            const imageCloudUrl = options.imageCloudUrl || '';
-            const imageDataUrl = options.imageDataUrl || '';
+            const channels = Array.isArray(channel) ? channel : (channel ? [channel] : []);
+            if (!channels.length) return [];
             const ui = siteText[currentLang || 'ar'] || siteText.ar;
-            if (imageCloudUrl) {
-                fullMessage += '\n\n📄 ' + (options.imageLinkLabel || ui.quoteImageLinkLabel || 'صورة عرض السعر A4:') + '\n' + imageCloudUrl;
+            let fullMessage = message || '';
+            const pdfCloudUrl = options.pdfCloudUrl || options.imageCloudUrl || '';
+            const pdfBlob = options.pdfBlob || null;
+            const fileName = options.fileName || 'nebras-quote-a4.pdf';
+            const mimeType = options.mimeType || (pdfBlob && pdfBlob.type) || 'application/pdf';
+            if (pdfCloudUrl) {
+                fullMessage += '\n\n📄 ' + (options.pdfLinkLabel || ui.quotePdfLinkLabel || ui.quoteImageLinkLabel || 'عرض السعر PDF (A4):') + '\n' + pdfCloudUrl;
             }
-            if (imageDataUrl) {
-                const shared = await tryShareQuoteDocument(fullMessage, imageDataUrl, options.fileName || 'nebras-quote-a4.png');
-                if (shared) return [channel];
+            if (pdfBlob && typeof navigator.share === 'function') {
+                const shared = await tryShareQuoteDocument(fullMessage, pdfBlob, fileName, mimeType);
+                if (shared) return channels.slice();
             }
-            const url = channel === 'customer-service'
-                ? customerServiceWhatsAppHref(fullMessage)
-                : salesPhoneWhatsAppHref(fullMessage);
-            if (url) openExternalMessagingUrl(url);
-            if (imageDataUrl) {
-                triggerQuoteImageDownload(imageDataUrl, options.fileName || 'nebras-quote-a4.png');
+            const sameNumber = normalizeSaPhoneE164(systemSettings.mainSalesPhone) === normalizeSaPhoneE164(systemSettings.customerServicePhone);
+            const toOpen = channels.filter(function(ch, idx, arr) {
+                if (ch === 'customer-service' && sameNumber && arr.indexOf('sales') >= 0 && arr.indexOf('sales') < idx) return false;
+                return true;
+            });
+            toOpen.forEach(function(ch, idx) {
+                setTimeout(function() {
+                    const url = ch === 'customer-service'
+                        ? customerServiceWhatsAppHref(fullMessage)
+                        : salesPhoneWhatsAppHref(fullMessage);
+                    if (url) openExternalMessagingUrl(url);
+                }, idx * 900);
+            });
+            if (pdfBlob) {
+                triggerQuoteFileDownload(pdfBlob, fileName);
+            } else if (options.imageDataUrl) {
+                triggerQuoteFileDownload(options.imageDataUrl, (fileName || 'nebras-quote-a4').replace(/\.pdf$/i, '') + '.png');
             }
-            return url ? [channel] : [];
+            return channels.slice();
+        }
+
+        function loadJsPdfLib() {
+            return new Promise(function(resolve, reject) {
+                if (window.jspdf && window.jspdf.jsPDF) {
+                    resolve(window.jspdf.jsPDF);
+                    return;
+                }
+                const existing = document.querySelector('script[data-nebras-jspdf]');
+                if (existing) {
+                    existing.addEventListener('load', function() { resolve(window.jspdf && window.jspdf.jsPDF); });
+                    existing.addEventListener('error', reject);
+                    return;
+                }
+                const s = document.createElement('script');
+                s.src = 'https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js';
+                s.defer = true;
+                s.setAttribute('data-nebras-jspdf', '1');
+                s.onload = function() { resolve(window.jspdf && window.jspdf.jsPDF); };
+                s.onerror = reject;
+                document.head.appendChild(s);
+            });
+        }
+
+        function getDataUrlImageSize(dataUrl) {
+            return new Promise(function(resolve) {
+                const img = new Image();
+                img.onload = function() {
+                    resolve({ w: img.naturalWidth || 794, h: img.naturalHeight || 1123 });
+                };
+                img.onerror = function() {
+                    resolve({ w: 794, h: 1123 });
+                };
+                img.src = dataUrl;
+            });
+        }
+
+        async function captureQuoteA4AsPdfBlob() {
+            const pngDataUrl = await captureQuoteA4AsPngDataUrl();
+            if (!pngDataUrl) return null;
+            try {
+                const jsPDF = await loadJsPdfLib();
+                if (!jsPDF) return null;
+                const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
+                const pageW = pdf.internal.pageSize.getWidth();
+                const pageH = pdf.internal.pageSize.getHeight();
+                const imgDims = await getDataUrlImageSize(pngDataUrl);
+                const margin = 6;
+                const maxW = pageW - margin * 2;
+                const maxH = pageH - margin * 2;
+                const pxToMm = 0.264583;
+                let imgW = imgDims.w * pxToMm;
+                let imgH = imgDims.h * pxToMm;
+                const ratio = Math.min(maxW / imgW, maxH / imgH, 1);
+                imgW *= ratio;
+                imgH *= ratio;
+                pdf.addImage(pngDataUrl, 'PNG', (pageW - imgW) / 2, margin, imgW, imgH);
+                return pdf.output('blob');
+            } catch (pdfErr) {
+                console.warn('Quote A4 PDF failed:', pdfErr);
+                return null;
+            }
+        }
+
+        function ensureQuoteA4Rendered() {
+            return new Promise(function(resolve) {
+                if (!nebrasCart.length) {
+                    resolve(false);
+                    return;
+                }
+                const doc = document.getElementById('quote-a4-document');
+                const overlay = document.getElementById('quote-print-overlay');
+                if (!doc || !overlay) {
+                    resolve(false);
+                    return;
+                }
+                if (!currentQuoteIssue || !currentQuoteIssue.quoteNo) {
+                    currentQuoteIssue = issueNextQuoteNumber();
+                }
+                resolveSiteLogoUrl(function(logoUrl) {
+                    renderQuotePreviewDocument(doc, overlay, logoUrl);
+                    overlay.classList.add('show');
+                    waitForQuoteDocumentImages(doc).then(function() {
+                        setTimeout(function() { resolve(true); }, 350);
+                    });
+                });
+            });
+        }
+
+        async function uploadQuotePdfBlob(pdfBlob, quoteNo) {
+            if (!pdfBlob || !supabaseClient) return '';
+            const fileName = (quoteNo || 'quote') + '-a4.pdf';
+            const file = pdfBlob instanceof File ? pdfBlob : new File([pdfBlob], fileName, { type: 'application/pdf' });
+            return (await uploadNebrasMediaFile(file)) || '';
         }
 
         function loadHtml2CanvasLib() {
@@ -5189,12 +5300,17 @@
             }
         }
 
-        async function tryShareQuoteDocument(text, dataUrl, fileName) {
-            if (!dataUrl || typeof navigator.share !== 'function') return false;
+        async function tryShareQuoteDocument(text, fileOrDataUrl, fileName, mimeType) {
+            if (!fileOrDataUrl || typeof navigator.share !== 'function') return false;
             try {
-                const blob = await fetch(dataUrl).then(function(r) { return r.blob(); });
-                if (!blob) return false;
-                const file = new File([blob], fileName || 'nebras-quote-a4.png', { type: 'image/png' });
+                let file = null;
+                if (fileOrDataUrl instanceof Blob) {
+                    file = fileOrDataUrl instanceof File ? fileOrDataUrl : new File([fileOrDataUrl], fileName || 'nebras-quote-a4.pdf', { type: mimeType || fileOrDataUrl.type || 'application/pdf' });
+                } else if (String(fileOrDataUrl).indexOf('data:') === 0) {
+                    const blob = await fetch(fileOrDataUrl).then(function(r) { return r.blob(); });
+                    file = new File([blob], fileName || 'nebras-quote-a4.png', { type: mimeType || blob.type || 'image/png' });
+                }
+                if (!file) return false;
                 const payload = { text: text || '', title: fileName || 'Nebras Quote A4' };
                 if (navigator.canShare && navigator.canShare({ files: [file] })) {
                     payload.files = [file];
@@ -5210,17 +5326,31 @@
             }
         }
 
-        function triggerQuoteImageDownload(dataUrl, fileName) {
-            if (!dataUrl || String(dataUrl).indexOf('data:') !== 0) return;
+        function triggerQuoteFileDownload(fileOrDataUrl, fileName) {
             try {
                 const a = document.createElement('a');
-                a.href = dataUrl;
-                a.download = (fileName || 'nebras-quote-a4').replace(/[^\w\-.\u0600-\u06FF]+/g, '_') + '.png';
+                if (fileOrDataUrl instanceof Blob) {
+                    a.href = URL.createObjectURL(fileOrDataUrl);
+                    a.download = (fileName || 'nebras-quote-a4.pdf').replace(/[^\w\-.\u0600-\u06FF]+/g, '_');
+                    if (a.download.indexOf('.') === -1) a.download += '.pdf';
+                } else if (String(fileOrDataUrl).indexOf('data:') === 0) {
+                    a.href = fileOrDataUrl;
+                    a.download = (fileName || 'nebras-quote-a4').replace(/[^\w\-.\u0600-\u06FF]+/g, '_') + '.png';
+                } else {
+                    return;
+                }
                 a.rel = 'noopener';
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
+                if (fileOrDataUrl instanceof Blob) {
+                    setTimeout(function() { URL.revokeObjectURL(a.href); }, 4000);
+                }
             } catch (dlErr) { /* ignore */ }
+        }
+
+        function triggerQuoteImageDownload(dataUrl, fileName) {
+            triggerQuoteFileDownload(dataUrl, fileName);
         }
 
         function renderCartOrderPreview() {
@@ -5257,8 +5387,154 @@
             el.hidden = false;
         }
 
+        async function submitQuoteA4Pdf(sendMode) {
+            sendMode = sendMode || 'both';
+            const channels = sendMode === 'both' ? ['sales', 'customer-service'] : [sendMode];
+            if (channels.indexOf('sales') < 0 && channels.indexOf('customer-service') < 0) return;
+            const ui = siteText[currentLang || 'ar'] || siteText.ar;
+            if (!nebrasCart.length) {
+                alert(ui.cartEmpty || 'أضف منتجات إلى السلة أولاً.');
+                return;
+            }
+            const validation = validateCheckoutProfile(readCheckoutFormToProfile(), ui);
+            if (!validation.ok) {
+                openCartDrawer();
+                setCartCheckoutStatus(validation.errors.join(' '), true);
+                return;
+            }
+            const profile = validation.profile;
+            const payment = readCartPaymentFromForm();
+            if (!currentQuoteIssue || !currentQuoteIssue.quoteNo) {
+                let confirmMsg = sendMode === 'both'
+                    ? (ui.sendQuoteA4BothConfirm || 'إرسال عرض السعر A4 (PDF) للمبيعات وخدمة العملاء؟')
+                    : (sendMode === 'sales' ? ui.sendQuoteA4SalesConfirm : ui.sendQuoteA4CsConfirm);
+                confirmMsg += '\n\n' + (ui.sendQuoteA4PdfHint || 'سيتم توليد PDF A4 وإرساله عبر واتساب') + '\n\n';
+                confirmMsg += formatQuoteLinesForMessage(nebrasCart, currentLang);
+                if (payment.bankIban) {
+                    confirmMsg += '\n\n' + (ui.cartPaymentConfirmBank || 'الحساب: ') + payment.bankIban;
+                }
+                if (payment.receiptDataUrl) {
+                    confirmMsg += '\n' + (ui.cartPaymentReceiptAttached || '✓ مرفق: صورة الحوالة');
+                }
+                if (!confirm(confirmMsg)) return;
+                currentQuoteIssue = issueNextQuoteNumber();
+            }
+            closeCartDrawer();
+            const rendered = await ensureQuoteA4Rendered();
+            if (!rendered) {
+                alert(ui.sendQuoteA4RenderFail || 'تعذّر تجهيز مستند A4 — أعدي المحاولة.');
+                return;
+            }
+            const pdfBlob = await captureQuoteA4AsPdfBlob();
+            if (!pdfBlob) {
+                alert(ui.sendQuoteA4PdfFail || 'تعذّر إنشاء PDF — تحققي من الاتصال وأعدي المحاولة.');
+                return;
+            }
+            const pdfFileName = (currentQuoteIssue.quoteNo || 'quote') + '-a4.pdf';
+            const pdfCloudUrl = await uploadQuotePdfBlob(pdfBlob, currentQuoteIssue.quoteNo);
+            const cartTotals = calcCartTotals();
+            const quoteChannel = detectQuoteChannelFromLines(nebrasCart);
+            const designerPayload = extractDoorDesignerPayload(nebrasCart);
+            const entry = {
+                id: 'sq-' + Date.now(),
+                quoteNo: currentQuoteIssue.quoteNo,
+                status: 'new',
+                at: Date.now(),
+                lang: currentLang || 'ar',
+                sessionId: getVisitorSessionId(),
+                customerName: profile.customerName,
+                phone: profile.phone,
+                email: profile.email || '',
+                city: profile.city || '',
+                address: profile.address || '',
+                note: profile.note || '',
+                lines: buildCartSnapshot(),
+                total: cartTotals.subtotalEx,
+                subtotalExVat: cartTotals.subtotalEx,
+                vatAmount: cartTotals.vatAmount,
+                totalIncVat: cartTotals.totalInc,
+                vatRate: cartTotals.vatRate,
+                quoteChannel: quoteChannel,
+                quoteKind: quoteChannel === 'door-designer' ? 'custom-door-design' : 'store-cart',
+                quoteType: 'quote',
+                messageFormat: 'a4-quote-pdf',
+                sentToChannel: sendMode,
+                quoteDocumentPdfUrl: pdfCloudUrl || '',
+                quoteDocumentCloudUrl: pdfCloudUrl || '',
+                adminDailyIssued: currentQuoteIssue ? currentQuoteIssue.todayIssued : null,
+                adminDailyFinalized: currentQuoteIssue ? currentQuoteIssue.todayFinalized : null,
+                catalogProductCount: (siteProducts || []).filter(function(p) { return p && p.visible !== false && productHasShop(p); }).length,
+                catalogVariantCount: (siteProducts || []).reduce(function(n, p) {
+                    return n + (productHasShop(p) ? (p.variants || []).length : 0);
+                }, 0),
+                doorDesignerSpec: designerPayload ? designerPayload.spec : '',
+                doorDesignerImage: designerPayload ? designerPayload.image : '',
+                paymentBankId: payment.bankId || '',
+                paymentBankIban: payment.bankIban || '',
+                paymentBankNameAr: payment.bankNameAr || '',
+                paymentBankNameEn: payment.bankNameEn || '',
+                transferDeclared: !!payment.transferDeclared,
+                transferReceiptDataUrl: payment.receiptDataUrl || '',
+                transferReceiptFileName: payment.receiptFileName || ''
+            };
+            const inbox = loadSalesQuotesInbox();
+            inbox.unshift(entry);
+            try {
+                saveSalesQuotesInbox(inbox);
+            } catch (saveErr) {
+                alert('تعذّر حفظ الطلب — جرّبي صورة أصغر للحوالة أو أعدي المحاولة.');
+                return;
+            }
+            const msg = buildQuoteA4WhatsAppMessage(entry, ui, currentLang);
+            const waChannels = await deliverQuoteViaWhatsApp(msg, channels, {
+                pdfBlob: pdfBlob,
+                pdfCloudUrl: pdfCloudUrl,
+                fileName: pdfFileName,
+                pdfLinkLabel: ui.quotePdfLinkLabel,
+                mimeType: 'application/pdf'
+            });
+            entry.notifyChannels = waChannels;
+            entry.notifiedSalesPhone = channels.indexOf('sales') >= 0 ? (systemSettings.mainSalesPhone || '') : '';
+            entry.notifiedCustomerServicePhone = channels.indexOf('customer-service') >= 0 ? (systemSettings.customerServicePhone || '') : '';
+            const cloudOk = await pushQuoteToNebrasCloud(entry);
+            if (entry.transferReceiptCloudUrl || entry.quoteDocumentPdfUrl) {
+                const refreshed = loadSalesQuotesInbox();
+                const saved = refreshed.find(function(e) { return e.id === entry.id; });
+                if (saved) {
+                    if (entry.transferReceiptCloudUrl) saved.transferReceiptCloudUrl = entry.transferReceiptCloudUrl;
+                    if (entry.quoteDocumentPdfUrl) {
+                        saved.quoteDocumentPdfUrl = entry.quoteDocumentPdfUrl;
+                        saved.quoteDocumentCloudUrl = entry.quoteDocumentPdfUrl;
+                    }
+                    saveSalesQuotesInbox(refreshed);
+                }
+            }
+            updateSalesInboxBadge();
+            if (currentAdmin && canManage('sales')) displaySalesQuotesInbox();
+            if (currentAdmin && canManage('audit')) renderAdminAnalyticsPanel();
+            if (currentAdmin) addAuditLog('عرض سعر PDF A4', entry.quoteNo + ' → ' + sendMode);
+            let doneMsg = (ui.sendQuoteA4Done || 'تم إرسال عرض السعر A4 (PDF). الرقم:') + ' ' + entry.quoteNo;
+            if (channels.indexOf('sales') >= 0) {
+                doneMsg += '\n📞 ' + (ui.salesHotlineLabel || 'المبيعات:') + ' ' + (systemSettings.mainSalesPhone || '');
+            }
+            if (channels.indexOf('customer-service') >= 0) {
+                doneMsg += '\n📞 ' + (ui.customerHotlineLabel || 'خدمة العملاء:') + ' ' + (systemSettings.customerServicePhone || '');
+            }
+            if (pdfCloudUrl) doneMsg += '\n📄 PDF: ' + pdfCloudUrl;
+            doneMsg += '\n\n' + (ui.sendQuoteWaHint || 'اضغط «إرسال» في واتساب — وأرفقي PDF إن لزم.');
+            if (!cloudOk) {
+                doneMsg += '\n\n' + (ui.sendQuoteCloudWarn || '(تم الحفظ محلياً — تحققي من اتصال Supabase.)');
+            } else {
+                doneMsg += '\n\n✓ ' + (ui.sendQuoteCloudOk || 'الطلب محفوظ في الإدارة.');
+            }
+            alert(doneMsg);
+        }
+
         async function submitCartOrQuote(channel) {
             if (channel !== 'sales' && channel !== 'customer-service') return;
+            if (isQuotePreviewOpen()) {
+                return submitQuoteA4Pdf(channel);
+            }
             const ui = siteText[currentLang || 'ar'] || siteText.ar;
             const isA4 = isQuotePreviewOpen();
             const messageFormat = isA4 ? 'a4-quote' : 'cart-order';
@@ -5349,34 +5625,8 @@
                 alert('تعذّر حفظ الطلب — جرّبي صورة أصغر للحوالة أو أعدي المحاولة.');
                 return;
             }
-            let quoteImageDataUrl = '';
-            let quoteImageCloudUrl = '';
-            if (isA4) {
-                const quoteDoc = document.getElementById('quote-a4-document');
-                if (!quoteDoc || !quoteDoc.innerHTML.trim()) {
-                    openQuotePreview();
-                    await new Promise(function(r) { setTimeout(r, 700); });
-                }
-                quoteImageDataUrl = await captureQuoteA4AsPngDataUrl();
-                if (quoteImageDataUrl) {
-                    entry.quoteDocumentDataUrl = quoteImageDataUrl;
-                    const qFile = dataUrlToUploadFile(quoteImageDataUrl, (entry.quoteNo || 'quote') + '-a4.png');
-                    if (qFile && supabaseClient) {
-                        quoteImageCloudUrl = await uploadNebrasMediaFile(qFile);
-                        if (quoteImageCloudUrl) {
-                            entry.quoteDocumentCloudUrl = quoteImageCloudUrl;
-                            entry.quoteDocumentDataUrl = quoteImageCloudUrl;
-                        }
-                    }
-                }
-            }
             const msg = buildQuoteWhatsAppMessage(entry, ui, currentLang, messageFormat);
-            const waChannels = await deliverQuoteViaWhatsApp(msg, channel, {
-                imageDataUrl: isA4 ? quoteImageDataUrl : '',
-                imageCloudUrl: isA4 ? quoteImageCloudUrl : '',
-                fileName: (entry.quoteNo || 'quote') + '-a4.png',
-                imageLinkLabel: ui.quoteImageLinkLabel
-            });
+            const waChannels = await deliverQuoteViaWhatsApp(msg, channel, {});
             entry.notifyChannels = waChannels;
             entry.notifiedSalesPhone = channel === 'sales' ? (systemSettings.mainSalesPhone || '') : '';
             entry.notifiedCustomerServicePhone = channel === 'customer-service' ? (systemSettings.customerServicePhone || '') : '';
@@ -5405,9 +5655,6 @@
             let doneMsg = doneBase + ' ' + entry.quoteNo;
             if (isA4) {
                 doneMsg += '\n📄 ' + (ui.sendQuoteA4Sent || 'صيغة A4');
-                if (quoteImageDataUrl || quoteImageCloudUrl) {
-                    doneMsg += '\n🖼️ ' + (ui.quoteImageSentHint || 'تم إرفاق/تحميل صورة المستند — أرفقيها في واتساب إن لم تظهر تلقائياً.');
-                }
             } else {
                 doneMsg += '\n🛒 ' + (ui.sendOrderSent || 'أوردر تحت التنفيذ');
             }
@@ -5472,8 +5719,8 @@
                         escapeHtmlAttr(String(e.adminDailyFinalized != null ? e.adminDailyFinalized : 0)) + ' ' +
                         escapeHtmlAttr(ui.salesInboxAdminFinalized || 'منفّذ') + '</small>')
                     : '';
-                const quoteDocUrl = e.quoteDocumentCloudUrl || e.quoteDocumentDataUrl || '';
-                const quoteDocThumb = quoteDocUrl && (e.messageFormat === 'a4-quote' || e.quoteType === 'quote')
+                const quoteDocUrl = e.quoteDocumentPdfUrl || e.quoteDocumentCloudUrl || e.quoteDocumentDataUrl || '';
+                const quoteDocThumb = quoteDocUrl && (e.messageFormat === 'a4-quote' || e.messageFormat === 'a4-quote-pdf' || e.quoteType === 'quote')
                     ? ('<br><div class="sales-quote-doc-inline"><img src="' + escapeHtmlAttr(quoteDocUrl) + '" alt="" loading="lazy" onclick="event.preventDefault();viewSalesQuoteDocument(\'' + entryKey + '\')"><a href="#" onclick="event.preventDefault();viewSalesQuoteDocument(\'' + entryKey + '\')">' + escapeHtmlAttr(ui.salesInboxQuoteDoc || 'عرض مستند A4') + '</a></div>')
                     : '';
                 const transferBadge = e.transferReceiptDataUrl
@@ -5604,10 +5851,10 @@
                 (entry.note ? '<p class="sales-quote-detail-note">' + escapeHtmlAttr(entry.note) + '</p>' : '') +
                 (entry.paymentBankIban ? '<p class="sales-quote-detail-bank"><strong>IBAN:</strong> <code dir="ltr">' + escapeHtmlAttr(entry.paymentBankIban) + '</code></p>' : '') +
                 transferHtml +
-                ((entry.quoteDocumentCloudUrl || entry.quoteDocumentDataUrl)
-                    ? ('<figure class="sales-quote-detail-doc"><img src="' + escapeHtmlAttr(entry.quoteDocumentCloudUrl || entry.quoteDocumentDataUrl) + '" alt="A4">' +
-                        '<figcaption><button type="button" class="analytics-receipt-thumb-btn" onclick="viewSalesQuoteDocument(\'' + escapeHtmlAttr(String(entry.id).replace(/'/g, "\\'")) + '\')">' +
-                        escapeHtmlAttr(ui.salesInboxQuoteDoc || 'عرض مستند A4') + '</button></figcaption></figure>')
+                ((entry.quoteDocumentPdfUrl || entry.quoteDocumentCloudUrl || entry.quoteDocumentDataUrl)
+                    ? ('<figure class="sales-quote-detail-doc"><a href="' + escapeHtmlAttr(entry.quoteDocumentPdfUrl || entry.quoteDocumentCloudUrl || entry.quoteDocumentDataUrl) + '" target="_blank" rel="noopener"><img src="' + escapeHtmlAttr(entry.quoteDocumentCloudUrl || entry.quoteDocumentDataUrl || '/images/logo.png') + '" alt="A4"></a>' +
+                        '<figcaption><a href="' + escapeHtmlAttr(entry.quoteDocumentPdfUrl || entry.quoteDocumentCloudUrl || entry.quoteDocumentDataUrl) + '" target="_blank" rel="noopener">' +
+                        escapeHtmlAttr(ui.salesInboxQuoteDoc || 'تحميل مستند A4 (PDF)') + '</a></figcaption></figure>')
                     : '') +
                 (linesHtml ? ('<ul class="sales-quote-detail-lines">' + linesHtml + '</ul>') : '') +
                 (entry.totalIncVat > 0 ? '<p class="sales-quote-detail-total"><strong>' + escapeHtmlAttr(ui.cartProductsTotalInc || 'إجمالي المنتجات شامل الضريبة: ') + '</strong> ' + formatSar(entry.totalIncVat) + '</p>' : '');
@@ -5626,9 +5873,13 @@
                 entry = cloudInbox.find(function(e) { return e.id === entryId; });
             }
             if (!entry) return;
-            const img = entry.quoteDocumentCloudUrl || entry.quoteDocumentDataUrl || '';
+            const img = entry.quoteDocumentPdfUrl || entry.quoteDocumentCloudUrl || entry.quoteDocumentDataUrl || '';
             if (!img) {
-                alert('لا توجد صورة مستند A4 لهذا الطلب.');
+                alert('لا يوجد مستند A4 (PDF) لهذا الطلب.');
+                return;
+            }
+            if (/\.pdf(\?|$)/i.test(img)) {
+                window.open(img, '_blank', 'noopener,noreferrer');
                 return;
             }
             openNebrasMediaLightbox([img], 0);
@@ -13808,7 +14059,16 @@
                 sendQuoteA4SalesConfirm: 'إرسال عرض السعر A4 للمبيعات؟',
                 sendQuoteA4CsConfirm: 'إرسال عرض السعر A4 لخدمة العملاء؟',
                 sendOrderHint: 'سيتم إرسال أوردر تحت التنفيذ',
-                sendQuoteA4Hint: 'سيتم إرسال عرض السعر بصيغة A4 الرسمية',
+                sendQuoteA4BothConfirm: 'إرسال عرض السعر A4 (PDF) للمبيعات وخدمة العملاء؟',
+                sendQuoteA4PdfHint: 'سيتم توليد PDF A4 وإرساله عبر واتساب للمبيعات وخدمة العملاء',
+                sendQuoteA4Done: 'تم إرسال عرض السعر A4 (PDF). الرقم:',
+                sendQuoteA4RenderFail: 'تعذّر تجهيز مستند A4 — أعدي المحاولة.',
+                sendQuoteA4PdfFail: 'تعذّر إنشاء PDF — تحققي من الاتصال وأعدي المحاولة.',
+                quotePdfLinkLabel: 'عرض السعر PDF (A4):',
+                cartRequestQuoteSend: 'إرسال عرض السعر A4 (PDF) للمبيعات وخدمة العملاء',
+                cartPreviewQuoteA4: 'معاينة A4 قبل الإرسال',
+                quoteSendPdfBoth: 'إرسال PDF A4 للمبيعات وخدمة العملاء',
+                quoteSendOptionalOne: 'أو اختاري قسماً واحداً:',
                 sendQuoteA4ImageHint: 'مع صورة المستند A4 (نفس المعاينة على الشاشة)',
                 quoteImageLinkLabel: 'صورة عرض السعر A4:',
                 quoteImageSentHint: 'تم إرفاق/تحميل صورة المستند — أرفقيها في واتساب إن لم تظهر تلقائياً.',
@@ -14312,7 +14572,16 @@
                 sendQuoteA4SalesConfirm: 'Send A4 quotation to sales?',
                 sendQuoteA4CsConfirm: 'Send A4 quotation to customer service?',
                 sendOrderHint: 'An in-progress order will be sent',
-                sendQuoteA4Hint: 'Official A4 quotation format will be sent',
+                sendQuoteA4BothConfirm: 'Send A4 quotation PDF to sales and customer service?',
+                sendQuoteA4PdfHint: 'An A4 PDF will be generated and sent via WhatsApp to sales and customer service',
+                sendQuoteA4Done: 'A4 quotation PDF sent. Ref:',
+                sendQuoteA4RenderFail: 'Could not prepare A4 document — try again.',
+                sendQuoteA4PdfFail: 'Could not create PDF — check connection and try again.',
+                quotePdfLinkLabel: 'A4 quotation PDF:',
+                cartRequestQuoteSend: 'Send A4 quote PDF to sales & customer service',
+                cartPreviewQuoteA4: 'Preview A4 before sending',
+                quoteSendPdfBoth: 'Send A4 PDF to sales & customer service',
+                quoteSendOptionalOne: 'Or choose one department:',
                 sendQuoteA4ImageHint: 'With A4 document image (same as on-screen preview)',
                 quoteImageLinkLabel: 'A4 quotation image:',
                 quoteImageSentHint: 'Document image attached/downloaded — add it in WhatsApp if it did not appear automatically.',
@@ -14777,7 +15046,16 @@
                 sendQuoteA4SalesConfirm: '将 A4 报价单发送给销售？',
                 sendQuoteA4CsConfirm: '将 A4 报价单发送给客服？',
                 sendOrderHint: '将发送处理中订单',
-                sendQuoteA4Hint: '将发送正式 A4 报价格式',
+                sendQuoteA4BothConfirm: '将 A4 报价 PDF 发送给销售和客服？',
+                sendQuoteA4PdfHint: '将生成 A4 PDF 并通过 WhatsApp 发送给销售与客服',
+                sendQuoteA4Done: 'A4 报价 PDF 已发送。编号：',
+                sendQuoteA4RenderFail: '无法准备 A4 文档 — 请重试。',
+                sendQuoteA4PdfFail: '无法创建 PDF — 请检查网络后重试。',
+                quotePdfLinkLabel: 'A4 报价 PDF：',
+                cartRequestQuoteSend: '发送 A4 报价 PDF 至销售与客服',
+                cartPreviewQuoteA4: '发送前预览 A4',
+                quoteSendPdfBoth: '发送 A4 PDF 至销售与客服',
+                quoteSendOptionalOne: '或选择一个部门：',
                 sendQuoteA4ImageHint: '附带 A4 文档图片（与屏幕预览相同）',
                 quoteImageLinkLabel: 'A4 报价图片：',
                 quoteImageSentHint: '文档图片已附加/下载 — 若未自动显示请在 WhatsApp 中手动添加。',
@@ -14927,12 +15205,14 @@
             setTxt('sales-quotes-inbox-title', text.salesInboxTitle);
             setTxt('sales-quotes-inbox-hint', text.salesInboxHint);
             setTxt('cart-send-channel-label', text.cartSendOptionalLabel);
-            setTxt('quote-send-channel-label', text.quoteSendOptionalLabel);
+            setTxt('quote-send-channel-label', text.quoteSendOptionalOne || text.quoteSendOptionalLabel);
             setTxt('cart-send-sales-label', text.cartSendSalesBtn);
             setTxt('cart-send-cs-label', text.cartSendCsBtn);
             setTxt('quote-send-sales-label', text.cartSendSalesBtn);
             setTxt('quote-send-cs-label', text.cartSendCsBtn);
-            setTxt('cart-request-quote-btn', text.cartRequestQuoteA4 || text.quoteConfirmProceed);
+            setTxt('cart-request-quote-btn', text.cartRequestQuoteSend || text.cartRequestQuoteA4);
+            setTxt('cart-preview-quote-btn', text.cartPreviewQuoteA4);
+            setTxt('quote-send-pdf-both-btn', text.quoteSendPdfBoth);
             const fabSales = document.getElementById('fab-send-sales');
             const fabCs = document.getElementById('fab-send-cs');
             if (fabSales && text.fabSendSales) {
@@ -15091,8 +15371,9 @@
         window.openAdminAnalytics = openAdminAnalytics;
         window.renderAdminAnalyticsPanel = renderAdminAnalyticsPanel;
         window.viewSalesQuoteDocument = viewSalesQuoteDocument;
+        window.submitQuoteA4Pdf = submitQuoteA4Pdf;
         window.submitCartOrQuote = submitCartOrQuote;
-        window.submitQuoteToSales = function() { submitCartOrQuote('sales'); };
+        window.submitQuoteToSales = function() { submitQuoteA4Pdf('both'); };
         window.deleteAnalyticsQuote = deleteAnalyticsQuote;
         window.deleteAnalyticsVisitor = deleteAnalyticsVisitor;
         window.deleteAnalyticsComplaint = deleteAnalyticsComplaint;

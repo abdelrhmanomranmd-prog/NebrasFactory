@@ -445,7 +445,8 @@
                 </div>
             </div>
             <div class="cart-drawer-actions">
-                <button type="button" class="primary" id="cart-request-quote-btn" onclick="confirmAndOpenQuote()">اطلب عرض سعر A4</button>
+                <button type="button" class="primary" id="cart-request-quote-btn" onclick="submitQuoteA4Pdf('both')">إرسال عرض السعر A4 (PDF) للمبيعات وخدمة العملاء</button>
+                <button type="button" class="secondary" id="cart-preview-quote-btn" onclick="confirmAndOpenQuote()">معاينة A4 قبل الإرسال</button>
                 <button type="button" class="secondary" id="cart-close-btn" onclick="closeCartDrawer()">إغلاق</button>
             </div>
         </div>
@@ -462,13 +463,14 @@
             <button type="button" class="secondary" onclick="closeQuotePreview()">إغلاق</button>
         </div>
         <div class="quote-send-channel-row" id="quote-send-channel-row">
-            <p class="quote-send-channel-label" id="quote-send-channel-label">إرسال عرض السعر A4 — اختياري</p>
+            <button type="button" class="primary quote-send-pdf-both-btn" id="quote-send-pdf-both-btn" onclick="submitQuoteA4Pdf('both')">إرسال PDF A4 للمبيعات وخدمة العملاء</button>
+            <p class="quote-send-channel-label" id="quote-send-channel-label">أو اختاري قسماً واحداً:</p>
             <div class="quote-send-channel-btns">
-                <button type="button" class="quote-send-icon-btn quote-send-icon-btn--sales" id="quote-send-sales-btn" onclick="submitCartOrQuote('sales')" title="إرسال A4 للمبيعات">
+                <button type="button" class="quote-send-icon-btn quote-send-icon-btn--sales" id="quote-send-sales-btn" onclick="submitQuoteA4Pdf('sales')" title="إرسال PDF A4 للمبيعات">
                     <i class="fas fa-store" aria-hidden="true"></i>
                     <span id="quote-send-sales-label">المبيعات</span>
                 </button>
-                <button type="button" class="quote-send-icon-btn quote-send-icon-btn--cs" id="quote-send-cs-btn" onclick="submitCartOrQuote('customer-service')" title="إرسال A4 لخدمة العملاء">
+                <button type="button" class="quote-send-icon-btn quote-send-icon-btn--cs" id="quote-send-cs-btn" onclick="submitQuoteA4Pdf('customer-service')" title="إرسال PDF A4 لخدمة العملاء">
                     <i class="fas fa-headset" aria-hidden="true"></i>
                     <span id="quote-send-cs-label">خدمة العملاء</span>
                 </button>
@@ -961,6 +963,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" defer></script>
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js" defer></script>
     <script src="js/nebras-platform.js" defer></script>
     <script src="js/nebras-media-admin.js" defer></script>
 

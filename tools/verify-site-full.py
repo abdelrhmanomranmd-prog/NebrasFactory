@@ -46,8 +46,10 @@ def main():
         err('buildQuoteA4WhatsAppMessage missing — A4 WhatsApp format broken')
     if 'buildCartOrderWhatsAppMessage' not in js:
         err('buildCartOrderWhatsAppMessage missing — cart order format broken')
-    if 'captureQuoteA4AsPngDataUrl' not in js:
-        err('captureQuoteA4AsPngDataUrl missing — A4 image send broken')
+    if 'submitQuoteA4Pdf' not in js:
+        err('submitQuoteA4Pdf missing — cart A4 PDF send broken')
+    if 'captureQuoteA4AsPdfBlob' not in js:
+        err('captureQuoteA4AsPdfBlob missing — PDF generation broken')
     if 'quote-daily-stats' in js and "class=\"quote-daily-stats\"" in js[js.find('function renderQuotePreviewDocument'):js.find('function renderQuotePreviewDocument') + 6000]:
         warn('quote-daily-stats still rendered in customer A4 — should be admin-only')
     if 'PRIMARY_GOVERNANCE_USERNAMES' not in js:
