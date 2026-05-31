@@ -1580,6 +1580,41 @@ html.celebration-site-wide .header-top-row {
     border-bottom-color: color-mix(in srgb, var(--occasion-accent) 35%, transparent);
 }
 
+@media (max-width: 768px) {
+    html.celebration-site-wide .site-celebration-overlay {
+        opacity: 1;
+        z-index: 900;
+    }
+
+    .site-celebration-overlay .celebration-float {
+        font-size: 1.25rem;
+        opacity: 0.45;
+    }
+
+    .header-logo-occasion-wrap .header-occasion-chip {
+        display: inline-flex !important;
+        max-width: min(220px, 58vw);
+        white-space: nowrap;
+    }
+
+    .dashboard-celebration-banner:not([hidden]) {
+        display: block;
+        margin-bottom: 16px;
+    }
+
+    html.celebration-site-wide .nebras-partners-section {
+        position: relative;
+        z-index: 1;
+    }
+}
+
+@media (max-width: 768px) {
+    .celebration-float,
+    .site-celebration-overlay .celebration-float {
+        animation: celebrationFloat 16s linear infinite !important;
+    }
+}
+
 @media print {
     body * { visibility: hidden; }
     .quote-print-overlay, .quote-print-overlay * { visibility: visible; }

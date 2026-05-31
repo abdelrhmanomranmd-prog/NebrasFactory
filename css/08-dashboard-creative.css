@@ -342,7 +342,7 @@ html[dir="rtl"] .nebras-partners-track--reverse:not(.nebras-partners-track--stat
     transform: scale(1.05);
 }
 
-/* شبكة ثابتة — شعارات واضحة بدون حركة */
+/* شبكة ثابتة — للحالة الفارغة فقط */
 .nebras-partners-marquee--static {
     mask-image: none;
     -webkit-mask-image: none;
@@ -370,6 +370,24 @@ html[dir="rtl"] .nebras-partners-track--reverse:not(.nebras-partners-track--stat
 }
 
 @media (max-width: 768px) {
+    .nebras-partners-section {
+        padding: 36px 3% 44px;
+    }
+
+    .nebras-partners-marquee {
+        mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
+        -webkit-mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
+    }
+
+    .nebras-partners-marquee--premium .nebras-partners-track {
+        animation-duration: 24s;
+        gap: 24px;
+    }
+
+    .nebras-partners-marquee--row2 .nebras-partners-track:not(.nebras-partners-track--static) {
+        animation-duration: 28s;
+    }
+
     .nebras-partners-marquee--static .nebras-partners-track {
         gap: 12px 14px;
         padding: 0 4px;

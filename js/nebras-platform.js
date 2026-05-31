@@ -5847,6 +5847,17 @@
             }
         }
 
+        function markPartnersMarqueesAnimated(root) {
+            if (!root) return;
+            root.querySelectorAll('.nebras-partners-marquee').forEach(function(m) {
+                m.classList.remove('nebras-partners-marquee--static');
+            });
+            root.querySelectorAll('.nebras-partners-marquee--row2').forEach(function(row) {
+                const track = row.querySelector('.nebras-partners-track');
+                row.hidden = !(track && track.children.length);
+            });
+        }
+
         function markPartnersMarqueesStatic(root) {
             if (!root) return;
             root.querySelectorAll('.nebras-partners-marquee').forEach(function(m) {
@@ -5896,17 +5907,17 @@
             const ui = siteText[lang] || siteText.ar;
             const visible = getVisibleSitePartners();
             const split = splitPartnersForMarqueeRows(visible);
-            const htmlA = buildPartnersTrackHtml(split.rowA, lang, 1);
-            const htmlB = buildPartnersTrackHtml(split.rowB, lang, 1);
+            const htmlA = buildPartnersTrackHtml(split.rowA, lang, 2);
+            const htmlB = buildPartnersTrackHtml(split.rowB, lang, 2);
             const hasPartners = !!(htmlA || htmlB);
             const isAdmin = document.body.classList.contains('admin-session');
             const adminEmptyHint = '<div class="nebras-partners-empty nebras-partners-empty--admin"><i class="fas fa-handshake"></i><p>' +
                 escapeHtmlAttr(ui.partnersEmptyHintAdmin || ui.partnersEmptyHint || '') + '</p></div>';
             const publicSection = document.getElementById('nebras-partners-section');
             const publicStage = document.getElementById('nebras-partners-stage-public');
-            applyPartnersTrack(document.getElementById('nebras-partners-track-public-a'), htmlA, '', true);
-            applyPartnersTrack(document.getElementById('nebras-partners-track-public-b'), htmlB, '', true);
-            markPartnersMarqueesStatic(publicStage);
+            applyPartnersTrack(document.getElementById('nebras-partners-track-public-a'), htmlA, '', false);
+            applyPartnersTrack(document.getElementById('nebras-partners-track-public-b'), htmlB, '', false);
+            markPartnersMarqueesAnimated(publicStage);
             if (publicSection) {
                 publicSection.hidden = !hasPartners;
                 publicSection.style.display = hasPartners ? '' : 'none';
@@ -5916,9 +5927,9 @@
             const dashTrackB = document.getElementById('nebras-partners-track-dashboard-b');
             const dashStage = document.getElementById('nebras-partners-stage-dashboard');
             if (hasPartners) {
-                applyPartnersTrack(dashTrackA, htmlA, '', true);
-                applyPartnersTrack(dashTrackB, htmlB, '', true);
-                markPartnersMarqueesStatic(dashStage);
+                applyPartnersTrack(dashTrackA, htmlA, '', false);
+                applyPartnersTrack(dashTrackB, htmlB, '', false);
+                markPartnersMarqueesAnimated(dashStage);
             } else if (isAdmin) {
                 applyPartnersTrack(dashTrackA, '', adminEmptyHint);
                 applyPartnersTrack(dashTrackB, '');
@@ -8047,6 +8058,7 @@
                 if (isMainGovernanceAdmin(user)) {
                     user.isPrimary = true;
                     user.role = 'superadmin';
+                    user.permissions = null;
                 }
                 currentAdmin = user;
                 status.textContent = ui.adminLoginOk || 'تم تسجيل الدخول بنجاح.';
@@ -8580,7 +8592,8 @@
             if (!siteLayer) return;
             siteLayer.innerHTML = '';
             const mix = getOccasionDecorationMix(preset);
-            const count = 30;
+            const mobile = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+            const count = mobile ? 22 : 30;
             for (let i = 0; i < count; i++) {
                 const item = mix[i % mix.length];
                 const el = document.createElement('span');
@@ -8596,6 +8609,7 @@
                 }
                 siteLayer.appendChild(el);
             }
+            siteLayer.setAttribute('aria-hidden', 'true');
         }
 
         function openDashboardNavSettings() {
@@ -8604,7 +8618,7 @@
                 openAdminPanel({ preventDefault: function() {} });
                 return;
             }
-            if (currentAdmin.role !== 'superadmin') {
+            if (!isMainGovernanceAdmin(currentAdmin) && currentAdmin.role !== 'superadmin') {
                 alert(ui.settingsSuperAdminOnly || 'إعدادات النظام الكاملة متاحة لـ Super Admin فقط.');
                 return;
             }
@@ -12333,7 +12347,10 @@
                 adminUsers.unshift({ id: 'nebras-factory-admin', username: 'NEBRASFACTORY', password: 'NEBRASFACTORYCOMPANYBASIC', role: 'superadmin', isPrimary: true });
             }
             adminUsers.forEach(function(u) {
-                if (u.isPrimary) u.role = 'superadmin';
+                if (u.isPrimary) {
+                    u.role = 'superadmin';
+                    u.permissions = null;
+                }
             });
         }
 
@@ -12530,7 +12547,10 @@
                 adminUsers.unshift({ id: 'nebras-factory-admin', username: 'NEBRASFACTORY', password: 'NEBRASFACTORYCOMPANYBASIC', role: 'superadmin', isPrimary: true });
             }
             adminUsers.forEach(function(u) {
-                if (u.isPrimary) u.role = 'superadmin';
+                if (u.isPrimary) {
+                    u.role = 'superadmin';
+                    u.permissions = null;
+                }
             });
         }
 
