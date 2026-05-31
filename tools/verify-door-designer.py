@@ -38,7 +38,7 @@ def main():
         err('DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS is not true')
     if 'applyComposedRollToPhotoPresetImg(img' not in js:
         err('applyComposedRollToPhotoPresetImg not called — color bake missing')
-    if 'has-door-roll-tint::after' not in css:
+    if 'has-door-roll-tint:not(.has-roll-composite-ready)::after' not in css and 'has-door-roll-tint::after' not in css:
         err('Instant CSS tint layer (::after) missing from door designer CSS')
     if 'grayscale(1)' in css and 'has-roll-composite' in css:
         pass  # expected: grayscale only until composite ready

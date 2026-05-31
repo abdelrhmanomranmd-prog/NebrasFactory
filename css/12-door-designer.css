@@ -2706,38 +2706,25 @@
     isolation: isolate;
 }
 
-/* طبقة لون فورية — تتغير مباشرة مع كل رولّة من الـ20 */
-.wpc-door-photo-preset-stack.has-door-roll-tint::after {
+/* طبقة لون فورية — تطابق كتالوج الرولّات بدون اسود/بكسلة */
+.wpc-door-photo-preset-stack.has-door-roll-tint:not(.has-roll-composite-ready)::after {
     content: '';
     position: absolute;
     inset: 0;
     z-index: 3;
     background-color: var(--door-roll-tint, #b8bcc4);
-    mix-blend-mode: multiply;
-    opacity: calc(var(--door-roll-tint-opacity, 0.92) * 0.88);
+    mix-blend-mode: color;
+    opacity: var(--door-roll-tint-opacity, 0.82);
     pointer-events: none;
 }
 
-.wpc-door-photo-preset-stack.has-door-roll-tint.has-roll-texture::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 2;
-    background-image: var(--door-roll-texture-url, none);
-    background-size: cover;
-    background-position: center;
-    mix-blend-mode: multiply;
-    opacity: 0.58;
-    pointer-events: none;
-    image-rendering: auto;
-    -webkit-mask-image: var(--door-roll-mask, none);
-    mask-image: var(--door-roll-mask, none);
-    -webkit-mask-size: contain;
-    mask-size: contain;
-    -webkit-mask-repeat: no-repeat;
-    mask-repeat: no-repeat;
-    -webkit-mask-position: center;
-    mask-position: center;
+.wpc-door-photo-preset-stack.has-door-roll-tint.has-roll-texture:not(.has-roll-composite-ready)::before {
+    display: none;
+}
+
+.wpc-door-photo-preset-stack.has-roll-composite-ready::after,
+.wpc-door-photo-preset-stack.has-roll-composite-ready::before {
+    display: none !important;
 }
 
 .wpc-door-photo-preset-img,
@@ -2763,39 +2750,16 @@
 }
 
 .wpc-door-photo-preset-roll {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    object-position: center center;
-    mix-blend-mode: multiply;
-    opacity: 0;
-    pointer-events: none;
-    border-radius: 2px;
-    transition: opacity 0.25s ease;
-    image-rendering: auto;
-    -webkit-mask-image: var(--door-roll-mask, none);
-    mask-image: var(--door-roll-mask, none);
-    -webkit-mask-size: contain;
-    mask-size: contain;
-    -webkit-mask-repeat: no-repeat;
-    mask-repeat: no-repeat;
-    -webkit-mask-position: center;
-    mask-position: center;
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
 }
 
-.wpc-door-photo-preset-roll.is-active {
-    opacity: var(--door-roll-layer-opacity, 0.92);
-}
-
-.wpc-door-photo-preset-stack.has-roll-texture .wpc-door-photo-preset-img {
-    filter: drop-shadow(0 22px 48px rgba(0, 0, 0, 0.22)) grayscale(1) contrast(var(--door-roll-base-contrast, 1.12)) brightness(var(--door-roll-base-brightness, 1.06));
-    transition: filter 0.28s ease, opacity 0.28s ease;
-}
-
-.wpc-door-photo-preset-stack.has-roll-texture .wpc-door-photo-preset-img:not(.has-roll-composite) {
-    filter: drop-shadow(0 22px 48px rgba(0, 0, 0, 0.22)) grayscale(1) contrast(var(--door-roll-base-contrast, 1.12)) brightness(var(--door-roll-base-brightness, 1.06));
+.wpc-door-photo-preset-stack.has-roll-texture:not(.has-roll-composite-ready) .wpc-door-photo-preset-img {
+    filter: drop-shadow(0 22px 48px rgba(0, 0, 0, 0.22))
+        saturate(0.5)
+        brightness(var(--door-roll-base-brightness, 1.08));
     transition: filter 0.28s ease, opacity 0.28s ease;
 }
 
@@ -2804,7 +2768,7 @@
 }
 
 .wpc-door-photo-preset-transom-cap.has-roll-texture:not(.has-roll-composite) {
-    filter: drop-shadow(0 12px 28px rgba(0, 0, 0, 0.12)) grayscale(1) contrast(1.1) brightness(1.05);
+    filter: drop-shadow(0 12px 28px rgba(0, 0, 0, 0.12)) saturate(0.5) brightness(1.06);
 }
 
 .wpc-door-photo-preset-transom-cap.has-roll-texture::after {

@@ -425,7 +425,7 @@
         }
 
         const DOOR_PHOTO_PRESET_ROOT = 'images/doors/presets/';
-        const DOOR_PHOTO_PRESET_CACHE = '26';
+        const DOOR_PHOTO_PRESET_CACHE = '27';
         /** صور أبواب المصنع الحقيقية في المعاينة — SVG احتياطي عند غياب الصورة */
         const DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS = true;
         let doorDesignerPreviewRaf = 0;
@@ -455,13 +455,13 @@
             const isLight = lum >= 0.68;
             const isDark = lum <= 0.15;
             return {
-                cssOpacity: isLight ? 0.97 : (isDark ? 0.94 : 0.92),
-                multiplyAlpha: isLight ? 0.8 : 0.94,
-                colorAlpha: isLight ? 0.96 : 0.9,
-                hexBoost: isLight ? 0.62 : (isDark ? 0.52 : 0.48),
-                saturationGray: isLight ? 0.94 : 0.88,
-                baseContrast: isLight ? 1.08 : 1.12,
-                baseBrightness: isLight ? 1.16 : 1.06
+                cssOpacity: isLight ? 0.88 : (isDark ? 0.82 : 0.85),
+                multiplyAlpha: isLight ? 0.72 : (isDark ? 0.78 : 0.86),
+                colorAlpha: isLight ? 0.92 : (isDark ? 0.88 : 0.9),
+                hexBoost: isLight ? 0.58 : (isDark ? 0.68 : 0.52),
+                saturationGray: isLight ? 0.55 : 0.42,
+                baseContrast: isLight ? 1.04 : 1.06,
+                baseBrightness: isLight ? 1.1 : 1.08
             };
         }
 
@@ -643,7 +643,7 @@
                             ctx.globalAlpha = 1;
                         }
                         ctx.globalCompositeOperation = 'multiply';
-                        ctx.globalAlpha = 0.22;
+                        ctx.globalAlpha = profile.saturationGray > 0.5 ? 0.14 : 0.08;
                         ctx.drawImage(base, 0, 0, w, h);
                         ctx.globalAlpha = 1;
                         ctx.globalCompositeOperation = 'source-over';
@@ -671,16 +671,26 @@
 
         function applyComposedRollToPhotoPresetImg(img, baseSrc, rollUrl, hex, isRoll, catalogIndex, rollImg) {
             if (!img || !baseSrc) return;
+            const stack = img.closest ? img.closest('.wpc-door-photo-preset-stack') : document.getElementById('wpc-door-photo-preset-stack');
             const token = String(Date.now()) + '-' + String(catalogIndex || 0) + '-' + String(hex || '');
             img.setAttribute('data-door-base-src', baseSrc);
             img.setAttribute('data-roll-compose-token', token);
-            img.classList.remove('has-roll-composite');
+            if (rollImg) {
+                rollImg.hidden = true;
+                rollImg.classList.remove('is-active');
+                rollImg.removeAttribute('src');
+            }
             if (!isRoll) {
                 img.src = baseSrc;
+                img.classList.remove('has-roll-composite', 'has-roll-pending');
+                if (stack) stack.classList.remove('has-roll-composite-ready', 'has-roll-pending', 'has-roll-texture');
                 return;
             }
-            const bust = (baseSrc.indexOf('?') >= 0 ? '&' : '?') + 'c=' + String(catalogIndex || 0) + '&h=' + encodeURIComponent(hex || '');
-            img.src = baseSrc.split('#')[0] + bust;
+            img.classList.add('has-roll-pending');
+            if (stack) {
+                stack.classList.add('has-roll-pending');
+                stack.classList.remove('has-roll-composite-ready');
+            }
             const tex = rollUrl ? resolveDoorRollTextureUrl(rollUrl) : '';
             composeDoorPhotoWithRoll(baseSrc, tex, hex, catalogIndex).then(function(composed) {
                 if (!img.isConnected) return;
@@ -688,9 +698,11 @@
                 if (composed) {
                     img.src = composed;
                     img.classList.add('has-roll-composite');
-                } else if (rollImg) {
-                    rollImg.removeAttribute('hidden');
-                    rollImg.classList.add('is-active');
+                    img.classList.remove('has-roll-pending');
+                    if (stack) {
+                        stack.classList.add('has-roll-composite-ready');
+                        stack.classList.remove('has-roll-pending');
+                    }
                 }
             });
         }
@@ -811,6 +823,8 @@
             }
             if (stack) {
                 stack.classList.toggle('has-roll-texture', !!isRoll);
+                stack.classList.toggle('has-roll-pending', !!isRoll);
+                stack.classList.remove('has-roll-composite-ready');
                 if (isRoll) stack.style.setProperty('--door-roll-mask', 'url("' + baseMask + '")');
             }
 
@@ -820,28 +834,22 @@
                     rollImg.classList.remove('is-active');
                     rollImg.removeAttribute('src');
                 }
-                if (img) img.src = baseSrc;
+                if (img) {
+                    img.src = baseSrc;
+                    img.classList.remove('has-roll-composite', 'has-roll-pending');
+                }
+                if (stack) stack.classList.remove('has-roll-composite-ready', 'has-roll-pending', 'has-roll-texture');
                 if (transomCap && transomCap.classList) {
-                    transomCap.classList.remove('has-roll-texture', 'has-door-roll-tint');
+                    transomCap.classList.remove('has-roll-texture', 'has-door-roll-tint', 'has-roll-composite');
                     transomCap.style.removeProperty('--door-cap-roll');
                 }
                 return;
             }
 
-            /* طبقة فورية — تظهر اللون مباشرة حتى ينتهي Canvas */
-            if (rollImg && rollAbsolute) {
-                const rollFallback = doorDesignerMediaUrl(getRollSwatchFallbackUrl(idx));
-                const rollBust = (rollAbsolute.indexOf('?') >= 0 ? '&' : '?') + 'r=' + idx + '&h=' + encodeURIComponent(hex || '') + '&v=' + DOOR_PHOTO_PRESET_CACHE;
-                rollImg.onerror = function() {
-                    if (rollImg.getAttribute('data-roll-fallback-tried') !== '1') {
-                        rollImg.setAttribute('data-roll-fallback-tried', '1');
-                        rollImg.src = rollFallback + (rollFallback.indexOf('?') >= 0 ? '&' : '?') + 'r=' + idx + '&h=' + encodeURIComponent(hex || '') + '&v=' + DOOR_PHOTO_PRESET_CACHE;
-                    }
-                };
-                rollImg.removeAttribute('data-roll-fallback-tried');
-                rollImg.removeAttribute('hidden');
-                rollImg.src = rollAbsolute + rollBust;
-                rollImg.classList.add('is-active');
+            if (rollImg) {
+                rollImg.hidden = true;
+                rollImg.classList.remove('is-active');
+                rollImg.removeAttribute('src');
             }
 
             if (transomCap && transomCap.src && !transomCap.hidden) {
