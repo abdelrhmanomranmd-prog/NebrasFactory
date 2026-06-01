@@ -12339,6 +12339,7 @@
                 email_mismatch: 'الإيميل غير مطابق للإيميل المعتمد للإدارة الرئيسية.',
                 gmail_not_configured: 'إرسال Gmail غير مُعدّ على الخادم. أضيفي GMAIL_APP_PASSWORD في Vercel.',
                 gmail_send_failed: 'تعذّر إرسال الرسالة عبر Gmail. تحققي من كلمة مرور التطبيق.',
+                gmail_auth_failed: 'فشل تسجيل الدخول لـ Gmail. في Vercel عدّلي GMAIL_APP_PASSWORD (16 حرف بدون مسافات) من Google → كلمات مرور التطبيقات → Nebras Factory.',
                 otp_store_unavailable: 'تخزين الرمز غير متاح. تحققي من SUPABASE_URL و SUPABASE_SERVICE_ROLE_KEY في Vercel ثم Redeploy.',
                 supabase_auth_failed: 'مفتاح Supabase غير صحيح. انسخي Secret key من Supabase → API Keys → default.',
                 server_error: 'خطأ في خادم Vercel. انتظري دقيقة بعد Redeploy أو راجعي GMAIL_APP_PASSWORD (بدون مسافات).',

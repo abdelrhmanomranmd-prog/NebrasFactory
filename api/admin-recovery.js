@@ -221,13 +221,11 @@ async function handleRecovery(req, res) {
         } catch (mailErr) {
             await supabaseClearOtp();
             console.error('Gmail send failed:', mailErr);
+            let errCode = 'gmail_send_failed';
+            const msg = String(mailErr && (mailErr.code || mailErr.message) || '').toUpperCase();
+            if (msg.indexOf('EAUTH') >= 0 || msg.indexOf('AUTH') >= 0) errCode = 'gmail_auth_failed';
             res.statusCode = 503;
-            res.end(
-                JSON.stringify({
-                    ok: false,
-                    error: mailErr.code || mailErr.message || 'gmail_send_failed'
-                })
-            );
+            res.end(JSON.stringify({ ok: false, error: errCode }));
             return;
         }
         res.statusCode = 200;
