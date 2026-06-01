@@ -15,14 +15,25 @@ function hashOtp(code) {
     return crypto.createHash('sha256').update(String(code) + '|' + otpSecret()).digest('hex');
 }
 
+const SUPABASE_FALLBACK_URL = 'https://oedldllrjavofpeaputz.supabase.co';
+const SUPABASE_FALLBACK_ANON = 'sb_publishable_bt6rlHxu_pjc1xpkKEWOcg_HZ43JMR0';
+
 function supabaseConfig() {
-    const url = (process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '').replace(/\/$/, '');
-    const key =
+    const url = (
+        process.env.SUPABASE_URL ||
+        process.env.NEXT_PUBLIC_SUPABASE_URL ||
+        SUPABASE_FALLBACK_URL
+    ).replace(/\/$/, '');
+    const keys = [];
+    const primary =
         process.env.SUPABASE_SERVICE_ROLE_KEY ||
         process.env.SUPABASE_SECRET_KEY ||
         process.env.SUPABASE_SERVICE_KEY ||
         '';
-    return { url, key: String(key).trim() };
+    if (primary) keys.push(String(primary).trim());
+    const anon = process.env.SUPABASE_ANON_KEY || SUPABASE_FALLBACK_ANON;
+    if (anon && keys.indexOf(anon) < 0) keys.push(String(anon).trim());
+    return { url, keys };
 }
 
 function supabaseHeaders(key) {
@@ -34,66 +45,76 @@ function supabaseHeaders(key) {
     };
 }
 
-async function supabaseUpsertOtp(payload) {
-    const { url, key } = supabaseConfig();
-    if (!url || !key) return { ok: false, code: 'otp_store_unavailable' };
-
+async function supabaseTryWithKey(url, key, payload, mode) {
+    if (!url || !key) return false;
     try {
-        await fetch(url + '/rest/v1/nebras_data_store?store_key=eq.' + encodeURIComponent(OTP_STORE_KEY), {
-            method: 'DELETE',
-            headers: supabaseHeaders(key)
-        });
-
-        const res = await fetch(url + '/rest/v1/nebras_data_store', {
-            method: 'POST',
-            headers: supabaseHeaders(key),
-            body: JSON.stringify({
-                store_key: OTP_STORE_KEY,
-                payload: payload,
-                updated_at: new Date().toISOString()
-            })
-        });
-
-        if (!res.ok) {
-            const errText = await res.text().catch(function() { return ''; });
-            console.error('Supabase OTP store failed:', res.status, errText);
-            return { ok: false, code: res.status === 401 || res.status === 403 ? 'supabase_auth_failed' : 'otp_store_unavailable' };
+        if (mode === 'write') {
+            await fetch(url + '/rest/v1/nebras_data_store?store_key=eq.' + encodeURIComponent(OTP_STORE_KEY), {
+                method: 'DELETE',
+                headers: supabaseHeaders(key)
+            });
+            const res = await fetch(url + '/rest/v1/nebras_data_store', {
+                method: 'POST',
+                headers: supabaseHeaders(key),
+                body: JSON.stringify({
+                    store_key: OTP_STORE_KEY,
+                    payload: payload,
+                    updated_at: new Date().toISOString()
+                })
+            });
+            if (!res.ok) {
+                console.error('Supabase OTP store failed:', res.status, await res.text().catch(function() { return ''; }));
+                return false;
+            }
+            return true;
         }
-        return { ok: true };
+        if (mode === 'read') {
+            const res = await fetch(
+                url + '/rest/v1/nebras_data_store?store_key=eq.' + encodeURIComponent(OTP_STORE_KEY) + '&select=payload',
+                { headers: supabaseHeaders(key) }
+            );
+            if (!res.ok) return null;
+            const rows = await res.json();
+            if (!rows || !rows[0] || !rows[0].payload) return null;
+            return rows[0].payload;
+        }
+        if (mode === 'delete') {
+            await fetch(url + '/rest/v1/nebras_data_store?store_key=eq.' + encodeURIComponent(OTP_STORE_KEY), {
+                method: 'DELETE',
+                headers: supabaseHeaders(key)
+            });
+            return true;
+        }
     } catch (err) {
-        console.error('Supabase OTP store error:', err);
-        return { ok: false, code: 'otp_store_unavailable' };
+        console.error('Supabase OTP error:', err);
     }
+    return mode === 'read' ? null : false;
+}
+
+async function supabaseUpsertOtp(payload) {
+    const { url, keys } = supabaseConfig();
+    if (!url || !keys.length) return { ok: false, code: 'otp_store_unavailable' };
+    for (let i = 0; i < keys.length; i++) {
+        if (await supabaseTryWithKey(url, keys[i], payload, 'write')) return { ok: true };
+    }
+    return { ok: false, code: 'supabase_auth_failed' };
 }
 
 async function supabaseReadOtp() {
-    const { url, key } = supabaseConfig();
-    if (!url || !key) return null;
-    try {
-        const res = await fetch(
-            url + '/rest/v1/nebras_data_store?store_key=eq.' + encodeURIComponent(OTP_STORE_KEY) + '&select=payload',
-            { headers: supabaseHeaders(key) }
-        );
-        if (!res.ok) return null;
-        const rows = await res.json();
-        if (!rows || !rows[0] || !rows[0].payload) return null;
-        return rows[0].payload;
-    } catch (err) {
-        console.error('Supabase OTP read error:', err);
-        return null;
+    const { url, keys } = supabaseConfig();
+    if (!url || !keys.length) return null;
+    for (let i = 0; i < keys.length; i++) {
+        const row = await supabaseTryWithKey(url, keys[i], null, 'read');
+        if (row) return row;
     }
+    return null;
 }
 
 async function supabaseClearOtp() {
-    const { url, key } = supabaseConfig();
-    if (!url || !key) return;
-    try {
-        await fetch(url + '/rest/v1/nebras_data_store?store_key=eq.' + encodeURIComponent(OTP_STORE_KEY), {
-            method: 'DELETE',
-            headers: supabaseHeaders(key)
-        });
-    } catch (err) {
-        console.error('Supabase OTP clear error:', err);
+    const { url, keys } = supabaseConfig();
+    if (!url || !keys.length) return;
+    for (let i = 0; i < keys.length; i++) {
+        await supabaseTryWithKey(url, keys[i], null, 'delete');
     }
 }
 
