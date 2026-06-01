@@ -403,8 +403,19 @@ img, video, canvas, svg {
 .workspace-shell,
 .door-studio-layout,
 .cart-drawer,
-.product-shop-modal {
+.product-shop-modal,
+.quote-print-overlay,
+.quote-a4-preview-stage {
     max-width: 100%;
+}
+
+button,
+a,
+.fab-cart,
+.fab-send-channel-group button,
+.cart-send-icon-btn,
+.quote-send-icon-btn {
+    touch-action: manipulation;
 }
 
 @media (max-width: 768px) {
@@ -467,11 +478,29 @@ img, video, canvas, svg {
         z-index: 5;
     }
 
-    .quote-a4 {
+    .quote-a4-preview-stage {
         width: 100%;
-        max-width: 100%;
-        padding: 14px 12px;
-        font-size: 0.88rem;
+        padding-inline: 2px;
+    }
+
+    .quote-a4 {
+        width: 210mm;
+        max-width: 210mm;
+        padding: 12mm 10mm 14mm;
+        font-size: 0.86rem;
+        margin-bottom: 8px;
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.18);
+    }
+
+    .quote-print-overlay .quote-send-channel-btns,
+    .quote-print-overlay .quote-print-actions {
+        gap: 8px;
+    }
+
+    .quote-print-overlay .primary,
+    .quote-print-overlay .secondary {
+        min-height: 44px;
+        touch-action: manipulation;
     }
 
     .quote-print-actions {
@@ -504,5 +533,29 @@ img, video, canvas, svg {
         max-width: 100%;
         height: auto;
         min-height: 280px;
+    }
+
+    .quote-a4 {
+        padding: 10mm 8mm 12mm;
+        font-size: 0.82rem;
+    }
+
+    .quote-hero-logo {
+        max-height: 72px;
+    }
+
+    .quote-factory-logo {
+        max-height: 44px;
+    }
+}
+
+@media (max-width: 360px) {
+    .quote-print-overlay {
+        padding-inline: 4px;
+    }
+
+    .quote-send-icon-btn {
+        min-height: 58px;
+        font-size: 0.82rem;
     }
 }

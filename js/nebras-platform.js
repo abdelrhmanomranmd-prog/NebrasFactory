@@ -5122,6 +5122,43 @@
             return !!(overlay && overlay.classList.contains('show'));
         }
 
+        function syncQuoteA4MobilePreviewScale() {
+            const stage = document.getElementById('quote-a4-preview-stage');
+            const doc = document.getElementById('quote-a4-document');
+            if (!stage || !doc) return;
+            if (!isQuotePreviewOpen()) {
+                doc.style.transform = '';
+                doc.style.transformOrigin = '';
+                stage.style.height = '';
+                stage.classList.remove('quote-a4-preview-stage--scaled');
+                return;
+            }
+            const pad = 24;
+            const avail = Math.min(window.innerWidth || 360, stage.clientWidth || window.innerWidth) - pad;
+            const docW = doc.offsetWidth || doc.scrollWidth;
+            if (!docW) return;
+            const scale = Math.min(1, avail / docW);
+            if (scale < 0.995) {
+                doc.style.transform = 'scale(' + scale + ')';
+                doc.style.transformOrigin = 'top center';
+                stage.style.height = Math.ceil((doc.offsetHeight || doc.scrollHeight) * scale + 12) + 'px';
+                stage.classList.add('quote-a4-preview-stage--scaled');
+            } else {
+                doc.style.transform = '';
+                doc.style.transformOrigin = '';
+                stage.style.height = '';
+                stage.classList.remove('quote-a4-preview-stage--scaled');
+            }
+        }
+
+        function getQuoteCaptureScale() {
+            const w = window.innerWidth || 1024;
+            const dpr = window.devicePixelRatio || 1;
+            if (w <= 480) return Math.min(1.35, dpr);
+            if (w <= 768) return Math.min(1.65, dpr);
+            return Math.min(2.25, Math.max(1.75, dpr));
+        }
+
         function buildQuoteA4WhatsAppMessage(entry, ui, lang) {
             if (!entry) return '';
             const isEn = lang === 'en';
@@ -5434,10 +5471,14 @@
             const doc = document.getElementById('quote-a4-document');
             if (!doc || !doc.innerHTML.trim()) return '';
             await waitForQuoteDocumentImages(doc);
+            const prevTransform = doc.style.transform;
+            const prevOrigin = doc.style.transformOrigin;
+            doc.style.transform = 'none';
+            doc.style.transformOrigin = '';
             try {
                 const html2canvas = await loadHtml2CanvasLib();
                 const canvas = await html2canvas(doc, {
-                    scale: Math.min(2.25, Math.max(1.75, window.devicePixelRatio || 1.75)),
+                    scale: getQuoteCaptureScale(),
                     useCORS: true,
                     allowTaint: true,
                     backgroundColor: '#ffffff',
@@ -5451,6 +5492,10 @@
             } catch (capErr) {
                 console.warn('Quote A4 capture failed:', capErr);
                 return '';
+            } finally {
+                doc.style.transform = prevTransform;
+                doc.style.transformOrigin = prevOrigin;
+                syncQuoteA4MobilePreviewScale();
             }
         }
 
@@ -6517,7 +6562,9 @@
                 ? (systemSettings.companyAddressEn || systemSettings.companyAddressAr || '')
                 : (systemSettings.companyAddressAr || systemSettings.companyAddressEn || '');
             const factoryTitle = isEn ? 'Factory & company' : (isZh ? '工厂信息' : 'بيانات المصنع والشركة');
+            const factoryLogo = buildQuoteLogoImgHtml('quote-factory-logo', logoUrl, logoAlt);
             return '<article class="quote-info-card quote-info-card--factory">' +
+                '<div class="quote-factory-brand" aria-hidden="false">' + factoryLogo + '</div>' +
                 '<h3 class="quote-info-card-title"><i class="fas fa-industry" aria-hidden="true"></i> ' + escapeHtmlAttr(factoryTitle) + '</h3>' +
                 '<p class="quote-factory-name">' + escapeHtmlAttr(companyName) + '</p>' +
                 buildQuoteInfoRow(isEn ? 'Commercial register' : (isZh ? '商业登记' : 'السجل التجاري'), systemSettings.commercialRegister) +
@@ -6613,11 +6660,16 @@
             overlay.classList.add('show');
             closeCartDrawer();
             updateSalesQuoteFab();
+            requestAnimationFrame(function() {
+                syncQuoteA4MobilePreviewScale();
+                waitForQuoteDocumentImages(doc, 2500).then(syncQuoteA4MobilePreviewScale);
+            });
         }
 
         function closeQuotePreview() {
             const overlay = document.getElementById('quote-print-overlay');
             if (overlay) overlay.classList.remove('show');
+            syncQuoteA4MobilePreviewScale();
             clearQuoteSessionState();
         }
 
@@ -10002,6 +10054,10 @@
             if (!window._nebrasMobileBarResizeBound) {
                 window._nebrasMobileBarResizeBound = true;
                 window.addEventListener('resize', syncMobileCommerceBar, { passive: true });
+                window.addEventListener('resize', syncQuoteA4MobilePreviewScale, { passive: true });
+                window.addEventListener('orientationchange', function() {
+                    setTimeout(syncQuoteA4MobilePreviewScale, 120);
+                }, { passive: true });
             }
         }
 

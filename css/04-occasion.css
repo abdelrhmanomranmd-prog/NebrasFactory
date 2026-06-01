@@ -970,13 +970,31 @@ body.platform-erp-active { --platform-layer: erp; }
     z-index: 3000;
     display: none;
     overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
     padding: 20px;
+    min-height: 100vh;
+    min-height: 100dvh;
 }
 
 .quote-print-overlay.show { display: block; }
 
+.quote-a4-preview-stage {
+    width: 100%;
+    max-width: 100%;
+    margin: 0 auto 16px;
+    display: flex;
+    justify-content: center;
+    overflow-x: hidden;
+}
+
+.quote-a4-preview-stage--scaled {
+    overflow-x: hidden;
+}
+
 .quote-a4 {
     width: 210mm;
+    max-width: 210mm;
     min-height: 297mm;
     margin: 0 auto 20px;
     background: #fff;
@@ -985,6 +1003,7 @@ body.platform-erp-active { --platform-layer: erp; }
     position: relative;
     box-shadow: 0 8px 40px rgba(0, 0, 0, 0.3);
     overflow: hidden;
+    box-sizing: border-box;
 }
 
 .quote-watermark-layer {
@@ -1085,6 +1104,21 @@ body.platform-erp-active { --platform-layer: erp; }
     line-height: 1.55;
 }
 
+.quote-factory-brand {
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.quote-factory-logo {
+    display: block;
+    margin: 0 auto 6px;
+    max-height: 52px;
+    max-width: min(160px, 90%);
+    width: auto;
+    height: auto;
+    object-fit: contain;
+}
+
 .quote-info-card--factory {
     border-top: 3px solid #0d2840;
 }
@@ -1170,7 +1204,9 @@ body.platform-erp-active { --platform-layer: erp; }
     z-index: 1;
     margin-top: 4px;
     border-radius: 10px;
-    overflow: hidden;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
     border: 1px solid rgba(13, 40, 64, 0.12);
 }
 
@@ -1249,12 +1285,43 @@ body.platform-erp-active { --platform-layer: erp; }
     .quote-info-card--factory {
         order: -1;
     }
+
+    .quote-hero-logo {
+        max-height: 84px;
+    }
+
+    .quote-watermark-logo {
+        opacity: 0.11;
+        width: 78%;
+    }
+
+    .quote-table--premium {
+        min-width: 520px;
+        font-size: 0.74rem;
+    }
+
+    .quote-table--premium th,
+    .quote-table--premium td {
+        padding: 6px 5px;
+    }
+
+    .quote-number-big {
+        font-size: 1.15rem;
+    }
 }
 
 @media print {
+    .quote-a4-preview-stage {
+        height: auto !important;
+        overflow: visible;
+    }
+
     .quote-a4 {
         -webkit-print-color-adjust: exact;
         print-color-adjust: exact;
+        transform: none !important;
+        width: 210mm !important;
+        max-width: 210mm !important;
     }
 
     .quote-watermark-logo {
@@ -1892,7 +1959,12 @@ html.celebration-site-wide .header-top-row {
 @media (max-width: 768px) {
     .celebration-float,
     .site-celebration-overlay .celebration-float {
-        animation: celebrationFloat 20s linear infinite;
+        animation: celebrationFloat 28s linear infinite;
+        opacity: 0.18;
+    }
+
+    .site-celebration-overlay {
+        pointer-events: none;
     }
 }
 
