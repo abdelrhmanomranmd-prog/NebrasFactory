@@ -13,13 +13,23 @@
     height: var(--mini-showcase-h);
     border-radius: 14px;
     overflow: hidden;
+    contain: layout style paint;
     background: linear-gradient(165deg, #0a1e32 0%, #123a5c 55%, #0d2840 100%);
     border: 2px solid rgba(0, 168, 255, 0.45);
     box-shadow:
         0 10px 28px rgba(0, 0, 0, 0.35),
         0 0 0 1px rgba(255, 255, 255, 0.08) inset,
         0 0 24px rgba(0, 168, 255, 0.15);
-    animation: nebrasMiniShowcaseFloat 5.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    .nebras-mini-showcase-frame {
+        animation: nebrasMiniShowcaseFloat 5.5s ease-in-out infinite;
+    }
+}
+
+.nebras-mini-showcase--interactive {
+    cursor: pointer;
 }
 
 .nebras-mini-showcase--partners .nebras-mini-showcase-frame {
@@ -36,7 +46,12 @@
     background: radial-gradient(ellipse at 50% 30%, rgba(0, 168, 255, 0.35) 0%, transparent 62%);
     pointer-events: none;
     z-index: 1;
-    animation: nebrasMiniShowcaseGlow 4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: no-preference) and (min-width: 769px) {
+    .nebras-mini-showcase-glow {
+        animation: nebrasMiniShowcaseGlow 4s ease-in-out infinite;
+    }
 }
 
 .nebras-mini-showcase--partners .nebras-mini-showcase-glow {
@@ -64,9 +79,14 @@
     object-fit: cover;
     object-position: center top;
     opacity: 0;
-    transform: scale(1.06) translateY(4px);
+    transform: scale(1.04) translateY(3px);
     animation: nebrasMiniShowcaseFade var(--cycle-duration, 18s) ease-in-out infinite;
-    will-change: opacity, transform;
+}
+
+@media (prefers-reduced-motion: no-preference) and (min-width: 769px) {
+    .nebras-mini-showcase-slide {
+        will-change: opacity;
+    }
 }
 
 .nebras-mini-showcase-slide--logo {
@@ -175,50 +195,17 @@
     margin-top: 0;
 }
 
-/* —— الهيدر: شركاء يسار / باب بجوار استكشف المنتجات —— */
-.header-aside {
-    flex: 0 0 auto;
-    align-self: flex-start;
+/* —— الهيدر: معاينات مصغّرة —— */
+.header-showcase-col .nebras-mini-showcase {
+    filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.3));
 }
 
-.header-aside[hidden] {
-    display: none !important;
+.header-showcase-card--hero .nebras-mini-showcase {
+    filter: drop-shadow(0 8px 20px rgba(0, 168, 255, 0.2));
 }
 
-.header-aside--partners .nebras-mini-showcase {
-    filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.35));
-}
-
-.header-campaign-panel-grid {
-    display: flex;
-    align-items: flex-start;
-    gap: clamp(10px, 2vw, 18px);
-}
-
-.header-campaign-main {
-    flex: 1 1 200px;
-    min-width: 0;
-}
-
-.header-campaign-door-aside {
-    flex: 0 0 auto;
-    align-self: center;
-    padding-top: 2px;
-}
-
-.header-campaign-door-aside .nebras-mini-showcase {
-    filter: drop-shadow(0 8px 22px rgba(0, 0, 0, 0.4));
-}
-
-[dir="rtl"] .header-aside--partners {
-    justify-self: end;
-}
-
-[dir="ltr"] .header-aside--partners {
-    justify-self: start;
-}
-
-body.nebras-door-interface-active .header-campaign-door-aside {
+body.nebras-door-interface-active .header-campaign-capsule,
+body.nebras-door-interface-active .header-campaign-panel {
     display: none;
 }
 

@@ -1,148 +1,287 @@
-/* حملة الهيدر — بجوار اسم الشركة */
+/* حملة الهيدر — تخطيط ديناميكي: شركاء | العلامة | كبسولة الحملة */
+
 .header-top-row--campaign {
     display: grid;
-    grid-template-columns: auto minmax(0, 1fr) minmax(0, 1.15fr);
-    align-items: start;
-    gap: clamp(12px, 2.5vw, 28px);
+    grid-template-columns: auto minmax(0, 0.95fr) minmax(0, 1.2fr);
+    align-items: center;
+    gap: clamp(10px, 2.2vw, 22px);
+    padding: clamp(6px, 1.2vw, 10px) 0;
 }
 
-[dir="rtl"] .header-aside--partners {
+[dir="rtl"] .header-showcase-col--partners {
     grid-column: 3;
     justify-self: end;
 }
 
 [dir="rtl"] .header-brand-stack {
     grid-column: 2;
+    justify-self: center;
+    text-align: center;
 }
 
 [dir="rtl"] .header-campaign-panel {
     grid-column: 1;
-    justify-self: end;
+    justify-self: stretch;
 }
 
-[dir="ltr"] .header-aside--partners {
+[dir="ltr"] .header-showcase-col--partners {
     grid-column: 1;
     justify-self: start;
 }
 
 [dir="ltr"] .header-brand-stack {
     grid-column: 2;
+    justify-self: center;
+    text-align: center;
 }
 
 [dir="ltr"] .header-campaign-panel {
     grid-column: 3;
+    justify-self: stretch;
 }
 
 .header-brand-stack {
     display: flex;
     flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-    flex: 0 1 auto;
-    max-width: min(420px, 42vw);
+    align-items: center;
+    gap: 8px;
+    max-width: min(440px, 100%);
+    margin-inline: auto;
 }
 
-[dir="ltr"] .header-brand-stack {
-    align-items: flex-end;
+[dir="ltr"] .header-brand-stack .lang-dropdown {
+    align-self: flex-end;
+}
+
+[dir="rtl"] .header-brand-stack .lang-dropdown {
+    align-self: flex-start;
 }
 
 .header-campaign-panel {
-    flex: 1 1 360px;
-    max-width: min(720px, 58vw);
-    padding: 4px 0 2px;
+    max-width: 100%;
+    min-width: 0;
+}
+
+.header-campaign-capsule {
+    position: relative;
+    padding: clamp(12px, 2.2vw, 18px);
+    border-radius: 18px;
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.1) 0%, rgba(0, 168, 255, 0.06) 48%, rgba(13, 40, 64, 0.35) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    box-shadow:
+        0 14px 36px rgba(0, 0, 0, 0.28),
+        inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    overflow: hidden;
+}
+
+.header-campaign-capsule::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 100% 0%, rgba(0, 168, 255, 0.12) 0%, transparent 55%);
+    pointer-events: none;
+}
+
+.header-campaign-capsule > * {
+    position: relative;
+    z-index: 1;
 }
 
 .header-campaign-headline {
-    margin: 0 0 6px;
-    font-size: clamp(1.05rem, 2vw, 1.45rem);
+    margin: 0 0 4px;
+    font-size: clamp(1rem, 1.9vw, 1.4rem);
     font-weight: 800;
-    line-height: 1.3;
+    line-height: 1.28;
     color: #fff;
     letter-spacing: -0.02em;
 }
 
 .header-campaign-tagline {
     margin: 0 0 12px;
-    font-size: clamp(0.78rem, 1.35vw, 0.92rem);
-    line-height: 1.55;
-    color: rgba(255, 255, 255, 0.88);
-    max-width: 52ch;
+    font-size: clamp(0.76rem, 1.3vw, 0.9rem);
+    line-height: 1.5;
+    color: rgba(255, 255, 255, 0.86);
+    max-width: 48ch;
+}
+
+.header-campaign-action-strip {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: clamp(10px, 2vw, 16px);
+    margin-bottom: 12px;
+}
+
+.header-campaign-door-aside {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    border-radius: 14px;
+    padding: 4px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.header-campaign-door-aside:hover,
+.header-campaign-door-aside:focus-visible {
+    transform: translateY(-2px);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 168, 255, 0.45);
+}
+
+.header-campaign-cta-block {
+    flex: 1 1 180px;
+    min-width: 0;
 }
 
 .header-campaign-cta {
     display: flex;
     flex-wrap: wrap;
-    gap: 10px;
-    margin-bottom: 12px;
+    gap: 8px;
+    align-items: center;
 }
 
 .header-cta {
     font-family: inherit;
-    font-size: 0.82rem;
+    font-size: clamp(0.78rem, 1.2vw, 0.84rem);
     font-weight: 700;
-    padding: 9px 16px;
-    border-radius: 8px;
+    padding: 9px 15px;
+    border-radius: 10px;
     cursor: pointer;
     transition: transform 0.2s, box-shadow 0.2s, background 0.2s;
     border: none;
+    white-space: nowrap;
 }
 
 .header-cta--primary {
-    background: var(--accent-red, #c41e3a);
+    background: linear-gradient(135deg, #d42a45 0%, #c41e3a 55%, #a81830 100%);
     color: #fff;
-    box-shadow: 0 4px 14px rgba(196, 30, 58, 0.35);
+    box-shadow: 0 4px 16px rgba(196, 30, 58, 0.4);
 }
 
 .header-cta--primary:hover {
     transform: translateY(-1px);
-    box-shadow: 0 6px 18px rgba(196, 30, 58, 0.45);
+    box-shadow: 0 6px 20px rgba(196, 30, 58, 0.5);
 }
 
 .header-cta--ghost {
-    background: transparent;
+    background: rgba(255, 255, 255, 0.06);
     color: #fff;
-    border: 1.5px solid rgba(255, 255, 255, 0.75);
+    border: 1.5px solid rgba(255, 255, 255, 0.65);
 }
 
 .header-cta--ghost:hover {
-    background: rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.14);
 }
 
 .header-campaign-stats {
     display: flex;
     flex-wrap: wrap;
-    gap: 14px 22px;
+    gap: 12px 18px;
     padding-top: 10px;
-    border-top: 1px solid rgba(255, 255, 255, 0.18);
+    border-top: 1px solid rgba(255, 255, 255, 0.16);
 }
 
 .header-stat {
     display: flex;
     flex-direction: column;
     gap: 2px;
-    min-width: 72px;
+    min-width: 68px;
 }
 
 .header-stat strong {
-    font-size: 1.15rem;
+    font-size: clamp(1rem, 1.8vw, 1.12rem);
     font-weight: 800;
     color: #fff;
     line-height: 1.1;
 }
 
 .header-stat span {
-    font-size: 0.72rem;
-    color: rgba(255, 255, 255, 0.78);
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.76);
     line-height: 1.3;
+}
+
+/* شريحة تسمية المعاينات */
+.header-showcase-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: none;
+    padding: 3px 9px;
+    border-radius: 999px;
+    color: rgba(255, 255, 255, 0.92);
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.header-showcase-chip--partners {
+    color: #a7f3d0;
+    background: rgba(16, 185, 129, 0.15);
+    border-color: rgba(46, 204, 113, 0.35);
+}
+
+.header-showcase-chip--doors {
+    color: #bae6fd;
+    background: rgba(0, 168, 255, 0.14);
+    border-color: rgba(0, 168, 255, 0.35);
+}
+
+.header-showcase-chip--inline {
+    margin-bottom: 0;
+}
+
+.header-showcase-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    flex: 0 0 auto;
+}
+
+.header-showcase-col[hidden] {
+    display: none !important;
+}
+
+.header-showcase-card {
+    padding: 6px;
+    border-radius: 16px;
+    background: rgba(8, 22, 38, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22);
+}
+
+.header-showcase-card--partners {
+    border-color: rgba(46, 204, 113, 0.28);
+}
+
+.header-showcase-card--doors,
+.header-showcase-card--hero {
+    border-color: rgba(0, 168, 255, 0.32);
+}
+
+@media (min-width: 901px) {
+    .header-campaign-capsule {
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+    }
 }
 
 @media (max-width: 900px) {
     .header-top-row--campaign {
         grid-template-columns: 1fr;
+        gap: 14px;
+        align-items: stretch;
     }
 
-    [dir="rtl"] .header-aside--partners,
-    [dir="ltr"] .header-aside--partners,
+    [dir="rtl"] .header-showcase-col--partners,
+    [dir="ltr"] .header-showcase-col--partners,
     [dir="rtl"] .header-brand-stack,
     [dir="ltr"] .header-brand-stack,
     [dir="rtl"] .header-campaign-panel,
@@ -151,38 +290,74 @@
         justify-self: stretch;
     }
 
-    .header-brand-stack,
-    .header-campaign-panel {
-        max-width: 100%;
+    .header-showcase-col--partners {
+        order: 3;
+        flex-direction: row;
+        justify-content: center;
+        flex-wrap: wrap;
     }
 
-    .header-campaign-panel-grid {
-        flex-wrap: wrap;
+    .header-brand-stack {
+        order: 1;
+    }
+
+    .header-campaign-panel {
+        order: 2;
+    }
+
+    .header-campaign-capsule {
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+    }
+
+    .header-campaign-action-strip {
+        justify-content: center;
+    }
+
+    .header-campaign-tagline {
+        max-width: none;
+        text-align: center;
+    }
+
+    .header-campaign-headline {
+        text-align: center;
+    }
+
+    .header-campaign-stats {
+        justify-content: center;
     }
 }
 
 @media (max-width: 768px) {
-    /* الحملة تظهر مرة عند الأعلى ثم تختفي مع التمرير — لا تثبت */
     .header-top-row--campaign {
         padding: 8px 4% 6px;
     }
 
-    .header-campaign-headline {
-        font-size: 1.05rem;
+    .header-campaign-capsule {
+        padding: 12px 14px;
+        border-radius: 14px;
     }
 
-    .header-campaign-tagline {
-        font-size: 0.8rem;
-        margin-bottom: 8px;
+    .header-campaign-action-strip {
+        flex-direction: column;
+        align-items: stretch;
     }
 
-    .header-campaign-stats {
-        gap: 10px 14px;
-        padding-top: 8px;
+    .header-campaign-door-aside {
+        flex-direction: row;
+        justify-content: center;
+        align-items: flex-end;
+        gap: 10px;
     }
 
-    .header-stat strong {
-        font-size: 1rem;
+    .header-campaign-cta {
+        flex-direction: column;
+    }
+
+    .header-cta {
+        width: 100%;
+        text-align: center;
+        white-space: normal;
     }
 
     .header-main-row {
@@ -209,12 +384,9 @@
     }
 }
 
-@media (max-width: 520px) {
-    .header-campaign-cta {
-        flex-direction: column;
-    }
-    .header-cta {
-        width: 100%;
-        text-align: center;
+@media (max-width: 400px) {
+    .nebras-mini-showcase {
+        --mini-showcase-w: 48px;
+        --mini-showcase-h: 80px;
     }
 }

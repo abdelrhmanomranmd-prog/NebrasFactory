@@ -8,11 +8,11 @@ body.nebras-door-interface-active .header-campaign-panel {
     display: none;
 }
 
-body.nebras-door-interface-active .header-aside--partners {
+body.nebras-door-interface-active .header-showcase-col--partners {
     display: none !important;
 }
 
-[dir="rtl"] body.nebras-door-interface-active .header-aside--doors {
+[dir="rtl"] body.nebras-door-interface-active .header-showcase-col--doors {
     grid-column: 3;
     justify-self: end;
 }
@@ -22,7 +22,7 @@ body.nebras-door-interface-active .header-aside--partners {
     justify-self: center;
 }
 
-[dir="ltr"] body.nebras-door-interface-active .header-aside--doors {
+[dir="ltr"] body.nebras-door-interface-active .header-showcase-col--doors {
     grid-column: 1;
     justify-self: start;
 }

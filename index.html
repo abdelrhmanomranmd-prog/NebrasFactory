@@ -84,12 +84,18 @@
     </div>
     <header>
         <div class="header-top-row header-top-row--campaign">
-            <div class="header-aside header-aside--partners" id="header-aside-partners" aria-label="شركاؤنا">
-                <div class="nebras-mini-showcase nebras-mini-showcase--partners" id="top-partners-showcase"></div>
-            </div>
-            <div class="header-aside header-aside--doors" id="header-aside-doors" hidden aria-hidden="true">
-                <div class="nebras-mini-showcase nebras-mini-showcase--doors" id="header-door-showcase" aria-label="معاينة أبواب WPC"></div>
-            </div>
+            <aside class="header-showcase-col header-showcase-col--partners" id="header-aside-partners" aria-label="شركاؤنا">
+                <span class="header-showcase-chip header-showcase-chip--partners"><i class="fas fa-handshake" aria-hidden="true"></i> شركاؤنا</span>
+                <div class="header-showcase-card header-showcase-card--partners">
+                    <div class="nebras-mini-showcase nebras-mini-showcase--partners" id="top-partners-showcase"></div>
+                </div>
+            </aside>
+            <aside class="header-showcase-col header-showcase-col--doors" id="header-aside-doors" hidden aria-hidden="true">
+                <span class="header-showcase-chip header-showcase-chip--doors"><i class="fas fa-door-open" aria-hidden="true"></i> صمّم بابك</span>
+                <div class="header-showcase-card header-showcase-card--doors">
+                    <div class="nebras-mini-showcase nebras-mini-showcase--doors" id="header-door-showcase" aria-label="معاينة أبواب WPC"></div>
+                </div>
+            </aside>
             <div class="header-brand-stack">
                 <div class="lang-dropdown">
                     <button type="button" class="lang-btn" id="lang-toggle-btn" aria-haspopup="true" aria-expanded="false" title="اختيار اللغة / Language">
@@ -105,19 +111,24 @@
                 <h1 class="header-campaign-title" id="hero-title"></h1>
             </div>
             <div class="header-campaign-panel" id="header-campaign-panel" aria-label="حملة نبراس">
-                <div class="header-campaign-panel-grid">
-                    <div class="header-campaign-main">
-                        <h2 class="header-campaign-headline" id="header-campaign-headline"></h2>
-                        <p class="header-campaign-tagline" id="header-campaign-tagline"></p>
-                        <div class="header-campaign-cta">
-                            <button type="button" class="header-cta header-cta--primary" id="header-explore-btn" onclick="openNebrasWorkspace({pillar:'store',view:'catalog-all'})"></button>
-                            <button type="button" class="header-cta header-cta--ghost" id="header-quote-btn" onclick="confirmAndOpenQuote()"></button>
+                <div class="header-campaign-capsule">
+                    <h2 class="header-campaign-headline" id="header-campaign-headline"></h2>
+                    <p class="header-campaign-tagline" id="header-campaign-tagline"></p>
+                    <div class="header-campaign-action-strip" id="header-campaign-action-strip">
+                        <div class="header-campaign-door-aside" id="header-campaign-door-aside" role="button" tabindex="0" aria-label="صمّم بابك — معاينة أبواب WPC">
+                            <span class="header-showcase-chip header-showcase-chip--doors header-showcase-chip--inline"><i class="fas fa-pencil-ruler" aria-hidden="true"></i> صمّم بابك</span>
+                            <div class="header-showcase-card header-showcase-card--doors header-showcase-card--hero">
+                                <div class="nebras-mini-showcase nebras-mini-showcase--doors nebras-mini-showcase--interactive" id="header-hero-door-showcase"></div>
+                            </div>
                         </div>
-                        <div class="header-campaign-stats" id="header-campaign-stats" aria-label="إنجازات المصنع"></div>
+                        <div class="header-campaign-cta-block">
+                            <div class="header-campaign-cta">
+                                <button type="button" class="header-cta header-cta--primary" id="header-explore-btn" onclick="openNebrasWorkspace({pillar:'store',view:'catalog-all'})"></button>
+                                <button type="button" class="header-cta header-cta--ghost" id="header-quote-btn" onclick="confirmAndOpenQuote()"></button>
+                            </div>
+                        </div>
                     </div>
-                    <aside class="header-campaign-door-aside" id="header-campaign-door-aside" aria-label="معاينة أبواب WPC">
-                        <div class="nebras-mini-showcase nebras-mini-showcase--doors" id="header-hero-door-showcase"></div>
-                    </aside>
+                    <div class="header-campaign-stats" id="header-campaign-stats" aria-label="إنجازات المصنع"></div>
                 </div>
             </div>
         </div>

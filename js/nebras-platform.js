@@ -6812,6 +6812,28 @@
 
         function refreshHeaderHeroDoorShowcase() {
             fillDoorMiniShowcase('header-hero-door-showcase');
+            wireHeaderHeroDoorShowcase();
+        }
+
+        function wireHeaderHeroDoorShowcase() {
+            const trigger = document.getElementById('header-campaign-door-aside');
+            if (!trigger || trigger.dataset.nebrasDoorWired === '1') return;
+            trigger.dataset.nebrasDoorWired = '1';
+            function openDoorDesigner() {
+                if (typeof openNebrasWorkspace === 'function') {
+                    openNebrasWorkspace({ pillar: 'store', view: 'door-designer' });
+                }
+            }
+            trigger.addEventListener('click', function(e) {
+                if (e.target.closest('button, a')) return;
+                openDoorDesigner();
+            });
+            trigger.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    openDoorDesigner();
+                }
+            });
         }
 
         function refreshHeaderDoorShowcase() {
@@ -12795,6 +12817,7 @@
             document.body.classList.toggle('nebras-door-interface-active', on);
             const partnersAside = document.getElementById('header-aside-partners');
             const doorsAside = document.getElementById('header-aside-doors');
+            const heroDoorStrip = document.getElementById('header-campaign-door-aside');
             if (partnersAside) {
                 partnersAside.hidden = on;
                 partnersAside.setAttribute('aria-hidden', on ? 'true' : 'false');
@@ -12803,6 +12826,7 @@
                 doorsAside.hidden = !on;
                 doorsAside.setAttribute('aria-hidden', on ? 'false' : 'true');
             }
+            if (heroDoorStrip) heroDoorStrip.hidden = on;
             if (on) refreshHeaderDoorShowcase();
         }
 
