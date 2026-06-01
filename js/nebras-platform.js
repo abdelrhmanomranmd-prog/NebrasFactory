@@ -6572,6 +6572,7 @@
         }
 
         function renderPartnersMarquees() {
+            ensureBuiltinSitePartners();
             const lang = currentLang || 'ar';
             const ui = siteText[lang] || siteText.ar;
             const visible = getVisibleSitePartners();
@@ -6590,6 +6591,7 @@
             if (publicSection) {
                 publicSection.hidden = !hasPartners;
                 publicSection.style.display = hasPartners ? '' : 'none';
+                publicSection.removeAttribute('aria-hidden');
             }
             if (publicStage) publicStage.hidden = !hasPartners;
             const dashTrackA = document.getElementById('nebras-partners-track-dashboard-a');
@@ -9429,9 +9431,11 @@
             const siteLayer = document.getElementById('site-celebration-overlay');
             if (!siteLayer) return;
             siteLayer.innerHTML = '';
+            const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if (reduceMotion) return;
             const mix = getOccasionDecorationMix(preset);
             const mobile = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
-            const count = mobile ? 22 : 30;
+            const count = mobile ? 10 : 24;
             for (let i = 0; i < count; i++) {
                 const item = mix[i % mix.length];
                 const el = document.createElement('span');
@@ -13617,6 +13621,7 @@
                 if (!loaded) return;
                 finalizePlatformDataAfterLoad();
                 renderAllPublicCatalog();
+                applyOccasionTheme();
                 if (nebrasWorkspaceState.route && nebrasWorkspaceState.route.view === 'door-designer') {
                     renderNebrasWorkspace();
                 }

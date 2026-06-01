@@ -372,20 +372,27 @@ html[dir="rtl"] .nebras-partners-track--reverse:not(.nebras-partners-track--stat
 @media (max-width: 768px) {
     .nebras-partners-section {
         padding: 36px 3% 44px;
+        position: relative;
+        z-index: 2;
     }
 
+    /* iOS Safari: mask-image قد يُخفي الشعارات بالكامل — نستخدم clip بدلاً منه */
     .nebras-partners-marquee {
-        mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
-        -webkit-mask-image: linear-gradient(90deg, transparent, #000 5%, #000 95%, transparent);
+        mask-image: none;
+        -webkit-mask-image: none;
+        overflow: hidden;
     }
 
-    .nebras-partners-marquee--premium .nebras-partners-track {
-        animation-duration: 24s;
-        gap: 24px;
+    .nebras-partners-marquee--premium .nebras-partners-track:not(.nebras-partners-track--static) {
+        animation-duration: 32s;
+        gap: 20px;
+        -webkit-transform: translate3d(0, 0, 0);
+        transform: translate3d(0, 0, 0);
+        will-change: transform;
     }
 
     .nebras-partners-marquee--row2 .nebras-partners-track:not(.nebras-partners-track--static) {
-        animation-duration: 28s;
+        animation-duration: 36s;
     }
 
     .nebras-partners-marquee--static .nebras-partners-track {

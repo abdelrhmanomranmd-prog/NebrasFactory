@@ -1583,18 +1583,26 @@ html.celebration-site-wide .header-top-row {
 @media (max-width: 768px) {
     html.celebration-site-wide .site-celebration-overlay {
         opacity: 1;
-        z-index: 900;
+        z-index: 2;
+        pointer-events: none;
+    }
+
+    html.celebration-site-wide .admin-dashboard.show {
+        background-attachment: scroll, scroll, scroll;
     }
 
     .site-celebration-overlay .celebration-float {
-        font-size: 1.25rem;
-        opacity: 0.45;
+        font-size: 1rem;
+        opacity: 0.28;
     }
 
     .header-logo-occasion-wrap .header-occasion-chip {
         display: inline-flex !important;
-        max-width: min(220px, 58vw);
-        white-space: nowrap;
+        max-width: min(240px, 72vw);
+        white-space: normal;
+        text-align: start;
+        line-height: 1.35;
+        font-size: 0.78rem;
     }
 
     .dashboard-celebration-banner:not([hidden]) {
@@ -1602,16 +1610,29 @@ html.celebration-site-wide .header-top-row {
         margin-bottom: 16px;
     }
 
-    html.celebration-site-wide .nebras-partners-section {
+    html.celebration-site-wide .nebras-partners-section,
+    html.celebration-site-wide .site-structure {
         position: relative;
-        z-index: 1;
+        z-index: 2;
+    }
+}
+
+@media (max-width: 768px) and (prefers-reduced-motion: reduce) {
+    .celebration-float,
+    .site-celebration-overlay .celebration-float {
+        animation: none !important;
+        opacity: 0.2;
+    }
+
+    .nebras-partners-marquee--premium .nebras-partners-track:not(.nebras-partners-track--static) {
+        animation: none !important;
     }
 }
 
 @media (max-width: 768px) {
     .celebration-float,
     .site-celebration-overlay .celebration-float {
-        animation: celebrationFloat 16s linear infinite !important;
+        animation: celebrationFloat 20s linear infinite;
     }
 }
 
