@@ -359,10 +359,10 @@
         <span class="cart-badge-count" id="cart-badge-count" hidden>0</span>
     </button>
     <div class="fab-send-channel-group" id="fab-send-channel-group" aria-label="إرسال اختياري">
-        <button type="button" class="fab-send-channel fab-send-channel--sales" id="fab-send-sales" onclick="submitCartOrQuote('sales')" title="إرسال للمبيعات" aria-label="إرسال للمبيعات">
+        <button type="button" class="fab-send-channel fab-send-channel--sales" id="fab-send-sales" onclick="submitQuoteA4Pdf('sales')" title="إرسال PDF A4 للمبيعات" aria-label="إرسال PDF A4 للمبيعات">
             <i class="fas fa-store" aria-hidden="true"></i>
         </button>
-        <button type="button" class="fab-send-channel fab-send-channel--cs" id="fab-send-cs" onclick="submitCartOrQuote('customer-service')" title="إرسال لخدمة العملاء" aria-label="إرسال لخدمة العملاء">
+        <button type="button" class="fab-send-channel fab-send-channel--cs" id="fab-send-cs" onclick="submitQuoteA4Pdf('customer-service')" title="إرسال PDF A4 لخدمة العملاء" aria-label="إرسال PDF A4 لخدمة العملاء">
             <i class="fas fa-headset" aria-hidden="true"></i>
         </button>
     </div>
@@ -432,15 +432,15 @@
             <div id="cart-payment-mount"></div>
             <div class="cart-order-preview" id="cart-order-preview" hidden aria-live="polite"></div>
             <div class="cart-send-channel-row" id="cart-send-channel-row">
-                <p class="cart-send-channel-label" id="cart-send-channel-label">إرسال اختياري — اختر القسم</p>
+                <p class="cart-send-channel-label" id="cart-send-channel-label">إرسال عرض السعر A4 — اختر القسم</p>
                 <div class="cart-send-channel-btns">
-                    <button type="button" class="cart-send-icon-btn cart-send-icon-btn--sales" id="cart-send-sales-btn" onclick="submitCartOrQuote('sales')" title="إرسال أوردر للمبيعات">
+                    <button type="button" class="cart-send-icon-btn cart-send-icon-btn--sales" id="cart-send-sales-btn" onclick="submitQuoteA4Pdf('sales')" title="إرسال PDF A4 للمبيعات">
                         <i class="fas fa-store" aria-hidden="true"></i>
-                        <span id="cart-send-sales-label">المبيعات</span>
+                        <span id="cart-send-sales-label">PDF — المبيعات</span>
                     </button>
-                    <button type="button" class="cart-send-icon-btn cart-send-icon-btn--cs" id="cart-send-cs-btn" onclick="submitCartOrQuote('customer-service')" title="إرسال أوردر لخدمة العملاء">
+                    <button type="button" class="cart-send-icon-btn cart-send-icon-btn--cs" id="cart-send-cs-btn" onclick="submitQuoteA4Pdf('customer-service')" title="إرسال PDF A4 لخدمة العملاء">
                         <i class="fas fa-headset" aria-hidden="true"></i>
-                        <span id="cart-send-cs-label">خدمة العملاء</span>
+                        <span id="cart-send-cs-label">PDF — خدمة العملاء</span>
                     </button>
                 </div>
             </div>

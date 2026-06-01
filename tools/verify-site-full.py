@@ -63,6 +63,10 @@ def main():
                'quote-send-sales-btn', 'quote-send-cs-btn'):
         if el not in html:
             err(f'Missing #{el} in index.html — send channel UI broken')
+    if 'buildQuoteFactoryCardHtml' not in js:
+        err('buildQuoteFactoryCardHtml missing — A4 quote layout broken')
+    if "submitQuoteA4Pdf('sales')" not in html:
+        err('cart sales icon must call submitQuoteA4Pdf(sales)')
     if 'html2canvas' not in html or 'jspdf' not in html:
         err('html2canvas or jspdf CDN missing — A4 PDF send broken')
 

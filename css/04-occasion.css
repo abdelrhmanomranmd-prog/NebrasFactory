@@ -999,20 +999,220 @@ body.platform-erp-active { --platform-layer: erp; }
 }
 
 .quote-watermark-logo {
-    width: 92%;
-    max-width: 520px;
+    width: 88%;
+    max-width: 480px;
     height: auto;
-    max-height: 92%;
+    max-height: 88%;
     object-fit: contain;
-    opacity: 0.08;
+    opacity: 0.09;
     filter: grayscale(1);
     user-select: none;
     -webkit-user-drag: none;
 }
 
+.quote-a4-inner {
+    position: relative;
+    z-index: 1;
+}
+
+.quote-doc-ribbon {
+    height: 5px;
+    margin: -16mm -14mm 14px;
+    background: linear-gradient(90deg, #0d2840 0%, #155e94 45%, #00a8ff 100%);
+    border-radius: 0 0 6px 6px;
+}
+
+.quote-doc-dual-cards {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 16px;
+}
+
+.quote-info-card {
+    position: relative;
+    z-index: 1;
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 1px solid rgba(13, 40, 64, 0.12);
+    background: rgba(248, 252, 255, 0.94);
+    font-size: 0.84rem;
+    line-height: 1.55;
+}
+
+.quote-info-card--factory {
+    border-top: 3px solid #0d2840;
+}
+
+.quote-info-card--customer {
+    border-top: 3px solid #00a8ff;
+}
+
+.quote-info-card-title {
+    margin: 0 0 10px;
+    font-size: 0.95rem;
+    color: #0d2840;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.quote-info-card-title i {
+    color: #155e94;
+    opacity: 0.9;
+}
+
+.quote-factory-logo-wrap {
+    text-align: center;
+    margin-bottom: 8px;
+}
+
+.quote-factory-logo-wrap .quote-brand-logo {
+    max-height: 72px;
+    max-width: 200px;
+    margin-inline: auto;
+}
+
+.quote-factory-name {
+    margin: 0 0 10px;
+    font-weight: 800;
+    font-size: 0.92rem;
+    color: #0d2840;
+    text-align: center;
+}
+
+.quote-info-row {
+    display: grid;
+    grid-template-columns: minmax(88px, 38%) 1fr;
+    gap: 6px 10px;
+    padding: 3px 0;
+    border-bottom: 1px dashed rgba(13, 40, 64, 0.08);
+}
+
+.quote-info-row:last-child {
+    border-bottom: none;
+}
+
+.quote-info-label {
+    font-weight: 700;
+    color: #155e94;
+}
+
+.quote-info-value {
+    color: #1a1a1a;
+    word-break: break-word;
+}
+
+.quote-title-center--premium {
+    margin: 4px 0 18px;
+    padding: 14px 12px 16px;
+    border-radius: 12px;
+    background: linear-gradient(180deg, rgba(13, 40, 64, 0.04) 0%, rgba(0, 168, 255, 0.06) 100%);
+    border: 1px solid rgba(13, 40, 64, 0.1);
+}
+
+.quote-doc-kicker {
+    margin: 0 0 6px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: #155e94;
+    opacity: 0.9;
+}
+
+.quote-table-wrap {
+    position: relative;
+    z-index: 1;
+    margin-top: 4px;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 1px solid rgba(13, 40, 64, 0.12);
+}
+
+.quote-table--premium th {
+    background: linear-gradient(180deg, #0d2840 0%, #123a5c 100%);
+}
+
+.quote-table--premium tbody tr:nth-child(even) {
+    background: rgba(0, 168, 255, 0.04);
+}
+
+.quote-totals-vat--card {
+    position: relative;
+    z-index: 1;
+    margin-top: 16px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 2px solid rgba(13, 40, 64, 0.14);
+    background: rgba(255, 255, 255, 0.96);
+}
+
+.quote-totals-title {
+    margin: 0 0 10px;
+    font-size: 1rem;
+    color: #0d2840;
+    text-align: center;
+}
+
+.quote-totals-grid {
+    margin-bottom: 10px;
+}
+
+.quote-totals-grand {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 0;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: linear-gradient(90deg, rgba(13, 40, 64, 0.06), rgba(0, 168, 255, 0.1));
+    font-size: 1rem;
+}
+
+.quote-totals-grand strong {
+    font-size: 1.15rem;
+    color: #0d2840;
+}
+
+.quote-totals-note {
+    margin: 10px 0 0;
+    font-size: 0.78rem;
+    opacity: 0.82;
+    text-align: center;
+    line-height: 1.6;
+}
+
+.quote-doc-footer--premium {
+    margin-top: 20px;
+    padding-top: 12px;
+    border-top: 2px solid rgba(13, 40, 64, 0.12);
+}
+
+.quote-footer-disclaimer {
+    margin: 10px 0 0;
+    opacity: 0.75;
+    font-size: 0.75rem;
+    text-align: center;
+}
+
+@media (max-width: 640px) {
+    .quote-doc-dual-cards {
+        grid-template-columns: 1fr;
+    }
+
+    .quote-info-card--factory {
+        order: -1;
+    }
+}
+
 @media print {
     .quote-watermark-logo {
         opacity: 0.1;
+    }
+
+    .quote-doc-ribbon {
+        margin-top: 0;
     }
 }
 
@@ -1086,6 +1286,11 @@ body.platform-erp-active { --platform-layer: erp; }
 .quote-terms-block {
     position: relative;
     z-index: 1;
+    margin-top: 22px;
+    padding: 16px 18px;
+    border: 1px solid rgba(13, 40, 64, 0.14);
+    border-radius: 10px;
+    background: rgba(248, 250, 252, 0.96);
 }
 
 .quote-terms-title {

@@ -6053,7 +6053,7 @@
         function getQuoteTermsHtml(lang) {
             const year = new Date().getFullYear();
             if (lang === 'en') {
-                return '<section class="quote-terms-block" style="position:relative;z-index:1;margin-top:22px;padding:16px 18px;border:1px solid rgba(13,40,64,0.14);border-radius:10px;background:rgba(248,250,252,0.96);">' +
+                return '<section class="quote-terms-block">' +
                     '<h3 class="quote-terms-title">Quotation &amp; Contract Terms</h3>' +
                     '<ol class="quote-terms-list">' +
                     '<li>This quotation is indicative until confirmed in writing by Nebras sales.</li>' +
@@ -6066,7 +6066,7 @@
                     '<p class="quote-copyright-line">© All rights reserved — Nebras Plastic Factory Company ' + year + '</p>';
             }
             if (lang === 'zh') {
-                return '<section class="quote-terms-block" style="position:relative;z-index:1;margin-top:22px;padding:16px 18px;border:1px solid rgba(13,40,64,0.14);border-radius:10px;background:rgba(248,250,252,0.96);">' +
+                return '<section class="quote-terms-block">' +
                     '<h3 class="quote-terms-title">报价与合同条款</h3>' +
                     '<ol class="quote-terms-list">' +
                     '<li>本报价为参考价，最终以 Nebras 销售书面确认为准。</li>' +
@@ -6078,7 +6078,7 @@
                     '</ol></section>' +
                     '<p class="quote-copyright-line">© 版权所有 — Nebras 塑料工厂 ' + year + '</p>';
             }
-            return '<section class="quote-terms-block" style="position:relative;z-index:1;margin-top:22px;padding:16px 18px;border:1px solid rgba(13,40,64,0.14);border-radius:10px;background:rgba(248,250,252,0.96);">' +
+            return '<section class="quote-terms-block">' +
                 '<h3 class="quote-terms-title">شروط وأحكام عرض السعر والعقد</h3>' +
                 '<ol class="quote-terms-list">' +
                 '<li>عرض السعر استرشادي حتى تأكيده كتابياً من فريق مبيعات مصنع نبراس.</li>' +
@@ -6321,6 +6321,68 @@
             });
         }
 
+        function buildQuoteInfoRow(label, value) {
+            return '<div class="quote-info-row"><span class="quote-info-label">' + label + '</span><span class="quote-info-value">' + escapeHtmlAttr(value || '—') + '</span></div>';
+        }
+
+        function buildQuoteCustomerCardHtml(cust, ui, lang) {
+            const isEn = lang === 'en';
+            const isZh = lang === 'zh';
+            const title = ui.quoteCustomerTitle || (isEn ? 'Customer details' : (isZh ? '客户信息' : 'بيانات العميل'));
+            return '<article class="quote-info-card quote-info-card--customer">' +
+                '<h3 class="quote-info-card-title"><i class="fas fa-user-circle" aria-hidden="true"></i> ' + escapeHtmlAttr(title) + '</h3>' +
+                buildQuoteInfoRow(isEn ? 'Name' : (isZh ? '姓名' : 'الاسم'), cust.customerName) +
+                buildQuoteInfoRow(isEn ? 'Phone' : (isZh ? '电话' : 'الجوال'), cust.phone) +
+                buildQuoteInfoRow(isEn ? 'Email' : (isZh ? '邮箱' : 'البريد'), cust.email) +
+                buildQuoteInfoRow(isEn ? 'City' : (isZh ? '城市' : 'المدينة'), cust.city) +
+                buildQuoteInfoRow(isEn ? 'Delivery' : (isZh ? '地址' : 'العنوان / التسليم'), cust.address) +
+                (cust.note ? buildQuoteInfoRow(isEn ? 'Notes' : (isZh ? '备注' : 'ملاحظات'), cust.note) : '') +
+                '</article>';
+        }
+
+        function buildQuoteFactoryCardHtml(logoUrl, logoAlt, lang) {
+            const isEn = lang === 'en';
+            const isZh = lang === 'zh';
+            const companyName = isEn ? 'Nebras Plastic Factory Company' : (isZh ? 'Nebras 塑料工厂公司' : 'شركة مصنع نبراس للبلاستيك');
+            const addr = isEn
+                ? (systemSettings.companyAddressEn || systemSettings.companyAddressAr || '')
+                : (systemSettings.companyAddressAr || systemSettings.companyAddressEn || '');
+            const brandImg = buildQuoteLogoImgHtml('quote-brand-logo', logoUrl, logoAlt);
+            const factoryTitle = isEn ? 'Factory & company' : (isZh ? '工厂信息' : 'بيانات المصنع والشركة');
+            return '<article class="quote-info-card quote-info-card--factory">' +
+                '<div class="quote-factory-logo-wrap">' + brandImg + '</div>' +
+                '<h3 class="quote-info-card-title"><i class="fas fa-industry" aria-hidden="true"></i> ' + escapeHtmlAttr(factoryTitle) + '</h3>' +
+                '<p class="quote-factory-name">' + escapeHtmlAttr(companyName) + '</p>' +
+                buildQuoteInfoRow(isEn ? 'Commercial register' : (isZh ? '商业登记' : 'السجل التجاري'), systemSettings.commercialRegister) +
+                buildQuoteInfoRow(isEn ? 'VAT No.' : (isZh ? '税号' : 'الرقم الضريبي'), systemSettings.taxNumber) +
+                buildQuoteInfoRow(isEn ? 'Address' : (isZh ? '地址' : 'العنوان'), addr) +
+                buildQuoteInfoRow(isEn ? 'Sales' : (isZh ? '销售' : 'المبيعات'), systemSettings.mainSalesPhone) +
+                buildQuoteInfoRow(isEn ? 'Customer service' : (isZh ? '客服' : 'خدمة العملاء'), systemSettings.customerServicePhone) +
+                '</article>';
+        }
+
+        function buildQuoteTotalsCardHtml(cartTotals, lang, pct) {
+            const isEn = lang === 'en';
+            const isZh = lang === 'zh';
+            const onRequest = isEn ? 'On request' : (isZh ? '询价' : 'عند الطلب');
+            return '<section class="quote-totals-vat quote-totals-vat--card">' +
+                '<h3 class="quote-totals-title">' + (isEn ? 'Totals' : (isZh ? '合计' : 'الإجماليات')) + '</h3>' +
+                '<div class="quote-totals-grid">' +
+                buildQuoteInfoRow(isEn ? 'Subtotal (ex VAT)' : (isZh ? '小计(不含税)' : 'المجموع قبل الضريبة'),
+                    cartTotals.subtotalEx > 0 ? formatSar(cartTotals.subtotalEx) : '—') +
+                buildQuoteInfoRow(isEn ? 'VAT (' + pct + '%)' : (isZh ? '增值税(' + pct + '%)' : 'ضريبة (' + pct + '%)'),
+                    cartTotals.vatAmount > 0 ? formatSar(cartTotals.vatAmount) : '—') +
+                '</div>' +
+                '<p class="quote-totals-grand">' +
+                '<span>' + (isEn ? 'Total (inc VAT)' : (isZh ? '总计(含税)' : 'إجمالي شامل الضريبة')) + '</span>' +
+                '<strong>' + (cartTotals.totalInc > 0 ? formatSar(cartTotals.totalInc) : onRequest) + '</strong></p>' +
+                '<p class="quote-totals-note">' +
+                (isEn ? 'Line prices are for the stated quantity; total is the sum including VAT.' :
+                    (isZh ? '价格为所示数量合计；总计为含税金额之和。' :
+                        'السعر لكل صف حسب العدد — والإجمالي مجموع الأسعار شاملة الضريبة.')) +
+                '</p></section>';
+        }
+
         function renderQuotePreviewDocument(doc, overlay, logoUrl) {
             const lang = currentLang || 'ar';
             const isEn = lang === 'en';
@@ -6343,67 +6405,42 @@
             const ui = siteText[lang] || siteText.ar;
             const cust = readCheckoutFormToProfile();
             const logoAlt = ui.quoteLogoAlt || 'شعار شركة مصنع نبراس للبلاستيك';
-            const companyName = isEn ? 'Nebras Plastic Factory Company' : (isZh ? 'Nebras 塑料工厂公司' : 'شركة مصنع نبراس للبلاستيك');
             const addr = isEn
                 ? (systemSettings.companyAddressEn || systemSettings.companyAddressAr || '')
                 : (systemSettings.companyAddressAr || systemSettings.companyAddressEn || '');
-            const customerBlock = (cust.customerName || cust.phone)
-                ? '<section class="quote-customer-block quote-customer-block--top">' +
-                '<h3>' + escapeHtmlAttr(ui.quoteCustomerTitle || 'بيانات العميل') + '</h3>' +
-                '<p><strong>' + (isEn ? 'Name: ' : 'الاسم: ') + '</strong>' + escapeHtmlAttr(cust.customerName || '—') + '</p>' +
-                '<p><strong>' + (isEn ? 'Phone: ' : 'الجوال: ') + '</strong>' + escapeHtmlAttr(cust.phone || '—') + '</p>' +
-                (cust.email ? '<p><strong>' + (isEn ? 'Email: ' : (isZh ? '邮箱: ' : 'البريد: ')) + '</strong>' + escapeHtmlAttr(cust.email) + '</p>' : '') +
-                (cust.address ? '<p><strong>' + (isEn ? 'Delivery address: ' : (isZh ? '配送地址: ' : 'العنوان / التسليم: ')) + '</strong>' + escapeHtmlAttr(cust.address) + '</p>' : '') +
-                (cust.city ? '<p><strong>' + (isEn ? 'City: ' : (isZh ? '城市: ' : 'المدينة: ')) + '</strong>' + escapeHtmlAttr(cust.city) + '</p>' : '') +
-                (cust.note ? '<p><strong>' + (isEn ? 'Notes: ' : 'ملاحظات: ') + '</strong>' + escapeHtmlAttr(cust.note) + '</p>' : '') +
-                '</section>'
-                : '';
             const doorDesignBlock = buildQuoteDoorDesignBlockHtml(nebrasCart, lang);
             const watermarkImg = buildQuoteLogoImgHtml('quote-watermark-logo', logoUrl, '');
-            const brandImg = buildQuoteLogoImgHtml('quote-brand-logo', logoUrl, logoAlt);
             const termsBlock = getQuoteTermsHtml(lang);
+            const companyName = isEn ? 'Nebras Plastic Factory Company' : (isZh ? 'Nebras 塑料工厂公司' : 'شركة مصنع نبراس للبلاستيك');
             doc.innerHTML =
                 '<div class="quote-watermark-layer" aria-hidden="true">' + watermarkImg + '</div>' +
+                '<div class="quote-a4-inner">' +
+                '<div class="quote-doc-ribbon" aria-hidden="true"></div>' +
                 '<header class="quote-doc-header quote-doc-header--premium">' +
-                '<div class="quote-doc-top-row">' +
-                customerBlock +
-                '<div class="quote-brand-block quote-brand-block--hero">' +
-                brandImg +
-                '<div class="quote-brand-meta">' +
-                '<strong>' + escapeHtmlAttr(companyName) + '</strong><br>' +
-                (isEn ? 'Sales: ' : (isZh ? '销售: ' : 'المبيعات: ')) + escapeHtmlAttr(systemSettings.mainSalesPhone || '') + '<br>' +
-                (isEn ? 'Customer service: ' : (isZh ? '客服: ' : 'خدمة العملاء: ')) + escapeHtmlAttr(systemSettings.customerServicePhone || '') +
-                '</div></div></div>' +
-                '<div class="quote-title-center">' +
+                '<div class="quote-doc-dual-cards">' +
+                buildQuoteFactoryCardHtml(logoUrl, logoAlt, lang) +
+                buildQuoteCustomerCardHtml(cust, ui, lang) +
+                '</div>' +
+                '<div class="quote-title-center quote-title-center--premium">' +
+                '<p class="quote-doc-kicker">' + escapeHtmlAttr(companyName) + '</p>' +
                 '<h1>' + (isEn ? 'Price Quotation' : (isZh ? '报价单' : 'عرض سعر')) + '</h1>' +
                 '<div class="quote-number-big">' + escapeHtmlAttr(quoteNo) + '</div>' +
                 '<div class="quote-date-line">' + (isEn ? 'Date: ' : (isZh ? '日期: ' : 'التاريخ: ')) + escapeHtmlAttr(dateStr) + '</div>' +
                 '</div></header>' +
                 doorDesignBlock +
-                '<table class="quote-table"><thead><tr>' +
+                '<div class="quote-table-wrap">' +
+                '<table class="quote-table quote-table--premium"><thead><tr>' +
                 '<th>#</th><th>' + (isEn ? 'Product' : (isZh ? '产品' : 'المنتج')) + '</th><th>' + (isEn ? 'Specs' : (isZh ? '规格' : 'المواصفات')) + '</th><th>' + (isEn ? 'Qty' : (isZh ? '数量' : 'العدد')) + '</th>' +
                 '<th>' + priceExHdr + '</th><th>' + priceIncHdr + '</th>' +
-                '</tr></thead><tbody>' + rows + '</tbody></table>' +
-                '<div class="quote-totals-vat" style="position:relative;z-index:1;margin-top:16px;text-align:center;font-size:0.95rem;line-height:1.7;">' +
-                '<p><strong>' + (isEn ? 'Products subtotal (ex VAT): ' : 'مجموع المنتجات قبل الضريبة: ') + '</strong>' +
-                (cartTotals.subtotalEx > 0 ? formatSar(cartTotals.subtotalEx) : '—') + '</p>' +
-                '<p><strong>' + (isEn ? 'VAT on products (' + pct + '%): ' : 'مجموع ضريبة المنتجات (' + pct + '%): ') + '</strong>' +
-                (cartTotals.vatAmount > 0 ? formatSar(cartTotals.vatAmount) : '—') + '</p>' +
-                '<p style="font-weight:800;font-size:1.12rem;margin-top:8px;"><strong>' +
-                (isEn ? 'Products total (inc VAT) — sum of lines: ' : 'إجمالي المنتجات شامل الضريبة (مجموع الأسطر): ') + '</strong>' +
-                (cartTotals.totalInc > 0 ? formatSar(cartTotals.totalInc) : (isEn ? 'On request' : (isZh ? '询价' : 'عند الطلب'))) + '</p>' +
-                '<p style="opacity:0.82;font-size:0.82rem;margin-top:6px;">' +
-                (isEn ? 'Line prices are for the stated quantity; grand total is the sum of prices including VAT.' :
-                    (isZh ? '价格为所示数量合计；总计为含税金额之和。' :
-                        'السعر لكل صف حسب العدد المذكور — والإجمالي مجموع «السعر بعد الضريبة» لجميع المنتجات.')) +
-                '</p></div>' +
+                '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
+                buildQuoteTotalsCardHtml(cartTotals, lang, pct) +
                 termsBlock +
-                '<footer class="quote-doc-footer"><div class="quote-legal-grid">' +
+                '<footer class="quote-doc-footer quote-doc-footer--premium"><div class="quote-legal-grid">' +
                 '<div><strong>' + (isEn ? 'Commercial Register: ' : (isZh ? '商业登记: ' : 'السجل التجاري: ')) + '</strong>' + escapeHtmlAttr(systemSettings.commercialRegister || '—') + '</div>' +
                 '<div><strong>' + (isEn ? 'VAT: ' : (isZh ? '税号: ' : 'الرقم الضريبي: ')) + '</strong>' + escapeHtmlAttr(systemSettings.taxNumber || '—') + '</div>' +
                 '<div><strong>' + (isEn ? 'Address: ' : (isZh ? '地址: ' : 'العنوان: ')) + '</strong>' + escapeHtmlAttr(addr || '—') + '</div>' +
-                '<p style="opacity:0.75;font-size:0.75rem;margin-top:10px;">' + (isEn ? 'Indicative quotation — final confirmation by Nebras sales team.' : (isZh ? '参考报价 — 最终以销售团队确认为准。' : 'عرض سعر استرشادي — التأكيد النهائي عبر فريق المبيعات.')) + '</p>' +
-                '</div></footer>';
+                '<p class="quote-footer-disclaimer">' + (isEn ? 'Indicative quotation — final confirmation by Nebras sales team.' : (isZh ? '参考报价 — 最终以销售团队确认为准。' : 'عرض سعر استرشادي — التأكيد النهائي عبر فريق المبيعات.')) + '</p>' +
+                '</div></footer></div>';
             overlay.classList.add('show');
             closeCartDrawer();
             updateSalesQuoteFab();
@@ -14291,9 +14328,9 @@
                 sendQuoteDoneCs: 'تم حفظ الطلب وإرساله لخدمة العملاء. الرقم:',
                 sendQuoteA4Sent: 'صيغة A4',
                 sendOrderSent: 'أوردر تحت التنفيذ',
-                cartSendOptionalLabel: 'إرسال اختياري — اختر القسم',
-                cartSendSalesBtn: 'المبيعات',
-                cartSendCsBtn: 'خدمة العملاء',
+                cartSendOptionalLabel: 'إرسال عرض السعر A4 — اختر القسم',
+                cartSendSalesBtn: 'PDF — المبيعات',
+                cartSendCsBtn: 'PDF — خدمة العملاء',
                 cartSendSalesTitle: 'إرسال أوردر للمبيعات',
                 cartSendCsTitle: 'إرسال أوردر لخدمة العملاء',
                 quoteSendOptionalLabel: 'إرسال عرض السعر A4 — اختياري',
@@ -14804,9 +14841,9 @@
                 sendQuoteDoneCs: 'Saved and sent to customer service. Ref:',
                 sendQuoteA4Sent: 'A4 format',
                 sendOrderSent: 'Order in progress',
-                cartSendOptionalLabel: 'Optional send — choose department',
-                cartSendSalesBtn: 'Sales',
-                cartSendCsBtn: 'Customer service',
+                cartSendOptionalLabel: 'Send A4 quotation PDF — choose department',
+                cartSendSalesBtn: 'PDF — Sales',
+                cartSendCsBtn: 'PDF — Customer service',
                 cartSendSalesTitle: 'Send order to sales',
                 cartSendCsTitle: 'Send order to customer service',
                 quoteSendOptionalLabel: 'Send A4 quote — optional',
@@ -15278,9 +15315,9 @@
                 sendQuoteDoneCs: '已保存并发送至客服。编号：',
                 sendQuoteA4Sent: 'A4 格式',
                 sendOrderSent: '处理中订单',
-                cartSendOptionalLabel: '可选发送 — 选择部门',
-                cartSendSalesBtn: '销售',
-                cartSendCsBtn: '客服',
+                cartSendOptionalLabel: '发送 A4 报价 PDF — 选择部门',
+                cartSendSalesBtn: 'PDF — 销售',
+                cartSendCsBtn: 'PDF — 客服',
                 cartSendSalesTitle: '发送订单给销售',
                 cartSendCsTitle: '发送订单给客服',
                 quoteSendOptionalLabel: '发送 A4 报价 — 可选',
