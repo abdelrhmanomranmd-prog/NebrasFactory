@@ -6788,9 +6788,13 @@
             const cycleSec = count * 3;
             const slideCls = 'nebras-mini-showcase-slide' + (variant === 'partners' ? ' nebras-mini-showcase-slide--logo' : '');
             const badgeIcon = variant === 'partners' ? 'fa-handshake' : 'fa-door-open';
+            const imgW = variant === 'partners' ? 84 : 92;
+            const imgH = variant === 'partners' ? 132 : 142;
             const slides = urls.map(function(src, i) {
                 const delay = -(cycleSec - 3) + (i * 3);
-                return '<img class="' + slideCls + '" src="' + escapeHtmlAttr(normalizeMediaPath(src)) + '" alt="" loading="lazy" decoding="async" style="animation-delay:' + delay + 's">';
+                const loading = i === 0 ? 'eager' : 'lazy';
+                const fetchPri = i === 0 && variant === 'doors' ? ' fetchpriority="high"' : '';
+                return '<img class="' + slideCls + '" src="' + escapeHtmlAttr(normalizeMediaPath(src)) + '" alt="" width="' + imgW + '" height="' + imgH + '" loading="' + loading + '" decoding="async"' + fetchPri + ' style="animation-delay:' + delay + 's">';
             }).join('');
             return '<div class="nebras-mini-showcase-frame" role="img">' +
                 '<span class="nebras-mini-showcase-glow" aria-hidden="true"></span>' +
@@ -12826,7 +12830,8 @@
                 doorsAside.hidden = !on;
                 doorsAside.setAttribute('aria-hidden', on ? 'false' : 'true');
             }
-            if (heroDoorStrip) heroDoorStrip.hidden = on;
+            if (heroDoorStrip && on) heroDoorStrip.hidden = true;
+            else if (heroDoorStrip && !on) heroDoorStrip.hidden = false;
             if (on) refreshHeaderDoorShowcase();
         }
 

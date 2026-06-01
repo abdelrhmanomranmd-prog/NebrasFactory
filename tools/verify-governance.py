@@ -46,7 +46,7 @@ def main():
     if 'abdelrhmanomranmd@gmail.com' not in js:
         err('PRIMARY_RECOVERY_EMAIL (abdelrhmanomranmd@gmail.com) missing in nebras-platform.js')
 
-    for showcase_id in ('header-hero-door-showcase', 'top-partners-showcase', 'header-aside-partners', 'header-campaign-capsule', 'header-campaign-action-strip'):
+    for showcase_id in ('header-hero-door-showcase', 'top-partners-showcase', 'header-aside-partners', 'header-hero-band', 'header-campaign-action-strip'):
         if showcase_id not in html:
             err(f'Header showcase element missing: #{showcase_id}')
 

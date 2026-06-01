@@ -1,39 +1,27 @@
-/* واجهة «صمّم بابك»: باب يسار الهيدر (نفس معاينة nebras-mini-showcase) */
+/* واجهة «صمّم بابك» — شريط هيدر مبسّط */
 
-body.nebras-door-interface-active .header-top-row--campaign {
-    grid-template-columns: auto minmax(0, 1fr);
+body.nebras-door-interface-active .header-hero-band {
+    max-width: 100%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: clamp(12px, 2vw, 20px);
 }
 
-body.nebras-door-interface-active .header-campaign-panel {
-    display: none;
-}
-
-body.nebras-door-interface-active .header-showcase-col--partners {
+body.nebras-door-interface-active .header-hero-rail--partners {
     display: none !important;
 }
 
-[dir="rtl"] body.nebras-door-interface-active .header-showcase-col--doors {
-    grid-column: 3;
-    justify-self: end;
+body.nebras-door-interface-active .header-hero-rail--doors {
+    display: flex !important;
 }
 
-[dir="rtl"] body.nebras-door-interface-active .header-brand-stack {
-    grid-column: 2;
-    justify-self: center;
-}
-
-[dir="ltr"] body.nebras-door-interface-active .header-showcase-col--doors {
-    grid-column: 1;
-    justify-self: start;
-}
-
-[dir="ltr"] body.nebras-door-interface-active .header-brand-stack {
-    grid-column: 2;
-    justify-self: center;
+body.nebras-door-interface-active .header-hero-core {
+    flex: 1 1 auto;
 }
 
 body.nebras-door-interface-active.nebras-workspace-active {
-    --nebras-door-header-h: clamp(118px, 22vw, 148px);
+    --nebras-door-header-h: clamp(112px, 20vw, 140px);
 }
 
 body.nebras-door-interface-active.nebras-workspace-active header {
@@ -64,6 +52,6 @@ body.nebras-door-interface-active.nebras-workspace-active .header-top-row--campa
 
 @media (max-width: 520px) {
     body.nebras-door-interface-active.nebras-workspace-active {
-        --nebras-door-header-h: 108px;
+        --nebras-door-header-h: 104px;
     }
 }

@@ -2,9 +2,14 @@
 
 .nebras-mini-showcase {
     flex: 0 0 auto;
-    --mini-showcase-w: clamp(58px, 12vw, 76px);
-    --mini-showcase-h: clamp(100px, 19vw, 120px);
+    --mini-showcase-w: clamp(64px, 11vw, 84px);
+    --mini-showcase-h: clamp(108px, 17vw, 132px);
     --cycle-duration: 18s;
+}
+
+.nebras-mini-showcase--hero {
+    --mini-showcase-w: clamp(72px, 14vw, 92px);
+    --mini-showcase-h: clamp(118px, 20vw, 142px);
 }
 
 .nebras-mini-showcase-frame {
@@ -76,24 +81,29 @@
     inset: 0;
     width: 100%;
     height: 100%;
+    max-width: 100%;
+    max-height: 100%;
     object-fit: cover;
     object-position: center top;
     opacity: 0;
-    transform: scale(1.04) translateY(3px);
+    transform: translateZ(0);
     animation: nebrasMiniShowcaseFade var(--cycle-duration, 18s) ease-in-out infinite;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+}
+
+.nebras-mini-showcase-slide--logo {
+    object-fit: contain;
+    object-position: center;
+    padding: 8px;
+    background: #fff;
+    image-rendering: auto;
 }
 
 @media (prefers-reduced-motion: no-preference) and (min-width: 769px) {
     .nebras-mini-showcase-slide {
         will-change: opacity;
     }
-}
-
-.nebras-mini-showcase-slide--logo {
-    object-fit: contain;
-    object-position: center;
-    padding: 6px;
-    background: #fff;
 }
 
 .nebras-mini-showcase-badge {
@@ -121,15 +131,29 @@
 @keyframes nebrasMiniShowcaseFade {
     0%, 100% {
         opacity: 0;
-        transform: scale(1.06) translateY(4px);
     }
-    3%, 14% {
+    4%, 15% {
         opacity: 1;
-        transform: scale(1) translateY(0);
     }
-    17%, 100% {
+    18%, 100% {
         opacity: 0;
-        transform: scale(0.98) translateY(-2px);
+    }
+}
+
+@media (min-width: 901px) and (prefers-reduced-motion: no-preference) {
+    @keyframes nebrasMiniShowcaseFade {
+        0%, 100% {
+            opacity: 0;
+            transform: scale(1.03) translateY(2px);
+        }
+        4%, 15% {
+            opacity: 1;
+            transform: scale(1) translateY(0);
+        }
+        18%, 100% {
+            opacity: 0;
+            transform: scale(0.99) translateY(-1px);
+        }
     }
 }
 
@@ -196,23 +220,28 @@
 }
 
 /* —— الهيدر: معاينات مصغّرة —— */
-.header-showcase-col .nebras-mini-showcase {
-    filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.3));
+.header-hero-rail .nebras-mini-showcase,
+.header-showcase-card .nebras-mini-showcase {
+    filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.28));
 }
 
-.header-showcase-card--hero .nebras-mini-showcase {
-    filter: drop-shadow(0 8px 20px rgba(0, 168, 255, 0.2));
-}
-
-body.nebras-door-interface-active .header-campaign-capsule,
-body.nebras-door-interface-active .header-campaign-panel {
+body.nebras-door-interface-active .header-hero-core .header-campaign-headline,
+body.nebras-door-interface-active .header-hero-core .header-campaign-tagline,
+body.nebras-door-interface-active .header-hero-core .header-campaign-action-strip,
+body.nebras-door-interface-active .header-hero-core .header-campaign-stats,
+body.nebras-door-interface-active .header-hero-core .header-hero-divider {
     display: none;
 }
 
 @media (max-width: 768px) {
     .nebras-mini-showcase {
-        --mini-showcase-w: 52px;
-        --mini-showcase-h: 88px;
+        --mini-showcase-w: 58px;
+        --mini-showcase-h: 96px;
+    }
+
+    .nebras-mini-showcase--hero {
+        --mini-showcase-w: 64px;
+        --mini-showcase-h: 104px;
     }
 
     .dashboard-identity-hero {
