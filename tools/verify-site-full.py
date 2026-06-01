@@ -72,6 +72,10 @@ def main():
             err(f'Missing #{el} in index.html — send channel UI broken')
     if 'buildQuoteFactoryCardHtml' not in js:
         err('buildQuoteFactoryCardHtml missing — A4 quote layout broken')
+    if 'buildQuoteHeaderLogoStripHtml' not in js:
+        err('buildQuoteHeaderLogoStripHtml missing — A4 header logo strip broken')
+    if 'quote-hero-logo' not in open(os.path.join(ROOT, 'css', '04-occasion.css'), encoding='utf-8').read():
+        err('quote-hero-logo CSS missing — A4 top logo not styled')
     if "submitQuoteA4Pdf('sales')" not in html:
         err('cart sales icon must call submitQuoteA4Pdf(sales)')
     if 'html2canvas' not in html or 'jspdf' not in html:

@@ -78,6 +78,10 @@
 
         async function uploadNebrasMediaFile(file) {
             if (!file) return null;
+            if (currentAdmin && !canUploadNebrasMedia('content')) {
+                alert('لا تملكين صلاحية رفع الصور أو الملفات. الإدارة الرئيسية (NEBRASFACTORY) تملك الصلاحية الكاملة.');
+                return null;
+            }
             if (!supabaseClient) {
                 alert('Supabase غير متصل — استخدمي خيار 2 (مسار images/...) أو سجّلي الدخول للإدارة.');
                 return null;
@@ -5426,7 +5430,7 @@
             try {
                 const html2canvas = await loadHtml2CanvasLib();
                 const canvas = await html2canvas(doc, {
-                    scale: Math.min(2, window.devicePixelRatio || 1.5),
+                    scale: Math.min(2.25, Math.max(1.75, window.devicePixelRatio || 1.75)),
                     useCORS: true,
                     allowTaint: true,
                     backgroundColor: '#ffffff',
@@ -6246,7 +6250,17 @@
 
         function buildQuoteLogoImgHtml(className, logoUrl, altText) {
             const listAttr = escapeHtmlAttr(getSiteLogoUrlListAttr());
-            return '<img class="' + className + '" src="' + escapeHtmlAttr(logoUrl) + '" data-src-list="' + listAttr + '" data-src-idx="0" onerror="siteLogoImgFallback(this)" alt="' + escapeHtmlAttr(altText || '') + '">';
+            return '<img class="' + className + '" src="' + escapeHtmlAttr(logoUrl) + '" data-src-list="' + listAttr + '" data-src-idx="0" decoding="sync" onerror="siteLogoImgFallback(this)" alt="' + escapeHtmlAttr(altText || '') + '">';
+        }
+
+        function buildQuoteHeaderLogoStripHtml(logoUrl, logoAlt, lang) {
+            const isEn = lang === 'en';
+            const isZh = lang === 'zh';
+            const tagline = isEn ? 'Nebras Plastic Factory Company' : (isZh ? 'Nebras 塑料工厂' : 'شركة مصنع نبراس للبلاستيك');
+            const heroLogo = buildQuoteLogoImgHtml('quote-hero-logo', logoUrl, logoAlt);
+            return '<div class="quote-header-logo-strip" role="banner">' +
+                heroLogo +
+                '<p class="quote-header-tagline">' + escapeHtmlAttr(tagline) + '</p></div>';
         }
 
         function getDoorDesignerSpecText() {
@@ -6495,10 +6509,8 @@
             const addr = isEn
                 ? (systemSettings.companyAddressEn || systemSettings.companyAddressAr || '')
                 : (systemSettings.companyAddressAr || systemSettings.companyAddressEn || '');
-            const brandImg = buildQuoteLogoImgHtml('quote-brand-logo', logoUrl, logoAlt);
             const factoryTitle = isEn ? 'Factory & company' : (isZh ? '工厂信息' : 'بيانات المصنع والشركة');
             return '<article class="quote-info-card quote-info-card--factory">' +
-                '<div class="quote-factory-logo-wrap">' + brandImg + '</div>' +
                 '<h3 class="quote-info-card-title"><i class="fas fa-industry" aria-hidden="true"></i> ' + escapeHtmlAttr(factoryTitle) + '</h3>' +
                 '<p class="quote-factory-name">' + escapeHtmlAttr(companyName) + '</p>' +
                 buildQuoteInfoRow(isEn ? 'Commercial register' : (isZh ? '商业登记' : 'السجل التجاري'), systemSettings.commercialRegister) +
@@ -6560,10 +6572,12 @@
             const watermarkImg = buildQuoteLogoImgHtml('quote-watermark-logo', logoUrl, '');
             const termsBlock = getQuoteTermsHtml(lang);
             const companyName = isEn ? 'Nebras Plastic Factory Company' : (isZh ? 'Nebras 塑料工厂公司' : 'شركة مصنع نبراس للبلاستيك');
+            const headerLogoStrip = buildQuoteHeaderLogoStripHtml(logoUrl, logoAlt, lang);
             doc.innerHTML =
                 '<div class="quote-watermark-layer" aria-hidden="true">' + watermarkImg + '</div>' +
                 '<div class="quote-a4-inner">' +
                 '<div class="quote-doc-ribbon" aria-hidden="true"></div>' +
+                headerLogoStrip +
                 '<header class="quote-doc-header quote-doc-header--premium">' +
                 '<div class="quote-doc-dual-cards">' +
                 buildQuoteFactoryCardHtml(logoUrl, logoAlt, lang) +
@@ -8142,7 +8156,17 @@
                 img.src = list[idx];
                 return;
             }
-            if (img.classList.contains('quote-watermark-logo')) {
+            if (img.classList.contains('quote-watermark-logo') || img.classList.contains('quote-hero-logo')) {
+                const parent = img.closest('.quote-watermark-layer, .quote-header-logo-strip');
+                if (parent && !parent.querySelector('.quote-logo-fallback-text')) {
+                    const fb = document.createElement('p');
+                    fb.className = 'quote-logo-fallback-text';
+                    fb.textContent = 'نبراس';
+                    if (img.classList.contains('quote-watermark-logo')) {
+                        fb.setAttribute('aria-hidden', 'true');
+                    }
+                    parent.appendChild(fb);
+                }
                 img.style.display = 'none';
                 return;
             }
@@ -15837,4 +15861,5 @@
         window.openNebrasWorkspace = openNebrasWorkspace;
         window.closeNebrasWorkspace = closeNebrasWorkspace;
         window.toggleMenu = toggleMenu;
+        window.siteLogoImgFallback = siteLogoImgFallback;
 
