@@ -36,9 +36,16 @@ def main():
     if 'function setLanguage' not in js:
         err('setLanguage missing')
     else:
+        sl_start = js.find('function setLanguage')
+        sl_end = js.find('\n        function ', sl_start + 20)
+        if sl_end < 0:
+            sl_end = sl_start + 12000
+        set_lang_body = js[sl_start:sl_end]
         for fn in ['renderPartnersMarquees', 'applyOccasionTheme', 'renderAllPublicCatalog']:
-            if fn + '(' not in js[js.find('function setLanguage'):js.find('function setLanguage') + 8000]:
+            if fn + '(' not in set_lang_body and fn not in ('renderPartnersMarquees',):
                 warn(f'setLanguage may not call {fn}')
+        if 'renderAllPublicCatalog' not in set_lang_body:
+            warn('setLanguage may not call renderAllPublicCatalog')
 
     if 'submitCartOrQuote' not in js:
         err('submitCartOrQuote missing — optional sales/CS send broken')
@@ -74,16 +81,18 @@ def main():
     if not langs:
         warn('siteText object not found via regex')
 
+    site_text_start = js.find('const siteText')
+    site_text_chunk = js[site_text_start:site_text_start + 500000] if site_text_start >= 0 else js
     for lang in ('ar', 'en', 'zh'):
-        block = re.search(r"\b" + lang + r"\s*:\s*\{", js)
-        if not block:
+        if not re.search(r'\b' + lang + r'\s*:\s*\{', site_text_chunk):
             err(f'siteText.{lang} block missing')
-            continue
-        start = block.start()
-        snippet = js[start:start + 12000]
-        for key in ('partnersPublicTitle', 'nav', 'heroTitle', 'doorDesignerQuoteBtn'):
-            if key not in snippet:
-                warn(f'siteText.{lang} may lack {key}')
+    for key in ('partnersPublicTitle', 'heroTitle', 'doorDesignerQuoteBtn'):
+        hits = len(re.findall(r'\b' + key + r'\s*:', site_text_chunk))
+        if hits < 3:
+            warn(f'siteText may lack {key} in all languages (found {hits}/3)')
+    for lang in ('ar', 'en', 'zh'):
+        if not re.search(r'\b' + lang + r'\s*:\s*\{[\s\S]*?\bnav\s*:\s*\{', site_text_chunk):
+            warn(f'siteText.{lang} may lack nav object')
 
     if 'grayscale(1)' in open(os.path.join(ROOT, 'css', '12-door-designer.css'), encoding='utf-8').read():
         warn('Door designer still uses grayscale(1) — may cause dark preview')

@@ -3319,6 +3319,135 @@
             return { ok: errors.length === 0, errors: errors, profile: p };
         }
 
+        function validateCheckoutProfileForPreview(profile, ui) {
+            const p = profile || readCheckoutFormToProfile();
+            const errors = [];
+            if (!String(p.customerName || '').trim()) {
+                errors.push(ui.checkoutNameRequired || 'الاسم أو اسم الشركة مطلوب.');
+            }
+            const phone = String(p.phone || '').replace(/\s+/g, '');
+            if (!phone || phone.length < 9) {
+                errors.push(ui.checkoutPhoneRequired || 'رقم الجوال مطلوب (9 أرقام على الأقل).');
+            }
+            return { ok: errors.length === 0, errors: errors, profile: p };
+        }
+
+        function clearCheckoutFieldErrors() {
+            ['checkout-customer-name', 'checkout-customer-phone', 'checkout-customer-address'].forEach(function(id) {
+                const el = document.getElementById(id);
+                if (el) el.classList.remove('checkout-field-error');
+            });
+        }
+
+        function highlightCheckoutFieldErrors(profile, requireAddress) {
+            clearCheckoutFieldErrors();
+            const p = profile || readCheckoutFormToProfile();
+            if (!String(p.customerName || '').trim()) {
+                const el = document.getElementById('checkout-customer-name');
+                if (el) el.classList.add('checkout-field-error');
+            }
+            const phone = String(p.phone || '').replace(/\s+/g, '');
+            if (!phone || phone.length < 9) {
+                const el = document.getElementById('checkout-customer-phone');
+                if (el) el.classList.add('checkout-field-error');
+            }
+            if (requireAddress && !String(p.address || '').trim()) {
+                const el = document.getElementById('checkout-customer-address');
+                if (el) el.classList.add('checkout-field-error');
+            }
+        }
+
+        function showCheckoutValidationErrors(errors, ui, requireAddress) {
+            const profile = readCheckoutFormToProfile();
+            openCartDrawer();
+            highlightCheckoutFieldErrors(profile, !!requireAddress);
+            const msg = (errors || []).join('\n');
+            setCartCheckoutStatus(msg, true);
+            const form = document.getElementById('cart-checkout-form');
+            if (form) {
+                setTimeout(function() {
+                    form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 120);
+            }
+            if (msg) alert(msg);
+        }
+
+        let quotePdfSubmitInFlight = false;
+
+        function setQuoteActionLoading(isLoading, sendMode) {
+            const ids = [
+                'cart-send-sales-btn', 'cart-send-cs-btn', 'cart-request-quote-btn', 'cart-preview-quote-btn',
+                'quote-send-sales-btn', 'quote-send-cs-btn', 'quote-send-pdf-both-btn',
+                'fab-send-sales', 'fab-send-cs', 'top-quote-btn', 'header-quote-btn', 'workspace-quote-btn', 'mob-bar-quote'
+            ];
+            ids.forEach(function(id) {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.classList.toggle('quote-action-loading', !!isLoading);
+                if (isLoading && (id.indexOf('send') >= 0 || id === 'cart-request-quote-btn')) {
+                    el.setAttribute('aria-busy', 'true');
+                } else {
+                    el.removeAttribute('aria-busy');
+                }
+            });
+            const statusEl = document.getElementById('quote-send-status');
+            if (statusEl) {
+                const ui = siteText[currentLang || 'ar'] || siteText.ar;
+                if (isLoading) {
+                    statusEl.hidden = false;
+                    statusEl.textContent = ui.sendQuoteA4Preparing || 'جاري تجهيز PDF A4…';
+                } else {
+                    statusEl.hidden = true;
+                    statusEl.textContent = '';
+                }
+            }
+        }
+
+        function bindQuoteCommerceButton(el, handler) {
+            if (!el || el.getAttribute('data-nebras-quote-bound') === '1') return;
+            el.setAttribute('data-nebras-quote-bound', '1');
+            el.removeAttribute('onclick');
+            el.addEventListener('click', function(event) {
+                event.preventDefault();
+                handler(event);
+            });
+        }
+
+        function initQuoteCommerceHandlers() {
+            bindQuoteCommerceButton(document.getElementById('cart-send-sales-btn'), function() {
+                submitQuoteA4Pdf('sales');
+            });
+            bindQuoteCommerceButton(document.getElementById('cart-send-cs-btn'), function() {
+                submitQuoteA4Pdf('customer-service');
+            });
+            bindQuoteCommerceButton(document.getElementById('cart-request-quote-btn'), function() {
+                submitQuoteA4Pdf('both');
+            });
+            bindQuoteCommerceButton(document.getElementById('cart-preview-quote-btn'), function() {
+                confirmAndOpenQuote();
+            });
+            bindQuoteCommerceButton(document.getElementById('quote-send-sales-btn'), function() {
+                submitQuoteA4Pdf('sales');
+            });
+            bindQuoteCommerceButton(document.getElementById('quote-send-cs-btn'), function() {
+                submitQuoteA4Pdf('customer-service');
+            });
+            bindQuoteCommerceButton(document.getElementById('quote-send-pdf-both-btn'), function() {
+                submitQuoteA4Pdf('both');
+            });
+            bindQuoteCommerceButton(document.getElementById('fab-send-sales'), function() {
+                submitQuoteA4Pdf('sales');
+            });
+            bindQuoteCommerceButton(document.getElementById('fab-send-cs'), function() {
+                submitQuoteA4Pdf('customer-service');
+            });
+            ['top-quote-btn', 'header-quote-btn', 'workspace-quote-btn', 'mob-bar-quote'].forEach(function(id) {
+                bindQuoteCommerceButton(document.getElementById(id), function() {
+                    confirmAndOpenQuote();
+                });
+            });
+        }
+
         function setCartCheckoutStatus(message, isError) {
             const el = document.getElementById('cart-checkout-status');
             if (!el) return;
@@ -5220,6 +5349,7 @@
                     resolve(false);
                     return;
                 }
+                readCheckoutFormToProfile();
                 if (!currentQuoteIssue || !currentQuoteIssue.quoteNo) {
                     currentQuoteIssue = issueNextQuoteNumber();
                 }
@@ -5230,6 +5360,17 @@
                         setTimeout(function() { resolve(true); }, 350);
                     });
                 });
+            });
+        }
+
+        function refreshQuotePreviewLive() {
+            if (!isQuotePreviewOpen() || !nebrasCart.length) return;
+            const doc = document.getElementById('quote-a4-document');
+            const overlay = document.getElementById('quote-print-overlay');
+            if (!doc || !overlay) return;
+            readCheckoutFormToProfile();
+            resolveSiteLogoUrl(function(logoUrl) {
+                renderQuotePreviewDocument(doc, overlay, logoUrl);
             });
         }
 
@@ -5391,6 +5532,7 @@
 
         async function submitQuoteA4Pdf(sendMode) {
             sendMode = sendMode || 'both';
+            if (quotePdfSubmitInFlight) return;
             const channels = sendMode === 'both' ? ['sales', 'customer-service'] : [sendMode];
             if (channels.indexOf('sales') < 0 && channels.indexOf('customer-service') < 0) return;
             const ui = siteText[currentLang || 'ar'] || siteText.ar;
@@ -5398,10 +5540,10 @@
                 alert(ui.cartEmpty || 'أضف منتجات إلى السلة أولاً.');
                 return;
             }
+            readCheckoutFormToProfile();
             const validation = validateCheckoutProfile(readCheckoutFormToProfile(), ui);
             if (!validation.ok) {
-                openCartDrawer();
-                setCartCheckoutStatus(validation.errors.join(' '), true);
+                showCheckoutValidationErrors(validation.errors, ui, true);
                 return;
             }
             const profile = validation.profile;
@@ -5421,6 +5563,9 @@
                 if (!confirm(confirmMsg)) return;
                 currentQuoteIssue = issueNextQuoteNumber();
             }
+            quotePdfSubmitInFlight = true;
+            setQuoteActionLoading(true, sendMode);
+            try {
             closeCartDrawer();
             const rendered = await ensureQuoteA4Rendered();
             if (!rendered) {
@@ -5530,6 +5675,13 @@
                 doneMsg += '\n\n✓ ' + (ui.sendQuoteCloudOk || 'الطلب محفوظ في الإدارة.');
             }
             alert(doneMsg);
+            } catch (submitErr) {
+                console.error('submitQuoteA4Pdf failed:', submitErr);
+                alert((ui.sendQuoteA4PdfFail || 'تعذّر إرسال عرض السعر.') + '\n' + (submitErr && submitErr.message ? submitErr.message : ''));
+            } finally {
+                quotePdfSubmitInFlight = false;
+                setQuoteActionLoading(false, sendMode);
+            }
         }
 
         async function submitCartOrQuote(channel) {
@@ -5804,6 +5956,7 @@
         }
 
         async function viewSalesQuoteEntry(entryId) {
+            if (!requirePermission('sales', 'عرض تفاصيل الطلب يتطلب صلاحية المبيعات.')) return;
             let entry = loadSalesQuotesInbox().find(function(e) { return e.id === entryId; });
             if (!entry) {
                 const cloudInbox = await fetchSalesQuotesFromCloud();
@@ -6285,23 +6438,13 @@
                 alert(ui.cartEmpty || 'أضف منتجات إلى السلة أولاً.');
                 return;
             }
-            const validation = validateCheckoutProfile(readCheckoutFormToProfile(), ui);
+            readCheckoutFormToProfile();
+            const validation = validateCheckoutProfileForPreview(readCheckoutFormToProfile(), ui);
             if (!validation.ok) {
-                openCartDrawer();
-                setCartCheckoutStatus(validation.errors.join(' '), true);
+                showCheckoutValidationErrors(validation.errors, ui, false);
                 return;
             }
-            const lines = nebrasCart.map(function(l) {
-                return '• ' + l.productTitle + ' (' + [l.color, l.size].filter(Boolean).join(' ') + ') ×' + l.qty;
-            }).join('\n');
-            const cust = validation.profile;
-            const custLine = '\n' + (ui.checkoutSummaryLabel || 'العميل: ') + cust.customerName + ' · ' + cust.phone +
-                (cust.address ? '\n' + cust.address : '');
-            const ok = confirm((ui.quoteConfirmTitle || 'تأكيد طلب عرض السعر') + '\n\n' + lines + custLine + '\n\n' + (ui.quoteConfirmProceed || 'متابعة لعرض السعر الرسمي؟'));
-            if (ok) {
-                currentQuoteIssue = null;
-                openQuotePreview();
-            }
+            openQuotePreview();
         }
 
         function openQuotePreview() {
@@ -6312,12 +6455,17 @@
             }
             const doc = document.getElementById('quote-a4-document');
             const overlay = document.getElementById('quote-print-overlay');
-            if (!doc || !overlay) return;
+            if (!doc || !overlay) {
+                alert('تعذّر فتح المعاينة — أعدي تحميل الصفحة.');
+                return;
+            }
+            readCheckoutFormToProfile();
             if (!currentQuoteIssue || !currentQuoteIssue.quoteNo) {
                 currentQuoteIssue = issueNextQuoteNumber();
             }
             resolveSiteLogoUrl(function(logoUrl) {
                 renderQuotePreviewDocument(doc, overlay, logoUrl);
+                overlay.scrollTop = 0;
             });
         }
 
@@ -8605,8 +8753,8 @@
 
         function openSystemSettingsForChannels() {
             if (!currentAdmin) return;
-            const t = siteText[currentLang || 'ar'];
-            if (currentAdmin.role !== 'superadmin') {
+            const t = siteText[currentLang || 'ar'] || siteText.ar;
+            if (!isMainGovernanceAdmin(currentAdmin) && currentAdmin.role !== 'superadmin') {
                 alert(t.channelsSettingsSuperAdminOnly || '');
                 return;
             }
@@ -11792,7 +11940,7 @@
 
         function openSystemSettingsForOccasion() {
             if (!currentAdmin) return;
-            if (currentAdmin.role !== 'superadmin') {
+            if (!isMainGovernanceAdmin(currentAdmin) && currentAdmin.role !== 'superadmin') {
                 const ui = siteText[currentLang || 'ar'] || siteText.ar;
                 alert(ui.occasionSettingsSuperAdminOnly || 'تخصيص الثيم متاح لمسؤول النظام فقط.');
                 return;
@@ -13735,12 +13883,14 @@
                 });
             }
             bootstrapNebrasPlatform();
+            initQuoteCommerceHandlers();
             setInterval(updateNebrasSiteClock, 60000);
             ['checkout-customer-name', 'checkout-customer-phone', 'checkout-customer-email', 'checkout-customer-city', 'checkout-customer-address', 'checkout-customer-note'].forEach(function(id) {
                 const el = document.getElementById(id);
                 if (el) {
-                    el.addEventListener('change', function() { readCheckoutFormToProfile(); });
-                    el.addEventListener('blur', function() { readCheckoutFormToProfile(); });
+                    el.addEventListener('change', function() { readCheckoutFormToProfile(); refreshQuotePreviewLive(); });
+                    el.addEventListener('blur', function() { readCheckoutFormToProfile(); refreshQuotePreviewLive(); });
+                    el.addEventListener('input', function() { readCheckoutFormToProfile(); refreshQuotePreviewLive(); });
                 }
             });
             const langBtn = document.querySelector('.lang-btn');
@@ -14312,6 +14462,7 @@
                 sendQuoteA4Done: 'تم إرسال عرض السعر A4 (PDF). الرقم:',
                 sendQuoteA4RenderFail: 'تعذّر تجهيز مستند A4 — أعدي المحاولة.',
                 sendQuoteA4PdfFail: 'تعذّر إنشاء PDF — تحققي من الاتصال وأعدي المحاولة.',
+                sendQuoteA4Preparing: 'جاري تجهيز PDF A4…',
                 quotePdfLinkLabel: 'عرض السعر PDF (A4):',
                 cartRequestQuoteSend: 'إرسال عرض السعر A4 (PDF) للمبيعات وخدمة العملاء',
                 cartPreviewQuoteA4: 'معاينة A4 قبل الإرسال',
@@ -14825,6 +14976,7 @@
                 sendQuoteA4Done: 'A4 quotation PDF sent. Ref:',
                 sendQuoteA4RenderFail: 'Could not prepare A4 document — try again.',
                 sendQuoteA4PdfFail: 'Could not create PDF — check connection and try again.',
+                sendQuoteA4Preparing: 'Preparing A4 PDF…',
                 quotePdfLinkLabel: 'A4 quotation PDF:',
                 cartRequestQuoteSend: 'Send A4 quote PDF to sales & customer service',
                 cartPreviewQuoteA4: 'Preview A4 before sending',
@@ -15299,6 +15451,7 @@
                 sendQuoteA4Done: 'A4 报价 PDF 已发送。编号：',
                 sendQuoteA4RenderFail: '无法准备 A4 文档 — 请重试。',
                 sendQuoteA4PdfFail: '无法创建 PDF — 请检查网络后重试。',
+                sendQuoteA4Preparing: '正在准备 A4 PDF…',
                 quotePdfLinkLabel: 'A4 报价 PDF：',
                 cartRequestQuoteSend: '发送 A4 报价 PDF 至销售与客服',
                 cartPreviewQuoteA4: '发送前预览 A4',
@@ -15621,6 +15774,12 @@
         window.viewSalesQuoteDocument = viewSalesQuoteDocument;
         window.submitQuoteA4Pdf = submitQuoteA4Pdf;
         window.submitCartOrQuote = submitCartOrQuote;
+        window.confirmAndOpenQuote = confirmAndOpenQuote;
+        window.openQuotePreview = openQuotePreview;
+        window.closeQuotePreview = closeQuotePreview;
+        window.openCartDrawer = openCartDrawer;
+        window.closeCartDrawer = closeCartDrawer;
+        window.markCurrentQuoteFinalized = markCurrentQuoteFinalized;
         window.submitQuoteToSales = function() { submitQuoteA4Pdf('both'); };
         window.deleteAnalyticsQuote = deleteAnalyticsQuote;
         window.deleteAnalyticsVisitor = deleteAnalyticsVisitor;
@@ -15638,4 +15797,44 @@
         window.manageStoreIconProducts = manageStoreIconProducts;
         window.toggleSiteProductVisibility = toggleSiteProductVisibility;
         window.purgeStaleCatalogReferences = purgeStaleCatalogReferences;
+        window.loginAdmin = loginAdmin;
+        window.logoutAdmin = logoutAdmin;
+        window.openAdminPanel = openAdminPanel;
+        window.closeAdminOverlay = closeAdminOverlay;
+        window.onDashboardTileClick = onDashboardTileClick;
+        window.scrollToDashboardSection = scrollToDashboardSection;
+        window.openSiteContentManager = openSiteContentManager;
+        window.openIconManagement = openIconManagement;
+        window.openSystemSettings = openSystemSettings;
+        window.openSystemSettingsForChannels = openSystemSettingsForChannels;
+        window.openSystemSettingsForOccasion = openSystemSettingsForOccasion;
+        window.openDashboardNavSettings = openDashboardNavSettings;
+        window.openVisitorIcon = openVisitorIcon;
+        window.openPlatformModule = openPlatformModule;
+        window.openErpModule = openErpModule;
+        window.addNewUser = addNewUser;
+        window.editUser = editUser;
+        window.deleteUser = deleteUser;
+        window.setLanguage = setLanguage;
+        window.applyOccasionTheme = applyOccasionTheme;
+        window.renderPartnersMarquees = renderPartnersMarquees;
+        window.saveContentData = saveContentData;
+        window.refreshPublicSiteFromGovernance = refreshPublicSiteFromGovernance;
+        window.viewSalesQuoteEntry = viewSalesQuoteEntry;
+        window.addSitePartner = addSitePartner;
+        window.editSitePartner = editSitePartner;
+        window.deleteSitePartner = deleteSitePartner;
+        window.openUserManagement = openUserManagement;
+        window.openSalesManagement = openSalesManagement;
+        window.openErpInventory = openErpInventory;
+        window.openErpOrders = openErpOrders;
+        window.openComplaintsManagement = openComplaintsManagement;
+        window.openBranchesManagement = openBranchesManagement;
+        window.openAuditLog = openAuditLog;
+        window.markSalesQuoteStatus = markSalesQuoteStatus;
+        window.dialNumber = dialNumber;
+        window.smartRouteToSales = smartRouteToSales;
+        window.openNebrasWorkspace = openNebrasWorkspace;
+        window.closeNebrasWorkspace = closeNebrasWorkspace;
+        window.toggleMenu = toggleMenu;
 

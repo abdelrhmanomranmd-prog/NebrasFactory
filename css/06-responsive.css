@@ -460,6 +460,13 @@ img, video, canvas, svg {
         align-items: flex-start;
     }
 
+    .quote-print-overlay .quote-print-actions,
+    .quote-print-overlay .quote-send-channel-row {
+        position: sticky;
+        top: 0;
+        z-index: 5;
+    }
+
     .quote-a4 {
         width: 100%;
         max-width: 100%;
