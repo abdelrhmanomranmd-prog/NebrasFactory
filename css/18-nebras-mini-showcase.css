@@ -1,0 +1,230 @@
+/* معاينة مصغّرة متحركة — أبواب / شركاء (نفس مقاس حركة الهيدر) */
+
+.nebras-mini-showcase {
+    flex: 0 0 auto;
+    --mini-showcase-w: clamp(58px, 12vw, 76px);
+    --mini-showcase-h: clamp(100px, 19vw, 120px);
+    --cycle-duration: 18s;
+}
+
+.nebras-mini-showcase-frame {
+    position: relative;
+    width: var(--mini-showcase-w);
+    height: var(--mini-showcase-h);
+    border-radius: 14px;
+    overflow: hidden;
+    background: linear-gradient(165deg, #0a1e32 0%, #123a5c 55%, #0d2840 100%);
+    border: 2px solid rgba(0, 168, 255, 0.45);
+    box-shadow:
+        0 10px 28px rgba(0, 0, 0, 0.35),
+        0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+        0 0 24px rgba(0, 168, 255, 0.15);
+    animation: nebrasMiniShowcaseFloat 5.5s ease-in-out infinite;
+}
+
+.nebras-mini-showcase--partners .nebras-mini-showcase-frame {
+    background: linear-gradient(165deg, #0d2840 0%, #134e4a 100%);
+    border-color: rgba(46, 204, 113, 0.4);
+    box-shadow:
+        0 10px 28px rgba(0, 0, 0, 0.28),
+        0 0 20px rgba(46, 204, 113, 0.12);
+}
+
+.nebras-mini-showcase-glow {
+    position: absolute;
+    inset: -20%;
+    background: radial-gradient(ellipse at 50% 30%, rgba(0, 168, 255, 0.35) 0%, transparent 62%);
+    pointer-events: none;
+    z-index: 1;
+    animation: nebrasMiniShowcaseGlow 4s ease-in-out infinite;
+}
+
+.nebras-mini-showcase--partners .nebras-mini-showcase-glow {
+    background: radial-gradient(ellipse at 50% 30%, rgba(46, 204, 113, 0.28) 0%, transparent 62%);
+}
+
+.nebras-mini-showcase-viewport {
+    position: absolute;
+    inset: 4px;
+    border-radius: 10px;
+    overflow: hidden;
+    z-index: 2;
+    background: #0d1a28;
+}
+
+.nebras-mini-showcase--partners .nebras-mini-showcase-viewport {
+    background: #fff;
+}
+
+.nebras-mini-showcase-slide {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+    opacity: 0;
+    transform: scale(1.06) translateY(4px);
+    animation: nebrasMiniShowcaseFade var(--cycle-duration, 18s) ease-in-out infinite;
+    will-change: opacity, transform;
+}
+
+.nebras-mini-showcase-slide--logo {
+    object-fit: contain;
+    object-position: center;
+    padding: 6px;
+    background: #fff;
+}
+
+.nebras-mini-showcase-badge {
+    position: absolute;
+    bottom: 5px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 3;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.62rem;
+    color: #fff;
+    background: rgba(0, 168, 255, 0.9);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+.nebras-mini-showcase--partners .nebras-mini-showcase-badge {
+    background: rgba(16, 185, 129, 0.92);
+}
+
+@keyframes nebrasMiniShowcaseFade {
+    0%, 100% {
+        opacity: 0;
+        transform: scale(1.06) translateY(4px);
+    }
+    3%, 14% {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+    17%, 100% {
+        opacity: 0;
+        transform: scale(0.98) translateY(-2px);
+    }
+}
+
+@keyframes nebrasMiniShowcaseFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px); }
+}
+
+@keyframes nebrasMiniShowcaseGlow {
+    0%, 100% { opacity: 0.55; }
+    50% { opacity: 1; }
+}
+
+/* —— الداشبورد: باب بجوار اسم الشركة —— */
+.dashboard-company-identity {
+    position: relative;
+    overflow: hidden;
+}
+
+.dashboard-identity-hero {
+    display: flex;
+    align-items: flex-start;
+    gap: clamp(12px, 2.5vw, 20px);
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.dashboard-identity-headcopy {
+    flex: 1 1 200px;
+    min-width: 0;
+}
+
+.dashboard-identity-kicker {
+    margin: 0 0 6px;
+    font-size: clamp(1.05rem, 2.2vw, 1.35rem);
+    font-weight: 800;
+    color: var(--primary-blue, #0d2840);
+    line-height: 1.35;
+}
+
+.dashboard-identity-kicker i {
+    color: var(--accent-blue, #00a8ff);
+    margin-inline-end: 6px;
+}
+
+.dashboard-company-identity::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 120% 80% at 0% 0%, rgba(0, 168, 255, 0.06) 0%, transparent 55%);
+    pointer-events: none;
+    z-index: 0;
+}
+
+.dashboard-identity-hero,
+.dashboard-company-identity .legal-grid,
+.dashboard-company-identity #dashboard-legal-title {
+    position: relative;
+    z-index: 1;
+}
+
+#dashboard-legal-title {
+    margin-top: 0;
+}
+
+/* —— الشريط العلوي: شركاء أسفل «اتصل بالمندوب الأقرب» —— */
+.top-bar-actions-col {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 8px;
+}
+
+[dir="ltr"] .top-bar-actions-col {
+    align-items: flex-start;
+}
+
+.top-partners-mini-row {
+    display: flex;
+    justify-content: flex-end;
+    width: 100%;
+}
+
+[dir="ltr"] .top-partners-mini-row {
+    justify-content: flex-start;
+}
+
+.top-partners-mini-row .nebras-mini-showcase {
+    filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.35));
+}
+
+@media (max-width: 768px) {
+    .nebras-mini-showcase {
+        --mini-showcase-w: 52px;
+        --mini-showcase-h: 88px;
+    }
+
+    .dashboard-identity-hero {
+        align-items: center;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .nebras-mini-showcase-frame,
+    .nebras-mini-showcase-glow,
+    .nebras-mini-showcase-slide {
+        animation: none !important;
+    }
+
+    .nebras-mini-showcase-slide {
+        opacity: 0;
+    }
+
+    .nebras-mini-showcase-slide:first-child {
+        opacity: 1;
+        transform: none;
+    }
+}

@@ -4880,6 +4880,7 @@
             applySiteLogoImages();
             applyOccasionTheme();
             renderOccasionPromoBar();
+            refreshNebrasMiniShowcases();
             if (typeof initStorefrontScrollReveal === 'function') initStorefrontScrollReveal();
         }
 
@@ -6770,6 +6771,59 @@
             saveSystemData({ skipCloud: true });
         }
 
+        const NEBRAS_DOOR_SHOWCASE_URLS = [
+            'images/doors/header-showcase/door-01.png',
+            'images/doors/header-showcase/door-02.png',
+            'images/doors/header-showcase/door-03.png',
+            'images/doors/header-showcase/door-04.png',
+            'images/doors/header-showcase/door-05.png',
+            'images/doors/header-showcase/door-06.png'
+        ];
+
+        function buildMiniShowcaseInnerHtml(imageUrls, variant) {
+            const urls = (imageUrls || []).filter(Boolean);
+            if (!urls.length) return '';
+            const count = urls.length;
+            const cycleSec = count * 3;
+            const slideCls = 'nebras-mini-showcase-slide' + (variant === 'partners' ? ' nebras-mini-showcase-slide--logo' : '');
+            const badgeIcon = variant === 'partners' ? 'fa-handshake' : 'fa-door-open';
+            const slides = urls.map(function(src, i) {
+                const delay = -(cycleSec - 3) + (i * 3);
+                return '<img class="' + slideCls + '" src="' + escapeHtmlAttr(normalizeMediaPath(src)) + '" alt="" loading="lazy" decoding="async" style="animation-delay:' + delay + 's">';
+            }).join('');
+            return '<div class="nebras-mini-showcase-frame" role="img">' +
+                '<span class="nebras-mini-showcase-glow" aria-hidden="true"></span>' +
+                '<div class="nebras-mini-showcase-viewport">' + slides + '</div>' +
+                '<span class="nebras-mini-showcase-badge" aria-hidden="true"><i class="fas ' + badgeIcon + '"></i></span>' +
+                '</div>';
+        }
+
+        function refreshDashboardDoorShowcase() {
+            const root = document.getElementById('dashboard-door-showcase');
+            if (!root) return;
+            root.style.setProperty('--cycle-duration', (NEBRAS_DOOR_SHOWCASE_URLS.length * 3) + 's');
+            root.innerHTML = buildMiniShowcaseInnerHtml(NEBRAS_DOOR_SHOWCASE_URLS, 'doors');
+        }
+
+        function refreshTopPartnersMiniShowcase() {
+            const root = document.getElementById('top-partners-showcase');
+            if (!root) return;
+            const urls = getVisibleSitePartners().map(function(p) { return p.logoUrl; }).filter(Boolean);
+            if (!urls.length) {
+                root.innerHTML = '';
+                root.hidden = true;
+                return;
+            }
+            root.hidden = false;
+            root.style.setProperty('--cycle-duration', (urls.length * 3) + 's');
+            root.innerHTML = buildMiniShowcaseInnerHtml(urls, 'partners');
+        }
+
+        function refreshNebrasMiniShowcases() {
+            refreshDashboardDoorShowcase();
+            refreshTopPartnersMiniShowcase();
+        }
+
         function renderPartnersMarquees() {
             ensureBuiltinSitePartners();
             const lang = currentLang || 'ar';
@@ -6812,6 +6866,7 @@
             if (dashHint) dashHint.style.display = hasPartners ? 'none' : '';
             const dashSubtitle = document.getElementById('dashboard-partners-subtitle');
             if (dashSubtitle) dashSubtitle.textContent = ui.partnersSuccessSubtitle || 'شركاؤنا في النجاح';
+            refreshTopPartnersMiniShowcase();
         }
 
         function buildCertificationsGridHtml(lang) {
@@ -13416,6 +13471,7 @@
             ensureBuiltinSitePartners();
             if (!Array.isArray(siteCertifications)) siteCertifications = [];
             ensureShowroomGallery();
+            refreshNebrasMiniShowcases();
             ensureDoorDesignerConfig();
             ensureDashboardGovernanceHandlers();
             ensureAnalyticsGovernance();
@@ -13921,6 +13977,7 @@
             }
             bootstrapNebrasPlatform();
             initQuoteCommerceHandlers();
+            refreshNebrasMiniShowcases();
             setInterval(updateNebrasSiteClock, 60000);
             ['checkout-customer-name', 'checkout-customer-phone', 'checkout-customer-email', 'checkout-customer-city', 'checkout-customer-address', 'checkout-customer-note'].forEach(function(id) {
                 const el = document.getElementById(id);
@@ -15716,6 +15773,8 @@
 
             const heroTitle = document.getElementById('hero-title');
             if (heroTitle) heroTitle.innerHTML = text.heroTitle;
+            const dashKicker = document.getElementById('dashboard-identity-kicker');
+            if (dashKicker) dashKicker.innerHTML = text.heroTitle;
             applyHeroBanner();
             if (currentAdmin) updateAdminRoleLabel(currentAdmin);
             setElementText('admin-dashboard-title', text.adminDashboardTitle);

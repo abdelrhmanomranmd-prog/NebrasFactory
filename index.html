@@ -40,6 +40,7 @@
     <link rel="stylesheet" href="css/12-door-designer.css">
     <link rel="stylesheet" href="css/13-header-campaign.css">
     <link rel="stylesheet" href="css/17-header-door-showcase.css">
+    <link rel="stylesheet" href="css/18-nebras-mini-showcase.css">
     <link rel="stylesheet" href="css/15-admin-analytics.css">
     <link rel="stylesheet" href="css/16-storefront-premium.css">
 </head>
@@ -70,15 +71,20 @@
                 <span id="top-customer-number"><i class="fas fa-headset"></i> خدمة العملاء والشكاوى: 0579394158</span>
             </div>
         </div>
-        <div class="actions">
-            <button type="button" class="top-commerce-btn" id="top-open-cart-btn" onclick="openCartDrawer()" title="سلة التسوق">
-                <i class="fas fa-shopping-cart" aria-hidden="true"></i>
-                <span class="top-cart-count" id="top-cart-count" hidden>0</span>
-            </button>
-            <button type="button" class="top-commerce-btn quote-top-btn" id="top-quote-btn" onclick="confirmAndOpenQuote()">اطلب عرض سعر</button>
-            <button id="top-call-sales-btn" onclick="dialNumber(systemSettings.mainSalesPhone)">اتصال المبيعات</button>
-            <button id="top-call-customer-btn" onclick="dialNumber(systemSettings.customerServicePhone)">اتصال خدمة العملاء</button>
-            <button id="top-smart-routing-btn" onclick="smartRouteToSales()">اتصال بالمندوب الأقرب</button>
+        <div class="top-bar-actions-col">
+            <div class="actions">
+                <button type="button" class="top-commerce-btn" id="top-open-cart-btn" onclick="openCartDrawer()" title="سلة التسوق">
+                    <i class="fas fa-shopping-cart" aria-hidden="true"></i>
+                    <span class="top-cart-count" id="top-cart-count" hidden>0</span>
+                </button>
+                <button type="button" class="top-commerce-btn quote-top-btn" id="top-quote-btn" onclick="confirmAndOpenQuote()">اطلب عرض سعر</button>
+                <button id="top-call-sales-btn" onclick="dialNumber(systemSettings.mainSalesPhone)">اتصال المبيعات</button>
+                <button id="top-call-customer-btn" onclick="dialNumber(systemSettings.customerServicePhone)">اتصال خدمة العملاء</button>
+                <button id="top-smart-routing-btn" onclick="smartRouteToSales()">اتصال بالمندوب الأقرب</button>
+            </div>
+            <div class="top-partners-mini-row" aria-label="شركاؤنا">
+                <div class="nebras-mini-showcase nebras-mini-showcase--partners" id="top-partners-showcase"></div>
+            </div>
         </div>
     </div>
     <header>
@@ -508,7 +514,13 @@
             </div>
         </div>
         <div class="dashboard-company-identity" id="dashboard-company-identity">
-            <h3 id="dashboard-legal-title" class="admin-only-ui">بيانات مصنع نبراس الرسمية (داخلية + خارجية)</h3>
+            <div class="dashboard-identity-hero">
+                <div class="nebras-mini-showcase nebras-mini-showcase--doors" id="dashboard-door-showcase" aria-label="معاينة أبواب WPC"></div>
+                <div class="dashboard-identity-headcopy">
+                    <p class="dashboard-identity-kicker" id="dashboard-identity-kicker"><i class="fas fa-star" aria-hidden="true"></i> شركة مصنع نبراس للبلاستيك</p>
+                    <h3 id="dashboard-legal-title" class="admin-only-ui">بيانات مصنع نبراس الرسمية (داخلية + خارجية)</h3>
+                </div>
+            </div>
             <div class="legal-grid" id="dashboard-legal-grid"></div>
         </div>
         <nav class="dashboard-main-nav" id="dashboard-main-nav" aria-label="تنقل الداشبورد">
