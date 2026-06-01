@@ -299,6 +299,7 @@
     </section>
 
     <footer class="site-footer" id="site-footer">
+        <p class="site-footer-copyright" id="site-footer-copyright">كل الحقوق محفوظة مع مصنع نبراس 2026</p>
         <p class="nebras-site-clock" id="nebras-site-clock" aria-live="polite"></p>
         <div class="company-legal-bar" id="footer-legal-bar" style="margin-bottom:16px;border-radius:12px;"></div>
         <div class="footer-designer-row">
@@ -536,6 +537,7 @@
             <button type="button" id="dash-nav-platform" onclick="scrollToDashboardSection('platform-hub-panel')">المنصة</button>
             <button type="button" id="dash-nav-content" onclick="openSiteContentManager()">المحتوى</button>
             <button type="button" id="dash-nav-settings" onclick="openDashboardNavSettings()">الإعدادات</button>
+            <button type="button" id="dash-nav-official" onclick="scrollToDashboardSection('dashboard-official-hub')">لينكتري و QR</button>
         </nav>
         <div class="dashboard-hub-intro admin-only-ui" id="dashboard-hub-intro">
             <h3 id="dashboard-hub-intro-title">مركز التحكم — نبراس</h3>
@@ -649,6 +651,37 @@
         <div class="dashboard-actions" id="dashboard-actions-grid"></div>
         <h3 class="dashboard-zone-label" id="dash-zone-operations"><i class="fas fa-cubes"></i> ERP والعمليات والتحليلات</h3>
         <div class="dashboard-grid" id="dashboard-secondary-grid"></div>
+        <footer class="dashboard-official-hub" id="dashboard-official-hub" aria-label="روابط رسمية و QR">
+            <div class="dashboard-official-head">
+                <h3 id="dashboard-official-title"><i class="fas fa-link" aria-hidden="true"></i> الروابط الرسمية و QR الموقع</h3>
+                <p class="dashboard-official-hint" id="dashboard-official-hint">لينكتري الرسمي · رمز QR للموقع · حقوق النشر</p>
+            </div>
+            <div class="dashboard-official-grid">
+                <div class="dashboard-official-meta">
+                    <p class="dashboard-copyright" id="dashboard-copyright-text">كل الحقوق محفوظة مع مصنع نبراس 2026</p>
+                    <p class="dashboard-site-url-line">
+                        <i class="fas fa-globe" aria-hidden="true"></i>
+                        <a id="dashboard-site-url-link" href="https://www.nebrasplasticcompany.com" target="_blank" rel="noopener noreferrer">www.nebrasplasticcompany.com</a>
+                    </p>
+                    <a class="dashboard-linktree-card" id="dashboard-linktree-link" href="https://linktr.ee/abdelrhmanomranmd" target="_blank" rel="noopener noreferrer">
+                        <span class="dashboard-linktree-icon" aria-hidden="true"><i class="fas fa-tree"></i></span>
+                        <span class="dashboard-linktree-copy">
+                            <strong id="dashboard-linktree-title">Nebras.Factory — Linktree الرسمي</strong>
+                            <small id="dashboard-linktree-url">linktr.ee/abdelrhmanomranmd</small>
+                        </span>
+                        <i class="fas fa-external-link-alt dashboard-linktree-go" aria-hidden="true"></i>
+                    </a>
+                </div>
+                <div class="dashboard-qr-card" id="dashboard-qr-card">
+                    <img class="dashboard-qr-img" id="dashboard-qr-img" src="images/nebras-site-qr.png" width="168" height="168" alt="رمز QR لموقع مصنع نبراس" decoding="async" loading="lazy">
+                    <p class="dashboard-qr-caption" id="dashboard-qr-caption">امسحي للوصول لموقع نبراس</p>
+                    <a class="dashboard-qr-download" id="dashboard-qr-download" href="images/nebras-site-qr.png" download="nebras-factory-site-qr.png">
+                        <i class="fas fa-download" aria-hidden="true"></i>
+                        <span id="dashboard-qr-download-label">تحميل QR</span>
+                    </a>
+                </div>
+            </div>
+        </footer>
     </section>
 
     <!-- Admin Sections -->

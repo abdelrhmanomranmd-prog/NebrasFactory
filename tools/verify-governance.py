@@ -46,6 +46,14 @@ def main():
     if 'abdelrhmanomranmd@gmail.com' not in js:
         err('PRIMARY_RECOVERY_EMAIL (abdelrhmanomranmd@gmail.com) missing in nebras-platform.js')
 
+    for el_id in ('dashboard-official-hub', 'dashboard-linktree-link', 'dashboard-qr-img'):
+        if el_id not in html:
+            err(f'Dashboard official hub element missing: #{el_id}')
+
+    qr_path = os.path.join(ROOT, 'images', 'nebras-site-qr.png')
+    if not os.path.isfile(qr_path):
+        err('images/nebras-site-qr.png missing (site QR)')
+
     for showcase_id in ('header-hero-door-showcase', 'top-partners-showcase', 'header-aside-partners', 'header-hero-band', 'header-campaign-action-strip'):
         if showcase_id not in html:
             err(f'Header showcase element missing: #{showcase_id}')

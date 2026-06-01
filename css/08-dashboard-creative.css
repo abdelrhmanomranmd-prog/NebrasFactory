@@ -677,3 +677,202 @@ html[dir="rtl"] .nebras-partners-track--reverse:not(.nebras-partners-track--stat
     border-radius: 16px;
     background: rgba(255, 255, 255, 0.6);
 }
+
+/* —— داشبورد: لينكتري · QR · حقوق النشر —— */
+.dashboard-official-hub {
+    margin: 32px 0 20px;
+    padding: clamp(18px, 3vw, 26px);
+    border-radius: 20px;
+    background: linear-gradient(145deg, rgba(13, 40, 64, 0.06) 0%, rgba(0, 168, 255, 0.05) 100%);
+    border: 1px solid rgba(21, 94, 148, 0.14);
+    box-shadow: 0 12px 32px rgba(13, 40, 64, 0.08);
+}
+
+.dashboard-official-head {
+    margin-bottom: 16px;
+}
+
+.dashboard-official-head h3 {
+    margin: 0 0 6px;
+    font-size: 1.1rem;
+    color: var(--primary-blue, #0d2840);
+}
+
+.dashboard-official-hint {
+    margin: 0;
+    font-size: 0.86rem;
+    color: #64748b;
+    line-height: 1.5;
+}
+
+.dashboard-official-grid {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: clamp(16px, 3vw, 28px);
+    align-items: center;
+}
+
+.dashboard-copyright {
+    margin: 0 0 10px;
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: var(--primary-blue, #0d2840);
+    letter-spacing: 0.01em;
+}
+
+.dashboard-site-url-line {
+    margin: 0 0 14px;
+    font-size: 0.85rem;
+    color: #475569;
+}
+
+.dashboard-site-url-line a {
+    color: #155e94;
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.dashboard-site-url-line a:hover {
+    text-decoration: underline;
+}
+
+.dashboard-linktree-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #0d2840 0%, #155e94 100%);
+    color: #fff;
+    text-decoration: none;
+    box-shadow: 0 8px 22px rgba(13, 40, 64, 0.22);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    max-width: 420px;
+}
+
+.dashboard-linktree-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 28px rgba(13, 40, 64, 0.3);
+    color: #fff;
+}
+
+.dashboard-linktree-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.14);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.dashboard-linktree-copy {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.dashboard-linktree-copy strong {
+    font-size: 0.88rem;
+    font-weight: 700;
+}
+
+.dashboard-linktree-copy small {
+    font-size: 0.72rem;
+    opacity: 0.85;
+    direction: ltr;
+    text-align: start;
+}
+
+.dashboard-linktree-go {
+    opacity: 0.75;
+    flex-shrink: 0;
+}
+
+.dashboard-qr-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 14px;
+    border-radius: 16px;
+    background: #fff;
+    border: 1px solid rgba(21, 94, 148, 0.12);
+    box-shadow: 0 8px 24px rgba(13, 40, 64, 0.1);
+}
+
+.dashboard-qr-img {
+    display: block;
+    width: 168px;
+    height: 168px;
+    max-width: 100%;
+    border-radius: 10px;
+    image-rendering: pixelated;
+    image-rendering: crisp-edges;
+}
+
+.dashboard-qr-caption {
+    margin: 0;
+    font-size: 0.78rem;
+    color: #475569;
+    text-align: center;
+}
+
+.dashboard-qr-download {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #155e94;
+    text-decoration: none;
+    padding: 6px 12px;
+    border-radius: 8px;
+    background: rgba(0, 168, 255, 0.1);
+}
+
+.dashboard-qr-download:hover {
+    background: rgba(0, 168, 255, 0.18);
+}
+
+.company-social-btn.soc-lt {
+    background: linear-gradient(145deg, #1e293b, #334155);
+}
+
+.site-footer-copyright {
+    margin: 0 0 10px;
+    text-align: center;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.82);
+    letter-spacing: 0.02em;
+}
+
+@media (max-width: 768px) {
+    .dashboard-official-grid {
+        grid-template-columns: 1fr;
+        justify-items: center;
+        text-align: center;
+    }
+
+    .dashboard-official-meta {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .dashboard-linktree-card {
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .dashboard-qr-img {
+        width: 152px;
+        height: 152px;
+    }
+}

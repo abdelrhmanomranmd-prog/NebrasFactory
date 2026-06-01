@@ -24,6 +24,9 @@
         const PRIMARY_GOVERNANCE_ADMIN_IDS = ['base-admin', 'nebras-factory-admin'];
         const PRIMARY_GOVERNANCE_USERNAMES = ['NEBRASFACTORY', 'NEBRASBASIC'];
         const PRIMARY_RECOVERY_EMAIL = 'abdelrhmanomranmd@gmail.com';
+        const NEBRAS_LINKTREE_URL = 'https://linktr.ee/abdelrhmanomranmd';
+        const NEBRAS_PUBLIC_SITE_URL = 'https://www.nebrasplasticcompany.com';
+        const NEBRAS_SITE_QR_IMAGE = 'images/nebras-site-qr.png';
         const NEBRAS_PERMISSION_LABELS = {
             users: 'المستخدمون',
             content: 'المحتوى والمعرض',
@@ -331,6 +334,8 @@
             socialFacebook: '',
             socialInstagram: '',
             socialSnapchat: '',
+            linktreeUrl: NEBRAS_LINKTREE_URL,
+            publicSiteUrl: NEBRAS_PUBLIC_SITE_URL,
             occasionSiteWide: true,
             iconDetailOverrides: {},
             occasionThemeEnabled: false,
@@ -8435,6 +8440,8 @@
                 telEl.setAttribute('tabindex', phone ? '0' : '-1');
             }
             if (phoneDisp) phoneDisp.textContent = phone || '';
+            const copyEl = document.getElementById('site-footer-copyright');
+            if (copyEl) copyEl.textContent = text.siteFooterCopyright || text.dashboardCopyright || 'كل الحقوق محفوظة مع مصنع نبراس 2026';
         }
 
         function sanitizeExternalUrl(url) {
@@ -8475,6 +8482,8 @@
             if (ig) items.push({ href: ig, icon: 'fab fa-instagram', label: 'Instagram', cls: 'soc-ig' });
             if (tt) items.push({ href: tt, icon: 'fab fa-tiktok', label: 'TikTok', cls: 'soc-tt' });
             if (sn) items.push({ href: sn, icon: 'fab fa-snapchat', label: 'Snapchat', cls: 'soc-sn' });
+            const lt = sanitizeExternalUrl(systemSettings.linktreeUrl || NEBRAS_LINKTREE_URL);
+            if (lt) items.push({ href: lt, icon: 'fas fa-link', label: 'Linktree', cls: 'soc-lt' });
 
             if (!items.length) {
                 section.style.display = 'none';
@@ -8888,6 +8897,43 @@
             openSystemSettings();
         }
 
+        function renderDashboardOfficialHub() {
+            const t = siteText[currentLang || 'ar'] || siteText.ar;
+            const linktree = sanitizeExternalUrl(systemSettings.linktreeUrl || NEBRAS_LINKTREE_URL) || NEBRAS_LINKTREE_URL;
+            const siteUrl = sanitizeExternalUrl(systemSettings.publicSiteUrl || NEBRAS_PUBLIC_SITE_URL) || NEBRAS_PUBLIC_SITE_URL;
+            const titleEl = document.getElementById('dashboard-official-title');
+            const hintEl = document.getElementById('dashboard-official-hint');
+            const copyEl = document.getElementById('dashboard-copyright-text');
+            const siteLink = document.getElementById('dashboard-site-url-link');
+            const ltLink = document.getElementById('dashboard-linktree-link');
+            const ltTitle = document.getElementById('dashboard-linktree-title');
+            const ltUrl = document.getElementById('dashboard-linktree-url');
+            const qrCaption = document.getElementById('dashboard-qr-caption');
+            const qrDownload = document.getElementById('dashboard-qr-download');
+            const qrDownloadLabel = document.getElementById('dashboard-qr-download-label');
+            const qrImg = document.getElementById('dashboard-qr-img');
+            if (titleEl) titleEl.innerHTML = '<i class="fas fa-link" aria-hidden="true"></i> ' + escapeHtmlAttr(t.dashboardOfficialTitle || 'الروابط الرسمية و QR الموقع');
+            if (hintEl) hintEl.textContent = t.dashboardOfficialHint || '';
+            if (copyEl) copyEl.textContent = t.dashboardCopyright || 'كل الحقوق محفوظة مع مصنع نبراس 2026';
+            if (siteLink) {
+                siteLink.href = siteUrl;
+                siteLink.textContent = siteUrl.replace(/^https?:\/\//i, '');
+            }
+            if (ltLink) ltLink.href = linktree;
+            if (ltTitle) ltTitle.textContent = t.dashboardLinktreeTitle || 'Nebras.Factory — Linktree الرسمي';
+            if (ltUrl) ltUrl.textContent = linktree.replace(/^https?:\/\//i, '');
+            if (qrCaption) qrCaption.textContent = t.dashboardQrCaption || '';
+            if (qrDownload) {
+                qrDownload.href = NEBRAS_SITE_QR_IMAGE;
+                qrDownload.setAttribute('download', 'nebras-factory-site-qr.png');
+            }
+            if (qrDownloadLabel) qrDownloadLabel.textContent = t.dashboardQrDownload || 'تحميل QR';
+            if (qrImg) {
+                qrImg.src = NEBRAS_SITE_QR_IMAGE + '?v=2026';
+                qrImg.alt = t.dashboardQrAlt || 'رمز QR لموقع مصنع نبراس';
+            }
+        }
+
         function renderDashboardChannelsStatus() {
             if (!currentAdmin) return;
             const t = siteText[currentLang || 'ar'];
@@ -8917,6 +8963,8 @@
             parts.push(row(!!ig, t.channelInstagram, ig ? t.channelDetailOn : t.channelDetailMissing));
             parts.push(row(!!tt, t.channelTikTok, tt ? t.channelDetailOn : t.channelDetailMissing));
             parts.push(row(!!sn, t.channelSnapchat, sn ? t.channelDetailOn : t.channelDetailMissing));
+            const lt = sanitizeExternalUrl(systemSettings.linktreeUrl || NEBRAS_LINKTREE_URL);
+            parts.push(row(!!lt, t.channelLinktree || 'Linktree', lt ? t.channelDetailOn : t.channelDetailMissing));
 
             listEl.innerHTML = parts.join('');
 
@@ -9242,6 +9290,8 @@
             updateSalesQuoteFab();
             renderAdminAnalyticsPanel();
             updateSalesInboxBadge();
+            renderDashboardOfficialHub();
+            renderDashboardChannelsStatus();
         }
 
         function logoutAdmin() {
@@ -14561,6 +14611,15 @@
                 dashboardChannelsTitle: 'حالة قنوات التواصل (إشعار للإدارة)',
                 dashboardChannelsHint: 'يُحدَّث هذا الجدول من «إعدادات النظام». الرابط الفارغ يخفي أيقونة القناة على الصفحة العامة. يُنصح بمراجعة القنوات بعد أي تغيير على المنصات الخارجية.',
                 dashboardChannelsEditBtn: 'فتح إعدادات روابط التواصل',
+                channelLinktree: 'Linktree (لينكتري)',
+                dashboardOfficialTitle: 'الروابط الرسمية و QR الموقع',
+                dashboardOfficialHint: 'لينكتري الرسمي لقنوات نبراس · رمز QR للموقع · حقوق النشر للإدارة.',
+                dashboardCopyright: 'كل الحقوق محفوظة مع مصنع نبراس 2026',
+                siteFooterCopyright: 'كل الحقوق محفوظة مع مصنع نبراس 2026',
+                dashboardLinktreeTitle: 'Nebras.Factory — Linktree الرسمي',
+                dashboardQrCaption: 'امسحي للوصول لموقع نبراس',
+                dashboardQrDownload: 'تحميل QR',
+                dashboardQrAlt: 'رمز QR لموقع مصنع نبراس للبلاستيك',
                 channelsSettingsSuperAdminOnly: 'تعديل روابط التواصل متاح لمسؤول النظام (Super Admin) فقط.',
                 dashboardOccasionTitle: 'الوضع الاحتفالي — شكل المناسبة في الداشبورد',
                 dashboardOccasionEditBtn: 'تهيئة شكل الاحتفال',
@@ -15076,6 +15135,15 @@
                 dashboardChannelsTitle: 'Social channels status (admin)',
                 dashboardChannelsHint: 'Synced from System Settings. Empty URL hides the icon on the public page. Review after changes on social platforms.',
                 dashboardChannelsEditBtn: 'Open social links settings',
+                channelLinktree: 'Linktree',
+                dashboardOfficialTitle: 'Official links & site QR',
+                dashboardOfficialHint: 'Official Linktree · site QR code · copyright.',
+                dashboardCopyright: 'All rights reserved — Nebras Plastic Factory 2026',
+                siteFooterCopyright: 'All rights reserved — Nebras Plastic Factory 2026',
+                dashboardLinktreeTitle: 'Nebras.Factory — Official Linktree',
+                dashboardQrCaption: 'Scan to open Nebras website',
+                dashboardQrDownload: 'Download QR',
+                dashboardQrAlt: 'Nebras factory website QR code',
                 channelsSettingsSuperAdminOnly: 'Editing social links is limited to the Super Admin account.',
                 dashboardOccasionTitle: 'Celebration mode — festive dashboard look',
                 dashboardOccasionEditBtn: 'Configure celebration',
@@ -15577,6 +15645,15 @@
                 dashboardChannelsTitle: '社交渠道状态（管理端提示）',
                 dashboardChannelsHint: '数据来自「系统设置」。留空链接则公开页不显示对应图标。平台变更后请及时核对。',
                 dashboardChannelsEditBtn: '打开社交链接设置',
+                channelLinktree: 'Linktree',
+                dashboardOfficialTitle: '官方链接与网站二维码',
+                dashboardOfficialHint: '官方 Linktree · 网站二维码 · 版权信息。',
+                dashboardCopyright: '版权所有 — 尼布拉斯塑料工厂 2026',
+                siteFooterCopyright: '版权所有 — 尼布拉斯塑料工厂 2026',
+                dashboardLinktreeTitle: 'Nebras.Factory — 官方 Linktree',
+                dashboardQrCaption: '扫描访问尼布拉斯网站',
+                dashboardQrDownload: '下载二维码',
+                dashboardQrAlt: '尼布拉斯工厂网站二维码',
                 channelsSettingsSuperAdminOnly: '仅超级管理员（Super Admin）可修改社交链接。',
                 dashboardOccasionTitle: '庆典模式 — 管理面板节日外观',
                 dashboardOccasionEditBtn: '配置庆典外观',
@@ -16011,6 +16088,7 @@
                 renderErpHubPanel();
                 renderDashboardTiles();
                 renderDashboardChannelsStatus();
+                renderDashboardOfficialHub();
             }
             renderDashboardOccasionStatus();
             setElementText('dashboard-occasion-title', text.dashboardOccasionTitle);
