@@ -23,6 +23,7 @@
         window.NEBRAS_SHOWROOM_MEDIA_ACCEPT = NEBRAS_SHOWROOM_MEDIA_ACCEPT;
         const PRIMARY_GOVERNANCE_ADMIN_IDS = ['base-admin', 'nebras-factory-admin'];
         const PRIMARY_GOVERNANCE_USERNAMES = ['NEBRASFACTORY', 'NEBRASBASIC'];
+        const PRIMARY_RECOVERY_EMAIL = 'abdelrhmanomranmd@gmail.com';
         const NEBRAS_PERMISSION_LABELS = {
             users: 'المستخدمون',
             content: 'المحتوى والمعرض',
@@ -316,7 +317,7 @@
         const DEFAULT_SYSTEM_SETTINGS = {
             mainSalesPhone: '0555092383',
             customerServicePhone: '0579394158',
-            recoveryEmail: 'admin@nebrasfactory.com',
+            recoveryEmail: PRIMARY_RECOVERY_EMAIL,
             designerPhone: '0535336185',
             commercialRegister: '1128185177',
             taxNumber: '312765384700003',
@@ -1700,7 +1701,7 @@
         let auditLogs = [];
         let dynamicContentBlocks = {};
         let dynamicSiteSections = {};
-        let passwordRecoveryCode = null;
+        let passwordRecoveryVerified = false;
         /** أيقونات الزوار المدمجة — العناوين تُعرض من siteText عبر titleKey عند تغيير اللغة */
         /** بوابة الزائر — ثلاث طبقات (متجر · معرض · منصة) بدون «كتالوج المنتجات» المجمّع */
         const DEFAULT_VISITOR_ICONS = [
@@ -6798,30 +6799,51 @@
                 '</div>';
         }
 
-        function refreshDashboardDoorShowcase() {
-            const root = document.getElementById('dashboard-door-showcase');
+        function fillDoorMiniShowcase(rootId) {
+            const root = document.getElementById(rootId);
             if (!root) return;
             root.style.setProperty('--cycle-duration', (NEBRAS_DOOR_SHOWCASE_URLS.length * 3) + 's');
             root.innerHTML = buildMiniShowcaseInnerHtml(NEBRAS_DOOR_SHOWCASE_URLS, 'doors');
         }
 
+        function refreshDashboardDoorShowcase() {
+            fillDoorMiniShowcase('dashboard-door-showcase');
+        }
+
+        function refreshHeaderHeroDoorShowcase() {
+            fillDoorMiniShowcase('header-hero-door-showcase');
+        }
+
+        function refreshHeaderDoorShowcase() {
+            fillDoorMiniShowcase('header-door-showcase');
+        }
+
         function refreshTopPartnersMiniShowcase() {
             const root = document.getElementById('top-partners-showcase');
+            const aside = document.getElementById('header-aside-partners');
             if (!root) return;
             const urls = getVisibleSitePartners().map(function(p) { return p.logoUrl; }).filter(Boolean);
+            const doorMode = document.body.classList.contains('nebras-door-interface-active');
             if (!urls.length) {
                 root.innerHTML = '';
                 root.hidden = true;
+                if (aside) aside.hidden = true;
                 return;
             }
             root.hidden = false;
             root.style.setProperty('--cycle-duration', (urls.length * 3) + 's');
             root.innerHTML = buildMiniShowcaseInnerHtml(urls, 'partners');
+            if (aside) {
+                aside.hidden = doorMode;
+                aside.setAttribute('aria-hidden', doorMode ? 'true' : 'false');
+            }
         }
 
         function refreshNebrasMiniShowcases() {
             refreshDashboardDoorShowcase();
             refreshTopPartnersMiniShowcase();
+            refreshHeaderHeroDoorShowcase();
+            refreshHeaderDoorShowcase();
         }
 
         function renderPartnersMarquees() {
@@ -12063,7 +12085,10 @@
             if (!salesInput || !customerInput || !recoveryInput) return;
             salesInput.value = systemSettings.mainSalesPhone || '';
             customerInput.value = systemSettings.customerServicePhone || '';
-            recoveryInput.value = systemSettings.recoveryEmail || '';
+            ensurePrimaryRecoveryEmail();
+            recoveryInput.value = systemSettings.recoveryEmail || PRIMARY_RECOVERY_EMAIL;
+            recoveryInput.readOnly = true;
+            recoveryInput.title = 'إيميل الإدارة الرئيسية المعتمد — لا يُغيَّر إلا من الإدارة المحورية';
             const designerInput = document.getElementById('setting-designer-phone');
             const waInput = document.getElementById('setting-social-whatsapp');
             const ttInput = document.getElementById('setting-social-tiktok');
@@ -12126,14 +12151,13 @@
             }
             const salesPhone = document.getElementById('setting-sales-phone').value.trim();
             const customerPhone = document.getElementById('setting-customer-phone').value.trim();
-            const recoveryEmail = document.getElementById('setting-recovery-email').value.trim();
-            if (!salesPhone || !customerPhone || !recoveryEmail) {
+            if (!salesPhone || !customerPhone) {
                 alert('يرجى إدخال جميع الأرقام.');
                 return;
             }
             systemSettings.mainSalesPhone = salesPhone;
             systemSettings.customerServicePhone = customerPhone;
-            systemSettings.recoveryEmail = recoveryEmail;
+            ensurePrimaryRecoveryEmail();
             const designerPhoneEl = document.getElementById('setting-designer-phone');
             const waEl = document.getElementById('setting-social-whatsapp');
             const ttEl = document.getElementById('setting-social-tiktok');
@@ -12216,6 +12240,38 @@
             return String(u.role || '').toLowerCase() === 'superadmin';
         }
 
+        function ensurePrimaryRecoveryEmail() {
+            if (!systemSettings || typeof systemSettings !== 'object') return;
+            const cur = String(systemSettings.recoveryEmail || '').trim().toLowerCase();
+            const primary = PRIMARY_RECOVERY_EMAIL.toLowerCase();
+            if (!cur || cur === 'admin@nebrasfactory.com' || cur !== primary) {
+                systemSettings.recoveryEmail = PRIMARY_RECOVERY_EMAIL;
+            }
+        }
+
+        function isLocalRecoveryApiFallback() {
+            try {
+                const host = String(window.location.hostname || '').toLowerCase();
+                return host === 'localhost' || host === '127.0.0.1';
+            } catch (e) {
+                return false;
+            }
+        }
+
+        function recoveryApiErrorMessage(errCode) {
+            const map = {
+                email_mismatch: 'الإيميل غير مطابق للإيميل المعتمد للإدارة الرئيسية.',
+                gmail_not_configured: 'إرسال Gmail غير مُعدّ على الخادم. أضيفي GMAIL_APP_PASSWORD في Vercel.',
+                gmail_send_failed: 'تعذّر إرسال الرسالة عبر Gmail. تحققي من كلمة مرور التطبيق.',
+                otp_store_unavailable: 'تخزين الرمز غير متاح. تحققي من SUPABASE_SERVICE_ROLE_KEY في Vercel.',
+                no_active_code: 'لا يوجد رمز نشط. اطلبي رمزاً جديداً.',
+                code_expired: 'انتهت صلاحية الرمز. اطلبي رمزاً جديداً.',
+                invalid_code: 'رمز التحقق غير صحيح.',
+                username_mismatch: 'الحساب لا يطابق الرمز المُرسل.'
+            };
+            return map[errCode] || 'تعذّر إكمال العملية. حاولي لاحقاً أو راجعي إعدادات Vercel.';
+        }
+
         function renderAccountSecurityPanel() {
             const status = document.getElementById('account-security-status');
             const directBtn = document.getElementById('account-security-direct-btn');
@@ -12225,8 +12281,8 @@
             if (emailBtn) emailBtn.textContent = isSuper ? 'تغيير كلمة المرور عبر الإيميل المعتمد' : 'استرجاع/تغيير عبر الإيميل';
             if (status) {
                 status.textContent = isSuper
-                    ? 'مدير النظام الرئيسي (Super Admin): لا يُغيَّر كلمة المرور إلا عبر الإيميل المرتبط بالموقع ورمز التحقق الديناميكي.'
-                    : 'موظف إداري: يمكنك تغيير البيانات بكلمة المرور الحالية، أو عبر الإيميل إن وُجد.';
+                    ? 'مدير النظام الرئيسي: تغيير كلمة المرور فقط عبر Gmail المعتمد (' + PRIMARY_RECOVERY_EMAIL + ') ورمز يُرسل إلى بريدك.'
+                    : 'موظف إداري: يمكنك تغيير البيانات بكلمة المرور الحالية، أو عبر Gmail المعتمد للإدارة.';
             }
         }
 
@@ -12261,31 +12317,102 @@
             alert('تم تحديث اسم المستخدم وكلمة المرور بنجاح.');
         }
 
-        function sendRecoveryCodeToEmail() {
+        async function sendRecoveryCodeToEmail() {
             if (!currentAdmin) return;
-            if (isPrimarySuperAdmin(currentAdmin) && !(systemSettings.recoveryEmail || '').trim()) {
-                alert('يُرجى ضبط الإيميل المعتمد للاسترجاع من إعدادات النظام أولاً.');
+            ensurePrimaryRecoveryEmail();
+            const approvedEmail = PRIMARY_RECOVERY_EMAIL;
+            const enteredEmail = prompt(
+                'أدخل إيميل الإدارة الرئيسية المعتمد (Gmail):\n\nالمعتمد: ' + approvedEmail
+            );
+            if (!enteredEmail || enteredEmail.trim().toLowerCase() !== approvedEmail.toLowerCase()) {
+                alert('الإيميل غير مطابق. الإيميل المعتمد للإدارة الرئيسية: ' + approvedEmail);
                 return;
             }
-            const enteredEmail = prompt('أدخل الإيميل المرتبط بالموقع:');
-            if (!enteredEmail || enteredEmail.trim().toLowerCase() !== (systemSettings.recoveryEmail || '').toLowerCase()) {
-                alert('الإيميل غير مطابق للإيميل المعتمد.');
-                return;
+            const emailBtn = document.getElementById('account-security-email-btn');
+            const prevLabel = emailBtn ? emailBtn.textContent : '';
+            if (emailBtn) {
+                emailBtn.disabled = true;
+                emailBtn.textContent = 'جاري إرسال الرمز إلى Gmail...';
             }
-            passwordRecoveryCode = String(Math.floor(100000 + Math.random() * 900000));
-            alert(`تم إرسال رمز التحقق إلى ${systemSettings.recoveryEmail} (محاكاة): ${passwordRecoveryCode}`);
-            const enteredCode = prompt('أدخل رمز التحقق المرسل للإيميل:');
-            if (enteredCode !== passwordRecoveryCode) {
-                alert('رمز التحقق غير صحيح.');
+            passwordRecoveryVerified = false;
+            let localDevCode = null;
+            try {
+                const res = await fetch('/api/admin-recovery?action=send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'send',
+                        email: approvedEmail,
+                        username: currentAdmin.username
+                    })
+                });
+                const data = await res.json().catch(function() { return {}; });
+                if (!res.ok || !data.ok) {
+                    if (isLocalRecoveryApiFallback() && (data.error === 'gmail_not_configured' || data.error === 'otp_store_unavailable')) {
+                        localDevCode = String(Math.floor(100000 + Math.random() * 900000));
+                        passwordRecoveryVerified = false;
+                        window.__nebrasLocalRecoveryCode = localDevCode;
+                        alert('وضع محلي: رمز التحقق (محاكاة): ' + localDevCode);
+                    } else {
+                        throw new Error(data.error || 'send_failed');
+                    }
+                } else {
+                    alert('تم إرسال رمز التحقق إلى ' + approvedEmail + '. راجعي بريد Gmail.');
+                }
+            } catch (sendErr) {
+                alert(recoveryApiErrorMessage(sendErr && sendErr.message));
+                if (emailBtn) {
+                    emailBtn.disabled = false;
+                    emailBtn.textContent = prevLabel;
+                }
+                renderAccountSecurityPanel();
                 return;
+            } finally {
+                if (emailBtn) {
+                    emailBtn.disabled = false;
+                    emailBtn.textContent = prevLabel;
+                }
+                renderAccountSecurityPanel();
+            }
+            const enteredCode = prompt('أدخل رمز التحقق المرسل إلى Gmail:');
+            if (!enteredCode) return;
+            if (localDevCode) {
+                if (enteredCode.trim() !== localDevCode) {
+                    alert('رمز التحقق غير صحيح.');
+                    return;
+                }
+                passwordRecoveryVerified = true;
+            } else {
+                try {
+                    const vRes = await fetch('/api/admin-recovery?action=verify', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            action: 'verify',
+                            email: approvedEmail,
+                            username: currentAdmin.username,
+                            code: enteredCode.trim()
+                        })
+                    });
+                    const vData = await vRes.json().catch(function() { return {}; });
+                    if (!vRes.ok || !vData.ok) {
+                        alert(recoveryApiErrorMessage(vData.error || 'invalid_code'));
+                        return;
+                    }
+                    passwordRecoveryVerified = true;
+                } catch (verifyErr) {
+                    alert(recoveryApiErrorMessage(verifyErr && verifyErr.message));
+                    return;
+                }
             }
             const newPassword = prompt('أدخل كلمة المرور الجديدة:');
-            if (!newPassword) return;
+            if (!newPassword || !passwordRecoveryVerified) return;
             currentAdmin.password = newPassword.trim();
-            passwordRecoveryCode = null;
+            passwordRecoveryVerified = false;
+            window.__nebrasLocalRecoveryCode = null;
             saveSystemData();
-            addAuditLog('استرجاع كلمة المرور', `تم تغيير كلمة المرور عبر الإيميل لحساب ${currentAdmin.username}`);
-            alert('تم تغيير كلمة المرور عبر الإيميل بنجاح.');
+            addAuditLog('استرجاع كلمة المرور', 'تم تغيير كلمة المرور عبر Gmail لحساب ' + currentAdmin.username);
+            alert('تم تغيير كلمة المرور عبر Gmail بنجاح.');
         }
 
         function openIconManagement() {
@@ -12666,11 +12793,17 @@
         function syncHeaderDoorShowcase(active) {
             const on = !!active;
             document.body.classList.toggle('nebras-door-interface-active', on);
-            const el = document.getElementById('header-door-showcase');
-            if (el) {
-                el.hidden = !on;
-                el.setAttribute('aria-hidden', on ? 'false' : 'true');
+            const partnersAside = document.getElementById('header-aside-partners');
+            const doorsAside = document.getElementById('header-aside-doors');
+            if (partnersAside) {
+                partnersAside.hidden = on;
+                partnersAside.setAttribute('aria-hidden', on ? 'true' : 'false');
             }
+            if (doorsAside) {
+                doorsAside.hidden = !on;
+                doorsAside.setAttribute('aria-hidden', on ? 'false' : 'true');
+            }
+            if (on) refreshHeaderDoorShowcase();
         }
 
         function openNebrasWorkspace(route) {
@@ -13469,6 +13602,7 @@
             ensureBuiltinBranches();
             if (!Array.isArray(sitePartners)) sitePartners = [];
             ensureBuiltinSitePartners();
+            ensurePrimaryRecoveryEmail();
             if (!Array.isArray(siteCertifications)) siteCertifications = [];
             ensureShowroomGallery();
             refreshNebrasMiniShowcases();

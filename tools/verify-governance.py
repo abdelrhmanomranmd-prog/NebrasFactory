@@ -31,7 +31,8 @@ def main():
     # Core governance
     for sym in (
         'isMainGovernanceAdmin', 'canManage', 'requirePermission', 'requireMainGovernanceAdmin',
-        'PRIMARY_GOVERNANCE_USERNAMES', 'manageStoreIconProducts', 'purgeStaleCatalogReferences',
+        'PRIMARY_GOVERNANCE_USERNAMES', 'PRIMARY_RECOVERY_EMAIL', 'ensurePrimaryRecoveryEmail',
+        'manageStoreIconProducts', 'purgeStaleCatalogReferences',
         'toggleSiteProductVisibility', 'saveContentData', 'syncNebrasCloudInBackground',
         'NEBRAS_CLOUD_STORE_SPECS', 'applyOccasionTheme', 'renderPartnersMarquees',
         'ensureBuiltinSitePartners', 'initQuoteCommerceHandlers', 'window.confirmAndOpenQuote',
@@ -41,6 +42,16 @@ def main():
 
     if 'scm-store-icons-list' not in html:
         err('scm-store-icons-list missing in index.html')
+
+    if 'abdelrhmanomranmd@gmail.com' not in js:
+        err('PRIMARY_RECOVERY_EMAIL (abdelrhmanomranmd@gmail.com) missing in nebras-platform.js')
+
+    for showcase_id in ('header-hero-door-showcase', 'top-partners-showcase', 'header-aside-partners'):
+        if showcase_id not in html:
+            err(f'Header showcase element missing: #{showcase_id}')
+
+    if not os.path.isfile(os.path.join(ROOT, 'api', 'admin-recovery.js')):
+        err('api/admin-recovery.js missing (Gmail recovery API)')
 
     # Dashboard handler map vs registry
     map_block = re.search(r'const DASHBOARD_HANDLER_MAP = \{([^}]+)\}', js, re.S)

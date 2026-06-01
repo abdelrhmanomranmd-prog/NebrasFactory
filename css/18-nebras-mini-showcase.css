@@ -175,30 +175,51 @@
     margin-top: 0;
 }
 
-/* —— الشريط العلوي: شركاء أسفل «اتصل بالمندوب الأقرب» —— */
-.top-bar-actions-col {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-end;
-    gap: 8px;
+/* —— الهيدر: شركاء يسار / باب بجوار استكشف المنتجات —— */
+.header-aside {
+    flex: 0 0 auto;
+    align-self: flex-start;
 }
 
-[dir="ltr"] .top-bar-actions-col {
-    align-items: flex-start;
+.header-aside[hidden] {
+    display: none !important;
 }
 
-.top-partners-mini-row {
-    display: flex;
-    justify-content: flex-end;
-    width: 100%;
-}
-
-[dir="ltr"] .top-partners-mini-row {
-    justify-content: flex-start;
-}
-
-.top-partners-mini-row .nebras-mini-showcase {
+.header-aside--partners .nebras-mini-showcase {
     filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.35));
+}
+
+.header-campaign-panel-grid {
+    display: flex;
+    align-items: flex-start;
+    gap: clamp(10px, 2vw, 18px);
+}
+
+.header-campaign-main {
+    flex: 1 1 200px;
+    min-width: 0;
+}
+
+.header-campaign-door-aside {
+    flex: 0 0 auto;
+    align-self: center;
+    padding-top: 2px;
+}
+
+.header-campaign-door-aside .nebras-mini-showcase {
+    filter: drop-shadow(0 8px 22px rgba(0, 0, 0, 0.4));
+}
+
+[dir="rtl"] .header-aside--partners {
+    justify-self: end;
+}
+
+[dir="ltr"] .header-aside--partners {
+    justify-self: start;
+}
+
+body.nebras-door-interface-active .header-campaign-door-aside {
+    display: none;
 }
 
 @media (max-width: 768px) {
