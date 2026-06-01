@@ -12608,6 +12608,16 @@
             return { pillar: 'showroom', view: 'icon', iconId: icon.id };
         }
 
+        function syncHeaderDoorShowcase(active) {
+            const on = !!active;
+            document.body.classList.toggle('nebras-door-interface-active', on);
+            const el = document.getElementById('header-door-showcase');
+            if (el) {
+                el.hidden = !on;
+                el.setAttribute('aria-hidden', on ? 'false' : 'true');
+            }
+        }
+
         function openNebrasWorkspace(route) {
             if (!route) return;
             if (route.view === 'external' && route.url) {
@@ -12617,6 +12627,7 @@
             nebrasWorkspaceState.active = true;
             nebrasWorkspaceState.route = route;
             document.body.classList.add('nebras-workspace-active');
+            syncHeaderDoorShowcase(route.view === 'door-designer');
             syncMobileCommerceBar();
             const ws = document.getElementById('nebras-workspace');
             if (ws) {
@@ -12640,6 +12651,7 @@
             nebrasWorkspaceState.active = false;
             nebrasWorkspaceState.route = null;
             document.body.classList.remove('nebras-workspace-active');
+            syncHeaderDoorShowcase(false);
             syncMobileCommerceBar();
             const ws = document.getElementById('nebras-workspace');
             if (ws) {
@@ -12911,6 +12923,7 @@
                 hydrateBankAccountMedia(main);
             }
             if (route.view === 'door-designer') bindDoorDesignerWorkspace();
+            syncHeaderDoorShowcase(route.view === 'door-designer');
         }
 
         function applyWorkspaceTranslations() {
