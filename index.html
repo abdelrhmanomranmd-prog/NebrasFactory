@@ -799,7 +799,10 @@
                 <ul id="scm-products-list" class="scm-list"></ul>
             </div>
             <div id="scm-panel-visitor" class="scm-panel">
-                <p class="scm-hint admin-only-ui" id="scm-visitor-hint">كل أيقونة: خلفية البطاقة + ألبوم معرض داخلي + PDF. اختر <strong>معرض</strong> (تصفح فقط) أو <strong>معرض + متجر</strong> (صور + أصناف + سلة). رفع الصور من «رفع / اختيار صورة» و«إضافة صورة للألبوم».</p>
+                <p class="scm-hint admin-only-ui" id="scm-visitor-hint">كل أيقونة: خلفية البطاقة + ألبوم معرض داخلي + PDF/فيديو. اختر <strong>معرض</strong> (تصفح فقط) أو <strong>معرض + متجر</strong> (صور + أصناف + سلة). الإدارة الرئيسية تتحكم بالكامل: رفع · تعديل · حذف أي وسائط.</p>
+                <h4 class="scm-subhead admin-only-ui scm-subhead--store"><i class="fas fa-store"></i> أيقونات المتجر الأربع (WPC عضم · WPC جاهز · ألومنيوم · منتجات أخرى)</h4>
+                <p class="scm-hint admin-only-ui">من هنا تُحدَّد المنتجات داخل كل أيقونة. عند حذف أو إخفاء منتج يُزال تلقائياً من الأيقونة.</p>
+                <ul id="scm-store-icons-list" class="scm-list scm-list--store"></ul>
                 <h4 class="scm-subhead admin-only-ui">بطاقات الخدمات (خدمات التصنيع · الدعم الفني · إدارة الجودة)</h4>
                 <ul id="scm-service-icons-list" class="scm-list scm-list--compact"></ul>
                 <h4 class="scm-subhead admin-only-ui">أيقونات بوابة الزائر</h4>
@@ -877,6 +880,7 @@
             </div>
             <div class="nebras-media-hub-actions">
                 <button type="button" class="primary" onclick="nebrasMediaHubConfirm()"><i class="fas fa-check"></i> تأكيد</button>
+                <button type="button" class="secondary scm-btn-danger" onclick="nebrasMediaHubClearSelection()"><i class="fas fa-trash"></i> مسح الاختيار</button>
                 <button type="button" class="secondary" onclick="closeNebrasMediaHub(null)">إلغاء</button>
             </div>
         </div>
@@ -914,18 +918,25 @@
                         <div class="nebras-media-thumb" id="nebras-vicon-bg-preview"><i class="fas fa-image"></i></div>
                         <input type="hidden" id="nebras-vicon-background">
                         <button type="button" class="secondary" onclick="nebrasViconEditorPickBg()"><i class="fas fa-upload"></i> رفع / اختيار صورة</button>
+                        <button type="button" class="secondary scm-btn-danger" onclick="nebrasViconEditorClearBg()"><i class="fas fa-trash"></i> حذف الخلفية</button>
                     </div>
                 </div>
             </div>
             <div class="nebras-vicon-media-section">
                 <h3><i class="fas fa-images"></i> ألبوم الصور</h3>
                 <ul id="nebras-vicon-album-list" class="nebras-media-item-list"></ul>
-                <button type="button" class="secondary" onclick="nebrasViconEditorAddAlbum()"><i class="fas fa-plus"></i> إضافة صورة للألبوم</button>
+                <div class="nebras-vicon-media-actions">
+                    <button type="button" class="secondary" onclick="nebrasViconEditorAddAlbum()"><i class="fas fa-plus"></i> إضافة صورة للألبوم</button>
+                    <button type="button" class="secondary scm-btn-danger" onclick="nebrasViconEditorClearAlbum()"><i class="fas fa-trash"></i> حذف كل الصور</button>
+                </div>
             </div>
             <div class="nebras-vicon-media-section">
                 <h3><i class="fas fa-file-pdf"></i> وثائق وPDF</h3>
                 <ul id="nebras-vicon-docs-list" class="nebras-media-item-list"></ul>
-                <button type="button" class="secondary" onclick="nebrasViconEditorAddDocument()"><i class="fas fa-plus"></i> إضافة وثيقة / PDF</button>
+                <div class="nebras-vicon-media-actions">
+                    <button type="button" class="secondary" onclick="nebrasViconEditorAddDocument()"><i class="fas fa-plus"></i> إضافة وثيقة / PDF</button>
+                    <button type="button" class="secondary scm-btn-danger" onclick="nebrasViconEditorClearDocs()"><i class="fas fa-trash"></i> حذف كل الوثائق</button>
+                </div>
             </div>
             <div class="nebras-media-hub-actions">
                 <button type="button" class="primary" onclick="saveVisitorIconEditor()"><i class="fas fa-save"></i> حفظ الأيقونة</button>

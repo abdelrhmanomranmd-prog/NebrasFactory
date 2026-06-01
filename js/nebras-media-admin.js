@@ -287,6 +287,37 @@
         else alert('احفظ الأيقونة أولاً ثم اضغط معاينة من القائمة.');
     }
 
+    function nebrasMediaHubClearSelection() {
+        _nebrasMediaHubResultUrl = '';
+        const manualInput = document.getElementById('nebras-media-hub-manual-input');
+        if (manualInput) manualInput.value = '';
+        nebrasMediaHubSetPreview('', '');
+        nebrasMediaHubSetStatus('تم مسح الاختيار — يمكنك رفع ملف جديد.', false);
+    }
+
+    function nebrasViconEditorClearBg() {
+        if (!requirePermission('content', 'صلاحية المحتوى مطلوبة.')) return;
+        if (!confirm('حذف خلفية البطاقة؟')) return;
+        document.getElementById('nebras-vicon-background').value = '';
+        nebrasViconEditorSetBgPreview('');
+    }
+
+    function nebrasViconEditorClearAlbum() {
+        if (!requirePermission('content', 'صلاحية المحتوى مطلوبة.')) return;
+        if (!_nebrasViconEditorState.album.length) return;
+        if (!confirm('حذف كل صور الألبوم؟')) return;
+        _nebrasViconEditorState.album = [];
+        renderNebrasMediaItemList(document.getElementById('nebras-vicon-album-list'), _nebrasViconEditorState.album, 'album');
+    }
+
+    function nebrasViconEditorClearDocs() {
+        if (!requirePermission('content', 'صلاحية المحتوى مطلوبة.')) return;
+        if (!_nebrasViconEditorState.documents.length) return;
+        if (!confirm('حذف كل الوثائق وPDF؟')) return;
+        _nebrasViconEditorState.documents = [];
+        renderNebrasMediaItemList(document.getElementById('nebras-vicon-docs-list'), _nebrasViconEditorState.documents, 'doc');
+    }
+
     function initNebrasMediaAdminOverrides() {
         window.pickMediaPath = function(options) { return openNebrasMediaHub(options); };
         window.pickMediaAlbumInteractive = async function(existingAlbum) {
@@ -317,6 +348,10 @@
         window.saveVisitorIconEditor = saveVisitorIconEditor;
         window.previewVisitorIconEditor = previewVisitorIconEditor;
         window.nebrasViconEditorRemoveItem = nebrasViconEditorRemoveItem;
+        window.nebrasViconEditorClearBg = nebrasViconEditorClearBg;
+        window.nebrasViconEditorClearAlbum = nebrasViconEditorClearAlbum;
+        window.nebrasViconEditorClearDocs = nebrasViconEditorClearDocs;
+        window.nebrasMediaHubClearSelection = nebrasMediaHubClearSelection;
     }
 
     window.initNebrasMediaAdminOverrides = initNebrasMediaAdminOverrides;

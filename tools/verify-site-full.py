@@ -54,6 +54,17 @@ def main():
         warn('quote-daily-stats still rendered in customer A4 — should be admin-only')
     if 'PRIMARY_GOVERNANCE_USERNAMES' not in js:
         err('PRIMARY_GOVERNANCE_USERNAMES missing')
+    for fn in ('manageStoreIconProducts', 'purgeStaleCatalogReferences', 'removeProductReferences', 'toggleSiteProductVisibility'):
+        if 'function ' + fn not in js:
+            err(f'{fn} missing — admin store governance broken')
+    if 'scm-store-icons-list' not in html:
+        err('scm-store-icons-list missing — store icon admin panel broken')
+    for el in ('fab-send-sales', 'fab-send-cs', 'cart-send-sales-btn', 'cart-send-cs-btn',
+               'quote-send-sales-btn', 'quote-send-cs-btn'):
+        if el not in html:
+            err(f'Missing #{el} in index.html — send channel UI broken')
+    if 'html2canvas' not in html or 'jspdf' not in html:
+        err('html2canvas or jspdf CDN missing — A4 PDF send broken')
 
     langs = re.findall(r"siteText\s*=\s*\{", js)
     if not langs:

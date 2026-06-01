@@ -1477,6 +1477,53 @@ body:not(.admin-session) .admin-only-ui {
     font-size: 1rem;
 }
 
+.nebras-vicon-media-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 8px;
+}
+
+.scm-subhead--store {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.scm-list--store .scm-store-icon-row {
+    border-inline-start: 3px solid var(--primary-blue, #0d2840);
+    padding-inline-start: 10px;
+}
+
+.scm-store-icon-badge {
+    display: inline-block;
+    margin-inline-start: 6px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    background: rgba(13, 40, 64, 0.1);
+    color: var(--primary-blue, #0d2840);
+}
+
+.scm-product-hidden-badge {
+    display: inline-block;
+    margin-inline: 6px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    background: rgba(180, 83, 9, 0.15);
+    color: #b45309;
+}
+
+.scm-product-row--hidden {
+    opacity: 0.72;
+}
+
+.scm-btn-danger {
+    color: #b45309 !important;
+    border-color: rgba(180, 83, 9, 0.35) !important;
+}
+
 @media (max-width: 768px) {
     .cart-drawer-overlay {
         align-items: stretch;

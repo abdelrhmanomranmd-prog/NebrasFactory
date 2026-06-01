@@ -4796,9 +4796,11 @@
             if (!el || !currentAdmin) return;
             ensureDashboardGovernanceHandlers();
             const gatewayCount = (visitorIcons || []).filter(isGatewayVisitorIcon).length;
+            const storeIconCount = (visitorIcons || []).filter(isStoreCatalogHubIcon).length;
             const productCount = (siteProducts || []).filter(function(p) { return p.visible !== false; }).length;
             const rows = [
-                { ok: productCount > 0, label: 'منتجات المتجر (4 أقسام)', detail: productCount + ' منتج' },
+                { ok: productCount > 0, label: 'منتجات المتجر (4 أقسام)', detail: productCount + ' منتج نشط' },
+                { ok: storeIconCount >= 4, label: 'أيقونات المتجر الأربع (8–11)', detail: storeIconCount + ' أيقونة — حذف/إخفاء المنتج يُزيله تلقائياً' },
                 { ok: gatewayCount > 0, label: 'أيقونات البوابة (خارجي)', detail: gatewayCount + ' أيقونة' },
                 { ok: (sitePartners || []).length > 0, label: 'شركاء (مارquee)', detail: (sitePartners || []).length + ' شريك' },
                 { ok: (siteCertifications || []).length >= 0, label: 'شهادات واعتمادات', detail: (siteCertifications || []).length + ' عنصر' },
@@ -5710,7 +5712,7 @@
                 const isDesigner = (e.quoteChannel || '') === 'door-designer';
                 const entryKey = String(e.id).replace(/'/g, "\\'");
                 const channelBadge = isDesigner ? ' <span style="display:inline-block;padding:2px 8px;border-radius:999px;background:#0f766e;color:#fff;font-size:0.72rem;">صمّم بابك</span>' : '';
-                const formatBadge = e.messageFormat === 'a4-quote'
+                const formatBadge = (e.messageFormat === 'a4-quote' || e.messageFormat === 'a4-quote-pdf')
                     ? ' <span class="sales-inbox-format-badge sales-inbox-format-badge--a4">A4</span>'
                     : (e.messageFormat === 'cart-order' ? ' <span class="sales-inbox-format-badge">ORDER</span>' : '');
                 const adminStats = (e.adminDailyIssued != null)
@@ -5720,8 +5722,13 @@
                         escapeHtmlAttr(ui.salesInboxAdminFinalized || 'منفّذ') + '</small>')
                     : '';
                 const quoteDocUrl = e.quoteDocumentPdfUrl || e.quoteDocumentCloudUrl || e.quoteDocumentDataUrl || '';
+                const isPdfDoc = quoteDocUrl && /\.pdf(\?|$)/i.test(quoteDocUrl);
                 const quoteDocThumb = quoteDocUrl && (e.messageFormat === 'a4-quote' || e.messageFormat === 'a4-quote-pdf' || e.quoteType === 'quote')
-                    ? ('<br><div class="sales-quote-doc-inline"><img src="' + escapeHtmlAttr(quoteDocUrl) + '" alt="" loading="lazy" onclick="event.preventDefault();viewSalesQuoteDocument(\'' + entryKey + '\')"><a href="#" onclick="event.preventDefault();viewSalesQuoteDocument(\'' + entryKey + '\')">' + escapeHtmlAttr(ui.salesInboxQuoteDoc || 'عرض مستند A4') + '</a></div>')
+                    ? ('<br><div class="sales-quote-doc-inline">' +
+                        (isPdfDoc
+                            ? '<span class="sales-quote-doc-pdf-icon"><i class="fas fa-file-pdf"></i></span>'
+                            : '<img src="' + escapeHtmlAttr(quoteDocUrl) + '" alt="" loading="lazy" onclick="event.preventDefault();viewSalesQuoteDocument(\'' + entryKey + '\')">') +
+                        '<a href="#" onclick="event.preventDefault();viewSalesQuoteDocument(\'' + entryKey + '\')">' + escapeHtmlAttr(ui.salesInboxQuoteDoc || 'عرض مستند A4') + '</a></div>')
                     : '';
                 const transferBadge = e.transferReceiptDataUrl
                     ? ' <span class="sales-inbox-transfer-badge sales-inbox-transfer-badge--receipt"><i class="fas fa-receipt"></i> ' + escapeHtmlAttr(ui.salesInboxTransferReceipt || 'حوالة + إيصال') + '</span>'
@@ -7412,8 +7419,157 @@
             };
         }
 
+        function canManageFullSiteContent() {
+            return canManage('content');
+        }
+
+        function requireFullSiteContent(message) {
+            if (!canManageFullSiteContent()) {
+                alert(message || 'إدارة المحتوى متاحة للإدارة الرئيسية (NEBRASFACTORY / NEBRASBASIC) أو من لديه صلاحية المحتوى.');
+                return false;
+            }
+            return true;
+        }
+
+        function getStoreCatalogHubIconIds() {
+            return [8, 9, 10, 11];
+        }
+
+        function isStoreCatalogHubIcon(icon) {
+            if (!icon) return false;
+            if (getStoreCatalogHubIconIds().indexOf(Number(icon.id)) >= 0) return true;
+            return !!(icon.catalogHub && icon.lane === 'store');
+        }
+
+        function removeProductReferences(productId) {
+            if (!productId) return;
+            (visitorIcons || []).forEach(function(icon) {
+                if (!icon) return;
+                if (icon.linkedProductId === productId) delete icon.linkedProductId;
+                if (Array.isArray(icon.productIds)) {
+                    icon.productIds = icon.productIds.filter(function(id) { return id !== productId; });
+                    if (!icon.productIds.length) delete icon.productIds;
+                }
+            });
+            (dashboardTiles || []).forEach(function(tile) {
+                if (tile && tile.linkedProductId === productId) delete tile.linkedProductId;
+            });
+            ensureShowroomGallery();
+            ['products', 'projects'].forEach(function(secKey) {
+                const items = showroomGallery[secKey] && showroomGallery[secKey].items;
+                if (!items) return;
+                items.forEach(function(it) {
+                    if (it && it.shopProductId === productId) {
+                        delete it.shopProductId;
+                        delete it.shopVariantIndex;
+                    }
+                });
+            });
+            if (Array.isArray(nebrasCart)) {
+                nebrasCart = nebrasCart.filter(function(l) { return l && l.productId !== productId; });
+                try { saveNebrasCart(); } catch (e) { /* ignore */ }
+            }
+        }
+
+        function purgeStaleCatalogReferences() {
+            const liveIds = {};
+            (siteProducts || []).forEach(function(p) {
+                if (p && p.id && p.visible !== false) liveIds[p.id] = true;
+            });
+            (visitorIcons || []).forEach(function(icon) {
+                if (!icon) return;
+                if (icon.linkedProductId && !liveIds[icon.linkedProductId]) delete icon.linkedProductId;
+                if (Array.isArray(icon.productIds)) {
+                    icon.productIds = icon.productIds.filter(function(id) { return liveIds[id]; });
+                    if (!icon.productIds.length) delete icon.productIds;
+                }
+            });
+            (dashboardTiles || []).forEach(function(tile) {
+                if (tile && tile.linkedProductId && !liveIds[tile.linkedProductId]) delete tile.linkedProductId;
+            });
+            ensureShowroomGallery();
+            ['products', 'projects'].forEach(function(secKey) {
+                const items = showroomGallery[secKey] && showroomGallery[secKey].items;
+                if (!items) return;
+                items.forEach(function(it) {
+                    if (it && it.shopProductId && !liveIds[it.shopProductId]) {
+                        delete it.shopProductId;
+                        delete it.shopVariantIndex;
+                    }
+                });
+            });
+        }
+
+        function manageStoreIconProducts(iconId) {
+            if (!requireFullSiteContent('صلاحية المحتوى مطلوبة لإدارة منتجات أيقونة المتجر.')) return;
+            const icon = (visitorIcons || []).find(function(i) { return Number(i.id) === Number(iconId); });
+            if (!icon || !isStoreCatalogHubIcon(icon)) {
+                alert('هذه الأيقونة ليست من أيقونات المتجر الأربع.');
+                return;
+            }
+            const pool = (siteProducts || []).filter(function(p) {
+                return p && p.visible !== false && getCatalogExperience(p) !== 'complaint';
+            });
+            if (!pool.length) {
+                alert('لا منتجات نشطة — أضيفي منتجات من تبويب المنتجات أولاً.');
+                return;
+            }
+            const assigned = Array.isArray(icon.productIds) && icon.productIds.length
+                ? icon.productIds.slice()
+                : getProductsForVisitorIcon(icon).map(function(p) { return p.id; });
+            const lines = pool.map(function(p, idx) {
+                const mark = assigned.indexOf(p.id) >= 0 ? '✓' : ' ';
+                return idx + ': [' + mark + '] ' + (p.titleAr || p.id);
+            }).join('\n');
+            const cmd = prompt(
+                'منتجات داخل «' + getVisitorIconDisplayTitle(icon) + '»\n' +
+                'اكتب أرقام المنتجات (مثال: 0,1,2) أو معرفات prod-...\n' +
+                'فارغ = تلقائي حسب القسم (#)\n\n' + lines,
+                assigned.join(', ')
+            );
+            if (cmd === null) return;
+            const trimmed = String(cmd).trim();
+            if (!trimmed) {
+                delete icon.productIds;
+            } else {
+                const picked = trimmed.split(/[,،\s]+/).map(function(token) {
+                    const t = token.trim();
+                    if (!t) return null;
+                    const idx = parseInt(t, 10);
+                    if (!isNaN(idx) && pool[idx]) return pool[idx].id;
+                    const found = pool.find(function(p) { return p.id === t; });
+                    return found ? found.id : null;
+                }).filter(Boolean);
+                const unique = [];
+                picked.forEach(function(id) { if (unique.indexOf(id) < 0) unique.push(id); });
+                if (unique.length) icon.productIds = unique;
+                else delete icon.productIds;
+            }
+            saveContentData();
+            displayVisitorIconsAdmin();
+            addAuditLog('منتجات أيقونة متجر', getVisitorIconDisplayTitle(icon));
+            alert('تم تحديث منتجات الأيقونة — التغيير ظاهر للزوار فوراً.');
+        }
+
+        function toggleSiteProductVisibility(productId) {
+            if (!requireFullSiteContent()) return;
+            const product = siteProducts.find(function(p) { return p.id === productId; });
+            if (!product) return;
+            const willHide = product.visible !== false;
+            const msg = willHide
+                ? ('إخفاء المنتج «' + (product.titleAr || productId) + '» من المتجر وأيقوناته؟\n(يمكن إظهاره لاحقاً)')
+                : ('إظهار المنتج «' + (product.titleAr || productId) + '» في المتجر؟');
+            if (!confirm(msg)) return;
+            product.visible = willHide ? false : true;
+            if (willHide) removeProductReferences(productId);
+            purgeStaleCatalogReferences();
+            saveContentData();
+            displaySiteProductsAdmin();
+            addAuditLog(willHide ? 'إخفاء منتج' : 'إظهار منتج', product.titleAr || productId);
+        }
+
         async function addSiteProduct() {
-            if (!requirePermission('content')) return;
+            if (!requireFullSiteContent()) return;
             const fields = await promptCatalogFields(null, 'product');
             if (!fields) return;
             const exp = promptCatalogExperience('shop');
@@ -7438,7 +7594,7 @@
         }
 
         async function editSiteProduct(productId) {
-            if (!requirePermission('content')) return;
+            if (!requireFullSiteContent()) return;
             const product = siteProducts.find(function(p) { return p.id === productId; });
             if (!product) return;
             const fields = await promptCatalogFields(product, 'product');
@@ -7456,12 +7612,23 @@
         }
 
         function deleteSiteProduct(productId) {
-            if (!requirePermission('content')) return;
+            if (!requireFullSiteContent()) return;
             const product = siteProducts.find(function(p) { return p.id === productId; });
-            if (!product || !confirm('حذف المنتج: ' + (product.titleAr || product.id) + '؟')) return;
+            if (!product) return;
+            let warn = 'حذف المنتج نهائياً: ' + (product.titleAr || product.id) + '؟';
+            const iconRefs = (visitorIcons || []).filter(function(ic) {
+                return ic && (ic.linkedProductId === productId || (Array.isArray(ic.productIds) && ic.productIds.indexOf(productId) >= 0));
+            });
+            if (iconRefs.length) {
+                warn += '\n\nسيُزال من ' + iconRefs.length + ' أيقونة/متجر مرتبطة.';
+            }
+            if (!confirm(warn)) return;
             siteProducts = siteProducts.filter(function(p) { return p.id !== productId; });
+            removeProductReferences(productId);
+            purgeStaleCatalogReferences();
             saveContentData();
             displaySiteProductsAdmin();
+            displayVisitorIconsAdmin();
             addAuditLog('حذف منتج', product.titleAr || product.id);
         }
 
@@ -7470,7 +7637,12 @@
             if (!list) return;
             const iconByProduct = {};
             (visitorIcons || []).forEach(function(ic) {
-                if (ic && ic.linkedProductId) iconByProduct[ic.linkedProductId] = ic.titleAr || ic.title || ('أيقونة ' + ic.id);
+                if (!ic) return;
+                const label = ic.titleAr || ic.title || ('أيقونة ' + ic.id);
+                if (ic.linkedProductId) iconByProduct[ic.linkedProductId] = label;
+                if (Array.isArray(ic.productIds)) {
+                    ic.productIds.forEach(function(pid) { iconByProduct[pid] = label; });
+                }
             });
             list.innerHTML = siteProducts.map(function(p) {
                 const variantCount = (p.variants || []).length;
@@ -7484,11 +7656,15 @@
                     ? ''
                     : '<button type="button" onclick="manageProductVariants(\'' + p.id + '\')">أصناف (صورة · سعر قبل الضريبة)</button>';
                 const iconNote = iconByProduct[p.id] ? (' · أيقونة المتجر: ' + iconByProduct[p.id]) : '';
-                return '<li><strong>' + escapeHtmlAttr(p.titleAr || p.id) + '</strong>' + escapeHtmlAttr(iconNote) + ' — ' + escapeHtmlAttr(p.iconClass || '') +
+                const hiddenBadge = p.visible === false ? ' <span class="scm-product-hidden-badge">مخفي</span>' : '';
+                const visBtn = p.visible === false
+                    ? '<button type="button" onclick="toggleSiteProductVisibility(\'' + p.id + '\')">إظهار</button>'
+                    : '<button type="button" onclick="toggleSiteProductVisibility(\'' + p.id + '\')">إخفاء</button>';
+                return '<li' + (p.visible === false ? ' class="scm-product-row--hidden"' : '') + '><strong>' + escapeHtmlAttr(p.titleAr || p.id) + '</strong>' + hiddenBadge + escapeHtmlAttr(iconNote) + ' — ' + escapeHtmlAttr(p.iconClass || '') +
                     ' <span style="opacity:0.85">[' + modeLabel + ']</span>' +
                     '<small>خلفية: ' + escapeHtmlAttr(p.backgroundImage || 'افتراضي') + ' | ألبوم: ' + ((p.album || []).length) + ' | أصناف: ' + variantCount + (variantPreview ? ' — ' + escapeHtmlAttr(variantPreview) : '') + '</small>' +
                     '<div class="scm-row-actions"><button type="button" onclick="editSiteProduct(\'' + p.id + '\')">تعديل</button>' +
-                    variantsBtn +
+                    variantsBtn + visBtn +
                     '<button type="button" onclick="deleteSiteProduct(\'' + p.id + '\')">حذف</button></div></li>';
             }).join('');
         }
@@ -11883,20 +12059,49 @@
             addAuditLog('حذف أيقونة زائر', `تم حذف أيقونة ${icon.title}`);
         }
 
+        function buildStoreIconAdminRowHtml(icon) {
+            const products = getProductsForVisitorIcon(icon);
+            const assigned = Array.isArray(icon.productIds) && icon.productIds.length
+                ? icon.productIds.length + ' محدد'
+                : products.length + ' تلقائي';
+            const preview = products.slice(0, 3).map(function(p) { return p.titleAr || p.id; }).join(' · ') || '—';
+            return '<li class="scm-store-icon-row"><strong>' + escapeHtmlAttr(getVisitorIconDisplayTitle(icon) || icon.title) + '</strong>' +
+                ' <span class="scm-store-icon-badge">' + assigned + ' منتج</span>' +
+                '<small>خلفية: ' + escapeHtmlAttr(icon.backgroundImage || 'افتراضي') +
+                ' | ألبوم: ' + ((icon.album || []).length) + ' | PDF: ' + ((icon.documents || []).length) +
+                ' | معاينة: ' + escapeHtmlAttr(preview) + '</small>' +
+                '<div class="scm-row-actions">' +
+                '<button type="button" onclick="openVisitorIcon(' + icon.id + ')">معاينة</button>' +
+                '<button type="button" onclick="manageStoreIconProducts(' + icon.id + ')">منتجات داخل الأيقونة</button>' +
+                '<button type="button" onclick="editVisitorIcon(' + icon.id + ')">وسائط (صور · فيديو · PDF)</button>' +
+                '</div></li>';
+        }
+
         function buildVisitorIconAdminRowHtml(icon) {
             const place = isServicePlacementIcon(icon) ? 'بطاقة خدمة' : 'بوابة زائر';
+            const storeBtn = isStoreCatalogHubIcon(icon)
+                ? '<button type="button" onclick="manageStoreIconProducts(' + icon.id + ')">منتجات المتجر</button>'
+                : '';
             return '<li><strong>' + escapeHtmlAttr(getVisitorIconDisplayTitle(icon) || icon.title) + '</strong> — ' + escapeHtmlAttr(icon.iconClass) +
                 ' <span style="opacity:0.85">[' + escapeHtmlAttr(getVisitorIconModeLabel(icon)) + ' · ' + escapeHtmlAttr(place) + ']</span>' +
                 '<small>خلفية: ' + escapeHtmlAttr(icon.backgroundImage || 'افتراضي') + ' | ألبوم: ' + ((icon.album || []).length) + ' صورة</small>' +
                 '<div class="scm-row-actions"><button type="button" onclick="openVisitorIcon(' + icon.id + ')">معاينة</button>' +
+                storeBtn +
                 '<button type="button" onclick="editVisitorIcon(' + icon.id + ')">وسائط ومحتوى</button>' +
                 (isServicePlacementIcon(icon) ? '' : '<button type="button" onclick="deleteVisitorIcon(' + icon.id + ')">حذف</button>') +
                 '</div></li>';
         }
 
         function displayVisitorIconsAdmin() {
-            const gatewayHtml = visitorIcons.filter(isGatewayVisitorIcon).map(buildVisitorIconAdminRowHtml).join('');
+            const storeHtml = visitorIcons.filter(isStoreCatalogHubIcon).map(buildStoreIconAdminRowHtml).join('');
+            const gatewayHtml = visitorIcons.filter(function(ic) {
+                return isGatewayVisitorIcon(ic) && !isStoreCatalogHubIcon(ic);
+            }).map(buildVisitorIconAdminRowHtml).join('');
             const serviceHtml = visitorIcons.filter(isServicePlacementIcon).map(buildVisitorIconAdminRowHtml).join('');
+            const storeList = document.getElementById('scm-store-icons-list');
+            if (storeList) {
+                storeList.innerHTML = storeHtml || '<li style="opacity:0.75">لا أيقونات متجر — سيتم إنشاؤها تلقائياً.</li>';
+            }
             ['icons-admin-list', 'icons-admin-list-legacy'].forEach(function(id) {
                 const list = document.getElementById(id);
                 if (list) list.innerHTML = gatewayHtml;
@@ -13002,6 +13207,7 @@
                 };
             });
             if (!Array.isArray(visitorIcons)) visitorIcons = [];
+            purgeStaleCatalogReferences();
             if (!adminUsers.some(function(user) { return user.id === 'base-admin'; })) {
                 adminUsers.unshift({ id: 'base-admin', username: 'NEBRASBASIC', password: 'NEBRASBASIC123', role: 'superadmin', isPrimary: true });
             }
@@ -15387,4 +15593,7 @@
         window.emptyAnalyticsRestoreBin = emptyAnalyticsRestoreBin;
         window.restoreAllAnalyticsRecords = restoreAllAnalyticsRecords;
         window.openDoorDesignerFromGateway = openDoorDesignerFromGateway;
+        window.manageStoreIconProducts = manageStoreIconProducts;
+        window.toggleSiteProductVisibility = toggleSiteProductVisibility;
+        window.purgeStaleCatalogReferences = purgeStaleCatalogReferences;
 
