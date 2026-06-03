@@ -138,6 +138,33 @@
     to { width: 100%; }
 }
 
+.nebras-brand-intro--with-welcome .nebras-brand-intro-progress span {
+    animation-duration: 20s;
+}
+
+.nebras-brand-intro-audio {
+    position: absolute;
+    width: 0;
+    height: 0;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.nebras-brand-intro-audio-hint {
+    margin: 0 0 16px;
+    font-size: 0.82rem;
+    color: rgba(255, 255, 255, 0.62);
+    animation: nebrasFadeUp 0.6s ease 1s both;
+}
+
+.nebras-brand-intro-audio-hint:not([hidden]) {
+    display: block;
+}
+
+.nebras-brand-intro--needs-audio-tap .nebras-brand-intro-audio-hint:not([hidden]) {
+    color: rgba(240, 160, 48, 0.95);
+}
+
 .nebras-brand-intro-skip {
     background: transparent;
     border: 1px solid rgba(255, 255, 255, 0.35);

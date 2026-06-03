@@ -11899,10 +11899,100 @@
 
         let brandIntroTimer = null;
         let brandIntroFailsafeTimer = null;
+        let brandIntroAudioStopTimer = null;
+        let brandIntroAudioUnlockBound = false;
+        const BRAND_INTRO_WELCOME_AUDIO_SEC = 20;
+        const BRAND_INTRO_WELCOME_MS = BRAND_INTRO_WELCOME_AUDIO_SEC * 1000;
+        const BRAND_INTRO_SHORT_MS = 2800;
+        const BRAND_INTRO_SHORT_FAILSAFE_MS = 5500;
+
+        function prefersReducedMotionIntro() {
+            try {
+                return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            } catch (e) {
+                return false;
+            }
+        }
+
+        function getBrandIntroWelcomeAudio() {
+            return document.getElementById('nebras-brand-intro-audio');
+        }
+
+        function stopBrandIntroWelcomeAudio() {
+            if (brandIntroAudioStopTimer) {
+                clearTimeout(brandIntroAudioStopTimer);
+                brandIntroAudioStopTimer = null;
+            }
+            const audio = getBrandIntroWelcomeAudio();
+            if (!audio) return;
+            audio.ontimeupdate = null;
+            try {
+                audio.pause();
+                audio.currentTime = 0;
+            } catch (e) { /* ignore */ }
+        }
+
+        function showBrandIntroAudioHint(show) {
+            const hint = document.getElementById('intro-audio-hint');
+            if (!hint) return;
+            if (show) {
+                const text = siteText[currentLang || 'ar'] || siteText.ar;
+                hint.textContent = text.introWelcomeTap || 'اضغطي في أي مكان للاستماع للترحيب';
+                hint.hidden = false;
+            } else {
+                hint.hidden = true;
+                hint.textContent = '';
+            }
+        }
+
+        function bindBrandIntroAudioUnlock(intro) {
+            if (!intro || brandIntroAudioUnlockBound) return;
+            brandIntroAudioUnlockBound = true;
+            function unlockPlay() {
+                playBrandIntroWelcomeAudio(true);
+            }
+            intro.addEventListener('click', unlockPlay, { passive: true });
+            intro.addEventListener('touchstart', unlockPlay, { passive: true });
+        }
+
+        function playBrandIntroWelcomeAudio(fromUserGesture) {
+            if (prefersReducedMotionIntro()) return;
+            const audio = getBrandIntroWelcomeAudio();
+            const intro = document.getElementById('nebras-brand-intro');
+            if (!audio || !intro || intro.hidden) return;
+            stopBrandIntroWelcomeAudio();
+            audio.currentTime = 0;
+            audio.ontimeupdate = function() {
+                if (audio.currentTime >= BRAND_INTRO_WELCOME_AUDIO_SEC) {
+                    audio.pause();
+                    audio.currentTime = BRAND_INTRO_WELCOME_AUDIO_SEC;
+                    audio.ontimeupdate = null;
+                }
+            };
+            brandIntroAudioStopTimer = setTimeout(function() {
+                stopBrandIntroWelcomeAudio();
+            }, BRAND_INTRO_WELCOME_MS + 400);
+            const playPromise = audio.play();
+            if (playPromise && typeof playPromise.then === 'function') {
+                playPromise.then(function() {
+                    showBrandIntroAudioHint(false);
+                    intro.classList.remove('nebras-brand-intro--needs-audio-tap');
+                }).catch(function() {
+                    if (!fromUserGesture) {
+                        intro.classList.add('nebras-brand-intro--needs-audio-tap');
+                        showBrandIntroAudioHint(true);
+                        bindBrandIntroAudioUnlock(intro);
+                    }
+                });
+            }
+        }
 
         function dismissBrandIntro() {
             const intro = document.getElementById('nebras-brand-intro');
             if (!intro) return;
+            stopBrandIntroWelcomeAudio();
+            intro.classList.remove('nebras-brand-intro--with-welcome', 'nebras-brand-intro--needs-audio-tap');
+            showBrandIntroAudioHint(false);
             if (brandIntroTimer) {
                 clearTimeout(brandIntroTimer);
                 brandIntroTimer = null;
@@ -11939,8 +12029,17 @@
             intro.setAttribute('aria-hidden', 'false');
             intro.classList.remove('is-leaving');
             document.body.classList.add('nebras-intro-active');
-            brandIntroTimer = setTimeout(dismissBrandIntro, 2800);
-            brandIntroFailsafeTimer = setTimeout(dismissBrandIntro, 5500);
+            const useWelcomeAudio = !!getBrandIntroWelcomeAudio() && !prefersReducedMotionIntro();
+            const introMs = useWelcomeAudio ? (BRAND_INTRO_WELCOME_MS + 800) : BRAND_INTRO_SHORT_MS;
+            const failsafeMs = useWelcomeAudio ? (BRAND_INTRO_WELCOME_MS + 2800) : BRAND_INTRO_SHORT_FAILSAFE_MS;
+            if (useWelcomeAudio) {
+                intro.classList.add('nebras-brand-intro--with-welcome');
+                playBrandIntroWelcomeAudio(false);
+            } else {
+                intro.classList.remove('nebras-brand-intro--with-welcome');
+            }
+            brandIntroTimer = setTimeout(dismissBrandIntro, introMs);
+            brandIntroFailsafeTimer = setTimeout(dismissBrandIntro, failsafeMs);
         }
 
         function applyDocumentMeta(text) {
@@ -14224,7 +14323,12 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             const introSkip = document.getElementById('intro-skip-btn');
-            if (introSkip) introSkip.addEventListener('click', dismissBrandIntro);
+            if (introSkip) {
+                introSkip.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    dismissBrandIntro();
+                });
+            }
             const lightbox = document.getElementById('nebras-media-lightbox');
             if (lightbox) {
                 lightbox.addEventListener('click', function(e) {
@@ -14411,6 +14515,7 @@
                 introBrandName: 'شركة مصنع نبراس للبلاستيك',
                 introTagline: 'أبواب WPC فاخرة — حلول متكاملة بالجودة والأناقة',
                 introSkip: 'دخول المنصة',
+                introWelcomeTap: 'اضغطي في أي مكان للاستماع للترحيب الصوتي',
                 heroEyebrow: 'مصنع نبراس للبلاستيك',
                 heroHeadline: 'أبواب WPC الفاخرة',
                 heroTaglineShort: 'حلول متكاملة بالجودة والأناقة — من القصيم إلى كل المملكة',
@@ -14939,6 +15044,7 @@
                 introBrandName: 'Nebras Plastic Factory Company',
                 introTagline: 'Luxury WPC doors — integrated quality and elegance',
                 introSkip: 'Enter platform',
+                introWelcomeTap: 'Tap anywhere to hear the welcome message',
                 heroEyebrow: 'Nebras Plastic Factory',
                 heroHeadline: 'Luxury WPC Doors',
                 heroTaglineShort: 'Integrated solutions with quality and elegance — across the Kingdom',
@@ -15540,6 +15646,7 @@
                 introBrandName: 'Nebras 塑料工厂公司',
                 introTagline: '高端 WPC 门 — 品质与优雅的集成方案',
                 introSkip: '进入平台',
+                introWelcomeTap: '点击任意处播放欢迎语音',
                 heroEyebrow: 'Nebras 塑料工厂',
                 heroHeadline: '高端 WPC 门',
                 heroTaglineShort: '品质与优雅 — 从卡西姆到全沙特',
