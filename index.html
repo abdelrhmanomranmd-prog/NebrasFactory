@@ -54,7 +54,7 @@
 </head>
 <body id="nebras-platform" class="platform-storefront" data-platform-layer="storefront">
 
-    <audio id="nebras-brand-intro-audio" class="nebras-brand-intro-audio" src="audio/nebras-welcome.mp3" preload="auto" playsinline webkit-playsinline="true" hidden></audio>
+    <audio id="nebras-brand-intro-audio" class="nebras-brand-intro-audio" src="audio/nebras-welcome.mp3" preload="auto" autoplay muted playsinline webkit-playsinline="true" hidden></audio>
 
     <div id="nebras-brand-intro" class="nebras-brand-intro nebras-brand-intro--gate" hidden aria-hidden="true">
         <div class="nebras-brand-intro-backdrop" aria-hidden="true"></div>
@@ -71,33 +71,43 @@
     </div>
     <script>
     (function () {
-        try { if (sessionStorage.getItem('nebrasIntroSeen') === '1') return; } catch (e) {}
-        var intro = document.getElementById('nebras-brand-intro');
-        if (!intro) return;
-        intro.hidden = false;
-        intro.setAttribute('aria-hidden', 'false');
-        document.body.classList.add('nebras-intro-active');
-        var audio = document.getElementById('nebras-brand-intro-audio');
-        if (audio) {
+        function kickNebrasWelcomeAudio() {
+            var audio = document.getElementById('nebras-brand-intro-audio');
+            if (!audio) return;
             audio.setAttribute('playsinline', '');
             audio.setAttribute('webkit-playsinline', 'true');
             audio.preload = 'auto';
             audio.volume = 1;
             try {
+                if (audio.currentTime >= 22) audio.currentTime = 0;
                 audio.muted = true;
-                var prime = audio.play();
-                if (prime && prime.then) {
-                    prime.then(function () {
-                        audio.pause();
-                        try { audio.currentTime = 0; } catch (e) {}
+                var p = audio.play();
+                if (p && p.then) {
+                    p.then(function () {
                         audio.muted = false;
-                        return audio.play();
+                        audio.volume = 1;
+                        if (audio.paused) return audio.play();
                     }).catch(function () { audio.muted = false; });
                 } else {
                     audio.muted = false;
                 }
             } catch (e) { audio.muted = false; }
         }
+        window.__nebrasKickWelcomeAudio = kickNebrasWelcomeAudio;
+        function onFirstTouch() {
+            kickNebrasWelcomeAudio();
+        }
+        document.addEventListener('touchstart', onFirstTouch, { capture: true, passive: true, once: true });
+        document.addEventListener('pointerdown', onFirstTouch, { capture: true, passive: true, once: true });
+        try { if (sessionStorage.getItem('nebrasIntroSeen') === '1') return; } catch (e) {}
+        var intro = document.getElementById('nebras-brand-intro');
+        if (!intro) return;
+        intro.hidden = false;
+        intro.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('nebras-intro-active');
+        kickNebrasWelcomeAudio();
+        setTimeout(kickNebrasWelcomeAudio, 120);
+        setTimeout(kickNebrasWelcomeAudio, 500);
     })();
     </script>
 
