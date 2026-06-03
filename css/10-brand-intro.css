@@ -139,7 +139,12 @@
 }
 
 .nebras-brand-intro--with-welcome .nebras-brand-intro-progress span {
-    animation-duration: 22s;
+    animation: nebrasWelcomeProgress 22s linear 0.2s forwards;
+}
+
+@keyframes nebrasWelcomeProgress {
+    from { width: 0; }
+    to { width: 100%; }
 }
 
 .nebras-brand-intro-audio {

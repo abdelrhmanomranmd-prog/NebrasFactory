@@ -11899,11 +11899,11 @@
 
         let brandIntroTimer = null;
         let brandIntroFailsafeTimer = null;
-        let brandIntroAudioStopTimer = null;
         let brandIntroAudioRetryTimers = [];
         let brandIntroWelcomePrepared = false;
         let brandIntroAudioRetryCount = 0;
         let brandIntroGestureBound = false;
+        let brandIntroFinishLocked = false;
         let nebrasAudioEngineUnlocked = false;
         const BRAND_INTRO_WELCOME_AUDIO_SEC = 22;
         const BRAND_INTRO_WELCOME_MS = BRAND_INTRO_WELCOME_AUDIO_SEC * 1000;
@@ -11932,6 +11932,71 @@
             brandIntroAudioRetryTimers.forEach(function(t) { clearTimeout(t); });
             brandIntroAudioRetryTimers = [];
             brandIntroAudioRetryCount = 0;
+        }
+
+        function clearBrandIntroDismissTimers() {
+            if (brandIntroTimer) {
+                clearTimeout(brandIntroTimer);
+                brandIntroTimer = null;
+            }
+            if (brandIntroFailsafeTimer) {
+                clearTimeout(brandIntroFailsafeTimer);
+                brandIntroFailsafeTimer = null;
+            }
+        }
+
+        function syncBrandIntroProgressToPlayback() {
+            const bar = document.querySelector('.nebras-brand-intro--with-welcome .nebras-brand-intro-progress span');
+            if (!bar) return;
+            bar.style.animation = 'none';
+            void bar.offsetWidth;
+            bar.style.animation = 'nebrasWelcomeProgress ' + BRAND_INTRO_WELCOME_AUDIO_SEC + 's linear forwards';
+        }
+
+        function scheduleBrandIntroDismissAfterWelcome() {
+            clearBrandIntroDismissTimers();
+            const audio = getBrandIntroWelcomeAudio();
+            let remainingMs = BRAND_INTRO_WELCOME_MS;
+            if (audio && !isNaN(audio.currentTime)) {
+                remainingMs = Math.max(0, (BRAND_INTRO_WELCOME_AUDIO_SEC - audio.currentTime) * 1000);
+            }
+            brandIntroTimer = setTimeout(finishBrandIntroWelcomeSequence, Math.ceil(remainingMs) + 120);
+            brandIntroFailsafeTimer = setTimeout(finishBrandIntroWelcomeSequence, BRAND_INTRO_WELCOME_MS + 3500);
+        }
+
+        function finishBrandIntroWelcomeSequence() {
+            if (brandIntroFinishLocked || !isBrandIntroVisible()) return;
+            brandIntroFinishLocked = true;
+            clearBrandIntroDismissTimers();
+            const audio = getBrandIntroWelcomeAudio();
+            if (audio) {
+                audio.ontimeupdate = null;
+                audio.onended = null;
+                try {
+                    audio.pause();
+                    if (audio.currentTime < BRAND_INTRO_WELCOME_AUDIO_SEC) {
+                        audio.currentTime = BRAND_INTRO_WELCOME_AUDIO_SEC;
+                    }
+                } catch (e) { /* ignore */ }
+            }
+            dismissBrandIntro();
+        }
+
+        function wireBrandIntroWelcomeAudioEvents(audio) {
+            if (!audio) return;
+            audio.ontimeupdate = function() {
+                if (audio.currentTime >= BRAND_INTRO_WELCOME_AUDIO_SEC - 0.08) {
+                    finishBrandIntroWelcomeSequence();
+                }
+            };
+            audio.onended = function() {
+                finishBrandIntroWelcomeSequence();
+            };
+        }
+
+        function onBrandIntroWelcomePlaybackStarted() {
+            syncBrandIntroProgressToPlayback();
+            scheduleBrandIntroDismissAfterWelcome();
         }
 
         function unlockNebrasAudioEngine() {
@@ -11981,23 +12046,13 @@
                 audio.setAttribute('webkit-playsinline', 'true');
                 if (typeof audio.load === 'function') audio.load();
             } catch (prepErr) { /* ignore */ }
+            wireBrandIntroWelcomeAudioEvents(audio);
             audio.oncanplaythrough = function() {
                 if (isBrandIntroVisible()) attemptBrandIntroWelcomePlay();
             };
             audio.onloadeddata = function() {
                 if (isBrandIntroVisible()) attemptBrandIntroWelcomePlay();
             };
-            audio.ontimeupdate = function() {
-                if (audio.currentTime >= BRAND_INTRO_WELCOME_AUDIO_SEC) {
-                    audio.pause();
-                    try { audio.currentTime = BRAND_INTRO_WELCOME_AUDIO_SEC; } catch (e) { /* ignore */ }
-                    audio.ontimeupdate = null;
-                }
-            };
-            if (brandIntroAudioStopTimer) clearTimeout(brandIntroAudioStopTimer);
-            brandIntroAudioStopTimer = setTimeout(function() {
-                stopBrandIntroWelcomeAudio();
-            }, BRAND_INTRO_WELCOME_MS + 400);
         }
 
         function playBrandIntroWelcomeSync() {
@@ -12013,8 +12068,11 @@
                 if (playPromise && typeof playPromise.then === 'function') {
                     playPromise.then(function() {
                         clearBrandIntroAudioRetries();
+                        onBrandIntroWelcomePlaybackStarted();
                         try { sessionStorage.setItem('nebrasAudioUnlocked', '1'); } catch (e) { /* ignore */ }
                     }).catch(function() { /* retry async */ });
+                } else {
+                    onBrandIntroWelcomePlaybackStarted();
                 }
                 return true;
             } catch (syncErr) {
@@ -12024,16 +12082,15 @@
 
         function stopBrandIntroWelcomeAudio() {
             clearBrandIntroAudioRetries();
+            clearBrandIntroDismissTimers();
             brandIntroWelcomePrepared = false;
-            if (brandIntroAudioStopTimer) {
-                clearTimeout(brandIntroAudioStopTimer);
-                brandIntroAudioStopTimer = null;
-            }
+            brandIntroFinishLocked = false;
             const audio = getBrandIntroWelcomeAudio();
             if (!audio) return;
             audio.oncanplaythrough = null;
             audio.onloadeddata = null;
             audio.ontimeupdate = null;
+            audio.onended = null;
             try {
                 audio.pause();
                 audio.currentTime = 0;
@@ -12054,6 +12111,7 @@
                 if (playPromise && typeof playPromise.then === 'function') {
                     playPromise.then(function() {
                         clearBrandIntroAudioRetries();
+                        onBrandIntroWelcomePlaybackStarted();
                         nebrasAudioEngineUnlocked = true;
                         try { sessionStorage.setItem('nebrasAudioUnlocked', '1'); } catch (e) { /* ignore */ }
                     }).catch(function() {
@@ -12132,16 +12190,9 @@
         function dismissBrandIntro() {
             const intro = document.getElementById('nebras-brand-intro');
             if (!intro) return;
+            clearBrandIntroDismissTimers();
             stopBrandIntroWelcomeAudio();
-            intro.classList.remove('nebras-brand-intro--with-welcome');
-            if (brandIntroTimer) {
-                clearTimeout(brandIntroTimer);
-                brandIntroTimer = null;
-            }
-            if (brandIntroFailsafeTimer) {
-                clearTimeout(brandIntroFailsafeTimer);
-                brandIntroFailsafeTimer = null;
-            }
+            intro.classList.remove('nebras-brand-intro--with-welcome', 'nebras-brand-intro--audio-playing');
             if (intro.hidden && !document.body.classList.contains('nebras-intro-active')) return;
             intro.classList.add('is-leaving');
             document.body.classList.remove('nebras-intro-active');
@@ -12170,19 +12221,17 @@
             intro.setAttribute('aria-hidden', 'false');
             intro.classList.remove('is-leaving');
             document.body.classList.add('nebras-intro-active');
+            brandIntroFinishLocked = false;
             const useWelcomeAudio = !!getBrandIntroWelcomeAudio() && !prefersReducedMotionIntro();
-            const introMs = useWelcomeAudio ? (BRAND_INTRO_WELCOME_MS + 800) : BRAND_INTRO_SHORT_MS;
-            const failsafeMs = useWelcomeAudio ? (BRAND_INTRO_WELCOME_MS + 2800) : BRAND_INTRO_SHORT_FAILSAFE_MS;
             if (useWelcomeAudio) {
                 intro.classList.add('nebras-brand-intro--with-welcome');
-                requestAnimationFrame(function() {
-                    startBrandIntroWelcomeAudio();
-                });
+                startBrandIntroWelcomeAudio();
+                brandIntroFailsafeTimer = setTimeout(finishBrandIntroWelcomeSequence, BRAND_INTRO_WELCOME_MS + 4500);
             } else {
                 intro.classList.remove('nebras-brand-intro--with-welcome');
+                brandIntroTimer = setTimeout(dismissBrandIntro, BRAND_INTRO_SHORT_MS);
+                brandIntroFailsafeTimer = setTimeout(dismissBrandIntro, BRAND_INTRO_SHORT_FAILSAFE_MS);
             }
-            brandIntroTimer = setTimeout(dismissBrandIntro, introMs);
-            brandIntroFailsafeTimer = setTimeout(dismissBrandIntro, failsafeMs);
         }
 
         function applyDocumentMeta(text) {
