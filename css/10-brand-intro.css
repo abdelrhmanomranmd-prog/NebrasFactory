@@ -178,6 +178,16 @@ body.nebras-intro-active {
     overflow: hidden;
 }
 
+body.nebras-intro-active #nebras-storefront,
+body.nebras-intro-active header,
+body.nebras-intro-active .top-contact-bar,
+body.nebras-intro-active .nebras-mobile-commerce-bar,
+body.nebras-intro-active .fab-cart,
+body.nebras-intro-active .fab-send-channel-group {
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+
 body.nebras-ready #nebras-storefront,
 body.nebras-ready header,
 body.nebras-ready .top-contact-bar {

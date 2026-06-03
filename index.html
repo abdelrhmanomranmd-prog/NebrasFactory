@@ -22,7 +22,7 @@
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link rel="preconnect" href="https://oedldllrjavofpeaputz.supabase.co" crossorigin>
     <link rel="dns-prefetch" href="https://oedldllrjavofpeaputz.supabase.co">
-    <link rel="preload" href="audio/nebras-welcome.mp3" as="fetch" crossorigin="anonymous">
+    <link rel="preload" href="audio/nebras-welcome.mp3" as="audio" type="audio/mpeg">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css"></noscript>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
@@ -47,20 +47,10 @@
 </head>
 <body id="nebras-platform" class="platform-storefront" data-platform-layer="storefront">
 
-    <audio id="nebras-brand-intro-audio" class="nebras-brand-intro-audio" preload="auto" autoplay playsinline webkit-playsinline="true" hidden>
+    <audio id="nebras-brand-intro-audio" class="nebras-brand-intro-audio" preload="auto" playsinline webkit-playsinline="true" hidden>
         <source src="audio/nebras-welcome.mp3" type="audio/mpeg">
         <source src="audio/nebras-welcome.mpeg" type="audio/mpeg">
     </audio>
-    <script>
-    (function () {
-        var a = document.getElementById('nebras-brand-intro-audio');
-        if (!a) return;
-        a.setAttribute('playsinline', '');
-        a.setAttribute('webkit-playsinline', 'true');
-        a.preload = 'auto';
-        try { a.load(); } catch (e) {}
-    })();
-    </script>
 
     <div id="nebras-brand-intro" class="nebras-brand-intro" hidden aria-hidden="true">
         <div class="nebras-brand-intro-backdrop" aria-hidden="true"></div>

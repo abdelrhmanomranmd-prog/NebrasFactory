@@ -12115,7 +12115,7 @@
                         nebrasAudioEngineUnlocked = true;
                         try { sessionStorage.setItem('nebrasAudioUnlocked', '1'); } catch (e) { /* ignore */ }
                     }).catch(function() {
-                        if (brandIntroAudioRetryCount >= 18) return;
+                        if (brandIntroAudioRetryCount >= 8) return;
                         brandIntroAudioRetryCount += 1;
                         const retryMs = 50 + brandIntroAudioRetryCount * 85;
                         brandIntroAudioRetryTimers.push(setTimeout(attemptBrandIntroWelcomePlay, retryMs));
@@ -12146,16 +12146,18 @@
             }
         }
 
+        let nebrasWelcomeAudioPrimed = false;
+
         function initNebrasWelcomeAudioEarly() {
+            if (nebrasWelcomeAudioPrimed) return;
             const audio = getBrandIntroWelcomeAudio();
             if (!audio) return;
+            nebrasWelcomeAudioPrimed = true;
             try {
                 audio.preload = 'auto';
                 audio.setAttribute('playsinline', '');
                 audio.setAttribute('webkit-playsinline', 'true');
-                if (typeof audio.load === 'function') audio.load();
             } catch (earlyErr) { /* ignore */ }
-            unlockNebrasAudioEngine();
         }
 
         function startBrandIntroWelcomeAudio() {
@@ -12165,26 +12167,17 @@
             if (!audio || !intro || intro.hidden) return;
             bindBrandIntroWelcomeGestures();
             prepareBrandIntroWelcomeAudio();
-            unlockNebrasAudioEngine().then(function() {
-                attemptBrandIntroWelcomePlay();
-            });
-            [0, 80, 180, 360, 650, 1100, 1800, 2600].forEach(function(delay) {
+            attemptBrandIntroWelcomePlay();
+            [120, 400, 900].forEach(function(delay) {
                 brandIntroAudioRetryTimers.push(setTimeout(attemptBrandIntroWelcomePlay, delay));
             });
-            window.addEventListener('pageshow', function onIntroPageShow(ev) {
-                if (!isBrandIntroVisible()) {
-                    window.removeEventListener('pageshow', onIntroPageShow);
-                    return;
-                }
-                if (ev && ev.persisted) attemptBrandIntroWelcomePlay();
-            });
-            document.addEventListener('visibilitychange', function onIntroVis() {
-                if (!isBrandIntroVisible()) {
-                    document.removeEventListener('visibilitychange', onIntroVis);
-                    return;
-                }
-                if (document.visibilityState === 'visible') attemptBrandIntroWelcomePlay();
-            });
+            if (!window._nebrasIntroPageShowBound) {
+                window._nebrasIntroPageShowBound = true;
+                window.addEventListener('pageshow', function(ev) {
+                    if (!isBrandIntroVisible()) return;
+                    if (ev && ev.persisted) attemptBrandIntroWelcomePlay();
+                });
+            }
         }
 
         function dismissBrandIntro() {
@@ -12201,6 +12194,7 @@
                 intro.hidden = true;
                 intro.setAttribute('aria-hidden', 'true');
                 intro.classList.remove('is-leaving');
+                dispatchNebrasIntroFinished();
             }, 520);
         }
 
@@ -12225,7 +12219,11 @@
             const useWelcomeAudio = !!getBrandIntroWelcomeAudio() && !prefersReducedMotionIntro();
             if (useWelcomeAudio) {
                 intro.classList.add('nebras-brand-intro--with-welcome');
-                startBrandIntroWelcomeAudio();
+                unlockNebrasAudioEngine().then(function() {
+                    startBrandIntroWelcomeAudio();
+                    playBrandIntroWelcomeSync();
+                    attemptBrandIntroWelcomePlay();
+                });
                 brandIntroFailsafeTimer = setTimeout(finishBrandIntroWelcomeSequence, BRAND_INTRO_WELCOME_MS + 4500);
             } else {
                 intro.classList.remove('nebras-brand-intro--with-welcome');
@@ -14477,8 +14475,36 @@
             });
         }
 
+        let nebrasPlatformBootstrapped = false;
+
+        function dispatchNebrasIntroFinished() {
+            try {
+                window.dispatchEvent(new CustomEvent('nebras-intro-finished'));
+            } catch (evErr) {
+                try { window.dispatchEvent(new Event('nebras-intro-finished')); } catch (e2) { /* ignore */ }
+            }
+        }
+
+        function shouldDeferHeavySiteRender() {
+            return document.body.classList.contains('nebras-intro-active') ||
+                !!(document.getElementById('nebras-brand-intro') && !document.getElementById('nebras-brand-intro').hidden);
+        }
+
+        function syncNebrasCloudInBackgroundDeferred() {
+            function runCloudSync() {
+                syncNebrasCloudInBackground();
+            }
+            if (shouldDeferHeavySiteRender()) {
+                window.addEventListener('nebras-intro-finished', runCloudSync, { once: true });
+                setTimeout(runCloudSync, BRAND_INTRO_WELCOME_MS + 6000);
+                return;
+            }
+            runCloudSync();
+        }
+
         async function bootstrapNebrasPlatform() {
-            dismissBrandIntro();
+            if (nebrasPlatformBootstrapped) return;
+            nebrasPlatformBootstrapped = true;
             try {
                 loadSystemData();
                 finalizePlatformDataAfterLoad();
@@ -14493,8 +14519,6 @@
                 ensureBuiltinBranches();
                 saveSystemData({ skipCloud: true });
                 applySiteLogoImages();
-                renderAllPublicCatalog();
-                syncNebrasCloudInBackground();
                 fetchDynamicContentBlocks().catch(function(e) { console.warn('content blocks:', e); });
                 fetchDynamicSiteSections().catch(function(e) { console.warn('site sections:', e); });
                 trackVisitorSession();
@@ -14503,13 +14527,27 @@
             } finally {
                 initNebrasSiteMediaSystem();
                 document.body.classList.add('nebras-ready');
+                maybeShowBrandIntro();
+                const introActive = shouldDeferHeavySiteRender();
                 try {
-                    setLanguage(currentLang || 'ar');
+                    setLanguage(currentLang || 'ar', { light: introActive });
                 } catch (langErr) {
                     console.warn('setLanguage error:', langErr);
                 }
-                maybeShowBrandIntro();
-                initStorefrontExperience();
+                if (!introActive) {
+                    initStorefrontExperience();
+                    syncNebrasCloudInBackgroundDeferred();
+                } else {
+                    window.addEventListener('nebras-intro-finished', function onIntroDone() {
+                        try {
+                            setLanguage(currentLang || 'ar');
+                        } catch (langErr2) {
+                            console.warn('setLanguage after intro:', langErr2);
+                        }
+                        initStorefrontExperience();
+                        syncNebrasCloudInBackgroundDeferred();
+                    }, { once: true });
+                }
             }
         }
 
@@ -16336,7 +16374,9 @@
             applyStorefrontPremiumUi(text);
         }
 
-        function setLanguage(lang) {
+        function setLanguage(lang, opts) {
+            opts = opts || {};
+            const light = !!opts.light;
             currentLang = lang;
             try { localStorage.setItem('nebrasLang', lang); } catch (e) { /* ignore */ }
             const text = siteText[lang] || siteText.ar;
@@ -16423,9 +16463,11 @@
             setElementText('quick-complaints-text', text.quickComplaintsText);
             setElementText('branches-title', text.branchesTitle);
             setElementText('branches-subtitle', text.branchesSubtitle);
-            mergeSupabaseIntoSiteCatalog(lang);
-            renderAllPublicCatalog();
-            applyDynamicSectionContent(lang);
+            if (!light) {
+                mergeSupabaseIntoSiteCatalog(lang);
+                renderAllPublicCatalog();
+                applyDynamicSectionContent(lang);
+            }
             setElementText('top-sales-number', `${text.topSalesLabel} ${systemSettings.mainSalesPhone}`, true);
             setElementText('top-customer-number', `${text.topCustomerLabel} ${systemSettings.customerServicePhone}`, true);
             setElementText('top-call-sales-btn', text.topSalesButton);
@@ -16443,24 +16485,26 @@
             if (langMenu) langMenu.classList.remove('show');
             const langToggleBtn = document.getElementById('lang-toggle-btn');
             if (langToggleBtn) langToggleBtn.setAttribute('aria-expanded', 'false');
-            renderVisitorIcons();
-            displayBranches();
-            if (nebrasWorkspaceState.active) renderNebrasWorkspace();
-            syncAdminSessionClass();
-            if (currentAdmin) {
-                renderPlatformHubPanel();
-                renderErpHubPanel();
-                renderDashboardTiles();
-                renderDashboardChannelsStatus();
-                renderDashboardOfficialHub();
+            if (!light) {
+                renderVisitorIcons();
+                displayBranches();
+                if (nebrasWorkspaceState.active) renderNebrasWorkspace();
+                syncAdminSessionClass();
+                if (currentAdmin) {
+                    renderPlatformHubPanel();
+                    renderErpHubPanel();
+                    renderDashboardTiles();
+                    renderDashboardChannelsStatus();
+                    renderDashboardOfficialHub();
+                }
+                renderDashboardOccasionStatus();
+                setElementText('dashboard-occasion-title', text.dashboardOccasionTitle);
+                setElementText('dashboard-occasion-edit-btn', text.dashboardOccasionEditBtn);
+                setElementText('setting-occasion-section-title', text.settingOccasionSectionTitle);
+                setElementText('setting-occasion-hint', text.settingOccasionHint);
+                setElementText('setting-occasion-enabled-label', text.settingOccasionEnabledLabel);
+                applyOccasionTheme();
             }
-            renderDashboardOccasionStatus();
-            setElementText('dashboard-occasion-title', text.dashboardOccasionTitle);
-            setElementText('dashboard-occasion-edit-btn', text.dashboardOccasionEditBtn);
-            setElementText('setting-occasion-section-title', text.settingOccasionSectionTitle);
-            setElementText('setting-occasion-hint', text.settingOccasionHint);
-            setElementText('setting-occasion-enabled-label', text.settingOccasionEnabledLabel);
-            applyOccasionTheme();
             updateNebrasSiteClock();
         }
 
