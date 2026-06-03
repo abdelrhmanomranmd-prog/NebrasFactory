@@ -82,6 +82,21 @@
             audio.setAttribute('playsinline', '');
             audio.setAttribute('webkit-playsinline', 'true');
             audio.preload = 'auto';
+            audio.volume = 1;
+            try {
+                audio.muted = true;
+                var prime = audio.play();
+                if (prime && prime.then) {
+                    prime.then(function () {
+                        audio.pause();
+                        try { audio.currentTime = 0; } catch (e) {}
+                        audio.muted = false;
+                        return audio.play();
+                    }).catch(function () { audio.muted = false; });
+                } else {
+                    audio.muted = false;
+                }
+            } catch (e) { audio.muted = false; }
         }
     })();
     </script>
