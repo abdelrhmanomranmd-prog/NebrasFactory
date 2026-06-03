@@ -174,6 +174,10 @@
     color: #fff;
 }
 
+html.nebras-first-visit body {
+    overflow: hidden;
+}
+
 body.nebras-intro-active {
     overflow: hidden;
 }
@@ -181,11 +185,28 @@ body.nebras-intro-active {
 body.nebras-intro-active #nebras-storefront,
 body.nebras-intro-active header,
 body.nebras-intro-active .top-contact-bar,
+body.nebras-intro-active .company-legal-bar,
+body.nebras-intro-active #site-celebration-overlay,
 body.nebras-intro-active .nebras-mobile-commerce-bar,
 body.nebras-intro-active .fab-cart,
-body.nebras-intro-active .fab-send-channel-group {
+body.nebras-intro-active .fab-send-channel-group,
+body.nebras-intro-active .admin-dashboard {
+    opacity: 0 !important;
     visibility: hidden !important;
     pointer-events: none !important;
+}
+
+body.nebras-site-reveal #nebras-storefront,
+body.nebras-site-reveal header,
+body.nebras-site-reveal .top-contact-bar,
+body.nebras-site-reveal .company-legal-bar,
+body.nebras-site-reveal .nebras-mobile-commerce-bar,
+body.nebras-site-reveal .fab-cart,
+body.nebras-site-reveal .fab-send-channel-group {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition: opacity 0.42s ease;
 }
 
 body.nebras-ready #nebras-storefront,

@@ -23,6 +23,13 @@
     <link rel="preconnect" href="https://oedldllrjavofpeaputz.supabase.co" crossorigin>
     <link rel="dns-prefetch" href="https://oedldllrjavofpeaputz.supabase.co">
     <link rel="preload" href="audio/nebras-welcome.mp3" as="audio" type="audio/mpeg">
+    <script>
+    try {
+        if (sessionStorage.getItem('nebrasIntroSeen') !== '1') {
+            document.documentElement.className += ' nebras-first-visit';
+        }
+    } catch (e) { document.documentElement.className += ' nebras-first-visit'; }
+    </script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css"></noscript>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
@@ -49,19 +56,35 @@
 
     <audio id="nebras-brand-intro-audio" class="nebras-brand-intro-audio" src="audio/nebras-welcome.mp3" preload="auto" playsinline webkit-playsinline="true" hidden></audio>
 
-    <div id="nebras-brand-intro" class="nebras-brand-intro" hidden aria-hidden="true">
+    <div id="nebras-brand-intro" class="nebras-brand-intro nebras-brand-intro--gate" hidden aria-hidden="true">
         <div class="nebras-brand-intro-backdrop" aria-hidden="true"></div>
         <div class="nebras-brand-intro-inner">
             <div class="nebras-brand-intro-logo-ring" aria-hidden="true">
                 <img src="images/logo.png" alt="" class="nebras-brand-intro-logo" onerror="siteLogoImgFallback(this)">
             </div>
-            <p class="nebras-brand-intro-eyebrow" id="intro-eyebrow"></p>
-            <h2 class="nebras-brand-intro-title" id="intro-brand-title" aria-live="polite"></h2>
-            <p class="nebras-brand-intro-tagline" id="intro-tagline"></p>
+            <p class="nebras-brand-intro-eyebrow" id="intro-eyebrow">المملكة العربية السعودية</p>
+            <h2 class="nebras-brand-intro-title" id="intro-brand-title" aria-live="polite">شركة مصنع نبراس للبلاستيك</h2>
+            <p class="nebras-brand-intro-tagline" id="intro-tagline">أبواب WPC فاخرة — حلول متكاملة بالجودة والأناقة</p>
             <div class="nebras-brand-intro-progress" aria-hidden="true"><span></span></div>
-            <button type="button" class="nebras-brand-intro-skip" id="intro-skip-btn"></button>
+            <button type="button" class="nebras-brand-intro-skip" id="intro-skip-btn">دخول المنصة</button>
         </div>
     </div>
+    <script>
+    (function () {
+        try { if (sessionStorage.getItem('nebrasIntroSeen') === '1') return; } catch (e) {}
+        var intro = document.getElementById('nebras-brand-intro');
+        if (!intro) return;
+        intro.hidden = false;
+        intro.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('nebras-intro-active');
+        var audio = document.getElementById('nebras-brand-intro-audio');
+        if (audio) {
+            audio.setAttribute('playsinline', '');
+            audio.setAttribute('webkit-playsinline', 'true');
+            audio.preload = 'auto';
+        }
+    })();
+    </script>
 
     <div id="site-celebration-overlay" class="site-celebration-overlay" aria-hidden="true"></div>
 
