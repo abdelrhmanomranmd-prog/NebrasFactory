@@ -22,6 +22,7 @@
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link rel="preconnect" href="https://oedldllrjavofpeaputz.supabase.co" crossorigin>
     <link rel="dns-prefetch" href="https://oedldllrjavofpeaputz.supabase.co">
+    <link rel="preload" href="audio/nebras-welcome.mp3" as="fetch" type="audio/mpeg" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css"></noscript>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
@@ -55,7 +56,8 @@
             <p class="nebras-brand-intro-eyebrow" id="intro-eyebrow"></p>
             <h2 class="nebras-brand-intro-title" id="intro-brand-title" aria-live="polite"></h2>
             <p class="nebras-brand-intro-tagline" id="intro-tagline"></p>
-            <audio id="nebras-brand-intro-audio" class="nebras-brand-intro-audio" preload="auto" autoplay playsinline hidden>
+            <audio id="nebras-brand-intro-audio" class="nebras-brand-intro-audio" preload="auto" autoplay playsinline webkit-playsinline hidden>
+                <source src="audio/nebras-welcome.mp3" type="audio/mpeg">
                 <source src="audio/nebras-welcome.mpeg" type="audio/mpeg">
             </audio>
             <div class="nebras-brand-intro-progress" aria-hidden="true"><span></span></div>
