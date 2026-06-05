@@ -1,11 +1,12 @@
 {
-  "cleanUrls": true,
+  "cleanUrls": false,
   "trailingSlash": false,
   "installCommand": "npm install",
-  "rewrites": [
+  "redirects": [
     {
-      "source": "/google4ebe8115a126a141.html",
-      "destination": "/google4ebe8115a126a141"
+      "source": "/nebras-wpc-promo-video",
+      "destination": "/nebras-wpc-promo-video.html",
+      "permanent": true
     }
   ],
   "functions": {
