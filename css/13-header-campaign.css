@@ -305,12 +305,7 @@
 
 @media (max-width: 768px) {
     .header-top-row--campaign {
-        padding: 8px 3.5% 10px;
-    }
-
-    .header-hero-band {
-        border-radius: 16px;
-        padding: 12px 14px;
+        display: none;
     }
 
     .header-campaign-action-strip {

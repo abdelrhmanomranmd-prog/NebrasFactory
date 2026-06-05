@@ -1,0 +1,28 @@
+{
+  "name": "مصنع نبراس للبلاستيك",
+  "short_name": "نبراس",
+  "description": "المنصة الرسمية لمصنع نبراس للبلاستيك — أبواب WPC فاخرة، معرض منتجات، وعروض أسعار.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d2840",
+  "theme_color": "#0d2840",
+  "lang": "ar",
+  "dir": "rtl",
+  "icons": [
+    {
+      "src": "/images/favicon-48.png",
+      "sizes": "48x48",
+      "type": "image/png"
+    },
+    {
+      "src": "/images/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/images/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

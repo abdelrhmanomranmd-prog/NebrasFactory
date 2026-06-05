@@ -3582,13 +3582,16 @@
             const el = document.getElementById('nebras-org-schema');
             if (!el) return;
             const siteUrl = sanitizeExternalUrl(systemSettings.publicSiteUrl || NEBRAS_PUBLIC_SITE_URL) || NEBRAS_PUBLIC_SITE_URL;
+            const base = siteUrl.replace(/\/$/, '');
             const schema = {
                 '@context': 'https://schema.org',
                 '@type': 'Organization',
                 name: 'شركة مصنع نبراس للبلاستيك',
-                alternateName: 'Nebras Plastic Factory',
+                alternateName: ['مصنع نبراس للبلاستيك', 'منصة نبراس', 'Nebras Plastic Factory'],
                 url: siteUrl,
-                logo: siteUrl.replace(/\/$/, '') + '/images/logo.png',
+                logo: base + '/images/favicon-48.png',
+                image: base + '/images/hero-nebras-banner.png',
+                description: 'شركة سعودية متخصصة في تصنيع وتركيب أبواب WPC عالية الجودة من القصيم إلى كل المملكة.',
                 telephone: String(systemSettings.mainSalesPhone || '').trim() || undefined,
                 taxID: String(systemSettings.taxNumber || '').trim() || undefined,
                 address: {
@@ -10123,13 +10126,19 @@
             setTxt('header-campaign-tagline', text.heroTaglineShort || text.heroText);
             setTxt('header-explore-btn', text.heroExploreBtn);
             setTxt('header-quote-btn', text.heroQuoteBtn);
+            setTxt('hero-mobile-eyebrow', text.heroEyebrow || text.introBrandName || '');
+            setTxt('hero-mobile-headline', text.heroHeadline);
+            setTxt('hero-mobile-tagline', text.heroTaglineShort || text.heroText);
+            setTxt('hero-mobile-explore', text.heroExploreBtn);
+            setTxt('hero-mobile-quote', text.heroQuoteBtn);
+            const statsHtml =
+                '<div class="header-stat"><strong>' + escapeHtmlAttr(text.heroStatWarrantyVal || '10') + '</strong><span>' + escapeHtmlAttr(text.heroStatWarranty || '') + '</span></div>' +
+                '<div class="header-stat"><strong>' + escapeHtmlAttr(text.heroStatInstallVal || '+1M') + '</strong><span>' + escapeHtmlAttr(text.heroStatInstall || '') + '</span></div>' +
+                '<div class="header-stat"><strong>' + escapeHtmlAttr(text.heroStatYearsVal || '5') + '</strong><span>' + escapeHtmlAttr(text.heroStatYears || '') + '</span></div>';
             const statsEl = document.getElementById('header-campaign-stats');
-            if (statsEl) {
-                statsEl.innerHTML =
-                    '<div class="header-stat"><strong>' + escapeHtmlAttr(text.heroStatWarrantyVal || '10') + '</strong><span>' + escapeHtmlAttr(text.heroStatWarranty || '') + '</span></div>' +
-                    '<div class="header-stat"><strong>' + escapeHtmlAttr(text.heroStatInstallVal || '+1M') + '</strong><span>' + escapeHtmlAttr(text.heroStatInstall || '') + '</span></div>' +
-                    '<div class="header-stat"><strong>' + escapeHtmlAttr(text.heroStatYearsVal || '5') + '</strong><span>' + escapeHtmlAttr(text.heroStatYears || '') + '</span></div>';
-            }
+            if (statsEl) statsEl.innerHTML = statsHtml;
+            const mobileStatsEl = document.getElementById('hero-mobile-stats');
+            if (mobileStatsEl) mobileStatsEl.innerHTML = statsHtml;
             const heroSection = document.getElementById('site-hero');
             if (heroSection) heroSection.setAttribute('aria-label', text.heroHeadline || 'الترحيب');
         }
@@ -12147,6 +12156,14 @@
             bar.style.animation = 'nebrasWelcomeProgress ' + BRAND_INTRO_WELCOME_AUDIO_SEC + 's linear forwards';
         }
 
+        function finishBrandIntroWelcomeSequence() {
+            if (brandIntroFinishLocked || !isBrandIntroVisible()) return;
+            brandIntroFinishLocked = true;
+            clearBrandIntroDismissTimers();
+            stopBrandIntroWelcomeAudio();
+            dismissBrandIntro();
+        }
+
         function scheduleBrandIntroDismissAfterWelcome() {
             clearBrandIntroDismissTimers();
             const audio = getBrandIntroWelcomeAudio();
@@ -12158,24 +12175,48 @@
             brandIntroFailsafeTimer = setTimeout(finishBrandIntroWelcomeSequence, BRAND_INTRO_WELCOME_MS + 3500);
         }
 
+        function scheduleBrandIntroWallClockSequence() {
+            clearBrandIntroDismissTimers();
+            syncBrandIntroProgressToPlayback();
+            brandIntroTimer = setTimeout(finishBrandIntroWelcomeSequence, BRAND_INTRO_WELCOME_MS + 100);
+            brandIntroFailsafeTimer = setTimeout(finishBrandIntroWelcomeSequence, BRAND_INTRO_WELCOME_MS + 3200);
+        }
+
         function wireBrandIntroWelcomeAudioEvents(audio) {
             if (!audio) return;
             audio.ontimeupdate = function() {
                 if (audio.currentTime >= BRAND_INTRO_WELCOME_AUDIO_SEC - 0.08) {
-                    markDoorDesignerWelcomeAudioConsumed();
-                    stopBrandIntroWelcomeAudio();
+                    if (isBrandIntroVisible()) {
+                        finishBrandIntroWelcomeSequence();
+                    } else if (isDoorDesignerWorkspaceActive()) {
+                        markDoorDesignerWelcomeAudioConsumed();
+                        stopBrandIntroWelcomeAudio();
+                    } else {
+                        stopBrandIntroWelcomeAudio();
+                    }
                 }
             };
             audio.onended = function() {
-                markDoorDesignerWelcomeAudioConsumed();
-                stopBrandIntroWelcomeAudio();
+                if (isBrandIntroVisible()) {
+                    finishBrandIntroWelcomeSequence();
+                } else if (isDoorDesignerWorkspaceActive()) {
+                    markDoorDesignerWelcomeAudioConsumed();
+                    stopBrandIntroWelcomeAudio();
+                } else {
+                    stopBrandIntroWelcomeAudio();
+                }
             };
         }
 
         function onBrandIntroWelcomePlaybackStarted() {
             if (brandIntroPlaybackStarted) return;
             brandIntroPlaybackStarted = true;
-            markDoorDesignerWelcomeAudioConsumed();
+            if (isBrandIntroVisible()) {
+                syncBrandIntroProgressToPlayback();
+                scheduleBrandIntroDismissAfterWelcome();
+            } else if (isDoorDesignerWorkspaceActive()) {
+                markDoorDesignerWelcomeAudioConsumed();
+            }
         }
 
         function primeBrandIntroWelcomeAudioBlob() {
@@ -12508,7 +12549,22 @@
         }
 
         function startBrandIntroWelcomeAudio() {
-            startDoorDesignerWelcomeAudio();
+            if (prefersReducedMotionIntro() || !isBrandIntroVisible()) return;
+            brandIntroAudioRetryCount = 0;
+            bindBrandIntroWelcomeGestures();
+            prepareBrandIntroWelcomeAudio();
+            tryPlayBrandIntroWelcome(false);
+            startBrandIntroAudioWatchdog();
+            brandIntroAudioRetryTimers.push(setTimeout(function() {
+                if (isBrandIntroVisible() && !brandIntroPlaybackStarted) {
+                    tryPlayBrandIntroWelcome(false);
+                }
+            }, 450));
+            resumeNebrasWebAudioContext().then(function() {
+                if (isBrandIntroVisible() && !brandIntroPlaybackStarted) {
+                    tryPlayBrandIntroWelcome(false);
+                }
+            });
         }
 
         function dismissBrandIntro() {
@@ -12532,12 +12588,27 @@
 
         function maybeShowBrandIntro() {
             const intro = document.getElementById('nebras-brand-intro');
-            if (intro) {
+            if (!intro) return;
+            let seen = false;
+            try { seen = sessionStorage.getItem('nebrasIntroSeen') === '1'; } catch (e) { /* ignore */ }
+            if (seen) {
                 intro.hidden = true;
                 intro.setAttribute('aria-hidden', 'true');
+                document.body.classList.remove('nebras-intro-active');
+                try { document.documentElement.classList.remove('nebras-first-visit'); } catch (e) { /* ignore */ }
+                return;
             }
-            document.body.classList.remove('nebras-intro-active');
-            try { document.documentElement.classList.remove('nebras-first-visit'); } catch (e) { /* ignore */ }
+            const text = siteText[currentLang || 'ar'] || siteText.ar;
+            applyBrandIntroContent(text);
+            intro.hidden = false;
+            intro.setAttribute('aria-hidden', 'false');
+            intro.classList.remove('is-leaving');
+            document.body.classList.add('nebras-intro-active');
+            brandIntroFinishLocked = false;
+            intro.classList.remove('nebras-brand-intro--with-welcome', 'nebras-brand-intro--audio-playing');
+            brandIntroTimer = setTimeout(dismissBrandIntro, BRAND_INTRO_SHORT_MS);
+            brandIntroFailsafeTimer = setTimeout(dismissBrandIntro, BRAND_INTRO_SHORT_FAILSAFE_MS);
+            scheduleWarmSiteBehindIntro();
         }
 
         function applyDocumentMeta(text) {
@@ -12545,6 +12616,14 @@
             if (text.pageTitle) document.title = text.pageTitle;
             const meta = document.querySelector('meta[name="description"]');
             if (meta && text.pageDescription) meta.setAttribute('content', text.pageDescription);
+            const ogTitle = document.querySelector('meta[property="og:title"]');
+            if (ogTitle && text.pageTitle) ogTitle.setAttribute('content', text.pageTitle);
+            const ogDesc = document.querySelector('meta[property="og:description"]');
+            if (ogDesc && text.pageDescription) ogDesc.setAttribute('content', text.pageDescription);
+            const twTitle = document.querySelector('meta[name="twitter:title"]');
+            if (twTitle && text.pageTitle) twTitle.setAttribute('content', text.pageTitle);
+            const twDesc = document.querySelector('meta[name="twitter:description"]');
+            if (twDesc && text.pageDescription) twDesc.setAttribute('content', text.pageDescription);
         }
 
         function applyAdminOverlayTranslations(text) {
@@ -14989,14 +15068,17 @@
                 initNebrasSiteMediaSystem();
                 document.body.classList.add('nebras-ready');
                 maybeShowBrandIntro();
+                const introActive = shouldDeferHeavySiteRender();
                 try {
-                    setLanguage(currentLang || 'ar');
+                    setLanguage(currentLang || 'ar', { light: introActive });
                 } catch (langErr) {
                     console.warn('setLanguage error:', langErr);
                 }
-                initStorefrontExperience();
-                syncNebrasCloudInBackgroundDeferred();
-                revealSiteAfterIntro();
+                if (!introActive) {
+                    initStorefrontExperience();
+                    syncNebrasCloudInBackgroundDeferred();
+                    revealSiteAfterIntro();
+                }
             }
         }
 
@@ -15005,9 +15087,6 @@
             bindBrandIntroWelcomeGestures();
             const introSkip = document.getElementById('intro-skip-btn');
             if (introSkip) {
-                introSkip.addEventListener('pointerdown', function() {
-                    playBrandIntroWelcomeSync();
-                }, { passive: true });
                 introSkip.addEventListener('click', function(e) {
                     e.stopPropagation();
                     dismissBrandIntro();
@@ -15193,8 +15272,8 @@
                 },
                 heroTitle: '<i class="fas fa-star"></i> شركة مصنع نبراس للبلاستيك',
                 heroText: 'من قلب المملكة العربية السعودية، نقدم حلولاً بلاستيكية عالمية بمعايير وجودة عالية.',
-                pageTitle: 'منصة نبراس الرقمية — مصنع نبراس للبلاستيك',
-                pageDescription: 'منصة مصنع نبراس للبلاستيك — معرض منتجات، طلب عروض أسعار، فروع المملكة، ونظام إدارة محكوم.',
+                pageTitle: 'مصنع نبراس للبلاستيك | منصة نبراس الرسمية — أبواب WPC',
+                pageDescription: 'شركة مصنع نبراس للبلاستيك — شركة سعودية متخصصة في تصنيع وتركيب أبواب WPC عالية الجودة. صمّم بابك، اطلب عرض سعر، واكتشف منتجاتنا من القصيم إلى كل المملكة.',
                 introEyebrow: 'المملكة العربية السعودية',
                 introBrandName: 'شركة مصنع نبراس للبلاستيك',
                 introTagline: 'أبواب WPC فاخرة — حلول متكاملة بالجودة والأناقة',
@@ -15722,8 +15801,8 @@
                 },
                 heroTitle: '<i class="fas fa-star"></i> Nebras Plastic Factory Company',
                 heroText: 'From the heart of the Kingdom, we offer global plastic solutions with authentic Saudi standards.',
-                pageTitle: 'Nebras Digital Platform — Nebras Plastic Factory',
-                pageDescription: 'Nebras Plastic Factory — product showroom, quotations, KSA branches, and governed admin.',
+                pageTitle: 'Nebras Plastic Factory | Official Nebras Platform — WPC Doors',
+                pageDescription: 'Nebras Plastic Factory — a Saudi manufacturer of premium WPC doors. Design your door, request a quote, and explore our products across the Kingdom.',
                 introEyebrow: 'Kingdom of Saudi Arabia',
                 introBrandName: 'Nebras Plastic Factory Company',
                 introTagline: 'Luxury WPC doors — integrated quality and elegance',
@@ -16324,8 +16403,8 @@
                 dashboardHubIntroText: '选择磁贴进入平台模块。合作伙伴在网站与后台同步展示。',
                 certsOverlayTitle: 'Nebras 认证',
                 certsOverlayIntro: '工厂证书与认证 — 图片与 PDF 及说明。',
-                pageTitle: 'Nebras 数字平台 — Nebras 塑料工厂',
-                pageDescription: 'Nebras 塑料工厂 — 产品展厅、报价、沙特分支与管控后台。',
+                pageTitle: 'Nebras 塑料工厂 | 官方 Nebras 平台 — WPC 门',
+                pageDescription: 'Nebras 塑料工厂 — 沙特高品质 WPC 门制造商。在线设计、索取报价，浏览全沙特产品。',
                 introEyebrow: '沙特阿拉伯王国',
                 introBrandName: 'Nebras 塑料工厂公司',
                 introTagline: '高端 WPC 门 — 品质与优雅的集成方案',
