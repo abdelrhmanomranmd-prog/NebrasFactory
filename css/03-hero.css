@@ -147,21 +147,50 @@
 
 @media (max-width: 768px) {
     .hero.hero-real {
-        min-height: min(42vh, 360px);
+        min-height: min(48vh, 400px);
+    }
+
+    .hero.hero-real .hero-bg-layer {
+        background-position: center 38%;
+        background-size: cover;
+    }
+
+    .hero.hero-real .hero-bg-layer::after {
+        background: linear-gradient(
+            180deg,
+            rgba(8, 8, 12, 0.35) 0%,
+            rgba(8, 8, 12, 0.2) 40%,
+            rgba(8, 8, 12, 0.55) 100%
+        );
     }
 
     .hero-content-wrap {
-        min-height: min(42vh, 360px);
+        min-height: min(48vh, 400px);
         padding: 16px 4% 44px;
     }
 
     .hero-content-wrap.hero-visual-only {
-        min-height: min(38vh, 320px);
+        min-height: min(44vh, 360px);
     }
 
     .hero-location-bar {
         font-size: 0.78rem;
         padding: 8px 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero.hero-real {
+        min-height: min(44vh, 340px);
+    }
+
+    .hero.hero-real .hero-bg-layer {
+        background-position: center 42%;
+    }
+
+    .hero-content-wrap,
+    .hero-content-wrap.hero-visual-only {
+        min-height: min(44vh, 340px);
     }
 }
 

@@ -22,14 +22,7 @@
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <link rel="preconnect" href="https://oedldllrjavofpeaputz.supabase.co" crossorigin>
     <link rel="dns-prefetch" href="https://oedldllrjavofpeaputz.supabase.co">
-    <link rel="preload" href="audio/nebras-welcome.mp3" as="audio" type="audio/mpeg">
-    <script>
-    try {
-        if (sessionStorage.getItem('nebrasIntroSeen') !== '1') {
-            document.documentElement.className += ' nebras-first-visit';
-        }
-    } catch (e) { document.documentElement.className += ' nebras-first-visit'; }
-    </script>
+    <link rel="preload" href="images/hero-nebras-banner.png" as="image" fetchpriority="high">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" media="print" onload="this.media='all'">
     <noscript><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css"></noscript>
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap" rel="stylesheet">
@@ -54,7 +47,7 @@
 </head>
 <body id="nebras-platform" class="platform-storefront" data-platform-layer="storefront">
 
-    <audio id="nebras-brand-intro-audio" class="nebras-brand-intro-audio" src="audio/nebras-welcome.mp3" preload="auto" autoplay muted playsinline webkit-playsinline="true" hidden></audio>
+    <audio id="nebras-brand-intro-audio" class="nebras-brand-intro-audio" src="audio/nebras-welcome.mp3" preload="metadata" playsinline webkit-playsinline="true" hidden></audio>
 
     <div id="nebras-brand-intro" class="nebras-brand-intro nebras-brand-intro--gate" hidden aria-hidden="true">
         <div class="nebras-brand-intro-backdrop" aria-hidden="true"></div>
@@ -69,48 +62,6 @@
             <button type="button" class="nebras-brand-intro-skip" id="intro-skip-btn">دخول المنصة</button>
         </div>
     </div>
-    <script>
-    (function () {
-        function kickNebrasWelcomeAudio() {
-            var audio = document.getElementById('nebras-brand-intro-audio');
-            if (!audio) return;
-            audio.setAttribute('playsinline', '');
-            audio.setAttribute('webkit-playsinline', 'true');
-            audio.preload = 'auto';
-            audio.volume = 1;
-            try {
-                if (audio.currentTime >= 22) audio.currentTime = 0;
-                audio.muted = true;
-                var p = audio.play();
-                if (p && p.then) {
-                    p.then(function () {
-                        audio.muted = false;
-                        audio.volume = 1;
-                        if (audio.paused) return audio.play();
-                    }).catch(function () { audio.muted = false; });
-                } else {
-                    audio.muted = false;
-                }
-            } catch (e) { audio.muted = false; }
-        }
-        window.__nebrasKickWelcomeAudio = kickNebrasWelcomeAudio;
-        function onFirstTouch() {
-            kickNebrasWelcomeAudio();
-        }
-        document.addEventListener('touchstart', onFirstTouch, { capture: true, passive: true, once: true });
-        document.addEventListener('pointerdown', onFirstTouch, { capture: true, passive: true, once: true });
-        try { if (sessionStorage.getItem('nebrasIntroSeen') === '1') return; } catch (e) {}
-        var intro = document.getElementById('nebras-brand-intro');
-        if (!intro) return;
-        intro.hidden = false;
-        intro.setAttribute('aria-hidden', 'false');
-        document.body.classList.add('nebras-intro-active');
-        kickNebrasWelcomeAudio();
-        setTimeout(kickNebrasWelcomeAudio, 120);
-        setTimeout(kickNebrasWelcomeAudio, 500);
-    })();
-    </script>
-
     <div id="site-celebration-overlay" class="site-celebration-overlay" aria-hidden="true"></div>
 
     <div class="company-legal-bar" id="public-legal-bar" aria-label="بيانات الشركة الرسمية"></div>
