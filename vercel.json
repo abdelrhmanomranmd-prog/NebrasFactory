@@ -2,6 +2,12 @@
   "cleanUrls": true,
   "trailingSlash": false,
   "installCommand": "npm install",
+  "rewrites": [
+    {
+      "source": "/google4ebe8115a126a141.html",
+      "destination": "/google4ebe8115a126a141"
+    }
+  ],
   "functions": {
     "api/**/*.js": {
       "maxDuration": 30
