@@ -3409,6 +3409,7 @@
         function setQuoteActionLoading(isLoading, sendMode) {
             const ids = [
                 'cart-send-sales-btn', 'cart-send-cs-btn', 'cart-request-quote-btn', 'cart-preview-quote-btn',
+                'cart-download-quote-btn', 'quote-download-pdf-btn',
                 'quote-send-sales-btn', 'quote-send-cs-btn', 'quote-send-pdf-both-btn',
                 'fab-send-sales', 'fab-send-cs', 'top-quote-btn', 'header-quote-btn', 'workspace-quote-btn', 'mob-bar-quote'
             ];
@@ -3457,6 +3458,12 @@
             });
             bindQuoteCommerceButton(document.getElementById('cart-preview-quote-btn'), function() {
                 confirmAndOpenQuote();
+            });
+            bindQuoteCommerceButton(document.getElementById('cart-download-quote-btn'), function() {
+                downloadQuoteA4Pdf();
+            });
+            bindQuoteCommerceButton(document.getElementById('quote-download-pdf-btn'), function() {
+                downloadQuoteA4Pdf();
             });
             bindQuoteCommerceButton(document.getElementById('quote-send-sales-btn'), function() {
                 submitQuoteA4Pdf('sales');
@@ -5358,6 +5365,14 @@
                 const shared = await tryShareQuoteDocument(fullMessage, pdfBlob, fileName, mimeType);
                 if (shared) return channels.slice();
             }
+            if (pdfBlob) {
+                fullMessage += '\n\n📎 ' + (ui.quotePdfAttachHint || 'تم تنزيل PDF على جهازك — أرفقيه من «المرفقات» في واتساب لإرسال عرض السعر بصيغة PDF.');
+                triggerQuoteFileDownload(pdfBlob, fileName);
+                await new Promise(function(resolve) { setTimeout(resolve, 700); });
+            } else if (options.imageDataUrl) {
+                triggerQuoteFileDownload(options.imageDataUrl, (fileName || 'nebras-quote-a4').replace(/\.pdf$/i, '') + '.png');
+                await new Promise(function(resolve) { setTimeout(resolve, 500); });
+            }
             const sameNumber = normalizeSaPhoneE164(systemSettings.mainSalesPhone) === normalizeSaPhoneE164(systemSettings.customerServicePhone);
             const toOpen = channels.filter(function(ch, idx, arr) {
                 if (ch === 'customer-service' && sameNumber && arr.indexOf('sales') >= 0 && arr.indexOf('sales') < idx) return false;
@@ -5371,11 +5386,6 @@
                     if (url) openExternalMessagingUrl(url);
                 }, idx * 900);
             });
-            if (pdfBlob) {
-                triggerQuoteFileDownload(pdfBlob, fileName);
-            } else if (options.imageDataUrl) {
-                triggerQuoteFileDownload(options.imageDataUrl, (fileName || 'nebras-quote-a4').replace(/\.pdf$/i, '') + '.png');
-            }
             return channels.slice();
         }
 
@@ -5642,6 +5652,47 @@
             el.hidden = false;
         }
 
+        async function downloadQuoteA4Pdf() {
+            if (quotePdfSubmitInFlight) return;
+            const ui = siteText[currentLang || 'ar'] || siteText.ar;
+            if (!nebrasCart.length) {
+                alert(ui.cartEmpty || 'أضف منتجات إلى السلة أولاً.');
+                return;
+            }
+            readCheckoutFormToProfile();
+            const validation = validateCheckoutProfile(readCheckoutFormToProfile(), ui);
+            if (!validation.ok) {
+                showCheckoutValidationErrors(validation.errors, ui, true);
+                return;
+            }
+            if (!currentQuoteIssue || !currentQuoteIssue.quoteNo) {
+                currentQuoteIssue = issueNextQuoteNumber();
+            }
+            quotePdfSubmitInFlight = true;
+            setQuoteActionLoading(true, 'download');
+            try {
+                const rendered = await ensureQuoteA4Rendered();
+                if (!rendered) {
+                    alert(ui.sendQuoteA4RenderFail || 'تعذّر تجهيز مستند A4 — أعدي المحاولة.');
+                    return;
+                }
+                const pdfBlob = await captureQuoteA4AsPdfBlob();
+                if (!pdfBlob) {
+                    alert(ui.sendQuoteA4PdfFail || 'تعذّر إنشاء PDF — تحققي من الاتصال وأعدي المحاولة.');
+                    return;
+                }
+                const pdfFileName = (currentQuoteIssue.quoteNo || 'nebras-quote') + '-a4.pdf';
+                triggerQuoteFileDownload(pdfBlob, pdfFileName);
+                alert((ui.downloadQuoteA4Done || 'تم تنزيل عرض السعر PDF على جهازك.') + '\n' + (currentQuoteIssue.quoteNo || ''));
+            } catch (dlErr) {
+                console.error('downloadQuoteA4Pdf failed:', dlErr);
+                alert((ui.sendQuoteA4PdfFail || 'تعذّر تنزيل PDF.') + '\n' + (dlErr && dlErr.message ? dlErr.message : ''));
+            } finally {
+                quotePdfSubmitInFlight = false;
+                setQuoteActionLoading(false, 'download');
+            }
+        }
+
         async function submitQuoteA4Pdf(sendMode) {
             sendMode = sendMode || 'both';
             if (quotePdfSubmitInFlight) return;
@@ -5780,7 +5831,10 @@
                 doneMsg += '\n📞 ' + (ui.customerHotlineLabel || 'خدمة العملاء:') + ' ' + (systemSettings.customerServicePhone || '');
             }
             if (pdfCloudUrl) doneMsg += '\n📄 PDF: ' + pdfCloudUrl;
-            doneMsg += '\n\n' + (ui.sendQuoteWaHint || 'اضغط «إرسال» في واتساب — وأرفقي PDF إن لزم.');
+            doneMsg += '\n\n' + (ui.sendQuoteWaHint || 'اضغط «إرسال» في واتساب — وأرفقي ملف PDF من التنزيلات.');
+            if (pdfBlob) {
+                doneMsg += '\n📎 ' + (ui.quotePdfAttachHint || 'تم تنزيل PDF — أرفقيه من «المرفقات» في واتساب.');
+            }
             if (!cloudOk) {
                 doneMsg += '\n\n' + (ui.sendQuoteCloudWarn || '(تم الحفظ محلياً — تحققي من اتصال Supabase.)');
             } else {
@@ -10059,7 +10113,8 @@
             if (!p) return '';
             if (/^https?:\/\//i.test(p)) return cssUrlValue(p);
             const rel = p.replace(/\\/g, '/').replace(/"/g, '');
-            return 'url("' + rel + '")';
+            const abs = rel.indexOf('/') === 0 ? rel : '/' + rel;
+            return 'url("' + abs + '")';
         }
 
         const HERO_BANNER_FALLBACKS = [
@@ -10069,11 +10124,14 @@
         ];
 
         const HERO_SLIDESHOW_DEFAULT = [
-            { src: 'images/hero-nebras-banner.png', headline: 0 },
-            { src: 'images/nebras-door-designer-icon-bg.png', headline: 1 },
-            { src: 'images/customer-complaints-background.jpeg', headline: 2 },
-            { src: 'images/backround-Quality-Management.jpg', headline: 0 },
-            { src: 'images/nebras-service-manufacturing-bg.png', headline: 1 }
+            { src: 'images/hero-slide-01-factory-banner.png', headline: 0 },
+            { src: 'images/hero-slide-02-wpc-pvc.png', headline: 1 },
+            { src: 'images/hero-slide-03-premium-wpc.png', headline: 2 },
+            { src: 'images/hero-slide-04-exhibition.png', headline: 3 },
+            { src: 'images/hero-slide-05-doors-showcase.png', headline: 4 },
+            { src: 'images/nebras-door-designer-icon-bg.png', headline: 5 },
+            { src: 'images/hero-slide-06-color-catalog.png', headline: 6 },
+            { src: 'images/hero-slide-07-quality.png', headline: 7 }
         ];
 
         let heroSlideshowTimer = null;
@@ -10142,25 +10200,65 @@
             else stopHeroSlideshow();
         }
 
-        function getHeroDynamicHeadlines(lang) {
+        function getHeroSlideHeadlines(lang) {
             const text = siteText[lang] || siteText.ar;
-            if (text && Array.isArray(text.heroDynamicHeadlines) && text.heroDynamicHeadlines.length) {
-                return text.heroDynamicHeadlines;
+            if (text && Array.isArray(text.heroSlideHeadlines) && text.heroSlideHeadlines.length >= 8) {
+                return text.heroSlideHeadlines;
             }
-            return (siteText.ar && siteText.ar.heroDynamicHeadlines) || [
+            const arSlides = siteText.ar && siteText.ar.heroSlideHeadlines;
+            if (Array.isArray(arSlides) && arSlides.length >= 8) return arSlides;
+            return [
                 'شركة مصنع نبراس للبلاستيك',
-                'لصناعة أبواب الـ WPC',
-                'مصنع سعودي وطني'
+                'لصناعة أبواب الـ WPC — جمال ومتانة بلا حدود',
+                'WPC يتفوّق على PVC — اختيارك الأذكى للأبواب',
+                'مصنع سعودي وطني — نصنع بفخر في قلب القصيم',
+                'جودة أبواب نبراس — صلابة تتحدى الزمن والطقس',
+                'صمّم بابك بنفسك.. وأبدع مع نبراس',
+                'اختر لونك.. ابنِ هويتك من كتالوج نبراس',
+                'نصنع الجودة.. نحافظ على البيئة — WPC مستدام'
             ];
+        }
+
+        function getHeroDynamicHeadlines(lang) {
+            return getHeroSlideHeadlines(lang);
+        }
+
+        function heroSlideAssetUrl(src) {
+            const p = normalizeHeroBannerPath(src);
+            if (/^https?:\/\//i.test(p)) return p;
+            return p.indexOf('/') === 0 ? p : '/' + p;
+        }
+
+        function preloadHeroSlideImages(slides) {
+            if (!Array.isArray(slides) || !slides.length) return;
+            slides.forEach(function(slide) {
+                const img = new Image();
+                img.decoding = 'async';
+                img.loading = 'eager';
+                img.src = heroSlideAssetUrl(slide.src);
+            });
+        }
+
+        function buildHeroSlideMarkup(slide, idx, isActive) {
+            const url = heroSlideAssetUrl(slide.src);
+            const fallback = heroSlideAssetUrl(HERO_BANNER_FALLBACKS[0]);
+            const activeClass = isActive ? ' is-active' : '';
+            const loadAttr = idx === 0 ? 'eager' : 'lazy';
+            const priority = idx === 0 ? ' fetchpriority="high"' : '';
+            return '<div class="hero-slide' + activeClass + '" data-slide="' + idx + '">' +
+                '<img class="hero-slide-img" src="' + escapeHtmlAttr(url) + '" alt="" decoding="async" loading="' + loadAttr + '"' + priority +
+                ' onerror="this.onerror=null;this.src=\'' + fallback.replace(/'/g, '') + '\'">' +
+                '</div>';
         }
 
         function getHeroSlideshowSlides() {
             const custom = systemSettings.heroSlideshowSlides;
             if (Array.isArray(custom) && custom.length) {
                 return custom.map(function(slide, idx) {
+                    const fallback = HERO_SLIDESHOW_DEFAULT[idx % HERO_SLIDESHOW_DEFAULT.length];
                     return {
-                        src: normalizeHeroBannerPath(slide.src || slide.image || HERO_SLIDESHOW_DEFAULT[idx % HERO_SLIDESHOW_DEFAULT.length].src),
-                        headline: typeof slide.headline === 'number' ? slide.headline : (idx % 3)
+                        src: normalizeHeroBannerPath(slide.src || slide.image || fallback.src),
+                        headline: typeof slide.headline === 'number' ? slide.headline : (idx % 8)
                     };
                 });
             }
@@ -10236,8 +10334,7 @@
 
             hero.classList.add('hero-slideshow-enabled');
             container.innerHTML = heroSlideshowSlides.map(function(slide, idx) {
-                const css = cssLocalImageValue(slide.src) || cssLocalImageValue(HERO_BANNER_FALLBACKS[0]);
-                return '<div class="hero-slide' + (idx === 0 ? ' is-active' : '') + '" data-slide="' + idx + '" style="background-image:' + (css || '') + '"></div>';
+                return buildHeroSlideMarkup(slide, idx, idx === 0);
             }).join('');
 
             if (dotsWrap) {
@@ -10257,12 +10354,13 @@
 
             heroSlideshowIndex = 0;
             setHeroDynamicHeadline(heroSlideshowSlides[0].headline, false);
+            preloadHeroSlideImages(heroSlideshowSlides);
 
             if (prefersReducedMotionIntro()) return;
 
             heroSlideshowTimer = setInterval(function() {
                 goHeroSlide(heroSlideshowIndex + 1, true);
-            }, 4800);
+            }, 5000);
         }
 
         function restartHeroSlideshowTimer() {
@@ -10270,7 +10368,7 @@
             if (prefersReducedMotionIntro()) return;
             heroSlideshowTimer = setInterval(function() {
                 goHeroSlide(heroSlideshowIndex + 1, true);
-            }, 4800);
+            }, 5000);
         }
 
         function applyHeroMarketingCopy(text) {
@@ -15451,6 +15549,16 @@
                     'لصناعة أبواب الـ WPC',
                     'مصنع سعودي وطني'
                 ],
+                heroSlideHeadlines: [
+                    'شركة مصنع نبراس للبلاستيك',
+                    'لصناعة أبواب الـ WPC — جمال ومتانة بلا حدود',
+                    'WPC يتفوّق على PVC — اختيارك الأذكى للأبواب',
+                    'مصنع سعودي وطني — نصنع بفخر في قلب القصيم',
+                    'جودة أبواب نبراس — صلابة تتحدى الزمن والطقس',
+                    'صمّم بابك بنفسك.. وأبدع مع نبراس',
+                    'اختر لونك.. ابنِ هويتك من كتالوج نبراس',
+                    'نصنع الجودة.. نحافظ على البيئة — WPC مستدام'
+                ],
                 heroTaglineShort: 'حوّل مساحتك بالجودة والأناقة — من القصيم إلى كل المملكة',
                 heroExploreBtn: 'استكشف المنتجات ←',
                 heroQuoteBtn: 'طلب عرض سعر',
@@ -15878,6 +15986,10 @@
                 sendQuoteA4PdfFail: 'تعذّر إنشاء PDF — تحققي من الاتصال وأعدي المحاولة.',
                 sendQuoteA4Preparing: 'جاري تجهيز PDF A4…',
                 quotePdfLinkLabel: 'عرض السعر PDF (A4):',
+                quotePdfAttachHint: 'تم تنزيل PDF على جهازك — أرفقيه من «المرفقات» في واتساب لإرسال عرض السعر بصيغة PDF.',
+                downloadQuoteA4Done: 'تم تنزيل عرض السعر PDF على جهازك.',
+                cartDownloadQuoteA4: 'تنزيل عرض السعر PDF',
+                quoteDownloadPdfBtn: 'تنزيل PDF',
                 cartRequestQuoteSend: 'إرسال عرض السعر A4 (PDF) للمبيعات وخدمة العملاء',
                 cartPreviewQuoteA4: 'معاينة A4 قبل الإرسال',
                 quoteSendPdfBoth: 'إرسال PDF A4 للمبيعات وخدمة العملاء',
@@ -15984,6 +16096,16 @@
                     'Nebras Plastic Factory Company',
                     'WPC Door Manufacturing',
                     'National Saudi Factory'
+                ],
+                heroSlideHeadlines: [
+                    'Nebras Plastic Factory Company',
+                    'Premium WPC Doors — timeless beauty, lasting strength',
+                    'WPC beats PVC — the smarter door choice',
+                    'National Saudi Factory — proudly made in Al-Qassim',
+                    'Nebras Door Quality — built to defy time and weather',
+                    'Design your door yourself — create with Nebras',
+                    'Choose your color — build your identity from Nebras catalog',
+                    'We craft quality — we protect the environment — sustainable WPC'
                 ],
                 heroTaglineShort: 'Transform your space with quality and elegance — across the Kingdom',
                 heroExploreBtn: 'Explore products ←',
@@ -16407,6 +16529,10 @@
                 sendQuoteA4PdfFail: 'Could not create PDF — check connection and try again.',
                 sendQuoteA4Preparing: 'Preparing A4 PDF…',
                 quotePdfLinkLabel: 'A4 quotation PDF:',
+                quotePdfAttachHint: 'PDF downloaded to your device — attach it from WhatsApp «Attachments» to send as PDF.',
+                downloadQuoteA4Done: 'Quotation PDF downloaded to your device.',
+                cartDownloadQuoteA4: 'Download quotation PDF',
+                quoteDownloadPdfBtn: 'Download PDF',
                 cartRequestQuoteSend: 'Send A4 quote PDF to sales & customer service',
                 cartPreviewQuoteA4: 'Preview A4 before sending',
                 quoteSendPdfBoth: 'Send A4 PDF to sales & customer service',
@@ -16591,6 +16717,16 @@
                     'Nebras 塑料工厂',
                     'WPC 门制造',
                     '沙特国家工厂'
+                ],
+                heroSlideHeadlines: [
+                    'Nebras 塑料工厂公司',
+                    'WPC 门制造 — 永恒之美，持久坚固',
+                    'WPC 优于 PVC — 更明智的门类选择',
+                    '沙特国家工厂 — 自豪产自卡西姆',
+                    'Nebras 门品质 — 经得起时间与气候',
+                    '自己设计您的门 — 与 Nebras 一起创造',
+                    '选择您的颜色 — 用 Nebras 色卡打造风格',
+                    '制造品质 — 守护环境 — 可持续 WPC'
                 ],
                 heroTaglineShort: '以品质与优雅焕新您的空间 — 覆盖全沙特',
                 heroExploreBtn: '探索产品 ←',
@@ -16897,6 +17033,10 @@
                 sendQuoteA4PdfFail: '无法创建 PDF — 请检查网络后重试。',
                 sendQuoteA4Preparing: '正在准备 A4 PDF…',
                 quotePdfLinkLabel: 'A4 报价 PDF：',
+                quotePdfAttachHint: 'PDF 已下载到您的设备 — 请在 WhatsApp「附件」中附上 PDF 文件发送。',
+                downloadQuoteA4Done: '报价 PDF 已下载到您的设备。',
+                cartDownloadQuoteA4: '下载报价 PDF',
+                quoteDownloadPdfBtn: '下载 PDF',
                 cartRequestQuoteSend: '发送 A4 报价 PDF 至销售与客服',
                 cartPreviewQuoteA4: '发送前预览 A4',
                 quoteSendPdfBoth: '发送 A4 PDF 至销售与客服',
@@ -17057,6 +17197,8 @@
             setTxt('quote-send-cs-label', text.cartSendCsBtn);
             setTxt('cart-request-quote-btn', text.cartRequestQuoteSend || text.cartRequestQuoteA4);
             setTxt('cart-preview-quote-btn', text.cartPreviewQuoteA4);
+            setTxt('cart-download-quote-btn', text.cartDownloadQuoteA4);
+            setTxt('quote-download-pdf-btn', text.quoteDownloadPdfBtn);
             setTxt('quote-send-pdf-both-btn', text.quoteSendPdfBoth);
             const fabSales = document.getElementById('fab-send-sales');
             const fabCs = document.getElementById('fab-send-cs');
@@ -17230,6 +17372,7 @@
         window.renderAdminAnalyticsPanel = renderAdminAnalyticsPanel;
         window.viewSalesQuoteDocument = viewSalesQuoteDocument;
         window.submitQuoteA4Pdf = submitQuoteA4Pdf;
+        window.downloadQuoteA4Pdf = downloadQuoteA4Pdf;
         window.submitCartOrQuote = submitCartOrQuote;
         window.confirmAndOpenQuote = confirmAndOpenQuote;
         window.openQuotePreview = openQuotePreview;

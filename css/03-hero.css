@@ -27,12 +27,22 @@
     inset: 0;
     opacity: 0;
     visibility: hidden;
-    transition: opacity 1.1s ease, visibility 1.1s ease;
+    transition: opacity 1.15s ease-in-out, visibility 1.15s ease-in-out;
     background-color: #08080c;
-    background-repeat: no-repeat;
-    background-size: cover;
-    background-position: center center;
-    will-change: opacity, transform;
+    will-change: opacity;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+}
+
+.hero-slide-img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center center;
+    image-rendering: auto;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
 }
 
 .hero-slide.is-active {
@@ -312,9 +322,9 @@
 }
 
 @media (min-width: 769px) {
-    .hero-slide {
-        background-size: cover;
-        background-position: center center;
+    .hero-slide-img {
+        object-fit: cover;
+        object-position: center center;
     }
 
     .hero-slide-dots {
@@ -346,9 +356,9 @@
         min-height: min(94svh, 820px);
     }
 
-    .hero-slide {
-        background-size: contain;
-        background-position: center top;
+    .hero-slide-img {
+        object-fit: contain;
+        object-position: center top;
     }
 
     .hero.hero-real::before {

@@ -111,6 +111,21 @@ def main():
     if 'grayscale(1)' in open(os.path.join(ROOT, 'css', '12-door-designer.css'), encoding='utf-8').read():
         warn('Door designer still uses grayscale(1) — may cause dark preview')
 
+    for fn in ('initHeroSlideshow', 'goHeroSlide', 'preloadHeroSlideImages', 'HERO_SLIDESHOW_DEFAULT',
+               'downloadQuoteA4Pdf', 'buildHeroSlideMarkup', 'getHeroSlideHeadlines'):
+        if fn not in js:
+            err(f'{fn} missing — hero slideshow or quote PDF broken')
+    for el in ('cart-download-quote-btn', 'quote-download-pdf-btn'):
+        if el not in html:
+            err(f'Missing #{el} in index.html — quote PDF download broken')
+    hero_slide_paths = re.findall(r"images/hero-slide-\d{2}-[^'\"]+\.png", js)
+    hero_slide_paths += re.findall(r"images/nebras-door-designer-icon-bg\.png", js)
+    for rel in sorted(set(hero_slide_paths)):
+        if not os.path.isfile(os.path.join(ROOT, rel.replace('/', os.sep))):
+            err(f'Hero slide asset missing: {rel}')
+    if 'hero-slideshow' not in html or 'hero-dynamic-headline' not in html:
+        err('Hero slideshow markup missing in index.html')
+
     print('=== NEBRAS FULL SITE AUDIT ===')
     print(f'ERRORS: {len(ERRORS)}')
     for e in ERRORS:
