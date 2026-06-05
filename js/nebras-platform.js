@@ -3570,13 +3570,11 @@
                 ? (systemSettings.companyAddressEn || systemSettings.companyAddressAr || '')
                 : (systemSettings.companyAddressAr || systemSettings.companyAddressEn || '');
             const salesPhone = String(systemSettings.mainSalesPhone || '').trim();
-            const publicEmail = String(systemSettings.recoveryEmail || PRIMARY_RECOVERY_EMAIL || '').trim();
             const parts = [];
             if (cr) parts.push('<span><strong>' + (isEn ? 'CR: ' : 'سجل تجاري: ') + '</strong>' + escapeHtmlAttr(cr) + '</span>');
             if (tax) parts.push('<span><strong>' + (isEn ? 'VAT: ' : 'الرقم الضريبي: ') + '</strong>' + escapeHtmlAttr(tax) + '</span>');
             if (addr) parts.push('<span><strong>' + (isEn ? 'Address: ' : 'العنوان: ') + '</strong>' + escapeHtmlAttr(addr) + '</span>');
             if (salesPhone) parts.push('<span><strong>' + (isEn ? 'Sales: ' : 'المبيعات: ') + '</strong><span dir="ltr">' + escapeHtmlAttr(salesPhone) + '</span></span>');
-            if (publicEmail) parts.push('<span><strong>' + (isEn ? 'Email: ' : 'البريد: ') + '</strong><a href="mailto:' + escapeHtmlAttr(publicEmail) + '" dir="ltr">' + escapeHtmlAttr(publicEmail) + '</a></span>');
             return parts.join('');
         }
 
@@ -3592,7 +3590,6 @@
                 url: siteUrl,
                 logo: siteUrl.replace(/\/$/, '') + '/images/logo.png',
                 telephone: String(systemSettings.mainSalesPhone || '').trim() || undefined,
-                email: String(systemSettings.recoveryEmail || PRIMARY_RECOVERY_EMAIL || '').trim() || undefined,
                 taxID: String(systemSettings.taxNumber || '').trim() || undefined,
                 address: {
                     '@type': 'PostalAddress',
@@ -3603,7 +3600,6 @@
                 }
             };
             if (!schema.telephone) delete schema.telephone;
-            if (!schema.email) delete schema.email;
             if (!schema.taxID) delete schema.taxID;
             if (!schema.address.streetAddress) delete schema.address;
             try { el.textContent = JSON.stringify(schema); } catch (schemaErr) { /* ignore */ }
@@ -3627,8 +3623,7 @@
                     { label: isEn ? 'Tax number' : 'الرقم الضريبي', value: systemSettings.taxNumber },
                     { label: isEn ? 'Address' : 'العنوان', value: isEn ? systemSettings.companyAddressEn : systemSettings.companyAddressAr },
                     { label: isEn ? 'Sales' : 'المبيعات', value: systemSettings.mainSalesPhone },
-                    { label: isEn ? 'Customer service' : 'خدمة العملاء', value: systemSettings.customerServicePhone },
-                    { label: isEn ? 'Official email' : 'البريد الرسمي', value: systemSettings.recoveryEmail || PRIMARY_RECOVERY_EMAIL }
+                    { label: isEn ? 'Customer service' : 'خدمة العملاء', value: systemSettings.customerServicePhone }
                 ];
                 grid.innerHTML = rows.map(function(r) {
                     return '<div><strong>' + escapeHtmlAttr(r.label) + '</strong><br>' + escapeHtmlAttr(r.value || '—') + '</div>';
@@ -6776,7 +6771,6 @@
                 '<div><strong>' + (isEn ? 'Commercial Register: ' : (isZh ? '商业登记: ' : 'السجل التجاري: ')) + '</strong>' + escapeHtmlAttr(systemSettings.commercialRegister || '—') + '</div>' +
                 '<div><strong>' + (isEn ? 'VAT: ' : (isZh ? '税号: ' : 'الرقم الضريبي: ')) + '</strong>' + escapeHtmlAttr(systemSettings.taxNumber || '—') + '</div>' +
                 '<div><strong>' + (isEn ? 'Address: ' : (isZh ? '地址: ' : 'العنوان: ')) + '</strong>' + escapeHtmlAttr(addr || '—') + '</div>' +
-                '<div><strong>' + (isEn ? 'Email: ' : (isZh ? '邮箱: ' : 'البريد: ')) + '</strong>' + escapeHtmlAttr(systemSettings.recoveryEmail || PRIMARY_RECOVERY_EMAIL) + '</div>' +
                 '<p class="quote-footer-disclaimer">' + escapeHtmlAttr(footerNote || '') + '</p>' +
                 '</div></footer></div>';
             overlay.classList.add('show');
