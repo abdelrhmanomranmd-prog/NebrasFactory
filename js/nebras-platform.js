@@ -10068,6 +10068,18 @@
             'images/wpc-background.avif'
         ];
 
+        const HERO_SLIDESHOW_DEFAULT = [
+            { src: 'images/hero-nebras-banner.png', headline: 0 },
+            { src: 'images/nebras-door-designer-icon-bg.png', headline: 1 },
+            { src: 'images/customer-complaints-background.jpeg', headline: 2 },
+            { src: 'images/backround-Quality-Management.jpg', headline: 0 },
+            { src: 'images/nebras-service-manufacturing-bg.png', headline: 1 }
+        ];
+
+        let heroSlideshowTimer = null;
+        let heroSlideshowIndex = 0;
+        let heroSlideshowSlides = [];
+
         function normalizeHeroBannerPath(path) {
             const p = String(path || '').trim();
             if (!p) return HERO_BANNER_FALLBACKS[0];
@@ -10094,12 +10106,23 @@
             }
 
             const layer = document.getElementById('hero-bg-layer');
+            const hero = document.getElementById('site-hero');
             const isCelebration = getResolvedOccasionThemeId() !== 'default';
+            if (isCelebration) {
+                stopHeroSlideshow();
+                const slideshow = document.getElementById('hero-slideshow');
+                if (slideshow) slideshow.innerHTML = '';
+                if (hero) hero.classList.remove('hero-slideshow-enabled');
+            }
             if (layer) {
                 if (isCelebration && occCss) {
                     layer.style.backgroundImage = occCss;
+                    layer.hidden = false;
+                } else if (!isCelebration) {
+                    layer.hidden = true;
                 } else {
                     layer.style.backgroundImage = bannerCss || cssLocalImageValue('images/background.png');
+                    layer.hidden = false;
                 }
             }
 
@@ -10114,6 +10137,135 @@
                     addrEl.textContent = systemSettings.companyAddressAr || systemSettings.companyAddressEn || '';
                 }
             }
+
+            const isCelebration = getResolvedOccasionThemeId() !== 'default';
+            if (!isCelebration) initHeroSlideshow();
+            else stopHeroSlideshow();
+        }
+
+        function getHeroDynamicHeadlines(lang) {
+            const text = siteText[lang] || siteText.ar;
+            if (text && Array.isArray(text.heroDynamicHeadlines) && text.heroDynamicHeadlines.length) {
+                return text.heroDynamicHeadlines;
+            }
+            return (siteText.ar && siteText.ar.heroDynamicHeadlines) || [
+                'شركة مصنع نبراس للبلاستيك',
+                'لصناعة أبواب الـ WPC',
+                'مصنع سعودي وطني'
+            ];
+        }
+
+        function getHeroSlideshowSlides() {
+            const custom = systemSettings.heroSlideshowSlides;
+            if (Array.isArray(custom) && custom.length) {
+                return custom.map(function(slide, idx) {
+                    return {
+                        src: normalizeHeroBannerPath(slide.src || slide.image || HERO_SLIDESHOW_DEFAULT[idx % HERO_SLIDESHOW_DEFAULT.length].src),
+                        headline: typeof slide.headline === 'number' ? slide.headline : (idx % 3)
+                    };
+                });
+            }
+            return HERO_SLIDESHOW_DEFAULT.map(function(slide) {
+                return { src: normalizeHeroBannerPath(slide.src), headline: slide.headline };
+            });
+        }
+
+        function stopHeroSlideshow() {
+            if (heroSlideshowTimer) {
+                clearInterval(heroSlideshowTimer);
+                heroSlideshowTimer = null;
+            }
+            const hero = document.getElementById('site-hero');
+            if (hero) hero.classList.remove('hero-slideshow-enabled');
+        }
+
+        function setHeroDynamicHeadline(headlineIndex, animate) {
+            const el = document.getElementById('hero-dynamic-headline');
+            if (!el) return;
+            const headlines = getHeroDynamicHeadlines(currentLang || 'ar');
+            const text = headlines[headlineIndex % headlines.length] || headlines[0] || '';
+            if (!animate) {
+                el.textContent = text;
+                el.classList.remove('is-leaving');
+                el.classList.add('is-visible');
+                return;
+            }
+            el.classList.remove('is-visible');
+            el.classList.add('is-leaving');
+            setTimeout(function() {
+                el.textContent = text;
+                el.classList.remove('is-leaving');
+                void el.offsetWidth;
+                el.classList.add('is-visible');
+            }, 380);
+        }
+
+        function goHeroSlide(index, animateHeadline) {
+            if (!heroSlideshowSlides.length) return;
+            heroSlideshowIndex = ((index % heroSlideshowSlides.length) + heroSlideshowSlides.length) % heroSlideshowSlides.length;
+            const slide = heroSlideshowSlides[heroSlideshowIndex];
+            const nodes = document.querySelectorAll('#hero-slideshow .hero-slide');
+            nodes.forEach(function(node, i) {
+                node.classList.toggle('is-active', i === heroSlideshowIndex);
+            });
+            const dots = document.querySelectorAll('#hero-slide-dots .hero-slide-dot');
+            dots.forEach(function(dot, i) {
+                dot.classList.toggle('is-active', i === heroSlideshowIndex);
+            });
+            setHeroDynamicHeadline(slide.headline, animateHeadline !== false);
+        }
+
+        function initHeroSlideshow() {
+            const container = document.getElementById('hero-slideshow');
+            const dotsWrap = document.getElementById('hero-slide-dots');
+            const hero = document.getElementById('site-hero');
+            if (!container || !hero) return;
+
+            if (heroSlideshowTimer) {
+                clearInterval(heroSlideshowTimer);
+                heroSlideshowTimer = null;
+            }
+
+            heroSlideshowSlides = getHeroSlideshowSlides();
+            if (!heroSlideshowSlides.length) return;
+
+            hero.classList.add('hero-slideshow-enabled');
+            container.innerHTML = heroSlideshowSlides.map(function(slide, idx) {
+                const css = cssLocalImageValue(slide.src) || cssLocalImageValue(HERO_BANNER_FALLBACKS[0]);
+                return '<div class="hero-slide' + (idx === 0 ? ' is-active' : '') + '" data-slide="' + idx + '" style="background-image:' + (css || '') + '"></div>';
+            }).join('');
+
+            if (dotsWrap) {
+                dotsWrap.innerHTML = heroSlideshowSlides.map(function(_, idx) {
+                    return '<button type="button" class="hero-slide-dot' + (idx === 0 ? ' is-active' : '') + '" data-slide="' + idx + '" aria-label="شريحة ' + (idx + 1) + '"></button>';
+                }).join('');
+                dotsWrap.querySelectorAll('.hero-slide-dot').forEach(function(dot) {
+                    dot.addEventListener('click', function() {
+                        const target = parseInt(dot.getAttribute('data-slide'), 10);
+                        if (!isNaN(target)) {
+                            goHeroSlide(target, true);
+                            restartHeroSlideshowTimer();
+                        }
+                    });
+                });
+            }
+
+            heroSlideshowIndex = 0;
+            setHeroDynamicHeadline(heroSlideshowSlides[0].headline, false);
+
+            if (prefersReducedMotionIntro()) return;
+
+            heroSlideshowTimer = setInterval(function() {
+                goHeroSlide(heroSlideshowIndex + 1, true);
+            }, 4800);
+        }
+
+        function restartHeroSlideshowTimer() {
+            if (heroSlideshowTimer) clearInterval(heroSlideshowTimer);
+            if (prefersReducedMotionIntro()) return;
+            heroSlideshowTimer = setInterval(function() {
+                goHeroSlide(heroSlideshowIndex + 1, true);
+            }, 4800);
         }
 
         function applyHeroMarketingCopy(text) {
@@ -10126,9 +10278,15 @@
             setTxt('header-campaign-tagline', text.heroTaglineShort || text.heroText);
             setTxt('header-explore-btn', text.heroExploreBtn);
             setTxt('header-quote-btn', text.heroQuoteBtn);
-            setTxt('hero-mobile-eyebrow', text.heroEyebrow || text.introBrandName || '');
-            setTxt('hero-mobile-headline', text.heroHeadline);
             setTxt('hero-mobile-tagline', text.heroTaglineShort || text.heroText);
+            if (heroSlideshowSlides.length) {
+                setHeroDynamicHeadline(heroSlideshowSlides[heroSlideshowIndex].headline, false);
+            } else {
+                const dynEl = document.getElementById('hero-dynamic-headline');
+                if (dynEl && Array.isArray(text.heroDynamicHeadlines) && text.heroDynamicHeadlines[0]) {
+                    dynEl.textContent = text.heroDynamicHeadlines[0];
+                }
+            }
             setTxt('hero-mobile-explore', text.heroExploreBtn);
             setTxt('hero-mobile-quote', text.heroQuoteBtn);
             const statsHtml =
@@ -10222,6 +10380,7 @@
 
         function initStorefrontExperience() {
             syncMobileCommerceBar();
+            if (getResolvedOccasionThemeId() === 'default') initHeroSlideshow();
             initStorefrontScrollReveal();
             if (!window._nebrasMobileBarResizeBound) {
                 window._nebrasMobileBarResizeBound = true;
@@ -15281,7 +15440,12 @@
                 introWelcomeTap: 'اضغطي في أي مكان للاستماع للترحيب الصوتي',
                 heroEyebrow: 'مصنع نبراس للبلاستيك',
                 heroHeadline: 'أبواب WPC الفاخرة',
-                heroTaglineShort: 'حلول متكاملة بالجودة والأناقة — من القصيم إلى كل المملكة',
+                heroDynamicHeadlines: [
+                    'شركة مصنع نبراس للبلاستيك',
+                    'لصناعة أبواب الـ WPC',
+                    'مصنع سعودي وطني'
+                ],
+                heroTaglineShort: 'حوّل مساحتك بالجودة والأناقة — من القصيم إلى كل المملكة',
                 heroExploreBtn: 'استكشف المنتجات ←',
                 heroQuoteBtn: 'طلب عرض سعر',
                 heroStatWarrantyVal: '10',
@@ -15810,7 +15974,12 @@
                 introWelcomeTap: 'Tap anywhere to hear the welcome message',
                 heroEyebrow: 'Nebras Plastic Factory',
                 heroHeadline: 'Luxury WPC Doors',
-                heroTaglineShort: 'Integrated solutions with quality and elegance — across the Kingdom',
+                heroDynamicHeadlines: [
+                    'Nebras Plastic Factory Company',
+                    'WPC Door Manufacturing',
+                    'National Saudi Factory'
+                ],
+                heroTaglineShort: 'Transform your space with quality and elegance — across the Kingdom',
                 heroExploreBtn: 'Explore products ←',
                 heroQuoteBtn: 'Request a quote',
                 heroStatWarrantyVal: '10',
@@ -16412,7 +16581,12 @@
                 introWelcomeTap: '点击任意处播放欢迎语音',
                 heroEyebrow: 'Nebras 塑料工厂',
                 heroHeadline: '高端 WPC 门',
-                heroTaglineShort: '品质与优雅 — 从卡西姆到全沙特',
+                heroDynamicHeadlines: [
+                    'Nebras 塑料工厂',
+                    'WPC 门制造',
+                    '沙特国家工厂'
+                ],
+                heroTaglineShort: '以品质与优雅焕新您的空间 — 覆盖全沙特',
                 heroExploreBtn: '探索产品 ←',
                 heroQuoteBtn: '申请报价',
                 heroStatWarrantyVal: '10',

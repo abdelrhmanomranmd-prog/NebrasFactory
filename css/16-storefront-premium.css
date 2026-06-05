@@ -11,8 +11,13 @@
     will-change: transform;
 }
 
+.hero-slideshow-enabled .hero-slide.is-active {
+    animation: nebrasHeroKenBurns 9s ease-in-out infinite alternate;
+}
+
 @media (prefers-reduced-motion: reduce) {
-    .hero.hero-real .hero-bg-layer {
+    .hero.hero-real .hero-bg-layer,
+    .hero-slideshow-enabled .hero-slide.is-active {
         animation: none;
     }
 }

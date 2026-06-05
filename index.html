@@ -206,13 +206,18 @@
 
     <div id="nebras-storefront" class="nebras-storefront">
 
-    <section class="hero hero-real" id="site-hero" aria-label="الترحيب">
+    <section class="hero hero-real hero-slideshow-enabled" id="site-hero" aria-label="الترحيب">
+        <div class="hero-slideshow" id="hero-slideshow" aria-hidden="true"></div>
         <div class="hero-bg-layer" id="hero-bg-layer" aria-hidden="true"></div>
+        <div class="hero-slide-dots" id="hero-slide-dots" aria-hidden="true"></div>
         <div class="hero-content-wrap" id="hero-content-wrap">
             <div class="hero-mobile-panel" id="hero-mobile-panel">
-                <p class="hero-mobile-eyebrow" id="hero-mobile-eyebrow">مصنع نبراس للبلاستيك</p>
-                <h1 class="hero-mobile-headline" id="hero-mobile-headline">أبواب WPC الفاخرة</h1>
-                <p class="hero-mobile-tagline" id="hero-mobile-tagline">حلول متكاملة بالجودة والأناقة — من القصيم إلى كل المملكة</p>
+                <div class="hero-dynamic-headline-wrap" aria-live="polite">
+                    <h1 class="hero-mobile-headline">
+                        <span class="hero-dynamic-headline is-visible" id="hero-dynamic-headline">شركة مصنع نبراس للبلاستيك</span>
+                    </h1>
+                </div>
+                <p class="hero-mobile-tagline" id="hero-mobile-tagline">حوّل مساحتك بالجودة والأناقة — من القصيم إلى كل المملكة</p>
                 <div class="hero-mobile-cta">
                     <button type="button" class="hero-mobile-btn hero-mobile-btn--primary" id="hero-mobile-explore" onclick="openNebrasWorkspace({pillar:'store',view:'catalog-all'})">استكشف المنتجات ←</button>
                     <button type="button" class="hero-mobile-btn hero-mobile-btn--ghost" id="hero-mobile-quote" onclick="confirmAndOpenQuote()">طلب عرض سعر</button>
