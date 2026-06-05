@@ -119,12 +119,22 @@ def main():
         if el not in html:
             err(f'Missing #{el} in index.html — quote PDF download broken')
     hero_slide_paths = re.findall(r"images/hero-slide-\d{2}-[^'\"]+\.png", js)
+    if 'WPC يتفوّق على PVC' in js or 'WPC beats PVC' in js:
+        warn('Old PVC hero headline still present — should be replaced')
     hero_slide_paths += re.findall(r"images/nebras-door-designer-icon-bg\.png", js)
     for rel in sorted(set(hero_slide_paths)):
         if not os.path.isfile(os.path.join(ROOT, rel.replace('/', os.sep))):
             err(f'Hero slide asset missing: {rel}')
     if 'hero-slideshow' not in html or 'hero-dynamic-headline' not in html:
         err('Hero slideshow markup missing in index.html')
+    slide_count = len(re.findall(r"\{ src: 'images/hero-slide-", js))
+    if slide_count < 12:
+        warn(f'HERO_SLIDESHOW_DEFAULT may have too few slides (found {slide_count})')
+    if 'downloadQuoteA4Pdf' not in js or 'cart-download-quote-btn' not in html:
+        err('Quote PDF download flow missing')
+    for fn in ('submitQuoteA4Pdf', 'captureQuoteA4AsPdfBlob', 'deliverQuoteViaWhatsApp', 'initQuoteCommerceHandlers'):
+        if fn not in js:
+            err(f'{fn} missing — quote PDF send/cart flow broken')
 
     print('=== NEBRAS FULL SITE AUDIT ===')
     print(f'ERRORS: {len(ERRORS)}')

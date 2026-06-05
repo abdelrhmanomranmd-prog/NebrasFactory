@@ -10125,13 +10125,18 @@
 
         const HERO_SLIDESHOW_DEFAULT = [
             { src: 'images/hero-slide-01-factory-banner.png', headline: 0 },
-            { src: 'images/hero-slide-02-wpc-pvc.png', headline: 1 },
-            { src: 'images/hero-slide-03-premium-wpc.png', headline: 2 },
-            { src: 'images/hero-slide-04-exhibition.png', headline: 3 },
+            { src: 'images/hero-slide-03-premium-wpc.png', headline: 1 },
+            { src: 'images/hero-slide-08-doors-trio.png', headline: 2 },
+            { src: 'images/hero-slide-09-doors-four.png', headline: 3 },
             { src: 'images/hero-slide-05-doors-showcase.png', headline: 4 },
-            { src: 'images/nebras-door-designer-icon-bg.png', headline: 5 },
-            { src: 'images/hero-slide-06-color-catalog.png', headline: 6 },
-            { src: 'images/hero-slide-07-quality.png', headline: 7 }
+            { src: 'images/hero-slide-12-factory-national.png', headline: 5 },
+            { src: 'images/hero-slide-11-wpc-guide.png', headline: 6 },
+            { src: 'images/hero-slide-10-kingdom-map.png', headline: 7 },
+            { src: 'images/hero-slide-13-wpc-protection.png', headline: 8 },
+            { src: 'images/hero-slide-04-exhibition.png', headline: 9 },
+            { src: 'images/nebras-door-designer-icon-bg.png', headline: 10 },
+            { src: 'images/hero-slide-06-color-catalog.png', headline: 11 },
+            { src: 'images/hero-slide-07-quality.png', headline: 12 }
         ];
 
         let heroSlideshowTimer = null;
@@ -10202,17 +10207,22 @@
 
         function getHeroSlideHeadlines(lang) {
             const text = siteText[lang] || siteText.ar;
-            if (text && Array.isArray(text.heroSlideHeadlines) && text.heroSlideHeadlines.length >= 8) {
+            if (text && Array.isArray(text.heroSlideHeadlines) && text.heroSlideHeadlines.length >= HERO_SLIDESHOW_DEFAULT.length) {
                 return text.heroSlideHeadlines;
             }
             const arSlides = siteText.ar && siteText.ar.heroSlideHeadlines;
-            if (Array.isArray(arSlides) && arSlides.length >= 8) return arSlides;
+            if (Array.isArray(arSlides) && arSlides.length >= HERO_SLIDESHOW_DEFAULT.length) return arSlides;
             return [
                 'شركة مصنع نبراس للبلاستيك',
-                'لصناعة أبواب الـ WPC — جمال ومتانة بلا حدود',
-                'WPC يتفوّق على PVC — اختيارك الأذكى للأبواب',
-                'مصنع سعودي وطني — نصنع بفخر في قلب القصيم',
-                'جودة أبواب نبراس — صلابة تتحدى الزمن والطقس',
+                'لصناعة أبواب الـ WPC — جمال يتخطى الزمن',
+                'تشكيلة واسعة لأبواب الـ WPC — أبواب زجاجية بتصاميم راقية',
+                'ألوان وتشطيبات متعددة — اختَر بابك بثقة من نبراس',
+                'من الكلاسيك إلى العصري — تشكيلة واسعة لأبواب الـ WPC',
+                'من المواد الخام إلى باب منزلك — فخر الصناعة السعودية',
+                'فلات، ديكور، يو، جلاس — نبراس تصنع الحلول المتكاملة',
+                'اتصل بنا من جميع أنحاء المملكة',
+                'أبواب WPC حماية من النمل الأبيض والرطوبة أو الشمس والمطر',
+                'مصنع سعودي وطني — حضورنا في المعارض يعكس ثقتكم',
                 'صمّم بابك بنفسك.. وأبدع مع نبراس',
                 'اختر لونك.. ابنِ هويتك من كتالوج نبراس',
                 'نصنع الجودة.. نحافظ على البيئة — WPC مستدام'
@@ -10258,7 +10268,7 @@
                     const fallback = HERO_SLIDESHOW_DEFAULT[idx % HERO_SLIDESHOW_DEFAULT.length];
                     return {
                         src: normalizeHeroBannerPath(slide.src || slide.image || fallback.src),
-                        headline: typeof slide.headline === 'number' ? slide.headline : (idx % 8)
+                        headline: typeof slide.headline === 'number' ? slide.headline : (idx % HERO_SLIDESHOW_DEFAULT.length)
                     };
                 });
             }
@@ -15551,10 +15561,15 @@
                 ],
                 heroSlideHeadlines: [
                     'شركة مصنع نبراس للبلاستيك',
-                    'لصناعة أبواب الـ WPC — جمال ومتانة بلا حدود',
-                    'WPC يتفوّق على PVC — اختيارك الأذكى للأبواب',
-                    'مصنع سعودي وطني — نصنع بفخر في قلب القصيم',
-                    'جودة أبواب نبراس — صلابة تتحدى الزمن والطقس',
+                    'لصناعة أبواب الـ WPC — جمال يتخطى الزمن',
+                    'تشكيلة واسعة لأبواب الـ WPC — أبواب زجاجية بتصاميم راقية',
+                    'ألوان وتشطيبات متعددة — اختَر بابك بثقة من نبراس',
+                    'من الكلاسيك إلى العصري — تشكيلة واسعة لأبواب الـ WPC',
+                    'من المواد الخام إلى باب منزلك — فخر الصناعة السعودية',
+                    'فلات، ديكور، يو، جلاس — نبراس تصنع الحلول المتكاملة',
+                    'اتصل بنا من جميع أنحاء المملكة',
+                    'أبواب WPC حماية من النمل الأبيض والرطوبة أو الشمس والمطر',
+                    'مصنع سعودي وطني — حضورنا في المعارض يعكس ثقتكم',
                     'صمّم بابك بنفسك.. وأبدع مع نبراس',
                     'اختر لونك.. ابنِ هويتك من كتالوج نبراس',
                     'نصنع الجودة.. نحافظ على البيئة — WPC مستدام'
@@ -16099,10 +16114,15 @@
                 ],
                 heroSlideHeadlines: [
                     'Nebras Plastic Factory Company',
-                    'Premium WPC Doors — timeless beauty, lasting strength',
-                    'WPC beats PVC — the smarter door choice',
-                    'National Saudi Factory — proudly made in Al-Qassim',
-                    'Nebras Door Quality — built to defy time and weather',
+                    'WPC door manufacturing — beauty that outlasts time',
+                    'Wide WPC range — elegant glazed door designs',
+                    'Multiple colors and finishes — choose your door with confidence',
+                    'From classic to modern — a wide range of WPC doors',
+                    'From raw materials to your door — pride of Saudi industry',
+                    'Flat, Decor, U, Glass — Nebras delivers integrated WPC solutions',
+                    'Contact us from anywhere in the Kingdom',
+                    'WPC doors — protection from termites, moisture, sun and rain',
+                    'National Saudi factory — our exhibitions reflect your trust',
                     'Design your door yourself — create with Nebras',
                     'Choose your color — build your identity from Nebras catalog',
                     'We craft quality — we protect the environment — sustainable WPC'
@@ -16720,10 +16740,15 @@
                 ],
                 heroSlideHeadlines: [
                     'Nebras 塑料工厂公司',
-                    'WPC 门制造 — 永恒之美，持久坚固',
-                    'WPC 优于 PVC — 更明智的门类选择',
-                    '沙特国家工厂 — 自豪产自卡西姆',
-                    'Nebras 门品质 — 经得起时间与气候',
+                    'WPC 门制造 — 超越时光之美',
+                    '丰富 WPC 系列 — 精美玻璃门设计',
+                    '多种颜色与饰面 — 放心选择您的门',
+                    '从经典到现代 — 丰富的 WPC 门系列',
+                    '从原料到您的门 — 沙特工业之傲',
+                    '平板、装饰、U型、玻璃 — Nebras 一体化 WPC 方案',
+                    '欢迎来自沙特各地的咨询',
+                    'WPC 门 — 防白蚁、防潮、防晒、防雨',
+                    '沙特国家工厂 — 展会见证您的信赖',
                     '自己设计您的门 — 与 Nebras 一起创造',
                     '选择您的颜色 — 用 Nebras 色卡打造风格',
                     '制造品质 — 守护环境 — 可持续 WPC'
