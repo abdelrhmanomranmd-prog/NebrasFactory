@@ -27,6 +27,15 @@ def main():
     with open(INDEX, encoding='utf-8') as f:
         html = f.read()
 
+    try:
+        syntax = subprocess.run(['node', '--check', JS], capture_output=True, text=True, timeout=30)
+        if syntax.returncode != 0:
+            err('nebras-platform.js has a JavaScript syntax error — site will not load')
+            if syntax.stderr:
+                err(syntax.stderr.strip().splitlines()[-1])
+    except FileNotFoundError:
+        warn('node not available — skipped JS syntax check')
+
     if 'markPartnersMarqueesStatic' in js and ', true)' in js and 'applyPartnersTrack(document.getElementById(\'nebras-partners-track-public-a\'), htmlA, \'\', true)' in js:
         warn('Partners public track forced static')
 
