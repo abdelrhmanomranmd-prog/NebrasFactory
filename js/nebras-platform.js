@@ -8664,56 +8664,165 @@
                 .replace(/</g, '&lt;');
         }
 
-        /** رابط واتساب للمهندس من رقم التذييل فقط (ديناميكي من الإعدادات) */
-        function designerFooterWhatsAppHref() {
-            const raw = String(systemSettings.designerPhone || '').replace(/\D/g, '');
-            if (raw.length < 9) return '';
-            let n = raw;
-            if (n.startsWith('0')) n = '966' + n.slice(1);
-            else if (!n.startsWith('966')) n = '966' + n;
-            return 'https://wa.me/' + n;
+        const LINKTREE_LINKS_CACHE_PREFIX = 'nebras-linktree-links-v1:';
+        const LINKTREE_LINKS_CACHE_TTL = 3600000;
+
+        function extractLinktreeUsername(url) {
+            const m = String(url || '').match(/linktr\.ee\/([^/?#]+)/i);
+            return m ? decodeURIComponent(m[1]) : '';
         }
 
-        function designerFooterTelHref() {
-            const p = String(systemSettings.designerPhone || '').trim();
-            if (!p) return '#';
-            return 'tel:' + p.replace(/\s+/g, '');
+        function inferSocialIconFromUrl(url) {
+            const u = String(url || '').toLowerCase();
+            if (u.indexOf('instagram') >= 0) return 'fab fa-instagram';
+            if (u.indexOf('facebook') >= 0 || u.indexOf('fb.com') >= 0) return 'fab fa-facebook-f';
+            if (u.indexOf('tiktok') >= 0) return 'fab fa-tiktok';
+            if (u.indexOf('snapchat') >= 0) return 'fab fa-snapchat';
+            if (u.indexOf('whatsapp') >= 0 || u.indexOf('wa.me') >= 0) return 'fab fa-whatsapp';
+            if (u.indexOf('youtube') >= 0 || u.indexOf('youtu.be') >= 0) return 'fab fa-youtube';
+            if (u.indexOf('twitter') >= 0 || u.indexOf('x.com') >= 0) return 'fab fa-x-twitter';
+            if (u.indexOf('telegram') >= 0 || u.indexOf('t.me') >= 0) return 'fab fa-telegram';
+            if (u.indexOf('linkedin') >= 0) return 'fab fa-linkedin-in';
+            return 'fas fa-external-link-alt';
+        }
+
+        function normalizeLinktreeProfileLinks(data) {
+            const raw = (data && (data.links || (data.data && data.data.links) || (data.profile && data.profile.links))) || [];
+            if (!Array.isArray(raw)) return [];
+            return raw.map(function(link) {
+                const url = sanitizeExternalUrl(link.url || link.href || link.link || '');
+                if (!url) return null;
+                const image = String(link.thumbnail || link.thumbnailUrl || link.image || link.thumbnail_url || '').trim();
+                return {
+                    title: String(link.title || link.label || link.name || '').trim() || url.replace(/^https?:\/\//i, ''),
+                    url: url,
+                    image: sanitizeExternalUrl(image) || '',
+                    icon: inferSocialIconFromUrl(url)
+                };
+            }).filter(Boolean);
+        }
+
+        function parseLinktreeHtmlLinks(html) {
+            const match = String(html || '').match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/i);
+            if (!match) return [];
+            try {
+                const json = JSON.parse(match[1]);
+                const pageProps = json.props && json.props.pageProps ? json.props.pageProps : {};
+                const links = pageProps.links || (pageProps.account && pageProps.account.links) || (pageProps.profile && pageProps.profile.links) || [];
+                return normalizeLinktreeProfileLinks({ links: links });
+            } catch (parseErr) {
+                return [];
+            }
+        }
+
+        function cacheLinktreeProfileLinks(cacheKey, links) {
+            try {
+                sessionStorage.setItem(cacheKey, JSON.stringify({ at: Date.now(), links: links }));
+            } catch (cacheErr) { /* ignore */ }
+        }
+
+        function readCachedLinktreeProfileLinks(cacheKey) {
+            try {
+                const cached = sessionStorage.getItem(cacheKey);
+                if (!cached) return null;
+                const parsed = JSON.parse(cached);
+                if (!parsed || !parsed.at || Date.now() - parsed.at > LINKTREE_LINKS_CACHE_TTL) return null;
+                return Array.isArray(parsed.links) ? parsed.links : null;
+            } catch (readErr) {
+                return null;
+            }
+        }
+
+        function buildLinktreeFallbackLinks(ui) {
+            const items = [];
+            const push = function(url, title, icon) {
+                const safe = sanitizeExternalUrl(url);
+                if (!safe) return;
+                items.push({ title: title, url: safe, image: '', icon: icon || inferSocialIconFromUrl(safe) });
+            };
+            push(systemSettings.socialInstagram, 'Instagram', 'fab fa-instagram');
+            push(systemSettings.socialFacebook, 'Facebook', 'fab fa-facebook-f');
+            push(systemSettings.socialTiktok, 'TikTok', 'fab fa-tiktok');
+            push(systemSettings.socialSnapchat, 'Snapchat', 'fab fa-snapchat');
+            push(salesPhoneWhatsAppHref(), ui.socialWaSalesLabel || 'واتساب المبيعات', 'fab fa-whatsapp');
+            const csWa = customerServiceWhatsAppHref();
+            if (csWa && csWa !== salesPhoneWhatsAppHref()) {
+                push(csWa, ui.socialWaCsLabel || 'واتساب خدمة العملاء', 'fab fa-whatsapp');
+            }
+            return items;
+        }
+
+        async function fetchLinktreeProfileLinks(profileUrl, ui) {
+            const username = extractLinktreeUsername(profileUrl);
+            if (!username) return buildLinktreeFallbackLinks(ui || siteText.ar);
+            const cacheKey = LINKTREE_LINKS_CACHE_PREFIX + username;
+            const cached = readCachedLinktreeProfileLinks(cacheKey);
+            if (cached && cached.length) return cached;
+
+            const endpoints = [
+                'https://linktr.ee/api/profiles/' + encodeURIComponent(username),
+                'https://linktr.ee/' + encodeURIComponent(username)
+            ];
+
+            for (let i = 0; i < endpoints.length; i++) {
+                try {
+                    const res = await fetch(endpoints[i], { credentials: 'omit', mode: 'cors' });
+                    if (!res.ok) continue;
+                    const contentType = (res.headers.get('content-type') || '').toLowerCase();
+                    let links = [];
+                    if (contentType.indexOf('json') >= 0) {
+                        links = normalizeLinktreeProfileLinks(await res.json());
+                    } else {
+                        links = parseLinktreeHtmlLinks(await res.text());
+                    }
+                    if (links.length) {
+                        cacheLinktreeProfileLinks(cacheKey, links);
+                        return links;
+                    }
+                } catch (fetchErr) { /* try next endpoint */ }
+            }
+            return buildLinktreeFallbackLinks(ui || siteText.ar);
+        }
+
+        function renderFooterLinktreeLinkCard(link) {
+            const img = link.image
+                ? '<img class="footer-linktree-link-img" src="' + escapeHtmlAttr(link.image) + '" alt="" loading="lazy" decoding="async" onerror="this.style.display=\'none\';if(this.nextElementSibling)this.nextElementSibling.style.display=\'inline-flex\'">'
+                : '';
+            const fallbackStyle = link.image ? ' style="display:none"' : '';
+            return '<a class="footer-linktree-link-card" href="' + escapeHtmlAttr(link.url) + '" target="_blank" rel="noopener noreferrer" title="' + escapeHtmlAttr(link.title) + '">' +
+                img +
+                '<span class="footer-linktree-link-fallback"' + fallbackStyle + '><i class="' + escapeHtmlAttr(link.icon || 'fas fa-external-link-alt') + '" aria-hidden="true"></i></span>' +
+                '<span class="footer-linktree-link-label">' + escapeHtmlAttr(link.title) + '</span></a>';
+        }
+
+        async function renderFooterLinktreeHub(text) {
+            const ui = text || siteText[currentLang || 'ar'] || siteText.ar;
+            const hub = document.getElementById('footer-linktree-hub');
+            const titleEl = document.getElementById('footer-linktree-hub-title');
+            const mainLink = document.getElementById('footer-linktree-main-link');
+            const container = document.getElementById('footer-linktree-links');
+            if (!hub || !container) return;
+
+            const ltUrl = sanitizeExternalUrl(systemSettings.linktreeUrl || NEBRAS_LINKTREE_URL);
+            if (titleEl) titleEl.textContent = ui.footerLinktreeHubTitle || 'لزيارة صفحاتنا على السوشيال ميديا';
+            if (mainLink) {
+                mainLink.href = ltUrl || '#';
+                mainLink.setAttribute('aria-label', ui.footerLinktreeHubTitle || 'Linktree');
+            }
+
+            container.innerHTML = '<p class="footer-linktree-loading">' + escapeHtmlAttr(ui.footerLinktreeLoading || 'جاري تحميل الصفحات…') + '</p>';
+            const links = await fetchLinktreeProfileLinks(ltUrl, ui);
+            if (!links.length) {
+                container.innerHTML = '<p class="footer-linktree-empty">' + escapeHtmlAttr(ui.footerLinktreeEmpty || 'لا توجد صفحات متاحة حالياً.') + '</p>';
+                return;
+            }
+            container.innerHTML = links.map(renderFooterLinktreeLinkCard).join('');
         }
 
         function applyFooterContent(text) {
-            const intro = text.footerDesignerIntro || '';
-            const phone = String(systemSettings.designerPhone || '').trim();
-            const contactLab = text.footerContactLabel || '';
-            let line = intro;
-            if (phone) line = intro + ' — ' + contactLab + ':';
-            else line = intro;
-
-            const designerEl = document.getElementById('footer-designer-line');
-            if (designerEl) designerEl.textContent = line;
-
-            const waHref = designerFooterWhatsAppHref();
-            const waEl = document.getElementById('footer-designer-wa');
-            const telEl = document.getElementById('footer-designer-tel');
-            const phoneDisp = document.getElementById('footer-designer-phone-display');
-
-            if (waEl) {
-                waEl.href = waHref || '#';
-                waEl.setAttribute('aria-label', text.footerDesignerWhatsAppAria || 'WhatsApp');
-                waEl.style.opacity = waHref ? '1' : '0.42';
-                waEl.style.pointerEvents = waHref ? '' : 'none';
-                waEl.setAttribute('tabindex', waHref ? '0' : '-1');
-            }
-            if (telEl) {
-                const telHref = phone ? designerFooterTelHref() : '#';
-                telEl.href = telHref;
-                telEl.setAttribute('aria-label', (text.footerDesignerCallAria || '') + (phone ? ' ' + phone : ''));
-                telEl.style.opacity = phone ? '1' : '0.42';
-                telEl.style.pointerEvents = phone ? '' : 'none';
-                telEl.setAttribute('tabindex', phone ? '0' : '-1');
-            }
-            if (phoneDisp) phoneDisp.textContent = phone || '';
             const copyEl = document.getElementById('site-footer-copyright');
             if (copyEl) copyEl.textContent = text.siteFooterCopyright || text.dashboardCopyright || 'كل الحقوق محفوظة مع مصنع نبراس 2026';
+            renderFooterLinktreeHub(text);
         }
 
         function sanitizeExternalUrl(url) {
@@ -8725,13 +8834,6 @@
             return 'https://' + u.replace(/^\/+/, '');
         }
 
-        /** واتساب الشركة في المنصة: الحقل من الإدارة أولًا، ثم الرقم العام للمهندس إن وُجد */
-        function resolveCompanyWhatsAppHref() {
-            const explicit = String(systemSettings.socialWhatsApp || '').trim();
-            if (explicit) return sanitizeExternalUrl(explicit);
-            return designerFooterWhatsAppHref();
-        }
-
         function renderCompanySocialSection(text) {
             const ui = text || siteText[currentLang || 'ar'];
             const container = document.getElementById('company-social-links');
@@ -8739,23 +8841,26 @@
             const titleEl = document.getElementById('company-social-title');
             const subEl = document.getElementById('company-social-subtitle');
             if (titleEl) titleEl.textContent = ui.companySocialTitle || '';
-            if (subEl) subEl.textContent = ui.companySocialSubtitlePublic || '';
+            if (subEl) subEl.textContent = ui.companySocialSubtitlePublic || ui.footerLinktreeHubTitle || '';
             if (!container || !section) return;
 
-            const wa = resolveCompanyWhatsAppHref();
             const fb = sanitizeExternalUrl(systemSettings.socialFacebook);
             const ig = sanitizeExternalUrl(systemSettings.socialInstagram);
             const tt = sanitizeExternalUrl(systemSettings.socialTiktok);
             const sn = sanitizeExternalUrl(systemSettings.socialSnapchat);
+            const explicitWa = sanitizeExternalUrl(systemSettings.socialWhatsApp);
+            const waSales = explicitWa || salesPhoneWhatsAppHref();
+            const waCs = customerServiceWhatsAppHref();
+            const lt = sanitizeExternalUrl(systemSettings.linktreeUrl || NEBRAS_LINKTREE_URL);
 
             const items = [];
-            if (wa) items.push({ href: wa, icon: 'fab fa-whatsapp', label: 'WhatsApp', cls: 'soc-wa' });
             if (fb) items.push({ href: fb, icon: 'fab fa-facebook-f', label: 'Facebook', cls: 'soc-fb' });
             if (ig) items.push({ href: ig, icon: 'fab fa-instagram', label: 'Instagram', cls: 'soc-ig' });
             if (tt) items.push({ href: tt, icon: 'fab fa-tiktok', label: 'TikTok', cls: 'soc-tt' });
             if (sn) items.push({ href: sn, icon: 'fab fa-snapchat', label: 'Snapchat', cls: 'soc-sn' });
-            const lt = sanitizeExternalUrl(systemSettings.linktreeUrl || NEBRAS_LINKTREE_URL);
-            if (lt) items.push({ href: lt, icon: 'fas fa-link', label: 'Linktree', cls: 'soc-lt' });
+            if (waSales) items.push({ href: waSales, icon: 'fab fa-whatsapp', label: ui.socialWaSalesLabel || 'واتساب المبيعات', cls: 'soc-wa soc-wa-sales' });
+            if (waCs && waCs !== waSales) items.push({ href: waCs, icon: 'fab fa-whatsapp', label: ui.socialWaCsLabel || 'واتساب خدمة العملاء', cls: 'soc-wa soc-wa-cs' });
+            if (lt) items.push({ href: lt, icon: 'fas fa-link', label: ui.channelLinktree || 'Linktree', cls: 'soc-lt' });
 
             if (!items.length) {
                 section.style.display = 'none';
@@ -8764,7 +8869,7 @@
             }
             section.style.display = '';
             container.innerHTML = items.map(function(it) {
-                return '<a class="company-social-btn ' + escapeHtmlAttr(it.cls) + '" href="' + escapeHtmlAttr(it.href) + '" target="_blank" rel="noopener noreferrer" aria-label="' + escapeHtmlAttr(it.label) + '"><i class="' + escapeHtmlAttr(it.icon) + '" aria-hidden="true"></i></a>';
+                return '<a class="company-social-btn ' + escapeHtmlAttr(it.cls) + '" href="' + escapeHtmlAttr(it.href) + '" target="_blank" rel="noopener noreferrer" aria-label="' + escapeHtmlAttr(it.label) + '" title="' + escapeHtmlAttr(it.label) + '"><i class="' + escapeHtmlAttr(it.icon) + '" aria-hidden="true"></i></a>';
             }).join('');
         }
 
@@ -9219,7 +9324,8 @@
             if (!listEl) return;
 
             const explicitWa = String(systemSettings.socialWhatsApp || '').trim();
-            const waHref = resolveCompanyWhatsAppHref();
+            const waSales = explicitWa || salesPhoneWhatsAppHref();
+            const waCs = customerServiceWhatsAppHref();
             const fb = sanitizeExternalUrl(systemSettings.socialFacebook);
             const ig = sanitizeExternalUrl(systemSettings.socialInstagram);
             const tt = sanitizeExternalUrl(systemSettings.socialTiktok);
@@ -9230,7 +9336,8 @@
             }
 
             const parts = [];
-            parts.push(row(!!waHref, t.channelWhatsApp, explicitWa ? t.channelDetailExplicitWa : (waHref ? t.channelDetailWaFallback : t.channelDetailMissing)));
+            parts.push(row(!!waSales, t.socialWaSalesLabel || t.channelWhatsApp, waSales ? t.channelDetailOn : t.channelDetailMissing));
+            parts.push(row(!!waCs, t.socialWaCsLabel || t.channelWhatsApp, waCs ? t.channelDetailOn : t.channelDetailMissing));
             parts.push(row(!!fb, t.channelFacebook, fb ? t.channelDetailOn : t.channelDetailMissing));
             parts.push(row(!!ig, t.channelInstagram, ig ? t.channelDetailOn : t.channelDetailMissing));
             parts.push(row(!!tt, t.channelTikTok, tt ? t.channelDetailOn : t.channelDetailMissing));
@@ -13174,13 +13281,13 @@
             recoveryInput.value = systemSettings.recoveryEmail || PRIMARY_RECOVERY_EMAIL;
             recoveryInput.readOnly = true;
             recoveryInput.title = 'إيميل الإدارة الرئيسية المعتمد — لا يُغيَّر إلا من الإدارة المحورية';
-            const designerInput = document.getElementById('setting-designer-phone');
+            const linktreeInput = document.getElementById('setting-linktree-url');
             const waInput = document.getElementById('setting-social-whatsapp');
             const ttInput = document.getElementById('setting-social-tiktok');
             const fbInput = document.getElementById('setting-social-facebook');
             const igInput = document.getElementById('setting-social-instagram');
             const snInput = document.getElementById('setting-social-snapchat');
-            if (designerInput) designerInput.value = systemSettings.designerPhone || '';
+            if (linktreeInput) linktreeInput.value = systemSettings.linktreeUrl || NEBRAS_LINKTREE_URL;
             if (waInput) waInput.value = systemSettings.socialWhatsApp || '';
             if (ttInput) ttInput.value = systemSettings.socialTiktok || '';
             if (fbInput) fbInput.value = systemSettings.socialFacebook || '';
@@ -13277,13 +13384,18 @@
             systemSettings.mainSalesPhone = salesPhone;
             systemSettings.customerServicePhone = customerPhone;
             ensurePrimaryRecoveryEmail();
-            const designerPhoneEl = document.getElementById('setting-designer-phone');
+            const linktreeEl = document.getElementById('setting-linktree-url');
             const waEl = document.getElementById('setting-social-whatsapp');
             const ttEl = document.getElementById('setting-social-tiktok');
             const fbEl = document.getElementById('setting-social-facebook');
             const igEl = document.getElementById('setting-social-instagram');
             const snEl = document.getElementById('setting-social-snapchat');
-            if (designerPhoneEl) systemSettings.designerPhone = designerPhoneEl.value.trim();
+            if (linktreeEl) systemSettings.linktreeUrl = linktreeEl.value.trim() || NEBRAS_LINKTREE_URL;
+            try {
+                Object.keys(sessionStorage).forEach(function(cacheKey) {
+                    if (cacheKey.indexOf(LINKTREE_LINKS_CACHE_PREFIX) === 0) sessionStorage.removeItem(cacheKey);
+                });
+            } catch (cacheClearErr) { /* ignore */ }
             if (waEl) systemSettings.socialWhatsApp = waEl.value.trim();
             if (ttEl) systemSettings.socialTiktok = ttEl.value.trim();
             if (fbEl) systemSettings.socialFacebook = fbEl.value.trim();
@@ -15823,10 +15935,11 @@
                 erpKpiBranches: 'فروع',
                 logoutText: '<i class="fas fa-sign-out-alt"></i> تسجيل خروج',
                 currentLangLabel: 'العربية',
-                footerDesignerIntro: 'التصميم والتطوير والبرمجة: المهندس عبدالرحمن عمران طرش',
-                footerContactLabel: 'للتواصل',
-                footerDesignerWhatsAppAria: 'مراسلة المهندس عبر واتساب',
-                footerDesignerCallAria: 'الاتصال بالمهندس',
+                footerLinktreeHubTitle: 'لزيارة صفحاتنا على السوشيال ميديا',
+                footerLinktreeLoading: 'جاري تحميل صفحات Linktree…',
+                footerLinktreeEmpty: 'لا توجد صفحات متاحة حالياً — راجع إعدادات Linktree.',
+                socialWaSalesLabel: 'واتساب المبيعات',
+                socialWaCsLabel: 'واتساب خدمة العملاء',
                 companySocialTitle: 'منصة التواصل — مصنع نبراس للبلاستيك',
                 companySocialSubtitlePublic: 'تابعوا أخبارنا وقنوات مصنع نبراس الرسمية.',
                 dashboardChannelsTitle: 'حالة قنوات التواصل (إشعار للإدارة)',
@@ -16372,10 +16485,11 @@
                 erpKpiBranches: 'Branches',
                 logoutText: '<i class="fas fa-sign-out-alt"></i> Logout',
                 currentLangLabel: 'English',
-                footerDesignerIntro: 'Design & development: Eng. Abdelrahman Omran Tarash',
-                footerContactLabel: 'Contact',
-                footerDesignerWhatsAppAria: 'WhatsApp the engineer',
-                footerDesignerCallAria: 'Call the engineer',
+                footerLinktreeHubTitle: 'Visit our pages on social media',
+                footerLinktreeLoading: 'Loading Linktree pages…',
+                footerLinktreeEmpty: 'No pages available right now — check Linktree settings.',
+                socialWaSalesLabel: 'WhatsApp — Sales',
+                socialWaCsLabel: 'WhatsApp — Customer service',
                 companySocialTitle: 'Social hub — Nebras Plastic Factory',
                 companySocialSubtitlePublic: 'Follow Nebras Plastic Factory official channels for updates.',
                 dashboardChannelsTitle: 'Social channels status (admin)',
@@ -16907,10 +17021,11 @@
                 erpKpiBranches: '分支',
                 logoutText: '<i class="fas fa-sign-out-alt"></i> 登出',
                 currentLangLabel: '中文',
-                footerDesignerIntro: '网站设计与开发：Abdelrahman Omran Tarash 工程师',
-                footerContactLabel: '联系方式',
-                footerDesignerWhatsAppAria: '通过 WhatsApp 联系工程师',
-                footerDesignerCallAria: '致电工程师',
+                footerLinktreeHubTitle: '访问我们的社交媒体页面',
+                footerLinktreeLoading: '正在加载 Linktree 页面…',
+                footerLinktreeEmpty: '暂无可用页面 — 请检查 Linktree 设置。',
+                socialWaSalesLabel: 'WhatsApp — 销售',
+                socialWaCsLabel: 'WhatsApp — 客服',
                 companySocialTitle: '社交平台 — Nebras 塑料工厂',
                 companySocialSubtitlePublic: '关注 Nebras 塑料工厂的官方渠道与动态。',
                 dashboardChannelsTitle: '社交渠道状态（管理端提示）',

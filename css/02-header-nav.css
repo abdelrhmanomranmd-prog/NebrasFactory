@@ -174,69 +174,103 @@ nav ul li a i { font-size: 0.9rem; }
     border-top: 2px solid rgba(0, 168, 255, 0.35);
 }
 
-.footer-designer-row {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: center;
-    gap: 14px 22px;
-    max-width: 1100px;
-    margin-inline: auto;
+.footer-linktree-hub {
+    max-width: 920px;
+    margin: 18px auto 0;
+    padding: 18px 16px 8px;
     text-align: center;
 }
 
-.footer-designer-text {
-    margin: 0;
-    flex: 1 1 260px;
-    max-width: 640px;
-}
-
-.footer-designer-actions {
-    display: inline-flex;
-    align-items: stretch;
-    gap: 10px;
-    flex-shrink: 0;
-}
-
-.footer-contact-btn {
+.footer-linktree-hub-head {
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
-    padding: 10px 16px;
-    border-radius: 14px;
+    gap: 10px;
     text-decoration: none;
-    font-weight: 700;
-    transition: transform 0.2s, filter 0.2s, opacity 0.2s;
-    border: none;
-    cursor: pointer;
-    font-family: inherit;
-    font-size: 1rem;
-}
-
-.footer-contact-btn:hover {
-    transform: translateY(-2px);
-    filter: brightness(1.06);
-}
-
-.footer-contact-wa {
-    background: #25d366;
     color: #fff;
-    font-size: 1.45rem;
-    min-width: 52px;
-    padding-inline: 14px;
+    margin-bottom: 16px;
+    transition: opacity 0.2s ease;
 }
 
-.footer-contact-phone {
-    background: rgba(0, 168, 255, 0.18);
+.footer-linktree-hub-head:hover {
+    opacity: 0.9;
+}
+
+.footer-linktree-hub-icon {
+    display: inline-flex;
+    width: 42px;
+    height: 42px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #43e660, #2dbd55);
+    color: #0d2818;
+    font-size: 1.1rem;
+    box-shadow: 0 6px 18px rgba(67, 230, 96, 0.28);
+}
+
+.footer-linktree-hub-title {
+    margin: 0;
+    font-size: clamp(1rem, 2.4vw, 1.2rem);
+    font-weight: 800;
+    line-height: 1.4;
+}
+
+.footer-linktree-links {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 4px;
+}
+
+.footer-linktree-link-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    width: 88px;
+    text-decoration: none;
+    color: rgba(255, 255, 255, 0.94);
+    transition: transform 0.2s ease;
+}
+
+.footer-linktree-link-card:hover {
+    transform: translateY(-3px);
+}
+
+.footer-linktree-link-img,
+.footer-linktree-link-fallback {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.28);
+    border: 2px solid rgba(255, 255, 255, 0.22);
+}
+
+.footer-linktree-link-fallback {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 168, 255, 0.22);
     color: #fff;
-    border: 1px solid rgba(0, 168, 255, 0.45);
+    font-size: 1.35rem;
 }
 
-.footer-phone-num {
-    font-size: 0.95rem;
+.footer-linktree-link-label {
+    font-size: 0.72rem;
     font-weight: 700;
-    letter-spacing: 0.02em;
+    line-height: 1.35;
+    max-width: 92px;
+    text-align: center;
+}
+
+.footer-linktree-loading,
+.footer-linktree-empty {
+    margin: 0;
+    font-size: 0.88rem;
+    opacity: 0.78;
 }
 
 /* منصة التواصل الاجتماعي للشركة (روابط من لوحة الإدارة) */
@@ -253,7 +287,7 @@ nav ul li a i { font-size: 0.9rem; }
     flex-wrap: wrap;
     gap: 14px;
     margin-top: 18px;
-    max-width: 720px;
+    max-width: 860px;
     margin-inline: auto;
 }
 
@@ -276,7 +310,15 @@ nav ul li a i { font-size: 0.9rem; }
     filter: brightness(1.08);
 }
 
-.company-social-btn.soc-wa { background: #25d366; }
+.company-social-btn.soc-wa,
+.company-social-btn.soc-wa-sales,
+.company-social-btn.soc-wa-cs { background: #25d366; }
+.company-social-btn.soc-wa-sales { background: linear-gradient(145deg, #25d366, #1ebe57); }
+.company-social-btn.soc-wa-cs { background: linear-gradient(145deg, #20c997, #17a589); }
+.company-social-btn.soc-lt {
+    background: linear-gradient(135deg, #43e660, #2dbd55);
+    color: #0d2818;
+}
 .company-social-btn.soc-fb { background: #1877f2; }
 .company-social-btn.soc-ig {
     background: linear-gradient(35deg, #f58529, #dd2a7b, #8134af);
