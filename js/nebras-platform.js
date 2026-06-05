@@ -12070,6 +12070,7 @@
         let brandIntroPlaybackStarted = false;
         let brandIntroWelcomeBlobFetching = false;
         let brandIntroAudioWatchdog = null;
+        let doorDesignerWelcomeAudioConsumed = false;
         let nebrasWebAudioCtx = null;
         let nebrasAudioEngineUnlocked = false;
         const BRAND_INTRO_WELCOME_AUDIO_SEC = 22;
@@ -12102,6 +12103,23 @@
 
         function isNebrasWelcomeAudioActive() {
             return isDoorDesignerWorkspaceActive();
+        }
+
+        function resetDoorDesignerWelcomeAudioVisit() {
+            doorDesignerWelcomeAudioConsumed = false;
+        }
+
+        function markDoorDesignerWelcomeAudioConsumed() {
+            doorDesignerWelcomeAudioConsumed = true;
+            clearBrandIntroAudioRetries();
+            stopBrandIntroAudioWatchdog();
+        }
+
+        function isDoorDesignerWelcomeAudioLocked() {
+            if (!isDoorDesignerWorkspaceActive()) return false;
+            if (doorDesignerWelcomeAudioConsumed) return true;
+            const audio = getBrandIntroWelcomeAudio();
+            return !!(audio && !audio.paused && audio.currentTime > 0.08 && audio.currentTime < BRAND_INTRO_WELCOME_AUDIO_SEC);
         }
 
         function clearBrandIntroAudioRetries() {
@@ -12144,10 +12162,12 @@
             if (!audio) return;
             audio.ontimeupdate = function() {
                 if (audio.currentTime >= BRAND_INTRO_WELCOME_AUDIO_SEC - 0.08) {
+                    markDoorDesignerWelcomeAudioConsumed();
                     stopBrandIntroWelcomeAudio();
                 }
             };
             audio.onended = function() {
+                markDoorDesignerWelcomeAudioConsumed();
                 stopBrandIntroWelcomeAudio();
             };
         }
@@ -12155,6 +12175,7 @@
         function onBrandIntroWelcomePlaybackStarted() {
             if (brandIntroPlaybackStarted) return;
             brandIntroPlaybackStarted = true;
+            markDoorDesignerWelcomeAudioConsumed();
         }
 
         function primeBrandIntroWelcomeAudioBlob() {
@@ -12279,7 +12300,7 @@
                     stopBrandIntroAudioWatchdog();
                     return;
                 }
-                if (!brandIntroPlaybackStarted || audio.paused || audio.muted) {
+                if (!isDoorDesignerWelcomeAudioLocked() && (!brandIntroPlaybackStarted || audio.paused || audio.muted)) {
                     tryPlayBrandIntroWelcome(false);
                 }
             }, 650);
@@ -12342,10 +12363,10 @@
             if (!audio._nebrasCanPlayBound) {
                 audio._nebrasCanPlayBound = true;
                 audio.addEventListener('canplaythrough', function() {
-                    if (isNebrasWelcomeAudioActive()) tryPlayBrandIntroWelcome(false);
+                    if (isNebrasWelcomeAudioActive() && !isDoorDesignerWelcomeAudioLocked()) tryPlayBrandIntroWelcome(false);
                 }, { passive: true });
                 audio.addEventListener('loadeddata', function() {
-                    if (isNebrasWelcomeAudioActive()) tryPlayBrandIntroWelcome(false);
+                    if (isNebrasWelcomeAudioActive() && !isDoorDesignerWelcomeAudioLocked()) tryPlayBrandIntroWelcome(false);
                 }, { passive: true });
             }
         }
@@ -12368,6 +12389,7 @@
 
         function tryPlayBrandIntroWelcome(fromUserGesture) {
             if (!isNebrasWelcomeAudioActive() || prefersReducedMotionIntro()) return;
+            if (isDoorDesignerWelcomeAudioLocked()) return;
             const audio = getBrandIntroWelcomeAudio();
             if (!brandIntroWelcomePrepared) prepareBrandIntroWelcomeAudio();
             if (audio && !audio.paused && audio.currentTime > 0.05 && audio.currentTime < BRAND_INTRO_WELCOME_AUDIO_SEC) {
@@ -12385,7 +12407,7 @@
         }
 
         function queueBrandIntroWelcomeRetry() {
-            if (brandIntroAudioRetryCount >= 16 || !isNebrasWelcomeAudioActive()) return;
+            if (brandIntroAudioRetryCount >= 2 || !isNebrasWelcomeAudioActive() || isDoorDesignerWelcomeAudioLocked()) return;
             brandIntroAudioRetryCount += 1;
             const retryMs = 40 + brandIntroAudioRetryCount * 70;
             brandIntroAudioRetryTimers.push(setTimeout(function() {
@@ -12401,7 +12423,7 @@
             if (brandIntroGestureBound) return;
             brandIntroGestureBound = true;
             function onUserGesture() {
-                if (!isNebrasWelcomeAudioActive()) return;
+                if (!isNebrasWelcomeAudioActive() || isDoorDesignerWelcomeAudioLocked()) return;
                 resumeNebrasWebAudioContext().then(function() {
                     tryPlayBrandIntroWelcome(true);
                 });
@@ -12418,11 +12440,13 @@
             }
             document.addEventListener('visibilitychange', function() {
                 if (!isNebrasWelcomeAudioActive() || document.visibilityState !== 'visible') return;
+                if (isDoorDesignerWelcomeAudioLocked()) return;
                 tryPlayBrandIntroWelcome(false);
             }, { passive: true });
         }
 
         function kickNebrasWelcomeAudioInline() {
+            if (isDoorDesignerWelcomeAudioLocked()) return;
             const audio = getBrandIntroWelcomeAudio();
             if (!audio) return;
             try {
@@ -12447,21 +12471,21 @@
 
         function startDoorDesignerWelcomeAudio() {
             if (prefersReducedMotionIntro() || !isDoorDesignerWorkspaceActive()) return;
+            if (isDoorDesignerWelcomeAudioLocked()) return;
             brandIntroAudioRetryCount = 0;
-            brandIntroWelcomePrepared = false;
-            stopBrandIntroWelcomeAudio();
             bindBrandIntroWelcomeGestures();
             prepareBrandIntroWelcomeAudio();
-            kickNebrasWelcomeAudioInline();
             tryPlayBrandIntroWelcome(false);
             startBrandIntroAudioWatchdog();
-            [80, 250, 600, 1200].forEach(function(delay) {
-                brandIntroAudioRetryTimers.push(setTimeout(function() {
+            brandIntroAudioRetryTimers.push(setTimeout(function() {
+                if (!isDoorDesignerWelcomeAudioLocked() && !brandIntroPlaybackStarted) {
                     tryPlayBrandIntroWelcome(false);
-                }, delay));
-            });
+                }
+            }, 450));
             resumeNebrasWebAudioContext().then(function() {
-                tryPlayBrandIntroWelcome(false);
+                if (!isDoorDesignerWelcomeAudioLocked() && !brandIntroPlaybackStarted) {
+                    tryPlayBrandIntroWelcome(false);
+                }
             });
         }
 
@@ -13594,6 +13618,8 @@
                 window.open(route.url, '_blank', 'noopener,noreferrer');
                 return;
             }
+            const wasDoorDesigner = !!(nebrasWorkspaceState.active && nebrasWorkspaceState.route && nebrasWorkspaceState.route.view === 'door-designer');
+            const enteringDoorDesigner = route.view === 'door-designer' && !wasDoorDesigner;
             nebrasWorkspaceState.active = true;
             nebrasWorkspaceState.route = route;
             document.body.classList.add('nebras-workspace-active');
@@ -13607,7 +13633,10 @@
             const sf = document.getElementById('nebras-storefront');
             if (sf) sf.setAttribute('aria-hidden', 'true');
             renderNebrasWorkspace();
-            if (route.view === 'door-designer') {
+            if (enteringDoorDesigner) {
+                resetDoorDesignerWelcomeAudioVisit();
+                brandIntroWelcomePrepared = false;
+                brandIntroPlaybackStarted = false;
                 requestAnimationFrame(function() {
                     startDoorDesignerWelcomeAudio();
                 });
@@ -13622,6 +13651,8 @@
         }
 
         function closeNebrasWorkspace() {
+            markDoorDesignerWelcomeAudioConsumed();
+            resetDoorDesignerWelcomeAudioVisit();
             stopBrandIntroWelcomeAudio();
             disposeDoorDesigner3dEngine();
             nebrasWorkspaceState.active = false;
