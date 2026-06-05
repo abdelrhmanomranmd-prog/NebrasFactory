@@ -3547,11 +3547,44 @@
             const addr = isEn
                 ? (systemSettings.companyAddressEn || systemSettings.companyAddressAr || '')
                 : (systemSettings.companyAddressAr || systemSettings.companyAddressEn || '');
+            const salesPhone = String(systemSettings.mainSalesPhone || '').trim();
+            const publicEmail = String(systemSettings.recoveryEmail || PRIMARY_RECOVERY_EMAIL || '').trim();
             const parts = [];
             if (cr) parts.push('<span><strong>' + (isEn ? 'CR: ' : 'سجل تجاري: ') + '</strong>' + escapeHtmlAttr(cr) + '</span>');
             if (tax) parts.push('<span><strong>' + (isEn ? 'VAT: ' : 'الرقم الضريبي: ') + '</strong>' + escapeHtmlAttr(tax) + '</span>');
             if (addr) parts.push('<span><strong>' + (isEn ? 'Address: ' : 'العنوان: ') + '</strong>' + escapeHtmlAttr(addr) + '</span>');
+            if (salesPhone) parts.push('<span><strong>' + (isEn ? 'Sales: ' : 'المبيعات: ') + '</strong><span dir="ltr">' + escapeHtmlAttr(salesPhone) + '</span></span>');
+            if (publicEmail) parts.push('<span><strong>' + (isEn ? 'Email: ' : 'البريد: ') + '</strong><a href="mailto:' + escapeHtmlAttr(publicEmail) + '" dir="ltr">' + escapeHtmlAttr(publicEmail) + '</a></span>');
             return parts.join('');
+        }
+
+        function updateOfficialOrganizationSchema() {
+            const el = document.getElementById('nebras-org-schema');
+            if (!el) return;
+            const siteUrl = sanitizeExternalUrl(systemSettings.publicSiteUrl || NEBRAS_PUBLIC_SITE_URL) || NEBRAS_PUBLIC_SITE_URL;
+            const schema = {
+                '@context': 'https://schema.org',
+                '@type': 'Organization',
+                name: 'شركة مصنع نبراس للبلاستيك',
+                alternateName: 'Nebras Plastic Factory',
+                url: siteUrl,
+                logo: siteUrl.replace(/\/$/, '') + '/images/logo.png',
+                telephone: String(systemSettings.mainSalesPhone || '').trim() || undefined,
+                email: String(systemSettings.recoveryEmail || PRIMARY_RECOVERY_EMAIL || '').trim() || undefined,
+                taxID: String(systemSettings.taxNumber || '').trim() || undefined,
+                address: {
+                    '@type': 'PostalAddress',
+                    streetAddress: String(systemSettings.companyAddressAr || '').trim() || undefined,
+                    addressLocality: 'عنيزة',
+                    addressRegion: 'القصيم',
+                    addressCountry: 'SA'
+                }
+            };
+            if (!schema.telephone) delete schema.telephone;
+            if (!schema.email) delete schema.email;
+            if (!schema.taxID) delete schema.taxID;
+            if (!schema.address.streetAddress) delete schema.address;
+            try { el.textContent = JSON.stringify(schema); } catch (schemaErr) { /* ignore */ }
         }
 
         function renderCompanyLegalBars() {
@@ -3572,7 +3605,8 @@
                     { label: isEn ? 'Tax number' : 'الرقم الضريبي', value: systemSettings.taxNumber },
                     { label: isEn ? 'Address' : 'العنوان', value: isEn ? systemSettings.companyAddressEn : systemSettings.companyAddressAr },
                     { label: isEn ? 'Sales' : 'المبيعات', value: systemSettings.mainSalesPhone },
-                    { label: isEn ? 'Customer service' : 'خدمة العملاء', value: systemSettings.customerServicePhone }
+                    { label: isEn ? 'Customer service' : 'خدمة العملاء', value: systemSettings.customerServicePhone },
+                    { label: isEn ? 'Official email' : 'البريد الرسمي', value: systemSettings.recoveryEmail || PRIMARY_RECOVERY_EMAIL }
                 ];
                 grid.innerHTML = rows.map(function(r) {
                     return '<div><strong>' + escapeHtmlAttr(r.label) + '</strong><br>' + escapeHtmlAttr(r.value || '—') + '</div>';
@@ -4887,6 +4921,8 @@
             applyOccasionTheme();
             renderOccasionPromoBar();
             refreshNebrasMiniShowcases();
+            applyDynamicSectionContent(currentLang || 'ar');
+            updateOfficialOrganizationSchema();
             if (typeof initStorefrontScrollReveal === 'function') initStorefrontScrollReveal();
         }
 
@@ -7623,6 +7659,7 @@
             if (currentAdmin) renderDashboardTiles();
             renderCompanyLegalBars();
             renderBankAccountsPublic();
+            updateOfficialOrganizationSchema();
             updateCartBadge();
             refreshClickableMediaSite(document);
         }
@@ -14597,6 +14634,7 @@
                 if (nebrasSiteWarmedBehindIntro) return;
                 renderAllPublicCatalog();
                 applyOccasionTheme();
+                updateOfficialOrganizationSchema();
                 if (nebrasWorkspaceState.route && nebrasWorkspaceState.route.view === 'door-designer') {
                     renderNebrasWorkspace();
                 }
