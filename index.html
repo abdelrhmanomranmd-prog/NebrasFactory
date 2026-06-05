@@ -798,6 +798,27 @@
             <input id="setting-company-address-en" type="text" placeholder="Address in English">
             <input id="setting-hero-banner-url" type="text" placeholder="صورة بانر الرئيسية (مثال: images/hero-nebras-banner.png)">
             <button type="button" class="admin-only-ui" onclick="pickHeroBannerFromSettings()">رفع / اختيار صورة بانر الرئيسية</button>
+            <div id="quote-a4-settings-block" class="quote-a4-settings-block">
+                <hr style="margin:14px 0;border:none;border-top:1px solid rgba(0,0,0,0.12);">
+                <p class="status">صيغة عرض السعر A4 — الإدارة الرئيسية فقط (ديناميكي على الموقع والـ PDF):</p>
+                <input id="setting-quote-a4-logo" type="text" placeholder="شعار عرض السعر (مثال: images/logo.png)">
+                <button type="button" class="admin-only-ui" onclick="pickQuoteA4LogoFromSettings()">رفع / اختيار شعار A4</button>
+                <input id="setting-quote-a4-tagline-ar" type="text" placeholder="السطر التعريفي أعلى عرض السعر (عربي)">
+                <input id="setting-quote-a4-tagline-en" type="text" placeholder="Tagline on quote header (English)">
+                <input id="setting-quote-a4-band-ar" type="text" placeholder="شريط المزايا تحت الشعار (عربي)">
+                <input id="setting-quote-a4-band-en" type="text" placeholder="Features band under logo (English)">
+                <label class="occasion-check"><input type="checkbox" id="setting-quote-a4-show-ribbon" checked> <span>شريط علوي ملوّن</span></label>
+                <label class="occasion-check"><input type="checkbox" id="setting-quote-a4-show-watermark" checked> <span>شعار مائي خلف البيانات</span></label>
+                <label class="occasion-check"><input type="checkbox" id="setting-quote-a4-show-frame" checked> <span>إطار رسمي كامل الصفحة</span></label>
+                <label class="occasion-check"><input type="checkbox" id="setting-quote-a4-show-seal" checked> <span>ختم المصنع في التذييل</span></label>
+                <input id="setting-quote-a4-watermark-opacity" type="number" min="0.04" max="0.35" step="0.01" placeholder="شفافية الشعار المائي (0.09)">
+                <input id="setting-quote-a4-watermark-scale" type="number" min="40" max="95" step="1" placeholder="حجم الشعار المائي % (78)">
+                <input id="setting-quote-a4-footer-ar" type="text" placeholder="ملاحظة التذييل (عربي)">
+                <input id="setting-quote-a4-footer-en" type="text" placeholder="Footer note (English)">
+                <textarea id="setting-quote-a4-terms-ar" rows="4" placeholder="شروط مخصصة (عربي) — اختياري، سطر لكل بند"></textarea>
+                <textarea id="setting-quote-a4-terms-en" rows="4" placeholder="Custom terms (English) — optional"></textarea>
+                <button type="button" class="admin-only-ui" onclick="previewQuoteA4TemplateFromSettings()">معاينة صيغة A4 الآن</button>
+            </div>
             <p class="status">حسابات بنكية (صور/شعارات — تُعرض في الموقع):</p>
             <div id="setting-bank-accounts-list" class="scm-list"></div>
             <button type="button" onclick="addBankAccountFromSettings()">+ حساب بنكي</button>

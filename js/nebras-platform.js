@@ -317,6 +317,27 @@
                 sortOrder: 3
             }
         ];
+        const DEFAULT_QUOTE_A4_SETTINGS = {
+            layout: 'nebras-factory',
+            logoUrl: 'images/logo.png',
+            watermarkOpacity: 0.09,
+            watermarkScale: 78,
+            accentColor: '#0d2840',
+            goldAccent: '#c9a227',
+            taglineAr: 'شركة مصنع نبراس للبلاستيك — أبواب WPC · بلاستيك · حلول صناعية',
+            taglineEn: 'Nebras Plastic Factory — WPC Doors · Plastic · Industrial Solutions',
+            headerBandAr: 'جودة سعودية · تصنيع محلي · خدمة ما بعد البيع',
+            headerBandEn: 'Saudi Quality · Local Manufacturing · After-sales Service',
+            footerNoteAr: 'عرض سعر استرشادي — التأكيد النهائي عبر فريق مبيعات مصنع نبراس.',
+            footerNoteEn: 'Indicative quotation — final confirmation by Nebras sales team.',
+            showRibbon: true,
+            showWatermark: true,
+            showFrame: true,
+            showSeal: true,
+            termsCustomAr: '',
+            termsCustomEn: ''
+        };
+
         const DEFAULT_SYSTEM_SETTINGS = {
             mainSalesPhone: '0555092383',
             customerServicePhone: '0579394158',
@@ -328,6 +349,7 @@
             companyAddressAr: 'القصيم - عنيزة - طريق الزلفي',
             companyAddressEn: 'Al-Qassim - Unaizah - Al Zulfi Road',
             heroBannerImageUrl: 'images/hero-nebras-banner.png',
+            quoteA4: null,
             bankAccounts: DEFAULT_BANK_ACCOUNTS.map(function(b) { return Object.assign({}, b); }),
             socialWhatsApp: '',
             socialTiktok: '',
@@ -6295,8 +6317,46 @@
             return null;
         }
 
+        function ensureQuoteA4Settings() {
+            if (!systemSettings || typeof systemSettings !== 'object') return DEFAULT_QUOTE_A4_SETTINGS;
+            const incoming = systemSettings.quoteA4 && typeof systemSettings.quoteA4 === 'object' ? systemSettings.quoteA4 : {};
+            systemSettings.quoteA4 = Object.assign({}, DEFAULT_QUOTE_A4_SETTINGS, incoming);
+            const q = systemSettings.quoteA4;
+            q.watermarkOpacity = Math.min(0.35, Math.max(0.04, Number(q.watermarkOpacity) || DEFAULT_QUOTE_A4_SETTINGS.watermarkOpacity));
+            q.watermarkScale = Math.min(95, Math.max(40, Number(q.watermarkScale) || DEFAULT_QUOTE_A4_SETTINGS.watermarkScale));
+            if (!q.logoUrl) q.logoUrl = 'images/logo.png';
+            if (!q.layout) q.layout = 'nebras-factory';
+            return q;
+        }
+
+        function getQuoteA4Settings() {
+            return ensureQuoteA4Settings();
+        }
+
+        function getQuoteA4LogoUrl() {
+            const q = getQuoteA4Settings();
+            return resolveDisplayMediaUrl(q.logoUrl || getSiteLogoUrl());
+        }
+
         function getQuoteTermsHtml(lang) {
+            const q = getQuoteA4Settings();
             const year = new Date().getFullYear();
+            function quoteCustomTermsHtml(text) {
+                return String(text || '').split('\n').filter(function(line) { return String(line).trim(); })
+                    .map(function(line) { return '<p class="quote-terms-custom-line">' + escapeHtmlAttr(line.trim()) + '</p>'; }).join('');
+            }
+            if (lang === 'en' && String(q.termsCustomEn || '').trim()) {
+                return '<section class="quote-terms-block quote-terms-block--custom">' +
+                    '<h3 class="quote-terms-title">Quotation Terms</h3>' +
+                    '<div class="quote-terms-custom">' + quoteCustomTermsHtml(q.termsCustomEn) + '</div></section>' +
+                    '<p class="quote-copyright-line">© All rights reserved — Nebras Plastic Factory Company ' + year + '</p>';
+            }
+            if (lang !== 'en' && lang !== 'zh' && String(q.termsCustomAr || '').trim()) {
+                return '<section class="quote-terms-block quote-terms-block--custom">' +
+                    '<h3 class="quote-terms-title">شروط وأحكام عرض السعر</h3>' +
+                    '<div class="quote-terms-custom">' + quoteCustomTermsHtml(q.termsCustomAr) + '</div></section>' +
+                    '<p class="quote-copyright-line">© كل الحقوق محفوظة لشركة مصنع نبراس للبلاستيك ' + year + '</p>';
+            }
             if (lang === 'en') {
                 return '<section class="quote-terms-block">' +
                     '<h3 class="quote-terms-title">Quotation &amp; Contract Terms</h3>' +
@@ -6344,11 +6404,17 @@
         function buildQuoteHeaderLogoStripHtml(logoUrl, logoAlt, lang) {
             const isEn = lang === 'en';
             const isZh = lang === 'zh';
-            const tagline = isEn ? 'Nebras Plastic Factory Company' : (isZh ? 'Nebras 塑料工厂' : 'شركة مصنع نبراس للبلاستيك');
+            const q = getQuoteA4Settings();
+            const tagline = isEn
+                ? (q.taglineEn || 'Nebras Plastic Factory Company')
+                : (isZh ? 'Nebras 塑料工厂' : (q.taglineAr || 'شركة مصنع نبراس للبلاستيك'));
+            const band = isEn ? (q.headerBandEn || '') : (isZh ? '' : (q.headerBandAr || ''));
             const heroLogo = buildQuoteLogoImgHtml('quote-hero-logo', logoUrl, logoAlt);
-            return '<div class="quote-header-logo-strip" role="banner">' +
-                heroLogo +
-                '<p class="quote-header-tagline">' + escapeHtmlAttr(tagline) + '</p></div>';
+            let html = '<div class="quote-header-logo-strip" role="banner">' + heroLogo +
+                '<p class="quote-header-tagline">' + escapeHtmlAttr(tagline) + '</p>';
+            if (band) html += '<p class="quote-header-band">' + escapeHtmlAttr(band) + '</p>';
+            html += '</div>';
+            return html;
         }
 
         function getDoorDesignerSpecText() {
@@ -6637,6 +6703,8 @@
             const lang = currentLang || 'ar';
             const isEn = lang === 'en';
             const isZh = lang === 'zh';
+            const q = getQuoteA4Settings();
+            const resolvedLogo = logoUrl || getQuoteA4LogoUrl();
             const now = new Date();
             const dateStr = formatNebrasDateTime(now, lang, { dateStyle: 'long', timeStyle: 'short' });
             const quoteNo = currentQuoteIssue.quoteNo;
@@ -6659,18 +6727,33 @@
                 ? (systemSettings.companyAddressEn || systemSettings.companyAddressAr || '')
                 : (systemSettings.companyAddressAr || systemSettings.companyAddressEn || '');
             const doorDesignBlock = buildQuoteDoorDesignBlockHtml(nebrasCart, lang);
-            const watermarkImg = buildQuoteLogoImgHtml('quote-watermark-logo', logoUrl, '');
+            const watermarkImg = buildQuoteLogoImgHtml('quote-watermark-logo', resolvedLogo, '');
             const termsBlock = getQuoteTermsHtml(lang);
             const companyName = isEn ? 'Nebras Plastic Factory Company' : (isZh ? 'Nebras 塑料工厂公司' : 'شركة مصنع نبراس للبلاستيك');
-            const headerLogoStrip = buildQuoteHeaderLogoStripHtml(logoUrl, logoAlt, lang);
+            const headerLogoStrip = buildQuoteHeaderLogoStripHtml(resolvedLogo, logoAlt, lang);
+            const footerNote = isEn ? (q.footerNoteEn || q.footerNoteAr) : (q.footerNoteAr || q.footerNoteEn);
+            const wmStyle = 'opacity:' + q.watermarkOpacity + ';width:' + q.watermarkScale + '%;max-height:' + q.watermarkScale + '%';
+            const docStyle = '--quote-accent:' + (q.accentColor || '#0d2840') + ';--quote-gold:' + (q.goldAccent || '#c9a227') + ';';
+            doc.className = 'quote-a4 quote-a4--' + escapeHtmlAttr(q.layout || 'nebras-factory');
+            doc.setAttribute('style', docStyle);
+            const frameHtml = q.showFrame ? '<div class="quote-a4-frame" aria-hidden="true"></div>' : '';
+            const ribbonHtml = q.showRibbon ? '<div class="quote-doc-ribbon" aria-hidden="true"></div>' : '';
+            const watermarkHtml = q.showWatermark
+                ? '<div class="quote-watermark-layer" aria-hidden="true"><img class="quote-watermark-logo" style="' + wmStyle + '" src="' + escapeHtmlAttr(resolvedLogo) + '" data-src-list="' + escapeHtmlAttr(getSiteLogoUrlListAttr()) + '" data-src-idx="0" decoding="sync" onerror="siteLogoImgFallback(this)" alt="">' +
+                '<div class="quote-watermark-pattern" aria-hidden="true"></div></div>'
+                : '';
+            const sealHtml = q.showSeal
+                ? '<div class="quote-factory-seal" aria-hidden="true"><span>NEBRAS</span><small>' + (isEn ? 'FACTORY' : 'مصنع') + '</small></div>'
+                : '';
             doc.innerHTML =
-                '<div class="quote-watermark-layer" aria-hidden="true">' + watermarkImg + '</div>' +
+                frameHtml +
+                watermarkHtml +
                 '<div class="quote-a4-inner">' +
-                '<div class="quote-doc-ribbon" aria-hidden="true"></div>' +
+                ribbonHtml +
                 headerLogoStrip +
                 '<header class="quote-doc-header quote-doc-header--premium">' +
                 '<div class="quote-doc-dual-cards">' +
-                buildQuoteFactoryCardHtml(logoUrl, logoAlt, lang) +
+                buildQuoteFactoryCardHtml(resolvedLogo, logoAlt, lang) +
                 buildQuoteCustomerCardHtml(cust, ui, lang) +
                 '</div>' +
                 '<div class="quote-title-center quote-title-center--premium">' +
@@ -6687,11 +6770,14 @@
                 '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
                 buildQuoteTotalsCardHtml(cartTotals, lang, pct) +
                 termsBlock +
-                '<footer class="quote-doc-footer quote-doc-footer--premium"><div class="quote-legal-grid">' +
+                '<footer class="quote-doc-footer quote-doc-footer--premium">' +
+                sealHtml +
+                '<div class="quote-legal-grid">' +
                 '<div><strong>' + (isEn ? 'Commercial Register: ' : (isZh ? '商业登记: ' : 'السجل التجاري: ')) + '</strong>' + escapeHtmlAttr(systemSettings.commercialRegister || '—') + '</div>' +
                 '<div><strong>' + (isEn ? 'VAT: ' : (isZh ? '税号: ' : 'الرقم الضريبي: ')) + '</strong>' + escapeHtmlAttr(systemSettings.taxNumber || '—') + '</div>' +
                 '<div><strong>' + (isEn ? 'Address: ' : (isZh ? '地址: ' : 'العنوان: ')) + '</strong>' + escapeHtmlAttr(addr || '—') + '</div>' +
-                '<p class="quote-footer-disclaimer">' + (isEn ? 'Indicative quotation — final confirmation by Nebras sales team.' : (isZh ? '参考报价 — 最终以销售团队确认为准。' : 'عرض سعر استرشادي — التأكيد النهائي عبر فريق المبيعات.')) + '</p>' +
+                '<div><strong>' + (isEn ? 'Email: ' : (isZh ? '邮箱: ' : 'البريد: ')) + '</strong>' + escapeHtmlAttr(systemSettings.recoveryEmail || PRIMARY_RECOVERY_EMAIL) + '</div>' +
+                '<p class="quote-footer-disclaimer">' + escapeHtmlAttr(footerNote || '') + '</p>' +
                 '</div></footer></div>';
             overlay.classList.add('show');
             closeCartDrawer();
@@ -6706,7 +6792,53 @@
             const overlay = document.getElementById('quote-print-overlay');
             if (overlay) overlay.classList.remove('show');
             syncQuoteA4MobilePreviewScale();
+            if (typeof window._restoreQuotePreviewDemo === 'function') {
+                window._restoreQuotePreviewDemo();
+                window._restoreQuotePreviewDemo = null;
+            }
             clearQuoteSessionState();
+        }
+
+        async function pickQuoteA4LogoFromSettings() {
+            if (!requireMainGovernanceAdmin('تعديل شعار عرض السعر A4 للإدارة الرئيسية فقط.')) return;
+            const q = getQuoteA4Settings();
+            const url = await pickMediaPath({
+                label: 'شعار عرض السعر A4',
+                defaultValue: q.logoUrl || 'images/logo.png'
+            });
+            if (!url) return;
+            q.logoUrl = url;
+            const input = document.getElementById('setting-quote-a4-logo');
+            if (input) input.value = url;
+            saveContentData();
+            addAuditLog('تعديل شعار عرض السعر A4', url);
+        }
+
+        function previewQuoteA4TemplateFromSettings() {
+            if (!requireMainGovernanceAdmin('معاينة صيغة عرض السعر A4 للإدارة الرئيسية فقط.')) return;
+            const overlay = document.getElementById('quote-print-overlay');
+            const doc = document.getElementById('quote-a4-document');
+            if (!overlay || !doc) return;
+            const savedCart = nebrasCart.slice();
+            const savedQuote = Object.assign({}, currentQuoteIssue);
+            if (!nebrasCart.length) {
+                nebrasCart = [{
+                    productTitle: 'باب WPC — معاينة إدارية',
+                    color: 'N-12',
+                    size: '220×90 سم',
+                    type: 'ضلفة',
+                    qty: 2,
+                    unitPrice: 1200
+                }];
+            }
+            currentQuoteIssue.quoteNo = currentQuoteIssue.quoteNo || ('NEBRAS-PREVIEW-' + Date.now().toString(36).toUpperCase());
+            window._restoreQuotePreviewDemo = function() {
+                nebrasCart = savedCart;
+                currentQuoteIssue = savedQuote;
+            };
+            resolveSiteLogoUrl(function(logoUrl) {
+                renderQuotePreviewDocument(doc, overlay, getQuoteA4LogoUrl() || logoUrl);
+            });
         }
 
         function buildSiteProductCardHtml(product, lang) {
@@ -12695,6 +12827,40 @@
             if (!Array.isArray(systemSettings.bankAccounts)) systemSettings.bankAccounts = [];
             renderBankAccountsSettingsList();
 
+            const q = getQuoteA4Settings();
+            const qLogo = document.getElementById('setting-quote-a4-logo');
+            const qTagAr = document.getElementById('setting-quote-a4-tagline-ar');
+            const qTagEn = document.getElementById('setting-quote-a4-tagline-en');
+            const qBandAr = document.getElementById('setting-quote-a4-band-ar');
+            const qBandEn = document.getElementById('setting-quote-a4-band-en');
+            const qFootAr = document.getElementById('setting-quote-a4-footer-ar');
+            const qFootEn = document.getElementById('setting-quote-a4-footer-en');
+            const qWmOp = document.getElementById('setting-quote-a4-watermark-opacity');
+            const qWmSc = document.getElementById('setting-quote-a4-watermark-scale');
+            const qTermsAr = document.getElementById('setting-quote-a4-terms-ar');
+            const qTermsEn = document.getElementById('setting-quote-a4-terms-en');
+            const qRibbon = document.getElementById('setting-quote-a4-show-ribbon');
+            const qWm = document.getElementById('setting-quote-a4-show-watermark');
+            const qFrame = document.getElementById('setting-quote-a4-show-frame');
+            const qSeal = document.getElementById('setting-quote-a4-show-seal');
+            if (qLogo) qLogo.value = q.logoUrl || '';
+            if (qTagAr) qTagAr.value = q.taglineAr || '';
+            if (qTagEn) qTagEn.value = q.taglineEn || '';
+            if (qBandAr) qBandAr.value = q.headerBandAr || '';
+            if (qBandEn) qBandEn.value = q.headerBandEn || '';
+            if (qFootAr) qFootAr.value = q.footerNoteAr || '';
+            if (qFootEn) qFootEn.value = q.footerNoteEn || '';
+            if (qWmOp) qWmOp.value = String(q.watermarkOpacity);
+            if (qWmSc) qWmSc.value = String(q.watermarkScale);
+            if (qTermsAr) qTermsAr.value = q.termsCustomAr || '';
+            if (qTermsEn) qTermsEn.value = q.termsCustomEn || '';
+            if (qRibbon) qRibbon.checked = q.showRibbon !== false;
+            if (qWm) qWm.checked = q.showWatermark !== false;
+            if (qFrame) qFrame.checked = q.showFrame !== false;
+            if (qSeal) qSeal.checked = q.showSeal !== false;
+            const quoteBlock = document.getElementById('quote-a4-settings-block');
+            if (quoteBlock) quoteBlock.hidden = !isMainGovernanceAdmin(currentAdmin);
+
             populateOccasionThemeSelect();
             const occEnabled = document.getElementById('setting-occasion-enabled');
             const occTheme = document.getElementById('setting-occasion-theme');
@@ -12765,6 +12931,42 @@
             const heroBannerEl = document.getElementById('setting-hero-banner-url');
             if (heroBannerEl) systemSettings.heroBannerImageUrl = heroBannerEl.value.trim() || 'images/hero-nebras-banner.png';
             if (!Array.isArray(systemSettings.bankAccounts)) systemSettings.bankAccounts = [];
+
+            if (isMainGovernanceAdmin()) {
+                const q = getQuoteA4Settings();
+                const qLogo = document.getElementById('setting-quote-a4-logo');
+                const qTagAr = document.getElementById('setting-quote-a4-tagline-ar');
+                const qTagEn = document.getElementById('setting-quote-a4-tagline-en');
+                const qBandAr = document.getElementById('setting-quote-a4-band-ar');
+                const qBandEn = document.getElementById('setting-quote-a4-band-en');
+                const qFootAr = document.getElementById('setting-quote-a4-footer-ar');
+                const qFootEn = document.getElementById('setting-quote-a4-footer-en');
+                const qWmOp = document.getElementById('setting-quote-a4-watermark-opacity');
+                const qWmSc = document.getElementById('setting-quote-a4-watermark-scale');
+                const qTermsAr = document.getElementById('setting-quote-a4-terms-ar');
+                const qTermsEn = document.getElementById('setting-quote-a4-terms-en');
+                const qRibbon = document.getElementById('setting-quote-a4-show-ribbon');
+                const qWm = document.getElementById('setting-quote-a4-show-watermark');
+                const qFrame = document.getElementById('setting-quote-a4-show-frame');
+                const qSeal = document.getElementById('setting-quote-a4-show-seal');
+                if (qLogo) q.logoUrl = qLogo.value.trim() || 'images/logo.png';
+                if (qTagAr) q.taglineAr = qTagAr.value.trim();
+                if (qTagEn) q.taglineEn = qTagEn.value.trim();
+                if (qBandAr) q.headerBandAr = qBandAr.value.trim();
+                if (qBandEn) q.headerBandEn = qBandEn.value.trim();
+                if (qFootAr) q.footerNoteAr = qFootAr.value.trim();
+                if (qFootEn) q.footerNoteEn = qFootEn.value.trim();
+                if (qWmOp) q.watermarkOpacity = parseFloat(qWmOp.value) || DEFAULT_QUOTE_A4_SETTINGS.watermarkOpacity;
+                if (qWmSc) q.watermarkScale = parseFloat(qWmSc.value) || DEFAULT_QUOTE_A4_SETTINGS.watermarkScale;
+                if (qTermsAr) q.termsCustomAr = qTermsAr.value.trim();
+                if (qTermsEn) q.termsCustomEn = qTermsEn.value.trim();
+                if (qRibbon) q.showRibbon = !!qRibbon.checked;
+                if (qWm) q.showWatermark = !!qWm.checked;
+                if (qFrame) q.showFrame = !!qFrame.checked;
+                if (qSeal) q.showSeal = !!qSeal.checked;
+                systemSettings.quoteA4 = q;
+                ensureQuoteA4Settings();
+            }
 
             const occEnabledEl = document.getElementById('setting-occasion-enabled');
             const occThemeEl = document.getElementById('setting-occasion-theme');
@@ -14118,6 +14320,10 @@
                         incoming.doorDesigner
                     );
                 }
+                if (incoming.quoteA4 && typeof incoming.quoteA4 === 'object' && !Array.isArray(incoming.quoteA4)) {
+                    systemSettings.quoteA4 = Object.assign({}, DEFAULT_QUOTE_A4_SETTINGS, systemSettings.quoteA4 || {}, incoming.quoteA4);
+                }
+                ensureQuoteA4Settings();
             } },
             { key: 'admin_users', get: function() { return adminUsers; }, set: function(v) { adminUsers = Array.isArray(v) ? v : []; } },
             { key: 'branches', get: function() { return branchesData; }, set: function(v) { branchesData = Array.isArray(v) ? v : []; } },
@@ -14199,6 +14405,7 @@
             ensureShowroomGallery();
             refreshNebrasMiniShowcases();
             ensureDoorDesignerConfig();
+            ensureQuoteA4Settings();
             ensureDashboardGovernanceHandlers();
             ensureAnalyticsGovernance();
             adminUsers = (Array.isArray(adminUsers) ? adminUsers : []).map(function(user, index) {
@@ -16774,6 +16981,8 @@
         window.openSystemSettings = openSystemSettings;
         window.openSystemSettingsForChannels = openSystemSettingsForChannels;
         window.openSystemSettingsForOccasion = openSystemSettingsForOccasion;
+        window.pickQuoteA4LogoFromSettings = pickQuoteA4LogoFromSettings;
+        window.previewQuoteA4TemplateFromSettings = previewQuoteA4TemplateFromSettings;
         window.openDashboardNavSettings = openDashboardNavSettings;
         window.openVisitorIcon = openVisitorIcon;
         window.openPlatformModule = openPlatformModule;
