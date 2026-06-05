@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1920, height=1080">
+    <title>نبراس | فيديو تسويقي — أبواب WPC</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --navy: #0c1f3d;
+            --navy-mid: #14325c;
+            --navy-light: #1e4a7a;
+            --gold: #c9a227;
+            --gold-light: #e8c547;
+            --white: #f8fafc;
+            --muted: #94a3b8;
+            --accent: #3b82f6;
+            --scene-dur: 6.5s;
+            --total-scenes: 10;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #000;
+            font-family: 'Cairo', sans-serif;
+        }
+
+        /* شاشة التسجيل 16:9 — افتح بملء الشاشة F11 ثم سجّل */
+        .video-stage {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #000;
+        }
+
+        .video-frame {
+            position: relative;
+            width: min(100vw, calc(100vh * 16 / 9));
+            height: min(100vh, calc(100vw * 9 / 16));
+            max-width: 1920px;
+            max-height: 1080px;
+            overflow: hidden;
+            background: var(--navy);
+            box-shadow: 0 0 80px rgba(0,0,0,.6);
+        }
+
+        .scene {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.9s ease;
+        }
+        .scene.active { opacity: 1; pointer-events: auto; }
+
+        .bg-gradient {
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 80% 60% at 70% 20%, rgba(59,130,246,.18) 0%, transparent 55%),
+                radial-gradient(ellipse 60% 50% at 10% 80%, rgba(201,162,39,.12) 0%, transparent 50%),
+                linear-gradient(155deg, var(--navy) 0%, #081428 45%, var(--navy-mid) 100%);
+        }
+
+        .grid-lines {
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(255,255,255,.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+            background-size: 48px 48px;
+            opacity: .5;
+        }
+
+        .particles span {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            border-radius: 50%;
+            background: var(--gold-light);
+            opacity: 0;
+            animation: floatParticle 4s ease-in-out infinite;
+        }
+        @keyframes floatParticle {
+            0%, 100% { opacity: 0; transform: translateY(0); }
+            50% { opacity: .6; transform: translateY(-30px); }
+        }
+
+        .content {
+            position: relative;
+            z-index: 5;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            padding: 48px 64px;
+        }
+
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            min-height: 72px;
+        }
+
+        .logo-sm {
+            height: 52px;
+            width: auto;
+            filter: drop-shadow(0 4px 12px rgba(0,0,0,.4));
+        }
+
+        .badge {
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: .04em;
+            padding: 8px 18px;
+            border-radius: 999px;
+            background: rgba(201,162,39,.15);
+            border: 1px solid rgba(201,162,39,.45);
+            color: var(--gold-light);
+        }
+
+        .hero-center {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 48px;
+        }
+
+        .hero-text { flex: 1; max-width: 52%; }
+
+        .hero-text h1 {
+            font-size: clamp(2rem, 4.2vw, 3.4rem);
+            font-weight: 900;
+            line-height: 1.15;
+            color: var(--white);
+            margin-bottom: 16px;
+        }
+
+        .hero-text h1 .gold { color: var(--gold-light); }
+
+        .hero-text p {
+            font-size: clamp(1rem, 1.6vw, 1.35rem);
+            color: var(--muted);
+            line-height: 1.7;
+            max-width: 90%;
+        }
+
+        .hero-text .sub {
+            margin-top: 20px;
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--gold-light);
+        }
+
+        .door-showcase {
+            flex: 0 0 38%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 1200px;
+        }
+
+        .door-card {
+            position: relative;
+            width: 220px;
+            height: 420px;
+            transform-style: preserve-3d;
+            animation: doorFloat 5s ease-in-out infinite;
+        }
+        @keyframes doorFloat {
+            0%, 100% { transform: rotateY(-8deg) translateY(0); }
+            50% { transform: rotateY(6deg) translateY(-12px); }
+        }
+
+        .door-frame {
+            position: absolute;
+            inset: 0;
+            border-radius: 6px;
+            background: linear-gradient(145deg, #5a6270, #2e3338);
+            box-shadow: 0 24px 60px rgba(0,0,0,.55), inset 0 0 0 3px #1a1e22;
+        }
+
+        .door-leaf {
+            position: absolute;
+            top: 14px; left: 14px; right: 14px; bottom: 14px;
+            border-radius: 4px;
+            background: linear-gradient(180deg, var(--door-light,#d4d8de) 0%, var(--door-mid,#9aa0a8) 55%, var(--door-dark,#5c636c) 100%);
+            box-shadow: inset 0 2px 20px rgba(255,255,255,.25);
+        }
+
+        .door-leaf.decor::before,
+        .door-leaf.decor::after {
+            content: '';
+            position: absolute;
+            left: 12%; right: 12%;
+            height: 2px;
+            background: rgba(0,0,0,.2);
+            box-shadow: 0 0 0 1px rgba(255,255,255,.15);
+        }
+        .door-leaf.decor::before { top: 28%; }
+        .door-leaf.decor::after { top: 52%; height: 80px; border: 2px solid rgba(0,0,0,.15); border-radius: 2px; background: transparent; }
+
+        .door-leaf.modern {
+            background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+        }
+        .door-leaf.modern::after {
+            content: '';
+            position: absolute;
+            right: 8%;
+            top: 45%;
+            width: 6px;
+            height: 80px;
+            background: var(--gold);
+            border-radius: 3px;
+        }
+
+        .door-glass-panels {
+            position: absolute;
+            top: 22%; left: 18%; right: 18%;
+            bottom: 28%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .door-glass-panels div {
+            background: linear-gradient(135deg, rgba(200,230,255,.7), rgba(100,150,190,.4));
+            border: 1px solid rgba(255,255,255,.4);
+            border-radius: 2px;
+        }
+
+        .door-u-channel::before {
+            content: '';
+            position: absolute;
+            inset: 16px;
+            border: 4px solid rgba(201,162,39,.5);
+            border-radius: 2px;
+        }
+
+        .benefits-row {
+            display: flex;
+            gap: 20px;
+            margin-top: 28px;
+            flex-wrap: wrap;
+        }
+
+        .benefit {
+            flex: 1;
+            min-width: 140px;
+            padding: 18px 16px;
+            border-radius: 14px;
+            background: rgba(255,255,255,.06);
+            border: 1px solid rgba(255,255,255,.1);
+            text-align: center;
+        }
+        .benefit i {
+            font-size: 1.6rem;
+            color: var(--gold-light);
+            margin-bottom: 8px;
+        }
+        .benefit strong {
+            display: block;
+            font-size: .95rem;
+            color: var(--white);
+        }
+        .benefit span {
+            font-size: .78rem;
+            color: var(--muted);
+        }
+
+        /* مشهد الافتتاح */
+        .intro-logo-wrap {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        .intro-logo {
+            width: min(420px, 55%);
+            animation: logoReveal 2s ease forwards;
+        }
+        @keyframes logoReveal {
+            0% { opacity: 0; transform: scale(.88); filter: blur(8px); }
+            100% { opacity: 1; transform: scale(1); filter: blur(0); }
+        }
+        .intro-tagline {
+            margin-top: 28px;
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--white);
+            opacity: 0;
+            animation: fadeUp 1s ease .8s forwards;
+        }
+        .intro-en {
+            margin-top: 8px;
+            font-size: .95rem;
+            letter-spacing: .12em;
+            color: var(--muted);
+            opacity: 0;
+            animation: fadeUp 1s ease 1.2s forwards;
+        }
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* عرض الأنواع — شريط */
+        .types-strip {
+            display: flex;
+            gap: 14px;
+            margin-top: 24px;
+        }
+        .type-pill {
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: .9rem;
+            background: rgba(255,255,255,.08);
+            color: var(--muted);
+            border: 1px solid transparent;
+            transition: all .4s ease;
+        }
+        .type-pill.on {
+            background: rgba(201,162,39,.2);
+            border-color: var(--gold);
+            color: var(--gold-light);
+            transform: scale(1.05);
+        }
+
+        /* مشهد المصنع */
+        .factory-stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-top: 32px;
+        }
+        .stat {
+            text-align: center;
+            padding: 24px 12px;
+            border-radius: 16px;
+            background: rgba(255,255,255,.05);
+            border: 1px solid rgba(255,255,255,.08);
+        }
+        .stat .num {
+            font-size: 2.2rem;
+            font-weight: 900;
+            color: var(--gold-light);
+            line-height: 1;
+        }
+        .stat .lbl {
+            margin-top: 8px;
+            font-size: .85rem;
+            color: var(--muted);
+        }
+
+        /* CTA */
+        .cta-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+        }
+        .cta-panel h2 {
+            font-size: 2.8rem;
+            font-weight: 900;
+            color: var(--white);
+            margin-bottom: 12px;
+        }
+        .cta-panel h2 .gold { color: var(--gold-light); }
+        .phones {
+            display: flex;
+            gap: 32px;
+            margin: 36px 0 28px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        .phone-box {
+            padding: 22px 40px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, rgba(201,162,39,.25), rgba(201,162,39,.08));
+            border: 2px solid var(--gold);
+            min-width: 280px;
+        }
+        .phone-box i { font-size: 1.4rem; color: var(--gold-light); margin-left: 10px; }
+        .phone-box .role { font-size: .85rem; color: var(--muted); display: block; margin-bottom: 6px; }
+        .phone-box .num {
+            font-size: 1.75rem;
+            font-weight: 900;
+            color: var(--white);
+            letter-spacing: .06em;
+            direction: ltr;
+            display: inline-block;
+        }
+        .cta-footer {
+            font-size: 1rem;
+            color: var(--muted);
+        }
+
+        .progress {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: rgba(255,255,255,.1);
+            z-index: 20;
+        }
+        .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--gold), var(--gold-light));
+            transition: width .3s linear;
+        }
+
+        .scene-label {
+            position: absolute;
+            bottom: 16px;
+            left: 64px;
+            font-size: .75rem;
+            color: rgba(255,255,255,.35);
+            z-index: 20;
+        }
+
+        /* تسجيل: اخفاء عناصر التحكم */
+        body.recording .rec-hint { display: none !important; }
+        .rec-hint {
+            position: fixed;
+            top: 12px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 9999;
+            background: rgba(0,0,0,.85);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 13px;
+            text-align: center;
+            max-width: 90%;
+        }
+        .rec-hint kbd {
+            background: #333;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .line-reveal {
+            overflow: hidden;
+        }
+        .line-reveal span {
+            display: inline-block;
+            animation: slideIn 0.8s cubic-bezier(.22,1,.36,1) forwards;
+        }
+        @keyframes slideIn {
+            from { transform: translateY(100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .shine {
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(105deg, transparent 40%, rgba(255,255,255,.06) 50%, transparent 60%);
+            animation: shine 6s ease-in-out infinite;
+            pointer-events: none;
+        }
+        @keyframes shine {
+            0%, 100% { transform: translateX(-30%) rotate(25deg); }
+            50% { transform: translateX(30%) rotate(25deg); }
+        }
+    </style>
+</head>
+<body>
+    <p class="rec-hint">للتسجيل: افتح الملف → <kbd>F11</kbd> ملء الشاشة → شغّل (زر أو مسافة) → سجّل الشاشة ~70 ثانية → أضف موسيقى وتعليق صوتي من الملف <strong>NEBRAS-WPC-VIDEO-SCRIPT.md</strong></p>
+
+    <div class="video-stage">
+        <div class="video-frame" id="videoFrame">
+            <div class="progress"><div class="progress-fill" id="progressFill"></div></div>
+
+            <!-- 1 افتحية -->
+            <section class="scene active" data-scene="0" data-dur="5">
+                <div class="bg-gradient"></div><div class="grid-lines"></div><div class="shine"></div>
+                <div class="content">
+                    <div class="intro-logo-wrap">
+                        <img class="intro-logo" src="images/nebras-logo.png" alt="شركة مصنع نبراس للبلاستيك">
+                        <p class="intro-tagline">صناعة سعودية · أبواب WPC بمعايير عالمية</p>
+                        <p class="intro-en">NEBRAS PLASTIC FACTORY COMPANY</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2 خطاف -->
+            <section class="scene" data-scene="1" data-dur="6">
+                <div class="bg-gradient"></div><div class="grid-lines"></div>
+                <div class="content">
+                    <div class="top-bar"><img class="logo-sm" src="images/nebras-logo.png" alt="نبراس"><span class="badge">WPC DOORS</span></div>
+                    <div class="hero-center">
+                        <div class="hero-text">
+                            <h1 class="line-reveal"><span>باب واحد… <span class="gold">يغيّر وجه مشروعك</span></span></h1>
+                            <p>من الفلل والفنادق إلى المشاريع السكنية — نبراس تقدّم حلول أبواب متكاملة: تصنيع، تخصيص، وجودة تدوم.</p>
+                        </div>
+                        <div class="door-showcase">
+                            <div class="door-card"><div class="door-frame"><div class="door-leaf"></div></div></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3 لماذا WPC -->
+            <section class="scene" data-scene="2" data-dur="7">
+                <div class="bg-gradient"></div>
+                <div class="content">
+                    <div class="top-bar"><img class="logo-sm" src="images/nebras-logo.png" alt="نبراس"><span class="badge">لماذا WPC؟</span></div>
+                    <div class="hero-text" style="max-width:100%">
+                        <h1>خشب يُبهر… <span class="gold">بلاستيك يُحمي</span></h1>
+                        <p>مادة WPC تجمع مظهر الخشب الفاخر مع مقاومة الرطوبة والحشرات والتشقق — بدون صيانة مكلفة.</p>
+                        <div class="benefits-row">
+                            <div class="benefit"><i class="fas fa-droplet-slash"></i><strong>مقاوم للرطوبة</strong><span>مناسب للمناخ السعودي</span></div>
+                            <div class="benefit"><i class="fas fa-bug-slash"></i><strong>بدون نمل أبيض</strong><span>لا يتأثر بالحشرات</span></div>
+                            <div class="benefit"><i class="fas fa-palette"></i><strong>ألوان متعددة</strong><span>رولات N بتشكيلة واسعة</span></div>
+                            <div class="benefit"><i class="fas fa-industry"></i><strong>تصنيع محلي</strong><span>من مصنع نبراس مباشرة</span></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 4 فلات -->
+            <section class="scene" data-scene="3" data-dur="6.5" data-type="flat">
+                <div class="bg-gradient"></div>
+                <div class="content">
+                    <div class="top-bar"><img class="logo-sm" src="images/nebras-logo.png" alt=""><span class="badge">الفلات</span></div>
+                    <div class="hero-center">
+                        <div class="hero-text">
+                            <h1>أبواب <span class="gold">فلات</span></h1>
+                            <p>خطوط نظيفة وهدوء بصري — مثالية للواجهات العصرية والمشاريع التي تحب البساطة الراقية.</p>
+                            <div class="types-strip" id="typesStrip"></div>
+                        </div>
+                        <div class="door-showcase">
+                            <div class="door-card" style="--door-light:#e2e6ec;--door-mid:#b0b6be;--door-dark:#6a727a">
+                                <div class="door-frame"><div class="door-leaf"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 5 ديكور -->
+            <section class="scene" data-scene="4" data-dur="6.5" data-type="decor">
+                <div class="bg-gradient"></div>
+                <div class="content">
+                    <div class="top-bar"><img class="logo-sm" src="images/nebras-logo.png" alt=""><span class="badge">الديكور</span></div>
+                    <div class="hero-center">
+                        <div class="hero-text">
+                            <h1>أبواب <span class="gold">ديكور</span></h1>
+                            <p>تفاصيل خارجية وإطارات زخرفية — لمسة كلاسيكية ترفع قيمة المدخل والصالة.</p>
+                        </div>
+                        <div class="door-showcase">
+                            <div class="door-card">
+                                <div class="door-frame"><div class="door-leaf decor"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 6 مودرن -->
+            <section class="scene" data-scene="5" data-dur="6.5" data-type="modern">
+                <div class="bg-gradient"></div>
+                <div class="content">
+                    <div class="top-bar"><img class="logo-sm" src="images/nebras-logo.png" alt=""><span class="badge">المودرن</span></div>
+                    <div class="hero-center">
+                        <div class="hero-text">
+                            <h1>أبواب <span class="gold">مودرن</span></h1>
+                            <p>تصاميم جريئة بخطوط حادة وألوان عميقة — للمشاريع التي تبحث عن هوية عصرية قوية.</p>
+                        </div>
+                        <div class="door-showcase">
+                            <div class="door-card">
+                                <div class="door-frame"><div class="door-leaf modern"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 7 جلاس -->
+            <section class="scene" data-scene="6" data-dur="6.5" data-type="glass">
+                <div class="bg-gradient"></div>
+                <div class="content">
+                    <div class="top-bar"><img class="logo-sm" src="images/nebras-logo.png" alt=""><span class="badge">الجلاس</span></div>
+                    <div class="hero-center">
+                        <div class="hero-text">
+                            <h1>أبواب <span class="gold">جلاس</span></h1>
+                            <p>إضاءة طبيعية ومظهر فاخر — دمج زجاج آمن مع إطار WPC متين.</p>
+                        </div>
+                        <div class="door-showcase">
+                            <div class="door-card">
+                                <div class="door-frame">
+                                    <div class="door-leaf" style="background:linear-gradient(180deg,#8a9098,#5a6068)">
+                                        <div class="door-glass-panels"><div></div><div></div><div></div><div></div></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 8 يو شانيل -->
+            <section class="scene" data-scene="7" data-dur="6.5" data-type="uchannel">
+                <div class="bg-gradient"></div>
+                <div class="content">
+                    <div class="top-bar"><img class="logo-sm" src="images/nebras-logo.png" alt=""><span class="badge">يو شانيل</span></div>
+                    <div class="hero-center">
+                        <div class="hero-text">
+                            <h1>أبواب <span class="gold">يو شانيل</span></h1>
+                            <p>قنوات U مميزة على السطح — عمق بصري وفخامة تليق بالمشاريع الكبرى.</p>
+                        </div>
+                        <div class="door-showcase">
+                            <div class="door-card">
+                                <div class="door-frame"><div class="door-leaf door-u-channel" style="--door-light:#c4a882;--door-mid:#9a7d5c;--door-dark:#5c4a38"></div></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 9 ثقة -->
+            <section class="scene" data-scene="8" data-dur="7">
+                <div class="bg-gradient"></div>
+                <div class="content">
+                    <div class="top-bar"><img class="logo-sm" src="images/nebras-logo.png" alt=""><span class="badge">مصنع نبراس</span></div>
+                    <div class="hero-text" style="max-width:100%; text-align:center;">
+                        <h1 style="text-align:center">من التصميم إلى <span class="gold">التسليم</span></h1>
+                        <p style="text-align:center; margin: 0 auto 8px;">مصنع متخصص في البلاستيك وأبواب WPC — دعم فني، تخصيص مقاسات وألوان، وإمداد للمقاولين والتجار.</p>
+                        <div class="factory-stats">
+                            <div class="stat"><div class="num">5+</div><div class="lbl">عائلات أبواب</div></div>
+                            <div class="stat"><div class="num">21</div><div class="lbl">رول لون</div></div>
+                            <div class="stat"><div class="num">WPC</div><div class="lbl">جودة صناعية</div></div>
+                            <div class="stat"><div class="num">KSA</div><div class="lbl">صناعة محلية</div></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 10 CTA -->
+            <section class="scene" data-scene="9" data-dur="8">
+                <div class="bg-gradient"></div><div class="shine"></div>
+                <div class="content">
+                    <div class="cta-panel">
+                        <img class="logo-sm" src="images/nebras-logo.png" alt="" style="height:64px; margin-bottom:20px">
+                        <h2>اطلب <span class="gold">عرض سعرك</span> اليوم</h2>
+                        <p style="color:var(--muted); font-size:1.15rem">مبيعات · استشارة · توريد مشاريع</p>
+                        <div class="phones">
+                            <div class="phone-box">
+                                <span class="role"><i class="fas fa-headset"></i> المبيعات</span>
+                                <span class="num">055 509 2383</span>
+                            </div>
+                            <div class="phone-box">
+                                <span class="role"><i class="fas fa-comments"></i> خدمة العملاء</span>
+                                <span class="num">057 939 4158</span>
+                            </div>
+                        </div>
+                        <p class="cta-footer">شركة مصنع نبراس للبلاستيك · أبواب WPC · فلات · ديكور · مودرن · جلاس · يو شانيل</p>
+                    </div>
+                </div>
+            </section>
+
+            <span class="scene-label" id="sceneLabel"></span>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            const scenes = Array.from(document.querySelectorAll('.scene'));
+            const progressFill = document.getElementById('progressFill');
+            const sceneLabel = document.getElementById('sceneLabel');
+            const types = [
+                { id: 'flat', ar: 'فلات' },
+                { id: 'decor', ar: 'ديكور' },
+                { id: 'modern', ar: 'مودرن' },
+                { id: 'glass', ar: 'جلاس' },
+                { id: 'uchannel', ar: 'يو شانيل' }
+            ];
+
+            const strip = document.getElementById('typesStrip');
+            if (strip) {
+                types.forEach(t => {
+                    const el = document.createElement('span');
+                    el.className = 'type-pill';
+                    el.dataset.type = t.id;
+                    el.textContent = t.ar;
+                    strip.appendChild(el);
+                });
+            }
+
+            let idx = 0;
+            let timer = null;
+            let started = false;
+            let totalDur = 0;
+            let elapsed = 0;
+
+            scenes.forEach(s => { totalDur += parseFloat(s.dataset.dur || 6); });
+
+            function highlightType(typeId) {
+                document.querySelectorAll('.type-pill').forEach(p => {
+                    p.classList.toggle('on', p.dataset.type === typeId);
+                });
+            }
+
+            function showScene(i) {
+                scenes.forEach((s, j) => s.classList.toggle('active', j === i));
+                const cur = scenes[i];
+                const type = cur.dataset.type;
+                if (type) highlightType(type);
+                const names = ['افتتاحية', 'خطاف', 'لماذا WPC', 'فلات', 'ديكور', 'مودرن', 'جلاس', 'يو شانيل', 'ثقة', 'دعوة للتواصل'];
+                sceneLabel.textContent = (i + 1) + ' / ' + scenes.length + ' — ' + (names[i] || '');
+            }
+
+            function tickProgress() {
+                const pct = Math.min(100, (elapsed / totalDur) * 100);
+                progressFill.style.width = pct + '%';
+            }
+
+            function next() {
+                elapsed += parseFloat(scenes[idx].dataset.dur || 6);
+                tickProgress();
+                idx = (idx + 1) % scenes.length;
+                if (idx === 0) elapsed = 0;
+                showScene(idx);
+                schedule();
+            }
+
+            function schedule() {
+                clearTimeout(timer);
+                const dur = parseFloat(scenes[idx].dataset.dur || 6) * 1000;
+                timer = setTimeout(next, dur);
+            }
+
+            function start() {
+                if (started) return;
+                started = true;
+                document.body.classList.add('recording');
+                idx = 0;
+                elapsed = 0;
+                showScene(0);
+                tickProgress();
+                schedule();
+            }
+
+            document.addEventListener('keydown', e => {
+                if (e.code === 'Space') { e.preventDefault(); start(); }
+            });
+            document.getElementById('videoFrame').addEventListener('click', start);
+
+            /* جسيمات خفيفة */
+            document.querySelectorAll('.scene').forEach(sc => {
+                const p = document.createElement('div');
+                p.className = 'particles';
+                for (let i = 0; i < 8; i++) {
+                    const s = document.createElement('span');
+                    s.style.left = (10 + Math.random() * 80) + '%';
+                    s.style.top = (10 + Math.random() * 80) + '%';
+                    s.style.animationDelay = (Math.random() * 3) + 's';
+                    p.appendChild(s);
+                }
+                sc.insertBefore(p, sc.firstChild?.nextSibling || sc.firstChild);
+            });
+        })();
+    </script>
+</body>
+</html>
