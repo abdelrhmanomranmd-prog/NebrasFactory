@@ -89,7 +89,7 @@
             <h2 class="nebras-brand-intro-title" id="intro-brand-title" aria-live="polite">شركة مصنع نبراس للبلاستيك</h2>
             <p class="nebras-brand-intro-tagline" id="intro-tagline">أبواب WPC فاخرة — حلول متكاملة بالجودة والأناقة</p>
             <div class="nebras-brand-intro-progress" aria-hidden="true"><span></span></div>
-            <button type="button" class="nebras-brand-intro-skip" id="intro-skip-btn">دخول المنصة</button>
+            <button type="button" class="nebras-brand-intro-skip" id="intro-skip-btn" onclick="if(typeof dismissBrandIntro==='function'){dismissBrandIntro();}">دخول المنصة</button>
         </div>
     </div>
     <script>
@@ -100,6 +100,18 @@
         intro.hidden = false;
         intro.setAttribute('aria-hidden', 'false');
         document.body.classList.add('nebras-intro-active');
+        setTimeout(function () {
+            if (!document.body.classList.contains('nebras-intro-active')) return;
+            if (typeof dismissBrandIntro === 'function') {
+                dismissBrandIntro();
+                return;
+            }
+            intro.hidden = true;
+            intro.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('nebras-intro-active');
+            document.body.classList.add('nebras-site-reveal');
+            try { sessionStorage.setItem('nebrasIntroSeen', '1'); } catch (e) {}
+        }, 3200);
     })();
     </script>
     <div id="site-celebration-overlay" class="site-celebration-overlay" aria-hidden="true"></div>

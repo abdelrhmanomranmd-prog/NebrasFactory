@@ -10138,7 +10138,6 @@
                 }
             }
 
-            const isCelebration = getResolvedOccasionThemeId() !== 'default';
             if (!isCelebration) initHeroSlideshow();
             else stopHeroSlideshow();
         }
@@ -10216,6 +10215,12 @@
         }
 
         function initHeroSlideshow() {
+            if (shouldDeferHeavySiteRender()) {
+                window.addEventListener('nebras-intro-finished', function() {
+                    initHeroSlideshow();
+                }, { once: true });
+                return;
+            }
             const container = document.getElementById('hero-slideshow');
             const dotsWrap = document.getElementById('hero-slide-dots');
             const hero = document.getElementById('site-hero');
@@ -12729,6 +12734,7 @@
         function dismissBrandIntro() {
             const intro = document.getElementById('nebras-brand-intro');
             if (!intro) return;
+            if (intro.classList.contains('is-leaving')) return;
             clearBrandIntroDismissTimers();
             stopBrandIntroWelcomeAudio();
             intro.classList.remove('nebras-brand-intro--with-welcome', 'nebras-brand-intro--audio-playing');
@@ -12767,7 +12773,11 @@
             intro.classList.remove('nebras-brand-intro--with-welcome', 'nebras-brand-intro--audio-playing');
             brandIntroTimer = setTimeout(dismissBrandIntro, BRAND_INTRO_SHORT_MS);
             brandIntroFailsafeTimer = setTimeout(dismissBrandIntro, BRAND_INTRO_SHORT_FAILSAFE_MS);
-            scheduleWarmSiteBehindIntro();
+            if (typeof requestIdleCallback === 'function') {
+                requestIdleCallback(function() { warmSiteBehindIntro(); }, { timeout: 3000 });
+            } else {
+                setTimeout(warmSiteBehindIntro, 2000);
+            }
         }
 
         function applyDocumentMeta(text) {
@@ -15151,10 +15161,6 @@
             const lang = currentLang || 'ar';
             try {
                 mergeSupabaseIntoSiteCatalog(lang);
-                renderAllPublicCatalog();
-                applyDynamicSectionContent(lang);
-                applyOccasionTheme();
-                nebrasSiteWarmedBehindIntro = true;
             } catch (warmErr) {
                 console.warn('warmSiteBehindIntro:', warmErr);
             }
@@ -17291,4 +17297,5 @@
         window.closeNebrasWorkspace = closeNebrasWorkspace;
         window.toggleMenu = toggleMenu;
         window.siteLogoImgFallback = siteLogoImgFallback;
+        window.dismissBrandIntro = dismissBrandIntro;
 
