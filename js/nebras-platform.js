@@ -335,8 +335,12 @@
             showFrame: true,
             showSeal: true,
             termsCustomAr: '',
-            termsCustomEn: ''
+            termsCustomEn: '',
+            staticPage2Url: 'documents/quote-a4-static-page2.png',
+            staticPage3Url: 'documents/quote-a4-static-page3.png'
         };
+
+        const storeCatalogFilterState = {};
 
         const DEFAULT_SYSTEM_SETTINGS = {
             mainSalesPhone: '0555092383',
@@ -375,7 +379,8 @@
             occasionPromoDiscountZh: '',
             platformTaglineAr: 'منصة رقمية محكومة — واجهة عالمية للمصنع ومركز قيادة داخلي بصلاحيات وأتمتة.',
             platformTaglineEn: 'Governed digital platform — global factory storefront and internal command center.',
-            doorDesigner: null
+            doorDesigner: null,
+            heroSlideshowSlides: null
         };
 
         const NEBRAS_ROLL_CATALOG_IMAGE = 'images/background-Nebras-colour-catalogue-(rolls).jpeg';
@@ -2389,6 +2394,9 @@
             });
             migrateLegacyCatalogProducts();
             clearDemoCatalogVariants();
+            siteProducts.forEach(function(p) {
+                if (p && p.inStock === undefined) p.inStock = true;
+            });
             siteProducts.sort(function(a, b) { return (a.sortOrder || 0) - (b.sortOrder || 0); });
 
             if (!Array.isArray(dashboardTiles) || !dashboardTiles.length) {
@@ -2713,6 +2721,253 @@
             return ui.catalogHubPriceOnRequest || 'عند الطلب';
         }
 
+        function isCatalogItemInStock(product, variant) {
+            if (!product || product.visible === false) return false;
+            if (product.inStock === false) return false;
+            if (variant && variant.inStock === false) return false;
+            return true;
+        }
+
+        function getStoreCatalogFilterKey(contextKey) {
+            return String(contextKey || 'all');
+        }
+
+        function getStoreCatalogFilters(contextKey) {
+            const key = getStoreCatalogFilterKey(contextKey);
+            if (!storeCatalogFilterState[key]) {
+                storeCatalogFilterState[key] = { availability: 'all', sort: 'default', color: '', size: '', type: '' };
+            }
+            return storeCatalogFilterState[key];
+        }
+
+        function flattenProductsToCatalogItems(products, lang) {
+            const items = [];
+            (products || []).forEach(function(product) {
+                if (!product || product.visible === false) return;
+                const baseTitle = getLocalizedCatalogField(product, 'title', lang);
+                const variants = Array.isArray(product.variants) ? product.variants : [];
+                if (variants.length) {
+                    variants.forEach(function(v, idx) {
+                        const color = lang === 'en' ? (v.colorEn || v.colorAr) : (v.colorAr || v.colorEn || '');
+                        const size = lang === 'en' ? (v.sizeEn || v.sizeAr) : (v.sizeAr || v.sizeEn || '');
+                        const type = lang === 'en' ? (v.typeEn || v.typeAr) : (v.typeAr || v.typeEn || '');
+                        const parts = [type, size, color].filter(Boolean);
+                        const label = parts.length ? (baseTitle + ' — ' + parts.join(' · ')) : baseTitle;
+                        const img = resolveDisplayMediaUrl(v.image || getProductMediaGallery(product)[0] || '');
+                        items.push({
+                            productId: product.id,
+                            variantIndex: idx,
+                            title: label,
+                            desc: getLocalizedCatalogField(product, 'text', lang) || '',
+                            image: img,
+                            price: Number(v.price) || 0,
+                            color: color,
+                            size: size,
+                            type: type,
+                            inStock: isCatalogItemInStock(product, v),
+                            shopEnabled: productHasShop(product)
+                        });
+                    });
+                } else {
+                    const img = resolveDisplayMediaUrl(getProductMediaGallery(product)[0] || '');
+                    items.push({
+                        productId: product.id,
+                        variantIndex: -1,
+                        title: baseTitle,
+                        desc: getLocalizedCatalogField(product, 'text', lang) || '',
+                        image: img,
+                        price: 0,
+                        color: '',
+                        size: '',
+                        type: '',
+                        inStock: isCatalogItemInStock(product, null),
+                        shopEnabled: productHasShop(product)
+                    });
+                }
+            });
+            return items;
+        }
+
+        function applyStoreCatalogFilters(items, filters) {
+            const f = filters || {};
+            let out = (items || []).slice();
+            if (f.availability === 'in') out = out.filter(function(it) { return it.inStock; });
+            else if (f.availability === 'out') out = out.filter(function(it) { return !it.inStock; });
+            if (f.color) out = out.filter(function(it) { return String(it.color || '').trim() === f.color; });
+            if (f.size) out = out.filter(function(it) { return String(it.size || '').trim() === f.size; });
+            if (f.type) out = out.filter(function(it) { return String(it.type || '').trim() === f.type; });
+            if (f.sort === 'price-asc') {
+                out.sort(function(a, b) { return (a.price || 999999999) - (b.price || 999999999); });
+            } else if (f.sort === 'price-desc') {
+                out.sort(function(a, b) { return (b.price || 0) - (a.price || 0); });
+            }
+            return out;
+        }
+
+        function buildStoreCatalogFilterOptions(items) {
+            const colors = {};
+            const sizes = {};
+            const types = {};
+            (items || []).forEach(function(it) {
+                if (it.color) colors[it.color] = true;
+                if (it.size) sizes[it.size] = true;
+                if (it.type) types[it.type] = true;
+            });
+            return {
+                colors: Object.keys(colors).sort(),
+                sizes: Object.keys(sizes).sort(),
+                types: Object.keys(types).sort()
+            };
+        }
+
+        function buildStoreCatalogCardHtml(item, lang, ui, clickHandler) {
+            const desc = item.desc ? String(item.desc).slice(0, 72) + (item.desc.length > 72 ? '…' : '') : '';
+            const stockBadge = item.inStock
+                ? '<span class="nebras-store-stock-badge nebras-store-stock-badge--in">' + escapeHtmlAttr(ui.storeFilterInStock || 'متاح') + '</span>'
+                : '<span class="nebras-store-stock-badge nebras-store-stock-badge--out">' + escapeHtmlAttr(ui.storeFilterOutOfStock || 'غير متاح') + '</span>';
+            const priceHtml = item.price > 0
+                ? formatVariantPriceBlock(item.price, lang)
+                : '<span class="variant-price variant-price--request">' + escapeHtmlAttr(ui.catalogHubPriceOnRequest || 'عند الطلب') + '</span>';
+            const cartBtn = item.shopEnabled && item.inStock && item.variantIndex >= 0
+                ? '<button type="button" class="nebras-store-card-cart-btn" onclick="event.stopPropagation();addVariantIndexToCart(\'' + String(item.productId).replace(/'/g, "\\'") + '\',' + item.variantIndex + ',1)"><i class="fas fa-cart-plus"></i></button>'
+                : '';
+            const onClick = clickHandler || ('openProductFromWorkspaceHub(\'' + escapeHtmlAttr(item.productId) + '\')');
+            return '<article class="nebras-store-catalog-card nebras-store-catalog-card--premium" role="button" tabindex="0" onclick="' + onClick + '" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){' + onClick + '}">' +
+                stockBadge +
+                '<span class="nebras-store-catalog-media">' +
+                (item.image
+                    ? '<img src="' + escapeHtmlAttr(item.image) + '" alt="' + escapeHtmlAttr(item.title) + '" loading="lazy" decoding="async">'
+                    : '<span class="nebras-store-catalog-placeholder"><i class="fas fa-box"></i></span>') +
+                '</span>' +
+                '<span class="nebras-store-catalog-body">' +
+                '<strong class="nebras-store-catalog-title">' + escapeHtmlAttr(item.title) + '</strong>' +
+                (desc ? '<span class="nebras-store-catalog-desc">' + escapeHtmlAttr(desc) + '</span>' : '') +
+                '<div class="nebras-store-catalog-price">' + priceHtml + '</div>' +
+                '<span class="nebras-store-catalog-cta"><i class="fas fa-search-plus"></i> ' + escapeHtmlAttr(ui.iconInnerOpenProduct || 'عرض المنتج') + '</span>' +
+                cartBtn +
+                '</span></article>';
+        }
+
+        function buildStoreCatalogLayoutHtml(products, lang, contextKey, options) {
+            const opts = options || {};
+            const ui = siteText[lang] || siteText.ar;
+            const key = getStoreCatalogFilterKey(contextKey);
+            const filters = getStoreCatalogFilters(key);
+            const allItems = flattenProductsToCatalogItems(products, lang);
+            const filtered = applyStoreCatalogFilters(allItems, filters);
+            const filterOpts = buildStoreCatalogFilterOptions(allItems);
+            const countLabel = (ui.storeProductCount || '{n} منتج').replace('{n}', String(filtered.length));
+            const sortBtns = [
+                { id: 'default', label: ui.storeSortDefault || 'الأكثر مبيعاً' },
+                { id: 'price-asc', label: ui.storeSortPriceLow || 'من الأقل سعراً' },
+                { id: 'price-desc', label: ui.storeSortPriceHigh || 'من الأعلى سعراً' }
+            ].map(function(s) {
+                const active = filters.sort === s.id ? ' is-active' : '';
+                return '<button type="button" class="nebras-store-sort-btn' + active + '" onclick="setStoreCatalogSort(\'' + escapeHtmlAttr(key) + '\',\'' + s.id + '\')">' + escapeHtmlAttr(s.label) + '</button>';
+            }).join('');
+            function availBtn(val, label) {
+                const active = filters.availability === val ? ' is-active' : '';
+                return '<button type="button" class="nebras-store-filter-chip' + active + '" onclick="setStoreCatalogAvailability(\'' + escapeHtmlAttr(key) + '\',\'' + val + '\')">' + escapeHtmlAttr(label) + '</button>';
+            }
+            function selectFilter(field, values, label) {
+                if (!values.length) return '';
+                const cur = filters[field] || '';
+                let html = '<div class="nebras-store-filter-group"><span class="nebras-store-filter-label">' + escapeHtmlAttr(label) + '</span><select class="nebras-store-filter-select" onchange="setStoreCatalogFacet(\'' + escapeHtmlAttr(key) + '\',\'' + field + '\',this.value)">';
+                html += '<option value="">' + escapeHtmlAttr(ui.storeFilterAll || 'الكل') + '</option>';
+                values.forEach(function(v) {
+                    html += '<option value="' + escapeHtmlAttr(v) + '"' + (cur === v ? ' selected' : '') + '>' + escapeHtmlAttr(v) + '</option>';
+                });
+                html += '</select></div>';
+                return html;
+            }
+            const sidebar = '<aside class="nebras-store-sidebar" aria-label="' + escapeHtmlAttr(ui.storeShoppingOptions || 'خيارات التسوق') + '">' +
+                '<h4 class="nebras-store-sidebar-title">' + escapeHtmlAttr(ui.storeShoppingOptions || 'خيارات التسوق') + '</h4>' +
+                '<div class="nebras-store-filter-group"><span class="nebras-store-filter-label">' + escapeHtmlAttr(ui.storeFilterAvailability || 'التوفر') + '</span>' +
+                '<div class="nebras-store-filter-chips">' +
+                availBtn('all', ui.storeFilterAll || 'الكل') +
+                availBtn('in', ui.storeFilterInStock || 'متاح') +
+                availBtn('out', ui.storeFilterOutOfStock || 'غير متاح') +
+                '</div></div>' +
+                selectFilter('type', filterOpts.types, ui.storeFilterType || 'النوع') +
+                selectFilter('size', filterOpts.sizes, ui.storeFilterSize || 'المقاس') +
+                selectFilter('color', filterOpts.colors, ui.storeFilterColor || 'اللون') +
+                '<button type="button" class="nebras-store-filter-reset" onclick="resetStoreCatalogFilters(\'' + escapeHtmlAttr(key) + '\')">' + escapeHtmlAttr(ui.storeFilterReset || 'إعادة ضبط الفلاتر') + '</button>' +
+                '</aside>';
+            const gridHtml = filtered.length
+                ? filtered.map(function(it) {
+                    const clickFn = opts.overlayMode
+                        ? ('closeIconOverlay();openProductCatalog(\'' + String(it.productId).replace(/'/g, "\\'") + '\')')
+                        : ('openProductFromWorkspaceHub(\'' + escapeHtmlAttr(it.productId) + '\')');
+                    return buildStoreCatalogCardHtml(it, lang, ui, clickFn);
+                }).join('')
+                : '<p class="nebras-store-empty">' + escapeHtmlAttr(ui.storeCatalogEmpty || 'لا منتجات تطابق الفلاتر الحالية.') + '</p>';
+            return '<div class="nebras-store-layout" data-store-context="' + escapeHtmlAttr(key) + '">' +
+                '<div class="nebras-store-main">' +
+                '<div class="nebras-store-toolbar">' +
+                '<div class="nebras-store-toolbar-head"><h4 class="nebras-store-toolbar-title">' + escapeHtmlAttr(opts.title || ui.catalogHubTitle || 'جميع المنتجات') + '</h4><span class="nebras-store-toolbar-count">' + escapeHtmlAttr(countLabel) + '</span></div>' +
+                '<div class="nebras-store-sort-row">' + sortBtns + '</div></div>' +
+                '<div class="nebras-store-catalog-grid nebras-store-catalog-grid--premium">' + gridHtml + '</div>' +
+                '</div>' + sidebar + '</div>';
+        }
+
+        function refreshStoreCatalogView(contextKey) {
+            const key = getStoreCatalogFilterKey(contextKey);
+            const mount = document.querySelector('.nebras-store-layout[data-store-context="' + key + '"]');
+            if (!mount) {
+                if (nebrasWorkspaceState.active) renderNebrasWorkspace();
+                return;
+            }
+            const route = nebrasWorkspaceState.route || {};
+            const icon = route.iconId ? visitorIcons.find(function(i) { return i.id === route.iconId; }) : null;
+            const products = route.view === 'catalog-hub' && icon
+                ? getProductsForVisitorIcon(icon)
+                : siteProducts.filter(function(p) { return p && p.visible !== false; });
+            const lang = currentLang || 'ar';
+            const ui = siteText[lang] || siteText.ar;
+            const title = icon ? getVisitorIconDisplayTitle(icon) : (ui.catalogHubTitle || 'كتالوج منتجات نبراس');
+            const parent = mount.parentElement;
+            if (!parent) return;
+            const wrapper = document.createElement('div');
+            wrapper.innerHTML = buildStoreCatalogLayoutHtml(products, lang, key, { title: title });
+            const fresh = wrapper.firstElementChild;
+            if (fresh) parent.replaceChild(fresh, mount);
+            wireClickableMediaIn(parent);
+        }
+
+        function setStoreCatalogAvailability(contextKey, value) {
+            const f = getStoreCatalogFilters(contextKey);
+            f.availability = value || 'all';
+            refreshStoreCatalogView(contextKey);
+        }
+
+        function setStoreCatalogSort(contextKey, value) {
+            const f = getStoreCatalogFilters(contextKey);
+            f.sort = value || 'default';
+            refreshStoreCatalogView(contextKey);
+        }
+
+        function setStoreCatalogFacet(contextKey, field, value) {
+            const f = getStoreCatalogFilters(contextKey);
+            if (field === 'color' || field === 'size' || field === 'type') f[field] = String(value || '').trim();
+            refreshStoreCatalogView(contextKey);
+        }
+
+        function resetStoreCatalogFilters(contextKey) {
+            const key = getStoreCatalogFilterKey(contextKey);
+            storeCatalogFilterState[key] = { availability: 'all', sort: 'default', color: '', size: '', type: '' };
+            refreshStoreCatalogView(contextKey);
+        }
+
+        function toggleProductStock(productId) {
+            if (!requireFullSiteContent()) return;
+            const product = siteProducts.find(function(p) { return p.id === productId; });
+            if (!product) return;
+            product.inStock = product.inStock === false;
+            saveContentData();
+            displaySiteProductsAdmin();
+            addAuditLog('تغيير توفر منتج', (product.inStock !== false ? 'متاح: ' : 'غير متاح: ') + (product.titleAr || productId));
+        }
+
         function getProductsForVisitorIcon(icon) {
             if (!icon) return [];
             if (icon.linkedProductId) {
@@ -2758,35 +3013,14 @@
             return [];
         }
 
-        function buildIconInnerHubHtml(products, lang) {
+        function buildIconInnerHubHtml(products, lang, iconId) {
             const ui = siteText[lang] || siteText.ar;
-            let cardsHtml = '';
-            products.forEach(function(p) {
-                const title = getLocalizedCatalogField(p, 'title', lang);
-                const text = getLocalizedCatalogField(p, 'text', lang);
-                const img = resolveDisplayMediaUrl(getProductMediaGallery(p)[0] || '');
-                const pid = String(p.id).replace(/'/g, "\\'");
-                const priceLine = getProductPriceLine(p, lang, ui);
-                const openLabel = ui.iconInnerOpenProduct || 'عرض المنتج';
-                const desc = text ? String(text).slice(0, 72) + (text.length > 72 ? '…' : '') : '';
-                cardsHtml += '<article class="nebras-store-catalog-card nebras-store-catalog-card--hub" role="button" tabindex="0" onclick="closeIconOverlay();openProductCatalog(\'' + pid + '\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){closeIconOverlay();openProductCatalog(\'' + pid + '\')}">';
-                cardsHtml += '<span class="nebras-store-catalog-media">';
-                if (img) {
-                    cardsHtml += '<img src="' + escapeHtmlAttr(img) + '" alt="' + escapeHtmlAttr(title) + '" loading="lazy" decoding="async">';
-                } else {
-                    cardsHtml += '<span class="nebras-store-catalog-placeholder"><i class="fas fa-box"></i></span>';
-                }
-                cardsHtml += '</span>';
-                cardsHtml += '<span class="nebras-store-catalog-body">';
-                cardsHtml += '<strong class="nebras-store-catalog-title">' + escapeHtmlAttr(title) + '</strong>';
-                if (desc) cardsHtml += '<span class="nebras-store-catalog-desc">' + escapeHtmlAttr(desc) + '</span>';
-                cardsHtml += '<span class="nebras-store-catalog-price">' + escapeHtmlAttr(priceLine) + '</span>';
-                cardsHtml += '<span class="nebras-store-catalog-cta"><i class="fas fa-search-plus"></i> ' + escapeHtmlAttr(openLabel) + '</span>';
-                cardsHtml += '</span></article>';
-            });
+            const ctx = 'icon-' + (iconId != null ? iconId : 'hub');
             return '<div class="icon-inner-hub-wrap">' +
-                '<h4 class="nebras-store-skus-title">' + escapeHtmlAttr(ui.catalogHubPick || 'اختر المنتج — صورة · شرح · سعر') + '</h4>' +
-                '<div class="nebras-store-catalog-grid nebras-store-catalog-grid--hub">' + cardsHtml + '</div>' +
+                buildStoreCatalogLayoutHtml(products, lang, ctx, {
+                    title: ui.catalogHubPick || 'جميع المنتجات',
+                    overlayMode: true
+                }) +
                 '</div>';
         }
 
@@ -5424,6 +5658,46 @@
             });
         }
 
+        async function fetchAssetAsDataUrlForPdf(assetPath) {
+            const rel = normalizeHeroBannerPath(assetPath);
+            const url = heroSlideAssetUrl(rel);
+            if (!url) return '';
+            try {
+                const res = await fetch(url, { credentials: 'omit' });
+                if (!res.ok) return '';
+                const blob = await res.blob();
+                if (!blob || !blob.size) return '';
+                return await new Promise(function(resolve) {
+                    const reader = new FileReader();
+                    reader.onload = function() { resolve(String(reader.result || '')); };
+                    reader.onerror = function() { resolve(''); };
+                    reader.readAsDataURL(blob);
+                });
+            } catch (fetchErr) {
+                return '';
+            }
+        }
+
+        async function appendA4ImagePageToPdf(pdf, dataUrl) {
+            if (!dataUrl || String(dataUrl).indexOf('data:') !== 0) return;
+            const jsPDF = pdf.constructor;
+            const pageW = pdf.internal.pageSize.getWidth();
+            const pageH = pdf.internal.pageSize.getHeight();
+            const imgDims = await getDataUrlImageSize(dataUrl);
+            const margin = 0;
+            const maxW = pageW - margin * 2;
+            const maxH = pageH - margin * 2;
+            const pxToMm = 0.264583;
+            let imgW = imgDims.w * pxToMm;
+            let imgH = imgDims.h * pxToMm;
+            const ratio = Math.min(maxW / imgW, maxH / imgH, 1);
+            imgW *= ratio;
+            imgH *= ratio;
+            pdf.addPage();
+            const format = String(dataUrl).indexOf('image/jpeg') >= 0 || String(dataUrl).indexOf('image/jpg') >= 0 ? 'JPEG' : 'PNG';
+            pdf.addImage(dataUrl, format, (pageW - imgW) / 2, (pageH - imgH) / 2, imgW, imgH);
+        }
+
         async function captureQuoteA4AsPdfBlob() {
             const pngDataUrl = await captureQuoteA4AsPngDataUrl();
             if (!pngDataUrl) return null;
@@ -5444,6 +5718,11 @@
                 imgW *= ratio;
                 imgH *= ratio;
                 pdf.addImage(pngDataUrl, 'PNG', (pageW - imgW) / 2, margin, imgW, imgH);
+                const q = getQuoteA4Settings();
+                const page2 = await fetchAssetAsDataUrlForPdf(q.staticPage2Url);
+                const page3 = await fetchAssetAsDataUrlForPdf(q.staticPage3Url);
+                if (page2) await appendA4ImagePageToPdf(pdf, page2);
+                if (page3) await appendA4ImagePageToPdf(pdf, page3);
                 return pdf.output('blob');
             } catch (pdfErr) {
                 console.warn('Quote A4 PDF failed:', pdfErr);
@@ -6020,11 +6299,15 @@
                 merged.push(e);
             });
             merged.sort(function(a, b) { return (b.at || 0) - (a.at || 0); });
-            if (!merged.length) {
-                list.innerHTML = '<li>' + escapeHtmlAttr(ui.salesInboxEmpty || 'لا طلبات عروض أسعار بعد.') + '</li>';
+            const visible = merged.filter(function(e) { return adminQuoteEntryVisible(e, currentAdmin); });
+            if (!visible.length) {
+                const emptyMsg = currentAdmin && String(currentAdmin.assignedBranchCity || '').trim()
+                    ? (ui.salesInboxBranchEmpty || 'لا طلبات لفرعك حالياً.')
+                    : (ui.salesInboxEmpty || 'لا طلبات عروض أسعار بعد.');
+                list.innerHTML = '<li>' + escapeHtmlAttr(emptyMsg) + '</li>';
                 return;
             }
-            list.innerHTML = merged.map(function(e) {
+            list.innerHTML = visible.map(function(e) {
                 const when = formatNebrasDateTime(e.at, currentLang);
                 const linesSummary = (e.lines || []).length + ' ' + (ui.salesInboxLines || 'صنف');
                 const isDesigner = (e.quoteChannel || '') === 'door-designer';
@@ -8241,11 +8524,15 @@
                 const visBtn = p.visible === false
                     ? '<button type="button" onclick="toggleSiteProductVisibility(\'' + p.id + '\')">إظهار</button>'
                     : '<button type="button" onclick="toggleSiteProductVisibility(\'' + p.id + '\')">إخفاء</button>';
-                return '<li' + (p.visible === false ? ' class="scm-product-row--hidden"' : '') + '><strong>' + escapeHtmlAttr(p.titleAr || p.id) + '</strong>' + hiddenBadge + escapeHtmlAttr(iconNote) + ' — ' + escapeHtmlAttr(p.iconClass || '') +
+                const stockBadge = p.inStock === false
+                    ? ' <span class="scm-product-stock-badge scm-product-stock-badge--out">غير متاح</span>'
+                    : ' <span class="scm-product-stock-badge scm-product-stock-badge--in">متاح</span>';
+                const stockBtn = '<button type="button" onclick="toggleProductStock(\'' + p.id + '\')">' + (p.inStock === false ? 'تفعيل التوفر' : 'تعطيل التوفر') + '</button>';
+                return '<li' + (p.visible === false ? ' class="scm-product-row--hidden"' : '') + '><strong>' + escapeHtmlAttr(p.titleAr || p.id) + '</strong>' + hiddenBadge + stockBadge + escapeHtmlAttr(iconNote) + ' — ' + escapeHtmlAttr(p.iconClass || '') +
                     ' <span style="opacity:0.85">[' + modeLabel + ']</span>' +
                     '<small>خلفية: ' + escapeHtmlAttr(p.backgroundImage || 'افتراضي') + ' | ألبوم: ' + ((p.album || []).length) + ' | أصناف: ' + variantCount + (variantPreview ? ' — ' + escapeHtmlAttr(variantPreview) : '') + '</small>' +
                     '<div class="scm-row-actions"><button type="button" onclick="editSiteProduct(\'' + p.id + '\')">تعديل</button>' +
-                    variantsBtn + visBtn +
+                    variantsBtn + stockBtn + visBtn +
                     '<button type="button" onclick="deleteSiteProduct(\'' + p.id + '\')">حذف</button></div></li>';
             }).join('');
         }
@@ -8733,6 +9020,13 @@
             }
         }
 
+        function filterLinktreeSocialOnlyLinks(links) {
+            return (links || []).filter(function(link) {
+                const u = String(link.url || '').toLowerCase();
+                return u.indexOf('wa.me') < 0 && u.indexOf('whatsapp') < 0 && u.indexOf('api.whatsapp') < 0;
+            });
+        }
+
         function buildLinktreeFallbackLinks(ui) {
             const items = [];
             const push = function(url, title, icon) {
@@ -8744,12 +9038,21 @@
             push(systemSettings.socialFacebook, 'Facebook', 'fab fa-facebook-f');
             push(systemSettings.socialTiktok, 'TikTok', 'fab fa-tiktok');
             push(systemSettings.socialSnapchat, 'Snapchat', 'fab fa-snapchat');
-            push(salesPhoneWhatsAppHref(), ui.socialWaSalesLabel || 'واتساب المبيعات', 'fab fa-whatsapp');
-            const csWa = customerServiceWhatsAppHref();
-            if (csWa && csWa !== salesPhoneWhatsAppHref()) {
-                push(csWa, ui.socialWaCsLabel || 'واتساب خدمة العملاء', 'fab fa-whatsapp');
-            }
-            return items;
+            return filterLinktreeSocialOnlyLinks(items);
+        }
+
+        function designerFooterWhatsAppHref() {
+            const raw = String(systemSettings.designerPhone || '0535336185').replace(/\D/g, '');
+            if (raw.length < 9) return '';
+            let n = raw;
+            if (n.startsWith('0')) n = '966' + n.slice(1);
+            else if (!n.startsWith('966')) n = '966' + n;
+            return 'https://wa.me/' + n;
+        }
+
+        function designerFooterTelHref() {
+            const p = String(systemSettings.designerPhone || '0535336185').trim();
+            return p ? ('tel:' + p.replace(/\s+/g, '')) : '#';
         }
 
         async function fetchLinktreeProfileLinks(profileUrl, ui) {
@@ -8811,7 +9114,7 @@
             }
 
             container.innerHTML = '<p class="footer-linktree-loading">' + escapeHtmlAttr(ui.footerLinktreeLoading || 'جاري تحميل الصفحات…') + '</p>';
-            const links = await fetchLinktreeProfileLinks(ltUrl, ui);
+            const links = filterLinktreeSocialOnlyLinks(await fetchLinktreeProfileLinks(ltUrl, ui));
             if (!links.length) {
                 container.innerHTML = '<p class="footer-linktree-empty">' + escapeHtmlAttr(ui.footerLinktreeEmpty || 'لا توجد صفحات متاحة حالياً.') + '</p>';
                 return;
@@ -8822,6 +9125,19 @@
         function applyFooterContent(text) {
             const copyEl = document.getElementById('site-footer-copyright');
             if (copyEl) copyEl.textContent = text.siteFooterCopyright || text.dashboardCopyright || 'كل الحقوق محفوظة مع مصنع نبراس 2026';
+            const creditText = document.getElementById('footer-designer-credit-text');
+            const waEl = document.getElementById('footer-designer-wa');
+            const telEl = document.getElementById('footer-designer-tel');
+            if (creditText) creditText.textContent = text.footerDesignerCredit || 'صمم بواسطة المهندس/ عبدالرحمن عمران طرش';
+            const waHref = designerFooterWhatsAppHref();
+            if (waEl) {
+                waEl.href = waHref || '#';
+                waEl.setAttribute('aria-label', text.footerDesignerWhatsAppAria || 'واتساب المصمم');
+            }
+            if (telEl) {
+                telEl.href = designerFooterTelHref();
+                telEl.setAttribute('aria-label', text.footerDesignerCallAria || 'اتصال المصمم');
+            }
             renderFooterLinktreeHub(text);
         }
 
@@ -8849,8 +9165,6 @@
             const tt = sanitizeExternalUrl(systemSettings.socialTiktok);
             const sn = sanitizeExternalUrl(systemSettings.socialSnapchat);
             const explicitWa = sanitizeExternalUrl(systemSettings.socialWhatsApp);
-            const waSales = explicitWa || salesPhoneWhatsAppHref();
-            const waCs = customerServiceWhatsAppHref();
             const lt = sanitizeExternalUrl(systemSettings.linktreeUrl || NEBRAS_LINKTREE_URL);
 
             const items = [];
@@ -8858,8 +9172,6 @@
             if (ig) items.push({ href: ig, icon: 'fab fa-instagram', label: 'Instagram', cls: 'soc-ig' });
             if (tt) items.push({ href: tt, icon: 'fab fa-tiktok', label: 'TikTok', cls: 'soc-tt' });
             if (sn) items.push({ href: sn, icon: 'fab fa-snapchat', label: 'Snapchat', cls: 'soc-sn' });
-            if (waSales) items.push({ href: waSales, icon: 'fab fa-whatsapp', label: ui.socialWaSalesLabel || 'واتساب المبيعات', cls: 'soc-wa soc-wa-sales' });
-            if (waCs && waCs !== waSales) items.push({ href: waCs, icon: 'fab fa-whatsapp', label: ui.socialWaCsLabel || 'واتساب خدمة العملاء', cls: 'soc-wa soc-wa-cs' });
             if (lt) items.push({ href: lt, icon: 'fas fa-link', label: ui.channelLinktree || 'Linktree', cls: 'soc-lt' });
 
             if (!items.length) {
@@ -10366,6 +10678,117 @@
                 '<img class="hero-slide-img" src="' + escapeHtmlAttr(url) + '" alt="" decoding="async" loading="' + loadAttr + '"' + priority +
                 ' onerror="this.onerror=null;this.src=\'' + fallback.replace(/'/g, '') + '\'">' +
                 '</div>';
+        }
+
+        function collectHeroSlideshowSlidesFromAdminForm() {
+            const rows = document.querySelectorAll('.hero-slideshow-admin-row');
+            const slides = [];
+            rows.forEach(function(row) {
+                const srcEl = row.querySelector('.hero-slideshow-admin-src');
+                const headlineEl = row.querySelector('.hero-slideshow-admin-headline');
+                if (!srcEl) return;
+                const src = String(srcEl.value || '').trim();
+                if (!src) return;
+                slides.push({
+                    src: src,
+                    headline: headlineEl ? (parseInt(headlineEl.value, 10) || 0) : 0
+                });
+            });
+            return slides;
+        }
+
+        function renderHeroSlideshowAdminList() {
+            const list = document.getElementById('hero-slideshow-admin-list');
+            const block = document.getElementById('hero-slideshow-admin-block');
+            if (!list) return;
+            if (block) block.hidden = !isMainGovernanceAdmin(currentAdmin);
+            const slides = getHeroSlideshowSlides();
+            const headlines = getHeroSlideHeadlines(currentLang || 'ar');
+            list.innerHTML = slides.map(function(slide, idx) {
+                const headlineText = headlines[slide.headline] || headlines[idx] || '';
+                return '<div class="hero-slideshow-admin-row" data-idx="' + idx + '">' +
+                    '<input type="text" class="hero-slideshow-admin-src" value="' + escapeHtmlAttr(slide.src) + '" placeholder="images/hero-slide-01-factory-banner.png">' +
+                    '<input type="number" class="hero-slideshow-admin-headline" min="0" value="' + slide.headline + '" title="رقم الجملة">' +
+                    '<span class="hero-slideshow-admin-preview-text">' + escapeHtmlAttr(headlineText) + '</span>' +
+                    '<button type="button" onclick="pickHeroSlideshowSlideImage(' + idx + ')">صورة</button>' +
+                    '<button type="button" onclick="removeHeroSlideshowSlide(' + idx + ')">حذف</button>' +
+                    '</div>';
+            }).join('');
+        }
+
+        function saveHeroSlideshowSlidesFromAdmin() {
+            const slides = collectHeroSlideshowSlidesFromAdminForm();
+            systemSettings.heroSlideshowSlides = slides.length ? slides : null;
+            saveContentData();
+            applyHeroBanner();
+        }
+
+        function addHeroSlideshowSlideFromSettings() {
+            if (!requireMainGovernanceAdmin('إدارة شرائح الهيدر للإدارة الرئيسية فقط.')) return;
+            const slides = collectHeroSlideshowSlidesFromAdminForm();
+            if (!slides.length && !systemSettings.heroSlideshowSlides) {
+                slides.push.apply(slides, HERO_SLIDESHOW_DEFAULT.map(function(s) {
+                    return { src: s.src, headline: s.headline };
+                }));
+            }
+            slides.push({ src: 'images/hero-slide-01-factory-banner.png', headline: slides.length });
+            systemSettings.heroSlideshowSlides = slides;
+            renderHeroSlideshowAdminList();
+            saveHeroSlideshowSlidesFromAdmin();
+        }
+
+        function removeHeroSlideshowSlide(idx) {
+            if (!requireMainGovernanceAdmin('إدارة شرائح الهيدر للإدارة الرئيسية فقط.')) return;
+            const slides = collectHeroSlideshowSlidesFromAdminForm();
+            slides.splice(idx, 1);
+            systemSettings.heroSlideshowSlides = slides.length ? slides : null;
+            renderHeroSlideshowAdminList();
+            saveHeroSlideshowSlidesFromAdmin();
+        }
+
+        async function pickHeroSlideshowSlideImage(idx) {
+            if (!requireMainGovernanceAdmin('إدارة شرائح الهيدر للإدارة الرئيسية فقط.')) return;
+            const url = await pickMediaPath({ label: 'صورة شريحة الهيدر' });
+            if (!url) return;
+            const input = document.querySelector('.hero-slideshow-admin-row[data-idx="' + idx + '"] .hero-slideshow-admin-src');
+            if (input) input.value = url;
+            saveHeroSlideshowSlidesFromAdmin();
+            renderHeroSlideshowAdminList();
+        }
+
+        function resetHeroSlideshowToDefault() {
+            if (!requireMainGovernanceAdmin('إدارة شرائح الهيدر للإدارة الرئيسية فقط.')) return;
+            if (!confirm('استعادة شرائح الهيدر الافتراضية؟')) return;
+            systemSettings.heroSlideshowSlides = null;
+            saveContentData();
+            renderHeroSlideshowAdminList();
+            applyHeroBanner();
+        }
+
+        async function pickQuoteA4StaticPageFromSettings(pageNo) {
+            if (!requireMainGovernanceAdmin('تعديل صيغة عرض السعر A4 للإدارة الرئيسية فقط.')) return;
+            const q = getQuoteA4Settings();
+            const label = pageNo === 3 ? 'ورقة العقد (ثابتة)' : 'ورقة القوانين (ثابتة)';
+            const url = await pickMediaPath({
+                label: label,
+                defaultValue: pageNo === 3 ? (q.staticPage3Url || '') : (q.staticPage2Url || '')
+            });
+            if (!url) return;
+            if (pageNo === 3) q.staticPage3Url = url;
+            else q.staticPage2Url = url;
+            const input = document.getElementById(pageNo === 3 ? 'setting-quote-a4-static-page3' : 'setting-quote-a4-static-page2');
+            if (input) input.value = url;
+            saveContentData();
+            addAuditLog('تعديل ورقة عرض السعر الثابتة', 'صفحة ' + pageNo + ': ' + url);
+        }
+
+        function adminQuoteEntryVisible(entry, admin) {
+            if (!admin || !String(admin.assignedBranchCity || '').trim()) return true;
+            const branchNeedle = String(admin.assignedBranchCity).trim().toLowerCase();
+            const entryCity = String(entry.city || '').trim().toLowerCase();
+            const entryAddr = String(entry.address || '').trim().toLowerCase();
+            if (!entryCity && !entryAddr) return false;
+            return entryCity.indexOf(branchNeedle) >= 0 || entryAddr.indexOf(branchNeedle) >= 0 || branchNeedle.indexOf(entryCity) >= 0;
         }
 
         function getHeroSlideshowSlides() {
@@ -13339,8 +13762,13 @@
             if (qWm) qWm.checked = q.showWatermark !== false;
             if (qFrame) qFrame.checked = q.showFrame !== false;
             if (qSeal) qSeal.checked = q.showSeal !== false;
+            const qStatic2 = document.getElementById('setting-quote-a4-static-page2');
+            const qStatic3 = document.getElementById('setting-quote-a4-static-page3');
+            if (qStatic2) qStatic2.value = q.staticPage2Url || '';
+            if (qStatic3) qStatic3.value = q.staticPage3Url || '';
             const quoteBlock = document.getElementById('quote-a4-settings-block');
             if (quoteBlock) quoteBlock.hidden = !isMainGovernanceAdmin(currentAdmin);
+            renderHeroSlideshowAdminList();
 
             populateOccasionThemeSelect();
             const occEnabled = document.getElementById('setting-occasion-enabled');
@@ -13419,6 +13847,8 @@
             if (!Array.isArray(systemSettings.bankAccounts)) systemSettings.bankAccounts = [];
 
             if (isMainGovernanceAdmin()) {
+                const heroSlides = collectHeroSlideshowSlidesFromAdminForm();
+                systemSettings.heroSlideshowSlides = heroSlides.length ? heroSlides : null;
                 const q = getQuoteA4Settings();
                 const qLogo = document.getElementById('setting-quote-a4-logo');
                 const qTagAr = document.getElementById('setting-quote-a4-tagline-ar');
@@ -13450,6 +13880,10 @@
                 if (qWm) q.showWatermark = !!qWm.checked;
                 if (qFrame) q.showFrame = !!qFrame.checked;
                 if (qSeal) q.showSeal = !!qSeal.checked;
+                const qStatic2El = document.getElementById('setting-quote-a4-static-page2');
+                const qStatic3El = document.getElementById('setting-quote-a4-static-page3');
+                if (qStatic2El) q.staticPage2Url = qStatic2El.value.trim();
+                if (qStatic3El) q.staticPage3Url = qStatic3El.value.trim();
                 systemSettings.quoteA4 = q;
                 ensureQuoteA4Settings();
             }
@@ -13496,6 +13930,7 @@
             }
 
             saveContentData();
+            applyHeroBanner();
             setLanguage(currentLang || 'ar');
             addAuditLog('تحديث إعدادات النظام', `تعديل إعدادات النظام والثيم (${systemSettings.occasionThemeId}) بواسطة ${currentAdmin.username}`);
             alert('تم حفظ إعدادات النظام بنجاح.');
@@ -14219,26 +14654,12 @@
                 '<p style="margin:16px 0 0;opacity:0.85;font-size:0.88rem">' + escapeHtmlAttr(t.workspaceMapDialHint || 'للموقع على الخريطة تواصل مع المبيعات أو زر «اتصال بالمندوب الأقرب» من الصفحة الرئيسية.') + '</p></div>';
         }
 
-        function buildWorkspaceProductGridHtml(products) {
+        function buildWorkspaceProductGridHtml(products, contextKey, title) {
             const lang = currentLang || 'ar';
             const ui = siteText[lang] || siteText.ar;
-            return '<div class="nebras-store-catalog-grid">' + products.map(function(p) {
-                const title = getLocalizedCatalogField(p, 'title', lang);
-                const text = getLocalizedCatalogField(p, 'text', lang);
-                const img = resolveDisplayMediaUrl(getProductMediaGallery(p)[0] || '');
-                const priceLine = getProductPriceLine(p, lang, ui);
-                const desc = text ? String(text).slice(0, 90) + (text.length > 90 ? '…' : '') : '';
-                return '<button type="button" class="nebras-store-catalog-card" onclick="openProductFromWorkspaceHub(\'' + escapeHtmlAttr(p.id) + '\')">' +
-                    '<span class="nebras-store-catalog-media">' +
-                    (img ? '<img src="' + escapeHtmlAttr(img) + '" alt="' + escapeHtmlAttr(title) + '" loading="lazy" decoding="async">' : '<span class="nebras-store-catalog-placeholder"><i class="fas fa-box"></i></span>') +
-                    '</span>' +
-                    '<span class="nebras-store-catalog-body">' +
-                    '<strong class="nebras-store-catalog-title">' + escapeHtmlAttr(title) + '</strong>' +
-                    (desc ? '<span class="nebras-store-catalog-desc">' + escapeHtmlAttr(desc) + '</span>' : '') +
-                    '<span class="nebras-store-catalog-price">' + escapeHtmlAttr(priceLine) + '</span>' +
-                    '<span class="nebras-store-catalog-cta"><i class="fas fa-arrow-left"></i> ' + escapeHtmlAttr(ui.iconInnerOpenProduct || 'عرض المنتج') + '</span>' +
-                    '</span></button>';
-            }).join('') + '</div>';
+            return buildStoreCatalogLayoutHtml(products, lang, contextKey || 'workspace-all', {
+                title: title || ui.catalogHubTitle || 'جميع المنتجات'
+            });
         }
 
         function mountStorefrontSectionInWorkspace(selector) {
@@ -14305,9 +14726,10 @@
                 const hubMode = route.view === 'catalog-hub' && icon
                     ? getCatalogExperience(icon)
                     : 'shop';
+                const ctxKey = route.view === 'catalog-hub' && icon ? ('icon-' + icon.id) : 'workspace-all';
                 html = buildWorkspaceModeHintHtml(hubMode === 'shop' ? 'shop' : 'browse', lang) +
                     '<p class="workspace-intro">' + escapeHtmlAttr(intro || ui.workspaceStoreIntro || 'متجر نبراس — اختر منتجاً للمعرض والأسعار وعرض السعر.') + '</p>' +
-                    buildWorkspaceProductGridHtml(products);
+                    buildWorkspaceProductGridHtml(products, ctxKey, title);
             } else if (route.view === 'product' && route.productId) {
                 const product = siteProducts.find(function(p) { return p.id === route.productId; });
                 if (!product) {
@@ -14485,10 +14907,16 @@
 
         function formatAdminPermissions(user) {
             if (user.isPrimary) return 'إدارة رئيسية — كامل الصلاحيات';
+            let perms = '';
             if (Array.isArray(user.permissions) && user.permissions.length) {
-                return user.permissions.map(function(k) { return NEBRAS_PERMISSION_LABELS[k] || k; }).join(' · ');
+                perms = user.permissions.map(function(k) { return NEBRAS_PERMISSION_LABELS[k] || k; }).join(' · ');
+            } else {
+                perms = (rolePermissions[user.role] || []).map(function(k) { return NEBRAS_PERMISSION_LABELS[k] || k; }).join(' · ');
             }
-            return (rolePermissions[user.role] || []).map(function(k) { return NEBRAS_PERMISSION_LABELS[k] || k; }).join(' · ');
+            if (String(user.assignedBranchCity || '').trim()) {
+                perms += (perms ? ' · ' : '') + 'فرع: ' + user.assignedBranchCity;
+            }
+            return perms;
         }
 
         function addNewUser() {
@@ -14515,12 +14943,22 @@
                 const permHelp = Object.keys(NEBRAS_PERMISSION_LABELS).join(', ');
                 const permsRaw = prompt('صلاحيات مخصصة (مفصولة بفاصلة):\n' + permHelp + '\n\nمثال: content,sales,audit', 'content,sales');
                 const permissions = parseAdminPermissionsInput(permsRaw, normalizedRole);
+                const branchCity = prompt('مدينة/فرع التخصيص (اتركه فارغاً للوصول الكامل — مثال: الرياض):', '');
+                if (branchCity === null) return;
                 const id = (employeeId || '').trim() || ('user-' + Date.now());
                 if (adminUsers.some(function(u) { return u.id === id; })) {
                     alert('معرف الموظف مستخدم مسبقاً.');
                     return;
                 }
-                adminUsers.push({ id: id, username: username.trim(), password: password.trim(), role: normalizedRole, permissions: permissions, isPrimary: false });
+                adminUsers.push({
+                    id: id,
+                    username: username.trim(),
+                    password: password.trim(),
+                    role: normalizedRole,
+                    permissions: permissions,
+                    assignedBranchCity: String(branchCity || '').trim(),
+                    isPrimary: false
+                });
                 saveSystemData();
                 alert('تم إضافة المستخدم الفرعي بنجاح — الصلاحيات: ' + permissions.join(', '));
                 displayUsers();
@@ -14581,6 +15019,12 @@
                 if (permsRaw === null) return;
                 permissions = parseAdminPermissionsInput(permsRaw, normalizedRole);
             }
+            let assignedBranchCity = user.assignedBranchCity || '';
+            if (!user.isPrimary) {
+                const branchPrompt = prompt('مدينة/فرع التخصيص (فارغ = وصول كامل):', assignedBranchCity);
+                if (branchPrompt === null) return;
+                assignedBranchCity = String(branchPrompt || '').trim();
+            }
             if (username && password) {
                 const idVal = user.isPrimary ? user.id : String(newId).trim();
                 adminUsers[index] = Object.assign({}, user, {
@@ -14589,6 +15033,7 @@
                     password: password,
                     role: user.isPrimary ? 'superadmin' : normalizedRole,
                     permissions: user.isPrimary ? null : permissions,
+                    assignedBranchCity: user.isPrimary ? '' : assignedBranchCity,
                     isPrimary: !!user.isPrimary
                 });
                 saveSystemData();
@@ -15950,6 +16395,10 @@
                 dashboardOfficialHint: 'لينكتري الرسمي لقنوات نبراس · رمز QR للموقع · حقوق النشر للإدارة.',
                 dashboardCopyright: 'كل الحقوق محفوظة مع مصنع نبراس 2026',
                 siteFooterCopyright: 'كل الحقوق محفوظة مع مصنع نبراس 2026',
+                footerDesignerCredit: 'صمم بواسطة المهندس/ عبدالرحمن عمران طرش',
+                footerDesignerWhatsAppAria: 'واتساب المصمم',
+                footerDesignerCallAria: 'اتصال المصمم',
+                salesInboxBranchEmpty: 'لا طلبات عروض أسعار لفرعك حالياً.',
                 dashboardLinktreeTitle: 'Nebras.Factory — Linktree الرسمي',
                 dashboardQrCaption: 'امسحي للوصول لموقع نبراس',
                 dashboardQrDownload: 'تحميل QR',
@@ -16071,6 +16520,20 @@
                 catalogHubBrowse: 'تصفح',
                 catalogHubPriceOnRequest: 'عند الطلب',
                 catalogHubCount: 'منتج',
+                storeShoppingOptions: 'خيارات التسوق',
+                storeFilterAvailability: 'التوفر',
+                storeFilterAll: 'الكل',
+                storeFilterInStock: 'متاح',
+                storeFilterOutOfStock: 'غير متاح',
+                storeFilterType: 'النوع',
+                storeFilterSize: 'المقاس',
+                storeFilterColor: 'اللون',
+                storeFilterReset: 'إعادة ضبط الفلاتر',
+                storeSortDefault: 'الأكثر مبيعاً',
+                storeSortPriceLow: 'من الأقل سعراً',
+                storeSortPriceHigh: 'من الأعلى سعراً',
+                storeProductCount: '{n} منتج',
+                storeCatalogEmpty: 'لا منتجات تطابق الفلاتر الحالية.',
                 occasionPromoTitle: 'عرض المناسبة',
                 occasionPromoCta: 'اكتشف العروض',
                 checkoutNoteLabel: 'ملاحظات للمبيعات',
@@ -16500,6 +16963,10 @@
                 dashboardOfficialHint: 'Official Linktree · site QR code · copyright.',
                 dashboardCopyright: 'All rights reserved — Nebras Plastic Factory 2026',
                 siteFooterCopyright: 'All rights reserved — Nebras Plastic Factory 2026',
+                footerDesignerCredit: 'Designed by Eng. / Abdulrahman Omran Tarsh',
+                footerDesignerWhatsAppAria: 'Designer WhatsApp',
+                footerDesignerCallAria: 'Call designer',
+                salesInboxBranchEmpty: 'No quote requests for your branch yet.',
                 dashboardLinktreeTitle: 'Nebras.Factory — Official Linktree',
                 dashboardQrCaption: 'Scan to open Nebras website',
                 dashboardQrDownload: 'Download QR',
@@ -16599,6 +17066,20 @@
                 catalogHubBrowse: 'Browse',
                 catalogHubPriceOnRequest: 'On request',
                 catalogHubCount: 'products',
+                storeShoppingOptions: 'Shopping options',
+                storeFilterAvailability: 'Availability',
+                storeFilterAll: 'All',
+                storeFilterInStock: 'In stock',
+                storeFilterOutOfStock: 'Out of stock',
+                storeFilterType: 'Type',
+                storeFilterSize: 'Size',
+                storeFilterColor: 'Color',
+                storeFilterReset: 'Reset filters',
+                storeSortDefault: 'Best selling',
+                storeSortPriceLow: 'Lowest price',
+                storeSortPriceHigh: 'Highest price',
+                storeProductCount: '{n} products',
+                storeCatalogEmpty: 'No products match the current filters.',
                 occasionPromoTitle: 'Special offer',
                 occasionPromoCta: 'Explore offers',
                 checkoutNoteLabel: 'Notes for sales',
@@ -17036,6 +17517,10 @@
                 dashboardOfficialHint: '官方 Linktree · 网站二维码 · 版权信息。',
                 dashboardCopyright: '版权所有 — 尼布拉斯塑料工厂 2026',
                 siteFooterCopyright: '版权所有 — 尼布拉斯塑料工厂 2026',
+                footerDesignerCredit: '设计：工程师 / 阿卜杜勒拉赫曼·奥姆兰·塔尔什',
+                footerDesignerWhatsAppAria: '设计师 WhatsApp',
+                footerDesignerCallAria: '致电设计师',
+                salesInboxBranchEmpty: '您所在分支暂无报价请求。',
                 dashboardLinktreeTitle: 'Nebras.Factory — 官方 Linktree',
                 dashboardQrCaption: '扫描访问尼布拉斯网站',
                 dashboardQrDownload: '下载二维码',
@@ -17128,6 +17613,20 @@
                 catalogHubBrowse: '浏览',
                 catalogHubPriceOnRequest: '询价',
                 catalogHubCount: '产品',
+                storeShoppingOptions: '购物选项',
+                storeFilterAvailability: '库存状态',
+                storeFilterAll: '全部',
+                storeFilterInStock: '有货',
+                storeFilterOutOfStock: '缺货',
+                storeFilterType: '类型',
+                storeFilterSize: '尺寸',
+                storeFilterColor: '颜色',
+                storeFilterReset: '重置筛选',
+                storeSortDefault: '最畅销',
+                storeSortPriceLow: '价格从低到高',
+                storeSortPriceHigh: '价格从高到低',
+                storeProductCount: '{n} 件产品',
+                storeCatalogEmpty: '没有符合当前筛选条件的产品。',
                 occasionPromoTitle: '特别优惠',
                 occasionPromoCta: '查看优惠',
                 checkoutNoteLabel: '给销售的备注',
@@ -17536,6 +18035,11 @@
         window.openDoorDesignerFromGateway = openDoorDesignerFromGateway;
         window.manageStoreIconProducts = manageStoreIconProducts;
         window.toggleSiteProductVisibility = toggleSiteProductVisibility;
+        window.toggleProductStock = toggleProductStock;
+        window.setStoreCatalogAvailability = setStoreCatalogAvailability;
+        window.setStoreCatalogSort = setStoreCatalogSort;
+        window.setStoreCatalogFacet = setStoreCatalogFacet;
+        window.resetStoreCatalogFilters = resetStoreCatalogFilters;
         window.purgeStaleCatalogReferences = purgeStaleCatalogReferences;
         window.loginAdmin = loginAdmin;
         window.logoutAdmin = logoutAdmin;
@@ -17549,7 +18053,12 @@
         window.openSystemSettingsForChannels = openSystemSettingsForChannels;
         window.openSystemSettingsForOccasion = openSystemSettingsForOccasion;
         window.pickQuoteA4LogoFromSettings = pickQuoteA4LogoFromSettings;
+        window.pickQuoteA4StaticPageFromSettings = pickQuoteA4StaticPageFromSettings;
         window.previewQuoteA4TemplateFromSettings = previewQuoteA4TemplateFromSettings;
+        window.addHeroSlideshowSlideFromSettings = addHeroSlideshowSlideFromSettings;
+        window.removeHeroSlideshowSlide = removeHeroSlideshowSlide;
+        window.pickHeroSlideshowSlideImage = pickHeroSlideshowSlideImage;
+        window.resetHeroSlideshowToDefault = resetHeroSlideshowToDefault;
         window.openDashboardNavSettings = openDashboardNavSettings;
         window.openVisitorIcon = openVisitorIcon;
         window.openPlatformModule = openPlatformModule;

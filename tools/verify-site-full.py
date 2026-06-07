@@ -127,11 +127,16 @@ def main():
             err(f'Hero slide asset missing: {rel}')
     if 'hero-slideshow' not in html or 'hero-dynamic-headline' not in html:
         err('Hero slideshow markup missing in index.html')
-    if 'footer-linktree-hub' not in html or 'footer-designer-line' in html:
-        err('Footer must use Linktree hub — designer footer row should be removed')
-    for fn in ('renderFooterLinktreeHub', 'fetchLinktreeProfileLinks', 'renderCompanySocialSection'):
+    if 'footer-linktree-hub' not in html or 'footer-bottom-bar' not in html:
+        err('Footer must use Linktree hub + bottom bar with designer credit')
+    if 'footer-designer-credit' not in html:
+        err('Footer designer credit block missing')
+    for fn in ('renderFooterLinktreeHub', 'fetchLinktreeProfileLinks', 'renderCompanySocialSection',
+               'renderHeroSlideshowAdminList', 'pickQuoteA4StaticPageFromSettings', 'adminQuoteEntryVisible'):
         if fn not in js:
-            err(f'{fn} missing — social/linktree footer broken')
+            err(f'{fn} missing — platform feature broken')
+    if 'staticPage2Url' not in js or 'staticPage3Url' not in js:
+        err('Quote A4 static pages 2-3 settings missing')
     slide_count = len(re.findall(r"\{ src: 'images/hero-slide-", js))
     if slide_count < 12:
         warn(f'HERO_SLIDESHOW_DEFAULT may have too few slides (found {slide_count})')

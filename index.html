@@ -377,11 +377,25 @@
         <p class="nebras-site-clock" id="nebras-site-clock" aria-live="polite"></p>
         <div class="company-legal-bar" id="footer-legal-bar" style="margin-bottom:16px;border-radius:12px;" data-nosnippet></div>
         <div class="footer-linktree-hub" id="footer-linktree-hub">
-            <a class="footer-linktree-hub-head" id="footer-linktree-main-link" href="https://linktr.ee/abdelrhmanomranmd" target="_blank" rel="noopener noreferrer">
-                <span class="footer-linktree-hub-icon" aria-hidden="true"><i class="fas fa-link"></i></span>
-                <h3 class="footer-linktree-hub-title" id="footer-linktree-hub-title">لزيارة صفحاتنا على السوشيال ميديا</h3>
-            </a>
+            <h3 class="footer-linktree-hub-title" id="footer-linktree-hub-title">لزيارة صفحاتنا على السوشيال ميديا</h3>
             <div class="footer-linktree-links" id="footer-linktree-links" aria-label="صفحات نبراس على السوشيال ميديا"></div>
+        </div>
+        <div class="footer-bottom-bar" id="footer-bottom-bar">
+            <a class="footer-linktree-main-btn" id="footer-linktree-main-link" href="https://linktr.ee/abdelrhmanomranmd" target="_blank" rel="noopener noreferrer" aria-label="Linktree">
+                <i class="fas fa-link" aria-hidden="true"></i>
+                <span>Linktree</span>
+            </a>
+            <div class="footer-designer-credit" id="footer-designer-credit">
+                <span class="footer-designer-credit-text" id="footer-designer-credit-text">صمم بواسطة المهندس/ عبدالرحمن عمران طرش</span>
+                <div class="footer-designer-credit-actions">
+                    <a id="footer-designer-tel" class="footer-designer-icon-btn footer-designer-icon-btn--phone" href="tel:0535336185" aria-label="اتصال المصمم">
+                        <i class="fas fa-mobile-screen-button" aria-hidden="true"></i>
+                    </a>
+                    <a id="footer-designer-wa" class="footer-designer-icon-btn footer-designer-icon-btn--wa" href="#" target="_blank" rel="noopener noreferrer" aria-label="واتساب المصمم">
+                        <i class="fab fa-whatsapp" aria-hidden="true"></i>
+                    </a>
+                </div>
+            </div>
         </div>
     </footer>
 
@@ -864,6 +878,12 @@
             <input id="setting-company-address-en" type="text" placeholder="Address in English">
             <input id="setting-hero-banner-url" type="text" placeholder="صورة بانر الرئيسية (مثال: images/hero-nebras-banner.png)">
             <button type="button" class="admin-only-ui" onclick="pickHeroBannerFromSettings()">رفع / اختيار صورة بانر الرئيسية</button>
+            <div id="hero-slideshow-admin-block" class="hero-slideshow-admin-block">
+                <p class="status">شرائح الهيدر الديناميكي — إضافة / تعديل / حذف (تُحفظ فوراً مع الموقع):</p>
+                <div id="hero-slideshow-admin-list" class="hero-slideshow-admin-list"></div>
+                <button type="button" class="admin-only-ui" onclick="addHeroSlideshowSlideFromSettings()">+ إضافة شريحة هيدر</button>
+                <button type="button" class="admin-only-ui" onclick="resetHeroSlideshowToDefault()">استعادة الشرائح الافتراضية</button>
+            </div>
             <div id="quote-a4-settings-block" class="quote-a4-settings-block">
                 <hr style="margin:14px 0;border:none;border-top:1px solid rgba(0,0,0,0.12);">
                 <p class="status">صيغة عرض السعر A4 — الإدارة الرئيسية فقط (ديناميكي على الموقع والـ PDF):</p>
@@ -883,6 +903,10 @@
                 <input id="setting-quote-a4-footer-en" type="text" placeholder="Footer note (English)">
                 <textarea id="setting-quote-a4-terms-ar" rows="4" placeholder="شروط مخصصة (عربي) — اختياري، سطر لكل بند"></textarea>
                 <textarea id="setting-quote-a4-terms-en" rows="4" placeholder="Custom terms (English) — optional"></textarea>
+                <input id="setting-quote-a4-static-page2" type="text" placeholder="الورقة 2 — القوانين (صورة/PDF ثابتة — مثال: documents/quote-rules.png)">
+                <button type="button" class="admin-only-ui" onclick="pickQuoteA4StaticPageFromSettings(2)">رفع ورقة القوانين (ثابتة)</button>
+                <input id="setting-quote-a4-static-page3" type="text" placeholder="الورقة 3 — عقد الشركة (صورة/PDF ثابتة — مثال: documents/quote-contract.png)">
+                <button type="button" class="admin-only-ui" onclick="pickQuoteA4StaticPageFromSettings(3)">رفع ورقة العقد (ثابتة)</button>
                 <button type="button" class="admin-only-ui" onclick="previewQuoteA4TemplateFromSettings()">معاينة صيغة A4 الآن</button>
             </div>
             <p class="status">حسابات بنكية (صور/شعارات — تُعرض في الموقع):</p>

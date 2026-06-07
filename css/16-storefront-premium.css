@@ -468,10 +468,208 @@ body.nebras-mobile-bar-active.admin-session .nebras-mobile-commerce-bar {
     letter-spacing: 0.06em;
 }
 
+.nebras-store-layout {
+    display: grid;
+    grid-template-columns: 1fr 260px;
+    gap: 22px;
+    align-items: start;
+}
+
+.nebras-store-main {
+    min-width: 0;
+}
+
+.nebras-store-toolbar {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.nebras-store-toolbar-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 8px 14px;
+}
+
+.nebras-store-toolbar-title {
+    margin: 0;
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #0d2840;
+}
+
+.nebras-store-toolbar-count {
+    font-size: 0.88rem;
+    color: #64748b;
+    font-weight: 600;
+}
+
+.nebras-store-sort-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.nebras-store-sort-btn {
+    padding: 8px 14px;
+    border-radius: 10px;
+    border: 1px solid rgba(13, 40, 64, 0.14);
+    background: #fff;
+    color: #334155;
+    font-size: 0.84rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.nebras-store-sort-btn.is-active,
+.nebras-store-sort-btn:hover {
+    background: linear-gradient(135deg, #c41e3a, #e85d4c);
+    border-color: transparent;
+    color: #fff;
+}
+
+.nebras-store-sidebar {
+    position: sticky;
+    top: 88px;
+    padding: 16px;
+    border-radius: 18px;
+    background: #fff;
+    border: 1px solid rgba(13, 40, 64, 0.1);
+    box-shadow: 0 12px 32px rgba(13, 40, 64, 0.06);
+}
+
+.nebras-store-sidebar-title {
+    margin: 0 0 14px;
+    font-size: 1rem;
+    font-weight: 800;
+    color: #0d2840;
+}
+
+.nebras-store-filter-group {
+    margin-bottom: 14px;
+}
+
+.nebras-store-filter-label {
+    display: block;
+    margin-bottom: 6px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #475569;
+}
+
+.nebras-store-filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.nebras-store-filter-chip {
+    padding: 6px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(13, 40, 64, 0.12);
+    background: #f8fafc;
+    font-size: 0.78rem;
+    font-weight: 700;
+    cursor: pointer;
+    color: #334155;
+}
+
+.nebras-store-filter-chip.is-active {
+    background: rgba(13, 40, 64, 0.92);
+    color: #fff;
+    border-color: transparent;
+}
+
+.nebras-store-filter-select {
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(13, 40, 64, 0.14);
+    background: #fff;
+    font-size: 0.84rem;
+}
+
+.nebras-store-filter-reset {
+    width: 100%;
+    margin-top: 8px;
+    padding: 9px 12px;
+    border-radius: 10px;
+    border: 1px dashed rgba(13, 40, 64, 0.2);
+    background: transparent;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #155e94;
+    cursor: pointer;
+}
+
+.nebras-store-catalog-card--premium {
+    position: relative;
+}
+
+.nebras-store-stock-badge {
+    position: absolute;
+    top: 10px;
+    inset-inline-end: 10px;
+    z-index: 2;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+}
+
+.nebras-store-stock-badge--in {
+    background: rgba(5, 150, 105, 0.92);
+    color: #fff;
+}
+
+.nebras-store-stock-badge--out {
+    background: rgba(100, 116, 139, 0.92);
+    color: #fff;
+}
+
+.nebras-store-card-cart-btn {
+    position: absolute;
+    bottom: 14px;
+    inset-inline-start: 14px;
+    width: 42px;
+    height: 42px;
+    border: none;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #c41e3a, #e85d4c);
+    color: #fff;
+    font-size: 1rem;
+    cursor: pointer;
+    box-shadow: 0 8px 20px rgba(196, 30, 58, 0.35);
+}
+
+.nebras-store-empty {
+    grid-column: 1 / -1;
+    padding: 28px;
+    text-align: center;
+    color: #64748b;
+    font-weight: 600;
+}
+
 .nebras-store-catalog-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 18px;
+}
+
+@media (max-width: 1100px) {
+    .nebras-store-catalog-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 820px) {
+    .nebras-store-catalog-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
 .nebras-store-catalog-card {
@@ -666,8 +864,20 @@ body.nebras-mobile-bar-active.admin-session .nebras-mobile-commerce-bar {
 
 .nebras-store-sku-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 16px;
+}
+
+@media (max-width: 1100px) {
+    .nebras-store-sku-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 820px) {
+    .nebras-store-sku-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
 }
 
 .nebras-store-sku-card {
@@ -778,6 +988,23 @@ body.nebras-mobile-bar-active.admin-session .nebras-mobile-commerce-bar {
     padding: 8px;
 }
 
+@media (max-width: 1100px) {
+    .nebras-store-layout {
+        grid-template-columns: 1fr 220px;
+    }
+}
+
+@media (max-width: 900px) {
+    .nebras-store-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .nebras-store-sidebar {
+        position: static;
+        order: -1;
+    }
+}
+
 @media (max-width: 640px) {
     .nebras-store-catalog-grid,
     .nebras-store-sku-grid {
@@ -786,5 +1013,14 @@ body.nebras-mobile-bar-active.admin-session .nebras-mobile-commerce-bar {
 
     .nebras-store-hero-img {
         max-height: 280px;
+    }
+
+    .nebras-store-sort-row {
+        flex-direction: column;
+    }
+
+    .nebras-store-sort-btn {
+        width: 100%;
+        text-align: center;
     }
 }
