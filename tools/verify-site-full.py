@@ -131,7 +131,10 @@ def main():
         err('Footer must use Linktree hub + bottom bar with designer credit')
     if 'footer-designer-credit' not in html:
         err('Footer designer credit block missing')
+    if not os.path.isfile(os.path.join(ROOT, 'api', 'linktree-profile.js')):
+        err('api/linktree-profile.js missing — Linktree social proxy broken')
     for fn in ('renderFooterLinktreeHub', 'fetchLinktreeProfileLinks', 'renderCompanySocialSection',
+               'resolveFooterSocialBrandLinks', 'getNebrasColorCatalog', 'renderColorCatalogAdminList',
                'renderHeroSlideshowAdminList', 'pickQuoteA4StaticPageFromSettings', 'adminQuoteEntryVisible'):
         if fn not in js:
             err(f'{fn} missing — platform feature broken')

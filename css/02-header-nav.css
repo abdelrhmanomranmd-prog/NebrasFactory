@@ -265,6 +265,41 @@ nav ul li a i { font-size: 0.9rem; }
     margin-top: 4px;
 }
 
+.footer-social-brand-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 14px;
+}
+
+.footer-social-brand-btn {
+    display: inline-flex;
+    width: 56px;
+    height: 56px;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    text-decoration: none;
+    color: #fff;
+    font-size: 1.45rem;
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.footer-social-brand-btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 28px rgba(0, 0, 0, 0.34);
+}
+
+.footer-social-brand-btn.soc-fb { background: #1877f2; }
+.footer-social-brand-btn.soc-ig {
+    background: linear-gradient(45deg, #f58529, #dd2a7b, #8134af, #515bd4);
+}
+.footer-social-brand-btn.soc-tt { background: #000; }
+.footer-social-brand-btn.soc-sn { background: #fffc00; color: #000; }
+
 .footer-linktree-link-card {
     display: flex;
     flex-direction: column;

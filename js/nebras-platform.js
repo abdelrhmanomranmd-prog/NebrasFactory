@@ -25,6 +25,18 @@
         const PRIMARY_GOVERNANCE_USERNAMES = ['NEBRASFACTORY', 'NEBRASBASIC'];
         const PRIMARY_RECOVERY_EMAIL = 'abdelrhmanomranmd@gmail.com';
         const NEBRAS_LINKTREE_URL = 'https://linktr.ee/abdelrhmanomranmd';
+        const NEBRAS_DEFAULT_SOCIAL_LINKS = {
+            socialInstagram: 'https://www.instagram.com/nebras.factory',
+            socialTiktok: 'https://www.tiktok.com/@nebras.factory1',
+            socialFacebook: 'https://www.facebook.com/profile.php?id=61573241064324',
+            socialSnapchat: 'https://www.snapchat.com/add/nebras.factory'
+        };
+        const FOOTER_SOCIAL_PLATFORMS = [
+            { id: 'facebook', matchers: ['facebook.com', 'fb.com'], settingKey: 'socialFacebook', cls: 'soc-fb', icon: 'fab fa-facebook-f', labelKey: 'channelFacebook' },
+            { id: 'tiktok', matchers: ['tiktok.com'], settingKey: 'socialTiktok', cls: 'soc-tt', icon: 'fab fa-tiktok', labelKey: 'channelTikTok' },
+            { id: 'instagram', matchers: ['instagram.com'], settingKey: 'socialInstagram', cls: 'soc-ig', icon: 'fab fa-instagram', labelKey: 'channelInstagram' },
+            { id: 'snapchat', matchers: ['snapchat.com'], settingKey: 'socialSnapchat', cls: 'soc-sn', icon: 'fab fa-snapchat', labelKey: 'channelSnapchat' }
+        ];
         const NEBRAS_PUBLIC_SITE_URL = 'https://www.nebrasplasticcompany.com';
         const NEBRAS_SITE_QR_IMAGE = 'images/nebras-site-qr.png';
         const NEBRAS_PERMISSION_LABELS = {
@@ -356,10 +368,10 @@
             quoteA4: null,
             bankAccounts: DEFAULT_BANK_ACCOUNTS.map(function(b) { return Object.assign({}, b); }),
             socialWhatsApp: '',
-            socialTiktok: '',
-            socialFacebook: '',
-            socialInstagram: '',
-            socialSnapchat: '',
+            socialTiktok: NEBRAS_DEFAULT_SOCIAL_LINKS.socialTiktok,
+            socialFacebook: NEBRAS_DEFAULT_SOCIAL_LINKS.socialFacebook,
+            socialInstagram: NEBRAS_DEFAULT_SOCIAL_LINKS.socialInstagram,
+            socialSnapchat: NEBRAS_DEFAULT_SOCIAL_LINKS.socialSnapchat,
             linktreeUrl: NEBRAS_LINKTREE_URL,
             publicSiteUrl: NEBRAS_PUBLIC_SITE_URL,
             occasionSiteWide: true,
@@ -458,6 +470,47 @@
                     catalogCol: grid[1],
                     textureUrl: getRollSwatchImageUrl(i)
                 };
+            });
+        }
+
+        function normalizeNebrasColorCatalogEntry(color, index) {
+            const c = Object.assign({}, color || {});
+            const idx = c.catalogIndex != null ? c.catalogIndex : index;
+            c.catalogIndex = idx;
+            if (c.isRoll !== false) {
+                const neb = c.nebCode != null ? c.nebCode : getNebrasRollCodeByIndex(idx);
+                c.nebCode = neb;
+                if (!String(c.code || '').match(/N-\d/i)) c.code = getRollCatalogCode(neb);
+                c.textureUrl = c.textureUrl || getRollSwatchImageUrl(idx);
+                c.isRoll = true;
+            }
+            return c;
+        }
+
+        function getNebrasColorCatalog() {
+            ensureDoorDesignerConfig();
+            const colors = systemSettings.doorDesigner && systemSettings.doorDesigner.colors;
+            if (!Array.isArray(colors) || !colors.length) {
+                return getNebrasDoorCatalogColors();
+            }
+            return colors.map(function(c, i) { return normalizeNebrasColorCatalogEntry(c, i); });
+        }
+
+        function refreshNebrasColorCatalogSite() {
+            renderPublicColorCollection(currentLang || 'ar');
+            if (nebrasWorkspaceState.active && nebrasWorkspaceState.route && nebrasWorkspaceState.route.view === 'color-rolls') {
+                renderNebrasWorkspace();
+            }
+            const doorRoot = document.getElementById('nebras-door-designer');
+            if (doorRoot) updateDoorDesignerPreview(doorRoot);
+        }
+
+        function ensureDefaultSocialSettings() {
+            if (!systemSettings || typeof systemSettings !== 'object') return;
+            Object.keys(NEBRAS_DEFAULT_SOCIAL_LINKS).forEach(function(key) {
+                if (!String(systemSettings[key] || '').trim()) {
+                    systemSettings[key] = NEBRAS_DEFAULT_SOCIAL_LINKS[key];
+                }
             });
         }
 
@@ -9027,18 +9080,34 @@
             });
         }
 
+        function linkMatchesPlatform(url, title, platform) {
+            const blob = (String(url || '') + ' ' + String(title || '')).toLowerCase();
+            return (platform.matchers || []).some(function(m) { return blob.indexOf(m) >= 0; });
+        }
+
+        function resolveFooterSocialBrandLinks(rawLinks, ui) {
+            ensureDefaultSocialSettings();
+            const links = filterLinktreeSocialOnlyLinks(rawLinks || []);
+            const text = ui || siteText[currentLang || 'ar'] || siteText.ar;
+            return FOOTER_SOCIAL_PLATFORMS.map(function(platform) {
+                const fromLinktree = links.find(function(link) {
+                    return linkMatchesPlatform(link.url, link.title, platform);
+                });
+                const settingUrl = sanitizeExternalUrl(systemSettings[platform.settingKey] || NEBRAS_DEFAULT_SOCIAL_LINKS[platform.settingKey]);
+                const url = fromLinktree ? sanitizeExternalUrl(fromLinktree.url) : settingUrl;
+                if (!url) return null;
+                return {
+                    id: platform.id,
+                    url: url,
+                    cls: platform.cls,
+                    icon: platform.icon,
+                    label: text[platform.labelKey] || platform.id
+                };
+            }).filter(Boolean);
+        }
+
         function buildLinktreeFallbackLinks(ui) {
-            const items = [];
-            const push = function(url, title, icon) {
-                const safe = sanitizeExternalUrl(url);
-                if (!safe) return;
-                items.push({ title: title, url: safe, image: '', icon: icon || inferSocialIconFromUrl(safe) });
-            };
-            push(systemSettings.socialInstagram, 'Instagram', 'fab fa-instagram');
-            push(systemSettings.socialFacebook, 'Facebook', 'fab fa-facebook-f');
-            push(systemSettings.socialTiktok, 'TikTok', 'fab fa-tiktok');
-            push(systemSettings.socialSnapchat, 'Snapchat', 'fab fa-snapchat');
-            return filterLinktreeSocialOnlyLinks(items);
+            return resolveFooterSocialBrandLinks([], ui);
         }
 
         function designerFooterWhatsAppHref() {
@@ -9057,24 +9126,30 @@
 
         async function fetchLinktreeProfileLinks(profileUrl, ui) {
             const username = extractLinktreeUsername(profileUrl);
-            if (!username) return buildLinktreeFallbackLinks(ui || siteText.ar);
+            if (!username) return [];
             const cacheKey = LINKTREE_LINKS_CACHE_PREFIX + username;
             const cached = readCachedLinktreeProfileLinks(cacheKey);
             if (cached && cached.length) return cached;
 
             const endpoints = [
+                '/api/linktree-profile?username=' + encodeURIComponent(username),
                 'https://linktr.ee/api/profiles/' + encodeURIComponent(username),
                 'https://linktr.ee/' + encodeURIComponent(username)
             ];
 
             for (let i = 0; i < endpoints.length; i++) {
                 try {
-                    const res = await fetch(endpoints[i], { credentials: 'omit', mode: 'cors' });
+                    const res = await fetch(endpoints[i], { credentials: 'omit' });
                     if (!res.ok) continue;
                     const contentType = (res.headers.get('content-type') || '').toLowerCase();
                     let links = [];
                     if (contentType.indexOf('json') >= 0) {
-                        links = normalizeLinktreeProfileLinks(await res.json());
+                        const payload = await res.json();
+                        if (payload && Array.isArray(payload.links)) {
+                            links = normalizeLinktreeProfileLinks({ links: payload.links });
+                        } else {
+                            links = normalizeLinktreeProfileLinks(payload);
+                        }
                     } else {
                         links = parseLinktreeHtmlLinks(await res.text());
                     }
@@ -9084,18 +9159,12 @@
                     }
                 } catch (fetchErr) { /* try next endpoint */ }
             }
-            return buildLinktreeFallbackLinks(ui || siteText.ar);
+            return [];
         }
 
-        function renderFooterLinktreeLinkCard(link) {
-            const img = link.image
-                ? '<img class="footer-linktree-link-img" src="' + escapeHtmlAttr(link.image) + '" alt="" loading="lazy" decoding="async" onerror="this.style.display=\'none\';if(this.nextElementSibling)this.nextElementSibling.style.display=\'inline-flex\'">'
-                : '';
-            const fallbackStyle = link.image ? ' style="display:none"' : '';
-            return '<a class="footer-linktree-link-card" href="' + escapeHtmlAttr(link.url) + '" target="_blank" rel="noopener noreferrer" title="' + escapeHtmlAttr(link.title) + '">' +
-                img +
-                '<span class="footer-linktree-link-fallback"' + fallbackStyle + '><i class="' + escapeHtmlAttr(link.icon || 'fas fa-external-link-alt') + '" aria-hidden="true"></i></span>' +
-                '<span class="footer-linktree-link-label">' + escapeHtmlAttr(link.title) + '</span></a>';
+        function renderFooterSocialBrandButton(link) {
+            return '<a class="footer-social-brand-btn ' + escapeHtmlAttr(link.cls) + '" href="' + escapeHtmlAttr(link.url) + '" target="_blank" rel="noopener noreferrer" aria-label="' + escapeHtmlAttr(link.label) + '" title="' + escapeHtmlAttr(link.label) + '">' +
+                '<i class="' + escapeHtmlAttr(link.icon) + '" aria-hidden="true"></i></a>';
         }
 
         async function renderFooterLinktreeHub(text) {
@@ -9114,12 +9183,14 @@
             }
 
             container.innerHTML = '<p class="footer-linktree-loading">' + escapeHtmlAttr(ui.footerLinktreeLoading || 'جاري تحميل الصفحات…') + '</p>';
-            const links = filterLinktreeSocialOnlyLinks(await fetchLinktreeProfileLinks(ltUrl, ui));
-            if (!links.length) {
+            const rawLinks = await fetchLinktreeProfileLinks(ltUrl, ui);
+            const brandLinks = resolveFooterSocialBrandLinks(rawLinks, ui);
+            if (!brandLinks.length) {
                 container.innerHTML = '<p class="footer-linktree-empty">' + escapeHtmlAttr(ui.footerLinktreeEmpty || 'لا توجد صفحات متاحة حالياً.') + '</p>';
                 return;
             }
-            container.innerHTML = links.map(renderFooterLinktreeLinkCard).join('');
+            container.innerHTML = '<div class="footer-social-brand-row" aria-label="' + escapeHtmlAttr(ui.footerSocialAria || 'صفحات التواصل الاجتماعي') + '">' +
+                brandLinks.map(renderFooterSocialBrandButton).join('') + '</div>';
         }
 
         function applyFooterContent(text) {
@@ -10765,6 +10836,125 @@
             applyHeroBanner();
         }
 
+        function renderColorCatalogAdminList() {
+            const list = document.getElementById('color-catalog-admin-list');
+            const block = document.getElementById('color-catalog-admin-block');
+            if (!list) return;
+            if (block) block.hidden = !isMainGovernanceAdmin(currentAdmin);
+            const colors = getNebrasColorCatalog();
+            list.innerHTML = colors.map(function(color, idx) {
+                return '<div class="color-catalog-admin-row" data-idx="' + idx + '">' +
+                    '<span class="color-catalog-admin-chip" style="' + escapeHtmlAttr(getRollCatalogChipStyle(color.catalogIndex != null ? color.catalogIndex : idx)) + '"></span>' +
+                    '<input type="text" class="color-catalog-admin-code" value="' + escapeHtmlAttr(color.code || '') + '" placeholder="N-1">' +
+                    '<input type="text" class="color-catalog-admin-label-ar" value="' + escapeHtmlAttr(color.labelAr || '') + '" placeholder="اسم اللون (عربي)">' +
+                    '<input type="text" class="color-catalog-admin-label-en" value="' + escapeHtmlAttr(color.labelEn || '') + '" placeholder="Color name (EN)">' +
+                    '<input type="text" class="color-catalog-admin-hex" value="' + escapeHtmlAttr(color.hex || '') + '" placeholder="#ffffff">' +
+                    '<button type="button" onclick="pickColorCatalogTexture(' + idx + ')">صورة</button>' +
+                    '<button type="button" onclick="removeColorCatalogEntry(' + idx + ')">حذف</button>' +
+                    '</div>';
+            }).join('');
+        }
+
+        function collectColorCatalogFromAdminForm() {
+            const rows = document.querySelectorAll('.color-catalog-admin-row');
+            const colors = [];
+            rows.forEach(function(row, idx) {
+                const code = row.querySelector('.color-catalog-admin-code');
+                const labelAr = row.querySelector('.color-catalog-admin-label-ar');
+                const labelEn = row.querySelector('.color-catalog-admin-label-en');
+                const hex = row.querySelector('.color-catalog-admin-hex');
+                if (!code || !labelAr) return;
+                const codeVal = String(code.value || '').trim();
+                const arVal = String(labelAr.value || '').trim();
+                if (!codeVal && !arVal) return;
+                const nebMatch = codeVal.match(/N-?(\d+)/i);
+                const nebCode = nebMatch ? parseInt(nebMatch[1], 10) : getNebrasRollCodeByIndex(idx);
+                colors.push(normalizeNebrasColorCatalogEntry({
+                    id: 'neb' + nebCode,
+                    code: codeVal || getRollCatalogCode(nebCode),
+                    nebCode: nebCode,
+                    labelAr: arVal,
+                    labelEn: labelEn ? String(labelEn.value || '').trim() : arVal,
+                    hex: hex ? String(hex.value || '').trim() : '#808080',
+                    isRoll: true,
+                    catalogIndex: idx
+                }, idx));
+            });
+            return colors;
+        }
+
+        function saveColorCatalogFromAdmin() {
+            if (!requireMainGovernanceAdmin('كتالوج الألوان للإدارة الرئيسية فقط.')) return;
+            ensureDoorDesignerConfig();
+            const colors = collectColorCatalogFromAdminForm();
+            if (!colors.length) {
+                alert('يجب الإبقاء على لون واحد على الأقل في الكتالوج.');
+                return;
+            }
+            systemSettings.doorDesigner.colors = colors;
+            saveContentData();
+            renderColorCatalogAdminList();
+            refreshNebrasColorCatalogSite();
+            addAuditLog('تحديث كتالوج الألوان', 'عدد الألوان: ' + colors.length);
+        }
+
+        function addColorCatalogEntryFromSettings() {
+            if (!requireMainGovernanceAdmin('كتالوج الألوان للإدارة الرئيسية فقط.')) return;
+            ensureDoorDesignerConfig();
+            const colors = collectColorCatalogFromAdminForm();
+            const nextIdx = colors.length;
+            const nextNeb = getNebrasRollCodeByIndex(nextIdx) || (nextIdx + 1);
+            colors.push(normalizeNebrasColorCatalogEntry({
+                id: 'neb-new-' + Date.now(),
+                code: getRollCatalogCode(nextNeb),
+                nebCode: nextNeb,
+                labelAr: 'لون جديد',
+                labelEn: 'New color',
+                hex: '#808080',
+                isRoll: true,
+                catalogIndex: nextIdx
+            }, nextIdx));
+            systemSettings.doorDesigner.colors = colors;
+            renderColorCatalogAdminList();
+            saveColorCatalogFromAdmin();
+        }
+
+        function removeColorCatalogEntry(idx) {
+            if (!requireMainGovernanceAdmin('كتالوج الألوان للإدارة الرئيسية فقط.')) return;
+            const colors = collectColorCatalogFromAdminForm();
+            if (colors.length <= 1) {
+                alert('لا يمكن حذف آخر لون في الكتالوج.');
+                return;
+            }
+            colors.splice(idx, 1);
+            systemSettings.doorDesigner.colors = colors.map(function(c, i) { return normalizeNebrasColorCatalogEntry(c, i); });
+            renderColorCatalogAdminList();
+            saveColorCatalogFromAdmin();
+        }
+
+        async function pickColorCatalogTexture(idx) {
+            if (!requireMainGovernanceAdmin('كتالوج الألوان للإدارة الرئيسية فقط.')) return;
+            const url = await pickMediaPath({ label: 'صورة/ملمس اللون' });
+            if (!url) return;
+            const colors = collectColorCatalogFromAdminForm();
+            if (!colors[idx]) return;
+            colors[idx].textureUrl = url;
+            systemSettings.doorDesigner.colors = colors;
+            saveColorCatalogFromAdmin();
+            renderColorCatalogAdminList();
+        }
+
+        function resetColorCatalogToDefault() {
+            if (!requireMainGovernanceAdmin('كتالوج الألوان للإدارة الرئيسية فقط.')) return;
+            if (!confirm('استعادة كتالوج نبراس القياسي (20 رولّة)؟')) return;
+            ensureDoorDesignerConfig();
+            systemSettings.doorDesigner.colors = getNebrasDoorCatalogColors().map(function(c) { return Object.assign({}, c); });
+            saveContentData();
+            renderColorCatalogAdminList();
+            refreshNebrasColorCatalogSite();
+            addAuditLog('استعادة كتالوج الألوان', '20 رولّة قياسية');
+        }
+
         async function pickQuoteA4StaticPageFromSettings(pageNo) {
             if (!requireMainGovernanceAdmin('تعديل صيغة عرض السعر A4 للإدارة الرئيسية فقط.')) return;
             const q = getQuoteA4Settings();
@@ -11502,7 +11692,7 @@
         function renderPublicColorCollection(lang) {
             const body = document.getElementById('color-catalog-body');
             if (!body) return;
-            const colors = getNebrasDoorCatalogColors();
+            const colors = getNebrasColorCatalog();
             const tiles = colors.map(function(item, idx) {
                 const code = String(item.code || getRollCatalogCode(item.nebCode || getNebrasRollCodeByIndex(idx))).trim();
                 const tex = resolveDoorRollTextureUrl(item.textureUrl || getRollSwatchImageUrl(idx));
@@ -11517,7 +11707,7 @@
 
             body.innerHTML = '' +
                 '<div class="nebras-color-collection-head">' +
-                '<span class="nebras-color-collection-pill">COLORS 20</span>' +
+                '<span class="nebras-color-collection-pill">COLORS ' + colors.length + '</span>' +
                 '<span class="nebras-color-collection-pill">MATERIAL WPC</span>' +
                 '<span class="nebras-color-collection-pill">ORIGIN KSA</span>' +
                 '</div>' +
@@ -11559,7 +11749,7 @@
         }
 
         function buildNebrasColorCollectionWorkspaceHtml() {
-            const colors = getNebrasDoorCatalogColors();
+            const colors = getNebrasColorCatalog();
             const tiles = colors.map(function(item, idx) {
                 const code = String(item.code || getRollCatalogCode(item.nebCode || getNebrasRollCodeByIndex(idx))).trim();
                 const tex = resolveDoorRollTextureUrl(item.textureUrl || getRollSwatchImageUrl(idx));
@@ -11580,7 +11770,7 @@
                 '<h3 class="nebras-color-cover-title"><em>Collection</em> Color</h3>' +
                 '<p class="nebras-color-cover-sub">WPC Doors & Panels · 2026</p>' +
                 '<div class="nebras-color-collection-head">' +
-                '<span class="nebras-color-collection-pill">COLORS 20</span>' +
+                '<span class="nebras-color-collection-pill">COLORS ' + colors.length + '</span>' +
                 '<span class="nebras-color-collection-pill">MATERIAL WPC</span>' +
                 '<span class="nebras-color-collection-pill">ORIGIN KSA</span>' +
                 '</div>' +
@@ -11590,7 +11780,7 @@
                 '<section class="nebras-color-deck is-hidden" id="nebras-color-deck">' +
                 '<div class="nebras-color-deck-head">' +
                 '<button type="button" class="nebras-color-back-btn" onclick="closeNebrasColorCollectionDeck()">رجوع</button>' +
-                '<div class="nebras-color-deck-count">20 COLOR ROLLS</div>' +
+                '<div class="nebras-color-deck-count">' + colors.length + ' COLOR ROLLS</div>' +
                 '</div>' +
                 '<div class="nebras-color-collection-grid">' + tiles + '</div>' +
                 '<p class="nebras-color-deck-foot">Crafting Beauty From Within — Unmatched WPC Quality</p>' +
@@ -11639,7 +11829,7 @@
         }
 
         function renderNebrasColorOverlayAt(index) {
-            const colors = getNebrasDoorCatalogColors();
+            const colors = getNebrasColorCatalog();
             if (!colors.length) return;
             const max = colors.length - 1;
             const idx = Math.max(0, Math.min(Number(index) || 0, max));
@@ -11678,7 +11868,7 @@
         };
 
         window.shiftNebrasColorCollection = function(delta) {
-            const colors = getNebrasDoorCatalogColors();
+            const colors = getNebrasColorCatalog();
             if (!colors.length) return;
             const cur = Number(window.__nebrasColorOverlayIndex) || 0;
             let next = cur + (Number(delta) || 0);
@@ -11688,7 +11878,7 @@
         };
 
         window.shareCurrentNebrasColor = async function() {
-            const colors = getNebrasDoorCatalogColors();
+            const colors = getNebrasColorCatalog();
             if (!colors.length) return;
             const idx = Math.max(0, Math.min(Number(window.__nebrasColorOverlayIndex) || 0, colors.length - 1));
             const item = colors[idx];
@@ -13769,6 +13959,7 @@
             const quoteBlock = document.getElementById('quote-a4-settings-block');
             if (quoteBlock) quoteBlock.hidden = !isMainGovernanceAdmin(currentAdmin);
             renderHeroSlideshowAdminList();
+            renderColorCatalogAdminList();
 
             populateOccasionThemeSelect();
             const occEnabled = document.getElementById('setting-occasion-enabled');
@@ -15344,6 +15535,7 @@
             refreshNebrasMiniShowcases();
             ensureDoorDesignerConfig();
             ensureQuoteA4Settings();
+            ensureDefaultSocialSettings();
             ensureDashboardGovernanceHandlers();
             ensureAnalyticsGovernance();
             adminUsers = (Array.isArray(adminUsers) ? adminUsers : []).map(function(user, index) {
@@ -16420,7 +16612,9 @@
                 scmProductsHint: 'كل منتج (WPC، ألومنيوم، غيره): زر «أصناف المنتج» — شكل/نوع + مقاس + لون + سعر + صورة. مع الأصناف يظهر متجر (سلة + عرض سعر) للزائر.',
                 channelWhatsApp: 'واتساب',
                 channelFacebook: 'فيسبوك',
+                channelTiktok: 'تيك توك',
                 channelInstagram: 'إنستغرام',
+                footerSocialAria: 'صفحات التواصل الاجتماعي لمصنع نبراس',
                 channelTikTok: 'تيك توك',
                 channelSnapchat: 'سناب شات',
                 channelDetailExplicitWa: 'رابط واتساب محفوظ في الإعدادات',
@@ -16966,6 +17160,7 @@
                 footerDesignerCredit: 'Designed by Eng. / Abdulrahman Omran Tarsh',
                 footerDesignerWhatsAppAria: 'Designer WhatsApp',
                 footerDesignerCallAria: 'Call designer',
+                footerSocialAria: 'Nebras Plastic Factory social media pages',
                 salesInboxBranchEmpty: 'No quote requests for your branch yet.',
                 dashboardLinktreeTitle: 'Nebras.Factory — Official Linktree',
                 dashboardQrCaption: 'Scan to open Nebras website',
@@ -17520,6 +17715,7 @@
                 footerDesignerCredit: '设计：工程师 / 阿卜杜勒拉赫曼·奥姆兰·塔尔什',
                 footerDesignerWhatsAppAria: '设计师 WhatsApp',
                 footerDesignerCallAria: '致电设计师',
+                footerSocialAria: 'Nebras 塑料工厂社交媒体页面',
                 salesInboxBranchEmpty: '您所在分支暂无报价请求。',
                 dashboardLinktreeTitle: 'Nebras.Factory — 官方 Linktree',
                 dashboardQrCaption: '扫描访问尼布拉斯网站',
@@ -18059,6 +18255,11 @@
         window.removeHeroSlideshowSlide = removeHeroSlideshowSlide;
         window.pickHeroSlideshowSlideImage = pickHeroSlideshowSlideImage;
         window.resetHeroSlideshowToDefault = resetHeroSlideshowToDefault;
+        window.saveColorCatalogFromAdmin = saveColorCatalogFromAdmin;
+        window.addColorCatalogEntryFromSettings = addColorCatalogEntryFromSettings;
+        window.removeColorCatalogEntry = removeColorCatalogEntry;
+        window.pickColorCatalogTexture = pickColorCatalogTexture;
+        window.resetColorCatalogToDefault = resetColorCatalogToDefault;
         window.openDashboardNavSettings = openDashboardNavSettings;
         window.openVisitorIcon = openVisitorIcon;
         window.openPlatformModule = openPlatformModule;
