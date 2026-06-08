@@ -1796,7 +1796,7 @@
             { id: 10, lane: 'store', sortOrder: 12, titleKey: 'visitorQuickAluminum', title: 'الألومنيوم', iconClass: 'fas fa-cog', visitorMode: 'shop', catalogHub: true, target: '#aluminum', album: ['images/aluminum-background.webp'] },
             { id: 11, lane: 'store', sortOrder: 13, titleKey: 'visitorQuickOtherProducts', title: 'منتجات أخرى', iconClass: 'fas fa-boxes', visitorMode: 'shop', catalogHub: true, target: '#products', backgroundImage: NEBRAS_STORE_ICON_MEDIA.otherProductsBg, album: [NEBRAS_STORE_ICON_MEDIA.otherProductsBg] },
             { id: 14, placement: 'services', sortOrder: 1, titleKey: 'serviceTitle1', title: 'خدمات التصنيع', iconClass: 'fas fa-tools', visitorMode: 'browse', target: '', backgroundImage: NEBRAS_SERVICE_ICON_MEDIA.mfg, album: [NEBRAS_SERVICE_ICON_MEDIA.mfg], textAr: 'تصنيع منتجات بلاستيكية عالية الجودة مع مراعاة أعلى معايير الأمان والاستدامة المناسبة للمشاريع الكبيرة.' },
-            { id: 15, placement: 'services', sortOrder: 2, titleKey: 'serviceTitle2', title: 'الدعم الفني', iconClass: 'fas fa-shield-alt', visitorMode: 'browse', target: '', backgroundImage: NEBRAS_SERVICE_ICON_MEDIA.support, album: ['images/customer-complaints-background.jpeg'], textAr: 'فريق دعم متكامل لمتابعة الطلبات وحل المشكلات بسرعة، مع تقديم الدعم الفني للعملاء والمشاريع بحرفية.' },
+            { id: 15, placement: 'services', sortOrder: 2, titleKey: 'serviceTitle2', title: 'الدعم الفني', iconClass: 'fas fa-shield-alt', visitorMode: 'browse', target: '', backgroundImage: NEBRAS_SERVICE_ICON_MEDIA.support, album: [NEBRAS_SERVICE_ICON_MEDIA.support], textAr: 'فريق دعم متكامل لمتابعة الطلبات وحل المشكلات بسرعة، مع تقديم الدعم الفني للعملاء والمشاريع بحرفية.' },
             { id: 16, placement: 'services', sortOrder: 3, titleKey: 'serviceTitle3', title: 'إدارة الجودة', iconClass: 'fas fa-chart-line', visitorMode: 'browse', target: '', backgroundImage: NEBRAS_SERVICE_ICON_MEDIA.quality, album: [NEBRAS_SERVICE_ICON_MEDIA.quality], textAr: 'مراقبة جودة دقيقة لكل منتج ومرحلة إنتاجية، لضمان منتج نهائي يناسب متطلبات السوق ورضا العملاء.' },
             { id: 17, placement: 'services', sortOrder: 4, titleKey: 'serviceTitleInstall', title: 'خدمات التركيب والضمان', iconClass: 'fas fa-screwdriver-wrench', visitorMode: 'browse', target: '', backgroundImage: NEBRAS_SERVICE_ICON_MEDIA.install, album: [NEBRAS_SERVICE_ICON_MEDIA.install], textAr: 'خدماتنا الميدانية المتكاملة: من المقاسات إلى التسليم — فرق محترفة جاهزة لخدمتكم في كل خطوة.' },
             { id: 3, lane: 'showroom', sortOrder: 30, titleKey: 'visitorQuickColorRolls', title: 'كتالوج ألوان نبراس (رولات)', iconClass: 'fas fa-swatchbook', visitorMode: 'browse', openHandler: 'color-rolls', target: '', album: ['images/background-Nebras-colour-catalogue-(rolls).jpeg'] },
@@ -1806,7 +1806,7 @@
             { id: 12, lane: 'platform', sortOrder: 22, titleKey: 'visitorQuickComplaints', title: 'استفسار الشكاوى', iconClass: 'fas fa-search', visitorMode: 'browse', openHandler: 'complaints-inquiry', target: '', backgroundImage: NEBRAS_STORE_ICON_MEDIA.complaintsBg, album: [NEBRAS_STORE_ICON_MEDIA.complaintsBg], textAr: 'قسم استفسارات وشكاوى العملاء — نستمع لاستفساراتكم لخدمة أفضل.' },
             { id: 13, lane: 'showroom', sortOrder: 28, titleKey: 'visitorQuickDoorDesigner', title: 'صمّم بابك مع نبراس', iconClass: 'fas fa-pencil-ruler', visitorMode: 'browse', openHandler: 'door-designer', target: '', backgroundImage: NEBRAS_SHOWROOM_ICON_MEDIA.doorDesignerBg, album: [NEBRAS_SHOWROOM_ICON_MEDIA.doorDesignerBg] },
             { id: 19, lane: 'showroom', sortOrder: 27, titleKey: 'visitorQuickShowroom', title: 'معرض نبراس — 5 أقسام', iconClass: 'fas fa-images', visitorMode: 'browse', openHandler: 'showroom-hub', target: '', backgroundImage: 'images/profile-2026/hero-cover.jpg', album: ['images/profile-2026/doors/doors-01.jpg', 'images/profile-2026/cabinets/cabinets-01.jpg', 'images/profile-2026/cnc/cnc-01.jpg'], textAr: 'أبواب نبراس · خزائن نبراس · أبواب WPC · خزائن WPC · قطع CNC · مشاريع NHC — صور بجودة كاملة من الملف التعريفي 2026.' },
-            { id: 18, lane: 'platform', sortOrder: 18, titleKey: 'visitorQuickCompanyProfile', title: 'الملف التعريفي الكامل 2026', iconClass: 'fas fa-book-open', visitorMode: 'browse', openHandler: 'company-profile', target: '', backgroundImage: 'images/profile-2026/hero-cover.jpg', album: ['images/profile-2026/hero-cover.jpg', 'images/profile-2026/doors/doors-01.jpg', 'images/profile-2026/cabinets/cabinets-01.jpg'], textAr: 'الملف التعريفي الرسمي — 14 قسماً: من نحن، المنتجات، 5 معارض (أبواب نبراس · خزائن نبراس · WPC · CNC)، الشهادات، المشاريع، والحسابات.' },
+            { id: 18, lane: 'platform', sortOrder: 18, titleKey: 'visitorQuickCompanyProfile', title: 'الملف التعريفي الكامل 2026', iconClass: 'fas fa-book-open', visitorMode: 'browse', openHandler: 'company-profile', target: '', backgroundImage: 'images/profile-2026/hero-cover.jpg', album: ['images/profile-2026/hero-cover.jpg'], textAr: 'الملف التعريفي الرسمي — 14 قسماً: من نحن، المنتجات، 5 معارض (أبواب نبراس · خزائن نبراس · WPC · CNC)، الشهادات، المشاريع، والحسابات.' },
             { id: 20, lane: 'platform', sortOrder: 17, titleKey: 'visitorQuickCallback', title: 'نبراس يتصل بك', iconClass: 'fas fa-phone-volume', visitorMode: 'browse', openHandler: 'callback-concierge', target: '', backgroundImage: 'images/profile-2026/hero-cover.jpg', album: [], textAr: 'اترك اسمك وجوالك — فريق المبيعات أو خدمة العملاء يتصل بك ويفهم احتياجك. يظهر طلبك في الإدارة والفرع حسب مدينتك.' }
         ];
 
@@ -1885,9 +1885,7 @@
                 bodyEn: 'Nebras Plastic Factory — Qassim, Unaizah. WPC doors, plastic solutions, and aluminum for clients across KSA.\n\n• Industrial expertise\n• Saudi quality standards\n• Sales and customer service teams',
                 bodyZh: 'Nebras 工厂位于卡西姆省。为沙特客户提供 WPC 门、塑料与铝材解决方案。',
                 album: ['images/background-about-us.png'],
-                gallery: [
-                    { id: 'cert-1', labelAr: 'شهادة/وثيقة معتمدة', labelEn: 'Certified document', captionAr: 'وثائق معتمدة لمصنع نبراس', captionEn: 'Nebras certified documents', image: 'images/background-about-us.png' }
-                ]
+                gallery: []
             },
             vision: {
                 id: 'vision',
@@ -2106,9 +2104,9 @@
                     }
                     if (def.id === 15) {
                         cur.backgroundImage = NEBRAS_SERVICE_ICON_MEDIA.support;
+                        cur.album = [NEBRAS_SERVICE_ICON_MEDIA.support];
                         cur.placement = 'services';
                         cur.target = '';
-                        if (!cur.album || !cur.album.length) cur.album = ['images/customer-complaints-background.jpeg'];
                     }
                     if (def.id === 16) {
                         cur.backgroundImage = NEBRAS_SERVICE_ICON_MEDIA.quality;
@@ -2136,7 +2134,7 @@
                         cur.openHandler = 'company-profile';
                         cur.target = '';
                         cur.backgroundImage = 'images/profile-2026/hero-cover.jpg';
-                        cur.album = ['images/profile-2026/hero-cover.jpg', 'images/profile-2026/doors/doors-01.jpg', 'images/profile-2026/cabinets/cabinets-01.jpg'];
+                        cur.album = ['images/profile-2026/hero-cover.jpg'];
                         if (!cur.titleKey) cur.titleKey = 'visitorQuickCompanyProfile';
                     }
                     if (def.id === 19) {
@@ -7845,7 +7843,7 @@
         }
 
         function buildCertificationsGridHtml(lang) {
-            const items = (siteCertifications || []).filter(function(c) { return c && c.visible !== false && c.mediaUrl; })
+            const items = (siteCertifications || []).filter(function(c) { return c && c.visible !== false; })
                 .sort(function(a, b) { return (a.sortOrder || 0) - (b.sortOrder || 0); });
             if (!items.length) {
                 const ui = siteText[lang] || siteText.ar;
@@ -7854,9 +7852,19 @@
                     : (ui.certsEmptyHintPublic || ui.certsEmptyPublic || 'قريباً — اعتمادات وشهادات مصنع نبراس.');
                 return '<p class="nebras-certs-empty" style="grid-column:1/-1;opacity:0.88">' + escapeHtmlAttr(msg) + '</p>';
             }
+            const ui = siteText[lang] || siteText.ar;
+            const pendingHint = ui.certsPendingUploadHint || 'ارفع صورة الشهادة أو PDF من إدارة المحتوى → الاعتمادات.';
             return items.map(function(cert) {
                 const title = getCertDisplayField(cert, 'title', lang);
                 const caption = getCertDisplayField(cert, 'caption', lang);
+                const rawUrl = String(cert.mediaUrl || '').trim();
+                if (!rawUrl) {
+                    return '<article class="nebras-cert-card nebras-cert-card--pending">' +
+                        '<div class="nebras-cert-pending-icon" aria-hidden="true"><i class="fas fa-award"></i></div>' +
+                        '<h4>' + escapeHtmlAttr(title || 'اعتماد') + '</h4>' +
+                        (caption ? '<p>' + escapeHtmlAttr(caption) + '</p>' : '') +
+                        '<span class="nebras-cert-pending-hint">' + escapeHtmlAttr(pendingHint) + '</span></article>';
+                }
                 const url = resolveDisplayMediaUrl(cert.mediaUrl);
                 const fullUrl = mediaUrlForLightbox(cert.mediaUrl);
                 const isPdf = cert.mediaType === 'pdf' || /\.pdf(\?|$)/i.test(url);
@@ -7988,8 +7996,15 @@
         }
 
         function getVisibleShowroomItems(sectionKey) {
+            const lang = currentLang || 'ar';
             return (getShowroomSection(sectionKey).items || [])
-                .filter(function(it) { return it && it.visible !== false && getShowroomItemMediaUrl(it); })
+                .filter(function(it) {
+                    if (!it || it.visible === false) return false;
+                    if (sectionKey === 'projects') {
+                        return !!(getShowroomItemMediaUrl(it) || getShowroomItemField(it, 'title', lang) || getShowroomItemField(it, 'caption', lang));
+                    }
+                    return !!getShowroomItemMediaUrl(it);
+                })
                 .sort(function(a, b) { return (a.sortOrder || 0) - (b.sortOrder || 0); });
         }
 
@@ -8013,7 +8028,9 @@
                 }
             }
             let mediaInner = '';
-            if (mediaType === 'video') {
+            if (!mediaUrl) {
+                mediaInner = '<div class="showroom-gallery-placeholder" aria-hidden="true"><i class="fas fa-building"></i></div>';
+            } else if (mediaType === 'video') {
                 mediaInner = '<video class="showroom-gallery-video" src="' + escapeHtmlAttr(resolved) + '" controls playsinline preload="metadata" poster=""></video>' +
                     '<span class="showroom-media-badge showroom-media-badge--video"><i class="fas fa-film"></i></span>';
             } else {
@@ -8277,9 +8294,9 @@
             const titleEn = prompt('العنوان (إنجليزي — اختياري):', '') || '';
             const captionAr = prompt('الشرح تحت الصورة/الوثيقة (عربي):', '') || '';
             const captionEn = prompt('الشرح (إنجليزي — اختياري):', '') || '';
-            const mediaUrl = await pickMediaPath({ label: 'صورة الشهادة أو PDF', defaultValue: '', accept: NEBRAS_MEDIA_ACCEPT_ALL });
-            if (!mediaUrl) return;
-            const mediaType = /\.pdf(\?|$)/i.test(mediaUrl) ? 'pdf' : 'image';
+            let mediaUrl = await pickMediaPath({ label: 'صورة الشهادة أو PDF (اختياري — يمكن الرفع لاحقاً)', defaultValue: '', accept: NEBRAS_MEDIA_ACCEPT_ALL });
+            if (!mediaUrl && !confirm('إضافة الاعتماد بدون ملف الآن؟ يمكنك رفع الصورة أو PDF لاحقاً من «تعديل».')) return;
+            const mediaType = mediaUrl && /\.pdf(\?|$)/i.test(mediaUrl) ? 'pdf' : (mediaUrl ? 'image' : 'pending');
             siteCertifications.push({
                 id: 'cert-' + Date.now(),
                 titleAr: titleAr.trim(),
@@ -8327,7 +8344,8 @@
             const list = document.getElementById('scm-certifications-list');
             if (!list) return;
             list.innerHTML = (siteCertifications || []).map(function(c) {
-                return '<li><strong>' + escapeHtmlAttr(c.titleAr || c.id) + '</strong> [' + escapeHtmlAttr(c.mediaType || 'image') + ']' +
+                const mediaLabel = (c.mediaUrl && String(c.mediaUrl).trim()) ? (c.mediaType || 'image') : 'بانتظار الرفع';
+                return '<li><strong>' + escapeHtmlAttr(c.titleAr || c.id) + '</strong> [' + escapeHtmlAttr(mediaLabel) + ']' +
                     '<small>' + escapeHtmlAttr(c.captionAr || '') + '</small>' +
                     '<div class="scm-row-actions">' +
                     '<button type="button" onclick="editSiteCertification(\'' + c.id + '\')">تعديل</button>' +
@@ -17057,6 +17075,7 @@
                 variantPreviewOnly: 'للمعاينة',
                 certsEmptyHintAdmin: 'أضيفوا الشهادات من إدارة المحتوى → اعتمادات وشهادات.',
                 certsEmptyHintPublic: 'قريباً — اعتمادات وشهادات مصنع نبراس المعتمدة.',
+                certsPendingUploadHint: 'الوثيقة تُرفع من إدارة المحتوى → الاعتمادات (صورة أو PDF).',
                 occasionFallbackTitle: 'مناسبة نبراس',
                 occasionOverlayHint: 'اضغط «انتقال» للاطلاع على المنتجات والعروض.',
                 workspaceBackHome: 'الواجهة الرئيسية',
@@ -17603,6 +17622,7 @@
                 storefrontProductsSubtitle: 'Browse products — each opens a full internal store page.',
                 certsEmptyHintAdmin: 'Add certificates in Content Manager → Certifications.',
                 certsEmptyHintPublic: 'Coming soon — accredited Nebras factory certifications.',
+                certsPendingUploadHint: 'Upload certificate image or PDF from Content Manager → Certifications.',
                 occasionFallbackTitle: 'Nebras occasion',
                 occasionOverlayHint: 'Tap to view products and offers.',
                 aboutTitle1: 'About Us',

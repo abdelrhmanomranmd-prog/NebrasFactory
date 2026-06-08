@@ -618,6 +618,25 @@ html[dir="rtl"] .nebras-partners-track--reverse:not(.nebras-partners-track--stat
     display: block;
 }
 
+.nebras-cert-card--pending {
+    padding: 24px 16px 16px;
+}
+
+.nebras-cert-pending-icon {
+    font-size: 2.4rem;
+    color: #d4a842;
+    margin-bottom: 10px;
+}
+
+.nebras-cert-pending-hint {
+    display: block;
+    font-size: 0.72rem;
+    line-height: 1.5;
+    opacity: 0.72;
+    padding: 0 14px 14px;
+    color: rgba(255, 255, 255, 0.75);
+}
+
 .nebras-cert-card--pdf {
     padding: 28px 16px 12px;
 }

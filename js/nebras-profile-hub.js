@@ -170,8 +170,7 @@
         html += '<section class="cph-section" id="cph-about">' +
             '<div class="cph-section-head"><span class="cph-section-num">01</span><h3>' + esc(en ? 'About Us' : 'من نحن') + '</h3>' +
             '<button type="button" class="cph-open-icon" onclick="openAboutPage(\'who\')"><i class="fas fa-external-link-alt"></i> ' + esc(en ? 'Open in About' : 'فتح في من نحن') + '</button></div>' +
-            '<p class="cph-section-text">' + esc(ui.aboutText1 || (en ? 'Leading Saudi WPC manufacturer since 2018.' : 'شركة سعودية رائدة في أبواب WPC منذ 2018.')) + '</p>' +
-            buildGalleryStripFromFolder('doors', 3, 'about') + '</section>';
+            '<p class="cph-section-text">' + esc(ui.aboutText1 || (en ? 'Leading Saudi WPC manufacturer since 2018.' : 'شركة سعودية رائدة في أبواب WPC منذ 2018.')) + '</p></section>';
 
         html += '<section class="cph-section" id="cph-vision">' +
             '<div class="cph-section-head"><span class="cph-section-num">02</span><h3>' + esc(en ? 'Vision & Mission' : 'الرؤية والرسالة') + '</h3>' +

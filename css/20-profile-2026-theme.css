@@ -80,7 +80,19 @@ body.nebras-profile-2026-theme .nebras-trust-item span {
     color: rgba(255, 255, 255, 0.72);
 }
 
-/* شعار بدون إطار — لوجو فقط */
+/* شعار نبراس — الحرف الأبيض فقط بدون إطار أو خلفية */
+.site-logo-img,
+.nebras-brand-intro-logo,
+.cph-cover-logo,
+.quote-official-header-logo img,
+.nebras-callback-modal-logo {
+    background: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+}
+
 body.nebras-profile-2026-theme .site-logo-img {
     filter: drop-shadow(0 4px 18px rgba(26, 143, 168, 0.35));
     max-height: 72px;

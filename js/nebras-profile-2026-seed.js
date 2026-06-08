@@ -5,7 +5,7 @@
 (function(global) {
     'use strict';
 
-    const PROFILE_2026_SEED_VERSION = 4;
+    const PROFILE_2026_SEED_VERSION = 5;
     const PROFILE_STORAGE_KEY = 'nebrasProfile2026SeedVersion';
 
     function img(folder, n) {
@@ -107,7 +107,8 @@
                 bodyAr: 'منذ عام 2018 بدأت شركة نبراس بالعمل في المملكة العربية السعودية لتكون شركة سعودية متخصصة في تصنيع الأبواب من مادة WPC عالية الجودة.\n\nخلال سبع سنوات تشرّفنا بخدمة آلاف العملاء على مستوى المملكة، وبفضل الجودة العالية والشكل الجمالي للأبواب حرصنا دائماً على تقديم وتطوير خدمات ما بعد البيع بفريق عالي الكفاءات.\n\nتمتلك الشركة مصنعاً متكاملاً لإنتاج الأبواب والديكورات مجهّزاً بفريق من المهندسين والعمال المتخصصين، إضافةً إلى اسطول كبير من فرق التركيبات والصيانة.\n\n🏭 مصنع متكامل في القصيم — عنيزة، المنطقة الصناعية، امتداد طريق الزلفي\n🏆 معتمد من NHC رسمياً — Zone C و Zone D\n✅ 3 شهادات ISO دولية — Americo QSR\n🇸🇦 مطابقة SASO للأبواب والنوافذ\n🔧 فرق تركيب وصيانة متخصصة',
                 bodyEn: 'Since 2018 Nebras has served thousands of clients across KSA with premium WPC doors, a fully integrated Qassim factory, NHC approval, ISO certifications, SASO compliance, and dedicated install teams.',
                 backgroundImage: 'images/profile-2026/hero-cover.jpg',
-                album: [img('doors', 1), img('doors', 2), img('doors', 3), img('cabinets', 1)]
+                album: ['images/profile-2026/hero-cover.jpg'],
+                gallery: []
             },
             vision: {
                 titleAr: 'نحو التميّز في صناعة الأبواب',
@@ -116,23 +117,24 @@
                 summaryEn: 'WPC leadership aligned with Saudi Vision 2030.',
                 bodyAr: 'رسالتنا · Mission\nتقديم الخدمات بأعلى معايير الجودة مع مراعاة عنصر الوقت المحدد مسبقاً، وتطوير خدمات ما بعد البيع بفريق عالي الكفاءات.\n\nرؤيتنا · Vision\nأن يكون مصنع نبراس رائداً في مجال أبواب WPC وخياراً مثالياً أمام كافة العملاء بما يتماشى مع رؤية المملكة 2030.\n\n2018 — سنة التأسيس\n1,250+ — مقاول وشركة عقارية معتمدة\n10 — سنوات ضمان\n100% — ضد الماء',
                 bodyEn: 'Mission: deliver services at the highest quality standards on time with expert after-sales.\nVision: lead WPC doors aligned with Vision 2030.\nFounded 2018 · 1,250+ partners · 10-year warranty · 100% water resistant.',
-                backgroundImage: 'images/profile-2026/doors/doors-04.jpg',
-                album: [img('doors', 4), img('doors', 5)]
+                backgroundImage: 'images/background-our-vision.jpg',
+                album: ['images/background-our-vision.jpg'],
+                gallery: []
             }
         },
         certifications: [
-            { id: 'cert-iso-9001', titleAr: 'ISO 9001:2015 — نظام إدارة الجودة', titleEn: 'ISO 9001:2015 Quality Management', captionAr: 'AMER12640 · Americo QSR — تصنيع ألواح أبواب WPC والإطارات وأثاث WPC. ساري · إعادة اعتماد 2026', captionEn: 'AMER12640 · Americo QSR — WPC doors, frames, furniture.', mediaUrl: img('doors', 6), mediaType: 'image', sortOrder: 1, visible: true },
-            { id: 'cert-iso-14001', titleAr: 'ISO 14001:2015 — الإدارة البيئية', titleEn: 'ISO 14001:2015 Environmental', captionAr: 'AMER12641 · Americo QSR — أعلى معايير الحماية البيئية. ساري · 2026', captionEn: 'AMER12641 · Americo QSR', mediaUrl: img('doors', 7), mediaType: 'image', sortOrder: 2, visible: true },
-            { id: 'cert-iso-45001', titleAr: 'ISO 45001:2018 — الصحة والسلامة', titleEn: 'ISO 45001:2018 OHS', captionAr: 'AMER12642 · Americo QSR — السلامة المهنية في تصنيع WPC. ساري · 2026', captionEn: 'AMER12642 · Americo QSR', mediaUrl: img('doors', 8), mediaType: 'image', sortOrder: 3, visible: true },
-            { id: 'cert-saso-coc', titleAr: 'SASO ASTC+ — شهادة مطابقة المنتج', titleEn: 'SASO ASTC+ COC', captionAr: '45006-084-24-1394731 — WPC Profile Belsonwpc · اللوائح التقنية للأبواب والنوافذ. COC معتمدة 2024', captionEn: 'SASO COC — doors & windows technical regulations.', mediaUrl: img('doors', 9), mediaType: 'image', sortOrder: 4, visible: true },
-            { id: 'cert-nhc-zone-d', titleAr: 'اعتماد مورد NHC — Zone D', titleEn: 'NHC Supplier Approval Zone D', captionAr: 'ABN-MSH-D-AR-50244-0 — أبان للمقاولات · مشروع المشرقية. B - Approved As Noted · مايو 2025', captionEn: 'Aban Contracting · Masharqiyah Zone D.', mediaUrl: img('doors', 10), mediaType: 'image', sortOrder: 5, visible: true },
-            { id: 'cert-nhc-zone-c', titleAr: 'اعتماد مورد NHC — Zone C', titleEn: 'NHC Supplier Approval Zone C', captionAr: 'MMC-MSH-C-AR-50295-0 — مشراف المدائن و Achieve Ultimate · Zone C. B - Approved · 2024-2025', captionEn: 'MMC & Achieve Ultimate · Zone C.', mediaUrl: img('doors', 11), mediaType: 'image', sortOrder: 6, visible: true }
+            { id: 'cert-iso-9001', titleAr: 'ISO 9001:2015 — نظام إدارة الجودة', titleEn: 'ISO 9001:2015 Quality Management', captionAr: 'AMER12640 · Americo QSR — تصنيع ألواح أبواب WPC والإطارات وأثاث WPC. ساري · إعادة اعتماد 2026', captionEn: 'AMER12640 · Americo QSR — WPC doors, frames, furniture.', mediaUrl: '', mediaType: 'pending', sortOrder: 1, visible: true },
+            { id: 'cert-iso-14001', titleAr: 'ISO 14001:2015 — الإدارة البيئية', titleEn: 'ISO 14001:2015 Environmental', captionAr: 'AMER12641 · Americo QSR — أعلى معايير الحماية البيئية. ساري · 2026', captionEn: 'AMER12641 · Americo QSR', mediaUrl: '', mediaType: 'pending', sortOrder: 2, visible: true },
+            { id: 'cert-iso-45001', titleAr: 'ISO 45001:2018 — الصحة والسلامة', titleEn: 'ISO 45001:2018 OHS', captionAr: 'AMER12642 · Americo QSR — السلامة المهنية في تصنيع WPC. ساري · 2026', captionEn: 'AMER12642 · Americo QSR', mediaUrl: '', mediaType: 'pending', sortOrder: 3, visible: true },
+            { id: 'cert-saso-coc', titleAr: 'SASO ASTC+ — شهادة مطابقة المنتج', titleEn: 'SASO ASTC+ COC', captionAr: '45006-084-24-1394731 — WPC Profile Belsonwpc · اللوائح التقنية للأبواب والنوافذ. COC معتمدة 2024', captionEn: 'SASO COC — doors & windows technical regulations.', mediaUrl: '', mediaType: 'pending', sortOrder: 4, visible: true },
+            { id: 'cert-nhc-zone-d', titleAr: 'اعتماد مورد NHC — Zone D', titleEn: 'NHC Supplier Approval Zone D', captionAr: 'ABN-MSH-D-AR-50244-0 — أبان للمقاولات · مشروع المشرقية. B - Approved As Noted · مايو 2025', captionEn: 'Aban Contracting · Masharqiyah Zone D.', mediaUrl: '', mediaType: 'pending', sortOrder: 5, visible: true },
+            { id: 'cert-nhc-zone-c', titleAr: 'اعتماد مورد NHC — Zone C', titleEn: 'NHC Supplier Approval Zone C', captionAr: 'MMC-MSH-C-AR-50295-0 — مشراف المدائن و Achieve Ultimate · Zone C. B - Approved · 2024-2025', captionEn: 'MMC & Achieve Ultimate · Zone C.', mediaUrl: '', mediaType: 'pending', sortOrder: 6, visible: true }
         ],
         projects: [
-            { titleAr: 'مشروع المشرقية — Zone D · أبان', titleEn: 'Masharqiyah Zone D · Aban', captionAr: 'توريد أبواب الغرف الداخلية WPC — اعتماد المهندس محمد هنداوي ومدير المشروع محمد عساف. B - Approved · مايو 2025', captionEn: 'WPC interior doors supply — NHC approved May 2025', imageUrl: img('doors', 12) },
-            { titleAr: 'مشروع المشرقية — Zone C · مشراف المدائن', titleEn: 'Masharqiyah Zone C · MMC', captionAr: 'توريد أبواب الغرف الداخلية عبر شركة مشراف المدائن. B - Approved · يناير 2025', captionEn: 'Interior doors via MMC — Jan 2025', imageUrl: img('cabinets', 1) },
-            { titleAr: 'مشروع المشرقية — Zone C · Achieve Ultimate', titleEn: 'Zone C · Achieve Ultimate', captionAr: 'توريد أبواب الغرف الداخلية — اعتماد فريق NHC الهندسي. B - Approved · نوفمبر 2024', captionEn: 'Achieve Ultimate Company — Nov 2024', imageUrl: img('cabinets', 2) },
-            { titleAr: 'فيلا كود WPC — Zone D', titleEn: 'Villa Code WPC Zone D', captionAr: 'Material-00378 — طلب اعتماد فيلا كود لأبواب WPC عبر أبان للمقاولات. ABN-MSH-D-AR-50185-0 · Under Process', captionEn: 'Villa Code Material-00378 — under process', imageUrl: img('cabinets', 3) }
+            { titleAr: 'مشروع المشرقية — Zone D · أبان', titleEn: 'Masharqiyah Zone D · Aban', captionAr: 'توريد أبواب الغرف الداخلية WPC — اعتماد المهندس محمد هنداوي ومدير المشروع محمد عساف. B - Approved · مايو 2025', captionEn: 'WPC interior doors supply — NHC approved May 2025' },
+            { titleAr: 'مشروع المشرقية — Zone C · مشراف المدائن', titleEn: 'Masharqiyah Zone C · MMC', captionAr: 'توريد أبواب الغرف الداخلية عبر شركة مشراف المدائن. B - Approved · يناير 2025', captionEn: 'Interior doors via MMC — Jan 2025' },
+            { titleAr: 'مشروع المشرقية — Zone C · Achieve Ultimate', titleEn: 'Zone C · Achieve Ultimate', captionAr: 'توريد أبواب الغرف الداخلية — اعتماد فريق NHC الهندسي. B - Approved · نوفمبر 2024', captionEn: 'Achieve Ultimate Company — Nov 2024' },
+            { titleAr: 'فيلا كود WPC — Zone D', titleEn: 'Villa Code WPC Zone D', captionAr: 'Material-00378 — طلب اعتماد فيلا كود لأبواب WPC عبر أبان للمقاولات. ABN-MSH-D-AR-50185-0 · Under Process', captionEn: 'Villa Code Material-00378 — under process' }
         ],
         productTexts: {
             'prod-wpc': {
@@ -220,7 +222,7 @@
         return PROFILE_2026.projects.map(function(p, idx) {
             return {
                 id: 'showroom-projects-nhc-' + (idx + 1),
-                imageUrl: p.imageUrl,
+                imageUrl: p.imageUrl || '',
                 titleAr: p.titleAr,
                 titleEn: p.titleEn,
                 captionAr: p.captionAr,
@@ -244,10 +246,9 @@
         Object.keys(PROFILE_2026.aboutPages).forEach(function(key) {
             const patch = PROFILE_2026.aboutPages[key];
             if (!aboutPages[key]) aboutPages[key] = {};
-            Object.keys(patch).forEach(function(field) {
-                aboutPages[key][field] = patch[field];
-            });
-            if (!aboutPages[key].gallery) aboutPages[key].gallery = [];
+            Object.assign(aboutPages[key], patch);
+            if (Array.isArray(patch.album)) aboutPages[key].album = patch.album.slice();
+            aboutPages[key].gallery = Array.isArray(patch.gallery) ? patch.gallery.slice() : [];
         });
     }
 
