@@ -1,0 +1,258 @@
+/* صيغة عرض السعر الرسمية — مطابقة لمرجع PDF (م صالح - جده - 935) */
+
+.quote-a4--nebras-official {
+    padding: 9mm 11mm 10mm;
+    font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+    font-size: 10.5px;
+    line-height: 1.35;
+    color: #1a2b3c;
+    background: #fff;
+    min-height: 297mm;
+    height: 297mm;
+    box-sizing: border-box;
+}
+
+.quote-a4--nebras-official .quote-a4-inner {
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+    height: 100%;
+}
+
+.quote-official-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 6px;
+}
+
+.quote-official-header-meta {
+    font-size: 9.5px;
+    font-weight: 600;
+    color: #1a365d;
+    line-height: 1.55;
+    text-align: start;
+    flex: 0 0 auto;
+}
+
+.quote-official-header-logo {
+    flex: 1 1 auto;
+    text-align: end;
+}
+
+.quote-official-header-logo img {
+    display: inline-block;
+    max-height: 58px;
+    max-width: 220px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+}
+
+.quote-official-divider {
+    height: 4px;
+    background: #17a8a0;
+    margin: 6px 0 10px;
+    border-radius: 1px;
+}
+
+.quote-official-meta-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 10px;
+    font-size: 10px;
+}
+
+.quote-official-meta-table td {
+    border: 1px solid #c8d4dc;
+    padding: 5px 8px;
+    vertical-align: middle;
+}
+
+.quote-official-meta-table .quote-official-meta-en {
+    width: 22%;
+    color: #1a365d;
+    font-weight: 600;
+    text-align: start;
+}
+
+.quote-official-meta-table .quote-official-meta-val {
+    width: 34%;
+    text-align: center;
+    font-weight: 700;
+    color: #111;
+}
+
+.quote-official-meta-table .quote-official-meta-ar {
+    width: 22%;
+    color: #1a365d;
+    font-weight: 600;
+    text-align: end;
+}
+
+.quote-official-items-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 9.5px;
+    margin-bottom: 10px;
+}
+
+.quote-official-items-table thead th {
+    background: #1a365d;
+    color: #fff;
+    font-weight: 700;
+    padding: 7px 5px;
+    border: 1px solid #1a365d;
+    text-align: center;
+    white-space: nowrap;
+}
+
+.quote-official-items-table tbody td {
+    border: 1px solid #c8d4dc;
+    padding: 7px 5px;
+    vertical-align: top;
+}
+
+.quote-official-items-table .quote-official-desc {
+    text-align: start;
+    min-width: 140px;
+}
+
+.quote-official-items-table .quote-official-desc-en {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+
+.quote-official-items-table .quote-official-desc-ar {
+    display: block;
+    color: #333;
+}
+
+.quote-official-items-table .quote-official-num {
+    text-align: center;
+    white-space: nowrap;
+}
+
+.quote-official-bottom {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 10px;
+    align-items: stretch;
+}
+
+.quote-official-words-box {
+    border: 1px solid #c8d4dc;
+    padding: 10px 12px;
+    display: flex;
+    align-items: center;
+    min-height: 120px;
+}
+
+.quote-official-words-box p {
+    margin: 0;
+    font-size: 10.5px;
+    font-weight: 700;
+    line-height: 1.65;
+    color: #1a365d;
+}
+
+.quote-official-totals-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 10px;
+}
+
+.quote-official-totals-table td {
+    border: 1px solid #c8d4dc;
+    padding: 6px 8px;
+}
+
+.quote-official-totals-table .quote-official-totals-en {
+    color: #1a365d;
+    font-weight: 600;
+    width: 28%;
+}
+
+.quote-official-totals-table .quote-official-totals-val {
+    text-align: center;
+    font-weight: 700;
+    width: 22%;
+}
+
+.quote-official-totals-table .quote-official-totals-ar {
+    color: #1a365d;
+    font-weight: 600;
+    text-align: end;
+    width: 28%;
+}
+
+.quote-official-totals-table tr.quote-official-totals-grand td {
+    background: #f0f4f8;
+    font-size: 11px;
+    font-weight: 800;
+}
+
+.quote-official-footer {
+    margin-top: auto;
+    padding-top: 8px;
+}
+
+.quote-official-footer-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    font-size: 9.5px;
+    line-height: 1.6;
+    color: #1a365d;
+}
+
+.quote-official-footer-sales strong {
+    display: block;
+    font-size: 10px;
+    margin-bottom: 4px;
+    color: #111;
+}
+
+.quote-official-footer-address {
+    text-align: end;
+}
+
+.quote-official-footer-address .quote-official-web {
+    display: block;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    margin-top: 4px;
+    color: #17a8a0;
+}
+
+.quote-official-footer-phones {
+    direction: ltr;
+    unicode-bidi: embed;
+    display: inline-block;
+}
+
+@media (max-width: 640px) {
+    .quote-official-bottom,
+    .quote-official-footer-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .quote-official-footer-address {
+        text-align: start;
+    }
+
+    .quote-official-items-table {
+        font-size: 8px;
+    }
+}
+
+@media print {
+    .quote-a4--nebras-official {
+        height: 297mm;
+        min-height: 297mm;
+        page-break-after: always;
+    }
+}

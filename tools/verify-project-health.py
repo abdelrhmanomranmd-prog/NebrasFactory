@@ -58,6 +58,8 @@ def extract_asset_refs(text):
 def check_js_asset_refs():
     js_files = [
         'js/nebras-platform.js',
+        'js/nebras-profile-2026-seed.js',
+        'js/nebras-profile-hub.js',
         'js/nebras-media-admin.js',
         'js/nebras-door-compositor.js',
         'js/nebras-door-3d.js',
@@ -74,7 +76,9 @@ def check_js_asset_refs():
             all_refs.setdefault(ref, []).append(js)
     missing = []
     for ref, sources in sorted(all_refs.items()):
-        if ref.endswith('/'):
+        if ref.endswith('/') or ref.endswith('-') or ref.endswith('.'):
+            continue
+        if not re.search(r'\.(png|jpe?g|webp|avif|svg|gif|css)$', ref, re.I):
             continue
         p = os.path.join(ROOT, ref.replace('/', os.sep))
         if not os.path.isfile(p):
@@ -133,6 +137,31 @@ def check_images():
     return count
 
 
+def check_site_audio():
+    for rel in ('audio/nebras-welcome.mp3',):
+        p = os.path.join(ROOT, rel.replace('/', os.sep))
+        if not os.path.isfile(p):
+            ERRORS.append(f'Missing site audio: {rel}')
+        elif os.path.getsize(p) < 1000:
+            ERRORS.append(f'Audio file too small: {rel}')
+
+
+def check_seo_files():
+    for rel in ('sitemap.xml', 'robots.txt', 'site.webmanifest', 'google4ebe8115a126a141.html'):
+        p = os.path.join(ROOT, rel.replace('/', os.sep))
+        if not os.path.isfile(p):
+            ERRORS.append(f'Missing SEO/deploy file: {rel}')
+    index_path = os.path.join(ROOT, 'index.html')
+    with open(index_path, encoding='utf-8') as f:
+        html = f.read()
+    if 'google-site-verification' not in html:
+        ERRORS.append('index.html missing google-site-verification meta')
+    if 'application/ld+json' not in html:
+        ERRORS.append('index.html missing JSON-LD schema')
+    if 'theme-color' not in html:
+        WARNINGS.append('index.html missing theme-color meta (mobile browsers)')
+
+
 def check_supabase_sql():
     sb = os.path.join(ROOT, 'supabase')
     for name in sorted(os.listdir(sb)):
@@ -151,6 +180,8 @@ def main():
     total_refs, missing_refs = check_js_asset_refs()
     img_count = check_images()
     check_css_files()
+    check_site_audio()
+    check_seo_files()
     check_supabase_sql()
 
     print('=== NEBRAS PROJECT HEALTH ===')

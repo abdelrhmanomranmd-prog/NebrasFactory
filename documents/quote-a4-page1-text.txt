@@ -1,0 +1,52 @@
+رقم عرض السعر935
+Quotation Number
+تاريخ اإلنشاء2026/04/29
+Creation Date
+صالح حتى2026/05/03
+Valid Till
+: رقم العمیلCustomer Code:
+:اسم العمیل
+ جده- م صالح Customer Name :
+:عنوان العمیل Customer Address:
+: الرقم الضریبي للعمیلVat No :
+المجموع
+Total
+مبلغ
+الضریبة
+Tax Amt
+الضریبة
+%Tax
+الخصم
+Discount
+السعر
+Price
+الكمیة
+Qty
+الوحدة
+Unit
+البیان
+Description
+37000
+5550
+15
+0
+740
+50
+piece
+STANDARD DOOR EDGE BAND * 45
+With installation N21
+باب ادج باند
+شامل  الكسسورات والتوريد والتركيب
+37000
+Subtotal المجموع
+0
+Discount الخصم
+37000
+ الجمالي قبل الضریبة
+Total Before Tax
+5550
+ Total Vat مجموع الضريبة
+42550
+Total اإلجمالي
+ :اإلجمالي العام
+فقط إثنان و أربعون ألف و خمسة مائة و خمسون ريال ال غير

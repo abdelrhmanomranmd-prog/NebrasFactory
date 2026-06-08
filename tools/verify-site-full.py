@@ -127,10 +127,12 @@ def main():
             err(f'Hero slide asset missing: {rel}')
     if 'hero-slideshow' not in html or 'hero-dynamic-headline' not in html:
         err('Hero slideshow markup missing in index.html')
-    if 'footer-linktree-hub' not in html or 'footer-bottom-bar' not in html:
-        err('Footer must use Linktree hub + bottom bar with designer credit')
-    if 'footer-designer-credit' not in html:
-        err('Footer designer credit block missing')
+    if 'footer-linktree-hub' in html or 'footer-designer-credit' in html:
+        err('Footer must not include Linktree hub or designer credit blocks')
+    if 'scm-showroom-sections-root' not in html:
+        err('Showroom admin must use dynamic 5-section root (scm-showroom-sections-root)')
+    if 'SHOWROOM_GALLERY_SECTION_DEFS' not in js:
+        err('SHOWROOM_GALLERY_SECTION_DEFS missing — 5-section showroom broken')
     if not os.path.isfile(os.path.join(ROOT, 'api', 'linktree-profile.js')):
         err('api/linktree-profile.js missing — Linktree social proxy broken')
     for fn in ('renderFooterLinktreeHub', 'fetchLinktreeProfileLinks', 'renderCompanySocialSection',

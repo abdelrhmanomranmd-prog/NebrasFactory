@@ -1,9 +1,62 @@
-/* معرض نبراس — منتجات + مشاريع (Workspace) */
+/* معرض نبراس — 5 أقسام + مشاريع NHC (Workspace) */
 
 .showroom-hub {
     display: flex;
     flex-direction: column;
     gap: 36px;
+}
+
+.showroom-hub-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px 14px;
+    border-radius: 16px;
+    background: rgba(6, 46, 68, 0.45);
+    border: 1px solid rgba(26, 143, 168, 0.22);
+    position: sticky;
+    top: 8px;
+    z-index: 4;
+    backdrop-filter: blur(10px);
+}
+
+.showroom-hub-nav-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(26, 143, 168, 0.28);
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.showroom-hub-nav-btn:hover {
+    background: rgba(26, 143, 168, 0.22);
+    border-color: rgba(212, 168, 66, 0.45);
+    transform: translateY(-1px);
+}
+
+.showroom-hub-nav-count,
+.showroom-hub-section-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.4em;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: rgba(212, 168, 66, 0.22);
+    color: #f0c060;
+    font-size: 0.72rem;
+    font-weight: 800;
+}
+
+.showroom-hub-section-count {
+    margin-inline-start: 6px;
 }
 
 .showroom-hub-intro {
@@ -34,6 +87,36 @@
     display: flex;
     align-items: center;
     gap: 10px;
+}
+
+body.nebras-profile-2026-theme .showroom-hub-section {
+    border-top-color: rgba(26, 143, 168, 0.2);
+}
+
+body.nebras-profile-2026-theme .showroom-hub-section-head h3 {
+    color: #fff;
+}
+
+body.nebras-profile-2026-theme .showroom-hub-section-intro,
+body.nebras-profile-2026-theme .showroom-hub-intro {
+    color: rgba(255, 255, 255, 0.78);
+}
+
+body.nebras-profile-2026-theme .showroom-gallery-card {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(26, 143, 168, 0.24);
+}
+
+body.nebras-profile-2026-theme .showroom-gallery-card-body h4 {
+    color: #fff;
+}
+
+body.nebras-profile-2026-theme .showroom-gallery-card-body p {
+    color: rgba(255, 255, 255, 0.72);
+}
+
+body.nebras-profile-2026-theme .showroom-gallery-empty {
+    color: rgba(255, 255, 255, 0.65);
 }
 
 .showroom-hub-section-intro {
@@ -77,8 +160,9 @@
 .showroom-gallery-card-media video {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
     display: block;
+    background: rgba(1, 13, 21, 0.55);
 }
 
 .showroom-gallery-card-media {

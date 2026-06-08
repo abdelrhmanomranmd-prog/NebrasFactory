@@ -8,6 +8,13 @@ desktop.ini
 .tmp_video_frames/
 .tmp-video-frames/
 
+# أدوات تطوير — ليست جزءاً من الموقع المنشور
+tools/profile-source.html
+tools/profile-image-map.json
+STABILITY-FIX-REPORT.txt
+GITHUB-REUPLOAD-CHECKLIST.txt
+images/profile-2026/profile-img-*.jpg
+
 # Python / أدوات تطوير
 tools/__pycache__/
 *.pyc

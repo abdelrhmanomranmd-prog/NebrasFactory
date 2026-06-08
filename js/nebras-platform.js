@@ -330,7 +330,7 @@
             }
         ];
         const DEFAULT_QUOTE_A4_SETTINGS = {
-            layout: 'nebras-factory',
+            layout: 'nebras-official',
             logoUrl: 'images/logo.png',
             watermarkOpacity: 0.09,
             watermarkScale: 78,
@@ -342,14 +342,15 @@
             headerBandEn: 'Saudi Quality · Local Manufacturing · After-sales Service',
             footerNoteAr: 'عرض سعر استرشادي — التأكيد النهائي عبر فريق مبيعات مصنع نبراس.',
             footerNoteEn: 'Indicative quotation — final confirmation by Nebras sales team.',
-            showRibbon: true,
-            showWatermark: true,
-            showFrame: true,
-            showSeal: true,
+            showRibbon: false,
+            showWatermark: false,
+            showFrame: false,
+            showSeal: false,
             termsCustomAr: '',
             termsCustomEn: '',
             staticPage2Url: 'documents/quote-a4-static-page2.png',
-            staticPage3Url: 'documents/quote-a4-static-page3.png'
+            staticPage3Url: 'documents/quote-a4-static-page3.png',
+            staticPage4Url: 'documents/quote-a4-static-page4.png'
         };
 
         const storeCatalogFilterState = {};
@@ -1803,7 +1804,9 @@
             { id: 2, lane: 'platform', sortOrder: 20, titleKey: 'visitorQuickBranches', title: 'فروع نبراس', iconClass: 'fas fa-map-marked-alt', visitorMode: 'browse', openHandler: 'branches-hub', target: '', backgroundImage: NEBRAS_PLATFORM_ICON_MEDIA.branchesBg, album: [NEBRAS_PLATFORM_ICON_MEDIA.branchesBg], textAr: 'تغطية شاملة لكامل المملكة — فروع ومناديب نبراس في جميع المناطق.' },
             { id: 4, lane: 'platform', sortOrder: 21, titleKey: 'visitorQuickBankAccounts', title: 'حسابات بنكية', iconClass: 'fas fa-building-columns', visitorMode: 'browse', target: '#bank-accounts-section', backgroundImage: NEBRAS_BANK_MEDIA.wall, album: [NEBRAS_BANK_MEDIA.snb, NEBRAS_BANK_MEDIA.riyad, NEBRAS_BANK_MEDIA.alrajhi] },
             { id: 12, lane: 'platform', sortOrder: 22, titleKey: 'visitorQuickComplaints', title: 'استفسار الشكاوى', iconClass: 'fas fa-search', visitorMode: 'browse', openHandler: 'complaints-inquiry', target: '', backgroundImage: NEBRAS_STORE_ICON_MEDIA.complaintsBg, album: [NEBRAS_STORE_ICON_MEDIA.complaintsBg], textAr: 'قسم استفسارات وشكاوى العملاء — نستمع لاستفساراتكم لخدمة أفضل.' },
-            { id: 13, lane: 'showroom', sortOrder: 28, titleKey: 'visitorQuickDoorDesigner', title: 'صمّم بابك مع نبراس', iconClass: 'fas fa-pencil-ruler', visitorMode: 'browse', openHandler: 'door-designer', target: '', backgroundImage: NEBRAS_SHOWROOM_ICON_MEDIA.doorDesignerBg, album: [NEBRAS_SHOWROOM_ICON_MEDIA.doorDesignerBg] }
+            { id: 13, lane: 'showroom', sortOrder: 28, titleKey: 'visitorQuickDoorDesigner', title: 'صمّم بابك مع نبراس', iconClass: 'fas fa-pencil-ruler', visitorMode: 'browse', openHandler: 'door-designer', target: '', backgroundImage: NEBRAS_SHOWROOM_ICON_MEDIA.doorDesignerBg, album: [NEBRAS_SHOWROOM_ICON_MEDIA.doorDesignerBg] },
+            { id: 19, lane: 'showroom', sortOrder: 27, titleKey: 'visitorQuickShowroom', title: 'معرض نبراس — 5 أقسام', iconClass: 'fas fa-images', visitorMode: 'browse', openHandler: 'showroom-hub', target: '', backgroundImage: 'images/profile-2026/hero-cover.jpg', album: ['images/profile-2026/doors/doors-01.jpg', 'images/profile-2026/cabinets/cabinets-01.jpg', 'images/profile-2026/cnc/cnc-01.jpg'], textAr: 'أبواب نبراس · خزائن نبراس · أبواب WPC · خزائن WPC · قطع CNC · مشاريع NHC — صور بجودة كاملة من الملف التعريفي 2026.' },
+            { id: 18, lane: 'platform', sortOrder: 18, titleKey: 'visitorQuickCompanyProfile', title: 'الملف التعريفي الكامل 2026', iconClass: 'fas fa-book-open', visitorMode: 'browse', openHandler: 'company-profile', target: '', backgroundImage: 'images/profile-2026/hero-cover.jpg', album: ['images/profile-2026/hero-cover.jpg', 'images/profile-2026/doors/doors-01.jpg', 'images/profile-2026/cabinets/cabinets-01.jpg'], textAr: 'الملف التعريفي الرسمي — 14 قسماً: من نحن، المنتجات، 5 معارض (أبواب نبراس · خزائن نبراس · WPC · CNC)، الشهادات، المشاريع، والحسابات.' }
         ];
 
         const SITE_PARTNERS_SEED_VERSION = 2;
@@ -1829,24 +1832,40 @@
         let siteCustomSections = [];
         let sitePartners = [];
         let siteCertifications = [];
-        /** معرض نبراس — قسمان: منتجات + مشاريع (تُدار بالكامل من الإدارة) */
+        /** معرض نبراس — 5 أقسام + مشاريع NHC (تُدار بالكامل من الإدارة) */
         let showroomGallery = null;
-        const DEFAULT_SHOWROOM_GALLERY = {
-            products: {
-                titleAr: 'منتجات نبراس',
-                titleEn: 'Nebras Products',
-                introAr: 'صور من خط إنتاج نبراس — أبواب WPC، بلاستيك، وألومنيوم.',
-                introEn: 'Images from Nebras production lines — WPC, plastic, and aluminum.',
-                items: []
-            },
-            projects: {
-                titleAr: 'مشاريع نبراس',
-                titleEn: 'Nebras Projects',
-                introAr: 'مشاريع منفّذة ونجاحات موثّقة مع عملائنا في المملكة.',
-                introEn: 'Delivered projects and documented success across KSA.',
-                items: []
-            }
-        };
+        const SHOWROOM_GALLERY_SECTION_DEFS = [
+            { key: 'doors', icon: 'door-open', titleAr: 'أبواب نبراس', titleEn: 'Nebras Doors', introAr: 'تشكيلة أبواب نبراس — من الملف التعريفي الرسمي 2026', introEn: 'Nebras door collection — official 2026 profile', emptyKey: 'showroomDoorsEmpty' },
+            { key: 'cabinets', icon: 'archive', titleAr: 'خزائن نبراس', titleEn: 'Nebras Cabinets', introAr: 'خزائن وتشطيبات نبراس بتصاميم عصرية', introEn: 'Nebras cabinets and finishes', emptyKey: 'showroomCabinetsEmpty' },
+            { key: 'wpcDoors', icon: 'door-closed', titleAr: 'أبواب WPC', titleEn: 'WPC Doors', introAr: 'أبواب WPC — مقاومة للماء والمناخ السعودي', introEn: 'WPC doors — water & climate resistant', emptyKey: 'showroomWpcDoorsEmpty' },
+            { key: 'wpcCabinets', icon: 'boxes-stacked', titleAr: 'خزائن WPC', titleEn: 'WPC Cabinets', introAr: 'خزائن WPC عالية الجودة من مصنع نبراس', introEn: 'Premium WPC cabinets from Nebras', emptyKey: 'showroomWpcCabinetsEmpty' },
+            { key: 'cnc', icon: 'cogs', titleAr: 'قطع CNC', titleEn: 'CNC Parts', introAr: 'أعمال CNC بدقة عالية — تصنيع حسب الطلب', introEn: 'Precision CNC manufacturing', emptyKey: 'showroomCncEmpty' },
+            { key: 'projects', icon: 'building', titleAr: 'مشاريع واعتمادات NHC', titleEn: 'NHC Projects & Approvals', introAr: 'شركاء في أضخم مشاريع الإسكان الوطني', introEn: 'Partners in national housing megaprojects', emptyKey: 'showroomProjectsEmpty' }
+        ];
+
+        function getShowroomGallerySectionKeys() {
+            return SHOWROOM_GALLERY_SECTION_DEFS.map(function(d) { return d.key; });
+        }
+
+        function getShowroomSectionDef(sectionKey) {
+            return SHOWROOM_GALLERY_SECTION_DEFS.find(function(d) { return d.key === sectionKey; }) || null;
+        }
+
+        function buildDefaultShowroomGallery() {
+            const gallery = {};
+            SHOWROOM_GALLERY_SECTION_DEFS.forEach(function(def) {
+                gallery[def.key] = {
+                    titleAr: def.titleAr,
+                    titleEn: def.titleEn,
+                    introAr: def.introAr,
+                    introEn: def.introEn,
+                    items: []
+                };
+            });
+            return gallery;
+        }
+
+        const DEFAULT_SHOWROOM_GALLERY = buildDefaultShowroomGallery();
         let nebrasCart = [];
 
         /** صفحات من نحن / رؤيتنا — محتوى داخلي + شهادات (تُدار من الإدارة) */
@@ -1921,10 +1940,11 @@
         ];
 
         const DEFAULT_DASHBOARD_TILES = [
+            { id: 'dash-company-profile', zone: 'quick', dashGroup: 'command', sortOrder: 0, iconClass: 'fas fa-book-open', titleAr: 'الملف التعريفي الكامل 2026', titleEn: 'Company Profile 2026', textAr: 'البروفايل الرسمي كاملاً — 12 قسماً مرتبطة بأيقونات الموقع.', textEn: 'Full official profile — 12 sections mapped to site icons.', cssClass: 'dashboard-tile-card--profile-2026', backgroundImage: 'images/profile-2026/hero-cover.jpg', handler: 'openCompanyProfileHub', permission: 'content', visible: true },
             { id: 'dash-content', zone: 'quick', dashGroup: 'command', sortOrder: 1, iconClass: 'fas fa-pen-to-square', titleAr: 'إدارة محتوى الموقع', titleEn: 'Site Content', textAr: 'منتجات، بوابة الزائر، شركاء، شهادات — ديناميكي بالكامل.', textEn: 'Products, gateway icons, partners, certs — fully dynamic.', handler: 'openSiteContentManager', permission: 'content', visible: true },
             { id: 'dash-about-pages', zone: 'quick', dashGroup: 'command', sortOrder: 2, iconClass: 'fas fa-building', titleAr: 'من نحن ورؤيتنا', titleEn: 'About & Vision', textAr: 'نصوص المصنع ووثائق الصفحات الداخلية.', textEn: 'Factory pages and documents.', handler: 'openAboutContentAdmin', permission: 'content', visible: true },
             { id: 'dash-certs', zone: 'quick', dashGroup: 'command', sortOrder: 3, iconClass: 'fas fa-award', titleAr: 'اعتمادات وشهادات', titleEn: 'Certifications', textAr: 'شهادات المعرض — صور وPDF.', textEn: 'Showroom certificates.', cssClass: 'dashboard-tile-card--certs', handler: 'openCertificationsHub', permission: 'content', visible: true },
-            { id: 'dash-showroom', zone: 'quick', dashGroup: 'command', sortOrder: 4, iconClass: 'fas fa-images', titleAr: 'معرض نبراس', titleEn: 'Nebras Showroom', textAr: 'منتجات نبراس + مشاريع نبراس — صور وسلة.', textEn: 'Products & projects galleries.', handler: 'openShowroomHub', permission: 'content', visible: true },
+            { id: 'dash-showroom', zone: 'quick', dashGroup: 'command', sortOrder: 4, iconClass: 'fas fa-images', titleAr: 'معرض نبراس', titleEn: 'Nebras Showroom', textAr: '5 أقسام: أبواب نبراس · خزائن نبراس · WPC · CNC · مشاريع NHC.', textEn: '5 galleries: doors, cabinets, WPC, CNC, NHC projects.', handler: 'openShowroomHub', permission: 'content', visible: true },
             { id: 'dash-users', zone: 'quick', dashGroup: 'command', sortOrder: 4, iconClass: 'fas fa-users-cog', titleAr: 'المستخدمون والصلاحيات', titleEn: 'Users & RBAC', textAr: 'أدوار وصلاحيات كاملة للموقع.', textEn: 'Roles and full site permissions.', handler: 'openUserManagement', permission: 'users', visible: true },
             { id: 'dash-audit', zone: 'quick', dashGroup: 'command', sortOrder: 5, iconClass: 'fas fa-clipboard-check', titleAr: 'سجل العمليات', titleEn: 'Audit Log', textAr: 'تتبع كل إجراء إداري.', textEn: 'Track admin actions.', handler: 'openAuditLog', permission: 'audit', visible: true },
             { id: 'dash-sales', zone: 'quick', dashGroup: 'command', sortOrder: 6, iconClass: 'fas fa-chart-line', titleAr: 'المبيعات', titleEn: 'Sales', textAr: 'عروض الأسعار الواردة والمبيعات.', textEn: 'Quotes and sales.', handler: 'openSalesManagement', permission: 'sales', visible: true },
@@ -1971,7 +1991,10 @@
             erpFinanceStub: function() {
                 alert('وحدة المالية ERP — مرحلة قادمة (محاسبة وتكاليف إنتاج).');
             },
-            openAdminAnalytics: function() { openAdminAnalytics(); }
+            openAdminAnalytics: function() { openAdminAnalytics(); },
+            openCompanyProfileHub: function() {
+                openNebrasWorkspace({ pillar: 'platform', view: 'company-profile' });
+            }
         };
 
         const DEPRECATED_VISITOR_ICON_IDS = [1, 5, 6];
@@ -2101,6 +2124,24 @@
                         cur.visitorMode = 'browse';
                         cur.openHandler = 'branches-hub';
                         cur.target = '';
+                    }
+                    if (def.id === 18) {
+                        cur.lane = 'platform';
+                        cur.visitorMode = 'browse';
+                        cur.openHandler = 'company-profile';
+                        cur.target = '';
+                        cur.backgroundImage = 'images/profile-2026/hero-cover.jpg';
+                        cur.album = ['images/profile-2026/hero-cover.jpg', 'images/profile-2026/doors/doors-01.jpg', 'images/profile-2026/cabinets/cabinets-01.jpg'];
+                        if (!cur.titleKey) cur.titleKey = 'visitorQuickCompanyProfile';
+                    }
+                    if (def.id === 19) {
+                        cur.lane = 'showroom';
+                        cur.visitorMode = 'browse';
+                        cur.openHandler = 'showroom-hub';
+                        cur.target = '';
+                        cur.backgroundImage = 'images/profile-2026/hero-cover.jpg';
+                        cur.album = ['images/profile-2026/doors/doors-01.jpg', 'images/profile-2026/cabinets/cabinets-01.jpg', 'images/profile-2026/cnc/cnc-01.jpg'];
+                        if (!cur.titleKey) cur.titleKey = 'visitorQuickShowroom';
                     }
                     if (def.album && def.album.length && [2, 4, 7, 8, 11, 12, 13, 14, 16, 17].indexOf(def.id) < 0) cur.album = def.album.slice();
                     if (def.openHandler && !cur.openHandler) cur.openHandler = def.openHandler;
@@ -3873,33 +3914,59 @@
         }
 
         function updateOfficialOrganizationSchema() {
-            const el = document.getElementById('nebras-org-schema');
-            if (!el) return;
+            const orgEl = document.getElementById('nebras-org-schema');
+            const webEl = document.getElementById('nebras-website-schema');
             const siteUrl = sanitizeExternalUrl(systemSettings.publicSiteUrl || NEBRAS_PUBLIC_SITE_URL) || NEBRAS_PUBLIC_SITE_URL;
             const base = siteUrl.replace(/\/$/, '');
-            const schema = {
-                '@context': 'https://schema.org',
+            const phone = String(systemSettings.mainSalesPhone || '').trim() || undefined;
+            const tax = String(systemSettings.taxNumber || '').trim() || undefined;
+            const street = String(systemSettings.companyAddressAr || '').trim() || undefined;
+            const org = {
                 '@type': 'Organization',
+                '@id': base + '/#organization',
                 name: 'شركة مصنع نبراس للبلاستيك',
                 alternateName: ['مصنع نبراس للبلاستيك', 'منصة نبراس', 'Nebras Plastic Factory'],
                 url: siteUrl,
-                logo: base + '/images/favicon-48.png',
-                image: base + '/images/hero-nebras-banner.png',
-                description: 'شركة سعودية متخصصة في تصنيع وتركيب أبواب WPC عالية الجودة من القصيم إلى كل المملكة.',
-                telephone: String(systemSettings.mainSalesPhone || '').trim() || undefined,
-                taxID: String(systemSettings.taxNumber || '').trim() || undefined,
-                address: {
-                    '@type': 'PostalAddress',
-                    streetAddress: String(systemSettings.companyAddressAr || '').trim() || undefined,
-                    addressLocality: 'عنيزة',
-                    addressRegion: 'القصيم',
-                    addressCountry: 'SA'
-                }
+                logo: { '@type': 'ImageObject', url: base + '/images/logo.png', width: 512, height: 512 },
+                image: base + '/images/profile-2026/hero-cover.jpg',
+                description: 'شركة سعودية متخصصة في تصنيع أبواب WPC وخزائن وقطع CNC — مورد معتمد NHC · SASO · ISO من القصيم.',
+                foundingDate: '2018',
+                areaServed: { '@type': 'Country', name: 'Saudi Arabia' },
+                knowsAbout: ['أبواب WPC', 'خزائن WPC', 'قطع CNC', 'NHC', 'SASO', 'ISO 9001']
             };
-            if (!schema.telephone) delete schema.telephone;
-            if (!schema.taxID) delete schema.taxID;
-            if (!schema.address.streetAddress) delete schema.address;
-            try { el.textContent = JSON.stringify(schema); } catch (schemaErr) { /* ignore */ }
+            if (phone) org.telephone = phone;
+            if (tax) org.taxID = tax;
+            if (street) {
+                org.address = { '@type': 'PostalAddress', streetAddress: street, addressLocality: 'عنيزة', addressRegion: 'القصيم', addressCountry: 'SA' };
+            }
+            const localBiz = {
+                '@type': 'LocalBusiness',
+                '@id': base + '/#localbusiness',
+                name: 'مصنع نبراس للبلاستيك',
+                image: base + '/images/profile-2026/hero-cover.jpg',
+                url: siteUrl,
+                priceRange: '$$',
+                address: { '@type': 'PostalAddress', addressLocality: 'عنيزة', addressRegion: 'القصيم', addressCountry: 'SA' },
+                parentOrganization: { '@id': base + '/#organization' }
+            };
+            if (phone) localBiz.telephone = phone;
+            if (orgEl) {
+                try { orgEl.textContent = JSON.stringify({ '@context': 'https://schema.org', '@graph': [org, localBiz] }); } catch (e) { /* ignore */ }
+            }
+            if (webEl) {
+                const website = {
+                    '@context': 'https://schema.org',
+                    '@type': 'WebSite',
+                    '@id': base + '/#website',
+                    name: 'مصنع نبراس للبلاستيك',
+                    alternateName: ['منصة نبراس', 'Nebras Plastic Factory'],
+                    url: siteUrl,
+                    description: 'المنصة الرسمية لمصنع نبراس — أبواب WPC، معرض 5 أقسام، عروض أسعار A4، وفروع المملكة.',
+                    inLanguage: 'ar-SA',
+                    publisher: { '@id': base + '/#organization' }
+                };
+                try { webEl.textContent = JSON.stringify(website); } catch (e) { /* ignore */ }
+            }
         }
 
         function renderCompanyLegalBars() {
@@ -4729,8 +4796,13 @@
             const ua = navigator.userAgent ? String(navigator.userAgent).slice(0, 140) : '';
             const lang = currentLang || 'ar';
             let session = visitorAnalytics.sessions.find(function(s) { return s.id === sid; });
+            const visitorBranchId = getVisitorBranchId();
             if (!session) {
                 session = { id: sid, firstSeen: now, lastSeen: now, pageViews: 1, lang: lang, userAgent: ua };
+                if (visitorBranchId) {
+                    session.branchId = visitorBranchId;
+                    session.branchCity = getBranchNameById(visitorBranchId, lang);
+                }
                 visitorAnalytics.sessions.unshift(session);
                 visitorAnalytics.totalVisits = (visitorAnalytics.totalVisits || 0) + 1;
                 if (visitorAnalytics.sessions.length > 500) {
@@ -4740,6 +4812,10 @@
                 session.lastSeen = now;
                 session.pageViews = (Number(session.pageViews) || 0) + 1;
                 session.lang = lang;
+                if (visitorBranchId) {
+                    session.branchId = visitorBranchId;
+                    session.branchCity = getBranchNameById(visitorBranchId, lang);
+                }
             }
             visitorAnalytics.totalPageViews = (visitorAnalytics.totalPageViews || 0) + 1;
             saveVisitorAnalyticsLocal();
@@ -5094,20 +5170,22 @@
         function buildVisitorReportTableHtml() {
             loadVisitorAnalyticsFromStorage();
             ensureVisitorAnalytics();
-            const sessions = (visitorAnalytics.sessions || []).slice().filter(function(s) {
+            const sessions = filterVisitorsForAdmin((visitorAnalytics.sessions || []).slice().filter(function(s) {
                 return s && !isAnalyticsItemDeleted('visitors', s.id);
-            }).sort(function(a, b) {
+            }), currentAdmin).sort(function(a, b) {
                 return (b.lastSeen || 0) - (a.lastSeen || 0);
             }).slice(0, 25);
             if (!sessions.length) {
                 return '<p class="analytics-empty">لا زيارات مسجّلة بعد — يُحدَّث تلقائياً عند فتح الموقع.</p>';
             }
             return wrapAnalyticsTableHtml('<table class="admin-analytics-table"><thead><tr>' +
-                '<th>الجلسة</th><th>أول زيارة</th><th>آخر نشاط</th><th>صفحات</th><th>اللغة</th>' +
+                '<th>الجلسة</th><th>الفرع</th><th>أول زيارة</th><th>آخر نشاط</th><th>صفحات</th><th>اللغة</th>' +
                 (isMainGovernanceAdmin() ? '<th>حذف</th>' : '') + '</tr></thead><tbody>' +
                 sessions.map(function(s) {
                     const safeId = String(s.id || '').replace(/'/g, "\\'");
+                    const branchLabel = s.branchCity || (s.branchId ? getBranchNameById(s.branchId) : '—');
                     return '<tr><td><code dir="ltr">' + escapeHtmlAttr(String(s.id || '').slice(-10)) + '</code></td>' +
+                        '<td>' + escapeHtmlAttr(branchLabel) + '</td>' +
                         '<td>' + escapeHtmlAttr(formatNebrasDateTime(s.firstSeen, currentLang)) + '</td>' +
                         '<td>' + escapeHtmlAttr(formatNebrasDateTime(s.lastSeen, currentLang)) + '</td>' +
                         '<td>' + (Number(s.pageViews) || 1) + '</td>' +
@@ -5138,10 +5216,12 @@
             const quoteCatalogEl = document.getElementById('quote-catalog-panel');
             const bankTransfersEl = document.getElementById('bank-transfers-panel');
             if (kpisEl) kpisEl.innerHTML = '<p class="analytics-empty">جاري تحميل التقارير…</p>';
-            const quotes = await getMergedSalesQuotesForAnalytics();
+            let quotes = await getMergedSalesQuotesForAnalytics();
+            quotes = filterQuotesForAdmin(quotes, currentAdmin);
             loadVisitorAnalyticsFromStorage();
             ensureVisitorAnalytics();
-            const uniqueVisitors = (visitorAnalytics.sessions || []).length;
+            const scopedVisitors = filterVisitorsForAdmin(visitorAnalytics.sessions || [], currentAdmin);
+            const uniqueVisitors = scopedVisitors.length;
             const openComplaints = Object.values(complaints || {}).filter(function(c) {
                 return c && c.status !== 'resolved';
             }).length;
@@ -5255,7 +5335,7 @@
             { id: 'dash-content', publicEffect: 'منتجات المتجر · أيقونات الزوار · أقسام إضافية', handler: 'openSiteContentManager' },
             { id: 'dash-about-pages', publicEffect: 'بطاقات من نحن / رؤيتنا + محتوى داخلي', handler: 'openAboutContentAdmin' },
             { id: 'dash-certs', publicEffect: 'اعتمادات وشهادات في المعرض', handler: 'openCertificationsHub' },
-            { id: 'dash-showroom', publicEffect: 'معرض منتجات ومشاريع نبراس', handler: 'openShowroomHub' },
+            { id: 'dash-showroom', publicEffect: 'معرض 5 أقسام + مشاريع NHC', handler: 'openShowroomHub' },
             { id: 'dash-users', publicEffect: 'صلاحيات الدخول للإدارة', handler: 'openUserManagement' },
             { id: 'dash-audit', publicEffect: 'سجل العمليات الإدارية', handler: 'openAuditLog' },
             { id: 'dash-sales', publicEffect: 'عروض الأسعار الواردة من السلة', handler: 'openSalesManagement' },
@@ -5294,11 +5374,13 @@
                 { ok: gatewayCount > 0, label: 'أيقونات البوابة (خارجي)', detail: gatewayCount + ' أيقونة' },
                 { ok: (sitePartners || []).length > 0, label: 'شركاء (مارquee)', detail: (sitePartners || []).length + ' شريك' },
                 { ok: (siteCertifications || []).length >= 0, label: 'شهادات واعتمادات', detail: (siteCertifications || []).length + ' عنصر' },
-                { ok: !!showroomGallery, label: 'معرض نبراس', detail: (function() {
+                { ok: !!showroomGallery, label: 'معرض نبراس (5 أقسام)', detail: (function() {
                     if (!showroomGallery) return '—';
-                    const p = (showroomGallery.products && showroomGallery.products.items) ? showroomGallery.products.items.length : 0;
-                    const j = (showroomGallery.projects && showroomGallery.projects.items) ? showroomGallery.projects.items.length : 0;
-                    return p + ' منتج · ' + j + ' مشروع';
+                    return getShowroomGallerySectionKeys().map(function(k) {
+                        const n = (showroomGallery[k] && showroomGallery[k].items) ? showroomGallery[k].items.length : 0;
+                        const def = getShowroomSectionDef(k);
+                        return (def ? def.titleAr : k) + ': ' + n;
+                    }).join(' · ');
                 })() },
                 { ok: (branchesData || []).length > 0, label: 'فروع المملكة', detail: (branchesData || []).length + ' فرع' },
                 { ok: ADMIN_GOVERNANCE_TILE_REGISTRY.every(function(r) {
@@ -5761,7 +5843,8 @@
                 const pageW = pdf.internal.pageSize.getWidth();
                 const pageH = pdf.internal.pageSize.getHeight();
                 const imgDims = await getDataUrlImageSize(pngDataUrl);
-                const margin = 6;
+                const qSettings = getQuoteA4Settings();
+                const margin = (qSettings.layout || 'nebras-official') === 'nebras-official' ? 0 : 6;
                 const maxW = pageW - margin * 2;
                 const maxH = pageH - margin * 2;
                 const pxToMm = 0.264583;
@@ -5771,11 +5854,13 @@
                 imgW *= ratio;
                 imgH *= ratio;
                 pdf.addImage(pngDataUrl, 'PNG', (pageW - imgW) / 2, margin, imgW, imgH);
-                const q = getQuoteA4Settings();
+                const q = qSettings;
                 const page2 = await fetchAssetAsDataUrlForPdf(q.staticPage2Url);
                 const page3 = await fetchAssetAsDataUrlForPdf(q.staticPage3Url);
+                const page4 = await fetchAssetAsDataUrlForPdf(q.staticPage4Url);
                 if (page2) await appendA4ImagePageToPdf(pdf, page2);
                 if (page3) await appendA4ImagePageToPdf(pdf, page3);
+                if (page4) await appendA4ImagePageToPdf(pdf, page4);
                 return pdf.output('blob');
             } catch (pdfErr) {
                 console.warn('Quote A4 PDF failed:', pdfErr);
@@ -6713,7 +6798,8 @@
             q.watermarkOpacity = Math.min(0.35, Math.max(0.04, Number(q.watermarkOpacity) || DEFAULT_QUOTE_A4_SETTINGS.watermarkOpacity));
             q.watermarkScale = Math.min(95, Math.max(40, Number(q.watermarkScale) || DEFAULT_QUOTE_A4_SETTINGS.watermarkScale));
             if (!q.logoUrl) q.logoUrl = 'images/logo.png';
-            if (!q.layout) q.layout = 'nebras-factory';
+            if (!q.layout || q.layout === 'nebras-factory') q.layout = 'nebras-official';
+            if (!q.staticPage4Url) q.staticPage4Url = DEFAULT_QUOTE_A4_SETTINGS.staticPage4Url;
             return q;
         }
 
@@ -7029,6 +7115,188 @@
             return '<div class="quote-info-row"><span class="quote-info-label">' + label + '</span><span class="quote-info-value">' + escapeHtmlAttr(value || '—') + '</span></div>';
         }
 
+        function formatQuotePlainNumber(amount) {
+            const n = Number(amount) || 0;
+            if (n % 1 === 0) return n.toLocaleString('en-US', { maximumFractionDigits: 0 });
+            return n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function formatQuoteSlashDate(value) {
+            const d = value instanceof Date ? value : new Date(value);
+            if (isNaN(d.getTime())) return '—';
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return y + '/' + m + '/' + day;
+        }
+
+        function getQuoteDisplayNumber(quoteNo) {
+            const raw = String(quoteNo || '').trim();
+            if (!raw) return '—';
+            return raw.replace(/^NEB-?/i, '') || raw;
+        }
+
+        function getQuoteValidTillDate(fromDate, days) {
+            const d = fromDate instanceof Date ? new Date(fromDate.getTime()) : new Date(fromDate);
+            if (isNaN(d.getTime())) return '—';
+            d.setDate(d.getDate() + (Number(days) || 4));
+            return formatQuoteSlashDate(d);
+        }
+
+        function formatAmountInArabicWords(amount) {
+            const n = Math.round(Number(amount) || 0);
+            if (!n) return 'صفر ريال';
+            const ones = ['', 'واحد', 'اثنان', 'ثلاثة', 'أربعة', 'خمسة', 'ستة', 'سبعة', 'ثمانية', 'تسعة'];
+            const onesFem = ['', 'واحدة', 'اثنتان', 'ثلاث', 'أربع', 'خمس', 'ست', 'سبع', 'ثمان', 'تسع'];
+            const tens = ['', 'عشرة', 'عشرون', 'ثلاثون', 'أربعون', 'خمسون', 'ستون', 'سبعون', 'ثمانون', 'تسعون'];
+            const teens = ['عشرة', 'أحد عشر', 'اثنا عشر', 'ثلاثة عشر', 'أربعة عشر', 'خمسة عشر', 'ستة عشر', 'سبعة عشر', 'ثمانية عشر', 'تسعة عشر'];
+            function under100(num, feminine) {
+                if (num < 10) return feminine ? onesFem[num] : ones[num];
+                if (num < 20) return teens[num - 10];
+                const t = Math.floor(num / 10);
+                const o = num % 10;
+                if (!o) return tens[t];
+                return (feminine ? onesFem[o] : ones[o]) + ' و ' + tens[t];
+            }
+            function under1000(num, feminine) {
+                if (num < 100) return under100(num, feminine);
+                const h = Math.floor(num / 100);
+                const r = num % 100;
+                let word = '';
+                if (h === 1) word = 'مائة';
+                else if (h === 2) word = 'مائتان';
+                else if (h <= 10) word = ones[h] + ' مائة';
+                else word = ones[h] + ' مائة';
+                if (r) word += ' و ' + under100(r, feminine);
+                return word;
+            }
+            function chunkGroup(num, one, two, plural, feminine) {
+                if (!num) return '';
+                if (num === 1) return one;
+                if (num === 2) return two;
+                if (num >= 3 && num <= 10) return under1000(num, feminine) + ' ' + plural;
+                return under1000(num, feminine) + ' ' + one;
+            }
+            const parts = [];
+            const millions = Math.floor(n / 1000000);
+            const thousands = Math.floor((n % 1000000) / 1000);
+            const rest = n % 1000;
+            if (millions) parts.push(chunkGroup(millions, 'مليون', 'مليونان', 'ملايين', false));
+            if (thousands) parts.push(chunkGroup(thousands, 'ألف', 'ألفان', 'آلاف', false));
+            if (rest) parts.push(under1000(rest, true));
+            let text = parts.join(' و ');
+            text = text.replace(/اثنان/g, 'إثنان').replace(/اثنتان/g, 'إثنتان');
+            return text + ' ريال';
+        }
+
+        function buildQuoteOfficialMetaRow(enLabel, arLabel, value) {
+            return '<tr><td class="quote-official-meta-en">' + escapeHtmlAttr(enLabel) + '</td>' +
+                '<td class="quote-official-meta-val">' + escapeHtmlAttr(value || '') + '</td>' +
+                '<td class="quote-official-meta-ar">' + escapeHtmlAttr(arLabel) + '</td></tr>';
+        }
+
+        function buildQuoteOfficialTotalsRow(enLabel, arLabel, value, grand) {
+            const cls = grand ? ' class="quote-official-totals-grand"' : '';
+            return '<tr' + cls + '><td class="quote-official-totals-en">' + escapeHtmlAttr(enLabel) + '</td>' +
+                '<td class="quote-official-totals-val">' + escapeHtmlAttr(value) + '</td>' +
+                '<td class="quote-official-totals-ar">' + escapeHtmlAttr(arLabel) + '</td></tr>';
+        }
+
+        function renderQuoteOfficialA4Document(doc, overlay, logoUrl) {
+            const lang = currentLang || 'ar';
+            const q = getQuoteA4Settings();
+            const resolvedLogo = logoUrl || getQuoteA4LogoUrl();
+            const now = new Date();
+            const quoteNo = currentQuoteIssue && currentQuoteIssue.quoteNo ? currentQuoteIssue.quoteNo : issueNextQuoteNumber().quoteNo;
+            const displayNo = getQuoteDisplayNumber(quoteNo);
+            const creationDate = formatQuoteSlashDate(now);
+            const validTill = getQuoteValidTillDate(now, 4);
+            const pct = getNebrasVatPercentLabel();
+            const cust = readCheckoutFormToProfile();
+            const customerDisplay = [cust.customerName, cust.city].filter(Boolean).join(' - ') || cust.customerName || '—';
+            const cartTotals = calcCartTotals();
+            const vatRate = getNebrasVatRate();
+            const rows = nebrasCart.map(function(line) {
+                const unit = Number(line.unitPrice) || 0;
+                const qty = Number(line.qty) || 1;
+                const lineEx = unit * qty;
+                const lineVat = lineEx * vatRate;
+                const specs = [line.color, line.size, line.type].filter(Boolean).join(' / ');
+                const descEn = escapeHtmlAttr(line.productTitle || '');
+                const descAr = escapeHtmlAttr(specs || line.productTitle || '');
+                const descExtra = line.note ? '<span class="quote-official-desc-ar">' + escapeHtmlAttr(line.note) + '</span>' : '';
+                return '<tr>' +
+                    '<td class="quote-official-desc"><span class="quote-official-desc-en">' + descEn + '</span>' +
+                    (descAr ? '<span class="quote-official-desc-ar">' + descAr + '</span>' : '') + descExtra + '</td>' +
+                    '<td class="quote-official-num">piece</td>' +
+                    '<td class="quote-official-num">' + qty + '</td>' +
+                    '<td class="quote-official-num">' + (unit > 0 ? formatQuotePlainNumber(unit) : '—') + '</td>' +
+                    '<td class="quote-official-num">0</td>' +
+                    '<td class="quote-official-num">' + pct + '</td>' +
+                    '<td class="quote-official-num">' + (lineVat > 0 ? formatQuotePlainNumber(lineVat) : '—') + '</td>' +
+                    '<td class="quote-official-num">' + (lineEx > 0 ? formatQuotePlainNumber(lineEx) : '—') + '</td>' +
+                    '</tr>';
+            }).join('');
+            const totalWords = cartTotals.totalInc > 0
+                ? 'الإجمالي العام: فقط ' + formatAmountInArabicWords(cartTotals.totalInc) + ' لا غير'
+                : 'الإجمالي العام: عند الطلب';
+            const factoryEmail = 'nebrasfactory@hotmail.com';
+            const factoryAddr = systemSettings.companyAddressAr || 'القصيم - صناعية عنيزة - إمتداد طريق الزلفي';
+            const salesPhone = systemSettings.mainSalesPhone || '0555092383';
+            const servicePhone = systemSettings.customerServicePhone || '0579394158';
+            const logoHtml = buildQuoteLogoImgHtml('quote-official-logo', resolvedLogo, 'شركة مصنع نبراس للبلاستيك');
+            doc.className = 'quote-a4 quote-a4--nebras-official';
+            doc.removeAttribute('style');
+            doc.innerHTML =
+                '<div class="quote-a4-inner">' +
+                '<header class="quote-official-header">' +
+                '<div class="quote-official-header-meta">VAT ' + escapeHtmlAttr(systemSettings.taxNumber || '312765384700003') + '<br>' +
+                'C.R ' + escapeHtmlAttr(systemSettings.commercialRegister || '1128185177') + '<br>' +
+                escapeHtmlAttr(factoryEmail) + '</div>' +
+                '<div class="quote-official-header-logo">' + logoHtml + '</div>' +
+                '</header>' +
+                '<div class="quote-official-divider" aria-hidden="true"></div>' +
+                '<table class="quote-official-meta-table"><tbody>' +
+                buildQuoteOfficialMetaRow('Quotation Number', 'رقم عرض السعر', displayNo) +
+                buildQuoteOfficialMetaRow('Creation Date', 'تاريخ الإنشاء', creationDate) +
+                buildQuoteOfficialMetaRow('Valid Till', 'صالح حتى', validTill) +
+                buildQuoteOfficialMetaRow('Customer Code', 'رقم العميل', cust.customerCode || '') +
+                buildQuoteOfficialMetaRow('Customer Name', 'اسم العميل', customerDisplay) +
+                buildQuoteOfficialMetaRow('Customer Address', 'عنوان العميل', cust.address || '') +
+                buildQuoteOfficialMetaRow('Vat No', 'الرقم الضريبي للعميل', cust.vatNo || '') +
+                '</tbody></table>' +
+                '<table class="quote-official-items-table"><thead><tr>' +
+                '<th>البيان<br>Description</th><th>الوحدة<br>Unit</th><th>الكمية<br>Qty</th>' +
+                '<th>السعر<br>Price</th><th>الخصم<br>Discount</th><th>الضريبة<br>%Tax</th>' +
+                '<th>مبلغ الضريبة<br>Tax Amt</th><th>المجموع<br>Total</th>' +
+                '</tr></thead><tbody>' + rows + '</tbody></table>' +
+                '<div class="quote-official-bottom">' +
+                '<div class="quote-official-words-box"><p>' + escapeHtmlAttr(totalWords) + '</p></div>' +
+                '<table class="quote-official-totals-table"><tbody>' +
+                buildQuoteOfficialTotalsRow('Subtotal', 'المجموع', cartTotals.subtotalEx > 0 ? formatQuotePlainNumber(cartTotals.subtotalEx) : '—') +
+                buildQuoteOfficialTotalsRow('Discount', 'الخصم', '0') +
+                buildQuoteOfficialTotalsRow('Total Before Tax', 'الاجمالي قبل الضريبة', cartTotals.subtotalEx > 0 ? formatQuotePlainNumber(cartTotals.subtotalEx) : '—') +
+                buildQuoteOfficialTotalsRow('Total Vat', 'مجموع الضريبة', cartTotals.vatAmount > 0 ? formatQuotePlainNumber(cartTotals.vatAmount) : '—') +
+                buildQuoteOfficialTotalsRow('Total', 'الإجمالي', cartTotals.totalInc > 0 ? formatQuotePlainNumber(cartTotals.totalInc) : '—', true) +
+                '</tbody></table></div>' +
+                '<div class="quote-official-divider" aria-hidden="true"></div>' +
+                '<footer class="quote-official-footer"><div class="quote-official-footer-grid">' +
+                '<div class="quote-official-footer-sales"><strong>للتواصل - إدارة المبيعات</strong>' +
+                '<span class="quote-official-footer-phones">0115048763 - 920033382</span><br>' +
+                '<span class="quote-official-footer-phones">' + escapeHtmlAttr(salesPhone) + ' - 0536694464</span><br>' +
+                '<span class="quote-official-footer-phones">خدمة المبيعات: ' + escapeHtmlAttr(servicePhone) + '</span></div>' +
+                '<div class="quote-official-footer-address">' + escapeHtmlAttr(factoryAddr) +
+                '<span class="quote-official-web">WWW.NIBRAS-FACTORY.COM</span></div>' +
+                '</div></footer></div>';
+            overlay.classList.add('show');
+            closeCartDrawer();
+            updateSalesQuoteFab();
+            requestAnimationFrame(function() {
+                syncQuoteA4MobilePreviewScale();
+                waitForQuoteDocumentImages(doc, 2500).then(syncQuoteA4MobilePreviewScale);
+            });
+        }
+
         function buildQuoteCustomerCardHtml(cust, ui, lang) {
             const isEn = lang === 'en';
             const isZh = lang === 'zh';
@@ -7088,10 +7356,14 @@
         }
 
         function renderQuotePreviewDocument(doc, overlay, logoUrl) {
+            const q = getQuoteA4Settings();
+            if ((q.layout || 'nebras-official') === 'nebras-official') {
+                renderQuoteOfficialA4Document(doc, overlay, logoUrl);
+                return;
+            }
             const lang = currentLang || 'ar';
             const isEn = lang === 'en';
             const isZh = lang === 'zh';
-            const q = getQuoteA4Settings();
             const resolvedLogo = logoUrl || getQuoteA4LogoUrl();
             const now = new Date();
             const dateStr = formatNebrasDateTime(now, lang, { dateStyle: 'long', timeStyle: 'short' });
@@ -7563,14 +7835,66 @@
             openNebrasWorkspace({ pillar: 'showroom', view: 'certifications' });
         }
 
-        function openShowroomHub() {
-            openNebrasWorkspace({ pillar: 'showroom', view: 'showroom-hub' });
+        function openShowroomHub(sectionKey) {
+            const key = String(sectionKey || '').trim();
+            const route = { pillar: 'showroom', view: 'showroom-hub' };
+            if (key && getShowroomSectionDef(key)) route.showroomSection = key;
+            openNebrasWorkspace(route);
+        }
+
+        function normalizeShowroomItem(it, key, idx) {
+            return {
+                id: it.id || ('showroom-' + key + '-' + idx),
+                imageUrl: String(it.imageUrl || '').trim(),
+                titleAr: String(it.titleAr || '').trim(),
+                titleEn: String(it.titleEn || '').trim(),
+                captionAr: String(it.captionAr || '').trim(),
+                captionEn: String(it.captionEn || '').trim(),
+                linkUrl: String(it.linkUrl || '').trim(),
+                shopProductId: String(it.shopProductId || '').trim(),
+                shopVariantIndex: it.shopVariantIndex != null && it.shopVariantIndex !== '' ? parseInt(it.shopVariantIndex, 10) : null,
+                sortOrder: Number(it.sortOrder) || idx + 1,
+                visible: it.visible !== false
+            };
+        }
+
+        function migrateLegacyShowroomProducts(raw) {
+            if (!raw || !raw.products || !Array.isArray(raw.products.items) || !raw.products.items.length) return raw;
+            const hasNewGallery = getShowroomGallerySectionKeys().some(function(k) {
+                return k !== 'projects' && raw[k] && Array.isArray(raw[k].items) && raw[k].items.length;
+            });
+            if (hasNewGallery) return raw;
+            const buckets = { doors: [], cabinets: [], wpcDoors: [], wpcCabinets: [], cnc: [] };
+            raw.products.items.forEach(function(it) {
+                if (!it) return;
+                const url = String(it.imageUrl || '');
+                if (url.indexOf('/doors/') !== -1) buckets.doors.push(it);
+                else if (url.indexOf('/cabinets/') !== -1) buckets.cabinets.push(it);
+                else if (url.indexOf('/cnc/') !== -1) buckets.cnc.push(it);
+                else if (url.indexOf('/gallery-extra/') !== -1) {
+                    const m = url.match(/gallery-extra-(\d+)/);
+                    const n = m ? parseInt(m[1], 10) : 0;
+                    if (n <= 24) buckets.wpcDoors.push(it);
+                    else buckets.wpcCabinets.push(it);
+                } else buckets.doors.push(it);
+            });
+            Object.keys(buckets).forEach(function(key) {
+                if (!buckets[key].length) return;
+                raw[key] = raw[key] || {};
+                raw[key].items = buckets[key];
+                if (!raw[key].titleAr) {
+                    const def = getShowroomSectionDef(key);
+                    if (def) raw[key].titleAr = def.titleAr;
+                }
+            });
+            return raw;
         }
 
         function normalizeShowroomGallery(raw) {
-            const base = JSON.parse(JSON.stringify(DEFAULT_SHOWROOM_GALLERY));
+            const base = buildDefaultShowroomGallery();
             if (!raw || typeof raw !== 'object') return base;
-            ['products', 'projects'].forEach(function(key) {
+            raw = migrateLegacyShowroomProducts(JSON.parse(JSON.stringify(raw)));
+            getShowroomGallerySectionKeys().forEach(function(key) {
                 const sec = raw[key];
                 if (!sec || typeof sec !== 'object') return;
                 if (sec.titleAr) base[key].titleAr = String(sec.titleAr);
@@ -7579,19 +7903,7 @@
                 if (sec.introEn) base[key].introEn = String(sec.introEn);
                 if (Array.isArray(sec.items)) {
                     base[key].items = sec.items.filter(function(it) { return it && typeof it === 'object'; }).map(function(it, idx) {
-                        return {
-                            id: it.id || ('showroom-' + key + '-' + idx),
-                            imageUrl: String(it.imageUrl || '').trim(),
-                            titleAr: String(it.titleAr || '').trim(),
-                            titleEn: String(it.titleEn || '').trim(),
-                            captionAr: String(it.captionAr || '').trim(),
-                            captionEn: String(it.captionEn || '').trim(),
-                            linkUrl: String(it.linkUrl || '').trim(),
-                            shopProductId: String(it.shopProductId || '').trim(),
-                            shopVariantIndex: it.shopVariantIndex != null && it.shopVariantIndex !== '' ? parseInt(it.shopVariantIndex, 10) : null,
-                            sortOrder: Number(it.sortOrder) || idx + 1,
-                            visible: it.visible !== false
-                        };
+                        return normalizeShowroomItem(it, key, idx);
                     });
                 }
             });
@@ -7676,48 +7988,74 @@
                 '<div class="showroom-gallery-card-media">' + mediaInner + '</div>' + body + '</article>';
         }
 
+        function scrollToShowroomSection(sectionKey) {
+            const el = document.getElementById('showroom-section-' + sectionKey);
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
         function buildShowroomSectionHtml(sectionKey, lang) {
             const ui = siteText[lang] || siteText.ar;
             const sec = getShowroomSection(sectionKey);
+            const def = getShowroomSectionDef(sectionKey);
             const items = getVisibleShowroomItems(sectionKey);
-            const title = getShowroomSectionField(sec, 'title', lang);
-            const intro = getShowroomSectionField(sec, 'intro', lang);
-            const emptyMsg = sectionKey === 'projects'
-                ? (ui.showroomProjectsEmpty || 'قريباً — مشاريع نبراس المنفّذة.')
-                : (ui.showroomProductsEmpty || 'قريباً — صور منتجات نبراس.');
+            const title = getShowroomSectionField(sec, 'title', lang) || (def ? (lang === 'en' ? def.titleEn : def.titleAr) : '');
+            const intro = getShowroomSectionField(sec, 'intro', lang) || (def ? (lang === 'en' ? def.introEn : def.introAr) : '');
+            const emptyKey = def && def.emptyKey ? def.emptyKey : 'showroomProductsEmpty';
+            const emptyMsg = ui[emptyKey] || ui.showroomProductsEmpty || 'قريباً — صور المعرض.';
+            const icon = def && def.icon ? def.icon : 'images';
             const grid = items.length
                 ? '<div class="showroom-gallery-grid">' + items.map(function(it) { return buildShowroomGalleryCardHtml(it, lang, ui); }).join('') + '</div>'
                 : '<p class="showroom-gallery-empty">' + escapeHtmlAttr(emptyMsg) + '</p>';
             return '<section class="showroom-hub-section showroom-hub-section--' + sectionKey + '" id="showroom-section-' + sectionKey + '">' +
                 '<div class="showroom-hub-section-head">' +
-                '<h3><i class="fas fa-' + (sectionKey === 'projects' ? 'building' : 'cubes') + '"></i> ' + escapeHtmlAttr(title) + '</h3>' +
+                '<h3><i class="fas fa-' + icon + '"></i> ' + escapeHtmlAttr(title) + ' <span class="showroom-hub-section-count">' + items.length + '</span></h3>' +
                 (intro ? '<p class="showroom-hub-section-intro">' + escapeHtmlAttr(intro) + '</p>' : '') +
                 '</div>' + grid + '</section>';
+        }
+
+        function buildShowroomHubNavHtml(lang) {
+            ensureShowroomGallery();
+            return '<nav class="showroom-hub-nav" aria-label="' + escapeHtmlAttr(lang === 'en' ? 'Showroom sections' : 'أقسام المعرض') + '">' +
+                SHOWROOM_GALLERY_SECTION_DEFS.map(function(def) {
+                    const sec = getShowroomSection(def.key);
+                    const title = getShowroomSectionField(sec, 'title', lang) || (lang === 'en' ? def.titleEn : def.titleAr);
+                    const count = getVisibleShowroomItems(def.key).length;
+                    return '<button type="button" class="showroom-hub-nav-btn" onclick="scrollToShowroomSection(\'' + def.key + '\')">' +
+                        '<i class="fas fa-' + def.icon + '"></i> ' + escapeHtmlAttr(title) +
+                        (count ? ' <span class="showroom-hub-nav-count">' + count + '</span>' : '') + '</button>';
+                }).join('') + '</nav>';
         }
 
         function buildShowroomHubHtml(lang) {
             const ui = siteText[lang] || siteText.ar;
             ensureShowroomGallery();
             return '<div class="showroom-hub">' +
-                '<p class="workspace-intro showroom-hub-intro">' + escapeHtmlAttr(ui.showroomHubIntro || 'معرض نبراس — منتجاتنا ومشاريعنا المنفّذة.') + '</p>' +
+                '<p class="workspace-intro showroom-hub-intro">' + escapeHtmlAttr(ui.showroomHubIntro || 'معرض نبراس — أبواب نبراس · خزائن نبراس · WPC · CNC · مشاريع NHC.') + '</p>' +
                 '<div class="showroom-hub-quick">' +
                 '<button type="button" class="workspace-action-btn" onclick="openNebrasWorkspace({pillar:\'showroom\',view:\'certifications\'})"><i class="fas fa-award"></i> ' + escapeHtmlAttr(ui.visitorQuickCertifications || 'اعتمادات وشهادات') + '</button>' +
                 '<button type="button" class="workspace-action-btn" onclick="openNebrasWorkspace({pillar:\'showroom\',view:\'color-rolls\'})"><i class="fas fa-swatchbook"></i> ' + escapeHtmlAttr(ui.visitorQuickColorRolls || 'كتالوج الألوان') + '</button>' +
                 '<button type="button" class="workspace-action-btn" onclick="openNebrasWorkspace({pillar:\'showroom\',view:\'door-designer\'})"><i class="fas fa-pencil-ruler"></i> ' + escapeHtmlAttr(ui.visitorQuickDoorDesigner || 'صمّم بابك') + '</button>' +
                 '</div>' +
-                buildShowroomSectionHtml('products', lang) +
-                buildShowroomSectionHtml('projects', lang) +
+                buildShowroomHubNavHtml(lang) +
+                getShowroomGallerySectionKeys().map(function(key) { return buildShowroomSectionHtml(key, lang); }).join('') +
                 '</div>';
         }
 
         function displayShowroomAdmin() {
-            const listProducts = document.getElementById('scm-showroom-products-list');
-            const listProjects = document.getElementById('scm-showroom-projects-list');
-            if (!listProducts && !listProjects) return;
+            const root = document.getElementById('scm-showroom-sections-root');
+            if (!root) return;
             ensureShowroomGallery();
-            function renderList(sectionKey, el) {
+            root.innerHTML = SHOWROOM_GALLERY_SECTION_DEFS.map(function(def) {
+                return '<div class="scm-showroom-admin-block" data-showroom-key="' + escapeHtmlAttr(def.key) + '">' +
+                    '<h4 class="scm-subhead">' + escapeHtmlAttr(def.titleAr) + '</h4>' +
+                    '<button type="button" onclick="editShowroomSectionMeta(\'' + def.key + '\')">تعديل عنوان القسم</button>' +
+                    '<button class="primary" type="button" onclick="addShowroomItem(\'' + def.key + '\')">+ إضافة صورة</button>' +
+                    '<ul id="scm-showroom-' + def.key + '-list" class="scm-list"></ul></div>';
+            }).join('');
+            SHOWROOM_GALLERY_SECTION_DEFS.forEach(function(def) {
+                const el = document.getElementById('scm-showroom-' + def.key + '-list');
                 if (!el) return;
-                const items = (getShowroomSection(sectionKey).items || []).slice().sort(function(a, b) {
+                const items = (getShowroomSection(def.key).items || []).slice().sort(function(a, b) {
                     return (a.sortOrder || 0) - (b.sortOrder || 0);
                 });
                 el.innerHTML = items.map(function(it) {
@@ -7726,12 +8064,10 @@
                     return '<li><strong>' + escapeHtmlAttr(it.titleAr || it.id) + '</strong>' + mediaBadge +
                         '<small>' + escapeHtmlAttr(it.imageUrl || '') + shop + '</small>' +
                         '<div class="scm-row-actions">' +
-                        '<button type="button" onclick="editShowroomItem(\'' + sectionKey + '\',\'' + it.id + '\')">تعديل</button>' +
-                        '<button type="button" onclick="deleteShowroomItem(\'' + sectionKey + '\',\'' + it.id + '\')">حذف</button></div></li>';
+                        '<button type="button" onclick="editShowroomItem(\'' + def.key + '\',\'' + it.id + '\')">تعديل</button>' +
+                        '<button type="button" onclick="deleteShowroomItem(\'' + def.key + '\',\'' + it.id + '\')">حذف</button></div></li>';
                 }).join('') || '<li>لا توجد صور — اضغطي + إضافة صورة</li>';
-            }
-            renderList('products', listProducts);
-            renderList('projects', listProjects);
+            });
         }
 
         async function editShowroomSectionMeta(sectionKey) {
@@ -8372,7 +8708,7 @@
                 if (tile && tile.linkedProductId === productId) delete tile.linkedProductId;
             });
             ensureShowroomGallery();
-            ['products', 'projects'].forEach(function(secKey) {
+            getShowroomGallerySectionKeys().forEach(function(secKey) {
                 const items = showroomGallery[secKey] && showroomGallery[secKey].items;
                 if (!items) return;
                 items.forEach(function(it) {
@@ -8405,7 +8741,7 @@
                 if (tile && tile.linkedProductId && !liveIds[tile.linkedProductId]) delete tile.linkedProductId;
             });
             ensureShowroomGallery();
-            ['products', 'projects'].forEach(function(secKey) {
+            getShowroomGallerySectionKeys().forEach(function(secKey) {
                 const items = showroomGallery[secKey] && showroomGallery[secKey].items;
                 if (!items) return;
                 items.forEach(function(it) {
@@ -8919,6 +9255,8 @@
             { id: 2, inquiry: 'شكوى من الجودة', response: 'قيد المراجعة' }
         ];
 
+        const VISITOR_BRANCH_KEY = 'nebras_visitor_branch_id';
+
         function normalizeBranchRecord(branch) {
             if (!branch || typeof branch !== 'object') return branch;
             const ar = String(branch.city || '').trim();
@@ -8927,7 +9265,110 @@
                 if (!branch.city_en || !String(branch.city_en).trim()) branch.city_en = known.en;
                 if (!branch.city_zh || !String(branch.city_zh).trim()) branch.city_zh = known.zh;
             }
+            if (branch.mapUrl == null) branch.mapUrl = '';
+            if (branch.addressAr == null) branch.addressAr = '';
+            if (branch.addressEn == null) branch.addressEn = '';
+            if (branch.mapLat == null) branch.mapLat = '';
+            if (branch.mapLng == null) branch.mapLng = '';
             return branch;
+        }
+
+        function getAdminAssignedBranchId(admin) {
+            admin = admin || currentAdmin;
+            if (!admin || admin.isPrimary || isMainGovernanceAdmin(admin)) return null;
+            if (admin.assignedBranchId != null && !isNaN(Number(admin.assignedBranchId))) {
+                return Number(admin.assignedBranchId);
+            }
+            const cityNeedle = String(admin.assignedBranchCity || '').trim().toLowerCase();
+            if (!cityNeedle) return null;
+            const match = (branchesData || []).find(function(b) {
+                const key = getBranchSearchKey(b);
+                const city = normalizeText(b.city || '');
+                return key.indexOf(cityNeedle) >= 0 || cityNeedle.indexOf(city) >= 0;
+            });
+            return match ? Number(match.id) : null;
+        }
+
+        function getAdminAssignedBranch(admin) {
+            const bid = getAdminAssignedBranchId(admin);
+            if (bid == null) return null;
+            return (branchesData || []).find(function(b) { return Number(b.id) === bid; }) || null;
+        }
+
+        function isBranchScopedAdmin(admin) {
+            return getAdminAssignedBranchId(admin) != null;
+        }
+
+        function getVisitorBranchId() {
+            try {
+                const raw = sessionStorage.getItem(VISITOR_BRANCH_KEY) || localStorage.getItem(VISITOR_BRANCH_KEY);
+                if (raw && !isNaN(Number(raw))) return Number(raw);
+            } catch (e) { /* ignore */ }
+            return null;
+        }
+
+        function setVisitorBranchId(branchId) {
+            const val = branchId != null && !isNaN(Number(branchId)) ? String(branchId) : '';
+            try {
+                if (val) {
+                    sessionStorage.setItem(VISITOR_BRANCH_KEY, val);
+                    localStorage.setItem(VISITOR_BRANCH_KEY, val);
+                } else {
+                    sessionStorage.removeItem(VISITOR_BRANCH_KEY);
+                    localStorage.removeItem(VISITOR_BRANCH_KEY);
+                }
+            } catch (e) { /* ignore */ }
+            trackVisitorSession();
+        }
+
+        function initVisitorBranchFromUrl() {
+            try {
+                const params = new URLSearchParams(window.location.search || '');
+                const bid = params.get('branchId') || params.get('branch');
+                if (!bid) return;
+                if (!isNaN(Number(bid))) {
+                    const found = (branchesData || []).find(function(b) { return Number(b.id) === Number(bid); });
+                    if (found) setVisitorBranchId(found.id);
+                    return;
+                }
+                const needle = String(bid).trim().toLowerCase();
+                const match = (branchesData || []).find(function(b) {
+                    return getBranchSearchKey(b).indexOf(needle) >= 0;
+                });
+                if (match) setVisitorBranchId(match.id);
+            } catch (e) { /* ignore */ }
+        }
+
+        function resolveEntryBranchId(entry, profile) {
+            if (entry && entry.branchId != null && !isNaN(Number(entry.branchId))) return Number(entry.branchId);
+            const visitorBid = getVisitorBranchId();
+            if (visitorBid) return visitorBid;
+            const city = String((profile && profile.city) || (entry && entry.city) || '').trim().toLowerCase();
+            if (!city) return null;
+            const match = (branchesData || []).find(function(b) {
+                const key = getBranchSearchKey(b);
+                return key.indexOf(city) >= 0 || city.indexOf(normalizeText(b.city || '')) >= 0;
+            });
+            return match ? Number(match.id) : null;
+        }
+
+        function getBranchNameById(branchId, lang) {
+            const branch = (branchesData || []).find(function(b) { return Number(b.id) === Number(branchId); });
+            return branch ? getBranchDisplayName(branch, lang || currentLang || 'ar') : '';
+        }
+
+        function entryMatchesBranchId(entry, branchId) {
+            if (branchId == null) return true;
+            if (!entry) return false;
+            if (entry.branchId != null && Number(entry.branchId) === Number(branchId)) return true;
+            const branch = (branchesData || []).find(function(b) { return Number(b.id) === Number(branchId); });
+            if (!branch) return false;
+            const needle = getBranchSearchKey(branch);
+            const city = String(entry.city || '').trim().toLowerCase();
+            const addr = String(entry.address || '').trim().toLowerCase();
+            if (!city && !addr) return false;
+            return needle.indexOf(city) >= 0 || city.indexOf(normalizeText(branch.city || '')) >= 0 ||
+                needle.indexOf(addr) >= 0 || addr.indexOf(normalizeText(branch.city || '')) >= 0;
         }
 
         function promptBranchCityNames(existing) {
@@ -9196,20 +9637,6 @@
         function applyFooterContent(text) {
             const copyEl = document.getElementById('site-footer-copyright');
             if (copyEl) copyEl.textContent = text.siteFooterCopyright || text.dashboardCopyright || 'كل الحقوق محفوظة مع مصنع نبراس 2026';
-            const creditText = document.getElementById('footer-designer-credit-text');
-            const waEl = document.getElementById('footer-designer-wa');
-            const telEl = document.getElementById('footer-designer-tel');
-            if (creditText) creditText.textContent = text.footerDesignerCredit || 'صمم بواسطة المهندس/ عبدالرحمن عمران طرش';
-            const waHref = designerFooterWhatsAppHref();
-            if (waEl) {
-                waEl.href = waHref || '#';
-                waEl.setAttribute('aria-label', text.footerDesignerWhatsAppAria || 'واتساب المصمم');
-            }
-            if (telEl) {
-                telEl.href = designerFooterTelHref();
-                telEl.setAttribute('aria-label', text.footerDesignerCallAria || 'اتصال المصمم');
-            }
-            renderFooterLinktreeHub(text);
         }
 
         function sanitizeExternalUrl(url) {
@@ -10958,27 +11385,58 @@
         async function pickQuoteA4StaticPageFromSettings(pageNo) {
             if (!requireMainGovernanceAdmin('تعديل صيغة عرض السعر A4 للإدارة الرئيسية فقط.')) return;
             const q = getQuoteA4Settings();
-            const label = pageNo === 3 ? 'ورقة العقد (ثابتة)' : 'ورقة القوانين (ثابتة)';
+            const labels = {
+                2: 'الورقة 2 — الشروط والأحكام (ثابتة)',
+                3: 'الورقة 3 — شروط التوريد والضمان (ثابتة)',
+                4: 'الورقة 4 — بيانات المصنع (ثابتة)'
+            };
+            const defaults = {
+                2: q.staticPage2Url || '',
+                3: q.staticPage3Url || '',
+                4: q.staticPage4Url || ''
+            };
             const url = await pickMediaPath({
-                label: label,
-                defaultValue: pageNo === 3 ? (q.staticPage3Url || '') : (q.staticPage2Url || '')
+                label: labels[pageNo] || ('ورقة عرض السعر ' + pageNo),
+                defaultValue: defaults[pageNo] || ''
             });
             if (!url) return;
-            if (pageNo === 3) q.staticPage3Url = url;
+            if (pageNo === 4) q.staticPage4Url = url;
+            else if (pageNo === 3) q.staticPage3Url = url;
             else q.staticPage2Url = url;
-            const input = document.getElementById(pageNo === 3 ? 'setting-quote-a4-static-page3' : 'setting-quote-a4-static-page2');
+            const input = document.getElementById('setting-quote-a4-static-page' + pageNo);
             if (input) input.value = url;
             saveContentData();
             addAuditLog('تعديل ورقة عرض السعر الثابتة', 'صفحة ' + pageNo + ': ' + url);
         }
 
         function adminQuoteEntryVisible(entry, admin) {
-            if (!admin || !String(admin.assignedBranchCity || '').trim()) return true;
-            const branchNeedle = String(admin.assignedBranchCity).trim().toLowerCase();
-            const entryCity = String(entry.city || '').trim().toLowerCase();
-            const entryAddr = String(entry.address || '').trim().toLowerCase();
-            if (!entryCity && !entryAddr) return false;
-            return entryCity.indexOf(branchNeedle) >= 0 || entryAddr.indexOf(branchNeedle) >= 0 || branchNeedle.indexOf(entryCity) >= 0;
+            const bid = getAdminAssignedBranchId(admin);
+            if (bid == null) return true;
+            return entryMatchesBranchId(entry, bid);
+        }
+
+        function adminVisitorSessionVisible(session, admin) {
+            const bid = getAdminAssignedBranchId(admin);
+            if (bid == null) return true;
+            if (!session) return false;
+            if (session.branchId != null && Number(session.branchId) === Number(bid)) return true;
+            const branch = getAdminAssignedBranch(admin);
+            if (!branch) return false;
+            const needle = normalizeText(branch.city || '');
+            const sc = String(session.branchCity || '').trim().toLowerCase();
+            return sc && (sc.indexOf(needle) >= 0 || needle.indexOf(sc) >= 0);
+        }
+
+        function filterQuotesForAdmin(quotes, admin) {
+            const bid = getAdminAssignedBranchId(admin);
+            if (bid == null) return quotes || [];
+            return (quotes || []).filter(function(q) { return entryMatchesBranchId(q, bid); });
+        }
+
+        function filterVisitorsForAdmin(sessions, admin) {
+            const bid = getAdminAssignedBranchId(admin);
+            if (bid == null) return sessions || [];
+            return (sessions || []).filter(function(s) { return adminVisitorSessionVisible(s, admin); });
         }
 
         function getHeroSlideshowSlides() {
@@ -11242,7 +11700,8 @@
             '.product-shop-modal .shop-hero',
             '.workspace-product-tile img',
             '.icon-inner-product-media img',
-            '.icon-inner-products-grid img'
+            '.icon-inner-products-grid img',
+            '.cph-gallery-strip img'
         ].join(',');
 
         function showNebrasLightboxMedia(url) {
@@ -11339,7 +11798,7 @@
             const gallery = el.closest(
                 '.workspace-gallery, .icon-overlay-gallery, .nebras-cert-grid, .icon-inner-product-detail, ' +
                 '.workspace-about-gallery-list, .icon-overlay-variants-grid, .showroom-gallery-grid, ' +
-                '.nebras-partners-stage, .cart-drawer, .product-shop-modal, .icon-inner-products-grid'
+                '.cph-gallery-strip, .nebras-partners-stage, .cart-drawer, .product-shop-modal, .icon-inner-products-grid'
             );
             let urls = [src];
             if (gallery && el.tagName === 'IMG') {
@@ -13954,8 +14413,10 @@
             if (qSeal) qSeal.checked = q.showSeal !== false;
             const qStatic2 = document.getElementById('setting-quote-a4-static-page2');
             const qStatic3 = document.getElementById('setting-quote-a4-static-page3');
+            const qStatic4 = document.getElementById('setting-quote-a4-static-page4');
             if (qStatic2) qStatic2.value = q.staticPage2Url || '';
             if (qStatic3) qStatic3.value = q.staticPage3Url || '';
+            if (qStatic4) qStatic4.value = q.staticPage4Url || '';
             const quoteBlock = document.getElementById('quote-a4-settings-block');
             if (quoteBlock) quoteBlock.hidden = !isMainGovernanceAdmin(currentAdmin);
             renderHeroSlideshowAdminList();
@@ -14073,8 +14534,10 @@
                 if (qSeal) q.showSeal = !!qSeal.checked;
                 const qStatic2El = document.getElementById('setting-quote-a4-static-page2');
                 const qStatic3El = document.getElementById('setting-quote-a4-static-page3');
+                const qStatic4El = document.getElementById('setting-quote-a4-static-page4');
                 if (qStatic2El) q.staticPage2Url = qStatic2El.value.trim();
                 if (qStatic3El) q.staticPage3Url = qStatic3El.value.trim();
+                if (qStatic4El) q.staticPage4Url = qStatic4El.value.trim();
                 systemSettings.quoteA4 = q;
                 ensureQuoteA4Settings();
             }
@@ -14644,6 +15107,12 @@
             if (icon.openHandler === 'color-rolls') {
                 return { pillar: 'showroom', view: 'color-rolls', iconId: icon.id };
             }
+            if (icon.openHandler === 'showroom-hub') {
+                return { pillar: 'showroom', view: 'showroom-hub', iconId: icon.id, showroomSection: icon.showroomSection || '' };
+            }
+            if (icon.openHandler === 'company-profile') {
+                return { pillar: 'platform', view: 'company-profile', iconId: icon.id };
+            }
             const exp = getCatalogExperience(icon);
             const tg = String(icon.target || '').trim();
             const linked = getProductsForVisitorIcon(icon);
@@ -14887,6 +15356,11 @@
             } else if (route.view === 'showroom-hub') {
                 title = ui.showroomHubTitle || 'معرض نبراس';
                 html = buildShowroomHubHtml(lang);
+                if (route.showroomSection) {
+                    requestAnimationFrame(function() {
+                        setTimeout(function() { scrollToShowroomSection(route.showroomSection); }, 100);
+                    });
+                }
             } else if (route.view === 'certifications') {
                 title = ui.certsOverlayTitle || 'اعتمادات وشهادات نبراس';
                 html = '<p class="workspace-intro">' + escapeHtmlAttr(ui.certsOverlayIntro || '') + '</p>' +
@@ -14976,10 +15450,17 @@
                 html = '<p class="workspace-intro">' + escapeHtmlAttr(getOccasionDetailBody(lang) || getOccasionPromoMessage(lang)) + '</p>' +
                     buildWorkspaceGalleryHtml(getOccasionVisitorImageUrl() ? [getOccasionVisitorImageUrl()] : []) +
                     '<div class="workspace-actions-row"><button type="button" class="workspace-action-btn workspace-action-btn--primary" onclick="openNebrasWorkspace({pillar:\'store\',view:\'catalog-all\'})"><i class="fas fa-door-open"></i> ' + escapeHtmlAttr(ui.workspaceBrowseProducts || 'استكشف المنتجات') + '</button></div>';
+            } else if (route.view === 'company-profile') {
+                title = ui.companyProfileTitle || ui.visitorQuickCompanyProfile || 'الملف التعريفي الكامل';
+                html = '<p class="workspace-intro">' + escapeHtmlAttr(ui.companyProfileIntro || 'الملف التعريفي الرسمي — كل الأقسام مرتبطة بأيقونات الموقع.') + '</p>' +
+                    (typeof buildCompanyProfileHubHtml === 'function'
+                        ? buildCompanyProfileHubHtml(lang, route.sectionId || '')
+                        : '<p>' + escapeHtmlAttr(ui.workspaceSectionMissing || 'المحتوى قيد التحديث.') + '</p>');
             } else if (route.view === 'sections-hub') {
                 title = ui.workspacePlatformHub || 'منصة نبراس';
                 html = '<p class="workspace-intro">' + escapeHtmlAttr(ui.workspacePlatformIntro || 'معلومات المصنع، الفروع، والحسابات.') + '</p>' +
                     '<div class="workspace-actions-row">' +
+                    '<button type="button" class="workspace-action-btn workspace-action-btn--primary" onclick="openCompanyProfileHub()"><i class="fas fa-book-open"></i> ' + escapeHtmlAttr(ui.visitorQuickCompanyProfile || 'الملف التعريفي') + '</button>' +
                     '<button type="button" class="workspace-action-btn" onclick="openNebrasWorkspace({pillar:\'platform\',view:\'branches\'})"><i class="fas fa-map-marked-alt"></i> ' + escapeHtmlAttr(ui.visitorQuickBranches || 'الفروع') + '</button>' +
                     '<button type="button" class="workspace-action-btn" onclick="openVisitorIcon(4)"><i class="fas fa-building-columns"></i> ' + escapeHtmlAttr(ui.visitorQuickBankAccounts || 'الحسابات') + '</button>' +
                     '</div>';
@@ -15001,9 +15482,18 @@
             }
             if (main) {
                 main.classList.toggle('workspace-main--door-designer', route.view === 'door-designer');
+                main.classList.toggle('workspace-main--company-profile', route.view === 'company-profile');
                 const cfgDoor = route.view === 'door-designer' ? ensureDoorDesignerConfig() : null;
                 main.classList.toggle('workspace-main--door-data-only', route.view === 'door-designer' && cfgDoor && !isDoorDesignerPreviewEnabled(cfgDoor));
                 if (route.view === 'door-designer') main.scrollTop = 0;
+                if (route.view === 'company-profile' && route.sectionId) {
+                    requestAnimationFrame(function() {
+                        setTimeout(function() {
+                            const el = document.getElementById('cph-' + route.sectionId);
+                            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                        }, 80);
+                    });
+                }
             }
             applyWorkspaceTranslations();
             wireClickableMediaIn(main);
@@ -15520,6 +16010,9 @@
 
         function finalizePlatformDataAfterLoad() {
             branchesData = (branchesData || []).map(normalizeBranchRecord);
+            if (typeof applyNebrasProfile2026Seed === 'function') {
+                applyNebrasProfile2026Seed();
+            }
             ensureDefaultBankAccounts();
             ensureBuiltinAboutPages();
             ensureBuiltinErpData();
@@ -15532,6 +16025,7 @@
             ensurePrimaryRecoveryEmail();
             if (!Array.isArray(siteCertifications)) siteCertifications = [];
             ensureShowroomGallery();
+            if (typeof repairShowroomGallerySections === 'function') repairShowroomGallerySections();
             refreshNebrasMiniShowcases();
             ensureDoorDesignerConfig();
             ensureQuoteA4Settings();
@@ -16431,11 +16925,17 @@
                 gatewayLaneStore: 'المتجر الإلكتروني',
                 gatewayLaneStoreHint: 'أبواب WPC والألومنيوم — أصناف، سلة، وعرض سعر',
                 gatewayLaneShowroom: 'معرض نبراس',
-                gatewayLaneShowroomHint: 'منتجات نبراس · مشاريع نبراس · شهادات وألوان',
+                gatewayLaneShowroomHint: '5 أقسام: أبواب نبراس · خزائن نبراس · WPC · CNC · مشاريع NHC',
+                visitorQuickShowroom: 'معرض نبراس — 5 أقسام',
                 showroomHubTitle: 'معرض نبراس',
-                showroomHubIntro: 'قسمان رئيسيان: منتجاتنا ومشاريعنا المنفّذة — مع إمكانية الشراء من الصور المرتبطة بمنتج.',
-                showroomProductsEmpty: 'أضيفوا صور منتجات نبراس من إدارة المحتوى → معرض نبراس.',
-                showroomProjectsEmpty: 'أضيفوا صور مشاريع نبراس المنفّذة من إدارة المحتوى → معرض نبراس.',
+                showroomHubIntro: 'معرض نبراس — أبواب نبراس · خزائن نبراس · أبواب WPC · خزائن WPC · قطع CNC · مشاريع NHC. اضغط على أي صورة للعرض بالدقة الكاملة.',
+                showroomDoorsEmpty: 'معرض أبواب نبراس — يُحمّل من الملف التعريفي 2026.',
+                showroomCabinetsEmpty: 'معرض خزائن نبراس — يُحمّل من الملف التعريفي 2026.',
+                showroomWpcDoorsEmpty: 'معرض أبواب WPC — يُحمّل من الملف التعريفي 2026.',
+                showroomWpcCabinetsEmpty: 'معرض خزائن WPC — يُحمّل من الملف التعريفي 2026.',
+                showroomCncEmpty: 'معرض قطع CNC — يُحمّل من الملف التعريفي 2026.',
+                showroomProductsEmpty: 'أضيفوا صور المعرض من إدارة المحتوى → معرض نبراس.',
+                showroomProjectsEmpty: 'مشاريع واعتمادات NHC — من الملف التعريفي 2026.',
                 gatewayLanePlatform: 'منصة المصنع',
                 gatewayLanePlatformHint: 'فروع المملكة، حسابات بنكية، وخدمات',
                 trustStripAria: 'مزايا مصنع نبراس',
@@ -16849,7 +17349,7 @@
                 scmTabAbout: 'من نحن ورؤيتنا',
                 scmAboutHint: 'نصوص تفصيلية وشهادات وصور — تظهر عند ضغط الزائر على أيقونة من نحن أو رؤيتنا.',
                 scmVisitorHint: 'كل أيقونة: خلفية البطاقة + ألبوم معرض داخلي + PDF. اختر «معرض» (تصفح فقط) أو «معرض + متجر» (صور + أصناف + سلة). رفع الصور والوثائق من «رفع / اختيار صورة» و«إضافة صورة للألبوم».',
-                scmShowroomHint: 'معرض نبراس — قسمان يظهران عند الضغط على «المعرض» في الهيدر: «منتجات نبراس» و«مشاريع نبراس». ارفعي الصور واربطي معرّف منتج (مثل prod-aluminum) لتفعيل زر السلة تحت الصورة.'
+                scmShowroomHint: 'معرض نبراس — 5 أقسام: أبواب نبراس · خزائن نبراس · أبواب WPC · خزائن WPC · قطع CNC + مشاريع NHC. ارفعي صور بجودة كاملة — الضغط يفتح الصورة الأصلية بدون ضغط.'
             },
             en: {
                 dir: 'ltr',
@@ -17417,7 +17917,7 @@
                 scmTabAbout: 'About & Vision',
                 scmAboutHint: 'Full text, certificates and images — shown when visitors open About or Vision.',
                 scmVisitorHint: 'Each icon: card background, internal gallery album, and PDF. Choose gallery-only or gallery + store. Upload via Pick image / Add album image.',
-                scmShowroomHint: 'Nebras showroom — two sections under Showroom: Products and Projects. Upload images and link a product id (e.g. prod-aluminum) to show Add to cart under the image.',
+                scmShowroomHint: 'Nebras showroom — 5 galleries: doors, cabinets, WPC doors, WPC cabinets, CNC + NHC projects. Upload full-quality images — click opens original resolution.',
                 lightboxImageAlt: 'Image',
                 lightboxCloseAria: 'Close',
                 lightboxPrevAria: 'Previous image',
@@ -17946,7 +18446,7 @@
                 scmTabAbout: '关于我们与愿景',
                 scmAboutHint: '详细文字、证书与图片 — 访客点击图标时显示。',
                 scmVisitorHint: '每个图标：卡片背景、内部相册与 PDF。可选仅展厅或展厅+商店。通过上传/选择图片与添加相册图片管理。',
-                scmShowroomHint: '展厅 — 导航「展厅」下两个板块：产品与项目。上传图片并关联产品 ID（如 prod-aluminum）可在图下显示加入购物车。',
+                scmShowroomHint: '展厅 — 五个板块：门、柜、WPC门、WPC柜、CNC + NHC项目。上传高清图，点击可全分辨率查看。',
                 lightboxImageAlt: '图片',
                 lightboxCloseAria: '关闭',
                 lightboxPrevAria: '上一张',
@@ -18291,4 +18791,6 @@
         window.toggleMenu = toggleMenu;
         window.siteLogoImgFallback = siteLogoImgFallback;
         window.dismissBrandIntro = dismissBrandIntro;
+        window.scrollToShowroomSection = scrollToShowroomSection;
+        window.openShowroomHub = openShowroomHub;
 
