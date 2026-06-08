@@ -2,10 +2,14 @@
 
 .quote-a4--nebras-official {
     padding: 9mm 11mm 10mm;
-    font-family: 'Segoe UI', Tahoma, Arial, sans-serif;
+    font-family: 'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif;
     font-size: 10.5px;
-    line-height: 1.35;
+    line-height: 1.45;
     color: #1a2b3c;
+    direction: rtl;
+    unicode-bidi: plaintext;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
     background: #fff;
     min-height: 297mm;
     height: 297mm;
@@ -254,5 +258,13 @@
         height: 297mm;
         min-height: 297mm;
         page-break-after: always;
+        font-family: 'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif !important;
+        direction: rtl !important;
+    }
+
+    .quote-official-meta-table td,
+    .quote-official-items-table td,
+    .quote-official-items-table th {
+        font-family: 'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif !important;
     }
 }

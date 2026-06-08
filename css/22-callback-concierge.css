@@ -1,0 +1,247 @@
+/* نبراس يتصل بك — خدمة طلب اتصال فوري للزوار */
+
+.nebras-callback-fab {
+    position: fixed;
+    z-index: 1480;
+    bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+    left: auto;
+    right: 24px;
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 18px 12px 14px;
+    border: 1px solid rgba(212, 168, 66, 0.45);
+    border-radius: 999px;
+    background: linear-gradient(135deg, #062e44 0%, #0a4b6e 55%, #1a8fa8 100%);
+    color: #fff;
+    font-family: inherit;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35), 0 0 24px rgba(26, 143, 168, 0.25);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+[dir="ltr"] .nebras-callback-fab {
+    right: auto;
+    left: 24px;
+}
+
+body.nebras-mobile-bar-active .nebras-callback-fab {
+    bottom: calc(78px + env(safe-area-inset-bottom, 0px));
+}
+
+@media (max-width: 640px) {
+    .nebras-callback-fab {
+        width: 54px;
+        height: 54px;
+        padding: 0;
+        justify-content: center;
+        border-radius: 50%;
+    }
+
+    .nebras-callback-fab > span:not(.nebras-callback-fab-pulse) {
+        display: none;
+    }
+}
+
+.nebras-callback-fab:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4), 0 0 32px rgba(212, 168, 66, 0.2);
+}
+
+.nebras-callback-fab i {
+    font-size: 1.1rem;
+    color: #f0c060;
+}
+
+.nebras-callback-fab-pulse {
+    position: absolute;
+    inset: -4px;
+    border-radius: 999px;
+    border: 2px solid rgba(26, 143, 168, 0.5);
+    animation: nebrasCallbackPulse 2.4s ease-out infinite;
+    pointer-events: none;
+}
+
+@keyframes nebrasCallbackPulse {
+    0% { transform: scale(1); opacity: 0.7; }
+    100% { transform: scale(1.18); opacity: 0; }
+}
+
+body.nebras-workspace-active .nebras-callback-fab,
+body.nebras-intro-active .nebras-callback-fab,
+body.admin-session .nebras-callback-fab,
+.cart-drawer-overlay.show ~ .nebras-callback-fab {
+    display: none;
+}
+
+.nebras-callback-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9600;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(1, 13, 21, 0.72);
+    backdrop-filter: blur(8px);
+}
+
+.nebras-callback-overlay.is-open {
+    display: flex;
+}
+
+.nebras-callback-modal {
+    width: min(100%, 440px);
+    max-height: min(92vh, 640px);
+    overflow: auto;
+    border-radius: 22px;
+    border: 1px solid rgba(26, 143, 168, 0.28);
+    background: linear-gradient(155deg, #031825 0%, #062e44 45%, #0a4b6e 100%);
+    color: #fff;
+    box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
+}
+
+.nebras-callback-modal-head {
+    padding: 22px 22px 12px;
+    text-align: center;
+}
+
+.nebras-callback-modal-logo {
+    width: 56px;
+    height: 56px;
+    margin: 0 auto 12px;
+    display: block;
+}
+
+.nebras-callback-modal-head h2 {
+    margin: 0 0 8px;
+    font-size: 1.2rem;
+}
+
+.nebras-callback-modal-head p {
+    margin: 0;
+    font-size: 0.88rem;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.78);
+}
+
+.nebras-callback-form {
+    padding: 8px 22px 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.nebras-callback-form label {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.88);
+}
+
+.nebras-callback-form input,
+.nebras-callback-form select,
+.nebras-callback-form textarea {
+    width: 100%;
+    padding: 11px 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(26, 143, 168, 0.35);
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    font-family: inherit;
+    font-size: 0.95rem;
+    box-sizing: border-box;
+}
+
+.nebras-callback-form input::placeholder,
+.nebras-callback-form textarea::placeholder {
+    color: rgba(255, 255, 255, 0.45);
+}
+
+.nebras-callback-form-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 6px;
+}
+
+.nebras-callback-form-actions button {
+    flex: 1 1 auto;
+    min-width: 120px;
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: none;
+    font-family: inherit;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.nebras-callback-submit {
+    background: linear-gradient(135deg, #d4a842, #f0c060);
+    color: #062e44;
+}
+
+.nebras-callback-cancel {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.2) !important;
+}
+
+.nebras-callback-success {
+    padding: 24px 22px 28px;
+    text-align: center;
+}
+
+.nebras-callback-success i {
+    font-size: 2.4rem;
+    color: #22b5d0;
+    margin-bottom: 12px;
+}
+
+.nebras-callback-success-card {
+    margin-top: 16px;
+    padding: 14px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(26, 143, 168, 0.25);
+    text-align: start;
+    font-size: 0.88rem;
+    line-height: 1.7;
+}
+
+.nebras-callback-status {
+    min-height: 1.2em;
+    font-size: 0.82rem;
+    color: #f0c060;
+}
+
+.callback-leads-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.82rem;
+}
+
+.callback-leads-table th,
+.callback-leads-table td {
+    border: 1px solid rgba(13, 40, 64, 0.12);
+    padding: 8px 10px;
+    text-align: start;
+    vertical-align: top;
+}
+
+.callback-leads-table th {
+    background: rgba(6, 46, 68, 0.08);
+}
+
+.callback-lead-status {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+.callback-lead-status--new { background: rgba(26, 143, 168, 0.2); color: #0a4b6e; }
+.callback-lead-status--called { background: rgba(212, 168, 66, 0.25); color: #7a5e10; }
+.callback-lead-status--done { background: rgba(34, 181, 96, 0.2); color: #166534; }

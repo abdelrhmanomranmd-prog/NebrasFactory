@@ -876,3 +876,28 @@ html[dir="rtl"] .nebras-partners-track--reverse:not(.nebras-partners-track--stat
         height: 152px;
     }
 }
+
+.dashboard-tile-card--profile-2026 {
+    border-top: 3px solid #d4a842;
+    background-image: linear-gradient(145deg, rgba(6, 46, 68, 0.92), rgba(10, 75, 110, 0.85)), var(--tile-bg, none);
+    color: #fff;
+}
+
+.dashboard-tile-card--profile-2026 .dashboard-tile-title,
+.dashboard-tile-card--profile-2026 .dashboard-tile-text {
+    color: #fff;
+}
+
+.dashboard-tile-card--profile-2026 .dashboard-tile-icon {
+    background: linear-gradient(135deg, #d4a842, #f0c060);
+    color: #062e44;
+}
+
+.dashboard-tile-card--callback {
+    border-top: 3px solid #1a8fa8;
+}
+
+.dashboard-tile-card--callback .dashboard-tile-icon {
+    background: linear-gradient(135deg, #062e44, #1a8fa8);
+    color: #f0c060;
+}

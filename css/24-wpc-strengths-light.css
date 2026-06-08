@@ -1,0 +1,109 @@
+/* نقاط قوة WPC — صيغة فاتحة 3 أعمدة (مرجع الملف التعريفي 2026) */
+
+.site-custom-section--wpc-strengths,
+.cph-section--wpc-strengths {
+    background: #ffffff;
+    border-radius: 20px;
+    border: 1px solid rgba(13, 40, 64, 0.08);
+    box-shadow: 0 10px 36px rgba(6, 46, 68, 0.08);
+    padding: 28px 22px 32px;
+    margin-bottom: 28px;
+}
+
+body.nebras-profile-2026-theme .site-custom-section--wpc-strengths,
+body.nebras-profile-2026-theme .cph-section--wpc-strengths {
+    background: #ffffff;
+}
+
+.site-custom-section--wpc-strengths .section-title,
+.cph-section--wpc-strengths .cph-section-head {
+    text-align: start;
+    margin-bottom: 22px;
+    border: none;
+    padding: 0;
+}
+
+.wpc-strengths-badge {
+    display: inline-block;
+    margin-bottom: 10px;
+    padding: 5px 12px;
+    border-radius: 8px;
+    background: rgba(6, 46, 68, 0.06);
+    color: #0a4b6e;
+    font-size: 0.78rem;
+    font-weight: 800;
+}
+
+.site-custom-section--wpc-strengths .section-title h2,
+.cph-section--wpc-strengths .cph-section-head h3 {
+    margin: 0 0 8px;
+    font-size: clamp(1.35rem, 3.5vw, 1.85rem);
+    font-weight: 900;
+    color: #062e44 !important;
+}
+
+.wpc-strengths-subtitle {
+    margin: 0;
+    font-size: 0.92rem;
+    line-height: 1.65;
+    color: #5a7080 !important;
+}
+
+.wpc-strengths-grid,
+.cph-strengths-grid--light {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+}
+
+.wpc-strength-card,
+.cph-strength--light {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 14px 14px 16px;
+    border-radius: 12px;
+    background: #fff;
+    border: 1px solid rgba(13, 40, 64, 0.1);
+    box-shadow: 0 4px 14px rgba(6, 46, 68, 0.04);
+    min-height: 72px;
+}
+
+.wpc-strength-text {
+    margin: 0;
+    flex: 1 1 auto;
+    font-size: 0.84rem;
+    line-height: 1.65;
+    font-weight: 700;
+    color: #062e44;
+    text-align: start;
+}
+
+.wpc-strength-icon,
+.cph-strength--light .cph-strength-icon {
+    flex: 0 0 auto;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #062e44, #0a4b6e);
+    color: #fff;
+    font-size: 1rem;
+}
+
+@media (max-width: 900px) {
+    .wpc-strengths-grid,
+    .cph-strengths-grid--light {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 560px) {
+    .wpc-strengths-grid,
+    .cph-strengths-grid--light {
+        grid-template-columns: 1fr;
+    }
+}

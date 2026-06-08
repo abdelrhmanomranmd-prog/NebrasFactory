@@ -155,7 +155,7 @@
             '<div class="cph-cover-bg" style="background-image:url(\'' + esc(d.cover.hero) + '\')"></div>' +
             '<div class="cph-cover-overlay"></div>' +
             '<div class="cph-cover-content">' +
-            '<img class="cph-cover-logo" src="images/logo.png" alt="Nebras" onerror="if(typeof siteLogoImgFallback===\'function\')siteLogoImgFallback(this)">' +
+            '<img class="cph-cover-logo" src="images/logo-white.svg" alt="Nebras" onerror="this.onerror=null;this.src=\'images/logo.png\'">' +
             '<p class="cph-cover-badge"><span class="cph-dot"></span>' + esc(d.cover.badge) + '</p>' +
             '<p class="cph-cover-saudi">🇸🇦 ' + esc(d.cover.saudi) + '</p>' +
             '<h2 class="cph-cover-title">' + esc(d.cover.title) + '</h2>' +
@@ -190,10 +190,16 @@
             html += buildGallerySectionHtml(sec, en);
         });
 
-        html += '<section class="cph-section" id="cph-strengths">' +
-            '<div class="cph-section-head"><span class="cph-section-num">09</span><h3>' + esc(en ? 'Why Nebras WPC?' : 'لماذا تختار أبواب نبراس WPC؟') + '</h3></div>' +
-            '<div class="cph-strengths-grid">' + strengths.map(function(s) {
-                return '<div class="cph-strength"><i class="' + esc(s.iconClass || 'fas fa-check') + '"></i><strong>' + esc(en ? (s.titleEn || s.titleAr) : s.titleAr) + '</strong><span>' + esc(en ? (s.textEn || s.textAr) : s.textAr) + '</span></div>';
+        const strengthsSub = (global.NEBRAS_PROFILE_2026 && global.NEBRAS_PROFILE_2026.customSection && global.NEBRAS_PROFILE_2026.customSection.subtitleAr) || 'مزايا استثنائية تجعل أبوابنا الخيار الأمثل لكل مشروع';
+        html += '<section class="cph-section cph-section--wpc-strengths" id="cph-strengths">' +
+            '<div class="cph-section-head"><span class="wpc-strengths-badge">07 نقاط قوة المنتج</span><h3>' + esc(en ? 'Why Nebras WPC?' : 'لماذا تختار أبواب نبراس WPC؟') + '</h3>' +
+            '<p class="wpc-strengths-subtitle">' + esc(en ? 'Exceptional advantages for every project' : strengthsSub) + '</p></div>' +
+            '<div class="cph-strengths-grid cph-strengths-grid--light">' + strengths.map(function(s) {
+                const t = en ? (s.titleEn || s.titleAr) : s.titleAr;
+                const x = en ? (s.textEn || s.textAr) : s.textAr;
+                const line = x ? (t + ' - ' + x) : t;
+                return '<article class="cph-strength cph-strength--light"><p class="wpc-strength-text">' + esc(line) + '</p>' +
+                    '<div class="cph-strength-icon" aria-hidden="true"><i class="' + esc(s.iconClass || 'fas fa-check') + '"></i></div></article>';
             }).join('') + '</div></section>';
 
         html += '<section class="cph-section" id="cph-certs">' +

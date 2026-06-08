@@ -1,0 +1,138 @@
+/* سلة التسوق — تجربة متجر عالمية */
+
+.cart-drawer {
+    display: flex;
+    flex-direction: column;
+    max-height: min(94vh, 820px);
+}
+
+.cart-drawer > h2 {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 0 0 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid rgba(13, 40, 64, 0.1);
+}
+
+.cart-drawer-count-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.6em;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #062e44, #1a8fa8);
+    color: #fff;
+    font-size: 0.78rem;
+    font-weight: 800;
+}
+
+#cart-drawer-lines {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    margin: 8px 0 12px;
+    padding-inline-end: 4px;
+}
+
+.cart-line {
+    display: grid;
+    grid-template-columns: 72px 1fr auto;
+    gap: 12px;
+    align-items: start;
+    padding: 12px;
+    margin-bottom: 10px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.96);
+    border: 1px solid rgba(13, 40, 64, 0.1);
+    box-shadow: 0 6px 18px rgba(13, 40, 64, 0.06);
+}
+
+.cart-line img {
+    width: 72px;
+    height: 72px;
+    object-fit: contain;
+    border-radius: 10px;
+    background: #f4f7fa;
+}
+
+.cart-line-body h4 {
+    margin: 0 0 4px;
+    font-size: 0.92rem;
+    color: #0d2840;
+}
+
+.cart-line-meta {
+    font-size: 0.78rem;
+    opacity: 0.78;
+    line-height: 1.5;
+}
+
+.cart-line-price {
+    font-weight: 800;
+    color: #062e44;
+    white-space: nowrap;
+}
+
+.cart-line-qty-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.cart-line-qty-row button {
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    border: 1px solid rgba(13, 40, 64, 0.15);
+    background: #fff;
+    cursor: pointer;
+    font-weight: 700;
+}
+
+.cart-line-remove {
+    width: auto !important;
+    height: auto !important;
+    padding: 4px 10px;
+    margin-inline-start: 8px;
+    font-size: 0.75rem;
+    color: #b91c1c;
+    border-color: rgba(185, 28, 28, 0.25) !important;
+}
+
+.cart-totals-vat-block {
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(6, 46, 68, 0.06), rgba(26, 143, 168, 0.08));
+    border: 1px solid rgba(26, 143, 168, 0.18);
+    margin-bottom: 12px;
+}
+
+.cart-drawer-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(13, 40, 64, 0.1);
+}
+
+.cart-drawer-actions .primary {
+    background: linear-gradient(135deg, #062e44, #0a4b6e);
+    font-weight: 800;
+}
+
+body.nebras-profile-2026-theme .cart-line {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(26, 143, 168, 0.22);
+}
+
+body.nebras-profile-2026-theme .cart-line-body h4,
+body.nebras-profile-2026-theme .cart-line-price {
+    color: #fff;
+}
+
+body.nebras-profile-2026-theme .cart-line-meta {
+    color: rgba(255, 255, 255, 0.72);
+}

@@ -113,6 +113,7 @@ body.nebras-profile-2026-theme .nebras-brand-intro-backdrop::before {
     pointer-events: none;
 }
 
+body.nebras-profile-2026-theme .nebras-brand-intro-logo-wrap,
 body.nebras-profile-2026-theme .nebras-brand-intro-logo-ring {
     background: none;
     box-shadow: none;
@@ -120,7 +121,9 @@ body.nebras-profile-2026-theme .nebras-brand-intro-logo-ring {
     padding: 0;
 }
 
-body.nebras-profile-2026-theme .nebras-brand-intro-logo-ring img {
+body.nebras-profile-2026-theme .nebras-brand-intro-logo-wrap img,
+body.nebras-profile-2026-theme .nebras-brand-intro-logo-ring img,
+body.nebras-profile-2026-theme .nebras-brand-intro-logo {
     filter: drop-shadow(0 6px 32px rgba(212, 168, 66, 0.4));
 }
 
@@ -170,11 +173,11 @@ body.nebras-profile-2026-theme .spotlight-card--about-vision p {
     color: rgba(255, 255, 255, 0.78);
 }
 
-body.nebras-profile-2026-theme .site-custom-section .section-title h2 {
+body.nebras-profile-2026-theme .site-custom-section:not(.site-custom-section--wpc-strengths) .section-title h2 {
     color: #fff;
 }
 
-body.nebras-profile-2026-theme .site-custom-section .section-title span {
+body.nebras-profile-2026-theme .site-custom-section:not(.site-custom-section--wpc-strengths) .section-title span {
     color: rgba(255, 255, 255, 0.65);
 }
 

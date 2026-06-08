@@ -331,7 +331,7 @@
         ];
         const DEFAULT_QUOTE_A4_SETTINGS = {
             layout: 'nebras-official',
-            logoUrl: 'images/logo.png',
+            logoUrl: 'images/logo-white.svg',
             watermarkOpacity: 0.09,
             watermarkScale: 78,
             accentColor: '#0d2840',
@@ -1806,7 +1806,8 @@
             { id: 12, lane: 'platform', sortOrder: 22, titleKey: 'visitorQuickComplaints', title: 'استفسار الشكاوى', iconClass: 'fas fa-search', visitorMode: 'browse', openHandler: 'complaints-inquiry', target: '', backgroundImage: NEBRAS_STORE_ICON_MEDIA.complaintsBg, album: [NEBRAS_STORE_ICON_MEDIA.complaintsBg], textAr: 'قسم استفسارات وشكاوى العملاء — نستمع لاستفساراتكم لخدمة أفضل.' },
             { id: 13, lane: 'showroom', sortOrder: 28, titleKey: 'visitorQuickDoorDesigner', title: 'صمّم بابك مع نبراس', iconClass: 'fas fa-pencil-ruler', visitorMode: 'browse', openHandler: 'door-designer', target: '', backgroundImage: NEBRAS_SHOWROOM_ICON_MEDIA.doorDesignerBg, album: [NEBRAS_SHOWROOM_ICON_MEDIA.doorDesignerBg] },
             { id: 19, lane: 'showroom', sortOrder: 27, titleKey: 'visitorQuickShowroom', title: 'معرض نبراس — 5 أقسام', iconClass: 'fas fa-images', visitorMode: 'browse', openHandler: 'showroom-hub', target: '', backgroundImage: 'images/profile-2026/hero-cover.jpg', album: ['images/profile-2026/doors/doors-01.jpg', 'images/profile-2026/cabinets/cabinets-01.jpg', 'images/profile-2026/cnc/cnc-01.jpg'], textAr: 'أبواب نبراس · خزائن نبراس · أبواب WPC · خزائن WPC · قطع CNC · مشاريع NHC — صور بجودة كاملة من الملف التعريفي 2026.' },
-            { id: 18, lane: 'platform', sortOrder: 18, titleKey: 'visitorQuickCompanyProfile', title: 'الملف التعريفي الكامل 2026', iconClass: 'fas fa-book-open', visitorMode: 'browse', openHandler: 'company-profile', target: '', backgroundImage: 'images/profile-2026/hero-cover.jpg', album: ['images/profile-2026/hero-cover.jpg', 'images/profile-2026/doors/doors-01.jpg', 'images/profile-2026/cabinets/cabinets-01.jpg'], textAr: 'الملف التعريفي الرسمي — 14 قسماً: من نحن، المنتجات، 5 معارض (أبواب نبراس · خزائن نبراس · WPC · CNC)، الشهادات، المشاريع، والحسابات.' }
+            { id: 18, lane: 'platform', sortOrder: 18, titleKey: 'visitorQuickCompanyProfile', title: 'الملف التعريفي الكامل 2026', iconClass: 'fas fa-book-open', visitorMode: 'browse', openHandler: 'company-profile', target: '', backgroundImage: 'images/profile-2026/hero-cover.jpg', album: ['images/profile-2026/hero-cover.jpg', 'images/profile-2026/doors/doors-01.jpg', 'images/profile-2026/cabinets/cabinets-01.jpg'], textAr: 'الملف التعريفي الرسمي — 14 قسماً: من نحن، المنتجات، 5 معارض (أبواب نبراس · خزائن نبراس · WPC · CNC)، الشهادات، المشاريع، والحسابات.' },
+            { id: 20, lane: 'platform', sortOrder: 17, titleKey: 'visitorQuickCallback', title: 'نبراس يتصل بك', iconClass: 'fas fa-phone-volume', visitorMode: 'browse', openHandler: 'callback-concierge', target: '', backgroundImage: 'images/profile-2026/hero-cover.jpg', album: [], textAr: 'اترك اسمك وجوالك — فريق المبيعات أو خدمة العملاء يتصل بك ويفهم احتياجك. يظهر طلبك في الإدارة والفرع حسب مدينتك.' }
         ];
 
         const SITE_PARTNERS_SEED_VERSION = 2;
@@ -1940,7 +1941,8 @@
         ];
 
         const DEFAULT_DASHBOARD_TILES = [
-            { id: 'dash-company-profile', zone: 'quick', dashGroup: 'command', sortOrder: 0, iconClass: 'fas fa-book-open', titleAr: 'الملف التعريفي الكامل 2026', titleEn: 'Company Profile 2026', textAr: 'البروفايل الرسمي كاملاً — 12 قسماً مرتبطة بأيقونات الموقع.', textEn: 'Full official profile — 12 sections mapped to site icons.', cssClass: 'dashboard-tile-card--profile-2026', backgroundImage: 'images/profile-2026/hero-cover.jpg', handler: 'openCompanyProfileHub', permission: 'content', visible: true },
+            { id: 'dash-company-profile', zone: 'quick', dashGroup: 'command', sortOrder: 0, iconClass: 'fas fa-book-open', titleAr: 'الملف التعريفي الكامل 2026', titleEn: 'Company Profile 2026', textAr: 'البروفايل الرسمي — 14 قسماً: من نحن، المنتجات، 5 معارض، الشهادات، والمشاريع.', textEn: 'Official profile — 14 sections with showroom galleries.', cssClass: 'dashboard-tile-card--profile-2026', backgroundImage: 'images/profile-2026/hero-cover.jpg', handler: 'openCompanyProfileHub', permission: 'content', visible: true },
+            { id: 'dash-callback-leads', zone: 'quick', dashGroup: 'command', sortOrder: 55, iconClass: 'fas fa-phone-volume', titleAr: 'نبراس يتصل بك', titleEn: 'Callback Leads', textAr: 'طلبات اتصال الزوار — تظهر في الإدارة الرئيسية والفروع.', textEn: 'Visitor callback requests by branch.', cssClass: 'dashboard-tile-card--callback', backgroundImage: 'images/profile-2026/hero-cover.jpg', handler: 'openCallbackLeadsAdmin', permission: 'sales', visible: true },
             { id: 'dash-content', zone: 'quick', dashGroup: 'command', sortOrder: 1, iconClass: 'fas fa-pen-to-square', titleAr: 'إدارة محتوى الموقع', titleEn: 'Site Content', textAr: 'منتجات، بوابة الزائر، شركاء، شهادات — ديناميكي بالكامل.', textEn: 'Products, gateway icons, partners, certs — fully dynamic.', handler: 'openSiteContentManager', permission: 'content', visible: true },
             { id: 'dash-about-pages', zone: 'quick', dashGroup: 'command', sortOrder: 2, iconClass: 'fas fa-building', titleAr: 'من نحن ورؤيتنا', titleEn: 'About & Vision', textAr: 'نصوص المصنع ووثائق الصفحات الداخلية.', textEn: 'Factory pages and documents.', handler: 'openAboutContentAdmin', permission: 'content', visible: true },
             { id: 'dash-certs', zone: 'quick', dashGroup: 'command', sortOrder: 3, iconClass: 'fas fa-award', titleAr: 'اعتمادات وشهادات', titleEn: 'Certifications', textAr: 'شهادات المعرض — صور وPDF.', textEn: 'Showroom certificates.', cssClass: 'dashboard-tile-card--certs', handler: 'openCertificationsHub', permission: 'content', visible: true },
@@ -1994,6 +1996,9 @@
             openAdminAnalytics: function() { openAdminAnalytics(); },
             openCompanyProfileHub: function() {
                 openNebrasWorkspace({ pillar: 'platform', view: 'company-profile' });
+            },
+            openCallbackLeadsAdmin: function() {
+                if (typeof window.openCallbackLeadsAdmin === 'function') window.openCallbackLeadsAdmin();
             }
         };
 
@@ -2142,6 +2147,14 @@
                         cur.backgroundImage = 'images/profile-2026/hero-cover.jpg';
                         cur.album = ['images/profile-2026/doors/doors-01.jpg', 'images/profile-2026/cabinets/cabinets-01.jpg', 'images/profile-2026/cnc/cnc-01.jpg'];
                         if (!cur.titleKey) cur.titleKey = 'visitorQuickShowroom';
+                    }
+                    if (def.id === 20) {
+                        cur.lane = 'platform';
+                        cur.visitorMode = 'browse';
+                        cur.openHandler = 'callback-concierge';
+                        cur.target = '';
+                        cur.backgroundImage = 'images/profile-2026/hero-cover.jpg';
+                        if (!cur.titleKey) cur.titleKey = 'visitorQuickCallback';
                     }
                     if (def.album && def.album.length && [2, 4, 7, 8, 11, 12, 13, 14, 16, 17].indexOf(def.id) < 0) cur.album = def.album.slice();
                     if (def.openHandler && !cur.openHandler) cur.openHandler = def.openHandler;
@@ -3868,7 +3881,7 @@
 
         function updateCartBadge() {
             const count = nebrasCart.reduce(function(sum, line) { return sum + (Number(line.qty) || 1); }, 0);
-            ['cart-badge-count', 'top-cart-count'].forEach(function(id) {
+            ['cart-badge-count', 'top-cart-count', 'cart-drawer-count-badge'].forEach(function(id) {
                 const el = document.getElementById(id);
                 if (!el) return;
                 if (count > 0) {
@@ -4268,11 +4281,11 @@
                 linesEl.innerHTML = nebrasCart.map(function(line, i) {
                     const img = line.image ? '<img src="' + escapeHtmlAttr(line.image) + '" alt="">' : '';
                     return '<div class="cart-line">' + img +
-                        '<div class="cart-line-details"><strong>' + escapeHtmlAttr(line.productTitle) + '</strong><br>' +
-                        escapeHtmlAttr([line.color, line.size, line.type].filter(Boolean).join(' · ')) +
-                        '<div class="cart-line-qty"><button type="button" onclick="changeCartLineQty(' + i + ',-1)" aria-label="-">−</button><span>' +
-                        escapeHtmlAttr(ui.cartQty || '') + line.qty + '</span><button type="button" onclick="changeCartLineQty(' + i + ',1)" aria-label="+">+</button></div>' +
-                        '<button type="button" style="margin-top:6px;font-size:0.8rem;" onclick="removeCartLine(' + i + ')">' + escapeHtmlAttr(ui.cartRemove || '') + '</button></div>' +
+                        '<div class="cart-line-body"><h4>' + escapeHtmlAttr(line.productTitle) + '</h4>' +
+                        '<div class="cart-line-meta">' + escapeHtmlAttr([line.color, line.size, line.type].filter(Boolean).join(' · ')) + '</div>' +
+                        '<div class="cart-line-qty-row"><button type="button" onclick="changeCartLineQty(' + i + ',-1)" aria-label="-">−</button><span>' +
+                        escapeHtmlAttr(String(line.qty)) + '</span><button type="button" onclick="changeCartLineQty(' + i + ',1)" aria-label="+">+</button>' +
+                        '<button type="button" class="cart-line-remove" onclick="removeCartLine(' + i + ')">' + escapeHtmlAttr(ui.cartRemove || 'حذف') + '</button></div></div>' +
                         formatCartLinePriceHtml(line, lang) + '</div>';
                 }).join('');
             }
@@ -5232,9 +5245,15 @@
             const shopProductCount = (siteProducts || []).filter(function(p) {
                 return p && p.visible !== false && productHasShop(p);
             }).length;
+            const callbackLeadsScoped = (typeof filterCallbackLeadsForAdmin === 'function' && typeof getCallbackLeads === 'function')
+                ? filterCallbackLeadsForAdmin(getCallbackLeads(), currentAdmin)
+                : [];
+            const callbackLeadsNew = callbackLeadsScoped.filter(function(l) { return l && (l.status || 'new') === 'new'; }).length;
             if (kpisEl) {
                 kpisEl.innerHTML = [
                     { v: uniqueVisitors, l: 'زوار (جلسات)' },
+                    { v: callbackLeadsScoped.length, l: 'طلبات «نبراس يتصل بك»' },
+                    { v: callbackLeadsNew, l: 'طلبات اتصال جديدة' },
                     { v: quotes.length, l: 'طلبات (عروض + مبيعات)' },
                     { v: quotesOnlyCount, l: 'عروض سعر فقط' },
                     { v: salesFromQuotes + manualSalesCount, l: 'مبيعات فعلية' },
@@ -5291,6 +5310,12 @@
                     buildAnalyticsPanelActionsHtml('visitors', 'clearAllAnalyticsVisitors', 'إفراغ تقرير الزوار') +
                     '<p class="scm-hint admin-only-ui">بيانات داخلية — لا تظهر للعملاء.</p>' +
                     buildVisitorReportTableHtml();
+            }
+            const callbackLeadsEl = document.getElementById('callback-leads-panel');
+            if (callbackLeadsEl && typeof buildCallbackLeadsReportHtml === 'function') {
+                callbackLeadsEl.innerHTML = '<h4 id="callback-leads-title"><i class="fas fa-phone-volume"></i> نبراس يتصل بك — طلبات اتصال الزوار</h4>' +
+                    '<p class="scm-hint admin-only-ui">يظهر في الإدارة الرئيسية كاملاً — ومدير الفرع يرى طلبات فرعه فقط. المبيعات وخدمة العملاء يحدّثون الحالة بعد الاتصال.</p>' +
+                    buildCallbackLeadsReportHtml(currentAdmin);
             }
             const restoreMount = document.getElementById('analytics-restore-mount');
             if (restoreMount) restoreMount.innerHTML = buildAnalyticsRestorePanelHtml();
@@ -5960,6 +5985,9 @@
             doc.style.transformOrigin = '';
             try {
                 const html2canvas = await loadHtml2CanvasLib();
+                if (document.fonts && document.fonts.ready) {
+                    try { await document.fonts.ready; } catch (fontWaitErr) { /* ignore */ }
+                }
                 const canvas = await html2canvas(doc, {
                     scale: getQuoteCaptureScale(),
                     useCORS: true,
@@ -5969,7 +5997,22 @@
                     width: doc.scrollWidth,
                     height: doc.scrollHeight,
                     windowWidth: doc.scrollWidth,
-                    windowHeight: doc.scrollHeight
+                    windowHeight: doc.scrollHeight,
+                    onclone: function(clonedDoc) {
+                        const cloned = clonedDoc.getElementById(doc.id) || clonedDoc.querySelector('.quote-a4');
+                        if (cloned) {
+                            cloned.style.fontFamily = "'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif";
+                            cloned.style.direction = 'rtl';
+                            cloned.style.unicodeBidi = 'plaintext';
+                        }
+                        if (clonedDoc.head && !clonedDoc.querySelector('link[data-nebras-cairo]')) {
+                            const link = clonedDoc.createElement('link');
+                            link.rel = 'stylesheet';
+                            link.href = 'https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap';
+                            link.setAttribute('data-nebras-cairo', '1');
+                            clonedDoc.head.appendChild(link);
+                        }
+                    }
                 });
                 return canvas.toDataURL('image/png', 0.92);
             } catch (capErr) {
@@ -6746,7 +6789,7 @@
         let cachedSiteLogoUrl = null;
 
         function getSiteLogoCandidateUrls() {
-            return buildUrlList(['logo', 'nebras-logo']);
+            return ['images/logo-white.svg'].concat(buildUrlList(['logo', 'nebras-logo']));
         }
 
         function getSiteLogoUrlListAttr() {
@@ -6797,7 +6840,7 @@
             const q = systemSettings.quoteA4;
             q.watermarkOpacity = Math.min(0.35, Math.max(0.04, Number(q.watermarkOpacity) || DEFAULT_QUOTE_A4_SETTINGS.watermarkOpacity));
             q.watermarkScale = Math.min(95, Math.max(40, Number(q.watermarkScale) || DEFAULT_QUOTE_A4_SETTINGS.watermarkScale));
-            if (!q.logoUrl) q.logoUrl = 'images/logo.png';
+            if (!q.logoUrl) q.logoUrl = 'images/logo-white.svg';
             if (!q.layout || q.layout === 'nebras-factory') q.layout = 'nebras-official';
             if (!q.staticPage4Url) q.staticPage4Url = DEFAULT_QUOTE_A4_SETTINGS.staticPage4Url;
             return q;
@@ -8372,7 +8415,25 @@
             root.innerHTML = sections.map(function(section) {
                 const title = getLocalizedCatalogField(section, 'title', lang);
                 const subtitle = getLocalizedCatalogField(section, 'subtitle', lang);
-                const items = (section.items || []).filter(function(i) { return i.visible !== false; });
+                const items = (section.items || []).filter(function(i) { return i.visible !== false; })
+                    .sort(function(a, b) { return (a.sortOrder || 0) - (b.sortOrder || 0); });
+                const isStrengthsLight = section.layout === 'wpc-strengths-light' || section.id === 'sec-wpc-strengths-2026';
+                if (isStrengthsLight) {
+                    const cards = items.map(function(item) {
+                        const ititle = getLocalizedCatalogField(item, 'title', lang);
+                        const caption = getLocalizedCatalogField(item, 'text', lang) || '';
+                        const line = caption ? (ititle + ' - ' + caption) : ititle;
+                        return '<article class="wpc-strength-card" data-section-id="' + escapeHtmlAttr(section.id) + '" data-item-id="' + escapeHtmlAttr(item.id) + '">' +
+                            '<p class="wpc-strength-text">' + escapeHtmlAttr(line) + '</p>' +
+                            '<div class="wpc-strength-icon" aria-hidden="true"><i class="' + escapeHtmlAttr(item.iconClass || 'fas fa-check') + '"></i></div></article>';
+                    }).join('');
+                    return '<section class="site-structure site-custom-section site-custom-section--wpc-strengths" id="custom-sec-' + escapeHtmlAttr(section.id) + '">' +
+                        '<div class="section-title">' +
+                        '<span class="wpc-strengths-badge">07 نقاط قوة المنتج</span>' +
+                        '<h2>' + escapeHtmlAttr(title) + '</h2>' +
+                        '<p class="wpc-strengths-subtitle">' + escapeHtmlAttr(subtitle) + '</p></div>' +
+                        '<div class="wpc-strengths-grid">' + cards + '</div></section>';
+                }
                 const cards = items.map(function(item) {
                     const ititle = getLocalizedCatalogField(item, 'title', lang);
                     const caption = getLocalizedCatalogField(item, 'text', lang) || getVisitorTargetCaption(item);
@@ -15113,6 +15174,9 @@
             if (icon.openHandler === 'company-profile') {
                 return { pillar: 'platform', view: 'company-profile', iconId: icon.id };
             }
+            if (icon.openHandler === 'callback-concierge') {
+                return { pillar: 'platform', view: 'callback-concierge', iconId: icon.id };
+            }
             const exp = getCatalogExperience(icon);
             const tg = String(icon.target || '').trim();
             const linked = getProductsForVisitorIcon(icon);
@@ -15456,6 +15520,10 @@
                     (typeof buildCompanyProfileHubHtml === 'function'
                         ? buildCompanyProfileHubHtml(lang, route.sectionId || '')
                         : '<p>' + escapeHtmlAttr(ui.workspaceSectionMissing || 'المحتوى قيد التحديث.') + '</p>');
+            } else if (route.view === 'callback-concierge') {
+                title = ui.visitorQuickCallback || 'نبراس يتصل بك';
+                html = '<p class="workspace-intro">' + escapeHtmlAttr(icon && icon.textAr ? icon.textAr : 'اترك اسمك وجوالك — فريق المبيعات أو خدمة العملاء يتواصل معك.') + '</p>' +
+                    '<div class="workspace-actions-row"><button type="button" class="workspace-action-btn workspace-action-btn--primary" onclick="openNebrasCallbackConcierge()"><i class="fas fa-phone-volume"></i> ' + escapeHtmlAttr(ui.visitorQuickCallback || 'اطلب اتصالاً') + '</button></div>';
             } else if (route.view === 'sections-hub') {
                 title = ui.workspacePlatformHub || 'منصة نبراس';
                 html = '<p class="workspace-intro">' + escapeHtmlAttr(ui.workspacePlatformIntro || 'معلومات المصنع، الفروع، والحسابات.') + '</p>' +
@@ -15527,6 +15595,10 @@
         function openVisitorIcon(iconId) {
             const icon = visitorIcons.find(item => item.id === iconId);
             if (!icon) return;
+            if (icon.openHandler === 'callback-concierge') {
+                if (typeof window.openNebrasCallbackConcierge === 'function') window.openNebrasCallbackConcierge();
+                return;
+            }
             if (icon.linkedProductId === 'prod-complaints' && icon.openHandler !== 'complaints-inquiry') {
                 openCustomerComplaints();
                 return;
@@ -15975,6 +16047,12 @@
             { key: 'analytics_governance', get: function() { ensureAnalyticsGovernance(); return analyticsGovernance; }, set: function(v) {
                 analyticsGovernance = v && typeof v === 'object' ? v : { deleted: { quotes: [], visitors: [], complaints: [], sales: [], customers: [] } };
                 ensureAnalyticsGovernance();
+            }},
+            { key: 'callback_leads', get: function() {
+                return typeof getCallbackLeads === 'function' ? getCallbackLeads() : [];
+            }, set: function(v) {
+                if (typeof setCallbackLeadsFromCloud === 'function') setCallbackLeadsFromCloud(Array.isArray(v) ? v : []);
+                if (typeof saveCallbackLeads === 'function') saveCallbackLeads();
             }}
         ];
 
@@ -16136,6 +16214,7 @@
             localStorage.setItem('nebrasSalesData', JSON.stringify(salesData || []));
             ensureVisitorAnalytics();
             localStorage.setItem(VISITOR_ANALYTICS_KEY, JSON.stringify(visitorAnalytics));
+            if (typeof saveCallbackLeads === 'function') saveCallbackLeads();
             } catch (storageErr) {
                 console.warn('Local storage save failed:', storageErr);
             }
@@ -16230,6 +16309,7 @@
                 } catch (e) { console.warn('Visitor analytics parse error', e); }
             }
             ensureVisitorAnalytics();
+            if (typeof loadCallbackLeads === 'function') loadCallbackLeads();
             ensureShowroomGallery();
             adminUsers = (Array.isArray(adminUsers) ? adminUsers : []).map((user, index) => {
                 const role = user && allowedRoles.includes(String(user.role || '').toLowerCase()) ? String(user.role).toLowerCase() : 'manager';
@@ -16927,6 +17007,10 @@
                 gatewayLaneShowroom: 'معرض نبراس',
                 gatewayLaneShowroomHint: '5 أقسام: أبواب نبراس · خزائن نبراس · WPC · CNC · مشاريع NHC',
                 visitorQuickShowroom: 'معرض نبراس — 5 أقسام',
+                visitorQuickCompanyProfile: 'الملف التعريفي الكامل 2026',
+                visitorQuickCallback: 'نبراس يتصل بك',
+                companyProfileTitle: 'الملف التعريفي الكامل 2026',
+                companyProfileIntro: 'الملف التعريفي الرسمي — 14 قسماً مرتبطة بأيقونات الموقع والمعرض.',
                 showroomHubTitle: 'معرض نبراس',
                 showroomHubIntro: 'معرض نبراس — أبواب نبراس · خزائن نبراس · أبواب WPC · خزائن WPC · قطع CNC · مشاريع NHC. اضغط على أي صورة للعرض بالدقة الكاملة.',
                 showroomDoorsEmpty: 'معرض أبواب نبراس — يُحمّل من الملف التعريفي 2026.',

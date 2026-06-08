@@ -83,6 +83,9 @@
     <link rel="stylesheet" href="css/19-quote-official-a4.css">
     <link rel="stylesheet" href="css/20-profile-2026-theme.css">
     <link rel="stylesheet" href="css/21-company-profile-hub.css">
+    <link rel="stylesheet" href="css/22-callback-concierge.css">
+    <link rel="stylesheet" href="css/23-cart-premium.css">
+    <link rel="stylesheet" href="css/24-wpc-strengths-light.css">
 </head>
 <body id="nebras-platform" class="platform-storefront" data-platform-layer="storefront">
 
@@ -91,8 +94,8 @@
     <div id="nebras-brand-intro" class="nebras-brand-intro nebras-brand-intro--gate" hidden aria-hidden="true">
         <div class="nebras-brand-intro-backdrop" aria-hidden="true"></div>
         <div class="nebras-brand-intro-inner">
-            <div class="nebras-brand-intro-logo-ring" aria-hidden="true">
-                <img src="images/logo.png" alt="" class="nebras-brand-intro-logo" onerror="siteLogoImgFallback(this)">
+            <div class="nebras-brand-intro-logo-wrap" aria-hidden="true">
+                <img src="images/logo-white.svg" alt="" class="nebras-brand-intro-logo" data-src-list="images/logo-white.svg|images/logo.png" data-src-idx="0" onerror="siteLogoImgFallback(this)">
             </div>
             <p class="nebras-brand-intro-eyebrow" id="intro-eyebrow">المملكة العربية السعودية</p>
             <h2 class="nebras-brand-intro-title" id="intro-brand-title" aria-live="polite">شركة مصنع نبراس للبلاستيك</h2>
@@ -198,7 +201,7 @@
             <div class="header-logo-occasion-wrap">
                 <div class="logo-container">
                     <a href="index.html" class="site-logo-link" aria-label="شركة مصنع نبراس للبلاستيك">
-                        <img src="images/logo.png" alt="شركة مصنع نبراس للبلاستيك" class="site-logo-img" onerror="siteLogoImgFallback(this)">
+                        <img src="images/logo-white.svg" alt="شركة مصنع نبراس للبلاستيك" class="site-logo-img" data-src-list="images/logo-white.svg|images/logo.png|images/nebras-logo.png" data-src-idx="0" onerror="siteLogoImgFallback(this)">
                     </a>
                 </div>
                 <div class="header-occasion-chip" id="header-occasion-chip" role="status" hidden>
@@ -485,7 +488,7 @@
 
     <div class="cart-drawer-overlay" id="cart-drawer-overlay" onclick="if(event.target===this)closeCartDrawer()">
         <div class="cart-drawer" role="dialog" aria-labelledby="cart-drawer-title">
-            <h2 id="cart-drawer-title">سلة التسوق</h2>
+            <h2 id="cart-drawer-title">سلة التسوق <span class="cart-drawer-count-badge" id="cart-drawer-count-badge" hidden>0</span></h2>
             <ol class="cart-checkout-steps" id="cart-checkout-steps" aria-label="خطوات الطلب"></ol>
             <p class="cart-commerce-hint" id="cart-commerce-hint"></p>
             <p class="cart-session-hint" id="cart-session-hint" hidden></p>
@@ -638,6 +641,7 @@
                 <article class="admin-analytics-table-card" id="quote-catalog-panel" aria-labelledby="quote-catalog-title"></article>
                 <article class="admin-analytics-table-card" id="bank-transfers-panel" aria-labelledby="bank-transfers-title"></article>
                 <article class="admin-analytics-table-card" id="visitor-report-panel" aria-labelledby="visitor-report-title"></article>
+                <article class="admin-analytics-table-card" id="callback-leads-panel" aria-labelledby="callback-leads-title"></article>
                 <div id="analytics-restore-mount"></div>
             </div>
         </section>
@@ -1145,8 +1149,51 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js" defer></script>
     <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js" defer></script>
+    <button type="button" class="nebras-callback-fab" id="nebras-callback-fab" aria-label="نبراس يتصل بك">
+        <span class="nebras-callback-fab-pulse" aria-hidden="true"></span>
+        <i class="fas fa-phone-volume" aria-hidden="true"></i>
+        <span>نبراس يتصل بك</span>
+    </button>
+
+    <div class="nebras-callback-overlay" id="nebras-callback-overlay" aria-hidden="true" role="dialog" aria-labelledby="nebras-callback-title">
+        <div class="nebras-callback-modal">
+            <div class="nebras-callback-modal-head">
+                <img src="images/logo-white.svg" alt="" class="nebras-callback-modal-logo" width="56" height="56">
+                <h2 id="nebras-callback-title">نبراس يتصل بك</h2>
+                <p>اترك اسمك وجوالك — فريق المبيعات أو خدمة العملاء يتواصل معك ويفهم احتياجك.</p>
+            </div>
+            <div id="nebras-callback-form-wrap">
+                <form class="nebras-callback-form" onsubmit="event.preventDefault();submitNebrasCallbackLead();">
+                    <label for="callback-visitor-name">الاسم الكامل <span class="req">*</span></label>
+                    <input type="text" id="callback-visitor-name" name="name" autocomplete="name" required placeholder="مثال: أحمد محمد">
+                    <label for="callback-visitor-phone">رقم الجوال <span class="req">*</span></label>
+                    <input type="tel" id="callback-visitor-phone" name="phone" autocomplete="tel" inputmode="tel" required placeholder="05xxxxxxxx">
+                    <label for="callback-branch-select">المدينة / الفرع</label>
+                    <select id="callback-branch-select" name="branch"></select>
+                    <label for="callback-visitor-need">ما احتياجك؟ (اختياري)</label>
+                    <textarea id="callback-visitor-need" name="need" rows="2" placeholder="أبواب WPC · خزائن · مشروع NHC · عرض سعر…"></textarea>
+                    <p class="nebras-callback-status" id="nebras-callback-status" role="status"></p>
+                    <div class="nebras-callback-form-actions">
+                        <button type="submit" class="nebras-callback-submit">اطلب اتصالاً الآن</button>
+                        <button type="button" class="nebras-callback-cancel" onclick="closeNebrasCallbackConcierge()">لاحقاً</button>
+                    </div>
+                </form>
+            </div>
+            <div id="nebras-callback-success-wrap" hidden>
+                <div class="nebras-callback-success">
+                    <i class="fas fa-circle-check" aria-hidden="true"></i>
+                    <h3>تم استلام طلبك</h3>
+                    <p>سيظهر طلبك فوراً في الإدارة الرئيسية والفرع المختار.</p>
+                    <div class="nebras-callback-success-card" id="nebras-callback-success-card"></div>
+                    <button type="button" class="nebras-callback-cancel" style="margin-top:14px;width:100%;" onclick="closeNebrasCallbackConcierge()">إغلاق</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script src="js/nebras-profile-2026-seed.js" defer></script>
     <script src="js/nebras-profile-hub.js" defer></script>
+    <script src="js/nebras-callback-concierge.js" defer></script>
     <script src="js/nebras-platform.js" defer></script>
     <script src="js/nebras-media-admin.js" defer></script>
 

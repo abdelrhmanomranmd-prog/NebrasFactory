@@ -8,6 +8,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 JS = os.path.join(ROOT, 'js', 'nebras-platform.js')
 INDEX = os.path.join(ROOT, 'index.html')
 MEDIA_JS = os.path.join(ROOT, 'js', 'nebras-media-admin.js')
+CALLBACK_JS = os.path.join(ROOT, 'js', 'nebras-callback-concierge.js')
 ERRORS = []
 WARNINGS = []
 
@@ -27,6 +28,8 @@ def main():
         html = f.read()
     with open(MEDIA_JS, encoding='utf-8') as f:
         media_js = f.read()
+    with open(CALLBACK_JS, encoding='utf-8') as f:
+        callback_js = f.read()
 
     # Core governance
     for sym in (
@@ -84,8 +87,9 @@ def main():
             or f'window.{name}=' in js
             or name in ('dialNumber',) and 'function dialNumber' in js
         )
-        if not ok and name not in media_js:
-            err(f'onclick handler not found in JS: {name}()')
+        if not ok and name not in media_js and name not in callback_js:
+            if not (f'global.{name} =' in callback_js or f'global.{name}=' in callback_js):
+                err(f'onclick handler not found in JS: {name}()')
 
     # Celebration mobile fix
     css_occ = open(os.path.join(ROOT, 'css', '04-occasion.css'), encoding='utf-8').read()

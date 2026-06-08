@@ -5,7 +5,7 @@
 (function(global) {
     'use strict';
 
-    const PROFILE_2026_SEED_VERSION = 3;
+    const PROFILE_2026_SEED_VERSION = 4;
     const PROFILE_STORAGE_KEY = 'nebrasProfile2026SeedVersion';
 
     function img(folder, n) {
@@ -156,26 +156,27 @@
             subtitleAr: 'مزايا استثنائية تجعل أبوابنا الخيار الأمثل لكل مشروع',
             subtitleEn: 'Exceptional advantages for every project',
             visible: true,
+            layout: 'wpc-strengths-light',
             items: [
-                { id: 'str-1', iconClass: 'fas fa-tint', titleAr: 'ضد الماء 100%', textAr: 'مقاومة كاملة للرطوبة والمياه', sortOrder: 1, visible: true },
-                { id: 'str-2', iconClass: 'fas fa-shield-alt', titleAr: 'ضد التعفن والانشقاق', textAr: 'لا يتأثر بالزمن', sortOrder: 2, visible: true },
-                { id: 'str-3', iconClass: 'fas fa-temperature-high', titleAr: 'مقاوم للمناخ', textAr: 'يتحمل الحرارة والتغيرات المناخية', sortOrder: 3, visible: true },
-                { id: 'str-4', iconClass: 'fas fa-bolt', titleAr: 'ثبات البراغي', textAr: 'أقوى من الخشب الطبيعي', sortOrder: 4, visible: true },
-                { id: 'str-5', iconClass: 'fas fa-magic', titleAr: 'منتجات جاهزة', textAr: 'لا تحتاج صبغ أو سنفرة', sortOrder: 5, visible: true },
-                { id: 'str-6', iconClass: 'fas fa-palette', titleAr: 'ألوان ثابتة', textAr: 'لا تتطلب صبغاً دورياً', sortOrder: 6, visible: true },
+                { id: 'str-1', iconClass: 'fas fa-tint', titleAr: 'ضد الماء بنسبة 100%', textAr: 'مقاومة كاملة للرطوبة والمياه', sortOrder: 1, visible: true },
+                { id: 'str-2', iconClass: 'fas fa-shield-alt', titleAr: 'مقاوم للتعفن والانشقاق', textAr: 'لا يتأثر بالزمن', sortOrder: 2, visible: true },
+                { id: 'str-3', iconClass: 'fas fa-temperature-high', titleAr: 'مقاوم للتغيرات المناخية', textAr: 'و درجات الحرارة العالية', sortOrder: 3, visible: true },
+                { id: 'str-4', iconClass: 'fas fa-bolt', titleAr: 'ثبات البراغي', textAr: 'بقوة أكبر من الخشب الطبيعي', sortOrder: 4, visible: true },
+                { id: 'str-5', iconClass: 'fas fa-magic', titleAr: 'منتجات جاهزة', textAr: 'لا تحتاج صبغ أو تنظيف أو سنفرة', sortOrder: 5, visible: true },
+                { id: 'str-6', iconClass: 'fas fa-palette', titleAr: 'لا تتطلب صبغاً دورياً', textAr: 'ألوان ثابتة لا تتغير', sortOrder: 6, visible: true },
                 { id: 'str-7', iconClass: 'fas fa-bug', titleAr: 'ضد الأرضة والحشرات', textAr: 'حماية شاملة', sortOrder: 7, visible: true },
-                { id: 'str-8', iconClass: 'fas fa-volume-mute', titleAr: 'عازل للصوت', textAr: 'عزل تام للضوضاء', sortOrder: 8, visible: true },
-                { id: 'str-9', iconClass: 'fas fa-leaf', titleAr: 'صديق للبيئة', textAr: 'بدون مواد كيميائية سامة', sortOrder: 9, visible: true },
-                { id: 'str-10', iconClass: 'fas fa-tools', titleAr: 'صيانة منخفضة', textAr: 'تكاليف صيانة قليلة لجودة عالية', sortOrder: 10, visible: true },
-                { id: 'str-11', iconClass: 'fas fa-hammer', titleAr: 'سهل التركيب', textAr: 'جاهز للتنصيب فور الاستلام', sortOrder: 11, visible: true },
-                { id: 'str-12', iconClass: 'fas fa-award', titleAr: 'ضمان 10 سنوات', textAr: 'ضد الماء والنمل الأبيض', sortOrder: 12, visible: true }
+                { id: 'str-8', iconClass: 'fas fa-eraser', titleAr: 'مقاومة ممتازة للخدش', textAr: 'وسهولة المعالجة عند الخدوش المتعمدة', sortOrder: 8, visible: true },
+                { id: 'str-9', iconClass: 'fas fa-leaf', titleAr: 'صديق للبيئة', textAr: 'لا يحتوي على مواد كيميائية سامة أو حافظة', sortOrder: 9, visible: true },
+                { id: 'str-10', iconClass: 'fas fa-volume-mute', titleAr: 'عازل للصوت', textAr: 'عزل تام للضوضاء وأعلى درجات الهدوء', sortOrder: 10, visible: true },
+                { id: 'str-11', iconClass: 'fas fa-tools', titleAr: 'تكاليف صيانة منخفضة', textAr: 'لجودة المنتج العالية', sortOrder: 11, visible: true },
+                { id: 'str-12', iconClass: 'fas fa-hammer', titleAr: 'سهل التركيب', textAr: 'منتجات جاهزة للتنصيب فور الاستلام', sortOrder: 12, visible: true }
             ]
         },
         systemSettings: {
             companyAddressAr: 'القصيم · عنيزة · المنطقة الصناعية · امتداد طريق الزلفي',
             companyAddressEn: 'Qassim · Unaizah · Industrial Zone · Zulfi Road Extension',
             heroBannerImageUrl: 'images/profile-2026/hero-cover.jpg',
-            logoUrl: 'images/logo.png'
+            logoUrl: 'images/logo-white.svg'
         }
     };
 
@@ -319,9 +320,12 @@
 
     function mergeCustomSection() {
         if (!Array.isArray(siteCustomSections)) siteCustomSections = [];
-        const exists = siteCustomSections.some(function(s) { return s && s.id === PROFILE_2026.customSection.id; });
-        if (!exists) {
-            siteCustomSections.unshift(JSON.parse(JSON.stringify(PROFILE_2026.customSection)));
+        const fresh = JSON.parse(JSON.stringify(PROFILE_2026.customSection));
+        const idx = siteCustomSections.findIndex(function(s) { return s && s.id === PROFILE_2026.customSection.id; });
+        if (idx < 0) {
+            siteCustomSections.unshift(fresh);
+        } else {
+            siteCustomSections[idx] = Object.assign({}, siteCustomSections[idx], fresh, { items: fresh.items });
         }
     }
 
