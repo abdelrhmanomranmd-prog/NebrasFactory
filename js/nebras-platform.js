@@ -2008,7 +2008,8 @@
         ];
 
         const DEFAULT_DASHBOARD_TILES = [
-            { id: 'dash-company-profile', zone: 'quick', dashGroup: 'command', sortOrder: 0, iconClass: 'fas fa-book-open', titleAr: 'الملف التعريفي الكامل 2026', titleEn: 'Company Profile 2026', textAr: 'البروفايل الرسمي — 14 قسماً: من نحن، المنتجات، 5 معارض، الشهادات، والمشاريع.', textEn: 'Official profile — 14 sections with showroom galleries.', cssClass: 'dashboard-tile-card--profile-2026', backgroundImage: 'images/profile-2026/hero-cover.jpg', handler: 'openCompanyProfileHub', permission: 'content', visible: true },
+            { id: 'dash-company-profile', zone: 'quick', dashGroup: 'command', sortOrder: 0, iconClass: 'fas fa-book-open', titleAr: 'الملف التعريفي الكامل 2026', titleEn: 'Company Profile 2026', textAr: 'البروفايل الرسمي — 24 صفحة: من نحن، المنتجات، الألوان، الشهادات، والمشاريع.', textEn: 'Official profile — 24 pages with showroom galleries.', cssClass: 'dashboard-tile-card--profile-2026', backgroundImage: 'images/profile-2026/hero-cover.jpg', handler: 'openCompanyProfileHub', permission: 'content', visible: true },
+            { id: 'dash-profile-pdf', zone: 'quick', dashGroup: 'command', sortOrder: 0.5, iconClass: 'fas fa-file-pdf', titleAr: 'بروفايل تعريفي لنبراس (تنزيل)', titleEn: 'Nebras Profile PDF', textAr: 'تنزيل ملف PDF الرسمي — 24 صفحة A4 للزوار والعملاء.', textEn: 'Download official 24-page A4 PDF for visitors.', cssClass: 'dashboard-tile-card--profile-2026', backgroundImage: 'images/hero-slide-06-color-catalog.png', handler: 'downloadNebrasProfilePdf', permission: 'content', visible: true },
             { id: 'dash-callback-leads', zone: 'quick', dashGroup: 'command', sortOrder: 55, iconClass: 'fas fa-phone-volume', titleAr: 'نبراس يتصل بك', titleEn: 'Callback Leads', textAr: 'طلبات اتصال الزوار — تظهر في الإدارة الرئيسية والفروع.', textEn: 'Visitor callback requests by branch.', cssClass: 'dashboard-tile-card--callback', backgroundImage: 'images/profile-2026/hero-cover.jpg', handler: 'openCallbackLeadsAdmin', permission: 'sales', visible: true },
             { id: 'dash-content', zone: 'quick', dashGroup: 'command', sortOrder: 1, iconClass: 'fas fa-pen-to-square', titleAr: 'إدارة محتوى الموقع', titleEn: 'Site Content', textAr: 'منتجات، بوابة الزائر، شركاء، شهادات — ديناميكي بالكامل.', textEn: 'Products, gateway icons, partners, certs — fully dynamic.', handler: 'openSiteContentManager', permission: 'content', visible: true },
             { id: 'dash-about-pages', zone: 'quick', dashGroup: 'command', sortOrder: 2, iconClass: 'fas fa-building', titleAr: 'من نحن ورؤيتنا', titleEn: 'About & Vision', textAr: 'نصوص المصنع ووثائق الصفحات الداخلية.', textEn: 'Factory pages and documents.', handler: 'openAboutContentAdmin', permission: 'content', visible: true },
@@ -2063,6 +2064,9 @@
             openAdminAnalytics: function() { openAdminAnalytics(); },
             openCompanyProfileHub: function() {
                 openNebrasWorkspace({ pillar: 'platform', view: 'company-profile' });
+            },
+            downloadNebrasProfilePdf: function() {
+                if (typeof window.downloadNebrasProfilePdf === 'function') window.downloadNebrasProfilePdf();
             },
             openCallbackLeadsAdmin: function() {
                 if (typeof window.openCallbackLeadsAdmin === 'function') window.openCallbackLeadsAdmin();

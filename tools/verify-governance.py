@@ -62,11 +62,11 @@ def main():
             err(f'Store catalog governance function missing: {fn}')
 
     profile_html = os.path.join(ROOT, 'nebras-company-profile-2026.html')
-    profile_css = os.path.join(ROOT, 'css', '25-company-profile-pdf.css')
+    profile_css = os.path.join(ROOT, 'css', '26-nebras-profile-bp.css')
     if not os.path.isfile(profile_html):
         err('nebras-company-profile-2026.html missing (company profile PDF slides)')
     if not os.path.isfile(profile_css):
-        err('css/25-company-profile-pdf.css missing (company profile PDF styles)')
+        err('css/26-nebras-profile-bp.css missing (company profile PDF styles)')
 
     qr_path = os.path.join(ROOT, 'images', 'nebras-site-qr.png')
     if not os.path.isfile(qr_path):
