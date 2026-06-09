@@ -347,3 +347,256 @@
         min-width: 56px;
     }
 }
+
+/* ============================================================
+   الهيدر السينمائي — خلفية حية من صور نبراس
+   Ken Burns + وشاح كحلي + شفق ذهبي/أزرق + شعاع ضوء + غبار ذهبي
+   ============================================================ */
+
+.header-cinematic,
+.hero-cinematic {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    z-index: 0;
+    pointer-events: none;
+}
+
+header > .header-top-row,
+header > .header-main-row {
+    position: relative;
+    z-index: 1;
+}
+
+/* --- شرائح صور نبراس مع حركة Ken Burns --- */
+.header-cinematic-slides {
+    position: absolute;
+    inset: 0;
+}
+
+.header-cinematic-slide {
+    position: absolute;
+    inset: -7%;
+    width: 114%;
+    height: 114%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity 2.2s ease-in-out;
+    will-change: transform, opacity;
+}
+
+.header-cinematic-slide.is-active {
+    opacity: 0.92;
+}
+
+.header-cinematic-slide[data-kb="0"].is-active {
+    animation: headerKenburnsA 17s ease-in-out forwards;
+}
+
+.header-cinematic-slide[data-kb="1"].is-active {
+    animation: headerKenburnsB 17s ease-in-out forwards;
+}
+
+.header-cinematic-slide[data-kb="2"].is-active {
+    animation: headerKenburnsC 17s ease-in-out forwards;
+}
+
+@keyframes headerKenburnsA {
+    0% { transform: scale(1) translate(0, 0); }
+    100% { transform: scale(1.12) translate(-1.8%, -1.4%); }
+}
+
+@keyframes headerKenburnsB {
+    0% { transform: scale(1.1) translate(1.6%, 0.8%); }
+    100% { transform: scale(1) translate(0, 0); }
+}
+
+@keyframes headerKenburnsC {
+    0% { transform: scale(1.02) translate(-1.2%, 1%); }
+    100% { transform: scale(1.14) translate(1.4%, -1%); }
+}
+
+/* --- وشاح كحلي يحفظ وضوح النصوص ويعطي عمقاً فاخراً --- */
+.header-cinematic-veil {
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(120% 90% at 50% 0%, rgba(5, 20, 36, 0.18) 0%, rgba(5, 20, 36, 0.55) 78%, rgba(4, 16, 30, 0.82) 100%),
+        linear-gradient(168deg, rgba(6, 23, 40, 0.86) 0%, rgba(10, 36, 60, 0.6) 42%, rgba(5, 19, 35, 0.9) 100%);
+}
+
+/* --- شفق متموج — ذهب نبراس وأزرقها --- */
+.header-cinematic-aurora {
+    position: absolute;
+    width: 56%;
+    height: 130%;
+    border-radius: 50%;
+    filter: blur(64px);
+    opacity: 0.32;
+    mix-blend-mode: screen;
+    will-change: transform;
+}
+
+.header-cinematic-aurora--gold {
+    top: -42%;
+    inset-inline-start: -10%;
+    background: radial-gradient(circle, rgba(212, 175, 55, 0.55) 0%, rgba(212, 175, 55, 0) 62%);
+    animation: headerAuroraGold 21s ease-in-out infinite alternate;
+}
+
+.header-cinematic-aurora--blue {
+    bottom: -52%;
+    inset-inline-end: -12%;
+    background: radial-gradient(circle, rgba(0, 168, 255, 0.5) 0%, rgba(0, 168, 255, 0) 64%);
+    animation: headerAuroraBlue 27s ease-in-out infinite alternate;
+}
+
+@keyframes headerAuroraGold {
+    0% { transform: translate3d(0, 0, 0) scale(1); }
+    50% { transform: translate3d(9%, 7%, 0) scale(1.16); }
+    100% { transform: translate3d(-5%, 3%, 0) scale(0.94); }
+}
+
+@keyframes headerAuroraBlue {
+    0% { transform: translate3d(0, 0, 0) scale(1.05); }
+    50% { transform: translate3d(-8%, -6%, 0) scale(0.92); }
+    100% { transform: translate3d(5%, -2%, 0) scale(1.18); }
+}
+
+/* --- شعاع ضوء يمسح الهيدر بأناقة --- */
+.header-cinematic-ray {
+    position: absolute;
+    top: -55%;
+    inset-inline-start: -45%;
+    width: 34%;
+    height: 220%;
+    background: linear-gradient(
+        100deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.05) 38%,
+        rgba(255, 244, 214, 0.14) 50%,
+        rgba(255, 255, 255, 0.05) 62%,
+        transparent 100%
+    );
+    transform: rotate(10deg);
+    animation: headerRaySweep 9.5s ease-in-out infinite;
+    will-change: transform;
+}
+
+@keyframes headerRaySweep {
+    0%, 18% { transform: translateX(-30vw) rotate(10deg); opacity: 0; }
+    32% { opacity: 1; }
+    62%, 100% { transform: translateX(135vw) rotate(10deg); opacity: 0; }
+}
+
+[dir="rtl"] .header-cinematic-ray {
+    animation-name: headerRaySweepRtl;
+}
+
+@keyframes headerRaySweepRtl {
+    0%, 18% { transform: translateX(30vw) rotate(-10deg); opacity: 0; }
+    32% { opacity: 1; }
+    62%, 100% { transform: translateX(-135vw) rotate(-10deg); opacity: 0; }
+}
+
+/* --- غبار ذهبي متصاعد --- */
+.header-cinematic-particles {
+    position: absolute;
+    inset: 0;
+}
+
+.header-cinematic-particle {
+    position: absolute;
+    bottom: -8px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255, 233, 168, 0.95) 0%, rgba(212, 175, 55, 0) 72%);
+    opacity: 0;
+    animation: headerParticleFloat var(--dur, 9s) linear infinite;
+    will-change: transform, opacity;
+}
+
+@keyframes headerParticleFloat {
+    0% { transform: translate3d(0, 0, 0); opacity: 0; }
+    10% { opacity: 0.9; }
+    80% { opacity: 0.5; }
+    100% { transform: translate3d(var(--sway, 0px), calc(-1 * var(--rise, 140px)), 0); opacity: 0; }
+}
+
+/* --- خيط ذهبي مضيء أسفل الهيدر --- */
+.header-cinematic-baseline {
+    position: absolute;
+    bottom: 0;
+    inset-inline: 0;
+    height: 2px;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(212, 175, 55, 0.85) 18%,
+        rgba(255, 233, 168, 0.95) 50%,
+        rgba(212, 175, 55, 0.85) 82%,
+        transparent 100%
+    );
+    background-size: 220% 100%;
+    box-shadow: 0 0 14px rgba(212, 175, 55, 0.45);
+    animation: headerBaselineShimmer 6.5s ease-in-out infinite alternate;
+}
+
+@keyframes headerBaselineShimmer {
+    0% { background-position: 0% 0; opacity: 0.75; }
+    100% { background-position: 100% 0; opacity: 1; }
+}
+
+/* ============================================================
+   خلفية الصفحة الديناميكية — أورورا هادئة خلف كل الأقسام
+   ============================================================ */
+
+body::before {
+    content: '';
+    position: fixed;
+    inset: -12%;
+    z-index: -1;
+    pointer-events: none;
+    background:
+        radial-gradient(900px 620px at 12% 6%, rgba(13, 40, 64, 0.07) 0%, transparent 62%),
+        radial-gradient(760px 520px at 88% 26%, rgba(212, 175, 55, 0.08) 0%, transparent 64%),
+        radial-gradient(1000px 720px at 46% 96%, rgba(0, 168, 255, 0.06) 0%, transparent 60%),
+        radial-gradient(620px 460px at 70% 64%, rgba(13, 40, 64, 0.05) 0%, transparent 58%);
+    animation: nebrasAmbientDrift 42s ease-in-out infinite alternate;
+    will-change: transform;
+}
+
+@keyframes nebrasAmbientDrift {
+    0% { transform: translate3d(-1.4%, -1%, 0) scale(1); }
+    50% { transform: translate3d(0.6%, 0.8%, 0) scale(1.05); }
+    100% { transform: translate3d(1.6%, -0.5%, 0) scale(1.02); }
+}
+
+/* --- موبايل: أداء أولاً --- */
+@media (max-width: 768px) {
+    .header-cinematic-ray,
+    .header-cinematic-particles {
+        display: none;
+    }
+
+    .header-cinematic-aurora {
+        filter: blur(42px);
+        opacity: 0.26;
+    }
+}
+
+/* --- احترام تفضيل تقليل الحركة --- */
+@media (prefers-reduced-motion: reduce) {
+    .header-cinematic-slide,
+    .header-cinematic-slide.is-active,
+    .header-cinematic-aurora,
+    .header-cinematic-ray,
+    .header-cinematic-particle,
+    .header-cinematic-baseline,
+    body::before {
+        animation: none !important;
+    }
+
+    .header-cinematic-slide.is-active {
+        transform: scale(1.04);
+    }
+}

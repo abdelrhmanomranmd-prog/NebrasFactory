@@ -1120,10 +1120,10 @@
 
         const DEFAULT_DOOR_DESIGNER = {
             enabled: true,
-            dataSeed: 'v24-roll-20-colors-svg-texture',
+            dataSeed: 'v26-3d-studio-size-matrix',
             previewModelEnabled: true,
             useCompositorPreview: false,
-            use3dPreview: false,
+            use3dPreview: true,
             introAr: 'استوديو «صمّم بابك» — اختر نوع الباب، النموذج، الديكور الخارجي، التكسية العلوية، ورولّة اللون (N-1..21 بدون N-12).',
             introEn: 'Design Your Door — pick door family, model, exterior decor (flat/curve), top cladding, and one of 20 NEBR roll colours.',
             introZh: '设计您的门 — 选择门型、型号、外饰（平/弧）、顶部包覆及 20 种 NEBR 卷材色。',
@@ -1132,7 +1132,7 @@
             previewImageUrl: 'images/background-quality-managment.jpeg',
             doorBaseImageUrl: NEBRAS_DOOR_PHOTO_DEFAULT,
             layerManifest: DEFAULT_DOOR_LAYER_MANIFEST,
-            designCanvasMode: 'studio',
+            designCanvasMode: '3d',
             usePhotorealPreview: false,
             types: [
                 { id: 'edge-band', labelAr: 'باب إيدج باند فلات', labelEn: 'Edge-band flat door', labelZh: '封边平板门', icon: 'modern' },
@@ -1197,10 +1197,14 @@
                 { id: 'left', labelAr: 'فتح يسار', labelEn: 'Left hand', labelZh: '左开' }
             ],
             sizes: [
-                { id: 'leaf-90-45-230', labelAr: 'ضلفة 90 × 4.5 × 230 سم', labelEn: 'Leaf 90 × 4.5 × 230 cm', labelZh: '门扇 90×4.5×230 厘米', widthCm: 90, thicknessCm: 4.5, heightCm: 230 },
-                { id: 'leaf-105-45-230', labelAr: 'ضلفة 105 × 4.5 × 230 سم', labelEn: 'Leaf 105 × 4.5 × 230 cm', labelZh: '门扇 105×4.5×230 厘米', widthCm: 105, thicknessCm: 4.5, heightCm: 230 },
                 { id: 'leaf-80-35-230', labelAr: 'ضلفة 80 × 3.5 × 230 سم', labelEn: 'Leaf 80 × 3.5 × 230 cm', labelZh: '门扇 80×3.5×230 厘米', widthCm: 80, thicknessCm: 3.5, heightCm: 230 },
-                { id: 'leaf-100-35-230', labelAr: 'ضلفة 100 × 3.5 × 230 سم', labelEn: 'Leaf 100 × 3.5 × 230 cm', labelZh: '门扇 100×3.5×230 厘米', widthCm: 100, thicknessCm: 3.5, heightCm: 230 }
+                { id: 'leaf-80-45-230', labelAr: 'ضلفة 80 × 4.5 × 230 سم', labelEn: 'Leaf 80 × 4.5 × 230 cm', labelZh: '门扇 80×4.5×230 厘米', widthCm: 80, thicknessCm: 4.5, heightCm: 230 },
+                { id: 'leaf-90-35-230', labelAr: 'ضلفة 90 × 3.5 × 230 سم', labelEn: 'Leaf 90 × 3.5 × 230 cm', labelZh: '门扇 90×3.5×230 厘米', widthCm: 90, thicknessCm: 3.5, heightCm: 230 },
+                { id: 'leaf-90-45-230', labelAr: 'ضلفة 90 × 4.5 × 230 سم', labelEn: 'Leaf 90 × 4.5 × 230 cm', labelZh: '门扇 90×4.5×230 厘米', widthCm: 90, thicknessCm: 4.5, heightCm: 230 },
+                { id: 'leaf-100-35-230', labelAr: 'ضلفة 100 × 3.5 × 230 سم', labelEn: 'Leaf 100 × 3.5 × 230 cm', labelZh: '门扇 100×3.5×230 厘米', widthCm: 100, thicknessCm: 3.5, heightCm: 230 },
+                { id: 'leaf-100-45-230', labelAr: 'ضلفة 100 × 4.5 × 230 سم', labelEn: 'Leaf 100 × 4.5 × 230 cm', labelZh: '门扇 100×4.5×230 厘米', widthCm: 100, thicknessCm: 4.5, heightCm: 230 },
+                { id: 'leaf-105-35-230', labelAr: 'ضلفة 105 × 3.5 × 230 سم', labelEn: 'Leaf 105 × 3.5 × 230 cm', labelZh: '门扇 105×3.5×230 厘米', widthCm: 105, thicknessCm: 3.5, heightCm: 230 },
+                { id: 'leaf-105-45-230', labelAr: 'ضلفة 105 × 4.5 × 230 سم', labelEn: 'Leaf 105 × 4.5 × 230 cm', labelZh: '门扇 105×4.5×230 厘米', widthCm: 105, thicknessCm: 4.5, heightCm: 230 }
             ],
             locks: [
                 { id: 'cylinder', labelAr: 'أسطوانة', labelEn: 'Cylinder', labelZh: '圆柱锁' },
@@ -1244,13 +1248,18 @@
             return cfg.previewModelEnabled !== false;
         }
 
+        /** يُرفع عند فشل تحميل WebGL/Three.js — يحوّل المعاينة تلقائياً لاستوديو SVG */
+        let nebrasDoor3dRuntimeFailed = false;
+
         function isDoorDesignerStudioLiveMode(cfg) {
             cfg = cfg || ensureDoorDesignerConfig();
+            if (nebrasDoor3dRuntimeFailed && (cfg.designCanvasMode === '3d' || cfg.use3dPreview === true)) return true;
             return cfg.designCanvasMode === 'studio' || cfg.designCanvasMode === 'studio-live';
         }
 
         function isDoorDesigner3dMode(cfg) {
             cfg = cfg || ensureDoorDesignerConfig();
+            if (nebrasDoor3dRuntimeFailed) return false;
             if (isDoorDesignerStudioLiveMode(cfg) || isDoorDesignerCompositorMode(cfg)) return false;
             return cfg.use3dPreview === true || cfg.designCanvasMode === '3d';
         }
@@ -1270,6 +1279,10 @@
                 tt._nebrasTurntableDispose = null;
             }
             let rotY = parseFloat(tt.dataset.turntableRotY || '-14') || -14;
+            // قوس أمامي فقط — الباب المسطّح لا يظهر كورقة رفيعة عند 90°
+            const ROT_MIN = -58;
+            const ROT_MAX = 58;
+            let spinDir = 1;
             let dragging = false;
             let lastX = 0;
             const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -1285,6 +1298,7 @@
                 tt._nebrasVisObs = visObs;
             }
             function applyRot() {
+                rotY = Math.max(ROT_MIN, Math.min(ROT_MAX, rotY));
                 const deg = rotY + 'deg';
                 tt.style.setProperty('--turntable-rotate-y', deg);
                 stage.style.setProperty('--turntable-rotate-y', deg);
@@ -1315,7 +1329,9 @@
                 if (rafId) return;
                 function tick() {
                     if (autoSpin && !dragging && visible) {
-                        rotY += 0.42;
+                        rotY += 0.3 * spinDir;
+                        if (rotY >= ROT_MAX - 1) spinDir = -1;
+                        if (rotY <= ROT_MIN + 1) spinDir = 1;
                         applyRot();
                         rafId = requestAnimationFrame(tick);
                     } else {
@@ -1494,6 +1510,23 @@
             if (viewport) viewport.setAttribute('data-3d-ready', '1');
         }
 
+        /** فشل المحرك 3D (WebGL/Three.js) — تحويل سلس لاستوديو SVG بدون أي خطأ ظاهر */
+        function fallbackDoorDesignerToStudio(root) {
+            nebrasDoor3dRuntimeFailed = true;
+            const stage = document.getElementById('door-3d-preview');
+            if (stage) {
+                const lang = currentLang || 'ar';
+                const ui = siteText[lang] || siteText.ar;
+                const leafMask = normalizeMediaPath(NEBRAS_DOOR_LEAF_MASK);
+                const hint3d = ui.doorDesignerCompositorHint || ui.doorDesigner3dHint || 'اسحبي للدوران 360° حول الباب';
+                stage.classList.remove('wpc-door-stage--engine-3d', 'wpc-door-stage--engine-compositor');
+                stage.classList.add('wpc-door-stage--studio-live', 'wpc-door-stage--keybab');
+                stage.innerHTML = buildDoorStudioLiveHtml(leafMask, hint3d);
+            }
+            if (root) updateDoorDesignerPreview(root);
+            bindDoorDesignerTurntable();
+        }
+
         function tryMountDoorDesigner3d(root, attempt) {
             if (!isDoorDesigner3dMode() || !root) return;
             const viewport = document.getElementById('nebras-door-3d-viewport');
@@ -1501,32 +1534,26 @@
             loadNebrasThreeJs().then(function() {
                 if (isDoorDesigner3dEngineReady()) {
                     const ok = NebrasDoor3D.mount(viewport);
-                    if (ok) {
-                        const loading = document.getElementById('nebras-door-3d-loading');
-                        if (loading) loading.remove();
-                        showDoorDesigner3dReadyBadge();
+                    if (!ok) {
+                        fallbackDoorDesignerToStudio(root);
+                        return;
                     }
+                    const loading = document.getElementById('nebras-door-3d-loading');
+                    if (loading) loading.remove();
+                    showDoorDesigner3dReadyBadge();
                     updateDoorDesignerPreview(root);
                     return;
                 }
                 if ((attempt || 0) < 24) {
                     setTimeout(function() { tryMountDoorDesigner3d(root, (attempt || 0) + 1); }, 120);
                 } else {
-                    const loading = document.getElementById('nebras-door-3d-loading');
-                    const lang = currentLang || 'ar';
-                    const ui = siteText[lang] || siteText.ar;
-                    const failMsg = ui.doorDesigner3dFail || 'تعذّر تحميل المعاينة ثلاثية الأبعاد. تحقّق من الاتصال أو أعد تحميل الصفحة (Ctrl+F5).';
-                    if (loading) {
-                        loading.className = 'nebras-door-3d-error';
-                        loading.innerHTML = '<i class="fas fa-triangle-exclamation" aria-hidden="true"></i> ' + failMsg;
-                    } else if (viewport) {
-                        viewport.innerHTML = '<p class="nebras-door-3d-error"><i class="fas fa-triangle-exclamation"></i> ' + failMsg + '</p>';
-                    }
-                    updateDoorDesignerPreview(root);
+                    fallbackDoorDesignerToStudio(root);
                 }
             }).catch(function() {
                 if ((attempt || 0) < 8) {
                     setTimeout(function() { tryMountDoorDesigner3d(root, (attempt || 0) + 1); }, 200);
+                } else {
+                    fallbackDoorDesignerToStudio(root);
                 }
             });
         }
@@ -1595,14 +1622,17 @@
                 if (model) applyDoorDesignerModelConfig(root, model);
             }
             const state = resolveDoorDesignerState(root);
-            if (changedGroup === 'mechanism' && state.isSliding) {
+            // تزامن مفصلي ↔ سحاب — يعمل مع أي مصدر للتغيير (نوع / نموذج / ميكانيزم / نموذج جاهز)
+            const wasSliding = root.dataset.doorWasSliding === '1';
+            if (state.isSliding && !wasSliding) {
                 setDoorDesignerGroupValue(root, 'decor', 'plain');
-                setDoorDesignerGroupValue(root, 'hardware', 'pull-inox');
+                const hwS = getDoorDesignerPick(root, 'hardware');
+                if (!hwS || hwS.indexOf('pull') === -1) setDoorDesignerGroupValue(root, 'hardware', 'pull-inox');
+            } else if (!state.isSliding && wasSliding) {
+                const hwH = getDoorDesignerPick(root, 'hardware');
+                if (hwH === 'pull-inox') setDoorDesignerGroupValue(root, 'hardware', 'lever-black');
             }
-            if (changedGroup === 'mechanism' && !state.isSliding) {
-                const hw = getDoorDesignerPick(root, 'hardware');
-                if (hw === 'pull-inox') setDoorDesignerGroupValue(root, 'hardware', 'lever-black');
-            }
+            root.dataset.doorWasSliding = state.isSliding ? '1' : '0';
             if (changedGroup === 'surface') {
                 if (state.surface === 'u-glass') {
                     const gl = getDoorDesignerPick(root, 'glassLayout');
@@ -1869,13 +1899,12 @@
             { id: 17, placement: 'services', sortOrder: 4, titleKey: 'serviceTitleInstall', title: 'خدمات التركيب والضمان', iconClass: 'fas fa-screwdriver-wrench', visitorMode: 'browse', target: '', backgroundImage: NEBRAS_SERVICE_ICON_MEDIA.install, album: [NEBRAS_SERVICE_ICON_MEDIA.install], textAr: 'خدماتنا الميدانية المتكاملة: من المقاسات إلى التسليم — فرق محترفة جاهزة لخدمتكم في كل خطوة.' },
             { id: 3, lane: 'showroom', sortOrder: 30, titleKey: 'visitorQuickColorRolls', title: 'كتالوج ألوان نبراس (رولات)', iconClass: 'fas fa-swatchbook', visitorMode: 'browse', openHandler: 'color-rolls', target: '', album: ['images/background-Nebras-colour-catalogue-(rolls).jpeg'] },
             { id: 7, lane: 'showroom', sortOrder: 31, titleKey: 'visitorQuickCertifications', title: 'اعتمادات وشهادات نبراس', iconClass: 'fas fa-award', visitorMode: 'browse', openHandler: 'certifications', target: '', backgroundImage: NEBRAS_SHOWROOM_ICON_MEDIA.certificationsBg, album: [NEBRAS_SHOWROOM_ICON_MEDIA.certificationsBg] },
-            { id: 2, lane: 'platform', sortOrder: 20, titleKey: 'visitorQuickBranches', title: 'فروع نبراس', iconClass: 'fas fa-map-marked-alt', visitorMode: 'browse', openHandler: 'branches-hub', target: '', backgroundImage: NEBRAS_PLATFORM_ICON_MEDIA.branchesBg, album: [NEBRAS_PLATFORM_ICON_MEDIA.branchesBg], textAr: 'تغطية شاملة لكامل المملكة — فروع ومناديب نبراس في جميع المناطق.' },
+            { id: 2, lane: 'platform', sortOrder: 20, titleKey: 'visitorQuickBranches', title: 'استكشف فروع نبراس', iconClass: 'fas fa-map-marked-alt', visitorMode: 'browse', openHandler: 'branches-hub', target: '', backgroundImage: NEBRAS_PLATFORM_ICON_MEDIA.branchesBg, album: [NEBRAS_PLATFORM_ICON_MEDIA.branchesBg], textAr: 'فروع نبراس في المملكة — اختر فرعاً للتواصل مع المبيعات والمندوبين في كل المناطق.' },
             { id: 4, lane: 'platform', sortOrder: 21, titleKey: 'visitorQuickBankAccounts', title: 'حسابات بنكية', iconClass: 'fas fa-building-columns', visitorMode: 'browse', target: '#bank-accounts-section', backgroundImage: NEBRAS_BANK_MEDIA.wall, album: [NEBRAS_BANK_MEDIA.snb, NEBRAS_BANK_MEDIA.riyad, NEBRAS_BANK_MEDIA.alrajhi] },
             { id: 12, lane: 'platform', sortOrder: 22, titleKey: 'visitorQuickComplaints', title: 'استفسار الشكاوى', iconClass: 'fas fa-search', visitorMode: 'browse', openHandler: 'complaints-inquiry', target: '', backgroundImage: NEBRAS_STORE_ICON_MEDIA.complaintsBg, album: [NEBRAS_STORE_ICON_MEDIA.complaintsBg], textAr: 'قسم استفسارات وشكاوى العملاء — نستمع لاستفساراتكم لخدمة أفضل.' },
             { id: 13, lane: 'showroom', sortOrder: 28, titleKey: 'visitorQuickDoorDesigner', title: 'صمّم بابك مع نبراس', iconClass: 'fas fa-pencil-ruler', visitorMode: 'browse', openHandler: 'door-designer', target: '', backgroundImage: NEBRAS_SHOWROOM_ICON_MEDIA.doorDesignerBg, album: [NEBRAS_SHOWROOM_ICON_MEDIA.doorDesignerBg] },
-            { id: 19, lane: 'showroom', sortOrder: 27, titleKey: 'visitorQuickShowroom', title: 'معرض نبراس — 5 أقسام', iconClass: 'fas fa-images', visitorMode: 'browse', openHandler: 'showroom-hub', target: '', backgroundImage: 'images/profile-2026/hero-cover.jpg', album: ['images/profile-2026/doors/doors-01.jpg', 'images/profile-2026/cabinets/cabinets-01.jpg', 'images/profile-2026/cnc/cnc-01.jpg'], textAr: 'أبواب نبراس · خزائن نبراس · أبواب WPC · خزائن WPC · قطع CNC · مشاريع NHC — صور بجودة كاملة من الملف التعريفي 2026.' },
-            { id: 21, lane: 'platform', sortOrder: 16, titleKey: 'visitorQuickProfilePdf', title: 'بروفايل تعريفي لنبراس (تنزيل)', iconClass: 'fas fa-file-pdf', visitorMode: 'browse', openHandler: 'profile-pdf-download', target: '', backgroundImage: 'images/hero-slide-06-color-catalog.png', album: ['images/profile-2026/hero-cover.jpg', 'images/profile-2026/doors/doors-06.jpg'], textAr: 'حمّل الملف التعريفي الرسمي PDF — 24 صفحة A4 بجودة طباعة عالية. أبواب WPC · شهادات · فروع · ألوان.' },
-            { id: 18, lane: 'platform', sortOrder: 18, titleKey: 'visitorQuickCompanyProfile', title: 'الملف التعريفي الكامل 2026', iconClass: 'fas fa-book-open', visitorMode: 'browse', openHandler: 'company-profile', target: '', backgroundImage: 'images/profile-2026/hero-cover.jpg', album: ['images/profile-2026/hero-cover.jpg'], textAr: 'الملف التعريفي الرسمي — 24 صفحة: من نحن، المنتجات، الألوان، الشهادات، المشاريع، والحسابات.' },
+            { id: 19, lane: 'showroom', sortOrder: 27, titleKey: 'visitorQuickShowroom', title: 'استكشف معرض نبراس', iconClass: 'fas fa-images', visitorMode: 'browse', openHandler: 'showroom-hub', target: '', backgroundImage: 'images/profile-2026/hero-cover.jpg', album: ['images/profile-2026/doors/doors-01.jpg', 'images/profile-2026/cabinets/cabinets-01.jpg', 'images/profile-2026/cnc/cnc-01.jpg'], textAr: 'أبواب نبراس · خزائن نبراس · أبواب WPC · خزائن WPC · قطع CNC · مشاريع NHC — استكشف المعرض بجودة كاملة.' },
+            { id: 21, lane: 'platform', sortOrder: 16, titleKey: 'visitorQuickNebrasProfile', title: 'البروفايل التعريفي لنبراس', iconClass: 'fas fa-book-open', visitorMode: 'browse', openHandler: 'company-profile', target: '', backgroundImage: 'images/profile-2026/hero-cover.jpg', album: ['images/profile-2026/hero-cover.jpg', 'images/profile-2026/doors/doors-06.jpg'], textAr: 'البروفايل التعريفي الرسمي — عرض كامل 24 صفحة داخل الأيقونة مع تنزيل PDF. أبواب WPC · شهادات · فروع · ألوان.' },
             { id: 20, lane: 'platform', sortOrder: 17, titleKey: 'visitorQuickCallback', title: 'نبراس يتصل بك', iconClass: 'fas fa-phone-volume', visitorMode: 'browse', openHandler: 'callback-concierge', target: '', backgroundImage: 'images/profile-2026/hero-cover.jpg', album: [], textAr: 'اترك اسمك وجوالك — فريق المبيعات أو خدمة العملاء يتصل بك ويفهم احتياجك. يظهر طلبك في الإدارة والفرع حسب مدينتك.' }
         ];
 
@@ -1960,15 +1989,15 @@
                 id: 'vision',
                 iconClass: 'fas fa-eye',
                 backgroundImage: 'background-our-vision',
-                titleAr: 'رؤيتنا',
-                titleEn: 'Our Vision',
-                titleZh: '我们的愿景',
-                summaryAr: 'نسعى لتوسيع حضورنا الصناعي وتقديم تجربة رقمية احترافية مع شراكة عملائنا.',
-                summaryEn: 'We aim to grow industrially and deliver a professional digital experience.',
-                summaryZh: '致力于工业扩展与专业数字体验。',
-                bodyAr: 'رؤيتنا: أن نكون الخيار الأول في حلول WPC والبلاستيك والألومنيوم في المملكة، مع تجربة رقمية عالمية لعملائنا.\n\n• الريادة في حلول WPC والبلاستيك\n• ابتكار وتطوير مستمر\n• شراكة طويلة مع الورش والمصانع',
-                bodyEn: 'Our vision: to lead WPC, plastic, and aluminum solutions in KSA with a world-class digital experience for our clients.',
-                bodyZh: '愿景：打造 Nebras 全球数字平台与内部 ERP。',
+                titleAr: 'نحو التميّز في صناعة الأبواب',
+                titleEn: 'Excellence in Door Manufacturing',
+                titleZh: '迈向门类制造卓越',
+                summaryAr: 'الريادة في أبواب WPC بما يتماشى مع رؤية المملكة 2030 نحو جودة الحياة والبناء المستدام.',
+                summaryEn: 'WPC leadership aligned with Saudi Vision 2030.',
+                summaryZh: '与沙特2030愿景一致的WPC领导力。',
+                bodyAr: 'رسالتنا · Mission\nتقديم الخدمات بأعلى معايير الجودة مع مراعاة عنصر الوقت المحدد مسبقاً، وتطوير خدمات ما بعد البيع بفريق عالي الكفاءات.\n\nرؤيتنا · Vision\nأن يكون مصنع نبراس رائداً في مجال أبواب WPC وخياراً مثالياً أمام كافة العملاء بما يتماشى مع رؤية المملكة 2030.\n\n2018 — سنة التأسيس\n1,250+ — مقاول وشركة عقارية معتمدة\n10 — سنوات ضمان\n100% — ضد الماء',
+                bodyEn: 'Mission: deliver services at the highest quality standards on time with expert after-sales.\nVision: lead WPC doors aligned with Vision 2030.\nFounded 2018 · 1,250+ partners · 10-year warranty · 100% water resistant.',
+                bodyZh: '使命：按时交付最高质量标准的服务。\n愿景：引领WPC门业，契合2030愿景。',
                 album: ['images/background-our-vision.jpg'],
                 gallery: []
             }
@@ -2008,8 +2037,8 @@
         ];
 
         const DEFAULT_DASHBOARD_TILES = [
-            { id: 'dash-company-profile', zone: 'quick', dashGroup: 'command', sortOrder: 0, iconClass: 'fas fa-book-open', titleAr: 'الملف التعريفي الكامل 2026', titleEn: 'Company Profile 2026', textAr: 'البروفايل الرسمي — 24 صفحة: من نحن، المنتجات، الألوان، الشهادات، والمشاريع.', textEn: 'Official profile — 24 pages with showroom galleries.', cssClass: 'dashboard-tile-card--profile-2026', backgroundImage: 'images/profile-2026/hero-cover.jpg', handler: 'openCompanyProfileHub', permission: 'content', visible: true },
-            { id: 'dash-profile-pdf', zone: 'quick', dashGroup: 'command', sortOrder: 0.5, iconClass: 'fas fa-file-pdf', titleAr: 'بروفايل تعريفي لنبراس (تنزيل)', titleEn: 'Nebras Profile PDF', textAr: 'تنزيل ملف PDF الرسمي — 24 صفحة A4 للزوار والعملاء.', textEn: 'Download official 24-page A4 PDF for visitors.', cssClass: 'dashboard-tile-card--profile-2026', backgroundImage: 'images/hero-slide-06-color-catalog.png', handler: 'downloadNebrasProfilePdf', permission: 'content', visible: true },
+            { id: 'dash-company-profile', zone: 'quick', dashGroup: 'command', sortOrder: 0, iconClass: 'fas fa-book-open', titleAr: 'البروفايل التعريفي لنبراس', titleEn: 'Nebras Company Profile', textAr: 'عرض البروفايل الكامل داخل المنصة — 24 صفحة مع تنزيل PDF.', textEn: 'Full profile viewer with PDF download — 24 pages.', cssClass: 'dashboard-tile-card--profile-2026', backgroundImage: 'images/profile-2026/hero-cover.jpg', handler: 'openCompanyProfileHub', permission: 'content', visible: true },
+            { id: 'dash-profile-pdf', zone: 'quick', dashGroup: 'command', sortOrder: 0.5, iconClass: 'fas fa-file-pdf', titleAr: 'تنزيل بروفايل PDF', titleEn: 'Download Profile PDF', textAr: 'تنزيل ملف PDF الرسمي — 24 صفحة A4.', textEn: 'Download official 24-page A4 PDF.', cssClass: 'dashboard-tile-card--profile-2026', backgroundImage: 'images/hero-slide-06-color-catalog.png', handler: 'downloadNebrasProfilePdf', permission: 'content', visible: false },
             { id: 'dash-callback-leads', zone: 'quick', dashGroup: 'command', sortOrder: 55, iconClass: 'fas fa-phone-volume', titleAr: 'نبراس يتصل بك', titleEn: 'Callback Leads', textAr: 'طلبات اتصال الزوار — تظهر في الإدارة الرئيسية والفروع.', textEn: 'Visitor callback requests by branch.', cssClass: 'dashboard-tile-card--callback', backgroundImage: 'images/profile-2026/hero-cover.jpg', handler: 'openCallbackLeadsAdmin', permission: 'sales', visible: true },
             { id: 'dash-content', zone: 'quick', dashGroup: 'command', sortOrder: 1, iconClass: 'fas fa-pen-to-square', titleAr: 'إدارة محتوى الموقع', titleEn: 'Site Content', textAr: 'منتجات، بوابة الزائر، شركاء، شهادات — ديناميكي بالكامل.', textEn: 'Products, gateway icons, partners, certs — fully dynamic.', handler: 'openSiteContentManager', permission: 'content', visible: true },
             { id: 'dash-about-pages', zone: 'quick', dashGroup: 'command', sortOrder: 2, iconClass: 'fas fa-building', titleAr: 'من نحن ورؤيتنا', titleEn: 'About & Vision', textAr: 'نصوص المصنع ووثائق الصفحات الداخلية.', textEn: 'Factory pages and documents.', handler: 'openAboutContentAdmin', permission: 'content', visible: true },
@@ -2073,7 +2102,7 @@
             }
         };
 
-        const DEPRECATED_VISITOR_ICON_IDS = [1, 5, 6];
+        const DEPRECATED_VISITOR_ICON_IDS = [1, 5, 6, 18];
         const DEPRECATED_VISITOR_ICON_KEYS = ['visitorQuickCatalogProducts', 'visitorQuickWpcDoors'];
 
         function purgeDeprecatedVisitorIcons() {
@@ -2200,15 +2229,9 @@
                         cur.visitorMode = 'browse';
                         cur.openHandler = 'branches-hub';
                         cur.target = '';
-                    }
-                    if (def.id === 18) {
-                        cur.lane = 'platform';
-                        cur.visitorMode = 'browse';
-                        cur.openHandler = 'company-profile';
-                        cur.target = '';
-                        cur.backgroundImage = 'images/profile-2026/hero-cover.jpg';
-                        cur.album = ['images/profile-2026/hero-cover.jpg'];
-                        if (!cur.titleKey) cur.titleKey = 'visitorQuickCompanyProfile';
+                        if (!cur.titleKey) cur.titleKey = 'visitorQuickBranches';
+                        cur.title = def.title;
+                        cur.textAr = def.textAr;
                     }
                     if (def.id === 19) {
                         cur.lane = 'showroom';
@@ -2218,6 +2241,8 @@
                         cur.backgroundImage = 'images/profile-2026/hero-cover.jpg';
                         cur.album = ['images/profile-2026/doors/doors-01.jpg', 'images/profile-2026/cabinets/cabinets-01.jpg', 'images/profile-2026/cnc/cnc-01.jpg'];
                         if (!cur.titleKey) cur.titleKey = 'visitorQuickShowroom';
+                        cur.title = def.title;
+                        cur.textAr = def.textAr;
                     }
                     if (def.id === 20) {
                         cur.lane = 'platform';
@@ -2230,11 +2255,14 @@
                     if (def.id === 21) {
                         cur.lane = 'platform';
                         cur.visitorMode = 'browse';
-                        cur.openHandler = 'profile-pdf-download';
+                        cur.openHandler = 'company-profile';
                         cur.target = '';
-                        cur.backgroundImage = 'images/hero-slide-06-color-catalog.png';
+                        cur.backgroundImage = 'images/profile-2026/hero-cover.jpg';
                         cur.album = ['images/profile-2026/hero-cover.jpg', 'images/profile-2026/doors/doors-06.jpg'];
-                        if (!cur.titleKey) cur.titleKey = 'visitorQuickProfilePdf';
+                        if (!cur.titleKey || cur.titleKey === 'visitorQuickProfilePdf') cur.titleKey = 'visitorQuickNebrasProfile';
+                        cur.title = def.title;
+                        cur.textAr = def.textAr;
+                        cur.iconClass = 'fas fa-book-open';
                     }
                     if (def.album && def.album.length && [2, 4, 7, 8, 11, 12, 13, 14, 16, 17].indexOf(def.id) < 0) cur.album = def.album.slice();
                     if (def.openHandler && !cur.openHandler) cur.openHandler = def.openHandler;
@@ -2601,6 +2629,14 @@
                 if (def) {
                     if (!t.backgroundImage && def.backgroundImage) t.backgroundImage = def.backgroundImage;
                     if (!t.cssClass && def.cssClass) t.cssClass = def.cssClass;
+                    if (t.id === 'dash-company-profile' || t.id === 'dash-profile-pdf') {
+                        t.titleAr = def.titleAr;
+                        t.titleEn = def.titleEn;
+                        t.textAr = def.textAr;
+                        t.textEn = def.textEn;
+                        t.visible = def.visible;
+                        t.handler = def.handler;
+                    }
                 }
             });
 
@@ -8699,6 +8735,20 @@
                 });
                 html += '</div>';
             }
+            if (pageId === 'vision') {
+                const profileTitle = ui.visitorQuickCompanyProfile || 'الملف التعريفي الكامل 2026';
+                html += '<section class="workspace-vision-profile-embed" id="workspace-vision-profile">' +
+                    '<h3 class="workspace-about-docs-title"><i class="fas fa-book-open"></i> ' + escapeHtmlAttr(profileTitle) + '</h3>' +
+                    '<p class="workspace-intro">' + escapeHtmlAttr(ui.visionProfileEmbedIntro || 'الملف التعريفي الرسمي 2026 — كل أقسام المصنع والمنتجات والشهادات والمعرض داخل صفحة نحو التميّز في صناعة الأبواب.') + '</p>' +
+                    '<div class="workspace-actions-row">' +
+                    '<button type="button" class="workspace-action-btn workspace-action-btn--primary" onclick="openCompanyProfileHub()"><i class="fas fa-book-open"></i> ' + escapeHtmlAttr(profileTitle) + '</button>' +
+                    '<button type="button" class="workspace-action-btn" onclick="downloadNebrasProfilePdf()"><i class="fas fa-download"></i> ' + escapeHtmlAttr(ui.visitorQuickProfilePdfDownload || 'تنزيل PDF') + '</button>' +
+                    '</div>';
+                if (typeof buildCompanyProfileHubHtml === 'function') {
+                    html += buildCompanyProfileHubHtml(lang, '');
+                }
+                html += '</section>';
+            }
             html += '</div>';
             return html;
         }
@@ -11260,6 +11310,75 @@
         let heroSlideshowIndex = 0;
         let heroSlideshowSlides = [];
 
+        /* ===== الهيدر السينمائي — صور نبراس حية خلف الهيدر ===== */
+        const HEADER_CINEMATIC_SLIDES = [
+            'images/hero-slide-01-factory-banner.png',
+            'images/hero-slide-08-doors-trio.png',
+            'images/hero-slide-03-premium-wpc.png',
+            'images/hero-slide-05-doors-showcase.png',
+            'images/hero-slide-12-factory-national.png',
+            'images/hero-slide-04-exhibition.png'
+        ];
+        let headerCinematicInited = false;
+
+        function initHeaderCinematic() {
+            if (headerCinematicInited) return;
+            const host = document.getElementById('header-cinematic-slides');
+            if (!host) return;
+            headerCinematicInited = true;
+            const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const isMobile = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+            const list = isMobile ? HEADER_CINEMATIC_SLIDES.slice(0, 3) : HEADER_CINEMATIC_SLIDES;
+            list.forEach(function(src, i) {
+                const img = document.createElement('img');
+                img.className = 'header-cinematic-slide';
+                img.src = src;
+                img.alt = '';
+                img.decoding = 'async';
+                img.loading = i === 0 ? 'eager' : 'lazy';
+                img.setAttribute('data-kb', String(i % 3));
+                host.appendChild(img);
+            });
+            const slides = host.children;
+            if (slides[0]) slides[0].classList.add('is-active');
+
+            // غبار ذهبي — ديسكتوب فقط
+            const pHost = document.getElementById('header-cinematic-particles');
+            if (pHost && !isMobile && !reduceMotion) {
+                for (let i = 0; i < 16; i++) {
+                    const p = document.createElement('span');
+                    p.className = 'header-cinematic-particle';
+                    const sz = (2 + Math.random() * 3.4).toFixed(1);
+                    p.style.left = (3 + Math.random() * 94) + '%';
+                    p.style.width = sz + 'px';
+                    p.style.height = sz + 'px';
+                    p.style.setProperty('--dur', (7 + Math.random() * 9).toFixed(1) + 's');
+                    p.style.setProperty('--rise', (90 + Math.random() * 160).toFixed(0) + 'px');
+                    p.style.setProperty('--sway', ((Math.random() * 64) - 32).toFixed(0) + 'px');
+                    p.style.animationDelay = (Math.random() * 9).toFixed(1) + 's';
+                    pHost.appendChild(p);
+                }
+            }
+
+            if (reduceMotion || slides.length < 2) return;
+
+            // إيقاف التدوير عند خروج الهيدر من الشاشة — كفاءة طاقة
+            let headerVisible = true;
+            const headerEl = document.querySelector('header');
+            if (typeof IntersectionObserver !== 'undefined' && headerEl) {
+                new IntersectionObserver(function(entries) {
+                    headerVisible = !!(entries[0] && entries[0].isIntersecting);
+                }, { threshold: 0.05 }).observe(headerEl);
+            }
+            let idx = 0;
+            setInterval(function() {
+                if (document.hidden || !headerVisible) return;
+                slides[idx].classList.remove('is-active');
+                idx = (idx + 1) % slides.length;
+                slides[idx].classList.add('is-active');
+            }, 7600);
+        }
+
         function normalizeHeroBannerPath(path) {
             const p = String(path || '').trim();
             if (!p) return HERO_BANNER_FALLBACKS[0];
@@ -11269,6 +11388,7 @@
         }
 
         function applyHeroBanner() {
+            initHeaderCinematic();
             const root = document.documentElement;
             const body = document.body;
             const bannerPath = normalizeHeroBannerPath(systemSettings.heroBannerImageUrl);
@@ -11881,7 +12001,6 @@
                 const el = document.getElementById(id);
                 if (el && val != null) el.textContent = val;
             }
-            setTxt('header-campaign-headline', text.heroHeadline);
             setTxt('header-campaign-tagline', text.heroTaglineShort || text.heroText);
             setTxt('header-explore-btn', text.heroExploreBtn);
             setTxt('header-quote-btn', text.heroQuoteBtn);
@@ -12252,9 +12371,9 @@
             }
             if (cfg.enabled !== false) {
                 cfg.previewModelEnabled = true;
-                cfg.designCanvasMode = 'studio';
+                cfg.designCanvasMode = '3d';
+                cfg.use3dPreview = true;
                 cfg.useCompositorPreview = false;
-                cfg.use3dPreview = false;
                 cfg.usePhotorealPreview = false;
             } else if (cfg.previewModelEnabled == null) {
                 cfg.previewModelEnabled = DEFAULT_DOOR_DESIGNER.previewModelEnabled !== false;
@@ -12974,11 +13093,24 @@
             const showGlassLayout = state.surface === 'u-glass' || state.surface === 'full-glass';
             if (glassLayoutSec) glassLayoutSec.classList.toggle('is-hidden', !showGlassLayout);
             if (glassPatSec) glassPatSec.classList.toggle('is-hidden', state.surface !== 'full-glass');
-            root.querySelectorAll('[data-door-group="decor"] .door-designer-opt').forEach(function(btn) {
+            // مع باب السحاب: لا تكسية علوية، والمقبض سحّة فقط — تعطيل بصري واضح بدل تجاهل صامت
+            root.querySelectorAll('[data-door-group="decor"]').forEach(function(btn) {
                 const val = btn.getAttribute('data-door-value');
-                const disabled = false;
+                const disabled = state.isSliding && val === 'transom';
                 btn.disabled = disabled;
                 btn.classList.toggle('is-disabled', disabled);
+                if (disabled && btn.classList.contains('is-active')) {
+                    setDoorDesignerGroupValue(root, 'decor', 'plain');
+                }
+            });
+            root.querySelectorAll('[data-door-group="hardware"]').forEach(function(btn) {
+                const val = String(btn.getAttribute('data-door-value') || '');
+                const disabled = state.isSliding && val.indexOf('pull') === -1;
+                btn.disabled = disabled;
+                btn.classList.toggle('is-disabled', disabled);
+                if (disabled && btn.classList.contains('is-active')) {
+                    setDoorDesignerGroupValue(root, 'hardware', 'pull-inox');
+                }
             });
             const openingSec = root.querySelector('[data-door-section="opening"]');
             if (openingSec) openingSec.classList.toggle('is-hidden', state.isSliding);
@@ -15407,7 +15539,7 @@
             const isBank = icon && icon.id === 4;
             const isCerts = icon && icon.id === 7;
             const isDoorDesigner = icon && icon.id === 13;
-            const isProfilePdf = icon && (icon.id === 21 || icon.openHandler === 'profile-pdf-download');
+            const isProfilePdf = icon && (icon.id === 21 || icon.openHandler === 'company-profile');
             const isHeroBg = visitorIconUsesHeroBg(icon);
             const bankPlates = isBank
                 ? '<div class="visitor-bank-plates" aria-hidden="true">' +
@@ -15460,7 +15592,7 @@
                 return { pillar: 'platform', view: 'icon', iconId: icon.id };
             }
             if (icon.openHandler === 'branches-hub') {
-                return { pillar: 'platform', view: 'icon', iconId: icon.id };
+                return { pillar: 'platform', view: 'branches', iconId: icon.id };
             }
             if (icon.openHandler === 'color-rolls') {
                 return { pillar: 'showroom', view: 'color-rolls', iconId: icon.id };
@@ -15691,6 +15823,9 @@
             if (!el) return '<p class="workspace-intro">' + escapeHtmlAttr(getWorkspaceUi().workspaceSectionMissing || 'المحتوى قيد التحديث.') + '</p>';
             const clone = el.cloneNode(true);
             clone.removeAttribute('id');
+            clone.removeAttribute('hidden');
+            clone.removeAttribute('aria-hidden');
+            if (clone.style && clone.style.display === 'none') clone.style.display = '';
             clone.querySelectorAll('[id]').forEach(function(node) { node.removeAttribute('id'); });
             return '<div class="workspace-section-mount">' + clone.outerHTML + '</div>';
         }
@@ -15714,11 +15849,21 @@
             const icon = route.iconId ? visitorIcons.find(function(i) { return i.id === route.iconId; }) : null;
 
             if (route.view === 'branches') {
-                title = ui.branchesTitle || 'فروع نبراس';
-                html = '<p class="workspace-intro">' + escapeHtmlAttr(ui.workspaceBranchesIntro || 'فروع المملكة — اختر فرعاً للتواصل مع المبيعات.') + '</p>' + buildWorkspaceBranchesHtml();
-                setTimeout(function() { workspaceSelectBranch(0); }, 0);
+                title = ui.visitorQuickBranches || ui.branchesTitle || 'استكشف فروع نبراس';
+                html = '<p class="workspace-intro">' + escapeHtmlAttr(ui.workspaceBranchesIntro || 'فروع نبراس في المملكة — اختر فرعاً للتواصل مع المبيعات.') + '</p>' +
+                    '<div class="workspace-section-mount workspace-branches-public">' +
+                    '<div class="section-title"><h2>' + escapeHtmlAttr(ui.branchesTitle || 'فروع نبراس في المملكة') + '</h2>' +
+                    '<span>' + escapeHtmlAttr(ui.branchesSubtitle || 'فروع نبراس بالمملكة مع رقم المبيعات لكل فرع.') + '</span></div>' +
+                    '<div class="about-grid" id="workspace-branches-public-grid">' + buildBranchCardsHtml(lang) + '</div></div>' +
+                    buildWorkspaceBranchesHtml();
+                setTimeout(function() {
+                    workspaceSelectBranch(0);
+                    hydrateBranchCardImages(document.getElementById('workspace-branches-public-grid'));
+                }, 0);
             } else if (route.view === 'showroom-hub') {
-                title = ui.showroomHubTitle || 'معرض نبراس';
+                title = (icon && icon.id === 19)
+                    ? (ui.visitorQuickShowroom || ui.showroomHubTitle || 'استكشف معرض نبراس')
+                    : (ui.showroomHubTitle || 'معرض نبراس');
                 html = buildShowroomHubHtml(lang);
                 if (route.showroomSection) {
                     requestAnimationFrame(function() {
@@ -15805,9 +15950,6 @@
                 if (icon.openHandler === 'complaints-inquiry') {
                     html += '<div class="workspace-actions-row"><button type="button" class="workspace-action-btn workspace-action-btn--primary" onclick="openCustomerComplaints()"><i class="fas fa-comment-dots"></i> ' + escapeHtmlAttr(ui.workspaceComplaintInquiryBtn || 'استفسار عن شكوى') + '</button></div>';
                 }
-                if (icon.openHandler === 'branches-hub') {
-                    html += '<div class="workspace-actions-row"><button type="button" class="workspace-action-btn workspace-action-btn--primary" onclick="openNebrasWorkspace({pillar:\'platform\',view:\'branches\'})"><i class="fas fa-map-marked-alt"></i> ' + escapeHtmlAttr(ui.workspaceBranchesListBtn || 'قائمة الفروع والاتصال') + '</button></div>';
-                }
             } else if (route.view === 'occasion') {
                 const lang = currentLang || 'ar';
                 title = getOccasionDisplayTitle(lang) || ui.occasionFallbackTitle || 'مناسبة نبراس';
@@ -15815,8 +15957,10 @@
                     buildWorkspaceGalleryHtml(getOccasionVisitorImageUrl() ? [getOccasionVisitorImageUrl()] : []) +
                     '<div class="workspace-actions-row"><button type="button" class="workspace-action-btn workspace-action-btn--primary" onclick="openNebrasWorkspace({pillar:\'store\',view:\'catalog-all\'})"><i class="fas fa-door-open"></i> ' + escapeHtmlAttr(ui.workspaceBrowseProducts || 'استكشف المنتجات') + '</button></div>';
             } else if (route.view === 'company-profile') {
-                title = ui.companyProfileTitle || ui.visitorQuickCompanyProfile || 'الملف التعريفي الكامل';
-                html = '<p class="workspace-intro">' + escapeHtmlAttr(ui.companyProfileIntro || 'الملف التعريفي الرسمي — كل الأقسام مرتبطة بأيقونات الموقع.') + '</p>' +
+                title = (icon && icon.id === 21)
+                    ? (ui.visitorQuickNebrasProfile || ui.companyProfileTitle || 'البروفايل التعريفي لنبراس')
+                    : (ui.companyProfileTitle || ui.visitorQuickCompanyProfile || 'الملف التعريفي الكامل');
+                html = '<p class="workspace-intro">' + escapeHtmlAttr(ui.companyProfileIntro || 'البروفايل التعريفي الرسمي — عرض كامل مع تنزيل PDF — كل الأقسام مرتبطة بأيقونات الموقع.') + '</p>' +
                     (typeof buildCompanyProfileHubHtml === 'function'
                         ? buildCompanyProfileHubHtml(lang, route.sectionId || '')
                         : '<p>' + escapeHtmlAttr(ui.workspaceSectionMissing || 'المحتوى قيد التحديث.') + '</p>');
@@ -15895,20 +16039,6 @@
         function openVisitorIcon(iconId) {
             const icon = visitorIcons.find(item => item.id === iconId);
             if (!icon) return;
-            if (icon.openHandler === 'profile-pdf-download') {
-                if (typeof window.downloadNebrasProfilePdf === 'function') {
-                    window.downloadNebrasProfilePdf();
-                } else {
-                    const a = document.createElement('a');
-                    a.href = 'documents/nebras-company-profile-2026.pdf';
-                    a.download = 'nebras-company-profile-2026.pdf';
-                    a.rel = 'noopener';
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                }
-                return;
-            }
             if (icon.openHandler === 'callback-concierge') {
                 if (typeof window.openNebrasCallbackConcierge === 'function') window.openNebrasCallbackConcierge();
                 return;
@@ -16200,14 +16330,11 @@
             list.innerHTML = customerServiceData.map(item => `<li>${item.inquiry} - ${item.response}</li>`).join('');
         }
 
-        function displayBranches() {
-            const grid = document.getElementById('branches-grid');
-            if (!grid) return;
+        function buildBranchCardsHtml(lang) {
             ensureBuiltinBranches();
-            const lang = currentLang || 'ar';
             const t = siteText[lang] || siteText.ar;
             const branches = (branchesData || []).filter(function(b) { return b && b.city; });
-            grid.innerHTML = branches.map(function(branch) {
+            return branches.map(function(branch) {
                 const name = getBranchDisplayName(branch, lang);
                 const bid = escapeHtmlAttr(branch.id);
                 return '<div class="branch-card" data-branch-id="' + bid + '">' +
@@ -16218,12 +16345,24 @@
                     '<a href="#" onclick="event.preventDefault(); branchSmartDial(' + Number(branch.id) + ');"><i class="fas fa-route"></i> ' + escapeHtmlAttr(t.branchSmartRoute) + '</a>' +
                     '</div></div>';
             }).join('');
-            branches.forEach(function(branch) {
-                const card = grid.querySelector('[data-branch-id="' + branch.id + '"]');
+        }
+
+        function hydrateBranchCardImages(rootEl) {
+            if (!rootEl) return;
+            (branchesData || []).forEach(function(branch) {
+                if (!branch || !branch.city) return;
+                const card = rootEl.querySelector('[data-branch-id="' + branch.id + '"]');
                 if (!card) return;
                 const urls = branchImageUrls(branch.image);
                 if (urls.length) tryUrls(card, urls, 0);
             });
+        }
+
+        function displayBranches() {
+            const grid = document.getElementById('branches-grid');
+            if (!grid) return;
+            grid.innerHTML = buildBranchCardsHtml(currentLang || 'ar');
+            hydrateBranchCardImages(grid);
         }
 
         function displayBranchesAdmin() {
@@ -17301,7 +17440,7 @@
                 lightboxNextAria: 'الصورة التالية',
                 aboutTitle1: 'من نحن',
                 aboutText1: 'نحن شركة مصنع نبراس للبلاستيك، نقدم حلولاً متكاملة للصناعة والمقاولات بشفافية وجودة سعودية أصيلة. هدفنا تطوير منتجات مبتكرة وتوفير تجربة سلسة لكل عميل وزائر.',
-                aboutTitle2: 'رؤيتنا',
+                aboutTitle2: 'نحو التميّز في صناعة الأبواب',
                 aboutText2: 'نسعى لتوسيع حضورنا الصناعي وتقديم تجربة رقمية احترافية، مع التزام عميق بالجودة والشراكة مع عملائنا داخل المملكة وخارجها.',
                 serviceTitle1: 'خدمات التصنيع',
                 serviceText1: 'تصنيع منتجات بلاستيكية عالية الجودة مع مراعاة أعلى معايير الأمان والاستدامة المناسبة للمشاريع الكبيرة.',
@@ -17320,13 +17459,16 @@
                 gatewayLaneStoreHint: 'أبواب WPC والألومنيوم — أصناف، سلة، وعرض سعر',
                 gatewayLaneShowroom: 'معرض نبراس',
                 gatewayLaneShowroomHint: '5 أقسام: أبواب نبراس · خزائن نبراس · WPC · CNC · مشاريع NHC',
-                visitorQuickShowroom: 'معرض نبراس — 5 أقسام',
+                visitorQuickShowroom: 'استكشف معرض نبراس',
                 visitorQuickCompanyProfile: 'الملف التعريفي الكامل 2026',
-                visitorQuickProfilePdf: 'بروفايل تعريفي لنبراس (تنزيل)',
+                visitorQuickNebrasProfile: 'البروفايل التعريفي لنبراس',
+                visitorQuickProfilePdfDownload: 'تنزيل PDF',
+                visitorQuickProfilePdf: 'تنزيل بروفايل PDF',
+                visionProfileEmbedIntro: 'الملف التعريفي الرسمي 2026 — كل أقسام المصنع والمنتجات والشهادات والمعرض داخل صفحة نحو التميّز في صناعة الأبواب.',
                 visitorQuickCallback: 'نبراس يتصل بك',
-                companyProfileTitle: 'الملف التعريفي الكامل 2026',
-                companyProfileIntro: 'الملف التعريفي الرسمي — 14 قسماً مرتبطة بأيقونات الموقع والمعرض.',
-                showroomHubTitle: 'معرض نبراس',
+                companyProfileTitle: 'البروفايل التعريفي لنبراس',
+                companyProfileIntro: 'البروفايل التعريفي الرسمي — عرض كامل 24 صفحة داخل الأيقونة مع تنزيل PDF — كل الأقسام مرتبطة بأيقونات الموقع.',
+                showroomHubTitle: 'استكشف معرض نبراس',
                 showroomHubIntro: 'معرض نبراس — أبواب نبراس · خزائن نبراس · أبواب WPC · خزائن WPC · قطع CNC · مشاريع NHC. اضغط على أي صورة للعرض بالدقة الكاملة.',
                 showroomDoorsEmpty: 'معرض أبواب نبراس — يُحمّل من الملف التعريفي 2026.',
                 showroomCabinetsEmpty: 'معرض خزائن نبراس — يُحمّل من الملف التعريفي 2026.',
@@ -17359,7 +17501,7 @@
                 visitorQuickOtherProducts: 'منتجات أخرى',
                 visitorQuickComplaints: 'استفسار الشكاوى',
                 visitorQuickCatalogProducts: 'كتالوج المنتجات',
-                visitorQuickBranches: 'فروع نبراس',
+                visitorQuickBranches: 'استكشف فروع نبراس',
                 visitorQuickColorRolls: 'كتالوج ألوان نبراس (رولات)',
                 visitorQuickBankAccounts: 'حسابات شركة مصنع نبراس البنكية',
                 visitorQuickCertifications: 'اعتمادات وشهادات نبراس',
@@ -17929,8 +18071,16 @@
                 occasionOverlayHint: 'Tap to view products and offers.',
                 aboutTitle1: 'About Us',
                 aboutText1: 'Nebras Plastic Factory Company delivers integrated industrial and contracting solutions with transparency and premium Saudi quality. Our mission is to innovate products and create a smooth experience for every client and visitor.',
-                aboutTitle2: 'Our Vision',
-                aboutText2: 'We aim to grow our industrial presence and deliver a professional digital experience, with strong commitment to quality and partnership across Saudi Arabia and beyond.',
+                aboutTitle2: 'Excellence in Door Manufacturing',
+                aboutText2: 'WPC leadership aligned with Saudi Vision 2030 — highest quality standards and after-sales excellence.',
+                visitorQuickShowroom: 'Explore Nebras Showroom',
+                visitorQuickNebrasProfile: 'Nebras Company Profile',
+                visitorQuickProfilePdfDownload: 'Download PDF',
+                visitorQuickProfilePdf: 'Download profile PDF',
+                visitorQuickCompanyProfile: 'Full Company Profile 2026',
+                visionProfileEmbedIntro: 'Official 2026 company profile — all factory sections, products, certifications and showroom inside Excellence in Door Manufacturing.',
+                companyProfileTitle: 'Nebras Company Profile',
+                companyProfileIntro: 'Official profile — full 24-page viewer with PDF download — all sections linked to site icons.',
                 serviceTitle1: 'Manufacturing Services',
                 serviceText1: 'Manufacturing high-quality plastic products while observing the highest safety and sustainability standards for large projects.',
                 serviceTitle2: 'Technical Support',
@@ -17948,7 +18098,7 @@
                 gatewayLaneStoreHint: 'WPC & aluminum — variants, cart, quotes',
                 gatewayLaneShowroom: 'Nebras Showroom',
                 gatewayLaneShowroomHint: 'Nebras products · projects · certificates',
-                showroomHubTitle: 'Nebras Showroom',
+                showroomHubTitle: 'Explore Nebras Showroom',
                 showroomHubIntro: 'Two main galleries: our products and delivered projects.',
                 showroomProductsEmpty: 'Add product images from Content → Nebras Showroom.',
                 showroomProjectsEmpty: 'Add project images from Content → Nebras Showroom.',
@@ -17975,7 +18125,7 @@
                 visitorQuickAluminum: 'Aluminum',
                 visitorQuickOtherProducts: 'Other products',
                 visitorQuickComplaints: 'Complaint inquiry',
-                visitorQuickBranches: 'Nebras branches',
+                visitorQuickBranches: 'Explore Nebras Branches',
                 visitorQuickColorRolls: 'Nebras colour catalogue (rolls)',
                 visitorQuickBankAccounts: 'Nebras Plastic Factory — bank accounts',
                 visitorJumpBankAccounts: 'Open bank accounts',
@@ -18353,7 +18503,10 @@
                 heroText: '我们来自沙特王国，为您提供符合沙特标准的全球塑料解决方案。',
                 aboutTitle1: '关于我们',
                 aboutText1: 'Nebras 塑料工厂公司提供一体化工业和承包解决方案，透明、高品质，旨在为每位客户和访客打造顺畅体验。',
-                aboutTitle2: '我们的愿景',
+                aboutTitle2: '迈向门类制造卓越',
+                visitorQuickShowroom: '探索 Nebras 展厅',
+                visitorQuickNebrasProfile: 'Nebras 公司简介',
+                visitorQuickBranches: '探索 Nebras 分支机构',
                 aboutText2: '我们致力于扩大工业影响力，提供专业数字体验，并以质量与合作贯穿沙特及更广泛的市场。',
                 serviceTitle1: '制造服务',
                 serviceText1: '制造高品质塑料产品，遵循最高安全和可持续标准。',
@@ -18537,7 +18690,6 @@
                 certsEmptyHintPublic: '即将推出 — Nebras 工厂认证。',
                 occasionFallbackTitle: 'Nebras 活动',
                 occasionOverlayHint: '点击查看产品与优惠。',
-                visitorQuickBranches: 'Nebras 分支机构',
                 visitorQuickColorRolls: 'Nebras 卷材色卡目录',
                 visitorQuickBankAccounts: 'Nebras 塑料工厂公司银行账户',
                 visitorJumpBankAccounts: '打开银行账户',

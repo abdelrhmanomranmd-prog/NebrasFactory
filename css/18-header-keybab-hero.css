@@ -1,0 +1,366 @@
+/* هيدر نبراس — صيغة كي باب: هيرو بعرض كامل + شريط تنقل زجاجي + محتوى فوق الخلفية */
+
+/* --- شريط التنقل الزجاجي فوق الهيرو (مثل كي باب) --- */
+.nebras-header--keybab {
+    position: sticky;
+    top: 0;
+    z-index: 1100;
+    background: transparent;
+    color: #fff;
+    padding: 0;
+}
+
+.nebras-header--keybab .header-main-row--glass {
+    background: linear-gradient(180deg, rgba(6, 20, 36, 0.88) 0%, rgba(6, 20, 36, 0.55) 72%, transparent 100%);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.18);
+}
+
+/* --- الهيرو بعرض كامل — حجم وصيغة كي باب --- */
+.hero-nebras-keybab {
+    position: relative;
+    min-height: min(88vh, 860px);
+    margin-top: -72px;
+    padding-top: 72px;
+    display: block;
+    overflow: hidden;
+    background: #061424;
+}
+
+.hero-nebras-keybab .hero-slideshow {
+    z-index: 1;
+}
+
+.hero-nebras-keybab .hero-cinematic {
+    z-index: 0;
+}
+
+.hero-nebras-keybab .hero-slide-img {
+    object-fit: cover;
+    object-position: center center;
+    transform: scale(1.02);
+}
+
+.hero-nebras-keybab::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    pointer-events: none;
+    background:
+        linear-gradient(105deg, rgba(6, 18, 32, 0.92) 0%, rgba(6, 18, 32, 0.55) 38%, rgba(6, 18, 32, 0.12) 62%, transparent 78%),
+        linear-gradient(to top, rgba(4, 14, 26, 0.88) 0%, rgba(4, 14, 26, 0.2) 22%, transparent 48%);
+}
+
+[dir="ltr"] .hero-nebras-keybab::before {
+    background:
+        linear-gradient(255deg, rgba(6, 18, 32, 0.92) 0%, rgba(6, 18, 32, 0.55) 38%, rgba(6, 18, 32, 0.12) 62%, transparent 78%),
+        linear-gradient(to top, rgba(4, 14, 26, 0.88) 0%, rgba(4, 14, 26, 0.2) 22%, transparent 48%);
+}
+
+/* --- لوحة المحتوى فوق الخلفية --- */
+.hero-keybab-panel {
+    position: relative;
+    z-index: 4;
+    min-height: min(82vh, 780px);
+    display: flex;
+    align-items: center;
+    padding: clamp(28px, 5vw, 56px) clamp(20px, 5%, 48px) clamp(72px, 8vw, 100px);
+    box-sizing: border-box;
+}
+
+.hero-keybab-grid {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: center;
+    gap: clamp(20px, 3vw, 36px);
+    width: 100%;
+    max-width: 1320px;
+    margin-inline: auto;
+}
+
+[dir="ltr"] .hero-keybab-grid {
+    direction: ltr;
+}
+
+.hero-keybab-main {
+    max-width: 640px;
+    display: flex;
+    flex-direction: column;
+    gap: clamp(10px, 1.8vw, 18px);
+}
+
+.hero-keybab-top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px 16px;
+}
+
+.hero-keybab-eyebrow {
+    margin: 0;
+    font-size: clamp(0.82rem, 1.4vw, 0.98rem);
+    font-weight: 700;
+    color: #d4af37;
+    letter-spacing: 0.02em;
+}
+
+.hero-keybab-title {
+    margin: 0;
+    font-size: clamp(2rem, 5.2vw, 3.65rem);
+    font-weight: 800;
+    line-height: 1.12;
+    color: #fff;
+    letter-spacing: -0.02em;
+    text-shadow: 0 4px 28px rgba(0, 0, 0, 0.55);
+}
+
+.hero-keybab-title .hero-dynamic-headline {
+    display: block;
+}
+
+.hero-keybab-tagline {
+    margin: 0;
+    font-size: clamp(0.95rem, 1.65vw, 1.18rem);
+    line-height: 1.65;
+    color: rgba(255, 255, 255, 0.92);
+    max-width: 42ch;
+    text-shadow: 0 2px 16px rgba(0, 0, 0, 0.45);
+}
+
+.hero-keybab-tagline::before {
+    content: '';
+    display: block;
+    width: 56px;
+    height: 3px;
+    margin-bottom: 14px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #d4af37, #e0334f);
+}
+
+.hero-keybab-tagline--mobile {
+    display: none;
+}
+
+/* أزرار كي باب — جنباً إلى جنب */
+.hero-keybab-cta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+}
+
+.hero-keybab-cta .header-cta,
+.hero-keybab-cta .hero-keybab-btn {
+    font-size: clamp(0.88rem, 1.2vw, 1rem);
+    padding: 14px 26px;
+    border-radius: 12px;
+    min-width: 168px;
+}
+
+.hero-keybab-cta .hero-mobile-btn {
+    display: none;
+}
+
+.hero-keybab-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: clamp(14px, 2.5vw, 24px);
+    margin-top: 4px;
+}
+
+/* إحصائيات — صف أفقي مثل كي باب */
+.hero-keybab-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: clamp(16px, 3vw, 32px);
+    margin-top: 8px;
+    padding-top: 18px;
+    border-top: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.hero-keybab-stats .header-stat {
+    flex: 0 1 auto;
+    min-width: 88px;
+    text-align: start;
+    align-items: flex-start;
+}
+
+.hero-keybab-stats .header-stat strong {
+    font-size: clamp(1.35rem, 2.8vw, 1.85rem);
+    color: #fff;
+}
+
+.hero-keybab-stats .header-stat strong::after {
+    content: '';
+}
+
+.hero-keybab-stats .header-stat span {
+    font-size: clamp(0.72rem, 1.1vw, 0.82rem);
+    color: rgba(255, 255, 255, 0.78);
+}
+
+.hero-keybab-stats--mobile {
+    display: none;
+}
+
+/* جانب الشركاء / صمّم بابك */
+.hero-keybab-aside {
+    align-self: center;
+}
+
+.hero-keybab-baseline {
+    position: absolute;
+    bottom: 48px;
+    left: 0;
+    right: 0;
+    z-index: 5;
+}
+
+.hero-nebras-keybab .hero-slide-dots {
+    display: flex;
+    bottom: 56px;
+    z-index: 5;
+}
+
+.hero-nebras-keybab .hero-location-bar {
+    z-index: 6;
+}
+
+/* إخفاء الهيرو القديم المنفصل */
+.hero-nebras-keybab .hero-content-wrap {
+    display: none;
+}
+
+/* --- موبايل --- */
+@media (max-width: 900px) {
+    .hero-nebras-keybab {
+        min-height: min(92svh, 820px);
+        margin-top: -64px;
+        padding-top: 64px;
+    }
+
+    .hero-keybab-panel {
+        min-height: min(88svh, 760px);
+        align-items: flex-end;
+        padding-bottom: 64px;
+    }
+
+    .hero-keybab-grid {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .hero-keybab-main {
+        max-width: none;
+        align-items: center;
+    }
+
+    .hero-keybab-top {
+        justify-content: center;
+    }
+
+    .hero-keybab-eyebrow {
+        flex: 1 1 100%;
+        text-align: center;
+    }
+
+    .hero-keybab-tagline {
+        display: none;
+    }
+
+    .hero-keybab-tagline--mobile {
+        display: block;
+        text-align: center;
+        max-width: 34ch;
+        margin-inline: auto;
+    }
+
+    .hero-keybab-tagline--mobile::before {
+        margin-inline: auto;
+    }
+
+    .hero-keybab-actions {
+        flex-direction: column;
+        align-items: center;
+        width: 100%;
+    }
+
+    .hero-keybab-cta {
+        flex-direction: column;
+        width: 100%;
+        max-width: 320px;
+    }
+
+    .hero-keybab-cta .header-cta {
+        display: none;
+    }
+
+    .hero-keybab-cta .hero-mobile-btn {
+        display: block;
+        width: 100%;
+    }
+
+    .hero-keybab-stats {
+        display: none;
+    }
+
+    .hero-keybab-stats--mobile {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+    }
+
+    .hero-keybab-stats--mobile .header-stat {
+        text-align: center;
+        align-items: center;
+    }
+
+    .hero-keybab-aside {
+        order: 3;
+        padding-top: 12px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .hero-nebras-keybab::before {
+        background: linear-gradient(
+            180deg,
+            rgba(6, 18, 32, 0.35) 0%,
+            rgba(6, 18, 32, 0.08) 35%,
+            rgba(6, 18, 32, 0.65) 70%,
+            rgba(4, 14, 26, 0.92) 100%
+        );
+    }
+
+    .hero-nebras-keybab .hero-slide-img {
+        object-fit: contain;
+        object-position: center top;
+    }
+}
+
+@media (max-width: 768px) {
+    .nebras-header--keybab .header-main-row--glass {
+        padding: 6px 4% 8px;
+        min-height: 52px;
+    }
+
+    .hero-keybab-title {
+        font-size: clamp(1.5rem, 6.5vw, 2.1rem);
+        text-align: center;
+    }
+
+    .header-campaign-door-aside {
+        flex-direction: row;
+        align-items: flex-end;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hero-nebras-keybab .hero-slide-img {
+        transform: none;
+    }
+}

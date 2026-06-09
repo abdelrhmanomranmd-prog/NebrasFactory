@@ -93,30 +93,32 @@ body.nebras-profile-2026-theme .showroom-hub-section {
     border-top-color: rgba(26, 143, 168, 0.2);
 }
 
+/* المعرض يُعرض داخل مساحة العمل الفاتحة — نص كحلي واضح وبطاقات بيضاء صلبة */
 body.nebras-profile-2026-theme .showroom-hub-section-head h3 {
-    color: #fff;
+    color: #062e44;
 }
 
 body.nebras-profile-2026-theme .showroom-hub-section-intro,
 body.nebras-profile-2026-theme .showroom-hub-intro {
-    color: rgba(255, 255, 255, 0.78);
+    color: rgba(6, 46, 68, 0.78);
 }
 
 body.nebras-profile-2026-theme .showroom-gallery-card {
-    background: rgba(255, 255, 255, 0.08);
+    background: #fff;
     border-color: rgba(26, 143, 168, 0.24);
 }
 
 body.nebras-profile-2026-theme .showroom-gallery-card-body h4 {
-    color: #fff;
+    color: #062e44;
 }
 
 body.nebras-profile-2026-theme .showroom-gallery-card-body p {
-    color: rgba(255, 255, 255, 0.72);
+    color: rgba(6, 46, 68, 0.82);
+    opacity: 1;
 }
 
 body.nebras-profile-2026-theme .showroom-gallery-empty {
-    color: rgba(255, 255, 255, 0.65);
+    color: rgba(6, 46, 68, 0.7);
 }
 
 .showroom-hub-section-intro {
@@ -256,10 +258,37 @@ body.nebras-profile-2026-theme .showroom-gallery-empty {
     display: flex;
     align-items: center;
     justify-content: center;
+    height: 100%;
     min-height: 140px;
-    background: linear-gradient(135deg, rgba(6, 46, 68, 0.08), rgba(26, 143, 168, 0.12));
-    color: #0a4b6e;
-    font-size: 2rem;
+    background:
+        radial-gradient(circle at 70% 25%, rgba(212, 168, 66, 0.22) 0%, transparent 55%),
+        linear-gradient(135deg, #062e44 0%, #0a4b6e 70%, #1a8fa8 130%);
+    color: rgba(255, 255, 255, 0.92);
+    font-size: 2.2rem;
+}
+
+/* بطاقات مشاريع NHC — صورة كاملة + شريط ذهبي يفصل النص */
+.showroom-hub-section--projects .showroom-gallery-card {
+    border-color: rgba(212, 168, 66, 0.45);
+}
+
+.showroom-hub-section--projects .showroom-gallery-card-media img {
+    object-fit: cover;
+    background: #062e44;
+}
+
+.showroom-hub-section--projects .showroom-gallery-card-body {
+    border-top: 3px solid #d4a842;
+    background: linear-gradient(180deg, rgba(212, 168, 66, 0.12) 0%, rgba(255, 255, 255, 0) 60%);
+}
+
+.showroom-hub-section--projects .showroom-gallery-card-body h4 {
+    color: #062e44;
+    font-weight: 800;
+}
+
+.showroom-hub-section--projects .showroom-gallery-card-body p {
+    color: rgba(6, 46, 68, 0.85);
 }
 
 @media (max-width: 600px) {

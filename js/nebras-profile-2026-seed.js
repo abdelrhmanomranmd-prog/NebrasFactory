@@ -5,7 +5,7 @@
 (function(global) {
     'use strict';
 
-    const PROFILE_2026_SEED_VERSION = 5;
+    const PROFILE_2026_SEED_VERSION = 7;
     const PROFILE_STORAGE_KEY = 'nebrasProfile2026SeedVersion';
 
     function img(folder, n) {
@@ -67,12 +67,17 @@
                 showroomProjectsEmpty: 'مشاريع واعتمادات NHC — من الملف التعريفي 2026.',
                 certsEmptyHintPublic: 'شهادات ISO · SASO · اعتمادات NHC — مصنع نبراس للبلاستيك',
                 visitorQuickCompanyProfile: 'الملف التعريفي الكامل 2026',
-                companyProfileTitle: 'الملف التعريفي الكامل — مصنع نبراس',
-                companyProfileIntro: 'كل محتوى الملف التعريفي الرسمي — منظم ومرتبط بأيقونات الموقع.',
-                gatewayLanePlatformHint: 'الملف التعريفي · فروع · حسابات بنكية · خدمات المصنع',
-                dashCompanyProfileTitle: 'الملف التعريفي الكامل 2026',
-                dashCompanyProfileText: 'البروفايل الرسمي كاملاً — 12 قسماً مرتبطة بأيقونات الموقع.',
-                dashShowroomText: '5 أقسام: أبواب نبراس · خزائن نبراس · WPC · CNC · مشاريع NHC.'
+                visitorQuickNebrasProfile: 'البروفايل التعريفي لنبراس',
+                visitorQuickBranches: 'استكشف فروع نبراس',
+                visitorQuickShowroom: 'استكشف معرض نبراس',
+                companyProfileTitle: 'البروفايل التعريفي لنبراس',
+                companyProfileIntro: 'البروفايل التعريفي الرسمي — عرض كامل 24 صفحة داخل الأيقونة مع تنزيل PDF.',
+                aboutTitle2: 'نحو التميّز في صناعة الأبواب',
+                visionProfileEmbedIntro: 'الملف التعريفي الرسمي 2026 — كل أقسام المصنع والمنتجات والشهادات والمعرض داخل صفحة نحو التميّز في صناعة الأبواب.',
+                gatewayLanePlatformHint: 'البروفايل التعريفي · فروع · حسابات بنكية · خدمات المصنع',
+                dashCompanyProfileTitle: 'البروفايل التعريفي لنبراس',
+                dashCompanyProfileText: 'عرض البروفايل الكامل داخل المنصة — 24 صفحة مع تنزيل PDF.',
+                dashShowroomText: 'استكشف معرض نبراس — أبواب · خزائن · WPC · CNC · مشاريع NHC.'
             },
             en: {
                 pageDescription: 'Saudi WPC door manufacturer since 2018 — NHC · SASO · ISO approved supplier.',
@@ -91,11 +96,15 @@
                 aboutText2: 'Leadership in WPC aligned with Vision 2030 — highest quality standards and after-sales excellence.',
                 showroomHubIntro: 'Nebras Showroom — doors, cabinets, WPC, CNC, NHC projects',
                 visitorQuickCompanyProfile: 'Full Company Profile 2026',
+                visitorQuickNebrasProfile: 'Nebras Company Profile',
+                visitorQuickBranches: 'Explore Nebras Branches',
+                visitorQuickShowroom: 'Explore Nebras Showroom',
                 companyProfileTitle: 'Nebras Company Profile',
-                companyProfileIntro: 'Official profile — all sections linked to site icons.',
-                dashCompanyProfileTitle: 'Full Company Profile 2026',
-                dashCompanyProfileText: 'Complete official profile — 12 sections mapped to icons.',
-                dashShowroomText: '5 galleries: doors, cabinets, WPC, CNC, NHC projects.'
+                companyProfileIntro: 'Official profile — full viewer with PDF download.',
+                aboutTitle2: 'Excellence in Door Manufacturing',
+                dashCompanyProfileTitle: 'Nebras Company Profile',
+                dashCompanyProfileText: 'Full profile viewer with PDF download — 24 pages.',
+                dashShowroomText: 'Explore Nebras Showroom — doors, cabinets, WPC, CNC, NHC.'
             }
         },
         aboutPages: {
@@ -131,10 +140,10 @@
             { id: 'cert-nhc-zone-c', titleAr: 'اعتماد مورد NHC — Zone C', titleEn: 'NHC Supplier Approval Zone C', captionAr: 'MMC-MSH-C-AR-50295-0 — مشراف المدائن و Achieve Ultimate · Zone C. B - Approved · 2024-2025', captionEn: 'MMC & Achieve Ultimate · Zone C.', mediaUrl: '', mediaType: 'pending', sortOrder: 6, visible: true }
         ],
         projects: [
-            { titleAr: 'مشروع المشرقية — Zone D · أبان', titleEn: 'Masharqiyah Zone D · Aban', captionAr: 'توريد أبواب الغرف الداخلية WPC — اعتماد المهندس محمد هنداوي ومدير المشروع محمد عساف. B - Approved · مايو 2025', captionEn: 'WPC interior doors supply — NHC approved May 2025' },
-            { titleAr: 'مشروع المشرقية — Zone C · مشراف المدائن', titleEn: 'Masharqiyah Zone C · MMC', captionAr: 'توريد أبواب الغرف الداخلية عبر شركة مشراف المدائن. B - Approved · يناير 2025', captionEn: 'Interior doors via MMC — Jan 2025' },
-            { titleAr: 'مشروع المشرقية — Zone C · Achieve Ultimate', titleEn: 'Zone C · Achieve Ultimate', captionAr: 'توريد أبواب الغرف الداخلية — اعتماد فريق NHC الهندسي. B - Approved · نوفمبر 2024', captionEn: 'Achieve Ultimate Company — Nov 2024' },
-            { titleAr: 'فيلا كود WPC — Zone D', titleEn: 'Villa Code WPC Zone D', captionAr: 'Material-00378 — طلب اعتماد فيلا كود لأبواب WPC عبر أبان للمقاولات. ABN-MSH-D-AR-50185-0 · Under Process', captionEn: 'Villa Code Material-00378 — under process' }
+            { titleAr: 'مشروع المشرقية — Zone D · أبان', titleEn: 'Masharqiyah Zone D · Aban', captionAr: 'توريد أبواب الغرف الداخلية WPC — اعتماد المهندس محمد هنداوي ومدير المشروع محمد عساف. B - Approved · مايو 2025', captionEn: 'WPC interior doors supply — NHC approved May 2025', imageUrl: 'images/profile-2026/doors/doors-02.jpg' },
+            { titleAr: 'مشروع المشرقية — Zone C · مشراف المدائن', titleEn: 'Masharqiyah Zone C · MMC', captionAr: 'توريد أبواب الغرف الداخلية عبر شركة مشراف المدائن. B - Approved · يناير 2025', captionEn: 'Interior doors via MMC — Jan 2025', imageUrl: 'images/profile-2026/doors/doors-05.jpg' },
+            { titleAr: 'مشروع المشرقية — Zone C · Achieve Ultimate', titleEn: 'Zone C · Achieve Ultimate', captionAr: 'توريد أبواب الغرف الداخلية — اعتماد فريق NHC الهندسي. B - Approved · نوفمبر 2024', captionEn: 'Achieve Ultimate Company — Nov 2024', imageUrl: 'images/profile-2026/doors/doors-09.jpg' },
+            { titleAr: 'فيلا كود WPC — Zone D', titleEn: 'Villa Code WPC Zone D', captionAr: 'Material-00378 — طلب اعتماد فيلا كود لأبواب WPC عبر أبان للمقاولات. ABN-MSH-D-AR-50185-0 · Under Process', captionEn: 'Villa Code Material-00378 — under process', imageUrl: 'images/profile-2026/gallery-extra/gallery-extra-01.jpg' }
         ],
         productTexts: {
             'prod-wpc': {
@@ -343,9 +352,14 @@
     function repairShowroomGallerySections() {
         if (typeof ensureShowroomGallery !== 'function' || typeof getShowroomGallerySectionKeys !== 'function') return false;
         ensureShowroomGallery();
+        const projectItems = (showroomGallery.projects && showroomGallery.projects.items) || [];
+        const projectsNeedImages = !projectItems.length || projectItems.some(function(it) {
+            return it && String(it.id || '').indexOf('showroom-projects-nhc-') === 0 && !it.imageUrl;
+        });
         const needsRepair = !showroomGallery.wpcDoors || !showroomGallery.wpcDoors.items || !showroomGallery.wpcDoors.items.length ||
             !showroomGallery.wpcCabinets || !showroomGallery.wpcCabinets.items || !showroomGallery.wpcCabinets.items.length ||
-            !showroomGallery.doors || !showroomGallery.doors.items || showroomGallery.doors.items.length < 5;
+            !showroomGallery.doors || !showroomGallery.doors.items || showroomGallery.doors.items.length < 5 ||
+            projectsNeedImages;
         if (!needsRepair) return false;
         mergeShowroomGallery();
         return true;
