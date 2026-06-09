@@ -155,7 +155,7 @@
             '<div class="cph-cover-bg" style="background-image:url(\'' + esc(d.cover.hero) + '\')"></div>' +
             '<div class="cph-cover-overlay"></div>' +
             '<div class="cph-cover-content">' +
-            '<img class="cph-cover-logo" src="images/logo-white.svg" alt="Nebras" onerror="this.onerror=null;this.src=\'images/logo.png\'">' +
+            '<img class="cph-cover-logo" src="images/logo-nebras-mark.png" alt="Nebras" onerror="this.onerror=null;this.src=\'images/logo-white.svg\'">' +
             '<p class="cph-cover-badge"><span class="cph-dot"></span>' + esc(d.cover.badge) + '</p>' +
             '<p class="cph-cover-saudi">🇸🇦 ' + esc(d.cover.saudi) + '</p>' +
             '<h2 class="cph-cover-title">' + esc(d.cover.title) + '</h2>' +
@@ -163,7 +163,11 @@
             '<p class="cph-cover-desc">' + esc(d.cover.desc) + '</p>' +
             '<div class="cph-stats">' + d.cover.stats.map(function(s) {
                 return '<div class="cph-stat"><strong>' + esc(s.val) + '</strong><span>' + esc(s.label) + '</span></div>';
-            }).join('') + '</div></div></header>';
+            }).join('') + '</div>' +
+            '<div class="cph-pdf-actions">' +
+            '<a class="cph-pdf-btn" href="nebras-company-profile-2026.html" target="_blank" rel="noopener"><i class="fas fa-book-open"></i> ' + esc(en ? 'View corporate profile' : 'عرض البروفايل — 24 صفحة احترافية') + '</a>' +
+            '<button type="button" class="cph-pdf-btn cph-pdf-btn--ghost" onclick="downloadNebrasProfilePdf()"><i class="fas fa-download"></i> ' + esc(en ? 'Download PDF' : 'تنزيل PDF') + '</button>' +
+            '</div></div></header>';
 
         html += nav;
 
@@ -261,8 +265,39 @@
         });
     }
 
+    var PROFILE_PDF_PATH = 'documents/nebras-company-profile-2026.pdf';
+    var PROFILE_PDF_NAME = 'nebras-company-profile-2026.pdf';
+
+    function downloadNebrasProfilePdf() {
+        fetch(PROFILE_PDF_PATH, { cache: 'no-store' })
+            .then(function(res) {
+                if (!res.ok) throw new Error('missing');
+                return res.blob();
+            })
+            .then(function(blob) {
+                var url = URL.createObjectURL(blob);
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = PROFILE_PDF_NAME;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                setTimeout(function() { URL.revokeObjectURL(url); }, 4000);
+            })
+            .catch(function() {
+                var a = document.createElement('a');
+                a.href = PROFILE_PDF_PATH;
+                a.download = PROFILE_PDF_NAME;
+                a.rel = 'noopener';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            });
+    }
+
     global.getProfileHubData = getProfileHubData;
     global.buildCompanyProfileHubHtml = buildCompanyProfileHubHtml;
     global.openCompanyProfileHub = openCompanyProfileHub;
     global.openCompanyProfileSection = openCompanyProfileSection;
+    global.downloadNebrasProfilePdf = downloadNebrasProfilePdf;
 })(typeof window !== 'undefined' ? window : globalThis);

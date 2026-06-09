@@ -331,7 +331,7 @@
         ];
         const DEFAULT_QUOTE_A4_SETTINGS = {
             layout: 'nebras-official',
-            logoUrl: 'images/logo-white.svg',
+            logoUrl: 'images/logo-nebras-mark.png',
             watermarkOpacity: 0.09,
             watermarkScale: 78,
             accentColor: '#0d2840',
@@ -497,13 +497,81 @@
             return colors.map(function(c, i) { return normalizeNebrasColorCatalogEntry(c, i); });
         }
 
+        function getLocalizedDoorCatalogLabel(entry, lang) {
+            if (!entry) return '';
+            if (lang === 'en') return entry.labelEn || entry.labelAr || entry.code || '';
+            if (lang === 'zh') return entry.labelZh || entry.labelEn || entry.labelAr || entry.code || '';
+            return entry.labelAr || entry.labelEn || entry.code || '';
+        }
+
+        function getStoreCatalogColorFilterOptions(lang) {
+            return getNebrasColorCatalog().map(function(c) {
+                const label = getLocalizedDoorCatalogLabel(c, lang);
+                const value = String(c.labelAr || c.code || label).trim();
+                const displayLabel = c.code ? (c.code + ' — ' + label) : label;
+                return { value: value, label: displayLabel, code: c.code, labelAr: c.labelAr, labelEn: c.labelEn };
+            });
+        }
+
+        function getStoreCatalogSizeFilterOptions(lang) {
+            ensureDoorDesignerConfig();
+            const sizes = systemSettings.doorDesigner.sizes || DEFAULT_DOOR_DESIGNER.sizes || [];
+            return sizes.map(function(s) {
+                const label = lang === 'en' ? (s.labelEn || s.labelAr) : (s.labelAr || s.labelEn || '');
+                return { value: String(label).trim(), label: String(label).trim(), id: s.id };
+            }).filter(function(s) { return s.value; });
+        }
+
+        function storeCatalogColorMatches(itemColor, filterColor) {
+            const ic = String(itemColor || '').trim();
+            const fc = String(filterColor || '').trim();
+            if (!fc) return true;
+            if (!ic) return false;
+            if (ic === fc) return true;
+            const catalog = getNebrasColorCatalog();
+            const entry = catalog.find(function(c) {
+                return fc === String(c.labelAr || '').trim() || fc === String(c.labelEn || '').trim() || fc === String(c.code || '').trim();
+            });
+            if (!entry) return ic === fc;
+            return ic === String(entry.labelAr || '').trim() || ic === String(entry.labelEn || '').trim() || ic === String(entry.code || '').trim();
+        }
+
+        function storeCatalogSizeMatches(itemSize, filterSize) {
+            const is = String(itemSize || '').trim();
+            const fs = String(filterSize || '').trim();
+            if (!fs) return true;
+            if (!is) return false;
+            if (is === fs) return true;
+            ensureDoorDesignerConfig();
+            const sizes = systemSettings.doorDesigner.sizes || DEFAULT_DOOR_DESIGNER.sizes || [];
+            const entry = sizes.find(function(s) {
+                const ar = String(s.labelAr || '').trim();
+                const en = String(s.labelEn || '').trim();
+                return fs === ar || fs === en;
+            });
+            if (!entry) return is === fs;
+            return is === String(entry.labelAr || '').trim() || is === String(entry.labelEn || '').trim();
+        }
+
+        function refreshStoreCatalogFilterViews() {
+            document.querySelectorAll('.nebras-store-layout[data-store-context]').forEach(function(el) {
+                const key = el.getAttribute('data-store-context');
+                if (key) refreshStoreCatalogView(key);
+            });
+        }
+
         function refreshNebrasColorCatalogSite() {
             renderPublicColorCollection(currentLang || 'ar');
+            refreshStoreCatalogFilterViews();
             if (nebrasWorkspaceState.active && nebrasWorkspaceState.route && nebrasWorkspaceState.route.view === 'color-rolls') {
                 renderNebrasWorkspace();
             }
             const doorRoot = document.getElementById('nebras-door-designer');
             if (doorRoot) updateDoorDesignerPreview(doorRoot);
+        }
+
+        function refreshNebrasDoorCatalogSite() {
+            refreshNebrasColorCatalogSite();
         }
 
         function ensureDefaultSocialSettings() {
@@ -1806,7 +1874,8 @@
             { id: 12, lane: 'platform', sortOrder: 22, titleKey: 'visitorQuickComplaints', title: 'استفسار الشكاوى', iconClass: 'fas fa-search', visitorMode: 'browse', openHandler: 'complaints-inquiry', target: '', backgroundImage: NEBRAS_STORE_ICON_MEDIA.complaintsBg, album: [NEBRAS_STORE_ICON_MEDIA.complaintsBg], textAr: 'قسم استفسارات وشكاوى العملاء — نستمع لاستفساراتكم لخدمة أفضل.' },
             { id: 13, lane: 'showroom', sortOrder: 28, titleKey: 'visitorQuickDoorDesigner', title: 'صمّم بابك مع نبراس', iconClass: 'fas fa-pencil-ruler', visitorMode: 'browse', openHandler: 'door-designer', target: '', backgroundImage: NEBRAS_SHOWROOM_ICON_MEDIA.doorDesignerBg, album: [NEBRAS_SHOWROOM_ICON_MEDIA.doorDesignerBg] },
             { id: 19, lane: 'showroom', sortOrder: 27, titleKey: 'visitorQuickShowroom', title: 'معرض نبراس — 5 أقسام', iconClass: 'fas fa-images', visitorMode: 'browse', openHandler: 'showroom-hub', target: '', backgroundImage: 'images/profile-2026/hero-cover.jpg', album: ['images/profile-2026/doors/doors-01.jpg', 'images/profile-2026/cabinets/cabinets-01.jpg', 'images/profile-2026/cnc/cnc-01.jpg'], textAr: 'أبواب نبراس · خزائن نبراس · أبواب WPC · خزائن WPC · قطع CNC · مشاريع NHC — صور بجودة كاملة من الملف التعريفي 2026.' },
-            { id: 18, lane: 'platform', sortOrder: 18, titleKey: 'visitorQuickCompanyProfile', title: 'الملف التعريفي الكامل 2026', iconClass: 'fas fa-book-open', visitorMode: 'browse', openHandler: 'company-profile', target: '', backgroundImage: 'images/profile-2026/hero-cover.jpg', album: ['images/profile-2026/hero-cover.jpg'], textAr: 'الملف التعريفي الرسمي — 14 قسماً: من نحن، المنتجات، 5 معارض (أبواب نبراس · خزائن نبراس · WPC · CNC)، الشهادات، المشاريع، والحسابات.' },
+            { id: 21, lane: 'platform', sortOrder: 16, titleKey: 'visitorQuickProfilePdf', title: 'بروفايل تعريفي لنبراس (تنزيل)', iconClass: 'fas fa-file-pdf', visitorMode: 'browse', openHandler: 'profile-pdf-download', target: '', backgroundImage: 'images/hero-slide-06-color-catalog.png', album: ['images/profile-2026/hero-cover.jpg', 'images/profile-2026/doors/doors-06.jpg'], textAr: 'حمّل الملف التعريفي الرسمي PDF — 24 صفحة A4 بجودة طباعة عالية. أبواب WPC · شهادات · فروع · ألوان.' },
+            { id: 18, lane: 'platform', sortOrder: 18, titleKey: 'visitorQuickCompanyProfile', title: 'الملف التعريفي الكامل 2026', iconClass: 'fas fa-book-open', visitorMode: 'browse', openHandler: 'company-profile', target: '', backgroundImage: 'images/profile-2026/hero-cover.jpg', album: ['images/profile-2026/hero-cover.jpg'], textAr: 'الملف التعريفي الرسمي — 24 صفحة: من نحن، المنتجات، الألوان، الشهادات، المشاريع، والحسابات.' },
             { id: 20, lane: 'platform', sortOrder: 17, titleKey: 'visitorQuickCallback', title: 'نبراس يتصل بك', iconClass: 'fas fa-phone-volume', visitorMode: 'browse', openHandler: 'callback-concierge', target: '', backgroundImage: 'images/profile-2026/hero-cover.jpg', album: [], textAr: 'اترك اسمك وجوالك — فريق المبيعات أو خدمة العملاء يتصل بك ويفهم احتياجك. يظهر طلبك في الإدارة والفرع حسب مدينتك.' }
         ];
 
@@ -2153,6 +2222,15 @@
                         cur.target = '';
                         cur.backgroundImage = 'images/profile-2026/hero-cover.jpg';
                         if (!cur.titleKey) cur.titleKey = 'visitorQuickCallback';
+                    }
+                    if (def.id === 21) {
+                        cur.lane = 'platform';
+                        cur.visitorMode = 'browse';
+                        cur.openHandler = 'profile-pdf-download';
+                        cur.target = '';
+                        cur.backgroundImage = 'images/hero-slide-06-color-catalog.png';
+                        cur.album = ['images/profile-2026/hero-cover.jpg', 'images/profile-2026/doors/doors-06.jpg'];
+                        if (!cur.titleKey) cur.titleKey = 'visitorQuickProfilePdf';
                     }
                     if (def.album && def.album.length && [2, 4, 7, 8, 11, 12, 13, 14, 16, 17].indexOf(def.id) < 0) cur.album = def.album.slice();
                     if (def.openHandler && !cur.openHandler) cur.openHandler = def.openHandler;
@@ -2898,8 +2976,8 @@
             let out = (items || []).slice();
             if (f.availability === 'in') out = out.filter(function(it) { return it.inStock; });
             else if (f.availability === 'out') out = out.filter(function(it) { return !it.inStock; });
-            if (f.color) out = out.filter(function(it) { return String(it.color || '').trim() === f.color; });
-            if (f.size) out = out.filter(function(it) { return String(it.size || '').trim() === f.size; });
+            if (f.color) out = out.filter(function(it) { return storeCatalogColorMatches(it.color, f.color); });
+            if (f.size) out = out.filter(function(it) { return storeCatalogSizeMatches(it.size, f.size); });
             if (f.type) out = out.filter(function(it) { return String(it.type || '').trim() === f.type; });
             if (f.sort === 'price-asc') {
                 out.sort(function(a, b) { return (a.price || 999999999) - (b.price || 999999999); });
@@ -2909,18 +2987,14 @@
             return out;
         }
 
-        function buildStoreCatalogFilterOptions(items) {
-            const colors = {};
-            const sizes = {};
+        function buildStoreCatalogFilterOptions(items, lang) {
             const types = {};
             (items || []).forEach(function(it) {
-                if (it.color) colors[it.color] = true;
-                if (it.size) sizes[it.size] = true;
                 if (it.type) types[it.type] = true;
             });
             return {
-                colors: Object.keys(colors).sort(),
-                sizes: Object.keys(sizes).sort(),
+                colors: getStoreCatalogColorFilterOptions(lang),
+                sizes: getStoreCatalogSizeFilterOptions(lang),
                 types: Object.keys(types).sort()
             };
         }
@@ -2960,7 +3034,7 @@
             const filters = getStoreCatalogFilters(key);
             const allItems = flattenProductsToCatalogItems(products, lang);
             const filtered = applyStoreCatalogFilters(allItems, filters);
-            const filterOpts = buildStoreCatalogFilterOptions(allItems);
+            const filterOpts = buildStoreCatalogFilterOptions(allItems, lang);
             const countLabel = (ui.storeProductCount || '{n} منتج').replace('{n}', String(filtered.length));
             const sortBtns = [
                 { id: 'default', label: ui.storeSortDefault || 'الأكثر مبيعاً' },
@@ -2980,7 +3054,9 @@
                 let html = '<div class="nebras-store-filter-group"><span class="nebras-store-filter-label">' + escapeHtmlAttr(label) + '</span><select class="nebras-store-filter-select" onchange="setStoreCatalogFacet(\'' + escapeHtmlAttr(key) + '\',\'' + field + '\',this.value)">';
                 html += '<option value="">' + escapeHtmlAttr(ui.storeFilterAll || 'الكل') + '</option>';
                 values.forEach(function(v) {
-                    html += '<option value="' + escapeHtmlAttr(v) + '"' + (cur === v ? ' selected' : '') + '>' + escapeHtmlAttr(v) + '</option>';
+                    const val = (v && typeof v === 'object') ? v.value : v;
+                    const lbl = (v && typeof v === 'object') ? v.label : v;
+                    html += '<option value="' + escapeHtmlAttr(val) + '"' + (cur === val ? ' selected' : '') + '>' + escapeHtmlAttr(lbl) + '</option>';
                 });
                 html += '</select></div>';
                 return html;
@@ -3938,7 +4014,7 @@
                 name: 'شركة مصنع نبراس للبلاستيك',
                 alternateName: ['مصنع نبراس للبلاستيك', 'منصة نبراس', 'Nebras Plastic Factory'],
                 url: siteUrl,
-                logo: { '@type': 'ImageObject', url: base + '/images/logo.png', width: 512, height: 512 },
+                logo: { '@type': 'ImageObject', url: base + '/images/logo-nebras-mark.png', width: 127, height: 129 },
                 image: base + '/images/profile-2026/hero-cover.jpg',
                 description: 'شركة سعودية متخصصة في تصنيع أبواب WPC وخزائن وقطع CNC — مورد معتمد NHC · SASO · ISO من القصيم.',
                 foundingDate: '2018',
@@ -5331,6 +5407,37 @@
             });
         }
 
+        function renderVisitorQrSection() {
+            const section = document.getElementById('nebras-visitor-qr-section');
+            if (!section) return;
+            const lang = currentLang || 'ar';
+            const t = siteText[lang] || siteText.ar;
+            const siteUrl = String(systemSettings.publicSiteUrl || NEBRAS_PUBLIC_SITE_URL).trim();
+            const titleEl = document.getElementById('nebras-visitor-qr-title');
+            const leadEl = document.getElementById('nebras-visitor-qr-lead');
+            const hintEl = document.getElementById('nebras-visitor-qr-hint');
+            const urlEl = document.getElementById('nebras-visitor-qr-url');
+            const imgEl = document.getElementById('nebras-visitor-qr-img');
+            const downloadEl = document.getElementById('nebras-visitor-qr-download');
+            const downloadLabelEl = document.getElementById('nebras-visitor-qr-download-label');
+            if (titleEl) titleEl.textContent = t.visitorQrTitle || 'شارك نبراس في ثوانٍ';
+            if (leadEl) leadEl.textContent = t.visitorQrLead || 'حمّل رمز QR وأرسله لصديق أو مقاول — يفتح موقع مصنع نبراس الرسمي مباشرة.';
+            if (hintEl) hintEl.textContent = t.visitorQrShareHint || 'كل مشاركة = فرصة جديدة لنبراس';
+            if (urlEl) {
+                urlEl.href = siteUrl;
+                urlEl.textContent = siteUrl.replace(/^https?:\/\//i, '');
+            }
+            if (imgEl) {
+                imgEl.src = NEBRAS_SITE_QR_IMAGE + '?v=2026';
+                imgEl.alt = t.visitorQrAlt || 'رمز QR لموقع مصنع نبراس';
+            }
+            if (downloadEl) {
+                downloadEl.href = NEBRAS_SITE_QR_IMAGE;
+                downloadEl.setAttribute('download', 'nebras-factory-site-qr.png');
+            }
+            if (downloadLabelEl) downloadLabelEl.textContent = t.visitorQrCta || 'تحميل رمز QR';
+        }
+
         function refreshPublicSiteFromGovernance() {
             renderAllPublicCatalog();
             applyHeroBanner();
@@ -5340,6 +5447,8 @@
             refreshNebrasMiniShowcases();
             applyDynamicSectionContent(currentLang || 'ar');
             updateOfficialOrganizationSchema();
+            renderVisitorQrSection();
+            refreshStoreCatalogFilterViews();
             if (typeof initStorefrontScrollReveal === 'function') initStorefrontScrollReveal();
         }
 
@@ -5391,7 +5500,13 @@
             const gatewayCount = (visitorIcons || []).filter(isGatewayVisitorIcon).length;
             const storeIconCount = (visitorIcons || []).filter(isStoreCatalogHubIcon).length;
             const productCount = (siteProducts || []).filter(function(p) { return p.visible !== false; }).length;
+            ensureDoorDesignerConfig();
+            const catalogColorCount = (systemSettings.doorDesigner.colors || []).length;
+            const catalogSizeCount = (systemSettings.doorDesigner.sizes || []).length;
+            const callbackLeadCount = (typeof getCallbackLeads === 'function' ? getCallbackLeads() : []).length;
             const rows = [
+                { ok: catalogColorCount >= 20, label: 'كتالوج ألوان نبراس (20 رولّة)', detail: catalogColorCount + ' لون — فلاتر المتجر · مصمم الأبواب · كتالوج الألوان' },
+                { ok: catalogSizeCount >= 4, label: 'مقاسات الضلفة (4 مقاسات)', detail: catalogSizeCount + ' مقاس — سمك 3.5 و 4.5 سم' },
                 { ok: productCount > 0, label: 'منتجات المتجر (4 أقسام)', detail: productCount + ' منتج نشط' },
                 { ok: storeIconCount >= 4, label: 'أيقونات المتجر الأربع (8–11)', detail: storeIconCount + ' أيقونة — حذف/إخفاء المنتج يُزيله تلقائياً' },
                 { ok: gatewayCount > 0, label: 'أيقونات البوابة (خارجي)', detail: gatewayCount + ' أيقونة' },
@@ -5406,6 +5521,8 @@
                     }).join(' · ');
                 })() },
                 { ok: (branchesData || []).length > 0, label: 'فروع المملكة', detail: (branchesData || []).length + ' فرع' },
+                { ok: !!document.getElementById('nebras-visitor-qr-section'), label: 'QR الموقع للزوار', detail: 'قسم عام — مسح · تحميل · مشاركة' },
+                { ok: typeof submitNebrasCallbackLead === 'function', label: 'نبراس يتصل بك', detail: callbackLeadCount + ' طلب — إدارة رئيسية وفروع حسب المدينة' },
                 { ok: ADMIN_GOVERNANCE_TILE_REGISTRY.every(function(r) {
                     const t = dashboardTiles.find(function(x) { return x.id === r.id; });
                     return t && t.handler === r.handler;
@@ -6787,7 +6904,7 @@
         let cachedSiteLogoUrl = null;
 
         function getSiteLogoCandidateUrls() {
-            return ['images/logo-white.svg'].concat(buildUrlList(['logo', 'nebras-logo']));
+            return ['images/logo-nebras-mark.png', 'images/logo-white.svg'].concat(buildUrlList(['logo', 'nebras-logo']));
         }
 
         function getSiteLogoUrlListAttr() {
@@ -6796,7 +6913,7 @@
 
         function getSiteLogoUrl() {
             const urls = getSiteLogoCandidateUrls();
-            return cachedSiteLogoUrl || urls[0] || 'images/logo.png';
+            return cachedSiteLogoUrl || urls[0] || 'images/logo-nebras-mark.png';
         }
 
         function resolveSiteLogoUrl(done) {
@@ -6813,7 +6930,7 @@
             const urls = getSiteLogoCandidateUrls();
             function tryNext(index) {
                 if (index >= urls.length) {
-                    const fallback = urls[0] || 'images/logo.png';
+                    const fallback = urls[0] || 'images/logo-nebras-mark.png';
                     if (typeof done === 'function') done(fallback);
                     return;
                 }
@@ -6838,7 +6955,7 @@
             const q = systemSettings.quoteA4;
             q.watermarkOpacity = Math.min(0.35, Math.max(0.04, Number(q.watermarkOpacity) || DEFAULT_QUOTE_A4_SETTINGS.watermarkOpacity));
             q.watermarkScale = Math.min(95, Math.max(40, Number(q.watermarkScale) || DEFAULT_QUOTE_A4_SETTINGS.watermarkScale));
-            if (!q.logoUrl) q.logoUrl = 'images/logo-white.svg';
+            if (!q.logoUrl) q.logoUrl = 'images/logo-nebras-mark.png';
             if (!q.layout || q.layout === 'nebras-factory') q.layout = 'nebras-official';
             if (!q.staticPage4Url) q.staticPage4Url = DEFAULT_QUOTE_A4_SETTINGS.staticPage4Url;
             return q;
@@ -7504,7 +7621,7 @@
             const q = getQuoteA4Settings();
             const url = await pickMediaPath({
                 label: 'شعار عرض السعر A4',
-                defaultValue: q.logoUrl || 'images/logo.png'
+                defaultValue: q.logoUrl || 'images/logo-nebras-mark.png'
             });
             if (!url) return;
             q.logoUrl = url;
@@ -11461,6 +11578,122 @@
             addAuditLog('استعادة كتالوج الألوان', '20 رولّة قياسية');
         }
 
+        function renderDoorSizeCatalogAdminList() {
+            const list = document.getElementById('door-size-catalog-admin-list');
+            const block = document.getElementById('door-size-catalog-admin-block');
+            if (!list || !block) return;
+            block.hidden = !isMainGovernanceAdmin(currentAdmin);
+            ensureDoorDesignerConfig();
+            const sizes = systemSettings.doorDesigner.sizes || [];
+            list.innerHTML = sizes.map(function(size, idx) {
+                return '<div class="color-catalog-admin-row door-size-catalog-admin-row" data-idx="' + idx + '">' +
+                    '<input type="text" class="door-size-catalog-admin-id" value="' + escapeHtmlAttr(size.id || '') + '" placeholder="leaf-80-35-230" readonly>' +
+                    '<input type="number" class="door-size-catalog-admin-width" min="40" max="200" value="' + escapeHtmlAttr(String(size.widthCm || '')) + '" placeholder="عرض سم">' +
+                    '<input type="number" class="door-size-catalog-admin-thickness" min="2" max="10" step="0.5" value="' + escapeHtmlAttr(String(size.thicknessCm || '')) + '" placeholder="سمك سم">' +
+                    '<input type="number" class="door-size-catalog-admin-height" min="180" max="280" value="' + escapeHtmlAttr(String(size.heightCm || '')) + '" placeholder="ارتفاع سم">' +
+                    '<input type="text" class="door-size-catalog-admin-label-ar" value="' + escapeHtmlAttr(size.labelAr || '') + '" placeholder="اسم المقاس (عربي)">' +
+                    '<input type="text" class="door-size-catalog-admin-label-en" value="' + escapeHtmlAttr(size.labelEn || '') + '" placeholder="Size label (EN)">' +
+                    '<button type="button" onclick="removeDoorSizeCatalogEntry(' + idx + ')">حذف</button>' +
+                    '</div>';
+            }).join('');
+        }
+
+        function buildDoorSizeLabelAr(widthCm, thicknessCm, heightCm) {
+            return 'ضلفة ' + widthCm + ' × ' + thicknessCm + ' × ' + heightCm + ' سم';
+        }
+
+        function buildDoorSizeLabelEn(widthCm, thicknessCm, heightCm) {
+            return 'Leaf ' + widthCm + ' × ' + thicknessCm + ' × ' + heightCm + ' cm';
+        }
+
+        function collectDoorSizeCatalogFromAdminForm() {
+            const rows = document.querySelectorAll('.door-size-catalog-admin-row');
+            const sizes = [];
+            rows.forEach(function(row, idx) {
+                const widthEl = row.querySelector('.door-size-catalog-admin-width');
+                const thickEl = row.querySelector('.door-size-catalog-admin-thickness');
+                const heightEl = row.querySelector('.door-size-catalog-admin-height');
+                const labelArEl = row.querySelector('.door-size-catalog-admin-label-ar');
+                const labelEnEl = row.querySelector('.door-size-catalog-admin-label-en');
+                const idEl = row.querySelector('.door-size-catalog-admin-id');
+                if (!widthEl || !thickEl || !heightEl) return;
+                const widthCm = parseFloat(widthEl.value);
+                const thicknessCm = parseFloat(thickEl.value);
+                const heightCm = parseFloat(heightEl.value);
+                if (isNaN(widthCm) || isNaN(thicknessCm) || isNaN(heightCm)) return;
+                const labelAr = labelArEl ? String(labelArEl.value || '').trim() : '';
+                const labelEn = labelEnEl ? String(labelEnEl.value || '').trim() : '';
+                const id = idEl && idEl.value ? String(idEl.value).trim() : ('leaf-' + Math.round(widthCm) + '-' + String(thicknessCm).replace('.', '') + '-' + Math.round(heightCm));
+                sizes.push({
+                    id: id,
+                    widthCm: widthCm,
+                    thicknessCm: thicknessCm,
+                    heightCm: heightCm,
+                    labelAr: labelAr || buildDoorSizeLabelAr(widthCm, thicknessCm, heightCm),
+                    labelEn: labelEn || buildDoorSizeLabelEn(widthCm, thicknessCm, heightCm),
+                    labelZh: buildDoorSizeLabelEn(widthCm, thicknessCm, heightCm)
+                });
+            });
+            return sizes;
+        }
+
+        function saveDoorSizeCatalogFromAdmin() {
+            if (!requireMainGovernanceAdmin('مقاسات الضلفة للإدارة الرئيسية فقط.')) return;
+            ensureDoorDesignerConfig();
+            const sizes = collectDoorSizeCatalogFromAdminForm();
+            if (!sizes.length) {
+                alert('يجب الإبقاء على مقاس واحد على الأقل.');
+                return;
+            }
+            systemSettings.doorDesigner.sizes = sizes;
+            saveContentData();
+            renderDoorSizeCatalogAdminList();
+            refreshNebrasDoorCatalogSite();
+            addAuditLog('تحديث مقاسات الضلفة', 'عدد المقاسات: ' + sizes.length);
+        }
+
+        function addDoorSizeCatalogEntryFromSettings() {
+            if (!requireMainGovernanceAdmin('مقاسات الضلفة للإدارة الرئيسية فقط.')) return;
+            ensureDoorDesignerConfig();
+            const sizes = collectDoorSizeCatalogFromAdminForm();
+            sizes.push({
+                id: 'leaf-' + Date.now(),
+                widthCm: 90,
+                thicknessCm: 3.5,
+                heightCm: 230,
+                labelAr: buildDoorSizeLabelAr(90, 3.5, 230),
+                labelEn: buildDoorSizeLabelEn(90, 3.5, 230),
+                labelZh: buildDoorSizeLabelEn(90, 3.5, 230)
+            });
+            systemSettings.doorDesigner.sizes = sizes;
+            renderDoorSizeCatalogAdminList();
+            saveDoorSizeCatalogFromAdmin();
+        }
+
+        function removeDoorSizeCatalogEntry(idx) {
+            if (!requireMainGovernanceAdmin('مقاسات الضلفة للإدارة الرئيسية فقط.')) return;
+            const sizes = collectDoorSizeCatalogFromAdminForm();
+            if (sizes.length <= 1) {
+                alert('لا يمكن حذف آخر مقاس في الكتالوج.');
+                return;
+            }
+            sizes.splice(idx, 1);
+            systemSettings.doorDesigner.sizes = sizes;
+            renderDoorSizeCatalogAdminList();
+            saveDoorSizeCatalogFromAdmin();
+        }
+
+        function resetDoorSizeCatalogToDefault() {
+            if (!requireMainGovernanceAdmin('مقاسات الضلفة للإدارة الرئيسية فقط.')) return;
+            if (!confirm('استعادة المقاسات القياسية (4 مقاسات: 3.5 و 4.5 سم)؟')) return;
+            ensureDoorDesignerConfig();
+            systemSettings.doorDesigner.sizes = JSON.parse(JSON.stringify(DEFAULT_DOOR_DESIGNER.sizes));
+            saveContentData();
+            renderDoorSizeCatalogAdminList();
+            refreshNebrasDoorCatalogSite();
+            addAuditLog('استعادة مقاسات الضلفة', '4 مقاسات قياسية');
+        }
+
         async function pickQuoteA4StaticPageFromSettings(pageNo) {
             if (!requireMainGovernanceAdmin('تعديل صيغة عرض السعر A4 للإدارة الرئيسية فقط.')) return;
             const q = getQuoteA4Settings();
@@ -12167,7 +12400,7 @@
                 '<filter id="wpcDoorShadow" x="-20%" y="-10%" width="140%" height="120%"><feDropShadow dx="12" dy="20" stdDeviation="18" flood-color="#000" flood-opacity="0.45"/></filter>' +
                 '<filter id="wpcDoorSpecular"><feGaussianBlur in="SourceAlpha" stdDeviation="1.2" result="b"/><feOffset dx="-2" dy="-3" result="o"/><feComponentTransfer in="o"><feFuncA type="linear" slope="0.25"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>' +
                 '<pattern id="wpcDoorTexture" patternUnits="objectBoundingBox" width="1" height="1"><image id="wpcDoorTextureImg" href="" width="1" height="1" preserveAspectRatio="xMidYMid slice"/></pattern></defs>' +
-                '<g id="wpcSvgDoorUnit" filter="url(#wpcDoorShadow)"><rect id="wpcSvgOuterFrame" x="18" y="8" width="404" height="892" rx="4" fill="url(#wpcFrameGrad)" stroke="#2e3338" stroke-width="2"/>' +
+                '<g id="wpcSvgDoorUnit" filter="url(#wpcDoorShadow)"><rect id="wpcSvgOuterFrame" x="18" y="8" width="404" height="892" rx="4" fill="url(#wpcFrameGrad)" stroke="#2e3338" stroke-width="4"/>' +
                 '<rect id="wpcSvgFrameLiner" x="38" y="38" width="364" height="832" fill="var(--door-frame-liner,#3a4046)"/><rect id="wpcSvgFrameBevel" x="50" y="50" width="340" height="808" fill="none" stroke="var(--door-frame-bevel,rgba(255,255,255,0.22))" stroke-width="2"/><rect x="18" y="878" width="404" height="22" rx="2" fill="url(#wpcThresholdGrad)"/>' +
                 '<g id="wpcSvgTransom" opacity="0"><rect x="96" y="48" width="248" height="72" rx="3" fill="url(#wpcLeafGrad)" stroke="rgba(0,0,0,0.12)"/><rect x="108" y="58" width="224" height="52" rx="2" fill="url(#wpcGlassGrad)" opacity="0.85"/></g>' +
                 '<g id="wpcSvgSidelite" opacity="0"><rect x="318" y="48" width="72" height="780" fill="url(#wpcFrameGrad)" stroke="#2e3338"/><rect x="328" y="58" width="52" height="760" fill="url(#wpcGlassGrad)" stroke="rgba(255,255,255,0.35)" stroke-width="2"/></g>' +
@@ -13227,6 +13460,41 @@
             if (unit) unit.setAttribute('transform', isLeft ? 'scale(-1,1) translate(-440,0)' : '');
         }
 
+        function applyWpcSvgFrameThickness(stage, thicknessCm) {
+            const t = Number(thicknessCm) || 3.5;
+            const jambPx = Math.round(20 + Math.max(0, t - 3.5) * 6);
+            const strokeW = (3.5 + Math.max(0, t - 3.5) * 1.6).toFixed(1);
+            const outerX = 18;
+            const outerY = 8;
+            const outerW = 404;
+            const outerH = 892;
+            const linerX = outerX + jambPx;
+            const linerY = outerY + jambPx;
+            const linerW = outerW - jambPx * 2;
+            const linerH = outerH - jambPx * 2;
+            const bevelInset = Math.max(8, Math.round(jambPx * 0.55));
+            const outerFrame = document.getElementById('wpcSvgOuterFrame');
+            const frameLiner = document.getElementById('wpcSvgFrameLiner');
+            const frameBevel = document.getElementById('wpcSvgFrameBevel');
+            if (outerFrame) outerFrame.setAttribute('stroke-width', strokeW);
+            if (frameLiner) {
+                frameLiner.setAttribute('x', String(linerX));
+                frameLiner.setAttribute('y', String(linerY));
+                frameLiner.setAttribute('width', String(linerW));
+                frameLiner.setAttribute('height', String(linerH));
+            }
+            if (frameBevel) {
+                frameBevel.setAttribute('x', String(linerX + bevelInset));
+                frameBevel.setAttribute('y', String(linerY + bevelInset));
+                frameBevel.setAttribute('width', String(linerW - bevelInset * 2));
+                frameBevel.setAttribute('height', String(linerH - bevelInset * 2));
+            }
+            if (stage) {
+                stage.style.setProperty('--door-frame-stroke', strokeW);
+                stage.style.setProperty('--door-frame-jamb', String(jambPx));
+            }
+        }
+
         function applyWpcSvgSize(stage, sizeId, cfg) {
             if (!stage || !cfg || !cfg.sizes) return;
             const size = cfg.sizes.find(function(s) { return s && s.id === sizeId; }) || cfg.sizes[0];
@@ -13241,6 +13509,7 @@
             stage.style.setProperty('--door-size-scale-y', String(scaleY));
             stage.style.setProperty('--door-thickness-cm', String(t));
             stage.setAttribute('data-size', sizeId || '');
+            applyWpcSvgFrameThickness(stage, t);
             const specH = stage.querySelector('.door-size-dim');
             if (specH) specH.textContent = w + '×' + t + '×' + h;
         }
@@ -14500,6 +14769,7 @@
             if (quoteBlock) quoteBlock.hidden = !isMainGovernanceAdmin(currentAdmin);
             renderHeroSlideshowAdminList();
             renderColorCatalogAdminList();
+            renderDoorSizeCatalogAdminList();
 
             populateOccasionThemeSelect();
             const occEnabled = document.getElementById('setting-occasion-enabled');
@@ -14596,7 +14866,7 @@
                 const qWm = document.getElementById('setting-quote-a4-show-watermark');
                 const qFrame = document.getElementById('setting-quote-a4-show-frame');
                 const qSeal = document.getElementById('setting-quote-a4-show-seal');
-                if (qLogo) q.logoUrl = qLogo.value.trim() || 'images/logo.png';
+                if (qLogo) q.logoUrl = qLogo.value.trim() || 'images/logo-nebras-mark.png';
                 if (qTagAr) q.taglineAr = qTagAr.value.trim();
                 if (qTagEn) q.taglineEn = qTagEn.value.trim();
                 if (qBandAr) q.headerBandAr = qBandAr.value.trim();
@@ -15114,14 +15384,17 @@
         window.renderSiteServiceCards = renderSiteServiceCards;
 
         function getVisitorIconHeroBgStyle(icon) {
-            if (!icon || !VISITOR_ICON_HERO_BG[icon.id]) return '';
-            const path = VISITOR_ICON_HERO_BG[icon.id]();
+            if (!icon) return '';
+            let path = '';
+            if (VISITOR_ICON_HERO_BG[icon.id]) path = VISITOR_ICON_HERO_BG[icon.id]();
+            else if (icon.backgroundImage) path = String(icon.backgroundImage).startsWith('images/') ? icon.backgroundImage : ('images/' + icon.backgroundImage);
+            if (!path) return '';
             const url = withVisitorIconMediaVersion(path, icon.id);
             return ' style="background-image:url(\'' + escapeHtmlAttr(url) + '\');background-size:cover;background-position:center;"';
         }
 
         function visitorIconUsesHeroBg(icon) {
-            return !!(icon && VISITOR_ICON_HERO_BG[icon.id]);
+            return !!(icon && (VISITOR_ICON_HERO_BG[icon.id] || icon.backgroundImage));
         }
 
         function renderVisitorIconCardMarkup(icon) {
@@ -15130,6 +15403,7 @@
             const isBank = icon && icon.id === 4;
             const isCerts = icon && icon.id === 7;
             const isDoorDesigner = icon && icon.id === 13;
+            const isProfilePdf = icon && (icon.id === 21 || icon.openHandler === 'profile-pdf-download');
             const isHeroBg = visitorIconUsesHeroBg(icon);
             const bankPlates = isBank
                 ? '<div class="visitor-bank-plates" aria-hidden="true">' +
@@ -15142,6 +15416,7 @@
             if (isBank) cardClass += ' visitor-icon-card--bank-accounts';
             else if (isCerts) cardClass += ' visitor-icon-card--certifications';
             else if (isDoorDesigner) cardClass += ' visitor-icon-card--door-designer';
+            else if (isProfilePdf) cardClass += ' visitor-icon-card--profile-pdf';
             else if (isHeroBg) cardClass += ' visitor-icon-card--hero-bg';
             const heroBgStyle = getVisitorIconHeroBgStyle(icon);
             const hideCornerIcon = isBank || isHeroBg;
@@ -15194,6 +15469,9 @@
             }
             if (icon.openHandler === 'callback-concierge') {
                 return { pillar: 'platform', view: 'callback-concierge', iconId: icon.id };
+            }
+            if (icon.openHandler === 'profile-pdf-download') {
+                return { pillar: 'platform', view: 'external', url: 'documents/nebras-company-profile-2026.pdf', iconId: icon.id };
             }
             const exp = getCatalogExperience(icon);
             const tg = String(icon.target || '').trim();
@@ -15613,6 +15891,20 @@
         function openVisitorIcon(iconId) {
             const icon = visitorIcons.find(item => item.id === iconId);
             if (!icon) return;
+            if (icon.openHandler === 'profile-pdf-download') {
+                if (typeof window.downloadNebrasProfilePdf === 'function') {
+                    window.downloadNebrasProfilePdf();
+                } else {
+                    const a = document.createElement('a');
+                    a.href = 'documents/nebras-company-profile-2026.pdf';
+                    a.download = 'nebras-company-profile-2026.pdf';
+                    a.rel = 'noopener';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                }
+                return;
+            }
             if (icon.openHandler === 'callback-concierge') {
                 if (typeof window.openNebrasCallbackConcierge === 'function') window.openNebrasCallbackConcierge();
                 return;
@@ -17026,6 +17318,7 @@
                 gatewayLaneShowroomHint: '5 أقسام: أبواب نبراس · خزائن نبراس · WPC · CNC · مشاريع NHC',
                 visitorQuickShowroom: 'معرض نبراس — 5 أقسام',
                 visitorQuickCompanyProfile: 'الملف التعريفي الكامل 2026',
+                visitorQuickProfilePdf: 'بروفايل تعريفي لنبراس (تنزيل)',
                 visitorQuickCallback: 'نبراس يتصل بك',
                 companyProfileTitle: 'الملف التعريفي الكامل 2026',
                 companyProfileIntro: 'الملف التعريفي الرسمي — 14 قسماً مرتبطة بأيقونات الموقع والمعرض.',
@@ -17042,13 +17335,13 @@
                 gatewayLanePlatformHint: 'فروع المملكة، حسابات بنكية، وخدمات',
                 trustStripAria: 'مزايا مصنع نبراس',
                 trustItem1Title: 'مصنع سعودي',
-                trustItem1Sub: 'جودة صناعية من القصيم',
+                trustItem1Sub: 'بجودة عالمية وأسعار منافسة',
                 trustItem2Title: 'ضمان وثقة',
                 trustItem2Sub: 'منتجات WPC معتمدة',
                 trustItem3Title: 'عرض سعر رسمي',
-                trustItem3Sub: 'فاتورة A4 + ضريبة',
+                trustItem3Sub: 'بأقل من 30 ثانية',
                 trustItem4Title: 'صمّم بابك',
-                trustItem4Sub: 'استوديو تفاعلي 3D',
+                trustItem4Sub: 'استمتع بتجربة فريدة',
                 gatewayExploreStore: 'استكشف المتجر الكامل',
                 gatewayDoorDesigner: 'صمّم بابك',
                 mobBarStore: 'المتجر',
@@ -17331,6 +17624,11 @@
                 storeSortPriceHigh: 'من الأعلى سعراً',
                 storeProductCount: '{n} منتج',
                 storeCatalogEmpty: 'لا منتجات تطابق الفلاتر الحالية.',
+                visitorQrTitle: 'شارك نبراس مع من تحب',
+                visitorQrLead: 'امسح الرمز أو حمّله وأرسله لصديق، مقاول، أو عميل — يصل مباشرة لموقع مصنع نبراس الرسمي.',
+                visitorQrShareHint: 'كل مشاركة = فرصة جديدة لنبراس — انشر الجودة السعودية',
+                visitorQrCta: 'تحميل رمز QR',
+                visitorQrAlt: 'رمز QR لموقع مصنع نبراس',
                 occasionPromoTitle: 'عرض المناسبة',
                 occasionPromoCta: 'اكتشف العروض',
                 checkoutNoteLabel: 'ملاحظات للمبيعات',
@@ -17654,13 +17952,13 @@
                 gatewayLanePlatformHint: 'Branches, bank accounts, services',
                 trustStripAria: 'Nebras factory advantages',
                 trustItem1Title: 'Saudi factory',
-                trustItem1Sub: 'Industrial quality from Qassim',
+                trustItem1Sub: 'Global quality, competitive prices',
                 trustItem2Title: 'Trust & warranty',
                 trustItem2Sub: 'Certified WPC products',
                 trustItem3Title: 'Official quotation',
-                trustItem3Sub: 'A4 invoice + VAT',
+                trustItem3Sub: 'In under 30 seconds',
                 trustItem4Title: 'Design your door',
-                trustItem4Sub: 'Interactive 3D studio',
+                trustItem4Sub: 'Enjoy a unique experience',
                 gatewayExploreStore: 'Explore full store',
                 gatewayDoorDesigner: 'Design your door',
                 mobBarStore: 'Store',
@@ -17879,6 +18177,11 @@
                 storeSortPriceHigh: 'Highest price',
                 storeProductCount: '{n} products',
                 storeCatalogEmpty: 'No products match the current filters.',
+                visitorQrTitle: 'Share Nebras in seconds',
+                visitorQrLead: 'Scan or download the QR code and send it to a friend, contractor, or client — opens the official Nebras factory website instantly.',
+                visitorQrShareHint: 'Every share is a new opportunity for Nebras',
+                visitorQrCta: 'Download QR code',
+                visitorQrAlt: 'QR code for Nebras Plastic Factory website',
                 occasionPromoTitle: 'Special offer',
                 occasionPromoCta: 'Explore offers',
                 checkoutNoteLabel: 'Notes for sales',
@@ -18070,13 +18373,13 @@
                 gatewayLanePlatformHint: '沙特分支、银行账户与服务',
                 trustStripAria: 'Nebras 工厂优势',
                 trustItem1Title: '沙特工厂',
-                trustItem1Sub: '卡西姆工业品质',
+                trustItem1Sub: '全球品质，竞争力价格',
                 trustItem2Title: '保障与信任',
                 trustItem2Sub: '认证 WPC 产品',
                 trustItem3Title: '正式报价',
-                trustItem3Sub: 'A4 发票 + 增值税',
+                trustItem3Sub: '30 秒内完成',
                 trustItem4Title: '定制您的门',
-                trustItem4Sub: '交互式 3D 工作室',
+                trustItem4Sub: '享受独特体验',
                 gatewayExploreStore: '浏览完整商店',
                 gatewayDoorDesigner: '设计您的门',
                 mobBarStore: '商店',
@@ -18427,6 +18730,11 @@
                 storeSortPriceHigh: '价格从高到低',
                 storeProductCount: '{n} 件产品',
                 storeCatalogEmpty: '没有符合当前筛选条件的产品。',
+                visitorQrTitle: '秒速分享 Nebras',
+                visitorQrLead: '扫描或下载二维码，发送给朋友、承包商或客户 — 直达 Nebras 工厂官网。',
+                visitorQrShareHint: '每一次分享都是 Nebras 的新机会',
+                visitorQrCta: '下载二维码',
+                visitorQrAlt: 'Nebras 工厂网站二维码',
                 occasionPromoTitle: '特别优惠',
                 occasionPromoCta: '查看优惠',
                 checkoutNoteLabel: '给销售的备注',
@@ -18776,6 +19084,7 @@
             const langToggleBtn = document.getElementById('lang-toggle-btn');
             if (langToggleBtn) langToggleBtn.setAttribute('aria-expanded', 'false');
             if (!light && !skipCatalog) {
+                renderVisitorQrSection();
                 renderVisitorIcons();
                 displayBranches();
                 if (nebrasWorkspaceState.active) renderNebrasWorkspace();
@@ -18864,6 +19173,10 @@
         window.removeColorCatalogEntry = removeColorCatalogEntry;
         window.pickColorCatalogTexture = pickColorCatalogTexture;
         window.resetColorCatalogToDefault = resetColorCatalogToDefault;
+        window.saveDoorSizeCatalogFromAdmin = saveDoorSizeCatalogFromAdmin;
+        window.addDoorSizeCatalogEntryFromSettings = addDoorSizeCatalogEntryFromSettings;
+        window.removeDoorSizeCatalogEntry = removeDoorSizeCatalogEntry;
+        window.resetDoorSizeCatalogToDefault = resetDoorSizeCatalogToDefault;
         window.openDashboardNavSettings = openDashboardNavSettings;
         window.openVisitorIcon = openVisitorIcon;
         window.openPlatformModule = openPlatformModule;

@@ -41,8 +41,8 @@
 }
 
 .cph-cover-logo {
-    width: 80px;
-    height: 80px;
+    width: 96px;
+    height: 96px;
     max-height: none;
     margin-bottom: 14px;
     object-fit: contain;
@@ -122,6 +122,40 @@
 .cph-stat span {
     font-size: 0.72rem;
     opacity: 0.8;
+}
+
+.cph-pdf-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 18px;
+}
+
+.cph-pdf-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 18px;
+    border-radius: 12px;
+    background: linear-gradient(145deg, #d4a842, #b8860b);
+    color: #041c2c;
+    font-size: 0.82rem;
+    font-weight: 800;
+    text-decoration: none;
+    box-shadow: 0 8px 22px rgba(212, 168, 66, 0.28);
+    transition: transform 0.2s ease;
+}
+
+.cph-pdf-btn:hover {
+    transform: translateY(-2px);
+}
+
+.cph-pdf-btn--ghost {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    box-shadow: none;
 }
 
 .cph-nav {

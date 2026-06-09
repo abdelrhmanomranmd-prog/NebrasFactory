@@ -335,8 +335,9 @@
 
     .logo-container img,
     .site-logo-img {
-        height: 46px;
-        max-width: min(180px, 48vw);
+        width: 52px;
+        height: 52px;
+        max-width: 52px;
     }
 }
 

@@ -59,12 +59,16 @@ header {
 
 .logo-container img,
 .site-logo-img {
-    height: 78px;
-    width: auto;
-    max-width: min(460px, 58vw);
+    width: 68px;
+    height: 68px;
+    max-width: 68px;
+    min-width: 48px;
     display: block;
-    border-radius: 8px;
+    border-radius: 0;
+    border: none;
+    background: none;
     object-fit: contain;
+    object-position: center;
 }
 
 .header-logo-occasion-wrap .header-occasion-chip {

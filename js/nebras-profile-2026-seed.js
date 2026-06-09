@@ -178,7 +178,7 @@
             companyAddressAr: 'القصيم · عنيزة · المنطقة الصناعية · امتداد طريق الزلفي',
             companyAddressEn: 'Qassim · Unaizah · Industrial Zone · Zulfi Road Extension',
             heroBannerImageUrl: 'images/profile-2026/hero-cover.jpg',
-            logoUrl: 'images/logo-white.svg'
+            logoUrl: 'images/logo-nebras-mark.png'
         }
     };
 

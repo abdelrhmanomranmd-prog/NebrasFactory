@@ -2413,7 +2413,7 @@
     position: absolute;
     left: 77.8%;
     top: 8.1%;
-    width: calc(var(--door-thickness-cm, 4) * 1.35px);
+    width: calc(var(--door-thickness-cm, 4) * 2.15px);
     height: 79.2%;
     border-radius: 0 3px 3px 0;
     background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(0, 0, 0, 0.24));
@@ -2449,6 +2449,11 @@
 
 .wpc-door-stage--keybab #wpcSvgOuterFrame {
     stroke: var(--door-frame-tint, #2e3338);
+    stroke-width: var(--door-frame-stroke, 4.5);
+}
+
+.wpc-door-stage--keybab #wpcSvgFrameLiner {
+    filter: brightness(0.96) contrast(1.04);
 }
 
 /* Profiles for the 8 main door models */

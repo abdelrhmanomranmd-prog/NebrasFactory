@@ -199,10 +199,19 @@
 
 .visitor-icon-card--certifications,
 .visitor-icon-card--door-designer,
-.visitor-icon-card--hero-bg {
+.visitor-icon-card--hero-bg,
+.visitor-icon-card--profile-pdf {
     min-height: 220px;
-    background-color: #2a2a2a;
+    background-color: #062e44;
     background-repeat: no-repeat;
+}
+
+.visitor-icon-card--profile-pdf {
+    border-top: 3px solid #d4a842;
+}
+
+.visitor-icon-card--profile-pdf::before {
+    background: linear-gradient(0deg, rgba(6, 46, 68, 0.92) 0%, rgba(6, 46, 68, 0.35) 50%, transparent 72%);
 }
 
 .visitor-icon-card--certifications::before,
@@ -213,7 +222,8 @@
 
 .visitor-icon-card--certifications .card-content,
 .visitor-icon-card--door-designer .card-content,
-.visitor-icon-card--hero-bg .card-content {
+.visitor-icon-card--hero-bg .card-content,
+.visitor-icon-card--profile-pdf .card-content {
     position: absolute;
     left: 0;
     right: 0;
@@ -227,8 +237,14 @@
 .visitor-icon-card--door-designer .card-content h3,
 .visitor-icon-card--door-designer .visitor-target-caption,
 .visitor-icon-card--hero-bg .card-content h3,
-.visitor-icon-card--hero-bg .visitor-target-caption {
+.visitor-icon-card--hero-bg .visitor-target-caption,
+.visitor-icon-card--profile-pdf .card-content h3,
+.visitor-icon-card--profile-pdf .visitor-target-caption {
     text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
+}
+
+.visitor-icon-card--profile-pdf .card-content h3 {
+    color: #f0c060;
 }
 
 /* قسم جديد: تقارير المبيعات */
