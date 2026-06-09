@@ -12001,6 +12001,7 @@
                 const el = document.getElementById(id);
                 if (el && val != null) el.textContent = val;
             }
+            setTxt('header-campaign-headline', text.heroHeadline);
             setTxt('header-campaign-tagline', text.heroTaglineShort || text.heroText);
             setTxt('header-explore-btn', text.heroExploreBtn);
             setTxt('header-quote-btn', text.heroQuoteBtn);

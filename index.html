@@ -76,7 +76,6 @@
     <link rel="stylesheet" href="css/11-media-lightbox.css">
     <link rel="stylesheet" href="css/12-door-designer.css">
     <link rel="stylesheet" href="css/13-header-campaign.css">
-    <link rel="stylesheet" href="css/18-header-keybab-hero.css">
     <link rel="stylesheet" href="css/17-header-door-showcase.css">
     <link rel="stylesheet" href="css/18-nebras-mini-showcase.css">
     <link rel="stylesheet" href="css/15-admin-analytics.css">
@@ -149,8 +148,56 @@
             <button id="top-smart-routing-btn" onclick="smartRouteToSales()">اتصال بالمندوب الأقرب</button>
         </div>
     </div>
-    <header class="nebras-header nebras-header--keybab">
-        <div class="header-main-row header-main-row--glass">
+    <header>
+        <div class="header-top-row header-top-row--campaign">
+            <div class="header-hero-band" id="header-hero-band">
+                <div class="header-hero-core" id="header-campaign-panel" aria-label="حملة نبراس">
+                    <div class="header-brand-row">
+                        <div class="lang-dropdown">
+                            <button type="button" class="lang-btn" id="lang-toggle-btn" aria-haspopup="true" aria-expanded="false" title="اختيار اللغة / Language">
+                                <i class="fas fa-language" aria-hidden="true"></i>
+                                <span id="lang-current-label">العربية</span>
+                            </button>
+                            <div class="lang-menu" id="lang-menu">
+                                <a href="#" data-lang="ar">العربية</a>
+                                <a href="#" data-lang="en">English</a>
+                                <a href="#" data-lang="zh">中文</a>
+                            </div>
+                        </div>
+                        <p class="header-campaign-title" id="hero-title"></p>
+                    </div>
+                    <div class="header-hero-divider" aria-hidden="true"></div>
+                    <h1 class="header-campaign-headline" id="header-campaign-headline"></h1>
+                    <p class="header-campaign-tagline" id="header-campaign-tagline"></p>
+                    <div class="header-campaign-action-strip" id="header-campaign-action-strip">
+                        <div class="header-campaign-door-aside" id="header-campaign-door-aside" role="button" tabindex="0" aria-label="صمّم بابك — معاينة أبواب WPC">
+                            <span class="header-showcase-chip header-showcase-chip--doors"><i class="fas fa-pencil-ruler" aria-hidden="true"></i> صمّم بابك</span>
+                            <div class="header-showcase-card header-showcase-card--doors">
+                                <div class="nebras-mini-showcase nebras-mini-showcase--doors nebras-mini-showcase--hero nebras-mini-showcase--interactive" id="header-hero-door-showcase"></div>
+                            </div>
+                        </div>
+                        <div class="header-campaign-cta">
+                            <button type="button" class="header-cta header-cta--primary" id="header-explore-btn" onclick="openNebrasWorkspace({pillar:'store',view:'catalog-all'})"></button>
+                            <button type="button" class="header-cta header-cta--ghost" id="header-quote-btn" onclick="confirmAndOpenQuote()"></button>
+                        </div>
+                    </div>
+                    <div class="header-campaign-stats" id="header-campaign-stats" aria-label="إنجازات المصنع"></div>
+                </div>
+                <aside class="header-hero-rail header-hero-rail--partners" id="header-aside-partners" aria-label="شركاؤنا">
+                    <span class="header-showcase-chip header-showcase-chip--partners"><i class="fas fa-handshake" aria-hidden="true"></i> شركاؤنا</span>
+                    <div class="header-showcase-card header-showcase-card--partners">
+                        <div class="nebras-mini-showcase nebras-mini-showcase--partners" id="top-partners-showcase"></div>
+                    </div>
+                </aside>
+                <aside class="header-hero-rail header-hero-rail--doors" id="header-aside-doors" hidden aria-hidden="true">
+                    <span class="header-showcase-chip header-showcase-chip--doors"><i class="fas fa-door-open" aria-hidden="true"></i> صمّم بابك</span>
+                    <div class="header-showcase-card header-showcase-card--doors">
+                        <div class="nebras-mini-showcase nebras-mini-showcase--doors" id="header-door-showcase" aria-label="معاينة أبواب WPC"></div>
+                    </div>
+                </aside>
+            </div>
+        </div>
+        <div class="header-main-row">
             <div class="header-logo-occasion-wrap">
                 <div class="logo-container">
                     <a href="index.html" class="site-logo-link" aria-label="شركة مصنع نبراس للبلاستيك">
@@ -183,78 +230,29 @@
 
     <div id="nebras-storefront" class="nebras-storefront">
 
-    <section class="hero hero-real hero-nebras-keybab hero-slideshow-enabled" id="site-hero" aria-label="الترحيب">
-        <div class="hero-cinematic" id="header-cinematic" aria-hidden="true">
-            <div class="header-cinematic-slides" id="header-cinematic-slides"></div>
-            <div class="header-cinematic-veil"></div>
-            <div class="header-cinematic-aurora header-cinematic-aurora--gold"></div>
-            <div class="header-cinematic-aurora header-cinematic-aurora--blue"></div>
-            <div class="header-cinematic-ray"></div>
-            <div class="header-cinematic-particles" id="header-cinematic-particles"></div>
-        </div>
+    <section class="hero hero-real hero-slideshow-enabled" id="site-hero" aria-label="الترحيب">
         <div class="hero-slideshow" id="hero-slideshow" aria-hidden="true">
             <div class="hero-slide is-active" data-slide="0">
                 <img class="hero-slide-img" src="/images/hero-slide-01-factory-banner.png" alt="" decoding="async" loading="eager" fetchpriority="high" onerror="this.onerror=null;this.src='/images/hero-nebras-banner.png'">
             </div>
         </div>
         <div class="hero-bg-layer" id="hero-bg-layer" aria-hidden="true"></div>
-        <div class="hero-keybab-panel">
-            <div class="hero-keybab-grid" id="header-hero-band">
-                <div class="hero-keybab-main" id="header-campaign-panel" aria-label="حملة نبراس">
-                    <div class="hero-keybab-top">
-                        <div class="lang-dropdown lang-dropdown--hero">
-                            <button type="button" class="lang-btn" id="lang-toggle-btn" aria-haspopup="true" aria-expanded="false" title="اختيار اللغة / Language">
-                                <i class="fas fa-language" aria-hidden="true"></i>
-                                <span id="lang-current-label">العربية</span>
-                            </button>
-                            <div class="lang-menu" id="lang-menu">
-                                <a href="#" data-lang="ar">العربية</a>
-                                <a href="#" data-lang="en">English</a>
-                                <a href="#" data-lang="zh">中文</a>
-                            </div>
-                        </div>
-                        <p class="hero-keybab-eyebrow header-campaign-title" id="hero-title"></p>
-                    </div>
-                    <div class="hero-dynamic-headline-wrap" aria-live="polite">
-                        <h1 class="hero-keybab-title header-campaign-headline">
-                            <span class="hero-dynamic-headline is-visible" id="hero-dynamic-headline">شركة مصنع نبراس للبلاستيك</span>
-                        </h1>
-                    </div>
-                    <p class="hero-keybab-tagline header-campaign-tagline" id="header-campaign-tagline"></p>
-                    <p class="hero-keybab-tagline hero-keybab-tagline--mobile" id="hero-mobile-tagline">حوّل مساحتك بالجودة والأناقة — من القصيم إلى كل المملكة</p>
-                    <div class="hero-keybab-actions header-campaign-action-strip" id="header-campaign-action-strip">
-                        <div class="header-campaign-door-aside" id="header-campaign-door-aside" role="button" tabindex="0" aria-label="صمّم بابك — معاينة أبواب WPC">
-                            <span class="header-showcase-chip header-showcase-chip--doors"><i class="fas fa-pencil-ruler" aria-hidden="true"></i> صمّم بابك</span>
-                            <div class="header-showcase-card header-showcase-card--doors">
-                                <div class="nebras-mini-showcase nebras-mini-showcase--doors nebras-mini-showcase--hero nebras-mini-showcase--interactive" id="header-hero-door-showcase"></div>
-                            </div>
-                        </div>
-                        <div class="header-campaign-cta hero-keybab-cta">
-                            <button type="button" class="header-cta header-cta--primary hero-keybab-btn" id="header-explore-btn" onclick="openNebrasWorkspace({pillar:'store',view:'catalog-all'})"></button>
-                            <button type="button" class="header-cta header-cta--ghost hero-keybab-btn" id="header-quote-btn" onclick="confirmAndOpenQuote()"></button>
-                            <button type="button" class="hero-mobile-btn hero-mobile-btn--primary" id="hero-mobile-explore" onclick="openNebrasWorkspace({pillar:'store',view:'catalog-all'})">استكشف المنتجات ←</button>
-                            <button type="button" class="hero-mobile-btn hero-mobile-btn--ghost" id="hero-mobile-quote" onclick="confirmAndOpenQuote()">طلب عرض سعر</button>
-                        </div>
-                    </div>
-                    <div class="hero-keybab-stats header-campaign-stats" id="header-campaign-stats" aria-label="إنجازات المصنع"></div>
-                    <div class="hero-keybab-stats hero-keybab-stats--mobile" id="hero-mobile-stats" aria-label="إنجازات المصنع"></div>
+        <div class="hero-slide-dots" id="hero-slide-dots" aria-hidden="true"></div>
+        <div class="hero-content-wrap" id="hero-content-wrap">
+            <div class="hero-mobile-panel" id="hero-mobile-panel">
+                <div class="hero-dynamic-headline-wrap" aria-live="polite">
+                    <h1 class="hero-mobile-headline">
+                        <span class="hero-dynamic-headline is-visible" id="hero-dynamic-headline">شركة مصنع نبراس للبلاستيك</span>
+                    </h1>
                 </div>
-                <aside class="hero-keybab-aside header-hero-rail header-hero-rail--partners" id="header-aside-partners" aria-label="شركاؤنا">
-                    <span class="header-showcase-chip header-showcase-chip--partners"><i class="fas fa-handshake" aria-hidden="true"></i> شركاؤنا</span>
-                    <div class="header-showcase-card header-showcase-card--partners">
-                        <div class="nebras-mini-showcase nebras-mini-showcase--partners" id="top-partners-showcase"></div>
-                    </div>
-                </aside>
-                <aside class="header-hero-rail header-hero-rail--doors" id="header-aside-doors" hidden aria-hidden="true">
-                    <span class="header-showcase-chip header-showcase-chip--doors"><i class="fas fa-door-open" aria-hidden="true"></i> صمّم بابك</span>
-                    <div class="header-showcase-card header-showcase-card--doors">
-                        <div class="nebras-mini-showcase nebras-mini-showcase--doors" id="header-door-showcase" aria-label="معاينة أبواب WPC"></div>
-                    </div>
-                </aside>
+                <p class="hero-mobile-tagline" id="hero-mobile-tagline">حوّل مساحتك بالجودة والأناقة — من القصيم إلى كل المملكة</p>
+                <div class="hero-mobile-cta">
+                    <button type="button" class="hero-mobile-btn hero-mobile-btn--primary" id="hero-mobile-explore" onclick="openNebrasWorkspace({pillar:'store',view:'catalog-all'})">استكشف المنتجات ←</button>
+                    <button type="button" class="hero-mobile-btn hero-mobile-btn--ghost" id="hero-mobile-quote" onclick="confirmAndOpenQuote()">طلب عرض سعر</button>
+                </div>
+                <div class="hero-mobile-stats" id="hero-mobile-stats" aria-label="إنجازات المصنع"></div>
             </div>
         </div>
-        <div class="hero-slide-dots" id="hero-slide-dots" aria-hidden="true"></div>
-        <div class="header-cinematic-baseline hero-keybab-baseline" aria-hidden="true"></div>
         <div class="hero-location-bar" id="hero-location-bar">
             <i class="fas fa-map-marker-alt" aria-hidden="true"></i>
             <span id="hero-address-text">القصيم - عنيزة - طريق الزلفي</span>
