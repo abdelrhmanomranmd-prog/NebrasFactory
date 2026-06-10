@@ -1794,15 +1794,18 @@
             ],
             modules: [
                 { id: 'erp-catalog', pillar: 'master', status: 'live', icon: 'fas fa-database', permission: 'content', handler: 'openSiteContentManager', nameAr: 'كتالوج المنتجات', descAr: 'ربط المتجر بالمواد', nameEn: 'Product master' },
-                { id: 'erp-inventory', pillar: 'supply', status: 'live', icon: 'fas fa-warehouse', permission: 'inventory', handler: 'openErpInventory', nameAr: 'المخزون WMS', descAr: 'SKU وكميات ومستودعات', nameEn: 'Inventory' },
+                { id: 'erp-production', pillar: 'supply', status: 'live', icon: 'fas fa-industry', permission: 'production', handler: 'openErpProduction', nameAr: 'الإنتاج اليومي', descAr: 'كميات الإنتاج المتاحة', nameEn: 'Production' },
+                { id: 'erp-inventory', pillar: 'supply', status: 'live', icon: 'fas fa-warehouse', permission: 'inventory', handler: 'openErpInventory', nameAr: 'المخزون والمستودع', descAr: 'SKU وكميات ومستودعات', nameEn: 'Inventory & WMS' },
+                { id: 'erp-pricelist', pillar: 'commerce', status: 'live', icon: 'fas fa-tags', permission: 'sales', handler: 'openSalesPriceList', nameAr: 'قائمة الأسعار', descAr: 'يحددها مدير المبيعات', nameEn: 'Price list' },
+                { id: 'erp-quote-builder', pillar: 'commerce', status: 'live', icon: 'fas fa-file-signature', permission: 'quotes', handler: 'openRepQuoteBuilder', nameAr: 'بناء عرض سعر', descAr: 'للمندوبين من القائمة', nameEn: 'Quote builder' },
                 { id: 'erp-sales', pillar: 'commerce', status: 'live', icon: 'fas fa-file-invoice-dollar', permission: 'sales', handler: 'openSalesManagement', nameAr: 'المبيعات', descAr: 'فواتير وعمليات بيع', nameEn: 'Sales' },
                 { id: 'erp-orders', pillar: 'commerce', status: 'beta', icon: 'fas fa-truck', permission: 'orders', handler: 'openErpOrders', nameAr: 'الطلبات OMS', descAr: 'متابعة التنفيذ', nameEn: 'Orders' },
-                { id: 'erp-procurement', pillar: 'supply', status: 'beta', icon: 'fas fa-truck-loading', permission: 'erp', handler: 'openErpProcurement', nameAr: 'المشتريات', descAr: 'موردون وتوريد', nameEn: 'Procurement' },
+                { id: 'erp-procurement', pillar: 'supply', status: 'live', icon: 'fas fa-truck-loading', permission: 'procurement', handler: 'openErpProcurement', nameAr: 'المشتريات والموردون', descAr: 'أوامر شراء وتكاليف', nameEn: 'Procurement' },
+                { id: 'erp-accounting', pillar: 'governance', status: 'live', icon: 'fas fa-file-invoice-dollar', permission: 'accounting', handler: 'openErpAccounting', nameAr: 'المحاسبة والتحويلات', descAr: 'تحويلات · مبيعات · أرباح', nameEn: 'Accounting' },
                 { id: 'erp-branches', pillar: 'master', status: 'live', icon: 'fas fa-map-marked-alt', permission: 'branches', handler: 'openBranchesManagement', nameAr: 'الفروع', descAr: 'شبكة المملكة', nameEn: 'Branches' },
                 { id: 'erp-complaints', pillar: 'crm', status: 'live', icon: 'fas fa-headset', permission: 'complaints', handler: 'openComplaintsManagement', nameAr: 'الشكاوى CRM', descAr: 'متابعة العملاء', nameEn: 'Complaints' },
                 { id: 'erp-customers', pillar: 'crm', status: 'live', icon: 'fas fa-users', permission: 'customerService', handler: 'openCustomerServiceManagement', nameAr: 'خدمة العملاء', descAr: 'استفسارات وردود', nameEn: 'Customer care' },
-                { id: 'erp-analytics', pillar: 'governance', status: 'live', icon: 'fas fa-chart-pie', permission: 'audit', handler: 'openAdminAnalytics', nameAr: 'ذكاء الأعمال BI', descAr: 'تقارير حية للإدارة', nameEn: 'Analytics' },
-                { id: 'erp-finance', pillar: 'governance', status: 'planned', icon: 'fas fa-coins', permission: 'erp', handler: 'erpFinanceStub', nameAr: 'المالية', descAr: 'محاسبة وتكاليف', nameEn: 'Finance' }
+                { id: 'erp-analytics', pillar: 'governance', status: 'live', icon: 'fas fa-chart-pie', permission: 'audit', handler: 'openAdminAnalytics', nameAr: 'ذكاء الأعمال BI', descAr: 'تقارير حية للإدارة', nameEn: 'Analytics' }
             ]
         };
 
@@ -1826,6 +1829,11 @@
         let erpInventory = [];
         let erpOrders = [];
         let erpProcurement = [];
+        /** NebrasERP — وحدات تشغيلية إضافية (إنتاج · مشتريات · تحويلات · قائمة أسعار) */
+        let erpProduction = [];   // { id, date, productAr, color, size, qty, unitAr, lineAr, note, by, branch, addedToStock }
+        let erpPurchases = [];    // { id, date, supplier, item, qty, unitCost, total, status, note, by }
+        let erpTransfers = [];    // { id, date, customerName, bankAr, amount, refNo, quoteNo, status, by }
+        let salesPriceList = [];  // { id, productAr, productEn, sku, color, size, unitAr, basePrice, minPrice, maxPrice, visible }
 
         const OCCASION_THEME_PRESETS = {
             default: {
@@ -2180,6 +2188,10 @@
             },
             openSystemSettings: function() { openSystemSettings(); },
             openErpInventory: function() { openErpInventory(); },
+            openErpProduction: function() { openErpProduction(); },
+            openErpAccounting: function() { openErpAccounting(); },
+            openSalesPriceList: function() { openSalesPriceList(); },
+            openRepQuoteBuilder: function() { openRepQuoteBuilder(); },
             openErpOrders: function() { openErpOrders(); },
             openErpProcurement: function() { openErpProcurement(); },
             scrollErpHub: function() { scrollErpHub(); },
@@ -10067,6 +10079,11 @@
             [
                 { id: 'user-management', key: 'users' },
                 { id: 'sales-management', key: 'sales' },
+                { id: 'sales-pricelist', key: 'sales' },
+                { id: 'rep-quote-builder', key: 'quotes' },
+                { id: 'erp-production', key: 'production' },
+                { id: 'erp-procurement', key: 'procurement' },
+                { id: 'erp-accounting', key: 'accounting' },
                 { id: 'customer-service-management', key: 'customerService' },
                 { id: 'complaints-management', key: 'complaints' },
                 { id: 'branches-management', key: 'branches' },
@@ -10362,15 +10379,583 @@
             addAuditLog('ERP طلب', customer);
         }
 
-        function openErpProcurement() {
-            if (!requirePermission('erp')) return;
-            const list = document.getElementById('erp-procurement-list');
-            if (list) {
-                list.innerHTML = erpProcurement.length
-                    ? erpProcurement.map(function(p) { return '<li>' + escapeHtmlAttr(p.title || p.id) + '</li>'; }).join('')
-                    : '<li>وحدة المشتريات — هيكل جاهز (موردون · أوامر شراء) كمنصات B2B العالمية.</li>';
+        /* ===================== NebrasERP — وحدات تشغيلية ===================== */
+        function erpToday() {
+            const d = new Date();
+            return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        }
+        function erpNum(v) { const n = parseFloat(v); return isNaN(n) ? 0 : n; }
+        function formatSar(v) {
+            const n = erpNum(v);
+            return n.toLocaleString('en-US', { maximumFractionDigits: 2 }) + ' ر.س';
+        }
+        function erpActor() { return currentAdmin ? currentAdmin.username : 'system'; }
+        function fieldVal(id) { const el = document.getElementById(id); return el ? String(el.value || '').trim() : ''; }
+
+        function ensureErpOperationsData() {
+            if (!Array.isArray(erpProduction)) erpProduction = [];
+            if (!Array.isArray(erpPurchases)) erpPurchases = [];
+            if (!Array.isArray(erpTransfers)) erpTransfers = [];
+            if (!Array.isArray(salesPriceList)) salesPriceList = [];
+        }
+
+        /* ---------- الإنتاج اليومي ---------- */
+        function openErpProduction() {
+            if (!requirePermission('production', 'صلاحية الإنتاج مطلوبة.')) return;
+            ensureErpOperationsData();
+            renderErpProductionForm();
+            displayErpProduction();
+            document.getElementById('erp-production').classList.add('show');
+        }
+
+        function renderErpProductionForm() {
+            const host = document.getElementById('erp-production-form');
+            if (!host) return;
+            const colorOpts = ['أبيض', 'بني', 'رمادي', 'بلوط', 'والنت', 'تيك', 'أسود', 'كريمي']
+                .map(function(c) { return '<option value="' + c + '">' + c + '</option>'; }).join('');
+            const sizeOpts = ['80×210', '90×210', '100×210', '80×230', '90×230', '100×230', '105×230', 'حسب الطلب']
+                .map(function(s) { return '<option value="' + s + '">' + s + '</option>'; }).join('');
+            const lineOpts = ['خط 1', 'خط 2', 'خط 3', 'CNC', 'تجميع', 'تشطيب']
+                .map(function(l) { return '<option value="' + l + '">' + l + '</option>'; }).join('');
+            host.innerHTML =
+                '<div class="erp-form-grid">' +
+                    '<label class="nebras-field"><span>التاريخ</span><input type="date" id="prod-date" value="' + erpToday() + '"></label>' +
+                    '<label class="nebras-field"><span>المنتج</span><input type="text" id="prod-product" placeholder="باب WPC فلات" list="prod-product-list"></label>' +
+                    '<label class="nebras-field"><span>اللون</span><select id="prod-color">' + colorOpts + '</select></label>' +
+                    '<label class="nebras-field"><span>المقاس</span><select id="prod-size">' + sizeOpts + '</select></label>' +
+                    '<label class="nebras-field"><span>الكمية المُنتَجة</span><input type="number" id="prod-qty" min="0" step="1" placeholder="0"></label>' +
+                    '<label class="nebras-field"><span>الوحدة</span><input type="text" id="prod-unit" value="قطعة"></label>' +
+                    '<label class="nebras-field"><span>خط الإنتاج</span><select id="prod-line">' + lineOpts + '</select></label>' +
+                    '<label class="nebras-field"><span>الفرع/المستودع</span><input type="text" id="prod-branch" value="القصيم — الرئيسي"></label>' +
+                    '<label class="nebras-field nebras-field--wide"><span>ملاحظات</span><input type="text" id="prod-note" placeholder="اختياري"></label>' +
+                    '<label class="erp-check nebras-field--wide"><input type="checkbox" id="prod-add-stock" checked> إضافة الكمية تلقائياً للمخزون المتاح</label>' +
+                '</div>' +
+                '<datalist id="prod-product-list">' +
+                    (siteProducts || []).map(function(p) { return '<option value="' + escapeHtmlAttr(p.titleAr || '') + '">'; }).join('') +
+                '</datalist>' +
+                '<div class="erp-form-actions"><button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="addErpProductionEntry()"><i class="fas fa-plus"></i> تسجيل إنتاج اليوم</button></div>';
+        }
+
+        function addErpProductionEntry() {
+            if (!requirePermission('production')) return;
+            ensureErpOperationsData();
+            const product = fieldVal('prod-product');
+            const qty = erpNum(fieldVal('prod-qty'));
+            if (!product) { alert('يرجى إدخال اسم المنتج.'); return; }
+            if (qty <= 0) { alert('يرجى إدخال كمية صحيحة.'); return; }
+            const entry = {
+                id: 'prod-' + Date.now(),
+                date: fieldVal('prod-date') || erpToday(),
+                productAr: product,
+                color: fieldVal('prod-color'),
+                size: fieldVal('prod-size'),
+                qty: qty,
+                unitAr: fieldVal('prod-unit') || 'قطعة',
+                lineAr: fieldVal('prod-line'),
+                branch: fieldVal('prod-branch'),
+                note: fieldVal('prod-note'),
+                by: erpActor(),
+                addedToStock: false
+            };
+            const addStock = (function() { const el = document.getElementById('prod-add-stock'); return el ? el.checked : false; })();
+            if (addStock) {
+                feedProductionToInventory(entry);
+                entry.addedToStock = true;
             }
+            erpProduction.unshift(entry);
+            saveSystemData();
+            renderErpProductionForm();
+            displayErpProduction();
+            if (typeof displayErpInventory === 'function') displayErpInventory();
+            renderErpHubPanel();
+            addAuditLog('إنتاج', entry.productAr + ' ' + entry.color + ' ' + entry.size + ' × ' + entry.qty);
+        }
+
+        function feedProductionToInventory(entry) {
+            ensureBuiltinErpData();
+            const sku = 'PRD-' + (entry.productAr + '-' + entry.color + '-' + entry.size).replace(/\s+/g, '').toUpperCase().slice(0, 28);
+            let item = erpInventory.find(function(i) { return i.sku === sku; });
+            if (item) {
+                item.qty = erpNum(item.qty) + erpNum(entry.qty);
+            } else {
+                erpInventory.push({
+                    id: 'inv-' + Date.now(),
+                    sku: sku,
+                    nameAr: entry.productAr + ' ' + entry.color + ' ' + entry.size,
+                    nameEn: entry.productAr,
+                    warehouseAr: entry.branch || 'القصيم — الرئيسي',
+                    warehouseEn: entry.branch || 'Qassim main',
+                    qty: erpNum(entry.qty),
+                    minQty: 10,
+                    unitAr: entry.unitAr || 'قطعة',
+                    productLink: ''
+                });
+            }
+        }
+
+        function deleteErpProductionEntry(id) {
+            if (!requirePermission('production')) return;
+            const entry = erpProduction.find(function(e) { return e.id === id; });
+            if (!entry || !confirm('حذف سجل إنتاج ' + entry.productAr + '؟')) return;
+            erpProduction = erpProduction.filter(function(e) { return e.id !== id; });
+            saveSystemData();
+            displayErpProduction();
+            renderErpHubPanel();
+        }
+
+        function displayErpProduction() {
+            const list = document.getElementById('erp-production-list');
+            if (!list) return;
+            ensureErpOperationsData();
+            const today = erpToday();
+            const todayQty = erpProduction.filter(function(e) { return e.date === today; })
+                .reduce(function(s, e) { return s + erpNum(e.qty); }, 0);
+            const totalQty = erpProduction.reduce(function(s, e) { return s + erpNum(e.qty); }, 0);
+            const summary = document.getElementById('erp-production-summary');
+            if (summary) {
+                summary.innerHTML =
+                    '<div class="erp-stat"><strong>' + todayQty + '</strong><span>إنتاج اليوم</span></div>' +
+                    '<div class="erp-stat"><strong>' + totalQty + '</strong><span>إجمالي مُسجّل</span></div>' +
+                    '<div class="erp-stat"><strong>' + erpProduction.length + '</strong><span>عدد السجلات</span></div>';
+            }
+            if (!erpProduction.length) {
+                list.innerHTML = '<p class="erp-empty">لا سجلات إنتاج بعد — سجّل إنتاج اليوم من النموذج بالأعلى.</p>';
+                return;
+            }
+            list.innerHTML = erpProduction.map(function(e) {
+                return '<article class="erp-row">' +
+                    '<div class="erp-row-main"><strong>' + escapeHtmlAttr(e.productAr) + '</strong>' +
+                        '<span class="erp-row-tags">' +
+                            (e.color ? '<span class="erp-tag">' + escapeHtmlAttr(e.color) + '</span>' : '') +
+                            (e.size ? '<span class="erp-tag">' + escapeHtmlAttr(e.size) + '</span>' : '') +
+                            (e.lineAr ? '<span class="erp-tag erp-tag--line">' + escapeHtmlAttr(e.lineAr) + '</span>' : '') +
+                            (e.addedToStock ? '<span class="erp-tag erp-tag--ok"><i class="fas fa-check"></i> أُضيف للمخزون</span>' : '') +
+                        '</span>' +
+                        '<small>' + escapeHtmlAttr(e.date) + ' · ' + escapeHtmlAttr(e.branch || '') + ' · بواسطة ' + escapeHtmlAttr(e.by || '') + (e.note ? ' · ' + escapeHtmlAttr(e.note) : '') + '</small>' +
+                    '</div>' +
+                    '<div class="erp-row-qty">' + erpNum(e.qty) + ' <small>' + escapeHtmlAttr(e.unitAr || '') + '</small></div>' +
+                    '<button type="button" class="erp-row-del" onclick="deleteErpProductionEntry(\'' + e.id + '\')" aria-label="حذف"><i class="fas fa-trash"></i></button>' +
+                '</article>';
+            }).join('');
+        }
+
+        /* ---------- المشتريات والموردون ---------- */
+        function openErpProcurement() {
+            if (!requirePermission('procurement', 'صلاحية المشتريات مطلوبة.')) return;
+            ensureErpOperationsData();
+            renderErpProcurementForm();
+            displayErpProcurement();
             document.getElementById('erp-procurement').classList.add('show');
+        }
+
+        function renderErpProcurementForm() {
+            const host = document.getElementById('erp-procurement-form');
+            if (!host) return;
+            host.innerHTML =
+                '<div class="erp-form-grid">' +
+                    '<label class="nebras-field"><span>التاريخ</span><input type="date" id="pur-date" value="' + erpToday() + '"></label>' +
+                    '<label class="nebras-field"><span>المورّد</span><input type="text" id="pur-supplier" placeholder="اسم المورّد"></label>' +
+                    '<label class="nebras-field"><span>الصنف / المادة</span><input type="text" id="pur-item" placeholder="حبيبات PVC"></label>' +
+                    '<label class="nebras-field"><span>الكمية</span><input type="number" id="pur-qty" min="0" step="any" placeholder="0"></label>' +
+                    '<label class="nebras-field"><span>سعر الوحدة (ر.س)</span><input type="number" id="pur-cost" min="0" step="any" placeholder="0" oninput="updatePurchaseTotalHint()"></label>' +
+                    '<label class="nebras-field"><span>الحالة</span><select id="pur-status"><option value="pending">قيد الطلب</option><option value="received">مستلَم</option><option value="paid">مدفوع</option></select></label>' +
+                    '<label class="nebras-field nebras-field--wide"><span>ملاحظات</span><input type="text" id="pur-note" placeholder="اختياري"></label>' +
+                '</div>' +
+                '<div class="erp-form-actions"><span class="erp-total-hint" id="pur-total-hint">الإجمالي: 0 ر.س</span>' +
+                    '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="addErpPurchase()"><i class="fas fa-plus"></i> تسجيل أمر شراء</button></div>';
+        }
+
+        function updatePurchaseTotalHint() {
+            const hint = document.getElementById('pur-total-hint');
+            if (!hint) return;
+            const total = erpNum(fieldVal('pur-qty')) * erpNum(fieldVal('pur-cost'));
+            hint.textContent = 'الإجمالي: ' + formatSar(total);
+        }
+
+        function addErpPurchase() {
+            if (!requirePermission('procurement')) return;
+            ensureErpOperationsData();
+            const supplier = fieldVal('pur-supplier');
+            const item = fieldVal('pur-item');
+            const qty = erpNum(fieldVal('pur-qty'));
+            const unitCost = erpNum(fieldVal('pur-cost'));
+            if (!supplier || !item) { alert('يرجى إدخال المورّد والصنف.'); return; }
+            erpPurchases.unshift({
+                id: 'pur-' + Date.now(),
+                date: fieldVal('pur-date') || erpToday(),
+                supplier: supplier,
+                item: item,
+                qty: qty,
+                unitCost: unitCost,
+                total: qty * unitCost,
+                status: fieldVal('pur-status') || 'pending',
+                note: fieldVal('pur-note'),
+                by: erpActor()
+            });
+            saveSystemData();
+            renderErpProcurementForm();
+            displayErpProcurement();
+            renderErpHubPanel();
+            addAuditLog('مشتريات', supplier + ' — ' + item);
+        }
+
+        function deleteErpPurchase(id) {
+            if (!requirePermission('procurement')) return;
+            const p = erpPurchases.find(function(x) { return x.id === id; });
+            if (!p || !confirm('حذف أمر الشراء؟')) return;
+            erpPurchases = erpPurchases.filter(function(x) { return x.id !== id; });
+            saveSystemData();
+            displayErpProcurement();
+        }
+
+        function displayErpProcurement() {
+            const list = document.getElementById('erp-procurement-list');
+            if (!list) return;
+            ensureErpOperationsData();
+            const total = erpPurchases.reduce(function(s, p) { return s + erpNum(p.total); }, 0);
+            const summary = document.getElementById('erp-procurement-summary');
+            if (summary) {
+                summary.innerHTML =
+                    '<div class="erp-stat"><strong>' + erpPurchases.length + '</strong><span>أوامر الشراء</span></div>' +
+                    '<div class="erp-stat"><strong>' + formatSar(total) + '</strong><span>إجمالي المشتريات</span></div>';
+            }
+            const statusLabel = { pending: 'قيد الطلب', received: 'مستلَم', paid: 'مدفوع' };
+            if (!erpPurchases.length) {
+                list.innerHTML = '<p class="erp-empty">لا أوامر شراء بعد.</p>';
+                return;
+            }
+            list.innerHTML = erpPurchases.map(function(p) {
+                return '<article class="erp-row">' +
+                    '<div class="erp-row-main"><strong>' + escapeHtmlAttr(p.item) + '</strong>' +
+                        '<span class="erp-row-tags"><span class="erp-tag">' + escapeHtmlAttr(p.supplier) + '</span>' +
+                            '<span class="erp-tag erp-tag--status-' + escapeHtmlAttr(p.status) + '">' + escapeHtmlAttr(statusLabel[p.status] || p.status) + '</span></span>' +
+                        '<small>' + escapeHtmlAttr(p.date) + ' · ' + erpNum(p.qty) + ' × ' + formatSar(p.unitCost) + (p.note ? ' · ' + escapeHtmlAttr(p.note) : '') + '</small>' +
+                    '</div>' +
+                    '<div class="erp-row-qty">' + formatSar(p.total) + '</div>' +
+                    '<button type="button" class="erp-row-del" onclick="deleteErpPurchase(\'' + p.id + '\')" aria-label="حذف"><i class="fas fa-trash"></i></button>' +
+                '</article>';
+            }).join('');
+        }
+
+        /* ---------- المحاسبة والتحويلات ---------- */
+        function openErpAccounting() {
+            if (!requirePermission('accounting', 'صلاحية المحاسبة مطلوبة.')) return;
+            ensureErpOperationsData();
+            renderErpAccountingForm();
+            displayErpAccounting();
+            document.getElementById('erp-accounting').classList.add('show');
+        }
+
+        function getQuoteTransferEntries() {
+            const inbox = (typeof loadSalesQuotesInbox === 'function') ? (loadSalesQuotesInbox() || []) : [];
+            return inbox.filter(function(q) { return q && (q.transferReceiptDataUrl || q.bankAr || q.paymentMethod === 'transfer'); })
+                .map(function(q) {
+                    return {
+                        id: 'q-' + (q.id || q.quoteNo),
+                        date: (q.at || '').slice(0, 10) || erpToday(),
+                        customerName: q.customerName || '—',
+                        bankAr: q.bankAr || 'تحويل بنكي',
+                        amount: erpNum(q.totalIncVat || q.total || 0),
+                        refNo: q.transferRef || '',
+                        quoteNo: q.quoteNo || '',
+                        status: 'from-quote',
+                        source: 'quote'
+                    };
+                });
+        }
+
+        function renderErpAccountingForm() {
+            const host = document.getElementById('erp-accounting-form');
+            if (!host) return;
+            host.innerHTML =
+                '<div class="erp-form-grid">' +
+                    '<label class="nebras-field"><span>التاريخ</span><input type="date" id="trf-date" value="' + erpToday() + '"></label>' +
+                    '<label class="nebras-field"><span>اسم العميل</span><input type="text" id="trf-customer" placeholder="اسم العميل"></label>' +
+                    '<label class="nebras-field"><span>البنك</span><input type="text" id="trf-bank" placeholder="الراجحي / الأهلي ..."></label>' +
+                    '<label class="nebras-field"><span>المبلغ (ر.س)</span><input type="number" id="trf-amount" min="0" step="any" placeholder="0"></label>' +
+                    '<label class="nebras-field"><span>رقم العملية</span><input type="text" id="trf-ref" placeholder="مرجع التحويل"></label>' +
+                    '<label class="nebras-field"><span>رقم العرض (اختياري)</span><input type="text" id="trf-quote" placeholder="NEB-..."></label>' +
+                '</div>' +
+                '<div class="erp-form-actions"><button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="addErpTransfer()"><i class="fas fa-plus"></i> تسجيل تحويل</button></div>';
+        }
+
+        function addErpTransfer() {
+            if (!requirePermission('accounting')) return;
+            ensureErpOperationsData();
+            const customer = fieldVal('trf-customer');
+            const amount = erpNum(fieldVal('trf-amount'));
+            if (!customer || amount <= 0) { alert('يرجى إدخال العميل والمبلغ.'); return; }
+            erpTransfers.unshift({
+                id: 'trf-' + Date.now(),
+                date: fieldVal('trf-date') || erpToday(),
+                customerName: customer,
+                bankAr: fieldVal('trf-bank') || 'تحويل بنكي',
+                amount: amount,
+                refNo: fieldVal('trf-ref'),
+                quoteNo: fieldVal('trf-quote'),
+                status: 'confirmed',
+                by: erpActor()
+            });
+            saveSystemData();
+            renderErpAccountingForm();
+            displayErpAccounting();
+            addAuditLog('تحويل بنكي', customer + ' — ' + formatSar(amount));
+        }
+
+        function deleteErpTransfer(id) {
+            if (!requirePermission('accounting')) return;
+            erpTransfers = erpTransfers.filter(function(x) { return x.id !== id; });
+            saveSystemData();
+            displayErpAccounting();
+        }
+
+        function displayErpAccounting() {
+            ensureErpOperationsData();
+            const manualTransfers = erpTransfers.slice();
+            const quoteTransfers = getQuoteTransferEntries();
+            const allTransfers = quoteTransfers.concat(manualTransfers);
+            const transfersTotal = allTransfers.reduce(function(s, t) { return s + erpNum(t.amount); }, 0);
+            const salesTotal = (salesData || []).reduce(function(s, x) { return s + erpNum(x.amount); }, 0);
+            const purchasesTotal = erpPurchases.reduce(function(s, p) { return s + erpNum(p.total); }, 0);
+            const profit = salesTotal - purchasesTotal;
+
+            const kpi = document.getElementById('erp-accounting-kpi');
+            if (kpi) {
+                kpi.innerHTML =
+                    '<div class="erp-stat erp-stat--accent"><strong>' + formatSar(salesTotal) + '</strong><span>إجمالي المبيعات</span></div>' +
+                    '<div class="erp-stat"><strong>' + formatSar(transfersTotal) + '</strong><span>التحويلات الواردة</span></div>' +
+                    '<div class="erp-stat"><strong>' + formatSar(purchasesTotal) + '</strong><span>المشتريات</span></div>' +
+                    '<div class="erp-stat ' + (profit >= 0 ? 'erp-stat--ok' : 'erp-stat--danger') + '"><strong>' + formatSar(profit) + '</strong><span>هامش الربح التقديري</span></div>';
+            }
+
+            const list = document.getElementById('erp-accounting-list');
+            if (list) {
+                if (!allTransfers.length) {
+                    list.innerHTML = '<p class="erp-empty">لا تحويلات مسجّلة — تظهر هنا تحويلات العملاء من العروض والتسجيل اليدوي.</p>';
+                } else {
+                    list.innerHTML = allTransfers.map(function(t) {
+                        const src = t.source === 'quote'
+                            ? '<span class="erp-tag erp-tag--line">من عرض ' + escapeHtmlAttr(t.quoteNo || '') + '</span>'
+                            : '<span class="erp-tag erp-tag--ok">يدوي</span>';
+                        const delBtn = t.source === 'quote' ? '' :
+                            '<button type="button" class="erp-row-del" onclick="deleteErpTransfer(\'' + t.id + '\')" aria-label="حذف"><i class="fas fa-trash"></i></button>';
+                        return '<article class="erp-row">' +
+                            '<div class="erp-row-main"><strong>' + escapeHtmlAttr(t.customerName) + '</strong>' +
+                                '<span class="erp-row-tags"><span class="erp-tag">' + escapeHtmlAttr(t.bankAr) + '</span>' + src + '</span>' +
+                                '<small>' + escapeHtmlAttr(t.date) + (t.refNo ? ' · مرجع ' + escapeHtmlAttr(t.refNo) : '') + '</small>' +
+                            '</div>' +
+                            '<div class="erp-row-qty">' + formatSar(t.amount) + '</div>' + delBtn +
+                        '</article>';
+                    }).join('');
+                }
+            }
+        }
+
+        /* ---------- قائمة الأسعار (مدير المبيعات) ---------- */
+        function openSalesPriceList() {
+            if (!requirePermission('sales', 'صلاحية المبيعات مطلوبة.')) return;
+            ensureErpOperationsData();
+            renderSalesPriceListForm();
+            displaySalesPriceList();
+            document.getElementById('sales-pricelist').classList.add('show');
+        }
+
+        function renderSalesPriceListForm() {
+            const host = document.getElementById('sales-pricelist-form');
+            if (!host) return;
+            host.innerHTML =
+                '<div class="erp-form-grid">' +
+                    '<label class="nebras-field"><span>المنتج</span><input type="text" id="pl-product" placeholder="باب WPC فلات"></label>' +
+                    '<label class="nebras-field"><span>SKU / كود</span><input type="text" id="pl-sku" placeholder="WPC-FLAT-90"></label>' +
+                    '<label class="nebras-field"><span>اللون</span><input type="text" id="pl-color" placeholder="أبيض"></label>' +
+                    '<label class="nebras-field"><span>المقاس</span><input type="text" id="pl-size" placeholder="90×210"></label>' +
+                    '<label class="nebras-field"><span>الوحدة</span><input type="text" id="pl-unit" value="قطعة"></label>' +
+                    '<label class="nebras-field"><span>السعر الأساسي (ر.س)</span><input type="number" id="pl-base" min="0" step="any" placeholder="0"></label>' +
+                    '<label class="nebras-field"><span>أدنى سعر مسموح</span><input type="number" id="pl-min" min="0" step="any" placeholder="0"></label>' +
+                    '<label class="nebras-field"><span>أعلى سعر مسموح</span><input type="number" id="pl-max" min="0" step="any" placeholder="0"></label>' +
+                '</div>' +
+                '<div class="erp-form-actions"><button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="addPriceListItem()"><i class="fas fa-plus"></i> إضافة للقائمة</button></div>';
+        }
+
+        function addPriceListItem() {
+            if (!requirePermission('sales')) return;
+            ensureErpOperationsData();
+            const product = fieldVal('pl-product');
+            const base = erpNum(fieldVal('pl-base'));
+            if (!product || base <= 0) { alert('يرجى إدخال المنتج والسعر الأساسي.'); return; }
+            const min = erpNum(fieldVal('pl-min')) || base;
+            const max = erpNum(fieldVal('pl-max')) || base;
+            salesPriceList.unshift({
+                id: 'pl-' + Date.now(),
+                productAr: product,
+                productEn: product,
+                sku: fieldVal('pl-sku'),
+                color: fieldVal('pl-color'),
+                size: fieldVal('pl-size'),
+                unitAr: fieldVal('pl-unit') || 'قطعة',
+                basePrice: base,
+                minPrice: Math.min(min, base),
+                maxPrice: Math.max(max, base),
+                visible: true
+            });
+            saveSystemData();
+            renderSalesPriceListForm();
+            displaySalesPriceList();
+            addAuditLog('قائمة أسعار', 'إضافة ' + product + ' بسعر ' + base);
+        }
+
+        function deletePriceListItem(id) {
+            if (!requirePermission('sales')) return;
+            const it = salesPriceList.find(function(x) { return x.id === id; });
+            if (!it || !confirm('حذف ' + it.productAr + ' من القائمة؟')) return;
+            salesPriceList = salesPriceList.filter(function(x) { return x.id !== id; });
+            saveSystemData();
+            displaySalesPriceList();
+        }
+
+        function displaySalesPriceList() {
+            const list = document.getElementById('sales-pricelist-list');
+            if (!list) return;
+            ensureErpOperationsData();
+            const summary = document.getElementById('sales-pricelist-summary');
+            if (summary) {
+                summary.innerHTML = '<div class="erp-stat"><strong>' + salesPriceList.length + '</strong><span>أصناف معتمدة للبيع</span></div>';
+            }
+            if (!salesPriceList.length) {
+                list.innerHTML = '<p class="erp-empty">لا أصناف بعد — مدير المبيعات يحدد المنتجات والأسعار التي يعمل عليها المندوبون.</p>';
+                return;
+            }
+            list.innerHTML = salesPriceList.map(function(it) {
+                return '<article class="erp-row">' +
+                    '<div class="erp-row-main"><strong>' + escapeHtmlAttr(it.productAr) + '</strong>' +
+                        '<span class="erp-row-tags">' +
+                            (it.sku ? '<span class="erp-tag">' + escapeHtmlAttr(it.sku) + '</span>' : '') +
+                            (it.color ? '<span class="erp-tag">' + escapeHtmlAttr(it.color) + '</span>' : '') +
+                            (it.size ? '<span class="erp-tag">' + escapeHtmlAttr(it.size) + '</span>' : '') +
+                        '</span>' +
+                        '<small>المدى المسموح: ' + formatSar(it.minPrice) + ' — ' + formatSar(it.maxPrice) + '</small>' +
+                    '</div>' +
+                    '<div class="erp-row-qty">' + formatSar(it.basePrice) + '</div>' +
+                    '<button type="button" class="erp-row-del" onclick="deletePriceListItem(\'' + it.id + '\')" aria-label="حذف"><i class="fas fa-trash"></i></button>' +
+                '</article>';
+            }).join('');
+        }
+
+        /* ---------- بناء عرض سعر (المندوب) ---------- */
+        let repQuoteDraft = { customerName: '', phone: '', lines: [] };
+
+        function openRepQuoteBuilder() {
+            if (!requirePermission('quotes', 'صلاحية عروض الأسعار مطلوبة.')) return;
+            ensureErpOperationsData();
+            if (!salesPriceList.length) {
+                alert('لا توجد قائمة أسعار بعد — يحددها مدير المبيعات أولاً من وحدة "قائمة الأسعار".');
+            }
+            repQuoteDraft = { customerName: '', phone: '', lines: [] };
+            renderRepQuoteBuilder();
+            document.getElementById('rep-quote-builder').classList.add('show');
+        }
+
+        function renderRepQuoteBuilder() {
+            const host = document.getElementById('rep-quote-body');
+            if (!host) return;
+            ensureErpOperationsData();
+            const opts = salesPriceList.map(function(it) {
+                return '<option value="' + it.id + '">' + escapeHtmlAttr(it.productAr + ' ' + (it.color || '') + ' ' + (it.size || '')) + ' — ' + formatSar(it.basePrice) + '</option>';
+            }).join('');
+            const linesHtml = repQuoteDraft.lines.length
+                ? repQuoteDraft.lines.map(function(ln, i) {
+                    return '<article class="erp-row">' +
+                        '<div class="erp-row-main"><strong>' + escapeHtmlAttr(ln.productAr) + '</strong>' +
+                            '<small>' + erpNum(ln.qty) + ' × ' + formatSar(ln.price) + '</small></div>' +
+                        '<div class="erp-row-qty">' + formatSar(erpNum(ln.qty) * erpNum(ln.price)) + '</div>' +
+                        '<button type="button" class="erp-row-del" onclick="removeRepQuoteLine(' + i + ')" aria-label="حذف"><i class="fas fa-trash"></i></button>' +
+                    '</article>';
+                  }).join('')
+                : '<p class="erp-empty">أضف أصنافاً للعرض من القائمة المعتمدة.</p>';
+            const subtotal = repQuoteDraft.lines.reduce(function(s, ln) { return s + erpNum(ln.qty) * erpNum(ln.price); }, 0);
+            const vat = subtotal * 0.15;
+            host.innerHTML =
+                '<div class="erp-form-grid">' +
+                    '<label class="nebras-field"><span>اسم العميل</span><input type="text" id="rq-customer" value="' + escapeHtmlAttr(repQuoteDraft.customerName) + '" placeholder="اسم العميل"></label>' +
+                    '<label class="nebras-field"><span>الجوال</span><input type="text" id="rq-phone" value="' + escapeHtmlAttr(repQuoteDraft.phone) + '" placeholder="05..."></label>' +
+                '</div>' +
+                '<div class="erp-form-grid erp-form-grid--line">' +
+                    '<label class="nebras-field nebras-field--wide"><span>الصنف من القائمة المعتمدة</span><select id="rq-item">' + (opts || '<option value="">لا أصناف</option>') + '</select></label>' +
+                    '<label class="nebras-field"><span>الكمية</span><input type="number" id="rq-qty" min="1" step="1" value="1"></label>' +
+                    '<label class="nebras-field"><span>السعر</span><input type="number" id="rq-price" min="0" step="any" placeholder="تلقائي"></label>' +
+                    '<div class="erp-form-actions"><button type="button" class="nebras-users-btn" onclick="addRepQuoteLine()"><i class="fas fa-plus"></i> إضافة صنف</button></div>' +
+                '</div>' +
+                '<div class="erp-quote-lines">' + linesHtml + '</div>' +
+                '<div class="erp-quote-totals">' +
+                    '<div><span>الإجمالي قبل الضريبة</span><strong>' + formatSar(subtotal) + '</strong></div>' +
+                    '<div><span>ضريبة 15%</span><strong>' + formatSar(vat) + '</strong></div>' +
+                    '<div class="erp-quote-grand"><span>الإجمالي شامل الضريبة</span><strong>' + formatSar(subtotal + vat) + '</strong></div>' +
+                '</div>' +
+                '<div class="erp-form-actions"><button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="saveRepQuote()"><i class="fas fa-floppy-disk"></i> حفظ العرض وإرساله للمبيعات</button></div>';
+        }
+
+        function captureRepQuoteHeader() {
+            repQuoteDraft.customerName = fieldVal('rq-customer') || repQuoteDraft.customerName;
+            repQuoteDraft.phone = fieldVal('rq-phone') || repQuoteDraft.phone;
+        }
+
+        function addRepQuoteLine() {
+            ensureErpOperationsData();
+            captureRepQuoteHeader();
+            const id = fieldVal('rq-item');
+            const it = salesPriceList.find(function(x) { return x.id === id; });
+            if (!it) { alert('اختر صنفاً من القائمة.'); return; }
+            const qty = Math.max(1, erpNum(fieldVal('rq-qty')) || 1);
+            let price = erpNum(fieldVal('rq-price')) || it.basePrice;
+            if (price < it.minPrice) { alert('السعر أقل من الحد الأدنى المسموح (' + formatSar(it.minPrice) + ').'); return; }
+            if (price > it.maxPrice) { alert('السعر أعلى من الحد الأقصى المسموح (' + formatSar(it.maxPrice) + ').'); return; }
+            repQuoteDraft.lines.push({ priceItemId: it.id, productAr: it.productAr + ' ' + (it.color || '') + ' ' + (it.size || ''), qty: qty, price: price });
+            renderRepQuoteBuilder();
+        }
+
+        function removeRepQuoteLine(i) {
+            captureRepQuoteHeader();
+            repQuoteDraft.lines.splice(i, 1);
+            renderRepQuoteBuilder();
+        }
+
+        function saveRepQuote() {
+            if (!requirePermission('quotes')) return;
+            const customer = fieldVal('rq-customer') || repQuoteDraft.customerName;
+            if (!customer) { alert('يرجى إدخال اسم العميل.'); return; }
+            if (!repQuoteDraft.lines.length) { alert('أضف صنفاً واحداً على الأقل.'); return; }
+            const subtotal = repQuoteDraft.lines.reduce(function(s, ln) { return s + erpNum(ln.qty) * erpNum(ln.price); }, 0);
+            const vat = subtotal * 0.15;
+            const quoteNo = (typeof issueNextQuoteNumber === 'function') ? issueNextQuoteNumber() : ('REP-' + Date.now());
+            const entry = {
+                id: 'repq-' + Date.now(),
+                quoteNo: quoteNo,
+                status: 'new',
+                at: new Date().toISOString(),
+                customerName: customer,
+                phone: fieldVal('rq-phone') || repQuoteDraft.phone,
+                lines: repQuoteDraft.lines.slice(),
+                subtotalExVat: subtotal,
+                vatAmount: vat,
+                totalIncVat: subtotal + vat,
+                total: subtotal + vat,
+                quoteKind: 'rep-built',
+                by: erpActor(),
+                assignedBranchCity: (currentAdmin && currentAdmin.assignedBranchCity) || ''
+            };
+            try {
+                const inbox = (typeof loadSalesQuotesInbox === 'function') ? (loadSalesQuotesInbox() || []) : [];
+                inbox.unshift(entry);
+                if (typeof saveSalesQuotesInbox === 'function') saveSalesQuotesInbox(inbox);
+            } catch (e) { /* ignore */ }
+            if (typeof pushQuoteToNebrasCloud === 'function') { try { pushQuoteToNebrasCloud(entry); } catch (e) {} }
+            saveSystemData();
+            if (typeof displaySalesQuotesInbox === 'function') displaySalesQuotesInbox();
+            if (typeof updateSalesInboxBadge === 'function') updateSalesInboxBadge();
+            addAuditLog('عرض سعر مندوب', customer + ' — ' + formatSar(subtotal + vat) + ' (' + quoteNo + ')');
+            alert('تم حفظ العرض ' + quoteNo + ' وإرساله لصندوق المبيعات.');
+            repQuoteDraft = { customerName: '', phone: '', lines: [] };
+            document.getElementById('rep-quote-builder').classList.remove('show');
         }
 
         function renderPlatformHubPanel() {
@@ -16771,6 +17356,10 @@
             { key: 'erp_inventory', get: function() { return erpInventory; }, set: function(v) { erpInventory = Array.isArray(v) ? v : []; } },
             { key: 'erp_orders', get: function() { return erpOrders; }, set: function(v) { erpOrders = Array.isArray(v) ? v : []; } },
             { key: 'erp_procurement', get: function() { return erpProcurement; }, set: function(v) { erpProcurement = Array.isArray(v) ? v : []; } },
+            { key: 'erp_production', get: function() { return erpProduction; }, set: function(v) { erpProduction = Array.isArray(v) ? v : []; } },
+            { key: 'erp_purchases', get: function() { return erpPurchases; }, set: function(v) { erpPurchases = Array.isArray(v) ? v : []; } },
+            { key: 'erp_transfers', get: function() { return erpTransfers; }, set: function(v) { erpTransfers = Array.isArray(v) ? v : []; } },
+            { key: 'sales_price_list', get: function() { return salesPriceList; }, set: function(v) { salesPriceList = Array.isArray(v) ? v : []; } },
             { key: 'site_partners', get: function() { return sitePartners; }, set: function(v) { sitePartners = Array.isArray(v) ? v : []; } },
             { key: 'site_certifications', get: function() { return siteCertifications; }, set: function(v) { siteCertifications = Array.isArray(v) ? v : []; } },
             { key: 'showroom_gallery', get: function() { return ensureShowroomGallery(); }, set: function(v) { showroomGallery = normalizeShowroomGallery(v); } },
@@ -16835,6 +17424,7 @@
             ensureDefaultBankAccounts();
             ensureBuiltinAboutPages();
             ensureBuiltinErpData();
+            ensureErpOperationsData();
             ensureBuiltinSiteCatalog();
             ensureBuiltinVisitorIcons();
             migrateVisitorIconMediaPaths();
@@ -16953,6 +17543,10 @@
             localStorage.setItem('nebrasErpInventory', JSON.stringify(erpInventory));
             localStorage.setItem('nebrasErpOrders', JSON.stringify(erpOrders));
             localStorage.setItem('nebrasErpProcurement', JSON.stringify(erpProcurement));
+            localStorage.setItem('nebrasErpProduction', JSON.stringify(erpProduction));
+            localStorage.setItem('nebrasErpPurchases', JSON.stringify(erpPurchases));
+            localStorage.setItem('nebrasErpTransfers', JSON.stringify(erpTransfers));
+            localStorage.setItem('nebrasSalesPriceList', JSON.stringify(salesPriceList));
             localStorage.setItem('nebrasAboutPages', JSON.stringify(aboutPages));
             localStorage.setItem('nebrasSitePartners', JSON.stringify(sitePartners));
             localStorage.setItem('nebrasSiteCertifications', JSON.stringify(siteCertifications));
@@ -17026,6 +17620,10 @@
             if (savedErpProcurement) {
                 try { erpProcurement = JSON.parse(savedErpProcurement); } catch (e) { console.warn('ERP procurement parse error', e); }
             }
+            try { const v = localStorage.getItem('nebrasErpProduction'); if (v) erpProduction = JSON.parse(v); } catch (e) { console.warn('ERP production parse error', e); }
+            try { const v = localStorage.getItem('nebrasErpPurchases'); if (v) erpPurchases = JSON.parse(v); } catch (e) { console.warn('ERP purchases parse error', e); }
+            try { const v = localStorage.getItem('nebrasErpTransfers'); if (v) erpTransfers = JSON.parse(v); } catch (e) { console.warn('ERP transfers parse error', e); }
+            try { const v = localStorage.getItem('nebrasSalesPriceList'); if (v) salesPriceList = JSON.parse(v); } catch (e) { console.warn('Sales price list parse error', e); }
             if (savedAboutPages) {
                 try {
                     const parsed = JSON.parse(savedAboutPages);
@@ -17034,6 +17632,7 @@
             }
             ensureBuiltinAboutPages();
             ensureBuiltinErpData();
+            ensureErpOperationsData();
             ensureBuiltinSiteCatalog();
             ensureBuiltinVisitorIcons();
             ensureBuiltinBranches();
@@ -19646,6 +20245,23 @@
         window.openUserManagement = openUserManagement;
         window.openSalesManagement = openSalesManagement;
         window.openErpInventory = openErpInventory;
+        window.openErpProduction = openErpProduction;
+        window.addErpProductionEntry = addErpProductionEntry;
+        window.deleteErpProductionEntry = deleteErpProductionEntry;
+        window.openErpProcurement = openErpProcurement;
+        window.addErpPurchase = addErpPurchase;
+        window.deleteErpPurchase = deleteErpPurchase;
+        window.updatePurchaseTotalHint = updatePurchaseTotalHint;
+        window.openErpAccounting = openErpAccounting;
+        window.addErpTransfer = addErpTransfer;
+        window.deleteErpTransfer = deleteErpTransfer;
+        window.openSalesPriceList = openSalesPriceList;
+        window.addPriceListItem = addPriceListItem;
+        window.deletePriceListItem = deletePriceListItem;
+        window.openRepQuoteBuilder = openRepQuoteBuilder;
+        window.addRepQuoteLine = addRepQuoteLine;
+        window.removeRepQuoteLine = removeRepQuoteLine;
+        window.saveRepQuote = saveRepQuote;
         window.openErpOrders = openErpOrders;
         window.openComplaintsManagement = openComplaintsManagement;
         window.openBranchesManagement = openBranchesManagement;

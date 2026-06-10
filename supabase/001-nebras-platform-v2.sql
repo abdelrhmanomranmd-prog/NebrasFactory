@@ -100,6 +100,10 @@ insert into public.nebras_data_store (store_key, payload) values
   ('erp_inventory', '[]'::jsonb),
   ('erp_orders', '[]'::jsonb),
   ('erp_procurement', '[]'::jsonb),
+  ('erp_production', '[]'::jsonb),
+  ('erp_purchases', '[]'::jsonb),
+  ('erp_transfers', '[]'::jsonb),
+  ('sales_price_list', '[]'::jsonb),
   ('site_partners', '[]'::jsonb),
   ('site_certifications', '[]'::jsonb),
   ('visitor_analytics', '{"sessions":[],"totalVisits":0,"totalPageViews":0}'::jsonb)

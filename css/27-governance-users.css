@@ -610,3 +610,214 @@
     .nebras-perm-grid { grid-template-columns: 1fr; }
     .nebras-users-grid { grid-template-columns: 1fr; padding: 16px; }
 }
+
+/* ============================================================
+   NebrasERP — وحدات تشغيلية (إنتاج · مشتريات · محاسبة · أسعار · عروض)
+   ============================================================ */
+.nebras-erp-modal {
+    --nu-navy: #062e44;
+    --nu-navy-2: #0a4d8c;
+    --nu-gold: #d4af37;
+    --nu-ink: #0d2233;
+    --nu-line: rgba(10, 77, 140, 0.16);
+    max-width: 1080px;
+    width: min(96vw, 1080px);
+    background: linear-gradient(180deg, #ffffff 0%, #f4f8fc 100%);
+    color: var(--nu-ink);
+    border-radius: 22px;
+    padding: 0 0 22px;
+    overflow: hidden;
+    box-shadow: 0 40px 120px rgba(4, 22, 40, 0.5);
+}
+
+.nebras-erp-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    padding: 20px 24px;
+    background: linear-gradient(135deg, var(--nu-navy) 0%, var(--nu-navy-2) 100%);
+    color: #fff;
+}
+
+.nebras-erp-head-title {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.nebras-erp-head-title > i {
+    font-size: 1.4rem;
+    color: var(--nu-gold);
+    width: 48px;
+    height: 48px;
+    display: grid;
+    place-items: center;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(212, 175, 55, 0.35);
+}
+
+.nebras-erp-head h2 { margin: 0; font-size: 1.18rem; color: #fff; }
+.nebras-erp-head p { margin: 3px 0 0; font-size: 0.78rem; color: rgba(255, 255, 255, 0.78); }
+
+.nebras-erp-subhead {
+    margin: 18px 24px 8px;
+    font-size: 0.95rem;
+    color: var(--nu-ink);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.nebras-erp-subhead i { color: var(--nu-gold); }
+
+.nebras-erp-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 16px 24px 4px;
+}
+
+.nebras-erp-stats--kpi { display: grid; grid-template-columns: repeat(4, 1fr); }
+
+.erp-stat {
+    flex: 1;
+    min-width: 130px;
+    background: #fff;
+    border: 1px solid var(--nu-line);
+    border-radius: 14px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    position: relative;
+    overflow: hidden;
+}
+.erp-stat::before {
+    content: "";
+    position: absolute;
+    inset-inline-start: 0; top: 0; bottom: 0;
+    width: 4px;
+    background: linear-gradient(180deg, var(--nu-gold), var(--nu-navy-2));
+}
+.erp-stat strong { font-size: 1.3rem; color: var(--nu-ink); line-height: 1.15; }
+.erp-stat span { font-size: 0.74rem; color: #5a6b7a; }
+.erp-stat--accent::before { background: linear-gradient(180deg, #1b9e57, #0a4d8c); }
+.erp-stat--ok strong { color: #1b9e57; }
+.erp-stat--danger strong { color: #c0392b; }
+
+.nebras-erp-form {
+    margin: 12px 24px;
+    padding: 16px;
+    border: 1px solid var(--nu-line);
+    border-radius: 16px;
+    background: #fff;
+}
+
+.erp-form-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+.erp-form-grid--line { grid-template-columns: 2fr 1fr 1fr auto; align-items: end; margin-top: 12px; }
+
+.erp-form-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 14px;
+    flex-wrap: wrap;
+}
+
+.erp-total-hint {
+    font-weight: 800;
+    color: var(--nu-navy-2);
+    margin-inline-end: auto;
+}
+
+.erp-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: var(--nu-navy-2);
+}
+.erp-check input { width: 18px; height: 18px; accent-color: var(--nu-navy-2); }
+
+.nebras-erp-list { margin: 8px 24px 0; display: flex; flex-direction: column; gap: 8px; }
+
+.erp-empty { color: #6a7888; text-align: center; padding: 22px; font-size: 0.88rem; }
+
+.erp-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border: 1px solid var(--nu-line);
+    border-radius: 13px;
+    background: #fff;
+}
+.erp-row-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.erp-row-main strong { font-size: 0.92rem; color: var(--nu-ink); }
+.erp-row-main small { font-size: 0.74rem; color: #6a7888; }
+.erp-row-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+
+.erp-tag {
+    font-size: 0.68rem;
+    font-weight: 700;
+    color: var(--nu-navy-2);
+    background: #eef4fa;
+    border: 1px solid var(--nu-line);
+    border-radius: 6px;
+    padding: 2px 7px;
+}
+.erp-tag--line { color: #8a6d10; background: rgba(212, 175, 55, 0.14); border-color: var(--nu-gold); }
+.erp-tag--ok { color: #1b9e57; background: rgba(27, 158, 87, 0.1); border-color: rgba(27, 158, 87, 0.35); }
+.erp-tag--status-received { color: #1b9e57; background: rgba(27, 158, 87, 0.1); }
+.erp-tag--status-paid { color: #0a4d8c; background: rgba(10, 77, 140, 0.1); }
+.erp-tag--status-pending { color: #c07a00; background: rgba(212, 137, 0, 0.12); }
+
+.erp-row-qty {
+    font-weight: 800;
+    color: var(--nu-navy-2);
+    font-size: 0.95rem;
+    white-space: nowrap;
+}
+.erp-row-qty small { font-weight: 600; color: #6a7888; font-size: 0.7rem; }
+
+.erp-row-del {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    border: 1px solid rgba(192, 57, 43, 0.3);
+    background: rgba(192, 57, 43, 0.06);
+    color: #c0392b;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.18s, color 0.18s;
+}
+.erp-row-del:hover { background: #c0392b; color: #fff; }
+
+/* بناء عرض السعر */
+.erp-quote-lines { display: flex; flex-direction: column; gap: 8px; margin: 14px 0; }
+.erp-quote-totals {
+    border-top: 1px dashed var(--nu-line);
+    padding-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.erp-quote-totals > div { display: flex; justify-content: space-between; font-size: 0.85rem; color: #5a6b7a; }
+.erp-quote-totals strong { color: var(--nu-ink); }
+.erp-quote-grand { font-size: 1rem !important; }
+.erp-quote-grand span, .erp-quote-grand strong { color: var(--nu-navy-2) !important; font-weight: 800; }
+
+@media (max-width: 768px) {
+    .erp-form-grid { grid-template-columns: 1fr 1fr; }
+    .erp-form-grid--line { grid-template-columns: 1fr 1fr; }
+    .nebras-erp-stats--kpi { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 480px) {
+    .erp-form-grid { grid-template-columns: 1fr; }
+}

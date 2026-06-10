@@ -835,11 +835,62 @@
     </div>
 
     <div class="admin-section" id="erp-procurement">
-        <div class="admin-modal">
-            <h2 id="erp-procurement-title">ERP — المشتريات والتوريد</h2>
-            <p class="scm-hint admin-only-ui" id="erp-procurement-hint">مرحلة قادمة: موردون، أوامر شراء، استلام — كسلاسل توريد علي بابا B2B.</p>
-            <ul id="erp-procurement-list" class="scm-list"></ul>
-            <button type="button" onclick="closeAdminSection('erp-procurement')">إغلاق</button>
+        <div class="admin-modal site-content-modal nebras-erp-modal">
+            <div class="nebras-erp-head">
+                <div class="nebras-erp-head-title"><i class="fas fa-truck-loading"></i><div><h2>المشتريات والموردون</h2><p>أوامر الشراء والتكاليف وحالة التوريد</p></div></div>
+                <button type="button" class="nebras-users-close" onclick="closeAdminSection('erp-procurement')" aria-label="إغلاق"><i class="fas fa-xmark"></i></button>
+            </div>
+            <div class="nebras-erp-stats" id="erp-procurement-summary"></div>
+            <div class="nebras-erp-form" id="erp-procurement-form"></div>
+            <div class="nebras-erp-list" id="erp-procurement-list"></div>
+        </div>
+    </div>
+
+    <div class="admin-section" id="erp-production">
+        <div class="admin-modal site-content-modal nebras-erp-modal">
+            <div class="nebras-erp-head">
+                <div class="nebras-erp-head-title"><i class="fas fa-industry"></i><div><h2>الإنتاج اليومي</h2><p>مدير الإنتاج يُدخل الكميات المتاحة وتُضاف للمخزون تلقائياً</p></div></div>
+                <button type="button" class="nebras-users-close" onclick="closeAdminSection('erp-production')" aria-label="إغلاق"><i class="fas fa-xmark"></i></button>
+            </div>
+            <div class="nebras-erp-stats" id="erp-production-summary"></div>
+            <div class="nebras-erp-form" id="erp-production-form"></div>
+            <div class="nebras-erp-list" id="erp-production-list"></div>
+        </div>
+    </div>
+
+    <div class="admin-section" id="erp-accounting">
+        <div class="admin-modal site-content-modal nebras-erp-modal">
+            <div class="nebras-erp-head">
+                <div class="nebras-erp-head-title"><i class="fas fa-file-invoice-dollar"></i><div><h2>المحاسبة والتحويلات</h2><p>تحويلات العملاء · ملخص المبيعات · المشتريات · هامش الربح</p></div></div>
+                <button type="button" class="nebras-users-close" onclick="closeAdminSection('erp-accounting')" aria-label="إغلاق"><i class="fas fa-xmark"></i></button>
+            </div>
+            <div class="nebras-erp-stats nebras-erp-stats--kpi" id="erp-accounting-kpi"></div>
+            <h3 class="nebras-erp-subhead"><i class="fas fa-money-bill-transfer"></i> تسجيل تحويل بنكي</h3>
+            <div class="nebras-erp-form" id="erp-accounting-form"></div>
+            <h3 class="nebras-erp-subhead"><i class="fas fa-list"></i> التحويلات الواردة</h3>
+            <div class="nebras-erp-list" id="erp-accounting-list"></div>
+        </div>
+    </div>
+
+    <div class="admin-section" id="sales-pricelist">
+        <div class="admin-modal site-content-modal nebras-erp-modal">
+            <div class="nebras-erp-head">
+                <div class="nebras-erp-head-title"><i class="fas fa-tags"></i><div><h2>قائمة الأسعار المعتمدة</h2><p>مدير المبيعات يحدد المنتجات والأسعار التي يعمل عليها المندوبون</p></div></div>
+                <button type="button" class="nebras-users-close" onclick="closeAdminSection('sales-pricelist')" aria-label="إغلاق"><i class="fas fa-xmark"></i></button>
+            </div>
+            <div class="nebras-erp-stats" id="sales-pricelist-summary"></div>
+            <div class="nebras-erp-form" id="sales-pricelist-form"></div>
+            <div class="nebras-erp-list" id="sales-pricelist-list"></div>
+        </div>
+    </div>
+
+    <div class="admin-section" id="rep-quote-builder">
+        <div class="admin-modal site-content-modal nebras-erp-modal">
+            <div class="nebras-erp-head">
+                <div class="nebras-erp-head-title"><i class="fas fa-file-signature"></i><div><h2>بناء عرض سعر</h2><p>اختر الأصناف من القائمة المعتمدة — يُرسَل العرض لصندوق المبيعات</p></div></div>
+                <button type="button" class="nebras-users-close" onclick="closeAdminSection('rep-quote-builder')" aria-label="إغلاق"><i class="fas fa-xmark"></i></button>
+            </div>
+            <div class="nebras-erp-form" id="rep-quote-body"></div>
         </div>
     </div>
 
