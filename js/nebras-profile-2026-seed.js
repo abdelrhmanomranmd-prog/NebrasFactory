@@ -5,9 +5,9 @@
 (function(global) {
     'use strict';
 
-    const PROFILE_2026_SEED_VERSION = 8;
+    const PROFILE_2026_SEED_VERSION = 9;
     const PROFILE_STORAGE_KEY = 'nebrasProfile2026SeedVersion';
-    const SHOWROOM_CATALOG_VERSION = 8;
+    const SHOWROOM_CATALOG_VERSION = 9;
     const SHOWROOM_CATALOG_STORAGE_KEY = 'nebrasShowroomCatalogVersion';
 
     function img(folder, n) {
@@ -213,6 +213,9 @@
     }
 
     const SHOWROOM_DOORS_CATALOG = [
+        [img('cabinets', 1), 'باب قواطع حمامات WPC', 'WPC restroom partition doors'],
+        [img('cabinets', 2), 'باب قواطع حمامات بمؤشر LED', 'Partition doors with LED indicator'],
+        [img('cabinets', 3), 'باب قواطع حمامات بخشب', 'Wood-finish partition doors'],
         [img('doors', 1), 'باب كلاسيك ثنائي اللوح', 'Classic two-panel door'],
         [img('doors', 2), 'باب زجاج مزدوج كلاسيك', 'Double classic glass door'],
         [img('doors', 3), 'باب فلات أبيض', 'Flat white door'],
@@ -228,10 +231,7 @@
     ];
 
     const SHOWROOM_CABINETS_CATALOG = [
-        [img('cabinets', 1), 'قواطع حمامات WPC', 'WPC toilet partitions'],
-        [img('cabinets', 2), 'قواطع حمامات بمؤشر LED', 'Partitions with LED occupancy'],
-        [img('cabinets', 3), 'قواطع حمامات بخشب وعاجي', 'Wood and cream partitions'],
-        [img('cabinets', 4), 'خزانة مطبخ علوية بيضاء', 'White upper kitchen cabinet'],
+        [img('cabinets', 4), 'خزانة ملابس كلاسيك رمادية', 'Classic grey wardrobe'],
         [img('cabinets', 5), 'خزانة ملابس بلون عاجي', 'Ivory wardrobe cabinet'],
         [img('cabinets', 6), 'خزانة ملابس فاخرة بزخارف', 'Premium decorative wardrobe'],
         [img('cabinets', 7), 'خزانة تخزين عصرية', 'Modern storage cabinet'],
@@ -268,20 +268,19 @@
         [galleryExtra(13), 'باب WPC داخلي مفصلي', 'WPC hinged interior door'],
         [galleryExtra(14), 'باب WPC زجاج ولوحات', 'WPC glass panel door'],
         [galleryExtra(15), 'باب WPC سادة فلات', 'WPC plain flat door'],
-        [galleryExtra(16), 'باب WPC يوتشانيل سادة', 'WPC plain U-channel door'],
-        [galleryExtra(17), 'باب WPC شرائح عمودية', 'WPC vertical slat door'],
-        [galleryExtra(18), 'باب WPC كلاسيك بزجاج', 'WPC classic glass door'],
-        [galleryExtra(19), 'باب WPC مزدوج داخلي', 'WPC double interior door'],
-        [galleryExtra(20), 'باب WPC فلات ضد الماء', 'WPC water-resistant flat door'],
-        [galleryExtra(21), 'باب WPC غرف نوم', 'WPC bedroom door'],
-        [galleryExtra(22), 'باب WPC مدخل داخلي', 'WPC internal entry door'],
-        [galleryExtra(23), 'باب WPC ضد الرطوبة', 'WPC moisture-resistant door'],
-        [galleryExtra(24), 'باب WPC تشطيب فاخر', 'WPC premium finish door'],
         [galleryExtra(33), 'باب WPC منحوت كلاسيك', 'WPC carved classic door'],
         [galleryExtra(40), 'باب WPC خشبي مزدوج', 'WPC double wood door']
     ]);
 
     const SHOWROOM_WPC_CABINETS_CATALOG = [
+        [galleryExtra(16), 'خزانة WPC ملابس كلاسيك رمادية', 'WPC classic grey wardrobe'],
+        [galleryExtra(17), 'خزانة WPC ملابس بدريسينغ', 'WPC wardrobe with dressing table'],
+        [galleryExtra(18), 'خزانة WPC ملابس فاخرة بزخارف', 'WPC premium decorative wardrobe'],
+        [galleryExtra(19), 'خزانة WPC ملابس بأدراج', 'WPC wardrobe with drawers'],
+        [galleryExtra(20), 'خزانة WPC زجاج منزلقة', 'WPC sliding glass wardrobe'],
+        [galleryExtra(21), 'خزانة WPC تلفزيون دوّار', 'WPC rotating TV cabinet wall'],
+        [galleryExtra(22), 'خزانة WPC غرفة نوم مدمجة', 'WPC integrated bedroom cabinet'],
+        [galleryExtra(23), 'خزانة WPC ركنية مفتوحة', 'WPC open corner cabinet'],
         [img('cabinets', 4), 'خزانة WPC مطبخ علوية', 'WPC upper kitchen cabinet'],
         [img('cabinets', 5), 'خزانة WPC ملابس عاجية', 'WPC ivory wardrobe'],
         [img('cabinets', 6), 'خزانة WPC ملابس فاخرة', 'WPC premium wardrobe'],
@@ -342,11 +341,28 @@
         } catch (e) { /* ignore */ }
     }
 
+    function showroomItemTitle(sec, idx) {
+        const items = showroomGallery && showroomGallery[sec] && showroomGallery[sec].items;
+        if (!items || !items[idx]) return '';
+        return String(items[idx].titleAr || '');
+    }
+
     function showroomHasGenericLabels() {
-        const doors = showroomGallery && showroomGallery.doors && showroomGallery.doors.items;
-        if (!doors || !doors.length) return true;
-        const first = String(doors[0].titleAr || '');
-        return /^باب نبراس\s+\d+$/i.test(first) || /^Nebras Door\s+\d+$/i.test(String(doors[0].titleEn || ''));
+        if (!showroomGallery) return true;
+        return /^باب نبراس\s+\d+$/i.test(showroomItemTitle('doors', 0)) ||
+            /^خزانة نبراس\s+\d+$/i.test(showroomItemTitle('cabinets', 0)) ||
+            /^باب WPC\s+\d+$/i.test(showroomItemTitle('wpcDoors', 0)) ||
+            /^خزانة WPC\s+\d+$/i.test(showroomItemTitle('wpcCabinets', 0));
+    }
+
+    function showroomProjectsNeedFix() {
+        const items = (showroomGallery && showroomGallery.projects && showroomGallery.projects.items) || [];
+        if (!items.length) return true;
+        return items.some(function(it) {
+            if (!it) return true;
+            const url = String(it.imageUrl || '');
+            return !url || url.indexOf('images/projects/nhc/') !== 0;
+        });
     }
 
     function getStoredShowroomCatalogVersion() {
@@ -402,7 +418,6 @@
     }
 
     function mergeShowroomGallery() {
-        if (typeof ensureShowroomGallery === 'function') ensureShowroomGallery();
         if (!showroomGallery || typeof showroomGallery !== 'object') showroomGallery = {};
 
         showroomGallery.doors = {
@@ -490,18 +505,11 @@
     function repairShowroomGallerySections() {
         if (typeof ensureShowroomGallery !== 'function' || typeof getShowroomGallerySectionKeys !== 'function') return false;
         ensureShowroomGallery();
-        const projectItems = (showroomGallery.projects && showroomGallery.projects.items) || [];
-        const projectsNeedImages = !projectItems.length || projectItems.some(function(it) {
-            if (!it || String(it.id || '').indexOf('showroom-projects-nhc-') !== 0) return false;
-            const url = String(it.imageUrl || '');
-            return !url || url.indexOf('images/projects/nhc/') !== 0;
-        });
         const catalogStale = getStoredShowroomCatalogVersion() < SHOWROOM_CATALOG_VERSION;
-        const needsRepair = catalogStale || showroomHasGenericLabels() ||
+        const needsRepair = catalogStale || showroomHasGenericLabels() || showroomProjectsNeedFix() ||
             !showroomGallery.wpcDoors || !showroomGallery.wpcDoors.items || !showroomGallery.wpcDoors.items.length ||
             !showroomGallery.wpcCabinets || !showroomGallery.wpcCabinets.items || !showroomGallery.wpcCabinets.items.length ||
-            !showroomGallery.doors || !showroomGallery.doors.items || showroomGallery.doors.items.length < 5 ||
-            projectsNeedImages;
+            !showroomGallery.doors || !showroomGallery.doors.items || showroomGallery.doors.items.length < 5;
         if (!needsRepair) return false;
         mergeShowroomGallery();
         return true;
@@ -514,6 +522,7 @@
         } catch (e) { stored = 0; }
         if (!force && stored >= PROFILE_2026_SEED_VERSION) {
             applyProfile2026ThemeClass();
+            if (typeof repairShowroomGallerySections === 'function') repairShowroomGallerySections();
             return false;
         }
 

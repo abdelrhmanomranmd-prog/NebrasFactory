@@ -16521,6 +16521,9 @@
                 }
             }
             spec.set(payload);
+            if (storeKey === 'showroom_gallery' && typeof repairShowroomGallerySections === 'function') {
+                repairShowroomGallerySections();
+            }
         }
 
         let nebrasThreeLoadPromise = null;
@@ -16557,7 +16560,11 @@
             ensurePrimaryRecoveryEmail();
             if (!Array.isArray(siteCertifications)) siteCertifications = [];
             ensureShowroomGallery();
-            if (typeof repairShowroomGallerySections === 'function') repairShowroomGallerySections();
+            if (typeof repairShowroomGallerySections === 'function' && repairShowroomGallerySections()) {
+                if (nebrasCloudSynced && typeof pushToNebrasCloud === 'function') {
+                    pushToNebrasCloud();
+                }
+            }
             refreshNebrasMiniShowcases();
             ensureDoorDesignerConfig();
             ensureQuoteA4Settings();
