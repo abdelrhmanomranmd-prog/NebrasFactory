@@ -86,6 +86,7 @@
     <link rel="stylesheet" href="css/22-callback-concierge.css">
     <link rel="stylesheet" href="css/23-cart-premium.css">
     <link rel="stylesheet" href="css/24-wpc-strengths-light.css">
+    <link rel="stylesheet" href="css/27-governance-users.css">
 </head>
 <body id="nebras-platform" class="platform-storefront" data-platform-layer="storefront">
 
@@ -785,16 +786,31 @@
 
     <!-- Admin Sections -->
     <div class="admin-section" id="user-management">
-        <div class="admin-modal">
-            <h2>إدارة المستخدمين والصلاحيات</h2>
-            <p class="scm-hint admin-only-ui">الإدارة الرئيسية تنشئ مستخدمين فرعيين وتحدد صلاحياتهم (محتوى · مبيعات · تقارير …). حذف/Restore التقارير للإدارة الرئيسية فقط.</p>
-            <button onclick="addNewUser()">إضافة مستخدم جديد</button>
-            <button onclick="openAccountSecurity()">أمان الحساب (تغيير اليوزر/الباسورد)</button>
-            <button onclick="openSiteContentManager()">إدارة محتوى الموقع بالكامل</button>
-            <button onclick="openIconManagement()">أيقونات الزوار (سريع)</button>
-            <button id="open-system-settings-btn" onclick="openSystemSettings()">إعدادات النظام (Super Admin)</button>
-            <ul id="users-list"></ul>
-            <button onclick="closeAdminSection('user-management')">إغلاق</button>
+        <div class="admin-modal site-content-modal nebras-users-modal">
+            <div class="nebras-users-head">
+                <div class="nebras-users-head-title">
+                    <i class="fas fa-users-cog" aria-hidden="true"></i>
+                    <div>
+                        <h2>إدارة المستخدمين والصلاحيات</h2>
+                        <p class="nebras-users-sub">حوكمة كاملة — الإدارة الرئيسية تنشئ فريق العمل وتحدد دور وصلاحية كل مستخدم (مبيعات · محاسبة · مخزون · إنتاج · مستودع · فروع · مندوبون).</p>
+                    </div>
+                </div>
+                <button type="button" class="nebras-users-close" onclick="closeAdminSection('user-management')" aria-label="إغلاق"><i class="fas fa-xmark"></i></button>
+            </div>
+
+            <div class="nebras-users-toolbar">
+                <button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="openUserEditor()"><i class="fas fa-user-plus"></i> مستخدم جديد</button>
+                <button type="button" class="nebras-users-btn" onclick="openAccountSecurity()"><i class="fas fa-shield-halved"></i> أمان حسابي</button>
+                <button type="button" class="nebras-users-btn" onclick="openSiteContentManager()"><i class="fas fa-paint-roller"></i> محتوى الموقع</button>
+                <button type="button" class="nebras-users-btn" onclick="openIconManagement()"><i class="fas fa-icons"></i> أيقونات الزوار</button>
+                <button type="button" class="nebras-users-btn" id="open-system-settings-btn" onclick="openSystemSettings()"><i class="fas fa-sliders"></i> إعدادات النظام</button>
+            </div>
+
+            <div class="nebras-users-stats" id="nebras-users-stats"></div>
+
+            <div class="nebras-users-editor" id="nebras-user-editor" hidden></div>
+
+            <div class="nebras-users-grid" id="users-list"></div>
         </div>
     </div>
 

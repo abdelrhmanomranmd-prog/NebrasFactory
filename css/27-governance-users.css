@@ -1,0 +1,612 @@
+/* ============================================================
+   حوكمة نبراس — واجهة إدارة المستخدمين والصلاحيات الاحترافية
+   نظام أدوار ومصفوفة صلاحيات بأسلوب ERP (كحلي + ذهبي)
+   ============================================================ */
+
+.nebras-users-modal {
+    --nu-navy: #062e44;
+    --nu-navy-2: #0a4d8c;
+    --nu-gold: #d4af37;
+    --nu-ink: #0d2233;
+    --nu-line: rgba(10, 77, 140, 0.16);
+    max-width: 1180px;
+    width: min(96vw, 1180px);
+    background: linear-gradient(180deg, #ffffff 0%, #f4f8fc 100%);
+    color: var(--nu-ink);
+    border-radius: 22px;
+    padding: 0;
+    overflow: hidden;
+    box-shadow: 0 40px 120px rgba(4, 22, 40, 0.5);
+}
+
+/* رأس النافذة */
+.nebras-users-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 22px 26px;
+    background:
+        radial-gradient(120% 160% at 100% 0%, rgba(212, 175, 55, 0.22) 0%, rgba(212, 175, 55, 0) 55%),
+        linear-gradient(135deg, var(--nu-navy) 0%, var(--nu-navy-2) 100%);
+    color: #fff;
+}
+
+.nebras-users-head-title {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.nebras-users-head-title > i {
+    font-size: 1.7rem;
+    color: var(--nu-gold);
+    background: rgba(255, 255, 255, 0.08);
+    width: 54px;
+    height: 54px;
+    display: grid;
+    place-items: center;
+    border-radius: 16px;
+    border: 1px solid rgba(212, 175, 55, 0.35);
+}
+
+.nebras-users-head h2 {
+    margin: 0;
+    font-size: 1.32rem;
+    color: #fff;
+}
+
+.nebras-users-sub {
+    margin: 4px 0 0;
+    font-size: 0.82rem;
+    line-height: 1.6;
+    color: rgba(255, 255, 255, 0.78);
+    max-width: 720px;
+}
+
+.nebras-users-close {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+}
+
+.nebras-users-close:hover {
+    background: rgba(255, 80, 80, 0.85);
+    transform: rotate(90deg);
+}
+
+/* شريط الأدوات */
+.nebras-users-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 18px 26px 6px;
+}
+
+.nebras-users-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: 12px;
+    border: 1px solid var(--nu-line);
+    background: #fff;
+    color: var(--nu-navy-2);
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.18s, box-shadow 0.18s, background 0.18s;
+}
+
+.nebras-users-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(10, 77, 140, 0.18);
+}
+
+.nebras-users-btn--primary {
+    background: linear-gradient(135deg, var(--nu-navy-2) 0%, var(--nu-navy) 100%);
+    color: #fff;
+    border-color: transparent;
+}
+
+.nebras-users-btn--primary i {
+    color: var(--nu-gold);
+}
+
+/* بطاقات الإحصائيات */
+.nebras-users-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    padding: 16px 26px;
+}
+
+.nebras-users-stat {
+    background: #fff;
+    border: 1px solid var(--nu-line);
+    border-radius: 16px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    position: relative;
+    overflow: hidden;
+}
+
+.nebras-users-stat::before {
+    content: "";
+    position: absolute;
+    inset-inline-start: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: linear-gradient(180deg, var(--nu-gold), var(--nu-navy-2));
+}
+
+.nebras-users-stat i {
+    color: var(--nu-navy-2);
+    font-size: 1.05rem;
+}
+
+.nebras-users-stat strong {
+    font-size: 1.5rem;
+    color: var(--nu-ink);
+    line-height: 1.1;
+}
+
+.nebras-users-stat span {
+    font-size: 0.76rem;
+    color: #5a6b7a;
+}
+
+/* ===== محرر المستخدم ===== */
+.nebras-users-editor {
+    padding: 6px 26px 0;
+}
+
+.nebras-editor-card {
+    border: 1px solid var(--nu-line);
+    border-radius: 20px;
+    background: #fff;
+    overflow: hidden;
+    box-shadow: 0 18px 50px rgba(6, 46, 68, 0.12);
+    animation: nuEditorIn 0.28s ease;
+}
+
+@keyframes nuEditorIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.nebras-editor-bar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 16px 20px;
+    background: linear-gradient(135deg, var(--role-accent, #0a4d8c) 0%, var(--nu-navy) 130%);
+    color: #fff;
+}
+
+.nebras-editor-role-icon {
+    width: 46px;
+    height: 46px;
+    border-radius: 14px;
+    display: grid;
+    place-items: center;
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    font-size: 1.15rem;
+    color: #fff;
+}
+
+.nebras-editor-bar h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    color: #fff;
+}
+
+.nebras-editor-bar p {
+    margin: 2px 0 0;
+    font-size: 0.78rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.nebras-editor-x {
+    margin-inline-start: auto;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.nebras-editor-x:hover { background: rgba(255, 80, 80, 0.8); }
+
+.nebras-editor-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+    padding: 20px;
+}
+
+.nebras-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.nebras-field--wide {
+    grid-column: 1 / -1;
+}
+
+.nebras-field > span {
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--nu-navy-2);
+}
+
+.nebras-field input,
+.nebras-field select {
+    padding: 11px 14px;
+    border-radius: 12px;
+    border: 1px solid var(--nu-line);
+    background: #f8fbfe;
+    font-family: inherit;
+    font-size: 0.9rem;
+    color: var(--nu-ink);
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.nebras-field input:focus,
+.nebras-field select:focus {
+    outline: none;
+    border-color: var(--nu-navy-2);
+    box-shadow: 0 0 0 3px rgba(10, 77, 140, 0.12);
+    background: #fff;
+}
+
+.nebras-field input:disabled,
+.nebras-field select:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.nebras-editor-hint {
+    margin: 8px 0 0;
+    font-size: 0.78rem;
+    color: #6a7888;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.nebras-editor-hint i { color: var(--nu-navy-2); }
+
+.nebras-editor-hint--lock {
+    margin: 0 20px 20px;
+    padding: 12px 16px;
+    background: rgba(212, 175, 55, 0.12);
+    border: 1px dashed var(--nu-gold);
+    border-radius: 12px;
+    color: #8a6d10;
+}
+
+.nebras-editor-perms-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 0 20px 12px;
+}
+
+.nebras-editor-perms-head h4 {
+    margin: 0;
+    font-size: 0.95rem;
+    color: var(--nu-ink);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.nebras-editor-perms-head h4 i { color: var(--nu-gold); }
+
+.nebras-editor-perms-actions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.nebras-editor-perms-actions button {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 11px;
+    border-radius: 9px;
+    border: 1px solid var(--nu-line);
+    background: #f4f8fc;
+    color: var(--nu-navy-2);
+    font-family: inherit;
+    font-size: 0.74rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.18s;
+}
+
+.nebras-editor-perms-actions button:hover { background: #e6f0fa; }
+
+/* شبكة الصلاحيات */
+.nebras-perm-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    gap: 10px;
+    padding: 0 20px 18px;
+}
+
+.nebras-perm-card {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto;
+    column-gap: 10px;
+    row-gap: 2px;
+    padding: 12px 14px;
+    border: 1px solid var(--nu-line);
+    border-radius: 14px;
+    background: #fff;
+    cursor: pointer;
+    transition: border-color 0.18s, background 0.18s, transform 0.12s;
+    position: relative;
+}
+
+.nebras-perm-card:hover { transform: translateY(-2px); border-color: var(--nu-navy-2); }
+
+.nebras-perm-card.is-on {
+    background: linear-gradient(180deg, rgba(10, 77, 140, 0.06), rgba(212, 175, 55, 0.06));
+    border-color: var(--nu-navy-2);
+}
+
+.nebras-perm-card input {
+    grid-row: 1 / span 2;
+    align-self: center;
+    width: 20px;
+    height: 20px;
+    accent-color: var(--nu-navy-2);
+    cursor: pointer;
+}
+
+.nebras-perm-card > i {
+    display: none;
+}
+
+.nebras-perm-card-title {
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: var(--nu-ink);
+}
+
+.nebras-perm-card-desc {
+    font-size: 0.72rem;
+    color: #6a7888;
+    line-height: 1.4;
+}
+
+.nebras-editor-footer {
+    display: flex;
+    gap: 10px;
+    padding: 16px 20px;
+    border-top: 1px solid var(--nu-line);
+    background: #f8fbfe;
+}
+
+/* ===== شبكة بطاقات المستخدمين ===== */
+.nebras-users-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 14px;
+    padding: 18px 26px 28px;
+    list-style: none;
+    margin: 0;
+}
+
+.nebras-users-empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    color: #6a7888;
+    padding: 30px;
+    font-size: 0.9rem;
+}
+
+.nebras-user-card {
+    border: 1px solid var(--nu-line);
+    border-radius: 18px;
+    background: #fff;
+    padding: 16px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 24px rgba(6, 46, 68, 0.07);
+    transition: transform 0.18s, box-shadow 0.18s;
+}
+
+.nebras-user-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 16px 40px rgba(6, 46, 68, 0.14);
+}
+
+.nebras-user-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    inset-inline-start: 0;
+    inset-inline-end: 0;
+    height: 4px;
+    background: var(--role-accent, #0a4d8c);
+}
+
+.nebras-user-card-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.nebras-user-avatar {
+    width: 46px;
+    height: 46px;
+    border-radius: 13px;
+    display: grid;
+    place-items: center;
+    color: #fff;
+    font-size: 1.15rem;
+    background: var(--role-accent, #0a4d8c);
+    flex-shrink: 0;
+}
+
+.nebras-user-id {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.nebras-user-id strong {
+    font-size: 1rem;
+    color: var(--nu-ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.nebras-user-id span {
+    font-size: 0.74rem;
+    color: #8090a0;
+}
+
+.nebras-user-primary {
+    margin-inline-start: auto;
+    font-size: 0.68rem;
+    font-weight: 800;
+    color: #8a6d10;
+    background: rgba(212, 175, 55, 0.16);
+    border: 1px solid var(--nu-gold);
+    padding: 4px 9px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+
+.nebras-user-role {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 0.86rem;
+    font-weight: 700;
+    color: var(--role-accent, #0a4d8c);
+    margin-bottom: 8px;
+}
+
+.nebras-user-branch {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.74rem;
+    color: #4a5a6a;
+    background: #f0f5fa;
+    border-radius: 8px;
+    padding: 5px 10px;
+    margin-bottom: 10px;
+}
+
+.nebras-user-branch--all { color: #6a7888; }
+
+.nebras-user-perms {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 14px;
+    min-height: 26px;
+}
+
+.nebras-user-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--nu-navy-2);
+    background: #eef4fa;
+    border: 1px solid var(--nu-line);
+    border-radius: 7px;
+    padding: 4px 8px;
+}
+
+.nebras-user-chip i { font-size: 0.65rem; opacity: 0.8; }
+
+.nebras-user-chip--all {
+    color: #8a6d10;
+    background: rgba(212, 175, 55, 0.14);
+    border-color: var(--nu-gold);
+}
+
+.nebras-user-chip--none {
+    color: #b0392b;
+    background: rgba(192, 57, 43, 0.08);
+    border-color: rgba(192, 57, 43, 0.3);
+}
+
+.nebras-user-card-foot {
+    display: flex;
+    gap: 8px;
+    border-top: 1px solid var(--nu-line);
+    padding-top: 12px;
+}
+
+.nebras-user-act {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1px solid var(--nu-line);
+    background: #f8fbfe;
+    color: var(--nu-navy-2);
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.18s, color 0.18s;
+}
+
+.nebras-user-act:hover { background: var(--nu-navy-2); color: #fff; }
+
+.nebras-user-act--danger { color: #c0392b; }
+
+.nebras-user-act--danger:hover { background: #c0392b; color: #fff; }
+
+/* استجابة الموبايل */
+@media (max-width: 768px) {
+    .nebras-users-stats { grid-template-columns: repeat(2, 1fr); }
+    .nebras-editor-grid { grid-template-columns: 1fr; }
+    .nebras-users-head { flex-direction: row; align-items: flex-start; }
+    .nebras-users-head h2 { font-size: 1.1rem; }
+    .nebras-users-sub { font-size: 0.76rem; }
+    .nebras-perm-grid { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 480px) {
+    .nebras-perm-grid { grid-template-columns: 1fr; }
+    .nebras-users-grid { grid-template-columns: 1fr; padding: 16px; }
+}

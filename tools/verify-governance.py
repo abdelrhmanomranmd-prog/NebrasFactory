@@ -125,9 +125,15 @@ def main():
         if f'window.{exp} =' not in js:
             err(f'window.{exp} not exported')
 
-    # User management guards
-    if 'isMainGovernanceAdmin()' not in js[js.find('function addNewUser'):js.find('function addNewUser') + 800]:
-        err('addNewUser missing isMainGovernanceAdmin guard')
+    # User management guards — editor-based flow
+    editor_start = js.find('function openUserEditor')
+    if editor_start < 0:
+        err('openUserEditor function missing (professional user editor)')
+    elif 'isMainGovernanceAdmin()' not in js[editor_start:editor_start + 900]:
+        err('openUserEditor missing isMainGovernanceAdmin guard')
+    for sym in ('saveUserFromEditor', 'renderUserEditorForm', 'NEBRAS_ROLE_DEFINITIONS', 'getUserEffectivePermissions', 'ASSIGNABLE_ROLES'):
+        if sym not in js:
+            err(f'User governance symbol missing: {sym}')
 
     print('=== NEBRAS GOVERNANCE AUDIT ===')
     print(f'onclick handlers checked: {len(onclick_names)}')

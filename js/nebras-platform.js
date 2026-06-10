@@ -40,16 +40,39 @@
         const NEBRAS_PUBLIC_SITE_URL = 'https://www.nebrasplasticcompany.com';
         const NEBRAS_SITE_QR_IMAGE = 'images/nebras-site-qr.png';
         const NEBRAS_PERMISSION_LABELS = {
-            users: 'المستخدمون',
+            users: 'المستخدمون والصلاحيات',
             content: 'المحتوى والمعرض',
-            erp: 'ERP',
+            erp: 'نظام ERP العام',
             inventory: 'المخزون',
-            orders: 'الطلبات',
+            warehouse: 'المستودع والجرد',
+            production: 'الإنتاج اليومي',
+            procurement: 'المشتريات والموردون',
+            accounting: 'الحسابات والتحويلات',
+            orders: 'الطلبات والتنفيذ',
             sales: 'المبيعات',
+            quotes: 'عروض الأسعار',
             customerService: 'خدمة العملاء',
             complaints: 'الشكاوى',
             branches: 'الفروع',
-            audit: 'التدقيق والتقارير'
+            audit: 'التقارير والتحليلات'
+        };
+        /** أيقونة + وصف لكل صلاحية — تُستخدم في واجهة إدارة المستخدمين الاحترافية */
+        const NEBRAS_PERMISSION_META = {
+            users: { icon: 'fas fa-users-cog', descAr: 'إنشاء المستخدمين وتحديد أدوارهم وصلاحياتهم' },
+            content: { icon: 'fas fa-paint-roller', descAr: 'تعديل محتوى الموقع والمعرض والصور والأقسام' },
+            erp: { icon: 'fas fa-cubes', descAr: 'الوصول العام للوحة ERP وكل وحداتها' },
+            inventory: { icon: 'fas fa-boxes-stacked', descAr: 'أصناف المخزون والكميات وتنبيهات الحد الأدنى' },
+            warehouse: { icon: 'fas fa-warehouse', descAr: 'حركة المستودع والجرد والمتاح فعلياً' },
+            production: { icon: 'fas fa-industry', descAr: 'إدخال كميات الإنتاج اليومية المتاحة' },
+            procurement: { icon: 'fas fa-truck-ramp-box', descAr: 'أوامر الشراء والموردون والتكاليف' },
+            accounting: { icon: 'fas fa-file-invoice-dollar', descAr: 'الحسابات والتحويلات البنكية وتحليل المبيعات' },
+            orders: { icon: 'fas fa-clipboard-list', descAr: 'طلبات العملاء وحالات التنفيذ والشحن' },
+            sales: { icon: 'fas fa-chart-line', descAr: 'إدارة المبيعات وتحويل العروض لمبيعات' },
+            quotes: { icon: 'fas fa-file-signature', descAr: 'إنشاء ومتابعة عروض الأسعار للعملاء' },
+            customerService: { icon: 'fas fa-headset', descAr: 'متابعة العملاء وطلبات التواصل' },
+            complaints: { icon: 'fas fa-comment-dots', descAr: 'استقبال ومعالجة الشكاوى' },
+            branches: { icon: 'fas fa-map-location-dot', descAr: 'إدارة الفروع وبياناتها' },
+            audit: { icon: 'fas fa-chart-pie', descAr: 'التقارير والتحليلات وسجل التدقيق' }
         };
         const SHOP_CATALOG_PRODUCT_IDS = ['prod-wpc-raw', 'prod-wpc', 'prod-aluminum', 'prod-other'];
 
@@ -208,12 +231,89 @@
             { id: 'nebras-factory-admin', username: 'NEBRASFACTORY', password: 'NEBRASFACTORYCOMPANYBASIC', role: 'superadmin', isPrimary: true },
             { id: 'base-admin', username: 'NEBRASBASIC', password: 'NEBRASBASIC123', role: 'superadmin', isPrimary: true }
         ];
-        const rolePermissions = {
-            superadmin: ['users', 'content', 'erp', 'inventory', 'orders', 'sales', 'customerService', 'complaints', 'branches', 'audit'],
-            manager: ['content', 'erp', 'inventory', 'sales', 'customerService', 'complaints', 'branches', 'audit'],
-            hr: ['users', 'audit']
+        const ALL_PERMISSION_KEYS = Object.keys(NEBRAS_PERMISSION_LABELS);
+        /**
+         * أدوار حوكمة نبراس — كل دور له صلاحيات افتراضية يمكن للإدارة الرئيسية تخصيصها.
+         * الإدارة الرئيسية (superadmin/primary) تملك كل الصلاحيات دائماً.
+         */
+        const NEBRAS_ROLE_DEFINITIONS = {
+            superadmin: {
+                labelAr: 'الإدارة الرئيسية', labelEn: 'Super Admin',
+                icon: 'fas fa-crown', accent: '#d4af37',
+                descAr: 'تحكم كامل بالموقع والمنصة و ERP وإنشاء جميع المستخدمين.',
+                permissions: ALL_PERMISSION_KEYS.slice(), assignable: false
+            },
+            manager: {
+                labelAr: 'مدير عام', labelEn: 'General Manager',
+                icon: 'fas fa-user-tie', accent: '#0a4d8c',
+                descAr: 'إدارة شاملة للمحتوى والعمليات والتقارير (بدون إنشاء مستخدمين).',
+                permissions: ['content', 'erp', 'inventory', 'warehouse', 'production', 'procurement', 'accounting', 'orders', 'sales', 'quotes', 'customerService', 'complaints', 'branches', 'audit']
+            },
+            sales_manager: {
+                labelAr: 'مدير المبيعات', labelEn: 'Sales Manager',
+                icon: 'fas fa-chart-line', accent: '#1b9e57',
+                descAr: 'يدير المبيعات وعروض الأسعار ويحدد البيانات التي يعمل عليها المندوبون.',
+                permissions: ['sales', 'quotes', 'orders', 'customerService', 'audit']
+            },
+            sales_rep: {
+                labelAr: 'مندوب مبيعات', labelEn: 'Sales Representative',
+                icon: 'fas fa-user-headset', accent: '#2aa9c9',
+                descAr: 'ينشئ عروض الأسعار للعملاء من البيانات التي يحددها مدير المبيعات.',
+                permissions: ['quotes', 'customerService']
+            },
+            accountant: {
+                labelAr: 'المحاسب', labelEn: 'Accountant',
+                icon: 'fas fa-file-invoice-dollar', accent: '#8e44ad',
+                descAr: 'مسؤول عن الحسابات والتحويلات والمشتريات وتحليل المبيعات.',
+                permissions: ['accounting', 'procurement', 'sales', 'orders', 'audit']
+            },
+            inventory_manager: {
+                labelAr: 'مدير المخزون', labelEn: 'Inventory Manager',
+                icon: 'fas fa-boxes-stacked', accent: '#e67e22',
+                descAr: 'يدير المخزون ويعرض المتاح فعلياً للإدارة الرئيسية.',
+                permissions: ['inventory', 'warehouse', 'audit']
+            },
+            warehouse_manager: {
+                labelAr: 'مدير المستودع', labelEn: 'Warehouse Manager',
+                icon: 'fas fa-warehouse', accent: '#c0392b',
+                descAr: 'يدير حركة المستودع والجرد واستلام/صرف المواد.',
+                permissions: ['warehouse', 'inventory', 'audit']
+            },
+            production_manager: {
+                labelAr: 'مدير الإنتاج', labelEn: 'Production Manager',
+                icon: 'fas fa-industry', accent: '#16a085',
+                descAr: 'يُدخل كميات الإنتاج المتاحة يومياً.',
+                permissions: ['production', 'inventory', 'audit']
+            },
+            branch_manager: {
+                labelAr: 'مدير فرع', labelEn: 'Branch Manager',
+                icon: 'fas fa-store', accent: '#2c3e50',
+                descAr: 'يدير فرعه فقط حسب الصلاحيات الممنوحة من الإدارة الرئيسية.',
+                permissions: ['sales', 'quotes', 'customerService', 'complaints', 'audit'], branchScoped: true
+            },
+            hr: {
+                labelAr: 'موارد بشرية', labelEn: 'HR',
+                icon: 'fas fa-id-badge', accent: '#7f8c8d',
+                descAr: 'متابعة المستخدمين والتقارير الإدارية.',
+                permissions: ['users', 'audit']
+            }
         };
+        const rolePermissions = Object.keys(NEBRAS_ROLE_DEFINITIONS).reduce(function(acc, key) {
+            acc[key] = NEBRAS_ROLE_DEFINITIONS[key].permissions.slice();
+            return acc;
+        }, {});
         const allowedRoles = Object.keys(rolePermissions);
+        /** الأدوار التي يمكن للإدارة الرئيسية إسنادها للمستخدمين الفرعيين (كل شيء عدا superadmin) */
+        const ASSIGNABLE_ROLES = allowedRoles.filter(function(r) {
+            return NEBRAS_ROLE_DEFINITIONS[r].assignable !== false && r !== 'superadmin';
+        });
+        function getRoleLabel(role) {
+            const def = NEBRAS_ROLE_DEFINITIONS[role];
+            return def ? def.labelAr : (role || '');
+        }
+        function getRoleDefinition(role) {
+            return NEBRAS_ROLE_DEFINITIONS[role] || null;
+        }
         let analyticsGovernance = { deleted: { quotes: [], visitors: [], complaints: [], sales: [], customers: [] } };
         /** صور الحسابات البنكية — 4 ملفات (خلفية الأيقونة + 3 بطاقات) */
         const NEBRAS_BANK_MEDIA = {
@@ -4175,10 +4275,10 @@
         }
 
         function renderBankAccountCardMarkup(b, idx, lang) {
-            const name = lang === 'en' ? (b.bankNameEn || b.bankNameAr) : (b.bankNameAr || b.bankNameEn);
+                const name = lang === 'en' ? (b.bankNameEn || b.bankNameAr) : (b.bankNameAr || b.bankNameEn);
             const imgCandidates = b.imageUrl ? bankAccountImageCandidates(b.imageUrl).map(withBankMediaVersion) : [];
             const imgPath = imgCandidates.length ? imgCandidates[0] : '';
-            const img = imgPath
+                const img = imgPath
                 ? '<img class="bank-plaque-img" data-bank-media="1" data-bank-candidates="' + escapeHtmlAttr(imgCandidates.join('|')) + '" src="' + escapeHtmlAttr(imgPath) + '" alt="' + escapeHtmlAttr(name || '') + '" loading="lazy" decoding="async">'
                 : '<i class="fas fa-university bank-plaque-fallback" aria-hidden="true"></i>';
             const ibanLine = b.iban
@@ -4187,7 +4287,7 @@
             const copyBtn = b.iban
                 ? '<button type="button" class="bank-card-copy-btn" onclick="copyBankAccountIban(\'' + escapeHtmlAttr(b.iban) + '\', event)"><i class="fas fa-copy"></i> ' + escapeHtmlAttr((siteText[lang] || siteText.ar).bankIbanCopyBtn || 'نسخ الآيبان') + '</button>'
                 : '';
-            const click = imgPath
+                const click = imgPath
                 ? ' bank-card--clickable" role="button" tabindex="0" onclick="openBankAccountCard(' + idx + ')" onkeydown="if(event.key===\'Enter\')openBankAccountCard(' + idx + ')"'
                 : '"';
             return '<article class="bank-card bank-card--visual' + click + '>' + img + ibanLine + copyBtn + '</article>';
@@ -4407,7 +4507,7 @@
             const subEl = document.getElementById('cart-subtotal-ex-row');
             const vatEl = document.getElementById('cart-vat-row');
             const incEl = document.getElementById('cart-total-inc-row');
-            const onRequest = lang === 'en' ? 'On request' : (lang === 'zh' ? '询价' : 'عند الطلب');
+                const onRequest = lang === 'en' ? 'On request' : (lang === 'zh' ? '询价' : 'عند الطلب');
             const pct = getNebrasVatPercentLabel();
             if (subEl) {
                 subEl.hidden = totals.subtotalEx <= 0;
@@ -6555,7 +6655,7 @@
             const inbox = loadSalesQuotesInbox();
             inbox.unshift(entry);
             try {
-                saveSalesQuotesInbox(inbox);
+            saveSalesQuotesInbox(inbox);
             } catch (saveErr) {
                 alert('تعذّر حفظ الطلب — جرّبي صورة أصغر للحوالة أو أعدي المحاولة.');
                 return;
@@ -6608,7 +6708,7 @@
             } else {
                 doneMsg += '\n\n✓ ' + (ui.sendQuoteCloudOk || 'الطلب محفوظ ويظهر في: المبيعات → طلبات عروض الأسعار + التحليلات.');
             }
-            alert(doneMsg);
+                alert(doneMsg);
         }
 
         function updateSalesQuoteFab() {
@@ -7284,7 +7384,7 @@
                 showCheckoutValidationErrors(validation.errors, ui, false);
                 return;
             }
-            openQuotePreview();
+                openQuotePreview();
         }
 
         function openQuotePreview() {
@@ -9468,7 +9568,7 @@
                     const fb = document.createElement('p');
                     fb.className = 'quote-logo-fallback-text';
                     fb.textContent = 'نبراس';
-                    if (img.classList.contains('quote-watermark-logo')) {
+            if (img.classList.contains('quote-watermark-logo')) {
                         fb.setAttribute('aria-hidden', 'true');
                     }
                     parent.appendChild(fb);
@@ -12017,9 +12117,9 @@
             setTxt('hero-mobile-explore', text.heroExploreBtn);
             setTxt('hero-mobile-quote', text.heroQuoteBtn);
             const statsHtml =
-                '<div class="header-stat"><strong>' + escapeHtmlAttr(text.heroStatWarrantyVal || '10') + '</strong><span>' + escapeHtmlAttr(text.heroStatWarranty || '') + '</span></div>' +
-                '<div class="header-stat"><strong>' + escapeHtmlAttr(text.heroStatInstallVal || '+1M') + '</strong><span>' + escapeHtmlAttr(text.heroStatInstall || '') + '</span></div>' +
-                '<div class="header-stat"><strong>' + escapeHtmlAttr(text.heroStatYearsVal || '5') + '</strong><span>' + escapeHtmlAttr(text.heroStatYears || '') + '</span></div>';
+                    '<div class="header-stat"><strong>' + escapeHtmlAttr(text.heroStatWarrantyVal || '10') + '</strong><span>' + escapeHtmlAttr(text.heroStatWarranty || '') + '</span></div>' +
+                    '<div class="header-stat"><strong>' + escapeHtmlAttr(text.heroStatInstallVal || '+1M') + '</strong><span>' + escapeHtmlAttr(text.heroStatInstall || '') + '</span></div>' +
+                    '<div class="header-stat"><strong>' + escapeHtmlAttr(text.heroStatYearsVal || '5') + '</strong><span>' + escapeHtmlAttr(text.heroStatYears || '') + '</span></div>';
             const statsEl = document.getElementById('header-campaign-stats');
             if (statsEl) statsEl.innerHTML = statsHtml;
             const mobileStatsEl = document.getElementById('hero-mobile-stats');
@@ -12269,16 +12369,16 @@
                 const img = e.target;
                 if (!img || img.tagName !== 'IMG' || !img.classList.contains('nebras-clickable-media')) return;
                 if (img.closest('button, .variant-add-btn')) return;
-                e.preventDefault();
-                e.stopPropagation();
-                openNebrasMediaLightboxFromEl(img);
+                    e.preventDefault();
+                    e.stopPropagation();
+                    openNebrasMediaLightboxFromEl(img);
             }, true);
             document.body.addEventListener('keydown', function(e) {
                 if (e.key !== 'Enter' && e.key !== ' ') return;
                 const img = e.target;
                 if (!img || img.tagName !== 'IMG' || !img.classList.contains('nebras-clickable-media')) return;
-                e.preventDefault();
-                openNebrasMediaLightboxFromEl(img);
+                        e.preventDefault();
+                        openNebrasMediaLightboxFromEl(img);
             });
         }
 
@@ -13181,7 +13281,7 @@
                     NEBRAS_ROLL_CODES.forEach(function(n, i) {
                         const colors = getNebrasDoorCatalogColors();
                         const hex = colors[i] ? colors[i].hex : '#b8bcc4';
-                        const pre = new Image();
+                const pre = new Image();
                         pre.src = doorDesignerMediaUrl(getRollSwatchImageUrl(i)) + '?ri=' + i + '&h=' + encodeURIComponent(hex) + '&v=' + DOOR_PHOTO_PRESET_CACHE;
                     });
                 }
@@ -13276,9 +13376,9 @@
                 el.classList.toggle('has-door-roll-tint', rollFinish);
                 el.style.setProperty('--door-roll-tint', safe);
                 if (rollFinish && absUrl) {
-                    el.style.backgroundImage = bgImage;
-                    el.style.backgroundSize = 'cover';
-                    el.style.backgroundPosition = 'center';
+                el.style.backgroundImage = bgImage;
+                el.style.backgroundSize = 'cover';
+                el.style.backgroundPosition = 'center';
                     el.style.filter = structFilter;
                 } else {
                     el.style.backgroundImage = 'none';
@@ -14655,7 +14755,8 @@
             if (!el) return;
             const ui = siteText[currentLang || 'ar'] || siteText.ar;
             const tpl = ui.adminRoleTemplate || 'User: {user} — Role: {role}';
-            el.textContent = tpl.replace('{user}', user.username).replace('{role}', user.role);
+            const roleLabel = (currentLang === 'ar' || !currentLang) ? getRoleLabel(user.role) : (getRoleDefinition(user.role) ? getRoleDefinition(user.role).labelEn : user.role);
+            el.textContent = tpl.replace('{user}', user.username).replace('{role}', roleLabel || user.role);
         }
 
         function applyOccasionTheme() {
@@ -15224,8 +15325,8 @@
             if (!enteredCode) return;
             if (localDevCode) {
                 if (enteredCode.trim() !== localDevCode) {
-                    alert('رمز التحقق غير صحيح.');
-                    return;
+                alert('رمز التحقق غير صحيح.');
+                return;
                 }
                 passwordRecoveryVerified = true;
             } else {
@@ -15323,12 +15424,12 @@
             const storeBtn = isStoreCatalogHubIcon(icon)
                 ? '<button type="button" onclick="manageStoreIconProducts(' + icon.id + ')">منتجات المتجر</button>'
                 : '';
-            return '<li><strong>' + escapeHtmlAttr(getVisitorIconDisplayTitle(icon) || icon.title) + '</strong> — ' + escapeHtmlAttr(icon.iconClass) +
+                return '<li><strong>' + escapeHtmlAttr(getVisitorIconDisplayTitle(icon) || icon.title) + '</strong> — ' + escapeHtmlAttr(icon.iconClass) +
                 ' <span style="opacity:0.85">[' + escapeHtmlAttr(getVisitorIconModeLabel(icon)) + ' · ' + escapeHtmlAttr(place) + ']</span>' +
                 '<small>خلفية: ' + escapeHtmlAttr(icon.backgroundImage || 'افتراضي') + ' | ألبوم: ' + ((icon.album || []).length) + ' صورة</small>' +
-                '<div class="scm-row-actions"><button type="button" onclick="openVisitorIcon(' + icon.id + ')">معاينة</button>' +
+                    '<div class="scm-row-actions"><button type="button" onclick="openVisitorIcon(' + icon.id + ')">معاينة</button>' +
                 storeBtn +
-                '<button type="button" onclick="editVisitorIcon(' + icon.id + ')">وسائط ومحتوى</button>' +
+                    '<button type="button" onclick="editVisitorIcon(' + icon.id + ')">وسائط ومحتوى</button>' +
                 (isServicePlacementIcon(icon) ? '' : '<button type="button" onclick="deleteVisitorIcon(' + icon.id + ')">حذف</button>') +
                 '</div></li>';
         }
@@ -16094,87 +16195,268 @@
         }
 
         function parseAdminPermissionsInput(raw, fallbackRole) {
-            const keys = Object.keys(NEBRAS_PERMISSION_LABELS);
-            if (!raw || !String(raw).trim()) {
+            const keys = ALL_PERMISSION_KEYS;
+            if (!raw || (!Array.isArray(raw) && !String(raw).trim())) {
                 return (rolePermissions[fallbackRole || 'manager'] || []).slice();
+            }
+            if (Array.isArray(raw)) {
+                return raw.filter(function(x) { return keys.indexOf(x) >= 0; });
             }
             return String(raw).split(/[,،\s]+/).map(function(x) { return x.trim(); }).filter(function(x) {
                 return keys.indexOf(x) >= 0;
             });
         }
 
-        function formatAdminPermissions(user) {
-            if (user.isPrimary) return 'إدارة رئيسية — كامل الصلاحيات';
-            let perms = '';
-            if (Array.isArray(user.permissions) && user.permissions.length) {
-                perms = user.permissions.map(function(k) { return NEBRAS_PERMISSION_LABELS[k] || k; }).join(' · ');
-            } else {
-                perms = (rolePermissions[user.role] || []).map(function(k) { return NEBRAS_PERMISSION_LABELS[k] || k; }).join(' · ');
-            }
-            if (String(user.assignedBranchCity || '').trim()) {
-                perms += (perms ? ' · ' : '') + 'فرع: ' + user.assignedBranchCity;
-            }
-            return perms;
+        function getUserEffectivePermissions(user) {
+            if (!user) return [];
+            if (user.isPrimary) return ALL_PERMISSION_KEYS.slice();
+            if (Array.isArray(user.permissions) && user.permissions.length) return user.permissions.slice();
+            return (rolePermissions[user.role] || []).slice();
         }
 
-        function addNewUser() {
-            if (!requirePermission('users', 'هذه العملية متاحة فقط لمسؤولي المستخدمين.')) return;
+        function formatAdminPermissions(user) {
+            if (user.isPrimary) return 'إدارة رئيسية — كامل الصلاحيات';
+            return getUserEffectivePermissions(user)
+                .map(function(k) { return NEBRAS_PERMISSION_LABELS[k] || k; }).join(' · ');
+        }
+
+        function getBranchCityOptions() {
+            const cities = (Array.isArray(branchesData) ? branchesData : []).map(function(b) {
+                return String(b.city || b.cityAr || '').trim();
+            }).filter(Boolean);
+            return Array.from(new Set(cities));
+        }
+
+        let nebrasUserEditorState = null;
+
+        function renderUserStats() {
+            const host = document.getElementById('nebras-users-stats');
+            if (!host) return;
+            const total = adminUsers.length;
+            const primary = adminUsers.filter(function(u) { return u.isPrimary; }).length;
+            const branchScoped = adminUsers.filter(function(u) { return !u.isPrimary && String(u.assignedBranchCity || '').trim(); }).length;
+            const roleCounts = {};
+            adminUsers.forEach(function(u) { roleCounts[u.role] = (roleCounts[u.role] || 0) + 1; });
+            const stats = [
+                { icon: 'fas fa-users', label: 'إجمالي المستخدمين', val: total },
+                { icon: 'fas fa-crown', label: 'إدارة رئيسية', val: primary },
+                { icon: 'fas fa-store', label: 'مخصّصون لفروع', val: branchScoped },
+                { icon: 'fas fa-id-badge', label: 'عدد الأدوار', val: Object.keys(roleCounts).length }
+            ];
+            host.innerHTML = stats.map(function(s) {
+                return '<div class="nebras-users-stat"><i class="' + s.icon + '"></i><strong>' + s.val + '</strong><span>' + s.label + '</span></div>';
+            }).join('');
+        }
+
+        function openUserEditor(index) {
+            if (!requirePermission('users', 'هذه العملية متاحة فقط للإدارة الرئيسية.')) return;
             if (!isMainGovernanceAdmin()) {
-                alert('إنشاء مستخدمين فرعيين متاح فقط للإدارة الرئيسية (NEBRASFACTORY / NEBRASBASIC).');
+                alert('إنشاء وتعديل المستخدمين متاح فقط للإدارة الرئيسية (NEBRASFACTORY / NEBRASBASIC).');
                 return;
             }
-            const employeeId = prompt('معرف الموظف (ID) — مثال EMP-102:', 'EMP-' + Date.now());
-            if (employeeId === null) return;
-            const username = prompt('اسم المستخدم (للدخول):');
-            const password = prompt('كلمة المرور:');
-            const role = prompt('الدور (manager = إدارة فرعية / hr = موارد بشرية):', 'manager');
-            if (username && password && role) {
-                const normalizedRole = role.trim().toLowerCase();
-                if (normalizedRole === 'superadmin') {
-                    alert('لا يمكن إنشاء Super Admin فرعي — الإدارة الرئيسية فقط.');
-                    return;
-                }
-                if (!allowedRoles.includes(normalizedRole)) {
-                    alert('الدور غير صحيح. الأدوار: manager / hr');
-                    return;
-                }
-                const permHelp = Object.keys(NEBRAS_PERMISSION_LABELS).join(', ');
-                const permsRaw = prompt('صلاحيات مخصصة (مفصولة بفاصلة):\n' + permHelp + '\n\nمثال: content,sales,audit', 'content,sales');
-                const permissions = parseAdminPermissionsInput(permsRaw, normalizedRole);
-                const branchCity = prompt('مدينة/فرع التخصيص (اتركه فارغاً للوصول الكامل — مثال: الرياض):', '');
-                if (branchCity === null) return;
-                const id = (employeeId || '').trim() || ('user-' + Date.now());
-                if (adminUsers.some(function(u) { return u.id === id; })) {
-                    alert('معرف الموظف مستخدم مسبقاً.');
-                    return;
-                }
-                adminUsers.push({
-                    id: id,
-                    username: username.trim(),
-                    password: password.trim(),
-                    role: normalizedRole,
-                    permissions: permissions,
-                    assignedBranchCity: String(branchCity || '').trim(),
-                    isPrimary: false
-                });
-                saveSystemData();
-                alert('تم إضافة المستخدم الفرعي بنجاح — الصلاحيات: ' + permissions.join(', '));
-                displayUsers();
-                addAuditLog('إضافة مستخدم', 'تمت إضافة ' + username + ' بدور ' + role);
-            }
+            const isEdit = typeof index === 'number' && adminUsers[index];
+            const user = isEdit ? adminUsers[index] : null;
+            const defaultRole = 'sales_rep';
+            nebrasUserEditorState = {
+                index: isEdit ? index : -1,
+                isEdit: !!isEdit,
+                isPrimary: !!(user && user.isPrimary),
+                id: user ? (user.id || '') : ('EMP-' + Date.now()),
+                username: user ? (user.username || '') : '',
+                password: user ? (user.password || '') : '',
+                role: user ? (user.role || defaultRole) : defaultRole,
+                assignedBranchCity: user ? (user.assignedBranchCity || '') : '',
+                permissions: user ? getUserEffectivePermissions(user) : (rolePermissions[defaultRole] || []).slice()
+            };
+            renderUserEditorForm();
+            const editor = document.getElementById('nebras-user-editor');
+            if (editor) editor.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
+
+        function renderUserEditorForm() {
+            const host = document.getElementById('nebras-user-editor');
+            if (!host || !nebrasUserEditorState) return;
+            const st = nebrasUserEditorState;
+            const roleOptions = ASSIGNABLE_ROLES.map(function(r) {
+                const def = NEBRAS_ROLE_DEFINITIONS[r];
+                return '<option value="' + r + '"' + (st.role === r ? ' selected' : '') + '>' + def.labelAr + ' — ' + def.labelEn + '</option>';
+            }).join('');
+            const roleDef = getRoleDefinition(st.role) || {};
+            const branchOptions = ['<option value="">— كل الفروع (وصول كامل) —</option>'].concat(
+                getBranchCityOptions().map(function(c) {
+                    return '<option value="' + escapeHtmlAttr(c) + '"' + (st.assignedBranchCity === c ? ' selected' : '') + '>' + escapeHtmlAttr(c) + '</option>';
+                })
+            ).join('');
+            const permCards = ALL_PERMISSION_KEYS.map(function(key) {
+                const meta = NEBRAS_PERMISSION_META[key] || {};
+                const on = st.permissions.indexOf(key) >= 0;
+                return '<label class="nebras-perm-card' + (on ? ' is-on' : '') + '">' +
+                    '<input type="checkbox" ' + (on ? 'checked' : '') + ' onchange="toggleUserEditorPerm(\'' + key + '\', this.checked)">' +
+                    '<i class="' + (meta.icon || 'fas fa-check') + '"></i>' +
+                    '<span class="nebras-perm-card-title">' + (NEBRAS_PERMISSION_LABELS[key] || key) + '</span>' +
+                    '<span class="nebras-perm-card-desc">' + (meta.descAr || '') + '</span>' +
+                    '</label>';
+            }).join('');
+            const branchHint = roleDef.branchScoped
+                ? '<p class="nebras-editor-hint"><i class="fas fa-circle-info"></i> هذا الدور يُدير فرعاً محدداً — اختاري الفرع لحصر بياناته.</p>' : '';
+            host.hidden = false;
+            host.innerHTML =
+                '<div class="nebras-editor-card">' +
+                    '<div class="nebras-editor-bar" style="--role-accent:' + (roleDef.accent || '#0a4d8c') + '">' +
+                        '<span class="nebras-editor-role-icon"><i class="' + (roleDef.icon || 'fas fa-user') + '"></i></span>' +
+                        '<div><h3>' + (st.isEdit ? 'تعديل مستخدم' : 'مستخدم جديد') + '</h3><p>' + (roleDef.descAr || '') + '</p></div>' +
+                        '<button type="button" class="nebras-editor-x" onclick="cancelUserEditor()" aria-label="إلغاء"><i class="fas fa-xmark"></i></button>' +
+                    '</div>' +
+                    '<div class="nebras-editor-grid">' +
+                        '<label class="nebras-field"><span>معرّف الموظف</span><input type="text" id="ue-id" value="' + escapeHtmlAttr(st.id) + '" ' + (st.isPrimary ? 'disabled' : '') + ' placeholder="EMP-102"></label>' +
+                        '<label class="nebras-field"><span>اسم المستخدم (للدخول)</span><input type="text" id="ue-username" value="' + escapeHtmlAttr(st.username) + '" placeholder="sales.riyadh"></label>' +
+                        '<label class="nebras-field"><span>كلمة المرور</span><input type="text" id="ue-password" value="' + escapeHtmlAttr(st.password) + '" ' + (st.isPrimary ? 'disabled' : '') + ' placeholder="••••••"></label>' +
+                        '<label class="nebras-field"><span>الدور الوظيفي</span><select id="ue-role" onchange="onUserEditorRoleChange(this.value)" ' + (st.isPrimary ? 'disabled' : '') + '>' + roleOptions + '</select></label>' +
+                        '<label class="nebras-field nebras-field--wide"><span>الفرع المخصّص</span><select id="ue-branch" onchange="onUserEditorBranchChange(this.value)" ' + (st.isPrimary ? 'disabled' : '') + '>' + branchOptions + '</select>' + branchHint + '</label>' +
+                    '</div>' +
+                    (st.isPrimary
+                        ? '<p class="nebras-editor-hint nebras-editor-hint--lock"><i class="fas fa-lock"></i> حساب إدارة رئيسية — يملك كل الصلاحيات ولا تُعدَّل.</p>'
+                        : '<div class="nebras-editor-perms-head"><h4><i class="fas fa-key"></i> الصلاحيات الممنوحة</h4>' +
+                            '<div class="nebras-editor-perms-actions">' +
+                                '<button type="button" onclick="resetUserEditorPermsToRole()"><i class="fas fa-rotate"></i> افتراضي الدور</button>' +
+                                '<button type="button" onclick="setAllUserEditorPerms(true)"><i class="fas fa-check-double"></i> الكل</button>' +
+                                '<button type="button" onclick="setAllUserEditorPerms(false)"><i class="fas fa-broom"></i> مسح</button>' +
+                            '</div></div><div class="nebras-perm-grid">' + permCards + '</div>') +
+                    '<div class="nebras-editor-footer">' +
+                        '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="saveUserFromEditor()"><i class="fas fa-floppy-disk"></i> حفظ المستخدم</button>' +
+                        '<button type="button" class="nebras-users-btn" onclick="cancelUserEditor()">إلغاء</button>' +
+                    '</div>' +
+                '</div>';
+        }
+
+        function onUserEditorRoleChange(role) {
+            if (!nebrasUserEditorState) return;
+            nebrasUserEditorState.role = role;
+            nebrasUserEditorState.permissions = (rolePermissions[role] || []).slice();
+            const def = getRoleDefinition(role);
+            if (def && def.branchScoped && !nebrasUserEditorState.assignedBranchCity) {
+                const cities = getBranchCityOptions();
+                if (cities.length) nebrasUserEditorState.assignedBranchCity = cities[0];
+            }
+            renderUserEditorForm();
+        }
+
+        function onUserEditorBranchChange(city) {
+            if (!nebrasUserEditorState) return;
+            nebrasUserEditorState.assignedBranchCity = String(city || '').trim();
+        }
+
+        function toggleUserEditorPerm(key, on) {
+            if (!nebrasUserEditorState) return;
+            const arr = nebrasUserEditorState.permissions;
+            const idx = arr.indexOf(key);
+            if (on && idx < 0) arr.push(key);
+            if (!on && idx >= 0) arr.splice(idx, 1);
+            renderUserEditorForm();
+        }
+
+        function setAllUserEditorPerms(on) {
+            if (!nebrasUserEditorState) return;
+            nebrasUserEditorState.permissions = on ? ALL_PERMISSION_KEYS.slice() : [];
+            renderUserEditorForm();
+        }
+
+        function resetUserEditorPermsToRole() {
+            if (!nebrasUserEditorState) return;
+            nebrasUserEditorState.permissions = (rolePermissions[nebrasUserEditorState.role] || []).slice();
+            renderUserEditorForm();
+        }
+
+        function cancelUserEditor() {
+            nebrasUserEditorState = null;
+            const editor = document.getElementById('nebras-user-editor');
+            if (editor) { editor.hidden = true; editor.innerHTML = ''; }
+        }
+
+        function saveUserFromEditor() {
+            if (!nebrasUserEditorState) return;
+            if (!isMainGovernanceAdmin()) { alert('العملية متاحة فقط للإدارة الرئيسية.'); return; }
+            const st = nebrasUserEditorState;
+            const idEl = document.getElementById('ue-id');
+            const userEl = document.getElementById('ue-username');
+            const passEl = document.getElementById('ue-password');
+            const id = st.isPrimary ? st.id : String((idEl && idEl.value) || '').trim();
+            const username = String((userEl && userEl.value) || '').trim();
+            const password = st.isPrimary ? st.password : String((passEl && passEl.value) || '').trim();
+            if (!username) { alert('يرجى إدخال اسم المستخدم.'); return; }
+            if (!st.isPrimary && !password) { alert('يرجى إدخال كلمة المرور.'); return; }
+            if (!st.isPrimary && !id) { alert('يرجى إدخال معرّف الموظف.'); return; }
+            const dupId = adminUsers.some(function(u, i) { return u.id === id && i !== st.index; });
+            if (dupId) { alert('معرّف الموظف مستخدم مسبقاً.'); return; }
+            const dupName = adminUsers.some(function(u, i) {
+                return String(u.username || '').toUpperCase() === username.toUpperCase() && i !== st.index;
+            });
+            if (dupName) { alert('اسم المستخدم مستخدم مسبقاً.'); return; }
+            if (st.isEdit) {
+                const existing = adminUsers[st.index] || {};
+                adminUsers[st.index] = Object.assign({}, existing, {
+                    id: st.isPrimary ? existing.id : id,
+                    username: username,
+                    password: password,
+                    role: st.isPrimary ? 'superadmin' : st.role,
+                    permissions: st.isPrimary ? null : st.permissions.slice(),
+                    assignedBranchCity: st.isPrimary ? '' : st.assignedBranchCity,
+                    isPrimary: !!st.isPrimary
+                });
+                addAuditLog('تعديل مستخدم', 'تم تعديل ' + username + ' (' + getRoleLabel(st.role) + ')');
+            } else {
+                adminUsers.push({
+                    id: id, username: username, password: password,
+                    role: st.role, permissions: st.permissions.slice(),
+                    assignedBranchCity: st.assignedBranchCity, isPrimary: false
+                });
+                addAuditLog('إضافة مستخدم', 'تمت إضافة ' + username + ' بدور ' + getRoleLabel(st.role));
+            }
+            saveSystemData();
+            cancelUserEditor();
+            displayUsers();
+        }
+
+        function addNewUser() { openUserEditor(); }
 
         function displayUsers() {
             const list = document.getElementById('users-list');
+            renderUserStats();
             if (!list) return;
+            if (!adminUsers.length) {
+                list.innerHTML = '<p class="nebras-users-empty">لا يوجد مستخدمون بعد — أضيفي أول مستخدم لفريق العمل.</p>';
+                return;
+            }
             list.innerHTML = adminUsers.map(function(user, index) {
-                const primaryBadge = user.isPrimary ? ' <span class="admin-user-primary-badge">رئيسي</span>' : '';
+                const def = getRoleDefinition(user.isPrimary ? 'superadmin' : user.role) || {};
+                const accent = def.accent || '#0a4d8c';
+                const perms = getUserEffectivePermissions(user);
+                const permChips = user.isPrimary
+                    ? '<span class="nebras-user-chip nebras-user-chip--all"><i class="fas fa-infinity"></i> كل الصلاحيات</span>'
+                    : (perms.length
+                        ? perms.map(function(k) {
+                            const meta = NEBRAS_PERMISSION_META[k] || {};
+                            return '<span class="nebras-user-chip"><i class="' + (meta.icon || 'fas fa-check') + '"></i> ' + (NEBRAS_PERMISSION_LABELS[k] || k) + '</span>';
+                          }).join('')
+                        : '<span class="nebras-user-chip nebras-user-chip--none">بدون صلاحيات</span>');
+                const branchTag = String(user.assignedBranchCity || '').trim()
+                    ? '<span class="nebras-user-branch"><i class="fas fa-store"></i> فرع ' + escapeHtmlAttr(user.assignedBranchCity) + '</span>'
+                    : '<span class="nebras-user-branch nebras-user-branch--all"><i class="fas fa-globe"></i> كل الفروع</span>';
                 const actions = user.isPrimary
-                    ? '<button onclick="editUser(' + index + ')">تعديل</button>'
-                    : '<button onclick="editUser(' + index + ')">تعديل</button> <button onclick="deleteUser(' + index + ')">حذف</button>';
-                return '<li><strong>' + escapeHtmlAttr(user.id || '') + '</strong> — ' + escapeHtmlAttr(user.username) +
-                    ' — ' + escapeHtmlAttr(user.role) + primaryBadge +
-                    '<br><small>' + escapeHtmlAttr(formatAdminPermissions(user)) + '</small> ' + actions + '</li>';
+                    ? '<button class="nebras-user-act" onclick="editUser(' + index + ')"><i class="fas fa-pen"></i> تعديل</button>'
+                    : '<button class="nebras-user-act" onclick="editUser(' + index + ')"><i class="fas fa-pen"></i> تعديل</button>' +
+                      '<button class="nebras-user-act nebras-user-act--danger" onclick="deleteUser(' + index + ')"><i class="fas fa-trash"></i> حذف</button>';
+                return '<article class="nebras-user-card" style="--role-accent:' + accent + '">' +
+                    '<header class="nebras-user-card-head">' +
+                        '<span class="nebras-user-avatar"><i class="' + (def.icon || 'fas fa-user') + '"></i></span>' +
+                        '<div class="nebras-user-id"><strong>' + escapeHtmlAttr(user.username || '') + '</strong><span>' + escapeHtmlAttr(user.id || '') + '</span></div>' +
+                        (user.isPrimary ? '<span class="nebras-user-primary"><i class="fas fa-crown"></i> رئيسي</span>' : '') +
+                    '</header>' +
+                    '<div class="nebras-user-role"><i class="' + (def.icon || 'fas fa-user') + '"></i> ' + escapeHtmlAttr(def.labelAr || user.role || '') + '</div>' +
+                    branchTag +
+                    '<div class="nebras-user-perms">' + permChips + '</div>' +
+                    '<footer class="nebras-user-card-foot">' + actions + '</footer>' +
+                '</article>';
             }).join('');
         }
 
@@ -16239,6 +16521,8 @@
                 addAuditLog('تعديل مستخدم', 'تم تعديل المستخدم ' + username);
             }
         }
+
+        function editUser(index) { openUserEditor(index); }
 
         function deleteUser(index) {
             if (!requirePermission('users', 'هذه العملية متاحة فقط لمسؤولي المستخدمين.')) return;
@@ -16517,7 +16801,7 @@
                 if (storeKey === 'branches' || storeKey === 'site_partners' || storeKey === 'site_certifications' ||
                     storeKey === 'admin_users' || storeKey === 'visitor_icons' || storeKey === 'dashboard_tiles' ||
                     storeKey === 'site_products') {
-                    return;
+                return;
                 }
             }
             spec.set(payload);
@@ -16581,6 +16865,7 @@
                     password: user && user.password ? user.password : 'ChangeMe123',
                     role: role,
                     permissions: Array.isArray(user && user.permissions) ? user.permissions.filter(Boolean) : null,
+                    assignedBranchCity: (user && user.assignedBranchCity) ? String(user.assignedBranchCity).trim() : '',
                     isPrimary: !!isPrimary
                 };
             });
@@ -16777,11 +17062,12 @@
                 const isPrimary = user && (user.isPrimary === true || PRIMARY_GOVERNANCE_ADMIN_IDS.indexOf(user.id) >= 0 ||
                     PRIMARY_GOVERNANCE_USERNAMES.indexOf(String(user.username || '').toUpperCase()) >= 0);
                 return {
-                    id: user && user.id ? user.id : `user-${Date.now()}-${index}`,
-                    username: user && user.username ? user.username : `user${index + 1}`,
-                    password: user && user.password ? user.password : 'ChangeMe123',
+                id: user && user.id ? user.id : `user-${Date.now()}-${index}`,
+                username: user && user.username ? user.username : `user${index + 1}`,
+                password: user && user.password ? user.password : 'ChangeMe123',
                     role: role,
                     permissions: Array.isArray(user && user.permissions) ? user.permissions.filter(Boolean) : null,
+                    assignedBranchCity: (user && user.assignedBranchCity) ? String(user.assignedBranchCity).trim() : '',
                     isPrimary: !!isPrimary
                 };
             });
@@ -19226,9 +19512,9 @@
             setElementText('branches-title', text.branchesTitle);
             setElementText('branches-subtitle', text.branchesSubtitle);
             if (!light && !skipCatalog) {
-                mergeSupabaseIntoSiteCatalog(lang);
-                renderAllPublicCatalog();
-                applyDynamicSectionContent(lang);
+            mergeSupabaseIntoSiteCatalog(lang);
+            renderAllPublicCatalog();
+            applyDynamicSectionContent(lang);
             }
             setElementText('top-sales-number', `${text.topSalesLabel} ${systemSettings.mainSalesPhone}`, true);
             setElementText('top-customer-number', `${text.topCustomerLabel} ${systemSettings.customerServicePhone}`, true);
@@ -19249,24 +19535,24 @@
             if (langToggleBtn) langToggleBtn.setAttribute('aria-expanded', 'false');
             if (!light && !skipCatalog) {
                 renderVisitorQrSection();
-                renderVisitorIcons();
-                displayBranches();
-                if (nebrasWorkspaceState.active) renderNebrasWorkspace();
-                syncAdminSessionClass();
-                if (currentAdmin) {
-                    renderPlatformHubPanel();
-                    renderErpHubPanel();
-                    renderDashboardTiles();
-                    renderDashboardChannelsStatus();
+            renderVisitorIcons();
+            displayBranches();
+            if (nebrasWorkspaceState.active) renderNebrasWorkspace();
+            syncAdminSessionClass();
+            if (currentAdmin) {
+                renderPlatformHubPanel();
+                renderErpHubPanel();
+                renderDashboardTiles();
+                renderDashboardChannelsStatus();
                     renderDashboardOfficialHub();
-                }
-                renderDashboardOccasionStatus();
-                setElementText('dashboard-occasion-title', text.dashboardOccasionTitle);
-                setElementText('dashboard-occasion-edit-btn', text.dashboardOccasionEditBtn);
-                setElementText('setting-occasion-section-title', text.settingOccasionSectionTitle);
-                setElementText('setting-occasion-hint', text.settingOccasionHint);
-                setElementText('setting-occasion-enabled-label', text.settingOccasionEnabledLabel);
-                applyOccasionTheme();
+            }
+            renderDashboardOccasionStatus();
+            setElementText('dashboard-occasion-title', text.dashboardOccasionTitle);
+            setElementText('dashboard-occasion-edit-btn', text.dashboardOccasionEditBtn);
+            setElementText('setting-occasion-section-title', text.settingOccasionSectionTitle);
+            setElementText('setting-occasion-hint', text.settingOccasionHint);
+            setElementText('setting-occasion-enabled-label', text.settingOccasionEnabledLabel);
+            applyOccasionTheme();
             } else if (skipCatalog) {
                 updateCartBadge();
                 updateNebrasSiteClock();
