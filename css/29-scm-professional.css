@@ -1,0 +1,293 @@
+/* نبراس — إدارة المحتوى SCM احترافية (المرحلة 3) */
+
+.nebras-scm-modal {
+    --scm-navy: #062e44;
+    --scm-navy-2: #0a4d8c;
+    --scm-gold: #d4af37;
+    --scm-ink: #0d2233;
+    --scm-line: rgba(10, 77, 140, 0.14);
+    max-width: 1240px;
+    width: min(97vw, 1240px);
+    background: linear-gradient(180deg, #ffffff 0%, #f4f8fc 100%);
+    color: var(--scm-ink);
+    border-radius: 22px;
+    padding: 0;
+    overflow: hidden;
+    box-shadow: 0 40px 120px rgba(4, 22, 40, 0.48);
+}
+
+.nebras-scm-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 22px 26px;
+    background:
+        radial-gradient(120% 160% at 100% 0%, rgba(212, 175, 55, 0.2) 0%, rgba(212, 175, 55, 0) 55%),
+        linear-gradient(135deg, var(--scm-navy) 0%, var(--scm-navy-2) 100%);
+    color: #fff;
+}
+
+.nebras-scm-head-title {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.nebras-scm-head-title > i {
+    font-size: 1.6rem;
+    color: var(--scm-gold);
+    width: 52px;
+    height: 52px;
+    display: grid;
+    place-items: center;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(212, 175, 55, 0.35);
+}
+
+.nebras-scm-head h2 {
+    margin: 0;
+    font-size: 1.28rem;
+    color: #fff;
+}
+
+.nebras-scm-sub {
+    margin: 4px 0 0;
+    font-size: 0.82rem;
+    line-height: 1.55;
+    color: rgba(255, 255, 255, 0.78);
+    max-width: 760px;
+}
+
+.nebras-scm-close {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    cursor: pointer;
+}
+
+.nebras-scm-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 14px 22px;
+    border-bottom: 1px solid var(--scm-line);
+    background: rgba(255, 255, 255, 0.72);
+}
+
+.nebras-scm-modal .scm-tabs {
+    padding: 0 22px;
+    margin-top: 0;
+    border-bottom: 1px solid var(--scm-line);
+    background: #fff;
+}
+
+.nebras-scm-modal .scm-panel {
+    padding: 18px 22px 8px;
+}
+
+.nebras-scm-modal .scm-governance-status {
+    margin: 12px 22px 0;
+}
+
+.nebras-scm-foot {
+    padding: 14px 22px 20px;
+    border-top: 1px solid var(--scm-line);
+    background: #f8fbfe;
+}
+
+.scm-panel-toolbar {
+    margin-bottom: 12px;
+}
+
+.scm-editor-mount {
+    margin-bottom: 16px;
+}
+
+.scm-editor-card {
+    padding: 18px 20px;
+    border-radius: 16px;
+    background: #fff;
+    border: 1px solid var(--scm-line);
+    box-shadow: 0 8px 28px rgba(6, 46, 68, 0.08);
+}
+
+.scm-editor-card h4 {
+    margin: 0 0 14px;
+    font-size: 1.05rem;
+    color: var(--scm-navy);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.scm-editor-card h4 i {
+    color: var(--scm-gold);
+}
+
+.scm-editor-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 14px;
+}
+
+.scm-editor-grid label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: #334155;
+}
+
+.scm-editor-grid input {
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--scm-line);
+    font: inherit;
+}
+
+.scm-editor-media {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px;
+    border-radius: 12px;
+    background: #f8fbfe;
+    border: 1px dashed var(--scm-line);
+}
+
+.scm-editor-media span {
+    font-size: 0.84rem;
+    font-weight: 600;
+    color: #475569;
+}
+
+.scm-editor-thumb {
+    width: 88px;
+    height: 88px;
+    border-radius: 12px;
+    object-fit: contain;
+    background: #fff;
+    border: 1px solid var(--scm-line);
+}
+
+.scm-editor-thumb--empty,
+.scm-editor-thumb--pdf {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    color: var(--scm-navy-2);
+    background: #eef5fb;
+}
+
+.scm-editor-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.scm-list--cards .scm-list-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 16px;
+    border-radius: 14px;
+    background: #fff;
+    border: 1px solid var(--scm-line);
+    margin-bottom: 10px;
+}
+
+.scm-list-thumb {
+    width: 56px;
+    height: 56px;
+    border-radius: 10px;
+    object-fit: contain;
+    background: #f8fbfe;
+    border: 1px solid var(--scm-line);
+    flex-shrink: 0;
+}
+
+.scm-list-thumb--empty,
+.scm-list-thumb--pdf {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+    color: var(--scm-navy-2);
+}
+
+.scm-list-copy {
+    flex: 1;
+    min-width: 0;
+}
+
+.scm-list-copy strong {
+    display: block;
+    color: var(--scm-navy);
+}
+
+.scm-list-copy small {
+    display: block;
+    margin-top: 4px;
+    opacity: 0.78;
+    font-size: 0.82rem;
+    word-break: break-all;
+}
+
+.scm-list-link {
+    color: var(--scm-navy-2);
+}
+
+.scm-tag {
+    display: inline-block;
+    margin-top: 4px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(10, 77, 140, 0.1);
+    font-size: 0.75rem !important;
+}
+
+.scm-empty {
+    padding: 24px;
+    text-align: center;
+    opacity: 0.75;
+    border-radius: 12px;
+    background: #f8fbfe;
+}
+
+.scm-list-card .scm-row-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.scm-list-card .scm-row-actions button {
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--scm-line);
+    background: #fff;
+    cursor: pointer;
+    font-size: 0.82rem;
+}
+
+.scm-list-card .scm-row-actions button:hover {
+    background: #eef5fb;
+}
+
+@media (max-width: 768px) {
+    .scm-list--cards .scm-list-card {
+        flex-wrap: wrap;
+    }
+    .scm-list-card .scm-row-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}

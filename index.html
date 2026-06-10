@@ -88,6 +88,7 @@
     <link rel="stylesheet" href="css/24-wpc-strengths-light.css">
     <link rel="stylesheet" href="css/27-governance-users.css">
     <link rel="stylesheet" href="css/28-erp-dashboard-shell.css">
+    <link rel="stylesheet" href="css/29-scm-professional.css">
 </head>
 <body id="nebras-platform" class="platform-storefront" data-platform-layer="storefront">
 
@@ -1078,11 +1079,23 @@
     </div>
 
     <div class="admin-section" id="site-content-management">
-        <div class="admin-modal site-content-modal">
-            <h2 id="scm-main-title">إدارة محتوى الموقع — بدون تعديل الكود</h2>
-            <p class="scm-hint admin-only-ui" id="scm-main-hint">صلاحية <strong>المحتوى</strong> (مدير الإدارة / Super Admin): تحكم كامل بالموقع — منتجات، أيقونات (صور · PDF · أصناف)، <strong>معرض نبراس</strong> (منتجات + مشاريع)، شركاء، شهادات، بانر الهيدر. متجر = سلة وعرض سعر.</p>
+        <div class="admin-modal site-content-modal nebras-scm-modal">
+            <div class="nebras-scm-head">
+                <div class="nebras-scm-head-title">
+                    <i class="fas fa-pen-to-square" aria-hidden="true"></i>
+                    <div>
+                        <h2 id="scm-main-title">إدارة محتوى الموقع — ديناميكي بالكامل</h2>
+                        <p class="nebras-scm-sub admin-only-ui" id="scm-main-hint">صلاحية <strong>المحتوى</strong>: منتجات · أيقونات · معرض نبراس · شركاء · شهادات — كل تعديل يُحفظ في Supabase ويظهر للزوار فوراً.</p>
+                    </div>
+                </div>
+                <button type="button" class="nebras-scm-close" onclick="closeAdminSection('site-content-management')" aria-label="إغلاق"><i class="fas fa-xmark"></i></button>
+            </div>
+            <div class="nebras-scm-toolbar admin-only-ui">
+                <button type="button" class="primary" onclick="openNebrasMediaHubQuick()"><i class="fas fa-cloud-upload-alt"></i> رفع وسائط</button>
+                <button type="button" class="secondary" onclick="openDoorDesignerAdmin()"><i class="fas fa-pencil-ruler"></i> مصمّم الأبواب 3D</button>
+                <button type="button" class="secondary" onclick="saveContentData()"><i class="fas fa-sync"></i> حفظ ومزامنة</button>
+            </div>
             <div id="scm-governance-status" class="scm-governance-status" aria-live="polite"></div>
-            <button type="button" class="primary admin-only-ui" style="margin:0 0 12px" onclick="openDoorDesignerAdmin()"><i class="fas fa-pencil-ruler"></i> إعداد «صمّم بابك مع نبراس» (3D)</button>
             <div class="scm-tabs" role="tablist">
                 <button type="button" class="active" id="scm-tab-products" data-scm-tab="products" onclick="switchScmTab('products')">المنتجات</button>
                 <button type="button" id="scm-tab-visitor" data-scm-tab="visitor" onclick="switchScmTab('visitor')">أيقونات الزوار</button>
@@ -1123,20 +1136,28 @@
                 <ul id="scm-about-list" class="scm-list"></ul>
             </div>
             <div id="scm-panel-partners" class="scm-panel">
-                <p class="scm-hint admin-only-ui">شعارات الشركاء (صورة + رابط اختياري) — شريط متحرك في الموقع وداخل الداشبورد مثل موقع مرجعي. ابدأوا فارغين ثم أضيفوا من هنا.</p>
-                <button class="primary" type="button" onclick="addSitePartner()">+ شريك جديد</button>
-                <ul id="scm-partners-list" class="scm-list"></ul>
+                <p class="scm-hint admin-only-ui">شعارات الشركاء (صورة + رابط اختياري) — شريط متحرك في الموقع وداخل الداشبورد.</p>
+                <div class="scm-panel-toolbar">
+                    <button class="primary" type="button" onclick="addSitePartner()"><i class="fas fa-plus"></i> شريك جديد</button>
+                </div>
+                <div id="scm-partner-editor" class="scm-editor-mount" hidden></div>
+                <ul id="scm-partners-list" class="scm-list scm-list--cards"></ul>
             </div>
             <div id="scm-panel-certifications" class="scm-panel">
-                <p class="scm-hint admin-only-ui">اعتمادات وشهادات نبراس — ارفعوا صور الشهادات أو ملفات PDF فقط (لا صور أبواب). يمكن إضافة العنوان أولاً ثم رفع الوثيقة لاحقاً من «تعديل».</p>
-                <button class="primary" type="button" onclick="addSiteCertification()">+ اعتماد / شهادة</button>
-                <ul id="scm-certifications-list" class="scm-list"></ul>
+                <p class="scm-hint admin-only-ui">اعتمادات وشهادات نبراس — صور أو PDF. يمكن إضافة العنوان أولاً ثم رفع الوثيقة لاحقاً.</p>
+                <div class="scm-panel-toolbar">
+                    <button class="primary" type="button" onclick="addSiteCertification()"><i class="fas fa-plus"></i> اعتماد / شهادة</button>
+                </div>
+                <div id="scm-cert-editor" class="scm-editor-mount" hidden></div>
+                <ul id="scm-certifications-list" class="scm-list scm-list--cards"></ul>
             </div>
             <div id="scm-panel-showroom" class="scm-panel">
                 <p class="scm-hint admin-only-ui" id="scm-showroom-hint">معرض نبراس — 5 أقسام: <strong>أبواب نبراس · خزائن نبراس · أبواب WPC · خزائن WPC · قطع CNC</strong> + مشاريع NHC. ارفعي صور بجودة كاملة — الضغط يفتح الصورة الأصلية.</p>
                 <div id="scm-showroom-sections-root"></div>
             </div>
-            <button type="button" onclick="closeAdminSection('site-content-management')">إغلاق</button>
+            <div class="nebras-scm-foot">
+                <button type="button" class="secondary" onclick="closeAdminSection('site-content-management')"><i class="fas fa-xmark"></i> إغلاق</button>
+            </div>
         </div>
     </div>
 

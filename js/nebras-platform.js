@@ -2163,6 +2163,11 @@
             { id: 'dash-sales-report', zone: 'grid', dashGroup: 'erp', sortOrder: 3, iconClass: 'fas fa-file-invoice-dollar', titleAr: 'تقارير المبيعات', titleEn: 'Sales Reports', textAr: 'تحليل أداء المبيعات.', textEn: 'Sales performance.', cssClass: 'card-sales-reports', backgroundImage: 'background', handler: 'openSalesManagement', permission: 'sales', visible: true },
             { id: 'dash-customers', zone: 'grid', dashGroup: 'erp', sortOrder: 4, iconClass: 'fas fa-user-friends', titleAr: 'إدارة العملاء', titleEn: 'CRM', textAr: 'علاقات العملاء.', textEn: 'Customer relationships.', cssClass: 'card-customer-management', backgroundImage: 'customer-complaints-background', handler: 'openCustomerServiceManagement', permission: 'customerService', visible: true },
             { id: 'dash-analytics', zone: 'grid', dashGroup: 'erp', sortOrder: 5, iconClass: 'fas fa-chart-pie', titleAr: 'التحليلات', titleEn: 'Analytics', textAr: 'منتجات · ألوان · شكاوى · زوار.', textEn: 'Live BI insights.', cssClass: 'card-analytics', backgroundImage: 'background-other-products', handler: 'openAdminAnalytics', permission: 'audit', visible: true },
+            { id: 'dash-production', zone: 'grid', dashGroup: 'erp', sortOrder: 6, iconClass: 'fas fa-industry', titleAr: 'الإنتاج اليومي', titleEn: 'Daily Production', textAr: 'كميات الإنتاج وربطها بالمخزون.', textEn: 'Production output linked to stock.', cssClass: 'card-production', handler: 'openErpProduction', permission: 'production', visible: true },
+            { id: 'dash-procurement', zone: 'grid', dashGroup: 'erp', sortOrder: 7, iconClass: 'fas fa-truck-loading', titleAr: 'المشتريات', titleEn: 'Procurement', textAr: 'أوامر شراء وموردون وتكاليف.', textEn: 'Purchase orders and suppliers.', cssClass: 'card-procurement', handler: 'openErpProcurement', permission: 'procurement', visible: true },
+            { id: 'dash-accounting', zone: 'grid', dashGroup: 'erp', sortOrder: 8, iconClass: 'fas fa-calculator', titleAr: 'المحاسبة', titleEn: 'Accounting', textAr: 'تحويلات بنكية ومبيعات وأرباح.', textEn: 'Transfers, sales, margins.', cssClass: 'card-accounting', handler: 'openErpAccounting', permission: 'accounting', visible: true },
+            { id: 'dash-pricelist', zone: 'grid', dashGroup: 'erp', sortOrder: 9, iconClass: 'fas fa-tags', titleAr: 'قائمة الأسعار', titleEn: 'Price List', textAr: 'أسعار معتمدة للمندوبين.', textEn: 'Approved rep pricing.', cssClass: 'card-pricelist', handler: 'openSalesPriceList', permission: 'sales', visible: true },
+            { id: 'dash-rep-quotes', zone: 'grid', dashGroup: 'erp', sortOrder: 10, iconClass: 'fas fa-file-signature', titleAr: 'بناء عرض سعر', titleEn: 'Quote Builder', textAr: 'للمندوبين — من القائمة المعتمدة.', textEn: 'Sales rep quote builder.', cssClass: 'card-rep-quotes', handler: 'openRepQuoteBuilder', permission: 'quotes', visible: true },
             { id: 'dash-settings', zone: 'quick', dashGroup: 'command', sortOrder: 11, iconClass: 'fas fa-sliders-h', titleAr: 'إعدادات المنصة', titleEn: 'Platform Settings', textAr: 'بانر، بنوك، ضريبة، احتفال — Super Admin.', textEn: 'Banner, banks, VAT, occasions.', handler: 'openSystemSettings', permission: 'users', superadminOnly: true, visible: true }
         ];
 
@@ -2211,7 +2216,8 @@
             },
             openCallbackLeadsAdmin: function() {
                 if (typeof window.openCallbackLeadsAdmin === 'function') window.openCallbackLeadsAdmin();
-            }
+            },
+            openNebrasMediaHubQuick: function() { openNebrasMediaHubQuick(); }
         };
 
         const DEPRECATED_VISITOR_ICON_IDS = [1, 5, 6, 18];
@@ -5641,6 +5647,11 @@
             { id: 'dash-sales-report', publicEffect: 'تقارير المبيعات', handler: 'openSalesManagement' },
             { id: 'dash-customers', publicEffect: 'إدارة العملاء', handler: 'openCustomerServiceManagement' },
             { id: 'dash-analytics', publicEffect: 'تحليلات داخلية (زوار · منتجات · ألوان)', handler: 'openAdminAnalytics' },
+            { id: 'dash-production', publicEffect: 'إنتاج يومي مرتبط بالمخزون', handler: 'openErpProduction' },
+            { id: 'dash-procurement', publicEffect: 'مشتريات وموردون', handler: 'openErpProcurement' },
+            { id: 'dash-accounting', publicEffect: 'محاسبة وتحويلات بنكية', handler: 'openErpAccounting' },
+            { id: 'dash-pricelist', publicEffect: 'قائمة أسعار المندوبين', handler: 'openSalesPriceList' },
+            { id: 'dash-rep-quotes', publicEffect: 'عروض أسعار المندوبين', handler: 'openRepQuoteBuilder' },
             { id: 'dash-settings', publicEffect: 'بانر · بنوك · ضريبة · احتفال · سوشيال', handler: 'openSystemSettings' }
         ];
 
@@ -8507,44 +8518,88 @@
             addAuditLog('حذف صورة معرض', itemId);
         }
 
-        async function addSitePartner() {
+        let scmPartnerEditorState = null;
+        let scmCertEditorState = null;
+
+        function openScmPartnerEditor(partnerId) {
             if (!requirePermission('content')) return;
-            const nameAr = prompt('اسم الشريك (عربي):');
-            if (nameAr === null) return;
-            const nameEn = prompt('اسم الشريك (إنجليزي — اختياري):', '') || '';
-            const logoUrl = await pickMediaPath({ label: 'شعار الشريك', defaultValue: 'images/logo.png' });
-            if (!logoUrl) { alert('يلزم شعار الشريك.'); return; }
-            const linkUrl = prompt('رابط الموقع (اختياري):', '') || '';
-            sitePartners.push({
-                id: 'partner-' + Date.now(),
-                nameAr: nameAr.trim(),
-                nameEn: nameEn.trim(),
-                logoUrl: logoUrl,
-                linkUrl: linkUrl.trim(),
-                sortOrder: sitePartners.length + 1,
-                visible: true,
-                logoOnly: true
-            });
-            saveContentData();
-            displayPartnersAdmin();
-            addAuditLog('إضافة شريك', nameAr);
+            switchScmTab('partners');
+            const existing = partnerId ? sitePartners.find(function(x) { return x.id === partnerId; }) : null;
+            scmPartnerEditorState = {
+                mode: existing ? 'edit' : 'new',
+                id: existing ? existing.id : ('partner-' + Date.now()),
+                draft: existing ? Object.assign({}, existing) : {
+                    nameAr: '', nameEn: '', logoUrl: '', linkUrl: '', visible: true, logoOnly: true,
+                    sortOrder: sitePartners.length + 1
+                }
+            };
+            renderScmPartnerEditor();
         }
 
-        async function editSitePartner(partnerId) {
-            if (!requirePermission('content')) return;
-            const p = sitePartners.find(function(x) { return x.id === partnerId; });
-            if (!p) return;
-            const nameAr = prompt('اسم الشريك (عربي):', p.nameAr || '');
-            if (nameAr === null) return;
-            const nameEn = prompt('اسم الشريك (إنجليزي):', p.nameEn || '') || '';
-            const logoUrl = await pickMediaPath({ label: 'شعار الشريك', defaultValue: p.logoUrl || '' });
-            if (logoUrl) p.logoUrl = logoUrl;
-            p.nameAr = nameAr.trim();
-            p.nameEn = nameEn.trim();
-            p.linkUrl = (prompt('رابط الموقع:', p.linkUrl || '') || '').trim();
-            saveContentData();
-            displayPartnersAdmin();
+        function renderScmPartnerEditor() {
+            const host = document.getElementById('scm-partner-editor');
+            if (!host || !scmPartnerEditorState) return;
+            const d = scmPartnerEditorState.draft;
+            const logoPreview = d.logoUrl
+                ? '<img src="' + escapeHtmlAttr(normalizeMediaPath(d.logoUrl)) + '" alt="" class="scm-editor-thumb">'
+                : '<span class="scm-editor-thumb scm-editor-thumb--empty"><i class="fas fa-image"></i></span>';
+            host.hidden = false;
+            host.innerHTML = '<div class="scm-editor-card">' +
+                '<h4><i class="fas fa-handshake"></i> ' + (scmPartnerEditorState.mode === 'edit' ? 'تعديل شريك' : 'شريك جديد') + '</h4>' +
+                '<div class="scm-editor-grid">' +
+                '<label>الاسم (عربي)<input type="text" id="scm-partner-name-ar" value="' + escapeHtmlAttr(d.nameAr || '') + '"></label>' +
+                '<label>الاسم (إنجليزي)<input type="text" id="scm-partner-name-en" value="' + escapeHtmlAttr(d.nameEn || '') + '"></label>' +
+                '<label>رابط الموقع (اختياري)<input type="url" id="scm-partner-link" value="' + escapeHtmlAttr(d.linkUrl || '') + '" placeholder="https://"></label>' +
+                '<div class="scm-editor-media"><span>شعار الشريك</span>' + logoPreview +
+                '<button type="button" class="secondary" onclick="scmPartnerPickLogo()"><i class="fas fa-cloud-upload-alt"></i> رفع / اختيار شعار</button></div>' +
+                '</div>' +
+                '<div class="scm-editor-actions">' +
+                '<button type="button" class="primary" onclick="saveScmPartnerFromEditor()"><i class="fas fa-check"></i> حفظ</button>' +
+                '<button type="button" class="secondary" onclick="cancelScmPartnerEditor()">إلغاء</button></div></div>';
         }
+
+        async function scmPartnerPickLogo() {
+            if (!scmPartnerEditorState) return;
+            const url = await pickMediaPath({ label: 'شعار الشريك', defaultValue: scmPartnerEditorState.draft.logoUrl || 'images/logo.png' });
+            if (!url) return;
+            scmPartnerEditorState.draft.logoUrl = url;
+            renderScmPartnerEditor();
+        }
+
+        function saveScmPartnerFromEditor() {
+            if (!scmPartnerEditorState) return;
+            const nameAr = (document.getElementById('scm-partner-name-ar') || {}).value || '';
+            const nameEn = (document.getElementById('scm-partner-name-en') || {}).value || '';
+            const linkUrl = (document.getElementById('scm-partner-link') || {}).value || '';
+            if (!nameAr.trim()) { alert('أدخل اسم الشريك بالعربية.'); return; }
+            if (!scmPartnerEditorState.draft.logoUrl) { alert('يلزم شعار الشريك.'); return; }
+            const payload = {
+                id: scmPartnerEditorState.id,
+                nameAr: nameAr.trim(),
+                nameEn: nameEn.trim(),
+                logoUrl: scmPartnerEditorState.draft.logoUrl,
+                linkUrl: linkUrl.trim(),
+                sortOrder: scmPartnerEditorState.draft.sortOrder || sitePartners.length + 1,
+                visible: scmPartnerEditorState.draft.visible !== false,
+                logoOnly: true
+            };
+            const idx = sitePartners.findIndex(function(p) { return p.id === payload.id; });
+            if (idx >= 0) sitePartners[idx] = Object.assign({}, sitePartners[idx], payload);
+            else sitePartners.push(payload);
+            saveContentData();
+            cancelScmPartnerEditor();
+            displayPartnersAdmin();
+            addAuditLog(scmPartnerEditorState.mode === 'edit' ? 'تعديل شريك' : 'إضافة شريك', payload.nameAr);
+        }
+
+        function cancelScmPartnerEditor() {
+            scmPartnerEditorState = null;
+            const host = document.getElementById('scm-partner-editor');
+            if (host) { host.hidden = true; host.innerHTML = ''; }
+        }
+
+        function addSitePartner() { openScmPartnerEditor(); }
+        function editSitePartner(partnerId) { openScmPartnerEditor(partnerId); }
 
         function deleteSitePartner(partnerId) {
             if (!requirePermission('content')) return;
@@ -8558,58 +8613,106 @@
             const list = document.getElementById('scm-partners-list');
             if (!list) return;
             list.innerHTML = (sitePartners || []).map(function(p) {
-                return '<li><strong>' + escapeHtmlAttr(p.nameAr || p.id) + '</strong>' +
-                    '<small>شعار: ' + escapeHtmlAttr(p.logoUrl || '') + '</small>' +
+                const logo = p.logoUrl ? '<img src="' + escapeHtmlAttr(normalizeMediaPath(p.logoUrl)) + '" alt="" class="scm-list-thumb">' : '';
+                return '<li class="scm-list-card">' + logo +
+                    '<div class="scm-list-copy"><strong>' + escapeHtmlAttr(p.nameAr || p.id) + '</strong>' +
+                    (p.nameEn ? '<small>' + escapeHtmlAttr(p.nameEn) + '</small>' : '') +
+                    (p.linkUrl ? '<small class="scm-list-link"><i class="fas fa-link"></i> ' + escapeHtmlAttr(p.linkUrl) + '</small>' : '') + '</div>' +
                     '<div class="scm-row-actions">' +
-                    '<button type="button" onclick="editSitePartner(\'' + p.id + '\')">تعديل</button>' +
-                    '<button type="button" onclick="deleteSitePartner(\'' + p.id + '\')">حذف</button></div></li>';
-            }).join('') || '<li>لا يوجد شركاء — اضغطي + شريك جديد</li>';
+                    '<button type="button" onclick="editSitePartner(\'' + p.id + '\')"><i class="fas fa-pen"></i> تعديل</button>' +
+                    '<button type="button" onclick="deleteSitePartner(\'' + p.id + '\')"><i class="fas fa-trash"></i> حذف</button></div></li>';
+            }).join('') || '<li class="scm-empty">لا يوجد شركاء — اضغطي + شريك جديد</li>';
         }
 
-        async function addSiteCertification() {
+        function openScmCertEditor(certId) {
             if (!requirePermission('content')) return;
-            const titleAr = prompt('عنوان الشهادة / الاعتماد (عربي):');
-            if (titleAr === null || !titleAr.trim()) return;
-            const titleEn = prompt('العنوان (إنجليزي — اختياري):', '') || '';
-            const captionAr = prompt('الشرح تحت الصورة/الوثيقة (عربي):', '') || '';
-            const captionEn = prompt('الشرح (إنجليزي — اختياري):', '') || '';
-            let mediaUrl = await pickMediaPath({ label: 'صورة الشهادة أو PDF (اختياري — يمكن الرفع لاحقاً)', defaultValue: '', accept: NEBRAS_MEDIA_ACCEPT_ALL });
-            if (!mediaUrl && !confirm('إضافة الاعتماد بدون ملف الآن؟ يمكنك رفع الصورة أو PDF لاحقاً من «تعديل».')) return;
-            const mediaType = mediaUrl && /\.pdf(\?|$)/i.test(mediaUrl) ? 'pdf' : (mediaUrl ? 'image' : 'pending');
-            siteCertifications.push({
-                id: 'cert-' + Date.now(),
+            switchScmTab('certifications');
+            const existing = certId ? siteCertifications.find(function(x) { return x.id === certId; }) : null;
+            scmCertEditorState = {
+                mode: existing ? 'edit' : 'new',
+                id: existing ? existing.id : ('cert-' + Date.now()),
+                draft: existing ? Object.assign({}, existing) : {
+                    titleAr: '', titleEn: '', captionAr: '', captionEn: '', mediaUrl: '', mediaType: 'pending',
+                    sortOrder: siteCertifications.length + 1, visible: true
+                }
+            };
+            renderScmCertEditor();
+        }
+
+        function renderScmCertEditor() {
+            const host = document.getElementById('scm-cert-editor');
+            if (!host || !scmCertEditorState) return;
+            const d = scmCertEditorState.draft;
+            let mediaPreview = '<span class="scm-editor-thumb scm-editor-thumb--empty"><i class="fas fa-file"></i></span>';
+            if (d.mediaUrl) {
+                if (/\.pdf(\?|$)/i.test(d.mediaUrl)) {
+                    mediaPreview = '<span class="scm-editor-thumb scm-editor-thumb--pdf"><i class="fas fa-file-pdf"></i> PDF</span>';
+                } else {
+                    mediaPreview = '<img src="' + escapeHtmlAttr(normalizeMediaPath(d.mediaUrl)) + '" alt="" class="scm-editor-thumb">';
+                }
+            }
+            host.hidden = false;
+            host.innerHTML = '<div class="scm-editor-card">' +
+                '<h4><i class="fas fa-award"></i> ' + (scmCertEditorState.mode === 'edit' ? 'تعديل اعتماد' : 'اعتماد / شهادة جديدة') + '</h4>' +
+                '<div class="scm-editor-grid">' +
+                '<label>العنوان (عربي)<input type="text" id="scm-cert-title-ar" value="' + escapeHtmlAttr(d.titleAr || '') + '"></label>' +
+                '<label>العنوان (إنجليزي)<input type="text" id="scm-cert-title-en" value="' + escapeHtmlAttr(d.titleEn || '') + '"></label>' +
+                '<label>الشرح (عربي)<input type="text" id="scm-cert-caption-ar" value="' + escapeHtmlAttr(d.captionAr || '') + '"></label>' +
+                '<label>الشرح (إنجليزي)<input type="text" id="scm-cert-caption-en" value="' + escapeHtmlAttr(d.captionEn || '') + '"></label>' +
+                '<div class="scm-editor-media"><span>صورة أو PDF</span>' + mediaPreview +
+                '<button type="button" class="secondary" onclick="scmCertPickMedia()"><i class="fas fa-cloud-upload-alt"></i> رفع وسائط</button></div>' +
+                '</div>' +
+                '<div class="scm-editor-actions">' +
+                '<button type="button" class="primary" onclick="saveScmCertFromEditor()"><i class="fas fa-check"></i> حفظ</button>' +
+                '<button type="button" class="secondary" onclick="cancelScmCertEditor()">إلغاء</button></div></div>';
+        }
+
+        async function scmCertPickMedia() {
+            if (!scmCertEditorState) return;
+            const url = await pickMediaPath({ label: 'صورة الشهادة أو PDF', defaultValue: scmCertEditorState.draft.mediaUrl || '', accept: NEBRAS_MEDIA_ACCEPT_ALL });
+            if (!url) return;
+            scmCertEditorState.draft.mediaUrl = url;
+            scmCertEditorState.draft.mediaType = /\.pdf(\?|$)/i.test(url) ? 'pdf' : 'image';
+            renderScmCertEditor();
+        }
+
+        function saveScmCertFromEditor() {
+            if (!scmCertEditorState) return;
+            const titleAr = (document.getElementById('scm-cert-title-ar') || {}).value || '';
+            const titleEn = (document.getElementById('scm-cert-title-en') || {}).value || '';
+            const captionAr = (document.getElementById('scm-cert-caption-ar') || {}).value || '';
+            const captionEn = (document.getElementById('scm-cert-caption-en') || {}).value || '';
+            if (!titleAr.trim()) { alert('أدخل عنوان الاعتماد بالعربية.'); return; }
+            const mediaUrl = scmCertEditorState.draft.mediaUrl || '';
+            const mediaType = mediaUrl ? (scmCertEditorState.draft.mediaType || 'image') : 'pending';
+            const payload = {
+                id: scmCertEditorState.id,
                 titleAr: titleAr.trim(),
                 titleEn: titleEn.trim(),
                 captionAr: captionAr.trim(),
                 captionEn: captionEn.trim(),
                 mediaUrl: mediaUrl,
                 mediaType: mediaType,
-                sortOrder: siteCertifications.length + 1,
-                visible: true
-            });
+                sortOrder: scmCertEditorState.draft.sortOrder || siteCertifications.length + 1,
+                visible: scmCertEditorState.draft.visible !== false
+            };
+            const idx = siteCertifications.findIndex(function(c) { return c.id === payload.id; });
+            if (idx >= 0) siteCertifications[idx] = Object.assign({}, siteCertifications[idx], payload);
+            else siteCertifications.push(payload);
             saveContentData();
+            cancelScmCertEditor();
             displayCertificationsAdmin();
-            addAuditLog('إضافة اعتماد/شهادة', titleAr);
+            addAuditLog(scmCertEditorState.mode === 'edit' ? 'تعديل اعتماد' : 'إضافة اعتماد/شهادة', payload.titleAr);
         }
 
-        async function editSiteCertification(certId) {
-            if (!requirePermission('content')) return;
-            const c = siteCertifications.find(function(x) { return x.id === certId; });
-            if (!c) return;
-            const titleAr = prompt('العنوان (عربي):', c.titleAr || '');
-            if (titleAr === null) return;
-            c.titleAr = titleAr.trim();
-            c.titleEn = (prompt('العنوان (إنجليزي):', c.titleEn || '') || '').trim();
-            c.captionAr = (prompt('الشرح (عربي):', c.captionAr || '') || '').trim();
-            c.captionEn = (prompt('الشرح (إنجليزي):', c.captionEn || '') || '').trim();
-            const mediaUrl = await pickMediaPath({ label: 'صورة أو PDF', defaultValue: c.mediaUrl || '' });
-            if (mediaUrl) {
-                c.mediaUrl = mediaUrl;
-                c.mediaType = /\.pdf(\?|$)/i.test(mediaUrl) ? 'pdf' : 'image';
-            }
-            saveContentData();
-            displayCertificationsAdmin();
+        function cancelScmCertEditor() {
+            scmCertEditorState = null;
+            const host = document.getElementById('scm-cert-editor');
+            if (host) { host.hidden = true; host.innerHTML = ''; }
         }
+
+        function addSiteCertification() { openScmCertEditor(); }
+        function editSiteCertification(certId) { openScmCertEditor(certId); }
 
         function deleteSiteCertification(certId) {
             if (!requirePermission('content')) return;
@@ -8623,13 +8726,28 @@
             const list = document.getElementById('scm-certifications-list');
             if (!list) return;
             list.innerHTML = (siteCertifications || []).map(function(c) {
+                let thumb = '<span class="scm-list-thumb scm-list-thumb--empty"><i class="fas fa-award"></i></span>';
+                if (c.mediaUrl) {
+                    if (c.mediaType === 'pdf' || /\.pdf(\?|$)/i.test(c.mediaUrl)) {
+                        thumb = '<span class="scm-list-thumb scm-list-thumb--pdf"><i class="fas fa-file-pdf"></i></span>';
+                    } else {
+                        thumb = '<img src="' + escapeHtmlAttr(normalizeMediaPath(c.mediaUrl)) + '" alt="" class="scm-list-thumb">';
+                    }
+                }
                 const mediaLabel = (c.mediaUrl && String(c.mediaUrl).trim()) ? (c.mediaType || 'image') : 'بانتظار الرفع';
-                return '<li><strong>' + escapeHtmlAttr(c.titleAr || c.id) + '</strong> [' + escapeHtmlAttr(mediaLabel) + ']' +
-                    '<small>' + escapeHtmlAttr(c.captionAr || '') + '</small>' +
+                return '<li class="scm-list-card">' + thumb +
+                    '<div class="scm-list-copy"><strong>' + escapeHtmlAttr(c.titleAr || c.id) + '</strong>' +
+                    '<small class="scm-tag">' + escapeHtmlAttr(mediaLabel) + '</small>' +
+                    (c.captionAr ? '<small>' + escapeHtmlAttr(c.captionAr) + '</small>' : '') + '</div>' +
                     '<div class="scm-row-actions">' +
-                    '<button type="button" onclick="editSiteCertification(\'' + c.id + '\')">تعديل</button>' +
-                    '<button type="button" onclick="deleteSiteCertification(\'' + c.id + '\')">حذف</button></div></li>';
-            }).join('') || '<li>لا توجد شهادات — اضغطي + اعتماد / شهادة</li>';
+                    '<button type="button" onclick="editSiteCertification(\'' + c.id + '\')"><i class="fas fa-pen"></i> تعديل</button>' +
+                    '<button type="button" onclick="deleteSiteCertification(\'' + c.id + '\')"><i class="fas fa-trash"></i> حذف</button></div></li>';
+            }).join('') || '<li class="scm-empty">لا توجد شهادات — اضغطي + اعتماد / شهادة</li>';
+        }
+
+        async function openNebrasMediaHubQuick() {
+            if (!requirePermission('content', 'صلاحية المحتوى مطلوبة لرفع الوسائط.')) return;
+            await pickMediaPath({ label: 'رفع وسائط للموقع', hint: 'صورة · PDF · فيديو — تُرفع إلى Supabase وتُستخدم في المحتوى' });
         }
 
         function renderDashboardTiles() {
@@ -11508,6 +11626,7 @@
             const map = [
                 { roles: ['superadmin', 'manager', 'hr'], icon: 'fas fa-users-cog', label: 'المستخدمون', handler: 'openUserManagement', perm: 'users' },
                 { roles: ['superadmin', 'manager'], icon: 'fas fa-paint-roller', label: 'محتوى الموقع', handler: 'openSiteContentManager', perm: 'content' },
+                { roles: ['superadmin', 'manager'], icon: 'fas fa-cloud-upload-alt', label: 'رفع وسائط', handler: 'openNebrasMediaHubQuick', perm: 'content' },
                 { roles: ['sales_manager', 'sales_rep', 'branch_manager'], icon: 'fas fa-file-signature', label: 'عروض الأسعار', handler: 'openRepQuoteBuilder', perm: 'quotes' },
                 { roles: ['sales_manager'], icon: 'fas fa-tags', label: 'قائمة الأسعار', handler: 'openSalesPriceList', perm: 'sales' },
                 { roles: ['accountant'], icon: 'fas fa-file-invoice-dollar', label: 'المحاسبة', handler: 'openErpAccounting', perm: 'accounting' },
@@ -11547,9 +11666,14 @@
             const sync = document.getElementById('dashboard-command-sync');
             if (sync) {
                 const cloudOk = !!supabaseClient;
+                let syncLine = cloudOk ? 'متصل — Supabase' : 'وضع محلي — انتظار السحابة';
+                if (cloudOk && nebrasLastCloudSaveAt) {
+                    syncLine += ' · آخر رفع: ' + formatNebrasDateTime(nebrasLastCloudSaveAt, 'ar');
+                } else if (cloudOk && nebrasLastCloudLoadAt) {
+                    syncLine += ' · آخر تحميل: ' + formatNebrasDateTime(nebrasLastCloudLoadAt, 'ar');
+                }
                 sync.className = 'dashboard-command-sync ' + (cloudOk ? 'dashboard-command-sync--ok' : 'dashboard-command-sync--warn');
-                sync.innerHTML = '<i class="fas fa-' + (cloudOk ? 'cloud' : 'cloud-slash') + '"></i> ' +
-                    (cloudOk ? 'متصل — Supabase' : 'وضع محلي — انتظار السحابة');
+                sync.innerHTML = '<i class="fas fa-' + (cloudOk ? 'cloud' : 'cloud-slash') + '"></i> ' + escapeHtmlAttr(syncLine);
             }
 
             const stats = getDashboardExtendedStats();
@@ -17748,6 +17872,8 @@
                     if (row && row.store_key) applyNebrasCloudRow(row.store_key, row.payload);
                 });
                 nebrasCloudSynced = true;
+                nebrasLastCloudLoadAt = new Date();
+                if (currentAdmin) renderDashboardCommandShell(currentAdmin);
                 return true;
             } catch (err) {
                 console.warn('Nebras cloud load error:', err);
@@ -17773,6 +17899,8 @@
                     return;
                 }
                 nebrasCloudSynced = true;
+                nebrasLastCloudSaveAt = new Date();
+                if (currentAdmin) renderDashboardCommandShell(currentAdmin);
             } catch (err) {
                 console.warn('Nebras cloud save error:', err);
             }
@@ -18137,6 +18265,8 @@
 
         let nebrasCloudSyncStarted = false;
         let nebrasSiteWarmedBehindIntro = false;
+        let nebrasLastCloudSaveAt = null;
+        let nebrasLastCloudLoadAt = null;
 
         function syncNebrasCloudInBackground() {
             cloudLoadWithTimeout().then(function(loaded) {
@@ -20500,6 +20630,15 @@
         window.addSitePartner = addSitePartner;
         window.editSitePartner = editSitePartner;
         window.deleteSitePartner = deleteSitePartner;
+        window.openScmPartnerEditor = openScmPartnerEditor;
+        window.scmPartnerPickLogo = scmPartnerPickLogo;
+        window.saveScmPartnerFromEditor = saveScmPartnerFromEditor;
+        window.cancelScmPartnerEditor = cancelScmPartnerEditor;
+        window.openScmCertEditor = openScmCertEditor;
+        window.scmCertPickMedia = scmCertPickMedia;
+        window.saveScmCertFromEditor = saveScmCertFromEditor;
+        window.cancelScmCertEditor = cancelScmCertEditor;
+        window.openNebrasMediaHubQuick = openNebrasMediaHubQuick;
         window.openUserManagement = openUserManagement;
         window.openSalesManagement = openSalesManagement;
         window.openErpInventory = openErpInventory;
