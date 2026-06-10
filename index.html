@@ -87,7 +87,7 @@
     <link rel="stylesheet" href="css/23-cart-premium.css">
     <link rel="stylesheet" href="css/24-wpc-strengths-light.css">
     <link rel="stylesheet" href="css/27-governance-users.css">
-    <link rel="stylesheet" href="css/28-dashboard-erp-command.css">
+    <link rel="stylesheet" href="css/28-erp-dashboard-shell.css">
 </head>
 <body id="nebras-platform" class="platform-storefront" data-platform-layer="storefront">
 
@@ -618,7 +618,24 @@
                 </div>
             </div>
         </div>
-        <div class="dashboard-company-identity" id="dashboard-company-identity">
+        <div class="dashboard-command-shell admin-only-ui" id="dashboard-command-shell">
+            <div class="dashboard-command-shell-inner">
+                <div class="dashboard-command-brand">
+                    <span class="dashboard-command-logo" aria-hidden="true"><i class="fas fa-industry"></i></span>
+                    <div>
+                        <strong id="dashboard-command-title">NEBRAS ERP</strong>
+                        <small id="dashboard-command-subtitle">منصة إدارة المصنع المتكاملة — أبواب WPC</small>
+                    </div>
+                </div>
+                <div class="dashboard-role-badge" id="dashboard-role-badge" aria-live="polite"></div>
+                <div class="dashboard-command-clock" id="dashboard-command-clock"></div>
+                <div class="dashboard-command-sync" id="dashboard-command-sync"></div>
+            </div>
+            <div class="dashboard-live-kpi-strip" id="dashboard-live-kpi-strip" aria-live="polite"></div>
+            <div class="dashboard-role-focus-banner" id="dashboard-role-focus-banner" hidden></div>
+            <div class="dashboard-quick-actions" id="dashboard-quick-actions"></div>
+        </div>
+        <div class="dashboard-company-identity dashboard-section" id="dashboard-company-identity" data-dashboard-section="identity">
             <div class="dashboard-identity-hero">
                 <div class="nebras-mini-showcase nebras-mini-showcase--doors" id="dashboard-door-showcase" aria-label="معاينة أبواب WPC"></div>
                 <div class="dashboard-identity-headcopy">
@@ -628,7 +645,7 @@
             </div>
             <div class="legal-grid" id="dashboard-legal-grid"></div>
         </div>
-        <nav class="dashboard-main-nav" id="dashboard-main-nav" aria-label="تنقل الداشبورد">
+        <nav class="dashboard-main-nav dashboard-section" id="dashboard-main-nav" aria-label="تنقل الداشبورد" data-dashboard-section="nav">
             <button type="button" id="dash-nav-analytics" onclick="openAdminAnalytics()">التحليلات</button>
             <button type="button" id="dash-nav-partners" onclick="scrollToDashboardSection('dashboard-partners-block')">الشركاء</button>
             <button type="button" id="dash-nav-ops" onclick="scrollToDashboardSection('dashboard-actions-grid')">العمليات</button>
@@ -639,22 +656,6 @@
             <button type="button" id="dash-nav-settings" onclick="openDashboardNavSettings()">الإعدادات</button>
             <button type="button" id="dash-nav-official" onclick="scrollToDashboardSection('dashboard-official-hub')">لينكتري و QR</button>
         </nav>
-        <section class="dashboard-command-center admin-only-ui" id="dashboard-command-center" aria-label="مركز قيادة نبراس ERP">
-            <div class="dcc-head">
-                <div class="dcc-welcome">
-                    <p class="dcc-kicker"><i class="fas fa-crown" aria-hidden="true"></i> مركز قيادة نبراس ERP</p>
-                    <h2 id="dcc-welcome-title">مرحباً بك في منصة نبراس</h2>
-                    <p id="dcc-welcome-sub">منصة ديناميكية متكاملة — إدارة · ERP · متجر · معرض</p>
-                    <span class="dcc-role-badge" id="dcc-role-badge"><i class="fas fa-user-shield" aria-hidden="true"></i> <span id="dcc-role-text"></span></span>
-                </div>
-                <div class="dcc-sync" id="dcc-sync-status" role="status">
-                    <i class="fas fa-cloud" aria-hidden="true"></i>
-                    <span id="dcc-sync-text">منصة ديناميكية — Git + Supabase</span>
-                </div>
-            </div>
-            <div class="dcc-kpis" id="dcc-kpi-strip" aria-live="polite"></div>
-            <div class="dcc-quick" id="dcc-quick-actions"></div>
-        </section>
         <div class="dashboard-hub-intro admin-only-ui" id="dashboard-hub-intro">
             <h3 id="dashboard-hub-intro-title">مركز التحكم — نبراس</h3>
             <p id="dashboard-hub-intro-text">منصة · معرض · متجر — كل أيقونة إدارية تفتح نظامها. المحتوى والصور والـ PDF من إدارة المحتوى دون برمجة.</p>
@@ -683,7 +684,7 @@
                 <div id="analytics-restore-mount"></div>
             </div>
         </section>
-        <div class="dashboard-partners-block nebras-partners-showcase" id="dashboard-partners-block">
+        <div class="dashboard-partners-block nebras-partners-showcase dashboard-section" id="dashboard-partners-block" data-dashboard-section="partners">
             <div class="dashboard-partners-head">
                 <h3 id="dashboard-partners-title"><i class="fas fa-handshake"></i> شركاؤنا</h3>
                 <p class="dashboard-partners-subtitle" id="dashboard-partners-subtitle">شركاؤنا في النجاح</p>
@@ -698,7 +699,7 @@
                 </div>
             </div>
         </div>
-        <div class="dashboard-header">
+        <div class="dashboard-header dashboard-erp-header dashboard-section" data-dashboard-section="header">
             <div>
                 <h2 id="admin-dashboard-title">مركز قيادة منصة نبراس</h2>
                 <p class="admin-role" id="admin-role-name"></p>
@@ -708,7 +709,7 @@
             <a class="admin-action" href="#" id="admin-logout-label" onclick="logoutAdmin()"><i class="fas fa-sign-out-alt"></i> تسجيل خروج</a>
         </div>
         <div class="dashboard-section-block">
-        <div class="erp-hub-panel" id="erp-hub-panel">
+        <div class="erp-hub-panel dashboard-section" id="erp-hub-panel" data-dashboard-section="erp">
             <span class="erp-badge-main" id="erp-badge-main"><i class="fas fa-cubes" aria-hidden="true"></i> NEBRAS ERP SYSTEM</span>
             <div class="platform-hub-head">
                 <div>
@@ -736,7 +737,7 @@
         </div>
         </div>
         <div class="dashboard-section-block">
-        <div class="platform-hub-panel" id="platform-hub-panel">
+        <div class="platform-hub-panel dashboard-section" id="platform-hub-panel" data-dashboard-section="platform">
             <div class="platform-hub-head">
                 <div>
                     <h3 id="platform-hub-title">منصة نبراس — التحكم الداخلي والخارجي</h3>
@@ -748,7 +749,7 @@
             <div class="platform-modules-grid" id="platform-modules-grid" role="list"></div>
         </div>
         </div>
-        <div class="dashboard-channels-panel" id="dashboard-channels-panel">
+        <div class="dashboard-channels-panel dashboard-section" id="dashboard-channels-panel" data-dashboard-section="channels">
             <div class="dashboard-channels-head">
                 <h3 id="dashboard-channels-title">حالة قنوات التواصل الاجتماعي</h3>
                 <p id="dashboard-channels-hint" class="dashboard-channels-hint admin-only-ui"></p>
@@ -757,7 +758,7 @@
             <button type="button" class="primary dashboard-channels-edit-btn" id="dashboard-channels-edit-btn" onclick="openSystemSettingsForChannels()">تعديل روابط التواصل</button>
             <p id="dashboard-channels-superadmin-note" class="status" style="display: none;"></p>
         </div>
-        <div class="dashboard-occasion-panel" id="dashboard-occasion-panel">
+        <div class="dashboard-occasion-panel dashboard-section" id="dashboard-occasion-panel" data-dashboard-section="occasion">
             <h3 id="dashboard-occasion-title">الوضع الاحتفالي للمناسبات</h3>
             <p class="dashboard-occasion-status" id="dashboard-occasion-status"></p>
             <div class="dashboard-occasion-preview" id="dashboard-occasion-preview" aria-hidden="true"></div>
@@ -768,7 +769,7 @@
         <div class="dashboard-actions" id="dashboard-actions-grid"></div>
         <h3 class="dashboard-zone-label" id="dash-zone-operations"><i class="fas fa-cubes"></i> ERP والعمليات والتحليلات</h3>
         <div class="dashboard-grid" id="dashboard-secondary-grid"></div>
-        <footer class="dashboard-official-hub" id="dashboard-official-hub" aria-label="روابط رسمية و QR">
+        <footer class="dashboard-official-hub dashboard-section" id="dashboard-official-hub" aria-label="روابط رسمية و QR" data-dashboard-section="official">
             <div class="dashboard-official-head">
                 <h3 id="dashboard-official-title"><i class="fas fa-link" aria-hidden="true"></i> الروابط الرسمية و QR الموقع</h3>
                 <p class="dashboard-official-hint" id="dashboard-official-hint">لينكتري الرسمي · رمز QR للموقع · حقوق النشر</p>
@@ -1077,24 +1078,11 @@
     </div>
 
     <div class="admin-section" id="site-content-management">
-        <div class="admin-modal site-content-modal nebras-scm-modal">
-            <div class="nebras-scm-head">
-                <div class="nebras-scm-head-title">
-                    <i class="fas fa-pen-to-square" aria-hidden="true"></i>
-                    <div>
-                        <h2 id="scm-main-title">إدارة محتوى الموقع</h2>
-                        <p class="nebras-scm-sub" id="scm-main-hint">تحكم كامل بالموقع — منتجات · معرض · شركاء · شهادات — ديناميكي بدون كود. كل تعديل يُحفظ ويُزامَن تلقائياً.</p>
-                    </div>
-                </div>
-                <button type="button" class="nebras-scm-close" onclick="closeAdminSection('site-content-management')" aria-label="إغلاق"><i class="fas fa-xmark"></i></button>
-            </div>
-            <div class="nebras-scm-body">
+        <div class="admin-modal site-content-modal">
+            <h2 id="scm-main-title">إدارة محتوى الموقع — بدون تعديل الكود</h2>
+            <p class="scm-hint admin-only-ui" id="scm-main-hint">صلاحية <strong>المحتوى</strong> (مدير الإدارة / Super Admin): تحكم كامل بالموقع — منتجات، أيقونات (صور · PDF · أصناف)، <strong>معرض نبراس</strong> (منتجات + مشاريع)، شركاء، شهادات، بانر الهيدر. متجر = سلة وعرض سعر.</p>
             <div id="scm-governance-status" class="scm-governance-status" aria-live="polite"></div>
-            <div class="nebras-scm-toolbar">
-                <button type="button" class="nebras-scm-btn nebras-scm-btn--primary" onclick="openDoorDesignerAdmin()"><i class="fas fa-pencil-ruler"></i> مصمم الأبواب 3D</button>
-                <button type="button" class="nebras-scm-btn" onclick="switchScmTab('showroom')"><i class="fas fa-images"></i> معرض نبراس</button>
-                <button type="button" class="nebras-scm-btn" onclick="switchScmTab('partners')"><i class="fas fa-handshake"></i> الشركاء</button>
-            </div>
+            <button type="button" class="primary admin-only-ui" style="margin:0 0 12px" onclick="openDoorDesignerAdmin()"><i class="fas fa-pencil-ruler"></i> إعداد «صمّم بابك مع نبراس» (3D)</button>
             <div class="scm-tabs" role="tablist">
                 <button type="button" class="active" id="scm-tab-products" data-scm-tab="products" onclick="switchScmTab('products')">المنتجات</button>
                 <button type="button" id="scm-tab-visitor" data-scm-tab="visitor" onclick="switchScmTab('visitor')">أيقونات الزوار</button>
@@ -1135,26 +1123,20 @@
                 <ul id="scm-about-list" class="scm-list"></ul>
             </div>
             <div id="scm-panel-partners" class="scm-panel">
-                <p class="scm-hint admin-only-ui">شعارات الشركاء (صورة + رابط اختياري) — شريط متحرك في الموقع وداخل الداشبورد.</p>
-                <div class="nebras-scm-toolbar">
-                    <button class="nebras-scm-btn nebras-scm-btn--primary" type="button" onclick="openScmPartnerEditor()"><i class="fas fa-plus"></i> شريك جديد</button>
-                </div>
-                <div class="nebras-scm-editor" id="scm-partner-editor" hidden></div>
-                <div id="scm-partners-list" class="scm-cards-grid"></div>
+                <p class="scm-hint admin-only-ui">شعارات الشركاء (صورة + رابط اختياري) — شريط متحرك في الموقع وداخل الداشبورد مثل موقع مرجعي. ابدأوا فارغين ثم أضيفوا من هنا.</p>
+                <button class="primary" type="button" onclick="addSitePartner()">+ شريك جديد</button>
+                <ul id="scm-partners-list" class="scm-list"></ul>
             </div>
             <div id="scm-panel-certifications" class="scm-panel">
-                <p class="scm-hint admin-only-ui">اعتمادات وشهادات نبراس — صور أو PDF. يمكن إضافة العنوان أولاً ثم رفع الوثيقة لاحقاً.</p>
-                <div class="nebras-scm-toolbar">
-                    <button class="nebras-scm-btn nebras-scm-btn--primary" type="button" onclick="openScmCertEditor()"><i class="fas fa-plus"></i> اعتماد / شهادة</button>
-                </div>
-                <div class="nebras-scm-editor" id="scm-cert-editor" hidden></div>
-                <div id="scm-certifications-list" class="scm-cards-grid"></div>
+                <p class="scm-hint admin-only-ui">اعتمادات وشهادات نبراس — ارفعوا صور الشهادات أو ملفات PDF فقط (لا صور أبواب). يمكن إضافة العنوان أولاً ثم رفع الوثيقة لاحقاً من «تعديل».</p>
+                <button class="primary" type="button" onclick="addSiteCertification()">+ اعتماد / شهادة</button>
+                <ul id="scm-certifications-list" class="scm-list"></ul>
             </div>
             <div id="scm-panel-showroom" class="scm-panel">
                 <p class="scm-hint admin-only-ui" id="scm-showroom-hint">معرض نبراس — 5 أقسام: <strong>أبواب نبراس · خزائن نبراس · أبواب WPC · خزائن WPC · قطع CNC</strong> + مشاريع NHC. ارفعي صور بجودة كاملة — الضغط يفتح الصورة الأصلية.</p>
                 <div id="scm-showroom-sections-root"></div>
             </div>
-            </div>
+            <button type="button" onclick="closeAdminSection('site-content-management')">إغلاق</button>
         </div>
     </div>
 

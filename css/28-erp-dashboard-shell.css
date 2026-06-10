@@ -1,0 +1,316 @@
+/* نبراس — غلاف لوحة التحكم ERP الاحترافية (المرحلة 3) */
+
+.dashboard-command-shell {
+    margin: 0 0 28px;
+    padding: 0;
+    border-radius: 24px;
+    background: linear-gradient(135deg, #071525 0%, #0d2840 42%, #134e6f 100%);
+    color: #fff;
+    border: 1px solid rgba(56, 189, 248, 0.28);
+    box-shadow: 0 24px 60px rgba(7, 21, 37, 0.35);
+    overflow: hidden;
+}
+
+.dashboard-command-shell-inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 16px 24px;
+    padding: 20px 24px 16px;
+}
+
+.dashboard-command-brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    flex: 1 1 220px;
+    min-width: 0;
+}
+
+.dashboard-command-logo {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.35rem;
+    background: linear-gradient(145deg, rgba(56, 189, 248, 0.35), rgba(46, 204, 113, 0.25));
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.25);
+}
+
+.dashboard-command-brand strong {
+    display: block;
+    font-size: 1.15rem;
+    letter-spacing: 0.04em;
+}
+
+.dashboard-command-brand small {
+    display: block;
+    margin-top: 4px;
+    opacity: 0.82;
+    font-size: 0.82rem;
+}
+
+.dashboard-role-badge {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 16px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    flex: 1 1 260px;
+}
+
+.dashboard-role-badge-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    color: #fff;
+    flex-shrink: 0;
+}
+
+.dashboard-role-badge-copy strong {
+    display: block;
+    font-size: 0.95rem;
+}
+
+.dashboard-role-badge-copy span {
+    display: block;
+    margin-top: 2px;
+    font-size: 0.78rem;
+    opacity: 0.85;
+}
+
+.dashboard-command-clock,
+.dashboard-command-sync {
+    font-size: 0.82rem;
+    opacity: 0.9;
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: rgba(0, 0, 0, 0.18);
+    white-space: nowrap;
+}
+
+.dashboard-command-sync--ok {
+    color: #7dcea0;
+}
+
+.dashboard-command-sync--warn {
+    color: #f4d03f;
+}
+
+.dashboard-live-kpi-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+    gap: 1px;
+    background: rgba(255, 255, 255, 0.08);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dashboard-live-kpi {
+    padding: 14px 16px;
+    background: rgba(0, 0, 0, 0.12);
+    text-align: center;
+    transition: background 0.2s;
+}
+
+.dashboard-live-kpi:hover {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.dashboard-live-kpi strong {
+    display: block;
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: #7dcea0;
+    line-height: 1.1;
+}
+
+.dashboard-live-kpi span {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.72rem;
+    opacity: 0.88;
+}
+
+.dashboard-live-kpi--alert strong {
+    color: #f39c12;
+}
+
+.dashboard-role-focus-banner {
+    padding: 16px 24px;
+    background: linear-gradient(90deg, rgba(46, 204, 113, 0.18), rgba(56, 189, 248, 0.12));
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 14px 20px;
+}
+
+.dashboard-role-focus-banner h4 {
+    margin: 0;
+    font-size: 1.05rem;
+    flex: 1 1 200px;
+}
+
+.dashboard-role-focus-banner p {
+    margin: 0;
+    flex: 2 1 280px;
+    font-size: 0.88rem;
+    opacity: 0.9;
+    line-height: 1.55;
+}
+
+.dashboard-role-focus-banner button {
+    border: none;
+    border-radius: 12px;
+    padding: 10px 18px;
+    font-family: inherit;
+    font-weight: 700;
+    cursor: pointer;
+    background: #2ecc71;
+    color: #0a2e26;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.dashboard-role-focus-banner button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(46, 204, 113, 0.35);
+}
+
+.dashboard-quick-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 14px 24px 18px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.dashboard-quick-action {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 9px 14px;
+    font-family: inherit;
+    font-size: 0.84rem;
+    font-weight: 700;
+    cursor: pointer;
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.2s, transform 0.2s;
+}
+
+.dashboard-quick-action:hover {
+    background: rgba(56, 189, 248, 0.25);
+    transform: translateY(-1px);
+}
+
+.dashboard-quick-action i {
+    opacity: 0.9;
+}
+
+/* تنقل الداشبورد — شريط ثابت مع حالة نشطة */
+.dashboard-main-nav {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    box-shadow: 0 8px 24px rgba(13, 40, 64, 0.08);
+}
+
+.dashboard-main-nav button.is-active {
+    background: var(--accent-blue, #155e94);
+    color: #fff;
+    box-shadow: 0 6px 16px rgba(21, 94, 148, 0.35);
+}
+
+/* رأس الداشبورد المحسّن */
+.dashboard-erp-header {
+    padding: 18px 22px;
+    border-radius: 20px;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(21, 94, 148, 0.12);
+    box-shadow: 0 12px 32px rgba(13, 40, 64, 0.08);
+}
+
+.dashboard-erp-header .admin-role {
+    margin: 6px 0 0;
+    font-size: 0.92rem;
+    color: #475569;
+}
+
+/* بطاقات الأيقونات — شارة المجموعة */
+.dashboard-tile-card .dashboard-tile-group-badge {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    font-size: 0.68rem;
+    font-weight: 800;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(13, 40, 64, 0.88);
+    color: #fff;
+    letter-spacing: 0.02em;
+    z-index: 2;
+}
+
+.dashboard-tile-card .dashboard-tile-group-badge--erp {
+    background: linear-gradient(135deg, #0a2e26, #16a085);
+}
+
+.dashboard-tile-card .dashboard-tile-group-badge--command {
+    background: linear-gradient(135deg, #0d2840, #155e94);
+}
+
+/* إخفاء أقسام حسب الدور */
+.admin-dashboard.dashboard-role-scoped .dashboard-section--role-hidden {
+    display: none !important;
+}
+
+.admin-dashboard.dashboard-role-scoped .dashboard-hub-intro.admin-only-ui {
+    display: none;
+}
+
+/* تخطيط ERP للوحة المحدودة */
+.admin-dashboard.dashboard-role-scoped .erp-hub-panel {
+    margin-top: 0;
+}
+
+@media (max-width: 768px) {
+    .dashboard-command-shell-inner {
+        padding: 16px 16px 12px;
+    }
+
+    .dashboard-live-kpi-strip {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .dashboard-role-focus-banner {
+        padding: 14px 16px;
+    }
+
+    .dashboard-quick-actions {
+        padding: 12px 16px 16px;
+    }
+
+    .dashboard-main-nav {
+        top: 0;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .dashboard-main-nav button {
+        flex-shrink: 0;
+    }
+}
