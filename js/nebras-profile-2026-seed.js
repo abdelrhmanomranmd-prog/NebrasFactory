@@ -5,8 +5,10 @@
 (function(global) {
     'use strict';
 
-    const PROFILE_2026_SEED_VERSION = 7;
+    const PROFILE_2026_SEED_VERSION = 8;
     const PROFILE_STORAGE_KEY = 'nebrasProfile2026SeedVersion';
+    const SHOWROOM_CATALOG_VERSION = 8;
+    const SHOWROOM_CATALOG_STORAGE_KEY = 'nebrasShowroomCatalogVersion';
 
     function img(folder, n) {
         return 'images/profile-2026/' + folder + '/' + folder + '-' + String(n).padStart(2, '0') + '.jpg';
@@ -140,10 +142,10 @@
             { id: 'cert-nhc-zone-c', titleAr: 'اعتماد مورد NHC — Zone C', titleEn: 'NHC Supplier Approval Zone C', captionAr: 'MMC-MSH-C-AR-50295-0 — مشراف المدائن و Achieve Ultimate · Zone C. B - Approved · 2024-2025', captionEn: 'MMC & Achieve Ultimate · Zone C.', mediaUrl: '', mediaType: 'pending', sortOrder: 6, visible: true }
         ],
         projects: [
-            { titleAr: 'مشروع المشرقية — Zone D · أبان', titleEn: 'Masharqiyah Zone D · Aban', captionAr: 'توريد أبواب الغرف الداخلية WPC — اعتماد المهندس محمد هنداوي ومدير المشروع محمد عساف. B - Approved · مايو 2025', captionEn: 'WPC interior doors supply — NHC approved May 2025', imageUrl: 'images/profile-2026/doors/doors-02.jpg' },
-            { titleAr: 'مشروع المشرقية — Zone C · مشراف المدائن', titleEn: 'Masharqiyah Zone C · MMC', captionAr: 'توريد أبواب الغرف الداخلية عبر شركة مشراف المدائن. B - Approved · يناير 2025', captionEn: 'Interior doors via MMC — Jan 2025', imageUrl: 'images/profile-2026/doors/doors-05.jpg' },
-            { titleAr: 'مشروع المشرقية — Zone C · Achieve Ultimate', titleEn: 'Zone C · Achieve Ultimate', captionAr: 'توريد أبواب الغرف الداخلية — اعتماد فريق NHC الهندسي. B - Approved · نوفمبر 2024', captionEn: 'Achieve Ultimate Company — Nov 2024', imageUrl: 'images/profile-2026/doors/doors-09.jpg' },
-            { titleAr: 'فيلا كود WPC — Zone D', titleEn: 'Villa Code WPC Zone D', captionAr: 'Material-00378 — طلب اعتماد فيلا كود لأبواب WPC عبر أبان للمقاولات. ABN-MSH-D-AR-50185-0 · Under Process', captionEn: 'Villa Code Material-00378 — under process', imageUrl: 'images/profile-2026/gallery-extra/gallery-extra-01.jpg' }
+            { titleAr: 'مشروع المشرقية — Zone D · أبان', titleEn: 'Masharqiyah Zone D · Aban', captionAr: 'توريد أبواب الغرف الداخلية WPC — اعتماد المهندس محمد هنداوي ومدير المشروع محمد عساف. B - Approved · مايو 2025', captionEn: 'WPC interior doors supply — NHC approved May 2025', imageUrl: 'images/projects/nhc/mashriqiyah-aerial.png' },
+            { titleAr: 'مشروع المشرقية — Zone C · مشراف المدائن', titleEn: 'Masharqiyah Zone C · MMC', captionAr: 'توريد أبواب الغرف الداخلية عبر شركة مشراف المدائن. B - Approved · يناير 2025', captionEn: 'Interior doors via MMC — Jan 2025', imageUrl: 'images/projects/nhc/daniya-mashriqiyah.png' },
+            { titleAr: 'مشروع المشرقية — Zone C · Achieve Ultimate', titleEn: 'Zone C · Achieve Ultimate', captionAr: 'توريد أبواب الغرف الداخلية — اعتماد فريق NHC الهندسي. B - Approved · نوفمبر 2024', captionEn: 'Achieve Ultimate Company — Nov 2024', imageUrl: 'images/projects/nhc/mashriqiyah-2-render.png' },
+            { titleAr: 'فيلا كود WPC — Zone D', titleEn: 'Villa Code WPC Zone D', captionAr: 'Material-00378 — طلب اعتماد فيلا كود لأبواب WPC عبر أبان للمقاولات. ABN-MSH-D-AR-50185-0 · Under Process', captionEn: 'Villa Code Material-00378 — under process', imageUrl: 'images/projects/nhc/mashriqiyah-destination.png' }
         ],
         productTexts: {
             'prod-wpc': {
@@ -191,40 +193,174 @@
         }
     };
 
-    function buildFolderItems(folder, count, prefixAr, prefixEn, captionAr, captionEn, idPrefix) {
-        const items = [];
-        for (let i = 1; i <= count; i++) {
-            items.push({
-                id: idPrefix + '-' + i,
-                imageUrl: img(folder, i),
-                titleAr: prefixAr + ' ' + i,
-                titleEn: prefixEn + ' ' + i,
-                captionAr: captionAr,
-                captionEn: captionEn,
-                sortOrder: i,
-                visible: true
-            });
-        }
-        return items;
+    function catalogItem(idPrefix, order, imageUrl, titleAr, titleEn, captionAr, captionEn) {
+        return {
+            id: idPrefix + '-' + order,
+            imageUrl: imageUrl,
+            titleAr: titleAr,
+            titleEn: titleEn,
+            captionAr: captionAr || (titleAr + ' — مصنع نبراس للبلاستيك'),
+            captionEn: captionEn || (titleEn + ' — Nebras Plastic Factory'),
+            sortOrder: order,
+            visible: true
+        };
     }
 
-    function buildGalleryExtraItems(start, end, prefixAr, prefixEn, captionAr, captionEn, idPrefix) {
-        const items = [];
-        let order = 1;
-        for (let i = start; i <= end; i++) {
-            items.push({
-                id: idPrefix + '-' + i,
-                imageUrl: galleryExtra(i),
-                titleAr: prefixAr + ' ' + order,
-                titleEn: prefixEn + ' ' + order,
-                captionAr: captionAr,
-                captionEn: captionEn,
-                sortOrder: order,
-                visible: true
-            });
-            order++;
+    function buildCuratedItems(idPrefix, rows) {
+        return rows.map(function(row, idx) {
+            return catalogItem(idPrefix, idx + 1, row[0], row[1], row[2], row[3], row[4]);
+        });
+    }
+
+    const SHOWROOM_DOORS_CATALOG = [
+        [img('doors', 1), 'باب كلاسيك ثنائي اللوح', 'Classic two-panel door'],
+        [img('doors', 2), 'باب زجاج مزدوج كلاسيك', 'Double classic glass door'],
+        [img('doors', 3), 'باب فلات أبيض', 'Flat white door'],
+        [img('doors', 4), 'باب فلات للحمام', 'Flat bathroom door'],
+        [img('doors', 5), 'باب فلات مع علوية ثابتة', 'Flat door with transom'],
+        [img('doors', 6), 'باب يوتشانيل بخشب فاتح', 'Light wood U-channel door'],
+        [img('doors', 7), 'باب يوتشانيل خشبي مع علوية', 'Wood U-channel door with transom'],
+        [img('doors', 8), 'باب شرائح أفقية خشبي', 'Horizontal slat wood door'],
+        [img('doors', 9), 'باب كلاسيك ثلاثي اللوح', 'Classic three-panel door'],
+        [img('doors', 10), 'باب فلات خشبي بعلوية', 'Wood flat door with transom'],
+        [img('doors', 11), 'باب شرائح منزلق مزدوج', 'Double sliding slat door'],
+        [img('doors', 12), 'باب سحاب خشبي مزدوج', 'Double wood sliding door']
+    ];
+
+    const SHOWROOM_CABINETS_CATALOG = [
+        [img('cabinets', 1), 'قواطع حمامات WPC', 'WPC toilet partitions'],
+        [img('cabinets', 2), 'قواطع حمامات بمؤشر LED', 'Partitions with LED occupancy'],
+        [img('cabinets', 3), 'قواطع حمامات بخشب وعاجي', 'Wood and cream partitions'],
+        [img('cabinets', 4), 'خزانة مطبخ علوية بيضاء', 'White upper kitchen cabinet'],
+        [img('cabinets', 5), 'خزانة ملابس بلون عاجي', 'Ivory wardrobe cabinet'],
+        [img('cabinets', 6), 'خزانة ملابس فاخرة بزخارف', 'Premium decorative wardrobe'],
+        [img('cabinets', 7), 'خزانة تخزين عصرية', 'Modern storage cabinet'],
+        [img('cabinets', 8), 'خزانة حمام مع مرآة', 'Bathroom vanity cabinet'],
+        [img('cabinets', 9), 'خزانة حائط معلقة', 'Wall-mounted cabinet'],
+        [img('cabinets', 10), 'وحدة تلفزيون رخامية', 'Marble TV wall unit'],
+        [img('cabinets', 11), 'خزانة مطبخ زاوية', 'Corner kitchen cabinet'],
+        [img('cabinets', 12), 'خزانة عرض وكتب', 'Display and bookshelf unit'],
+        [img('cabinets', 13), 'خزانة ملابس انزلاقية', 'Sliding wardrobe cabinet'],
+        [img('cabinets', 14), 'خزانة مطبخ بإطار ذهبي', 'Kitchen cabinet with gold trim'],
+        [img('cabinets', 15), 'خزانة أدراج بيضاء', 'White drawer cabinet'],
+        [img('cabinets', 16), 'خزانة أطفال ملونة', 'Children room cabinet'],
+        [img('cabinets', 17), 'خزانة وحدات مدمجة', 'Integrated modular cabinet'],
+        [img('cabinets', 18), 'خزانة تخزين مطبخ — مصنع', 'Factory kitchen storage unit'],
+        [img('cabinets', 19), 'خزانة مفتوحة ودرج', 'Open shelf and drawer unit'],
+        [img('cabinets', 20), 'خزانة زاوية بأبواب زجاج', 'Corner glass-door wardrobe']
+    ];
+
+    const SHOWROOM_WPC_DOORS_CATALOG = SHOWROOM_DOORS_CATALOG.map(function(row) {
+        return [row[0], 'باب WPC — ' + row[1], 'WPC door — ' + row[2]];
+    }).concat([
+        [galleryExtra(1), 'باب WPC داخلي كلاسيك أبيض', 'WPC classic white interior door'],
+        [galleryExtra(2), 'باب WPC كلاسيك لوحين', 'WPC two-panel classic door'],
+        [galleryExtra(3), 'باب WPC فلات عصري', 'WPC modern flat door'],
+        [galleryExtra(4), 'باب WPC فلات حمام', 'WPC bathroom flat door'],
+        [galleryExtra(5), 'باب WPC بعلوية ثابتة', 'WPC door with transom'],
+        [galleryExtra(6), 'باب WPC يوتشانيل خشبي', 'WPC wood U-channel door'],
+        [galleryExtra(7), 'باب WPC يوتشانيل مع علوية', 'WPC U-channel with transom'],
+        [galleryExtra(8), 'باب WPC شرائح أفقية', 'WPC horizontal slat door'],
+        [galleryExtra(9), 'باب WPC كلاسيك ثلاثي', 'WPC three-panel classic door'],
+        [galleryExtra(10), 'باب WPC فلات خشبي', 'WPC wood flat door'],
+        [galleryExtra(11), 'باب WPC شرائح منزلق', 'WPC sliding slat door'],
+        [galleryExtra(12), 'باب WPC سحاب مزدوج', 'WPC double sliding door'],
+        [galleryExtra(13), 'باب WPC داخلي مفصلي', 'WPC hinged interior door'],
+        [galleryExtra(14), 'باب WPC زجاج ولوحات', 'WPC glass panel door'],
+        [galleryExtra(15), 'باب WPC سادة فلات', 'WPC plain flat door'],
+        [galleryExtra(16), 'باب WPC يوتشانيل سادة', 'WPC plain U-channel door'],
+        [galleryExtra(17), 'باب WPC شرائح عمودية', 'WPC vertical slat door'],
+        [galleryExtra(18), 'باب WPC كلاسيك بزجاج', 'WPC classic glass door'],
+        [galleryExtra(19), 'باب WPC مزدوج داخلي', 'WPC double interior door'],
+        [galleryExtra(20), 'باب WPC فلات ضد الماء', 'WPC water-resistant flat door'],
+        [galleryExtra(21), 'باب WPC غرف نوم', 'WPC bedroom door'],
+        [galleryExtra(22), 'باب WPC مدخل داخلي', 'WPC internal entry door'],
+        [galleryExtra(23), 'باب WPC ضد الرطوبة', 'WPC moisture-resistant door'],
+        [galleryExtra(24), 'باب WPC تشطيب فاخر', 'WPC premium finish door'],
+        [galleryExtra(33), 'باب WPC منحوت كلاسيك', 'WPC carved classic door'],
+        [galleryExtra(40), 'باب WPC خشبي مزدوج', 'WPC double wood door']
+    ]);
+
+    const SHOWROOM_WPC_CABINETS_CATALOG = [
+        [img('cabinets', 4), 'خزانة WPC مطبخ علوية', 'WPC upper kitchen cabinet'],
+        [img('cabinets', 5), 'خزانة WPC ملابس عاجية', 'WPC ivory wardrobe'],
+        [img('cabinets', 6), 'خزانة WPC ملابس فاخرة', 'WPC premium wardrobe'],
+        [img('cabinets', 7), 'خزانة WPC تخزين عصرية', 'WPC modern storage'],
+        [img('cabinets', 8), 'خزانة WPC حمام', 'WPC bathroom vanity'],
+        [img('cabinets', 9), 'خزانة WPC حائط معلقة', 'WPC wall cabinet'],
+        [img('cabinets', 10), 'وحدة WPC تلفزيون رخامية', 'WPC marble TV unit'],
+        [img('cabinets', 11), 'خزانة WPC مطبخ زاوية', 'WPC corner kitchen'],
+        [img('cabinets', 12), 'خزانة WPC عرض وكتب', 'WPC display bookshelf'],
+        [img('cabinets', 13), 'خزانة WPC انزلاقية', 'WPC sliding wardrobe'],
+        [img('cabinets', 14), 'خزانة WPC مطبخ ذهبية', 'WPC gold-trim kitchen'],
+        [img('cabinets', 15), 'خزانة WPC أدراج', 'WPC drawer cabinet'],
+        [img('cabinets', 16), 'خزانة WPC أطفال', 'WPC children cabinet'],
+        [img('cabinets', 17), 'خزانة WPC وحدات مدمجة', 'WPC modular cabinet'],
+        [img('cabinets', 18), 'خزانة WPC تخزين مطبخ', 'WPC kitchen storage'],
+        [img('cabinets', 19), 'خزانة WPC مفتوحة', 'WPC open shelf unit'],
+        [img('cabinets', 20), 'خزانة WPC زجاج زاوية', 'WPC glass corner wardrobe'],
+        [galleryExtra(26), 'وحدة WPC تلفزيون ورفوف', 'WPC TV wall with shelves'],
+        [galleryExtra(28), 'خزانة WPC مطبخ مدمجة', 'WPC built-in kitchen'],
+        [galleryExtra(30), 'خزانة WPC تخزين مصنع', 'WPC factory storage unit'],
+        [galleryExtra(31), 'خزانة WPC درج مطبخ', 'WPC kitchen drawer bank'],
+        [galleryExtra(32), 'خزانة WPC حائط كاملة', 'WPC full wall cabinet'],
+        [galleryExtra(34), 'خزانة WPC غرفة نوم', 'WPC bedroom cabinet'],
+        [galleryExtra(35), 'خزانة WPC ركنية', 'WPC corner cabinet'],
+        [galleryExtra(36), 'خزانة WPC أحذية', 'WPC shoe cabinet'],
+        [galleryExtra(37), 'خزانة WPC معرض', 'WPC display cabinet'],
+        [galleryExtra(38), 'خزانة WPC مكتب', 'WPC office cabinet'],
+        [galleryExtra(39), 'خزانة WPC درج عميق', 'WPC deep drawer unit'],
+        [galleryExtra(41), 'خزانة WPC مطبخ علوية وسفلية', 'WPC upper and base kitchen'],
+        [galleryExtra(42), 'خزانة WPC حمام معلقة', 'WPC floating bathroom cabinet'],
+        [galleryExtra(43), 'خزانة WPC تخزين منزلي', 'WPC home storage unit'],
+        [galleryExtra(44), 'خزانة WPC رفوف مفتوحة', 'WPC open shelving unit'],
+        [galleryExtra(45), 'خزانة WPC دريسينغ', 'WPC dressing cabinet'],
+        [galleryExtra(46), 'خزانة WPC مطبخ عصرية', 'WPC modern kitchen'],
+        [galleryExtra(47), 'خزانة WPC تخزين ضيقة', 'WPC slim storage cabinet']
+    ];
+
+    const SHOWROOM_CNC_CATALOG = [
+        [img('cnc', 2), 'لوح زخرفي CNC — أوراق ذهبية', 'CNC gold leaf relief panel'],
+        [img('cnc', 3), 'نقش زخرفي CNC على WPC', 'CNC decorative WPC carving'],
+        [img('cnc', 6), 'واجهة منحوتة CNC', 'CNC carved facade panel'],
+        [img('cnc', 7), 'لوح ألواح CNC هندسي', 'CNC geometric panel'],
+        [img('cnc', 8), 'زخرفة واجهة CNC', 'CNC facade ornament'],
+        [img('cnc', 9), 'قطع ديكور CNC للجدران', 'CNC wall decor parts'],
+        [img('cnc', 10), 'حفر CNC على WPC', 'CNC engraving on WPC'],
+        [img('cnc', 11), 'لوح جدار CNC ثلاثي', 'CNC 3D wall panel'],
+        [img('cnc', 12), 'نقش عربي CNC', 'CNC Arabic pattern carving'],
+        [img('cnc', 13), 'واجهة CNC بارزة', 'CNC raised relief facade'],
+        [img('cnc', 14), 'قطع ستائر CNC', 'CNC decorative screen parts'],
+        [img('cnc', 15), 'تشطيب CNC باب وخزانة', 'CNC door and cabinet finish']
+    ];
+
+    function persistShowroomGalleryLocal() {
+        try {
+            if (typeof showroomGallery !== 'undefined' && showroomGallery) {
+                localStorage.setItem('nebrasShowroomGallery', JSON.stringify(showroomGallery));
+            }
+        } catch (e) { /* ignore */ }
+    }
+
+    function showroomHasGenericLabels() {
+        const doors = showroomGallery && showroomGallery.doors && showroomGallery.doors.items;
+        if (!doors || !doors.length) return true;
+        const first = String(doors[0].titleAr || '');
+        return /^باب نبراس\s+\d+$/i.test(first) || /^Nebras Door\s+\d+$/i.test(String(doors[0].titleEn || ''));
+    }
+
+    function getStoredShowroomCatalogVersion() {
+        try {
+            return parseInt(localStorage.getItem(SHOWROOM_CATALOG_STORAGE_KEY) || '0', 10) || 0;
+        } catch (e) {
+            return 0;
         }
-        return items;
+    }
+
+    function markShowroomCatalogApplied() {
+        try {
+            localStorage.setItem(SHOWROOM_CATALOG_STORAGE_KEY, String(SHOWROOM_CATALOG_VERSION));
+        } catch (e) { /* ignore */ }
     }
 
     function buildShowroomProjectItems() {
@@ -272,37 +408,37 @@
         showroomGallery.doors = {
             titleAr: 'أبواب نبراس',
             titleEn: 'Nebras Doors',
-            introAr: 'تشكيلة أبواب نبراس — من الملف التعريفي الرسمي 2026',
-            introEn: 'Nebras door collection — official 2026 profile',
-            items: buildFolderItems('doors', 12, 'باب نبراس', 'Nebras Door', 'باب نبراس — مصنع نبراس للبلاستيك', 'Nebras door — Nebras Plastic Factory', 'showroom-doors')
+            introAr: 'تشكيلة أبواب نبراس — أسماء مطابقة للصور من الملف التعريفي 2026',
+            introEn: 'Nebras doors — image-matched labels from 2026 profile',
+            items: buildCuratedItems('showroom-doors', SHOWROOM_DOORS_CATALOG)
         };
         showroomGallery.cabinets = {
             titleAr: 'خزائن نبراس',
             titleEn: 'Nebras Cabinets',
-            introAr: 'خزائن وتشطيبات نبراس بتصاميم عصرية',
-            introEn: 'Nebras cabinets and finishes',
-            items: buildFolderItems('cabinets', 20, 'خزانة نبراس', 'Nebras Cabinet', 'خزانة نبراس — مصنع نبراس', 'Nebras cabinet — Nebras Factory', 'showroom-cabinets')
+            introAr: 'خزائن وقواطع ووحدات تخزين — تسمية دقيقة لكل صورة',
+            introEn: 'Cabinets, partitions, and storage — accurate labels per image',
+            items: buildCuratedItems('showroom-cabinets', SHOWROOM_CABINETS_CATALOG)
         };
         showroomGallery.wpcDoors = {
             titleAr: 'أبواب WPC',
             titleEn: 'WPC Doors',
             introAr: 'أبواب WPC — مقاومة للماء والمناخ السعودي · ضمان 10 سنوات',
             introEn: 'WPC doors — water & climate resistant · 10-year warranty',
-            items: buildGalleryExtraItems(1, 24, 'باب WPC', 'WPC Door', 'باب WPC — مصنع نبراس', 'WPC door — Nebras Factory', 'showroom-wpc-doors')
+            items: buildCuratedItems('showroom-wpc-doors', SHOWROOM_WPC_DOORS_CATALOG)
         };
         showroomGallery.wpcCabinets = {
             titleAr: 'خزائن WPC',
             titleEn: 'WPC Cabinets',
-            introAr: 'خزائن WPC عالية الجودة من مصنع نبراس',
-            introEn: 'Premium WPC cabinets from Nebras',
-            items: buildGalleryExtraItems(25, 47, 'خزانة WPC', 'WPC Cabinet', 'خزانة WPC — مصنع نبراس', 'WPC cabinet — Nebras Factory', 'showroom-wpc-cabinets')
+            introAr: 'خزائن ومطابخ ووحدات تلفزيون WPC — بدون صور غير مطابقة',
+            introEn: 'WPC cabinets, kitchens, and TV units — matched imagery only',
+            items: buildCuratedItems('showroom-wpc-cabinets', SHOWROOM_WPC_CABINETS_CATALOG)
         };
         showroomGallery.cnc = {
             titleAr: 'قطع CNC',
             titleEn: 'CNC Parts',
-            introAr: 'أعمال CNC بدقة عالية — تصنيع حسب الطلب',
-            introEn: 'Precision CNC manufacturing',
-            items: buildFolderItems('cnc', 15, 'قطع CNC', 'CNC Part', 'عمل CNC — مصنع نبراس', 'CNC work — Nebras Factory', 'showroom-cnc')
+            introAr: 'أعمال CNC وزخارف ولوحات — تصنيع حسب الطلب',
+            introEn: 'CNC panels, carvings, and decor — made to order',
+            items: buildCuratedItems('showroom-cnc', SHOWROOM_CNC_CATALOG)
         };
         showroomGallery.projects = {
             titleAr: 'مشاريع واعتمادات NHC',
@@ -315,6 +451,8 @@
         if (typeof normalizeShowroomGallery === 'function') {
             showroomGallery = normalizeShowroomGallery(showroomGallery);
         }
+        markShowroomCatalogApplied();
+        persistShowroomGalleryLocal();
     }
 
     function mergeProducts() {
@@ -354,9 +492,13 @@
         ensureShowroomGallery();
         const projectItems = (showroomGallery.projects && showroomGallery.projects.items) || [];
         const projectsNeedImages = !projectItems.length || projectItems.some(function(it) {
-            return it && String(it.id || '').indexOf('showroom-projects-nhc-') === 0 && !it.imageUrl;
+            if (!it || String(it.id || '').indexOf('showroom-projects-nhc-') !== 0) return false;
+            const url = String(it.imageUrl || '');
+            return !url || url.indexOf('images/projects/nhc/') !== 0;
         });
-        const needsRepair = !showroomGallery.wpcDoors || !showroomGallery.wpcDoors.items || !showroomGallery.wpcDoors.items.length ||
+        const catalogStale = getStoredShowroomCatalogVersion() < SHOWROOM_CATALOG_VERSION;
+        const needsRepair = catalogStale || showroomHasGenericLabels() ||
+            !showroomGallery.wpcDoors || !showroomGallery.wpcDoors.items || !showroomGallery.wpcDoors.items.length ||
             !showroomGallery.wpcCabinets || !showroomGallery.wpcCabinets.items || !showroomGallery.wpcCabinets.items.length ||
             !showroomGallery.doors || !showroomGallery.doors.items || showroomGallery.doors.items.length < 5 ||
             projectsNeedImages;
