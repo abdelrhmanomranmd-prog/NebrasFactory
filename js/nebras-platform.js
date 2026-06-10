@@ -1774,7 +1774,7 @@
                 { id: 'customers', status: 'beta', icon: 'fas fa-headset', permission: 'customerService', handler: 'openCustomerServiceManagement', nameAr: 'خدمة العملاء', descAr: 'استفسارات وردود — توسعة قادمة', nameEn: 'Customer service' },
                 { id: 'inventory', status: 'live', icon: 'fas fa-warehouse', permission: 'inventory', handler: 'openErpInventory', nameAr: 'المخزون ERP', descAr: 'SKU، مستودعات، تنبيهات — يعمل الآن', nameEn: 'ERP Inventory' },
                 { id: 'erp', status: 'live', icon: 'fas fa-cubes', permission: 'erp', handler: 'scrollErpHub', nameAr: 'لوحة ERP', descAr: 'نظام التخطيط الداخلي الكامل', nameEn: 'ERP console' },
-                { id: 'orders', status: 'beta', icon: 'fas fa-truck', permission: 'orders', handler: 'openErpOrders', nameAr: 'الطلبات OMS', descAr: 'تسجيل ومتابعة الطلبات — تجريبي', nameEn: 'Orders OMS' },
+                { id: 'orders', status: 'live', icon: 'fas fa-truck', permission: 'orders', handler: 'openErpOrders', nameAr: 'الطلبات OMS', descAr: 'تسجيل ومتابعة الطلبات وحالات التنفيذ', nameEn: 'Orders OMS' },
                 { id: 'procurement', status: 'beta', icon: 'fas fa-truck-loading', permission: 'erp', handler: 'openErpProcurement', nameAr: 'المشتريات', descAr: 'توريد وموردون — تجريبي', nameEn: 'Procurement' },
                 { id: 'analytics', status: 'live', icon: 'fas fa-chart-pie', permission: 'audit', handler: 'openAdminAnalytics', nameAr: 'التحليلات', descAr: 'منتجات · ألوان · شكاوى · زوار · ترتيب العروض', nameEn: 'Analytics' },
                 { id: 'audit', status: 'live', icon: 'fas fa-clipboard-check', permission: 'audit', handler: 'openAuditLog', nameAr: 'سجل العمليات', descAr: 'تتبع كل إجراء إداري', nameEn: 'Audit log' },
@@ -1783,7 +1783,7 @@
         };
 
         const NEBRAS_ERP = {
-            version: '0.9.0',
+            version: '1.0.0',
             codename: 'NebrasERP',
             pillars: [
                 { id: 'master', nameAr: 'البيانات المرجعية', nameEn: 'Master data' },
@@ -1799,7 +1799,8 @@
                 { id: 'erp-pricelist', pillar: 'commerce', status: 'live', icon: 'fas fa-tags', permission: 'sales', handler: 'openSalesPriceList', nameAr: 'قائمة الأسعار', descAr: 'يحددها مدير المبيعات', nameEn: 'Price list' },
                 { id: 'erp-quote-builder', pillar: 'commerce', status: 'live', icon: 'fas fa-file-signature', permission: 'quotes', handler: 'openRepQuoteBuilder', nameAr: 'بناء عرض سعر', descAr: 'للمندوبين من القائمة', nameEn: 'Quote builder' },
                 { id: 'erp-sales', pillar: 'commerce', status: 'live', icon: 'fas fa-file-invoice-dollar', permission: 'sales', handler: 'openSalesManagement', nameAr: 'المبيعات', descAr: 'فواتير وعمليات بيع', nameEn: 'Sales' },
-                { id: 'erp-orders', pillar: 'commerce', status: 'beta', icon: 'fas fa-truck', permission: 'orders', handler: 'openErpOrders', nameAr: 'الطلبات OMS', descAr: 'متابعة التنفيذ', nameEn: 'Orders' },
+                { id: 'erp-orders', pillar: 'commerce', status: 'live', icon: 'fas fa-truck', permission: 'orders', handler: 'openErpOrders', nameAr: 'الطلبات OMS', descAr: 'تسجيل ومتابعة التنفيذ', nameEn: 'Orders' },
+                { id: 'erp-warehouse-transfers', pillar: 'supply', status: 'live', icon: 'fas fa-dolly', permission: 'warehouse', handler: 'openErpWarehouseTransfers', nameAr: 'تحويلات المستودع', descAr: 'نقل بين الفروع', nameEn: 'Stock transfers' },
                 { id: 'erp-procurement', pillar: 'supply', status: 'live', icon: 'fas fa-truck-loading', permission: 'procurement', handler: 'openErpProcurement', nameAr: 'المشتريات والموردون', descAr: 'أوامر شراء وتكاليف', nameEn: 'Procurement' },
                 { id: 'erp-accounting', pillar: 'governance', status: 'live', icon: 'fas fa-file-invoice-dollar', permission: 'accounting', handler: 'openErpAccounting', nameAr: 'المحاسبة والتحويلات', descAr: 'تحويلات · مبيعات · أرباح', nameEn: 'Accounting' },
                 { id: 'erp-branches', pillar: 'master', status: 'live', icon: 'fas fa-map-marked-alt', permission: 'branches', handler: 'openBranchesManagement', nameAr: 'الفروع', descAr: 'شبكة المملكة', nameEn: 'Branches' },
@@ -1812,8 +1813,8 @@
         const GLOBAL_PLATFORM_BENCHMARK = [
             { areaAr: 'واجهة متجر / معرض', areaEn: 'Storefront & catalogue', globalAr: 'أمازون · جرير · علي بابا', nebrasAr: 'يعمل — محكوم من الإدارة', parity: 'high' },
             { areaAr: 'ERP مخزون WMS', areaEn: 'Inventory / WMS', globalAr: 'مستودعات · SKU', nebrasAr: 'يعمل — SKU ومستودعات', parity: 'mid' },
-            { areaAr: 'طلبات وشحن OMS', areaEn: 'Orders & fulfillment', globalAr: 'تتبع · فروع · شحن', nebrasAr: 'تجريبي — توسعة قادمة', parity: 'soon' },
-            { areaAr: 'B2B / مشتريات', areaEn: 'Procurement B2B', globalAr: 'علي بابا · موردون', nebrasAr: 'تجريبي — هيكل جاهز', parity: 'soon' },
+            { areaAr: 'طلبات وشحن OMS', areaEn: 'Orders & fulfillment', globalAr: 'تتبع · فروع · شحن', nebrasAr: 'يعمل — تسجيل وحالات تنفيذ', parity: 'mid' },
+            { areaAr: 'B2B / مشتريات', areaEn: 'Procurement B2B', globalAr: 'علي بابا · موردون', nebrasAr: 'يعمل — أوامر شراء وموردون', parity: 'mid' },
             { areaAr: 'صلاحيات وموظفين', areaEn: 'RBAC & admin', globalAr: 'أدوار · سجل عمليات', nebrasAr: 'يعمل — كامل', parity: 'high' },
             { areaAr: 'CRM وشكاوى', areaEn: 'CRM & support', globalAr: 'تذاكر · فروع', nebrasAr: 'يعمل', parity: 'high' },
             { areaAr: 'دفع إلكتروني', areaEn: 'Payments', globalAr: 'بوابات · محفظة', nebrasAr: 'مرحلة قادمة', parity: 'soon' },
@@ -1833,6 +1834,7 @@
         let erpProduction = [];   // { id, date, productAr, color, size, qty, unitAr, lineAr, note, by, branch, addedToStock }
         let erpPurchases = [];    // { id, date, supplier, item, qty, unitCost, total, status, note, by }
         let erpTransfers = [];    // { id, date, customerName, bankAr, amount, refNo, quoteNo, status, by }
+        let erpStockTransfers = []; // { id, date, sku, productAr, qty, fromWarehouse, toWarehouse, status, note, by }
         let salesPriceList = [];  // { id, productAr, productEn, sku, color, size, unitAr, basePrice, minPrice, maxPrice, visible }
 
         const OCCASION_THEME_PRESETS = {
@@ -2168,6 +2170,8 @@
             { id: 'dash-accounting', zone: 'grid', dashGroup: 'erp', sortOrder: 8, iconClass: 'fas fa-calculator', titleAr: 'المحاسبة', titleEn: 'Accounting', textAr: 'تحويلات بنكية ومبيعات وأرباح.', textEn: 'Transfers, sales, margins.', cssClass: 'card-accounting', handler: 'openErpAccounting', permission: 'accounting', visible: true },
             { id: 'dash-pricelist', zone: 'grid', dashGroup: 'erp', sortOrder: 9, iconClass: 'fas fa-tags', titleAr: 'قائمة الأسعار', titleEn: 'Price List', textAr: 'أسعار معتمدة للمندوبين.', textEn: 'Approved rep pricing.', cssClass: 'card-pricelist', handler: 'openSalesPriceList', permission: 'sales', visible: true },
             { id: 'dash-rep-quotes', zone: 'grid', dashGroup: 'erp', sortOrder: 10, iconClass: 'fas fa-file-signature', titleAr: 'بناء عرض سعر', titleEn: 'Quote Builder', textAr: 'للمندوبين — من القائمة المعتمدة.', textEn: 'Sales rep quote builder.', cssClass: 'card-rep-quotes', handler: 'openRepQuoteBuilder', permission: 'quotes', visible: true },
+            { id: 'dash-orders', zone: 'grid', dashGroup: 'erp', sortOrder: 11, iconClass: 'fas fa-truck', titleAr: 'الطلبات OMS', titleEn: 'Orders OMS', textAr: 'تسجيل ومتابعة حالات التنفيذ.', textEn: 'Order fulfillment tracking.', cssClass: 'card-orders', handler: 'openErpOrders', permission: 'orders', visible: true },
+            { id: 'dash-warehouse-transfers', zone: 'grid', dashGroup: 'erp', sortOrder: 12, iconClass: 'fas fa-dolly', titleAr: 'تحويلات المستودع', titleEn: 'Stock Transfers', textAr: 'نقل الكميات بين الفروع.', textEn: 'Inter-branch stock moves.', cssClass: 'card-warehouse-transfers', handler: 'openErpWarehouseTransfers', permission: 'warehouse', visible: true },
             { id: 'dash-settings', zone: 'quick', dashGroup: 'command', sortOrder: 11, iconClass: 'fas fa-sliders-h', titleAr: 'إعدادات المنصة', titleEn: 'Platform Settings', textAr: 'بانر، بنوك، ضريبة، احتفال — Super Admin.', textEn: 'Banner, banks, VAT, occasions.', handler: 'openSystemSettings', permission: 'users', superadminOnly: true, visible: true }
         ];
 
@@ -2198,6 +2202,7 @@
             openSalesPriceList: function() { openSalesPriceList(); },
             openRepQuoteBuilder: function() { openRepQuoteBuilder(); },
             openErpOrders: function() { openErpOrders(); },
+            openErpWarehouseTransfers: function() { openErpWarehouseTransfers(); },
             openErpProcurement: function() { openErpProcurement(); },
             scrollErpHub: function() { scrollErpHub(); },
             openCertificationsHub: function() { openCertificationsHub(); },
@@ -5652,6 +5657,8 @@
             { id: 'dash-accounting', publicEffect: 'محاسبة وتحويلات بنكية', handler: 'openErpAccounting' },
             { id: 'dash-pricelist', publicEffect: 'قائمة أسعار المندوبين', handler: 'openSalesPriceList' },
             { id: 'dash-rep-quotes', publicEffect: 'عروض أسعار المندوبين', handler: 'openRepQuoteBuilder' },
+            { id: 'dash-orders', publicEffect: 'طلبات OMS وحالات التنفيذ', handler: 'openErpOrders' },
+            { id: 'dash-warehouse-transfers', publicEffect: 'تحويلات مخزون بين الفروع', handler: 'openErpWarehouseTransfers' },
             { id: 'dash-settings', publicEffect: 'بانر · بنوك · ضريبة · احتفال · سوشيال', handler: 'openSystemSettings' }
         ];
 
@@ -10213,6 +10220,9 @@
                 { id: 'sales-management', key: 'sales' },
                 { id: 'sales-pricelist', key: 'sales' },
                 { id: 'rep-quote-builder', key: 'quotes' },
+                { id: 'erp-inventory', key: 'inventory' },
+                { id: 'erp-orders', key: 'orders' },
+                { id: 'erp-warehouse-transfers', key: 'warehouse' },
                 { id: 'erp-production', key: 'production' },
                 { id: 'erp-procurement', key: 'procurement' },
                 { id: 'erp-accounting', key: 'accounting' },
@@ -10396,72 +10406,105 @@
             if (currentAdmin) renderDashboardCommandShell(currentAdmin);
         }
 
+        let erpInventoryEditId = null;
+
+        function getErpWarehouseOptions() {
+            const wh = [];
+            (erpInventory || []).forEach(function(i) {
+                const w = String(i.warehouseAr || '').trim();
+                if (w && wh.indexOf(w) < 0) wh.push(w);
+            });
+            getBranchCityOptions().forEach(function(c) {
+                if (wh.indexOf(c) < 0) wh.push(c);
+            });
+            if (wh.indexOf('القصيم — الرئيسي') < 0) wh.unshift('القصيم — الرئيسي');
+            return wh;
+        }
+
+        function buildErpSelectOptions(values, selected) {
+            return values.map(function(v) {
+                return '<option value="' + escapeHtmlAttr(v) + '"' + (selected === v ? ' selected' : '') + '>' + escapeHtmlAttr(v) + '</option>';
+            }).join('');
+        }
+
         function openErpInventory() {
             if (!requirePermission('inventory', 'صلاحية المخزون ERP مطلوبة.')) return;
             ensureBuiltinErpData();
+            erpInventoryEditId = null;
+            renderErpInventoryForm();
             displayErpInventory();
             document.getElementById('erp-inventory').classList.add('show');
         }
 
-        function displayErpInventory() {
-            const list = document.getElementById('erp-inventory-list');
-            if (!list) return;
-            const lang = currentLang || 'ar';
-            list.innerHTML = erpInventory.map(function(item) {
-                const name = lang === 'en' && item.nameEn ? item.nameEn : item.nameAr;
-                const wh = lang === 'en' && item.warehouseEn ? item.warehouseEn : item.warehouseAr;
-                const low = Number(item.qty) <= Number(item.minQty || 0);
-                return '<li><strong>' + escapeHtmlAttr(item.sku) + '</strong> — ' + escapeHtmlAttr(name) +
-                    '<small> ' + escapeHtmlAttr(wh) + ' | ' + escapeHtmlAttr(String(item.qty)) + ' ' + escapeHtmlAttr(item.unitAr || '') +
-                    (low ? ' <span class="erp-stock-alert">⚠ تحت الحد الأدنى</span>' : '') + '</small>' +
-                    '<div class="scm-row-actions">' +
-                    '<button type="button" onclick="editErpInventoryItem(\'' + item.id + '\')">تعديل</button>' +
-                    '<button type="button" onclick="deleteErpInventoryItem(\'' + item.id + '\')">حذف</button></div></li>';
+        function renderErpInventoryForm(item) {
+            const host = document.getElementById('erp-inventory-form');
+            if (!host) return;
+            const d = item || {};
+            const whOpts = buildErpSelectOptions(getErpWarehouseOptions(), d.warehouseAr || 'القصيم — الرئيسي');
+            const prodOpts = (siteProducts || []).map(function(p) {
+                return '<option value="' + escapeHtmlAttr(p.id) + '"' + (d.productLink === p.id ? ' selected' : '') + '>' + escapeHtmlAttr(p.titleAr || p.id) + '</option>';
             }).join('');
+            host.innerHTML =
+                '<h3 class="nebras-erp-subhead"><i class="fas fa-boxes-stacked"></i> ' + (item ? 'تعديل صنف' : 'صنف مخزون جديد') + '</h3>' +
+                '<div class="erp-form-grid">' +
+                    '<label class="nebras-field"><span>كود SKU</span><input type="text" id="inv-sku" value="' + escapeHtmlAttr(d.sku || '') + '" placeholder="WPC-RAW-80"></label>' +
+                    '<label class="nebras-field"><span>الاسم (عربي)</span><input type="text" id="inv-name-ar" value="' + escapeHtmlAttr(d.nameAr || '') + '"></label>' +
+                    '<label class="nebras-field"><span>الاسم (إنجليزي)</span><input type="text" id="inv-name-en" value="' + escapeHtmlAttr(d.nameEn || '') + '"></label>' +
+                    '<label class="nebras-field"><span>المستودع / الفرع</span><select id="inv-warehouse">' + whOpts + '</select></label>' +
+                    '<label class="nebras-field"><span>الكمية الحالية</span><input type="number" id="inv-qty" min="0" step="any" value="' + escapeHtmlAttr(String(d.qty != null ? d.qty : '')) + '"></label>' +
+                    '<label class="nebras-field"><span>الحد الأدنى للتنبيه</span><input type="number" id="inv-min-qty" min="0" step="any" value="' + escapeHtmlAttr(String(d.minQty != null ? d.minQty : '')) + '"></label>' +
+                    '<label class="nebras-field"><span>الوحدة</span><input type="text" id="inv-unit" value="' + escapeHtmlAttr(d.unitAr || 'قطعة') + '"></label>' +
+                    '<label class="nebras-field"><span>ربط بمنتج الموقع</span><select id="inv-product-link"><option value="">— بدون —</option>' + prodOpts + '</select></label>' +
+                '</div>' +
+                '<div class="erp-form-actions">' +
+                    '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="saveErpInventoryItem()"><i class="fas fa-check"></i> ' + (item ? 'حفظ التعديل' : 'إضافة للمخزون') + '</button>' +
+                    (item ? '<button type="button" class="nebras-users-btn" onclick="cancelErpInventoryEdit()">إلغاء</button>' : '') +
+                '</div>';
         }
 
-        function addErpInventoryItem() {
+        function saveErpInventoryItem() {
             if (!requirePermission('inventory')) return;
-            const sku = prompt('كود SKU:');
-            const nameAr = prompt('اسم الصنف (عربي):');
-            if (!sku || !nameAr) return;
-            const nameEn = prompt('Name (English):', nameAr);
-            const warehouseAr = prompt('المستودع / الفرع:', 'القصيم — الرئيسي');
-            const qty = parseFloat(prompt('الكمية الحالية:', '0')) || 0;
-            const minQty = parseFloat(prompt('الحد الأدنى للتنبيه:', '0')) || 0;
-            const unitAr = prompt('الوحدة (كيس / قطعة …):', 'كيس');
-            const productLink = prompt('ربط بمنتج الموقع (معرّف prod-… اختياري):', '');
-            erpInventory.push({
-                id: 'inv-' + Date.now(),
-                sku: sku.trim(),
-                nameAr: nameAr.trim(),
-                nameEn: (nameEn || nameAr).trim(),
-                warehouseAr: (warehouseAr || '').trim(),
-                warehouseEn: (warehouseAr || '').trim(),
-                qty: qty,
-                minQty: minQty,
-                unitAr: (unitAr || '').trim(),
-                productLink: (productLink || '').trim()
-            });
+            const sku = fieldVal('inv-sku');
+            const nameAr = fieldVal('inv-name-ar');
+            if (!sku || !nameAr) { alert('SKU واسم الصنف مطلوبان.'); return; }
+            const payload = {
+                sku: sku,
+                nameAr: nameAr,
+                nameEn: fieldVal('inv-name-en') || nameAr,
+                warehouseAr: fieldVal('inv-warehouse') || 'القصيم — الرئيسي',
+                warehouseEn: fieldVal('inv-warehouse') || 'Qassim main',
+                qty: erpNum(fieldVal('inv-qty')),
+                minQty: erpNum(fieldVal('inv-min-qty')),
+                unitAr: fieldVal('inv-unit') || 'قطعة',
+                productLink: fieldVal('inv-product-link')
+            };
+            if (erpInventoryEditId) {
+                const item = erpInventory.find(function(i) { return i.id === erpInventoryEditId; });
+                if (item) Object.assign(item, payload);
+                addAuditLog('ERP مخزون', 'تعديل ' + sku);
+            } else {
+                erpInventory.push(Object.assign({ id: 'inv-' + Date.now() }, payload));
+                addAuditLog('ERP مخزون', 'إضافة SKU ' + sku);
+            }
+            erpInventoryEditId = null;
             saveSystemData();
+            renderErpInventoryForm();
             displayErpInventory();
             renderErpHubPanel();
-            addAuditLog('ERP مخزون', 'إضافة SKU ' + sku);
+            if (currentAdmin) renderDashboardCommandShell(currentAdmin);
         }
 
         function editErpInventoryItem(id) {
             if (!requirePermission('inventory')) return;
             const item = erpInventory.find(function(i) { return i.id === id; });
             if (!item) return;
-            const qty = prompt('الكمية الحالية:', item.qty);
-            const minQty = prompt('الحد الأدنى:', item.minQty);
-            if (qty === null) return;
-            item.qty = parseFloat(qty) || 0;
-            item.minQty = parseFloat(minQty) || 0;
-            saveSystemData();
-            displayErpInventory();
-            renderErpHubPanel();
-            addAuditLog('ERP مخزون', 'تعديل ' + item.sku);
+            erpInventoryEditId = id;
+            renderErpInventoryForm(item);
+        }
+
+        function cancelErpInventoryEdit() {
+            erpInventoryEditId = null;
+            renderErpInventoryForm();
         }
 
         function deleteErpInventoryItem(id) {
@@ -10474,42 +10517,312 @@
             renderErpHubPanel();
         }
 
+        function displayErpInventory() {
+            const list = document.getElementById('erp-inventory-list');
+            if (!list) return;
+            ensureBuiltinErpData();
+            const lang = currentLang || 'ar';
+            const lowCount = erpInventory.filter(function(i) { return Number(i.qty) <= Number(i.minQty || 0); }).length;
+            const summary = document.getElementById('erp-inventory-summary');
+            if (summary) {
+                summary.innerHTML =
+                    '<div class="erp-stat"><strong>' + erpInventory.length + '</strong><span>أصناف SKU</span></div>' +
+                    '<div class="erp-stat' + (lowCount ? ' erp-stat--alert' : '') + '"><strong>' + lowCount + '</strong><span>تحت الحد الأدنى</span></div>' +
+                    '<div class="erp-stat"><strong>' + getErpWarehouseOptions().length + '</strong><span>مستودعات</span></div>';
+            }
+            if (!erpInventory.length) {
+                list.innerHTML = '<p class="erp-empty">لا أصناف — أضيفوا SKU من النموذج أعلاه.</p>';
+                return;
+            }
+            list.innerHTML = erpInventory.map(function(item) {
+                const name = lang === 'en' && item.nameEn ? item.nameEn : item.nameAr;
+                const wh = lang === 'en' && item.warehouseEn ? item.warehouseEn : item.warehouseAr;
+                const low = Number(item.qty) <= Number(item.minQty || 0);
+                return '<article class="erp-row' + (low ? ' erp-row--alert' : '') + '">' +
+                    '<div class="erp-row-main"><strong>' + escapeHtmlAttr(item.sku) + '</strong> — ' + escapeHtmlAttr(name) +
+                        '<span class="erp-row-tags"><span class="erp-tag">' + escapeHtmlAttr(wh) + '</span>' +
+                            (low ? '<span class="erp-tag erp-tag--status-pending">تحت الحد</span>' : '') + '</span>' +
+                        '<small>' + escapeHtmlAttr(String(item.qty)) + ' ' + escapeHtmlAttr(item.unitAr || '') + ' · حد أدنى ' + escapeHtmlAttr(String(item.minQty || 0)) + '</small>' +
+                    '</div>' +
+                    '<div class="erp-row-actions-inline">' +
+                        '<button type="button" onclick="editErpInventoryItem(\'' + item.id + '\')"><i class="fas fa-pen"></i></button>' +
+                        '<button type="button" class="erp-row-del" onclick="deleteErpInventoryItem(\'' + item.id + '\')" aria-label="حذف"><i class="fas fa-trash"></i></button>' +
+                    '</div></article>';
+            }).join('');
+        }
+
+        const ERP_ORDER_STATUSES = [
+            { id: 'pending', label: 'قيد الانتظار' },
+            { id: 'confirmed', label: 'مؤكّد' },
+            { id: 'production', label: 'قيد الإنتاج' },
+            { id: 'ready', label: 'جاهز للتسليم' },
+            { id: 'shipped', label: 'تم الشحن' },
+            { id: 'delivered', label: 'مُسلَّم' },
+            { id: 'cancelled', label: 'ملغي' }
+        ];
+
         function openErpOrders() {
             if (!requirePermission('orders', 'صلاحية الطلبات مطلوبة.')) return;
+            ensureBuiltinErpData();
+            renderErpOrdersForm();
             displayErpOrders();
             document.getElementById('erp-orders').classList.add('show');
+        }
+
+        function renderErpOrdersForm() {
+            const host = document.getElementById('erp-orders-form');
+            if (!host) return;
+            const branchOpts = buildErpSelectOptions(getBranchCityOptions().length ? getBranchCityOptions() : ['القصيم — الرئيسي'], '');
+            const statusOpts = ERP_ORDER_STATUSES.map(function(s) {
+                return '<option value="' + s.id + '">' + s.label + '</option>';
+            }).join('');
+            host.innerHTML =
+                '<h3 class="nebras-erp-subhead"><i class="fas fa-plus-circle"></i> تسجيل طلب جديد</h3>' +
+                '<div class="erp-form-grid">' +
+                    '<label class="nebras-field"><span>التاريخ</span><input type="date" id="ord-date" value="' + erpToday() + '"></label>' +
+                    '<label class="nebras-field"><span>اسم العميل</span><input type="text" id="ord-customer" placeholder="اسم العميل"></label>' +
+                    '<label class="nebras-field"><span>الجوال</span><input type="tel" id="ord-phone" placeholder="05xxxxxxxx"></label>' +
+                    '<label class="nebras-field"><span>الفرع المسؤول</span><select id="ord-branch"><option value="">— اختر —</option>' + branchOpts + '</select></label>' +
+                    '<label class="nebras-field"><span>المنتج / الطلب</span><input type="text" id="ord-product" placeholder="باب WPC 90×210" list="ord-product-list"></label>' +
+                    '<label class="nebras-field"><span>الكمية</span><input type="number" id="ord-qty" min="1" step="1" value="1"></label>' +
+                    '<label class="nebras-field"><span>الحالة</span><select id="ord-status">' + statusOpts + '</select></label>' +
+                    '<label class="nebras-field"><span>مرجع عرض سعر</span><input type="text" id="ord-quote-ref" placeholder="اختياري"></label>' +
+                    '<label class="nebras-field nebras-field--wide"><span>ملاحظات</span><input type="text" id="ord-notes" placeholder="اختياري"></label>' +
+                '</div>' +
+                '<datalist id="ord-product-list">' +
+                    (siteProducts || []).map(function(p) { return '<option value="' + escapeHtmlAttr(p.titleAr || '') + '">'; }).join('') +
+                '</datalist>' +
+                '<div class="erp-form-actions"><button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="addErpOrder()"><i class="fas fa-plus"></i> تسجيل الطلب</button></div>';
+        }
+
+        function addErpOrder() {
+            if (!requirePermission('orders')) return;
+            const customer = fieldVal('ord-customer');
+            const product = fieldVal('ord-product');
+            if (!customer || !product) { alert('اسم العميل والمنتج مطلوبان.'); return; }
+            const orderNo = 'NB-' + new Date().getFullYear() + '-' + String(erpOrders.length + 1).padStart(4, '0');
+            erpOrders.unshift({
+                id: 'ORD-' + Date.now(),
+                orderNo: orderNo,
+                date: fieldVal('ord-date') || erpToday(),
+                customer: customer,
+                phone: fieldVal('ord-phone'),
+                branch: fieldVal('ord-branch'),
+                product: product,
+                qty: erpNum(fieldVal('ord-qty')) || 1,
+                status: fieldVal('ord-status') || 'pending',
+                quoteRef: fieldVal('ord-quote-ref'),
+                notes: fieldVal('ord-notes'),
+                by: erpActor(),
+                createdAt: new Date().toISOString()
+            });
+            saveSystemData();
+            renderErpOrdersForm();
+            displayErpOrders();
+            renderErpHubPanel();
+            if (currentAdmin) renderDashboardCommandShell(currentAdmin);
+            addAuditLog('ERP طلب', customer + ' — ' + product);
+        }
+
+        function updateErpOrderStatus(id, status) {
+            if (!requirePermission('orders')) return;
+            const o = erpOrders.find(function(x) { return x.id === id; });
+            if (!o) return;
+            o.status = status;
+            o.updatedAt = new Date().toISOString();
+            saveSystemData();
+            displayErpOrders();
+            renderErpHubPanel();
+        }
+
+        function deleteErpOrder(id) {
+            if (!requirePermission('orders')) return;
+            const o = erpOrders.find(function(x) { return x.id === id; });
+            if (!o || !confirm('حذف الطلب ' + (o.orderNo || o.id) + '؟')) return;
+            erpOrders = erpOrders.filter(function(x) { return x.id !== id; });
+            saveSystemData();
+            displayErpOrders();
+            renderErpHubPanel();
         }
 
         function displayErpOrders() {
             const list = document.getElementById('erp-orders-list');
             if (!list) return;
+            const statusMap = {};
+            ERP_ORDER_STATUSES.forEach(function(s) { statusMap[s.id] = s.label; });
+            const pending = erpOrders.filter(function(o) { return o.status === 'pending' || o.status === 'confirmed'; }).length;
+            const summary = document.getElementById('erp-orders-summary');
+            if (summary) {
+                summary.innerHTML =
+                    '<div class="erp-stat"><strong>' + erpOrders.length + '</strong><span>إجمالي الطلبات</span></div>' +
+                    '<div class="erp-stat' + (pending ? ' erp-stat--alert' : '') + '"><strong>' + pending + '</strong><span>قيد المعالجة</span></div>';
+            }
             if (!erpOrders.length) {
-                list.innerHTML = '<li>لا توجد طلبات مسجلة — جاهز للتوسعة مثل OMS عالمي.</li>';
+                list.innerHTML = '<p class="erp-empty">لا طلبات مسجلة — سجّلوا الطلب الأول من النموذج.</p>';
                 return;
             }
             list.innerHTML = erpOrders.map(function(o) {
-                return '<li><strong>' + escapeHtmlAttr(o.id) + '</strong> — ' + escapeHtmlAttr(o.customer) +
-                    ' | ' + escapeHtmlAttr(o.status) + ' | ' + escapeHtmlAttr(o.branch || '') + '</li>';
+                const st = o.status || 'pending';
+                const nextActions = [];
+                if (st === 'pending') nextActions.push({ s: 'confirmed', l: 'تأكيد' });
+                if (st === 'confirmed') nextActions.push({ s: 'production', l: 'إنتاج' });
+                if (st === 'production') nextActions.push({ s: 'ready', l: 'جاهز' });
+                if (st === 'ready') nextActions.push({ s: 'shipped', l: 'شحن' });
+                if (st === 'shipped') nextActions.push({ s: 'delivered', l: 'تسليم' });
+                const actionBtns = nextActions.map(function(a) {
+                    return '<button type="button" class="erp-tag erp-tag--action" onclick="updateErpOrderStatus(\'' + o.id + '\',\'' + a.s + '\')">' + a.l + '</button>';
+                }).join('');
+                return '<article class="erp-row">' +
+                    '<div class="erp-row-main"><strong>' + escapeHtmlAttr(o.orderNo || o.id) + '</strong> — ' + escapeHtmlAttr(o.customer) +
+                        '<span class="erp-row-tags"><span class="erp-tag erp-tag--status-' + escapeHtmlAttr(st) + '">' + escapeHtmlAttr(statusMap[st] || st) + '</span>' +
+                            (o.branch ? '<span class="erp-tag">' + escapeHtmlAttr(o.branch) + '</span>' : '') + '</span>' +
+                        '<small>' + escapeHtmlAttr(o.date || '') + ' · ' + escapeHtmlAttr(o.product) + ' × ' + erpNum(o.qty) +
+                            (o.phone ? ' · ' + escapeHtmlAttr(o.phone) : '') +
+                            (o.notes ? ' · ' + escapeHtmlAttr(o.notes) : '') + '</small>' +
+                        (actionBtns ? '<div class="erp-row-quick-actions">' + actionBtns + '</div>' : '') +
+                    '</div>' +
+                    '<button type="button" class="erp-row-del" onclick="deleteErpOrder(\'' + o.id + '\')" aria-label="حذف"><i class="fas fa-trash"></i></button>' +
+                '</article>';
             }).join('');
         }
 
-        function addErpOrderStub() {
-            if (!requirePermission('orders')) return;
-            const customer = prompt('اسم العميل:');
-            const product = prompt('المنتج / الطلب:');
-            if (!customer || !product) return;
-            erpOrders.push({
-                id: 'ORD-' + Date.now(),
-                customer: customer.trim(),
-                product: product.trim(),
-                status: 'pending',
-                branch: prompt('الفرع:', '') || '',
-                createdAt: new Date().toISOString()
+        function openErpWarehouseTransfers() {
+            if (!canManage('warehouse') && !canManage('inventory')) {
+                alert('صلاحية المستودع أو المخزون مطلوبة.');
+                return;
+            }
+            ensureBuiltinErpData();
+            ensureErpOperationsData();
+            renderErpStockTransferForm();
+            displayErpStockTransfers();
+            document.getElementById('erp-warehouse-transfers').classList.add('show');
+        }
+
+        function renderErpStockTransferForm() {
+            const host = document.getElementById('erp-stock-transfer-form');
+            if (!host) return;
+            const whOpts = buildErpSelectOptions(getErpWarehouseOptions(), '');
+            const skuOpts = (erpInventory || []).map(function(i) {
+                return '<option value="' + escapeHtmlAttr(i.sku) + '" data-name="' + escapeHtmlAttr(i.nameAr || '') + '" data-wh="' + escapeHtmlAttr(i.warehouseAr || '') + '">' +
+                    escapeHtmlAttr(i.sku) + ' — ' + escapeHtmlAttr(i.nameAr || '') + ' (' + escapeHtmlAttr(i.warehouseAr || '') + ': ' + erpNum(i.qty) + ')</option>';
+            }).join('');
+            host.innerHTML =
+                '<h3 class="nebras-erp-subhead"><i class="fas fa-exchange-alt"></i> تحويل مخزون بين المستودعات</h3>' +
+                '<div class="erp-form-grid">' +
+                    '<label class="nebras-field"><span>التاريخ</span><input type="date" id="xfr-date" value="' + erpToday() + '"></label>' +
+                    '<label class="nebras-field"><span>الصنف (SKU)</span><select id="xfr-sku"><option value="">— اختر —</option>' + skuOpts + '</select></label>' +
+                    '<label class="nebras-field"><span>من مستودع</span><select id="xfr-from">' + whOpts + '</select></label>' +
+                    '<label class="nebras-field"><span>إلى مستودع</span><select id="xfr-to">' + whOpts + '</select></label>' +
+                    '<label class="nebras-field"><span>الكمية</span><input type="number" id="xfr-qty" min="1" step="1" placeholder="0"></label>' +
+                    '<label class="nebras-field nebras-field--wide"><span>ملاحظات</span><input type="text" id="xfr-note" placeholder="اختياري"></label>' +
+                '</div>' +
+                '<div class="erp-form-actions"><button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="addErpStockTransfer()"><i class="fas fa-dolly"></i> تنفيذ التحويل</button></div>';
+        }
+
+        function findInventoryBySkuWarehouse(sku, warehouse) {
+            return erpInventory.find(function(i) {
+                return String(i.sku).trim() === String(sku).trim() &&
+                    String(i.warehouseAr || '').trim() === String(warehouse || '').trim();
             });
+        }
+
+        function applyStockTransferToInventory(transfer) {
+            const sku = transfer.sku;
+            const qty = erpNum(transfer.qty);
+            const fromItem = findInventoryBySkuWarehouse(sku, transfer.fromWarehouse);
+            if (!fromItem || erpNum(fromItem.qty) < qty) return false;
+            fromItem.qty = erpNum(fromItem.qty) - qty;
+            let toItem = findInventoryBySkuWarehouse(sku, transfer.toWarehouse);
+            if (toItem) {
+                toItem.qty = erpNum(toItem.qty) + qty;
+            } else if (fromItem) {
+                erpInventory.push({
+                    id: 'inv-' + Date.now(),
+                    sku: fromItem.sku,
+                    nameAr: fromItem.nameAr,
+                    nameEn: fromItem.nameEn,
+                    warehouseAr: transfer.toWarehouse,
+                    warehouseEn: transfer.toWarehouse,
+                    qty: qty,
+                    minQty: fromItem.minQty || 0,
+                    unitAr: fromItem.unitAr || 'قطعة',
+                    productLink: fromItem.productLink || ''
+                });
+            }
+            return true;
+        }
+
+        function addErpStockTransfer() {
+            if (!canManage('warehouse') && !canManage('inventory')) return;
+            ensureErpOperationsData();
+            const sku = fieldVal('xfr-sku');
+            const fromWh = fieldVal('xfr-from');
+            const toWh = fieldVal('xfr-to');
+            const qty = erpNum(fieldVal('xfr-qty'));
+            if (!sku || !fromWh || !toWh) { alert('اختر SKU والمستودعين.'); return; }
+            if (fromWh === toWh) { alert('المستودع المصدر والوجهة يجب أن يكونا مختلفين.'); return; }
+            if (qty <= 0) { alert('أدخل كمية صحيحة.'); return; }
+            const sel = document.getElementById('xfr-sku');
+            const opt = sel && sel.selectedOptions && sel.selectedOptions[0];
+            const productAr = opt ? (opt.getAttribute('data-name') || sku) : sku;
+            const transfer = {
+                id: 'xfr-' + Date.now(),
+                date: fieldVal('xfr-date') || erpToday(),
+                sku: sku,
+                productAr: productAr,
+                qty: qty,
+                fromWarehouse: fromWh,
+                toWarehouse: toWh,
+                status: 'completed',
+                note: fieldVal('xfr-note'),
+                by: erpActor()
+            };
+            if (!applyStockTransferToInventory(transfer)) {
+                alert('الكمية غير متوفرة في المستودع المصدر.');
+                return;
+            }
+            erpStockTransfers.unshift(transfer);
             saveSystemData();
-            displayErpOrders();
+            renderErpStockTransferForm();
+            displayErpStockTransfers();
+            displayErpInventory();
             renderErpHubPanel();
-            addAuditLog('ERP طلب', customer);
+            if (currentAdmin) renderDashboardCommandShell(currentAdmin);
+            addAuditLog('تحويل مخزون', sku + ': ' + fromWh + ' → ' + toWh + ' (' + qty + ')');
+        }
+
+        function deleteErpStockTransfer(id) {
+            if (!canManage('warehouse') && !canManage('inventory')) return;
+            const t = erpStockTransfers.find(function(x) { return x.id === id; });
+            if (!t || !confirm('حذف سجل التحويل؟ (لن يُعاد المخزون تلقائياً)')) return;
+            erpStockTransfers = erpStockTransfers.filter(function(x) { return x.id !== id; });
+            saveSystemData();
+            displayErpStockTransfers();
+        }
+
+        function displayErpStockTransfers() {
+            const list = document.getElementById('erp-stock-transfer-list');
+            if (!list) return;
+            const summary = document.getElementById('erp-stock-transfer-summary');
+            if (summary) {
+                summary.innerHTML =
+                    '<div class="erp-stat"><strong>' + erpStockTransfers.length + '</strong><span>تحويلات مسجّلة</span></div>' +
+                    '<div class="erp-stat"><strong>' + erpStockTransfers.filter(function(t) { return t.date === erpToday(); }).length + '</strong><span>اليوم</span></div>';
+            }
+            if (!erpStockTransfers.length) {
+                list.innerHTML = '<p class="erp-empty">لا تحويلات بعد.</p>';
+                return;
+            }
+            list.innerHTML = erpStockTransfers.map(function(t) {
+                return '<article class="erp-row">' +
+                    '<div class="erp-row-main"><strong>' + escapeHtmlAttr(t.sku) + '</strong> — ' + escapeHtmlAttr(t.productAr || '') +
+                        '<span class="erp-row-tags"><span class="erp-tag">' + escapeHtmlAttr(t.fromWarehouse) + ' → ' + escapeHtmlAttr(t.toWarehouse) + '</span></span>' +
+                        '<small>' + escapeHtmlAttr(t.date) + ' · ' + erpNum(t.qty) + ' قطعة' +
+                            (t.note ? ' · ' + escapeHtmlAttr(t.note) : '') + ' · ' + escapeHtmlAttr(t.by || '') + '</small>' +
+                    '</div>' +
+                    '<button type="button" class="erp-row-del" onclick="deleteErpStockTransfer(\'' + t.id + '\')" aria-label="حذف"><i class="fas fa-trash"></i></button>' +
+                '</article>';
+            }).join('');
         }
 
         /* ===================== NebrasERP — وحدات تشغيلية ===================== */
@@ -10529,6 +10842,7 @@
             if (!Array.isArray(erpProduction)) erpProduction = [];
             if (!Array.isArray(erpPurchases)) erpPurchases = [];
             if (!Array.isArray(erpTransfers)) erpTransfers = [];
+            if (!Array.isArray(erpStockTransfers)) erpStockTransfers = [];
             if (!Array.isArray(salesPriceList)) salesPriceList = [];
         }
 
@@ -11560,9 +11874,9 @@
             },
             warehouse_manager: {
                 greetingAr: 'مركز المستودع',
-                descAr: 'حركة المستودع والجرد والمتاح فعلياً.',
+                descAr: 'تحويلات المخزون بين الفروع والجرد والمتاح فعلياً.',
                 scrollTo: 'erp-hub-panel',
-                openHandler: 'openErpInventory',
+                openHandler: 'openErpWarehouseTransfers',
                 hideSections: ['dashboard-partners-block', 'platform-hub-panel', 'dashboard-channels-panel', 'dashboard-occasion-panel']
             },
             production_manager: {
@@ -11611,7 +11925,11 @@
                 transfersCount: (erpTransfers || []).length,
                 transfersTotal: transfersTotal,
                 priceListCount: (salesPriceList || []).length,
-                quoteInbox: quoteInbox
+                quoteInbox: quoteInbox,
+                ordersPending: (erpOrders || []).filter(function(o) {
+                    return o.status === 'pending' || o.status === 'confirmed' || o.status === 'production';
+                }).length,
+                stockTransfersToday: (erpStockTransfers || []).filter(function(t) { return t.date === today; }).length
             };
         }
 
@@ -11631,6 +11949,8 @@
                 { roles: ['sales_manager'], icon: 'fas fa-tags', label: 'قائمة الأسعار', handler: 'openSalesPriceList', perm: 'sales' },
                 { roles: ['accountant'], icon: 'fas fa-file-invoice-dollar', label: 'المحاسبة', handler: 'openErpAccounting', perm: 'accounting' },
                 { roles: ['inventory_manager', 'warehouse_manager'], icon: 'fas fa-boxes-stacked', label: 'المخزون', handler: 'openErpInventory', perm: 'inventory' },
+                { roles: ['warehouse_manager'], icon: 'fas fa-dolly', label: 'تحويلات', handler: 'openErpWarehouseTransfers', perm: 'warehouse' },
+                { roles: ['sales_manager', 'branch_manager', 'manager'], icon: 'fas fa-truck', label: 'الطلبات', handler: 'openErpOrders', perm: 'orders' },
                 { roles: ['production_manager'], icon: 'fas fa-industry', label: 'الإنتاج', handler: 'openErpProduction', perm: 'production' },
                 { roles: ['accountant', 'manager', 'superadmin'], icon: 'fas fa-truck-ramp-box', label: 'المشتريات', handler: 'openErpProcurement', perm: 'procurement' },
                 { roles: ['superadmin', 'manager', 'sales_manager', 'accountant'], icon: 'fas fa-chart-line', label: 'التحليلات', handler: 'openAdminAnalytics', perm: 'audit' },
@@ -11693,7 +12013,13 @@
                     kpis.push({ v: formatSar(stats.transfersTotal).replace(' ر.س', ''), l: 'تحويلات (ر.س)', alert: false });
                     kpis.push({ v: stats.purchasesCount, l: 'أوامر شراء', alert: false });
                 }
-                if (canManage('orders')) kpis.push({ v: stats.ordersCount, l: 'طلبات', alert: false });
+                if (canManage('orders')) {
+                    kpis.push({ v: stats.ordersCount, l: 'طلبات', alert: false });
+                    kpis.push({ v: stats.ordersPending, l: 'قيد المعالجة', alert: stats.ordersPending > 0 });
+                }
+                if (canManage('warehouse') || canManage('inventory')) {
+                    kpis.push({ v: stats.stockTransfersToday, l: 'تحويلات اليوم', alert: false });
+                }
                 if (canManage('complaints')) kpis.push({ v: stats.complaintsCount, l: 'شكاوى', alert: stats.complaintsCount > 0 });
                 if (canManage('branches')) kpis.push({ v: stats.branchesCount, l: 'فروع', alert: false });
                 if (!kpis.length && isMainGovernanceAdmin(user)) {
@@ -17741,6 +18067,7 @@
             { key: 'erp_production', get: function() { return erpProduction; }, set: function(v) { erpProduction = Array.isArray(v) ? v : []; } },
             { key: 'erp_purchases', get: function() { return erpPurchases; }, set: function(v) { erpPurchases = Array.isArray(v) ? v : []; } },
             { key: 'erp_transfers', get: function() { return erpTransfers; }, set: function(v) { erpTransfers = Array.isArray(v) ? v : []; } },
+            { key: 'erp_stock_transfers', get: function() { return erpStockTransfers; }, set: function(v) { erpStockTransfers = Array.isArray(v) ? v : []; } },
             { key: 'sales_price_list', get: function() { return salesPriceList; }, set: function(v) { salesPriceList = Array.isArray(v) ? v : []; } },
             { key: 'site_partners', get: function() { return sitePartners; }, set: function(v) { sitePartners = Array.isArray(v) ? v : []; } },
             { key: 'site_certifications', get: function() { return siteCertifications; }, set: function(v) { siteCertifications = Array.isArray(v) ? v : []; } },
@@ -17932,6 +18259,7 @@
             localStorage.setItem('nebrasErpProduction', JSON.stringify(erpProduction));
             localStorage.setItem('nebrasErpPurchases', JSON.stringify(erpPurchases));
             localStorage.setItem('nebrasErpTransfers', JSON.stringify(erpTransfers));
+            localStorage.setItem('nebrasErpStockTransfers', JSON.stringify(erpStockTransfers));
             localStorage.setItem('nebrasSalesPriceList', JSON.stringify(salesPriceList));
             localStorage.setItem('nebrasAboutPages', JSON.stringify(aboutPages));
             localStorage.setItem('nebrasSitePartners', JSON.stringify(sitePartners));
@@ -18009,6 +18337,7 @@
             try { const v = localStorage.getItem('nebrasErpProduction'); if (v) erpProduction = JSON.parse(v); } catch (e) { console.warn('ERP production parse error', e); }
             try { const v = localStorage.getItem('nebrasErpPurchases'); if (v) erpPurchases = JSON.parse(v); } catch (e) { console.warn('ERP purchases parse error', e); }
             try { const v = localStorage.getItem('nebrasErpTransfers'); if (v) erpTransfers = JSON.parse(v); } catch (e) { console.warn('ERP transfers parse error', e); }
+            try { const v = localStorage.getItem('nebrasErpStockTransfers'); if (v) erpStockTransfers = JSON.parse(v); } catch (e) { console.warn('ERP stock transfers parse error', e); }
             try { const v = localStorage.getItem('nebrasSalesPriceList'); if (v) salesPriceList = JSON.parse(v); } catch (e) { console.warn('Sales price list parse error', e); }
             if (savedAboutPages) {
                 try {
@@ -20660,6 +20989,16 @@
         window.removeRepQuoteLine = removeRepQuoteLine;
         window.saveRepQuote = saveRepQuote;
         window.openErpOrders = openErpOrders;
+        window.addErpOrder = addErpOrder;
+        window.updateErpOrderStatus = updateErpOrderStatus;
+        window.deleteErpOrder = deleteErpOrder;
+        window.saveErpInventoryItem = saveErpInventoryItem;
+        window.editErpInventoryItem = editErpInventoryItem;
+        window.cancelErpInventoryEdit = cancelErpInventoryEdit;
+        window.deleteErpInventoryItem = deleteErpInventoryItem;
+        window.openErpWarehouseTransfers = openErpWarehouseTransfers;
+        window.addErpStockTransfer = addErpStockTransfer;
+        window.deleteErpStockTransfer = deleteErpStockTransfer;
         window.openComplaintsManagement = openComplaintsManagement;
         window.openBranchesManagement = openBranchesManagement;
         window.openAuditLog = openAuditLog;

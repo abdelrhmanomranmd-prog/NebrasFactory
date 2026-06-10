@@ -834,22 +834,38 @@
     </div>
 
     <div class="admin-section" id="erp-inventory">
-        <div class="admin-modal site-content-modal">
-            <h2 id="erp-inventory-title">ERP — إدارة المخزون والمواد</h2>
-            <p class="scm-hint admin-only-ui" id="erp-inventory-hint">مثل أنظمة WMS في أمازون وجرير: أكواد SKU، كميات، مستودعات، وتنبيهات الحد الأدنى.</p>
-            <button class="primary" type="button" onclick="addErpInventoryItem()">+ صنف مخزون</button>
-            <ul id="erp-inventory-list" class="scm-list erp-inventory-list"></ul>
-            <button type="button" onclick="closeAdminSection('erp-inventory')">إغلاق</button>
+        <div class="admin-modal site-content-modal nebras-erp-modal">
+            <div class="nebras-erp-head">
+                <div class="nebras-erp-head-title"><i class="fas fa-warehouse"></i><div><h2 id="erp-inventory-title">المخزون والمواد WMS</h2><p id="erp-inventory-hint">SKU · كميات · مستودعات · تنبيهات الحد الأدنى</p></div></div>
+                <button type="button" class="nebras-users-close" onclick="closeAdminSection('erp-inventory')" aria-label="إغلاق"><i class="fas fa-xmark"></i></button>
+            </div>
+            <div class="nebras-erp-stats" id="erp-inventory-summary"></div>
+            <div class="nebras-erp-form" id="erp-inventory-form"></div>
+            <div class="nebras-erp-list" id="erp-inventory-list"></div>
         </div>
     </div>
 
     <div class="admin-section" id="erp-orders">
-        <div class="admin-modal">
-            <h2 id="erp-orders-title">ERP — الطلبات والتنفيذ (OMS)</h2>
-            <p class="scm-hint admin-only-ui" id="erp-orders-hint">مرحلة قادمة: طلبات زوار، حالات الشحن، ربط الفروع — كمنصات التجارة العالمية.</p>
-            <ul id="erp-orders-list" class="scm-list"></ul>
-            <button type="button" onclick="addErpOrderStub()">+ تسجيل طلب تجريبي</button>
-            <button type="button" onclick="closeAdminSection('erp-orders')">إغلاق</button>
+        <div class="admin-modal site-content-modal nebras-erp-modal">
+            <div class="nebras-erp-head">
+                <div class="nebras-erp-head-title"><i class="fas fa-truck"></i><div><h2 id="erp-orders-title">الطلبات والتنفيذ OMS</h2><p id="erp-orders-hint">تسجيل ومتابعة الطلبات — حالات التنفيذ وربط الفروع</p></div></div>
+                <button type="button" class="nebras-users-close" onclick="closeAdminSection('erp-orders')" aria-label="إغلاق"><i class="fas fa-xmark"></i></button>
+            </div>
+            <div class="nebras-erp-stats" id="erp-orders-summary"></div>
+            <div class="nebras-erp-form" id="erp-orders-form"></div>
+            <div class="nebras-erp-list" id="erp-orders-list"></div>
+        </div>
+    </div>
+
+    <div class="admin-section" id="erp-warehouse-transfers">
+        <div class="admin-modal site-content-modal nebras-erp-modal">
+            <div class="nebras-erp-head">
+                <div class="nebras-erp-head-title"><i class="fas fa-dolly"></i><div><h2>تحويلات المستودع</h2><p>نقل الكميات بين فروع ومستودعات المصنع</p></div></div>
+                <button type="button" class="nebras-users-close" onclick="closeAdminSection('erp-warehouse-transfers')" aria-label="إغلاق"><i class="fas fa-xmark"></i></button>
+            </div>
+            <div class="nebras-erp-stats" id="erp-stock-transfer-summary"></div>
+            <div class="nebras-erp-form" id="erp-stock-transfer-form"></div>
+            <div class="nebras-erp-list" id="erp-stock-transfer-list"></div>
         </div>
     </div>
 

@@ -777,6 +777,23 @@
 .erp-tag--status-received { color: #1b9e57; background: rgba(27, 158, 87, 0.1); }
 .erp-tag--status-paid { color: #0a4d8c; background: rgba(10, 77, 140, 0.1); }
 .erp-tag--status-pending { color: #c07a00; background: rgba(212, 137, 0, 0.12); }
+.erp-tag--status-confirmed { color: #0a4d8c; background: rgba(10, 77, 140, 0.1); }
+.erp-tag--status-production { color: #6b21a8; background: rgba(107, 33, 168, 0.1); }
+.erp-tag--status-ready { color: #1b9e57; background: rgba(27, 158, 87, 0.1); }
+.erp-tag--status-shipped { color: #0369a1; background: rgba(3, 105, 161, 0.1); }
+.erp-tag--status-delivered { color: #166534; background: rgba(22, 101, 52, 0.12); }
+.erp-tag--status-cancelled { color: #991b1b; background: rgba(153, 27, 27, 0.1); }
+.erp-tag--action { cursor: pointer; border-color: var(--nu-navy-2); }
+.erp-tag--action:hover { background: var(--nu-navy-2); color: #fff; }
+
+.erp-row--alert { border-color: rgba(192, 57, 43, 0.35); background: rgba(192, 57, 43, 0.04); }
+.erp-stat--alert strong { color: #c0392b; }
+.erp-row-actions-inline { display: flex; gap: 6px; flex-shrink: 0; }
+.erp-row-actions-inline button {
+    width: 34px; height: 34px; border-radius: 9px;
+    border: 1px solid var(--nu-line); background: #fff; color: var(--nu-navy-2); cursor: pointer;
+}
+.erp-row-quick-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
 
 .erp-row-qty {
     font-weight: 800;

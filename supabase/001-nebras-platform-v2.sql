@@ -103,6 +103,7 @@ insert into public.nebras_data_store (store_key, payload) values
   ('erp_production', '[]'::jsonb),
   ('erp_purchases', '[]'::jsonb),
   ('erp_transfers', '[]'::jsonb),
+  ('erp_stock_transfers', '[]'::jsonb),
   ('sales_price_list', '[]'::jsonb),
   ('site_partners', '[]'::jsonb),
   ('site_certifications', '[]'::jsonb),
