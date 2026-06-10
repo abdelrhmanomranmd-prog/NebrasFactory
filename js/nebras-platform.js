@@ -2160,6 +2160,11 @@
             { id: 'dash-branches', zone: 'quick', dashGroup: 'command', sortOrder: 9, iconClass: 'fas fa-map-marked-alt', titleAr: 'الفروع', titleEn: 'Branches', textAr: 'شبكة فروع المملكة.', textEn: 'KSA branch network.', handler: 'openBranchesManagement', permission: 'branches', visible: true },
             { id: 'dash-erp', zone: 'grid', dashGroup: 'erp', sortOrder: 1, iconClass: 'fas fa-cubes', titleAr: 'لوحة ERP', titleEn: 'ERP Console', textAr: 'نظام تخطيط موارد المصنع.', textEn: 'Factory ERP hub.', handler: 'scrollErpHub', permission: 'erp', visible: true },
             { id: 'dash-inventory', zone: 'grid', dashGroup: 'erp', sortOrder: 2, iconClass: 'fas fa-warehouse', titleAr: 'مخزون ERP', titleEn: 'Inventory WMS', textAr: 'SKU ومستودعات وتنبيهات.', textEn: 'SKU and warehouses.', cssClass: 'card-inventory-management', backgroundImage: 'pvc-background', handler: 'openErpInventory', permission: 'inventory', visible: true },
+            { id: 'dash-production', zone: 'grid', dashGroup: 'erp', sortOrder: 2.5, iconClass: 'fas fa-industry', titleAr: 'الإنتاج اليومي', titleEn: 'Daily Production', textAr: 'تسجيل كميات الإنتاج وإضافتها للمخزون.', textEn: 'Log production and feed inventory.', handler: 'openErpProduction', permission: 'production', visible: true },
+            { id: 'dash-procurement', zone: 'grid', dashGroup: 'erp', sortOrder: 2.6, iconClass: 'fas fa-truck-loading', titleAr: 'المشتريات', titleEn: 'Procurement', textAr: 'أوامر شراء وموردون وتكاليف.', textEn: 'Purchase orders and suppliers.', handler: 'openErpProcurement', permission: 'procurement', visible: true },
+            { id: 'dash-accounting', zone: 'grid', dashGroup: 'erp', sortOrder: 2.7, iconClass: 'fas fa-calculator', titleAr: 'المحاسبة', titleEn: 'Accounting', textAr: 'تحويلات · مبيعات · مشتريات · هامش.', textEn: 'Transfers, sales, purchases, margin.', handler: 'openErpAccounting', permission: 'accounting', visible: true },
+            { id: 'dash-pricelist', zone: 'grid', dashGroup: 'erp', sortOrder: 2.8, iconClass: 'fas fa-tags', titleAr: 'قائمة الأسعار', titleEn: 'Price List', textAr: 'الأسعار المعتمدة لمندوبي المبيعات.', textEn: 'Approved prices for sales reps.', handler: 'openSalesPriceList', permission: 'sales', visible: true },
+            { id: 'dash-rep-quote', zone: 'grid', dashGroup: 'erp', sortOrder: 2.9, iconClass: 'fas fa-file-signature', titleAr: 'بناء عرض سعر', titleEn: 'Quote Builder', textAr: 'عروض المندوبين من القائمة المعتمدة.', textEn: 'Rep quotes from approved list.', handler: 'openRepQuoteBuilder', permission: 'quotes', visible: true },
             { id: 'dash-sales-report', zone: 'grid', dashGroup: 'erp', sortOrder: 3, iconClass: 'fas fa-file-invoice-dollar', titleAr: 'تقارير المبيعات', titleEn: 'Sales Reports', textAr: 'تحليل أداء المبيعات.', textEn: 'Sales performance.', cssClass: 'card-sales-reports', backgroundImage: 'background', handler: 'openSalesManagement', permission: 'sales', visible: true },
             { id: 'dash-customers', zone: 'grid', dashGroup: 'erp', sortOrder: 4, iconClass: 'fas fa-user-friends', titleAr: 'إدارة العملاء', titleEn: 'CRM', textAr: 'علاقات العملاء.', textEn: 'Customer relationships.', cssClass: 'card-customer-management', backgroundImage: 'customer-complaints-background', handler: 'openCustomerServiceManagement', permission: 'customerService', visible: true },
             { id: 'dash-analytics', zone: 'grid', dashGroup: 'erp', sortOrder: 5, iconClass: 'fas fa-chart-pie', titleAr: 'التحليلات', titleEn: 'Analytics', textAr: 'منتجات · ألوان · شكاوى · زوار.', textEn: 'Live BI insights.', cssClass: 'card-analytics', backgroundImage: 'background-other-products', handler: 'openAdminAnalytics', permission: 'audit', visible: true },
@@ -8497,44 +8502,95 @@
             addAuditLog('حذف صورة معرض', itemId);
         }
 
-        async function addSitePartner() {
+        let scmPartnerEditorState = null;
+        let scmCertEditorState = null;
+
+        function openScmPartnerEditor(partnerId) {
             if (!requirePermission('content')) return;
-            const nameAr = prompt('اسم الشريك (عربي):');
-            if (nameAr === null) return;
-            const nameEn = prompt('اسم الشريك (إنجليزي — اختياري):', '') || '';
-            const logoUrl = await pickMediaPath({ label: 'شعار الشريك', defaultValue: 'images/logo.png' });
-            if (!logoUrl) { alert('يلزم شعار الشريك.'); return; }
-            const linkUrl = prompt('رابط الموقع (اختياري):', '') || '';
-            sitePartners.push({
-                id: 'partner-' + Date.now(),
-                nameAr: nameAr.trim(),
-                nameEn: nameEn.trim(),
-                logoUrl: logoUrl,
-                linkUrl: linkUrl.trim(),
-                sortOrder: sitePartners.length + 1,
-                visible: true,
-                logoOnly: true
-            });
-            saveContentData();
-            displayPartnersAdmin();
-            addAuditLog('إضافة شريك', nameAr);
+            const existing = partnerId ? sitePartners.find(function(p) { return p.id === partnerId; }) : null;
+            scmPartnerEditorState = {
+                id: existing ? existing.id : ('partner-' + Date.now()),
+                nameAr: existing ? (existing.nameAr || '') : '',
+                nameEn: existing ? (existing.nameEn || '') : '',
+                logoUrl: existing ? (existing.logoUrl || '') : '',
+                linkUrl: existing ? (existing.linkUrl || '') : '',
+                isNew: !existing
+            };
+            renderScmPartnerEditor();
         }
 
-        async function editSitePartner(partnerId) {
-            if (!requirePermission('content')) return;
-            const p = sitePartners.find(function(x) { return x.id === partnerId; });
-            if (!p) return;
-            const nameAr = prompt('اسم الشريك (عربي):', p.nameAr || '');
-            if (nameAr === null) return;
-            const nameEn = prompt('اسم الشريك (إنجليزي):', p.nameEn || '') || '';
-            const logoUrl = await pickMediaPath({ label: 'شعار الشريك', defaultValue: p.logoUrl || '' });
-            if (logoUrl) p.logoUrl = logoUrl;
-            p.nameAr = nameAr.trim();
-            p.nameEn = nameEn.trim();
-            p.linkUrl = (prompt('رابط الموقع:', p.linkUrl || '') || '').trim();
-            saveContentData();
-            displayPartnersAdmin();
+        function renderScmPartnerEditor() {
+            const host = document.getElementById('scm-partner-editor');
+            if (!host || !scmPartnerEditorState) return;
+            const st = scmPartnerEditorState;
+            const thumb = st.logoUrl
+                ? '<img src="' + escapeHtmlAttr(normalizeMediaPath(st.logoUrl)) + '" alt="">'
+                : '<i class="fas fa-image"></i>';
+            host.hidden = false;
+            host.innerHTML = '<h3><i class="fas fa-handshake"></i> ' + (st.isNew ? 'شريك جديد' : 'تعديل شريك') + '</h3>' +
+                '<div class="nebras-scm-editor-grid">' +
+                '<div class="nebras-scm-field"><label>الاسم (عربي) *</label><input type="text" id="scm-partner-name-ar" value="' + escapeHtmlAttr(st.nameAr) + '"></div>' +
+                '<div class="nebras-scm-field"><label>الاسم (إنجليزي)</label><input type="text" id="scm-partner-name-en" value="' + escapeHtmlAttr(st.nameEn) + '"></div>' +
+                '<div class="nebras-scm-field nebras-scm-field--full"><label>رابط الموقع (اختياري)</label><input type="text" id="scm-partner-link" value="' + escapeHtmlAttr(st.linkUrl) + '" placeholder="https://"></div>' +
+                '<div class="nebras-scm-field nebras-scm-field--full"><label>شعار الشريك *</label>' +
+                '<div class="nebras-scm-media-row"><div class="nebras-scm-media-preview" id="scm-partner-logo-preview">' + thumb + '</div>' +
+                '<input type="hidden" id="scm-partner-logo-url" value="' + escapeHtmlAttr(st.logoUrl) + '">' +
+                '<button type="button" class="nebras-scm-btn" onclick="scmPartnerEditorPickLogo()"><i class="fas fa-upload"></i> رفع شعار</button></div></div></div>' +
+                '<div class="nebras-scm-editor-actions">' +
+                '<button type="button" class="nebras-scm-btn nebras-scm-btn--primary" onclick="saveScmPartnerEditor()"><i class="fas fa-check"></i> حفظ</button>' +
+                '<button type="button" class="nebras-scm-btn" onclick="cancelScmPartnerEditor()">إلغاء</button></div>';
         }
+
+        async function scmPartnerEditorPickLogo() {
+            const url = await pickMediaPath({ label: 'شعار الشريك', defaultValue: scmPartnerEditorState ? scmPartnerEditorState.logoUrl : 'images/logo.png' });
+            if (!url || !scmPartnerEditorState) return;
+            scmPartnerEditorState.logoUrl = url;
+            const prev = document.getElementById('scm-partner-logo-preview');
+            const inp = document.getElementById('scm-partner-logo-url');
+            if (inp) inp.value = url;
+            if (prev) prev.innerHTML = '<img src="' + escapeHtmlAttr(normalizeMediaPath(url)) + '" alt="">';
+        }
+
+        function saveScmPartnerEditor() {
+            if (!requirePermission('content') || !scmPartnerEditorState) return;
+            const nameAr = (document.getElementById('scm-partner-name-ar') || {}).value || '';
+            const nameEn = (document.getElementById('scm-partner-name-en') || {}).value || '';
+            const linkUrl = (document.getElementById('scm-partner-link') || {}).value || '';
+            const logoUrl = (document.getElementById('scm-partner-logo-url') || {}).value || scmPartnerEditorState.logoUrl || '';
+            if (!nameAr.trim()) { alert('أدخل اسم الشريك بالعربية.'); return; }
+            if (!logoUrl.trim()) { alert('يلزم شعار الشريك.'); return; }
+            const payload = {
+                id: scmPartnerEditorState.id,
+                nameAr: nameAr.trim(),
+                nameEn: nameEn.trim(),
+                logoUrl: logoUrl.trim(),
+                linkUrl: linkUrl.trim(),
+                visible: true,
+                logoOnly: true
+            };
+            if (scmPartnerEditorState.isNew) {
+                payload.sortOrder = sitePartners.length + 1;
+                sitePartners.push(payload);
+                addAuditLog('إضافة شريك', nameAr);
+            } else {
+                const idx = sitePartners.findIndex(function(p) { return p.id === scmPartnerEditorState.id; });
+                if (idx >= 0) sitePartners[idx] = Object.assign({}, sitePartners[idx], payload);
+                addAuditLog('تعديل شريك', nameAr);
+            }
+            saveContentData();
+            cancelScmPartnerEditor();
+            displayPartnersAdmin();
+            renderDashboardCommandCenter();
+        }
+
+        function cancelScmPartnerEditor() {
+            scmPartnerEditorState = null;
+            const host = document.getElementById('scm-partner-editor');
+            if (host) { host.hidden = true; host.innerHTML = ''; }
+        }
+
+        function addSitePartner() { openScmPartnerEditor(); }
+        function editSitePartner(partnerId) { openScmPartnerEditor(partnerId); }
 
         function deleteSitePartner(partnerId) {
             if (!requirePermission('content')) return;
@@ -8542,64 +8598,131 @@
             sitePartners = sitePartners.filter(function(p) { return p.id !== partnerId; });
             saveContentData();
             displayPartnersAdmin();
+            renderDashboardCommandCenter();
         }
 
         function displayPartnersAdmin() {
             const list = document.getElementById('scm-partners-list');
             if (!list) return;
+            if (!(sitePartners || []).length) {
+                list.innerHTML = '<p class="scm-hint">لا يوجد شركاء — اضغط «شريك جديد» لإضافة شعار.</p>';
+                return;
+            }
             list.innerHTML = (sitePartners || []).map(function(p) {
-                return '<li><strong>' + escapeHtmlAttr(p.nameAr || p.id) + '</strong>' +
-                    '<small>شعار: ' + escapeHtmlAttr(p.logoUrl || '') + '</small>' +
-                    '<div class="scm-row-actions">' +
-                    '<button type="button" onclick="editSitePartner(\'' + p.id + '\')">تعديل</button>' +
-                    '<button type="button" onclick="deleteSitePartner(\'' + p.id + '\')">حذف</button></div></li>';
-            }).join('') || '<li>لا يوجد شركاء — اضغطي + شريك جديد</li>';
+                const logo = normalizeMediaPath(p.logoUrl || '');
+                const thumb = logo
+                    ? '<img src="' + escapeHtmlAttr(logo) + '" alt="' + escapeHtmlAttr(p.nameAr || '') + '">'
+                    : '<i class="fas fa-image"></i>';
+                return '<article class="scm-entity-card">' +
+                    '<div class="scm-entity-card-thumb">' + thumb + '</div>' +
+                    '<h4>' + escapeHtmlAttr(p.nameAr || p.id) + '</h4>' +
+                    (p.linkUrl ? '<p><i class="fas fa-link"></i> ' + escapeHtmlAttr(p.linkUrl) + '</p>' : '<p>بدون رابط</p>') +
+                    '<div class="scm-entity-card-actions">' +
+                    '<button type="button" onclick="editSitePartner(\'' + p.id + '\')"><i class="fas fa-pen"></i> تعديل</button>' +
+                    '<button type="button" onclick="deleteSitePartner(\'' + p.id + '\')"><i class="fas fa-trash"></i> حذف</button></div></article>';
+            }).join('');
         }
 
-        async function addSiteCertification() {
+        function openScmCertEditor(certId) {
             if (!requirePermission('content')) return;
-            const titleAr = prompt('عنوان الشهادة / الاعتماد (عربي):');
-            if (titleAr === null || !titleAr.trim()) return;
-            const titleEn = prompt('العنوان (إنجليزي — اختياري):', '') || '';
-            const captionAr = prompt('الشرح تحت الصورة/الوثيقة (عربي):', '') || '';
-            const captionEn = prompt('الشرح (إنجليزي — اختياري):', '') || '';
-            let mediaUrl = await pickMediaPath({ label: 'صورة الشهادة أو PDF (اختياري — يمكن الرفع لاحقاً)', defaultValue: '', accept: NEBRAS_MEDIA_ACCEPT_ALL });
-            if (!mediaUrl && !confirm('إضافة الاعتماد بدون ملف الآن؟ يمكنك رفع الصورة أو PDF لاحقاً من «تعديل».')) return;
+            const existing = certId ? siteCertifications.find(function(c) { return c.id === certId; }) : null;
+            scmCertEditorState = {
+                id: existing ? existing.id : ('cert-' + Date.now()),
+                titleAr: existing ? (existing.titleAr || '') : '',
+                titleEn: existing ? (existing.titleEn || '') : '',
+                captionAr: existing ? (existing.captionAr || '') : '',
+                captionEn: existing ? (existing.captionEn || '') : '',
+                mediaUrl: existing ? (existing.mediaUrl || '') : '',
+                mediaType: existing ? (existing.mediaType || 'image') : 'pending',
+                isNew: !existing
+            };
+            renderScmCertEditor();
+        }
+
+        function renderScmCertEditor() {
+            const host = document.getElementById('scm-cert-editor');
+            if (!host || !scmCertEditorState) return;
+            const st = scmCertEditorState;
+            const isPdf = st.mediaUrl && /\.pdf(\?|$)/i.test(st.mediaUrl);
+            let thumb = '<i class="fas fa-award"></i>';
+            if (st.mediaUrl) {
+                thumb = isPdf
+                    ? '<i class="fas fa-file-pdf"></i>'
+                    : '<img src="' + escapeHtmlAttr(normalizeMediaPath(st.mediaUrl)) + '" alt="">';
+            }
+            host.hidden = false;
+            host.innerHTML = '<h3><i class="fas fa-award"></i> ' + (st.isNew ? 'اعتماد / شهادة جديدة' : 'تعديل اعتماد') + '</h3>' +
+                '<div class="nebras-scm-editor-grid">' +
+                '<div class="nebras-scm-field"><label>العنوان (عربي) *</label><input type="text" id="scm-cert-title-ar" value="' + escapeHtmlAttr(st.titleAr) + '"></div>' +
+                '<div class="nebras-scm-field"><label>العنوان (إنجليزي)</label><input type="text" id="scm-cert-title-en" value="' + escapeHtmlAttr(st.titleEn) + '"></div>' +
+                '<div class="nebras-scm-field nebras-scm-field--full"><label>الشرح (عربي)</label><textarea id="scm-cert-caption-ar" rows="2">' + escapeHtmlAttr(st.captionAr) + '</textarea></div>' +
+                '<div class="nebras-scm-field nebras-scm-field--full"><label>الشرح (إنجليزي)</label><textarea id="scm-cert-caption-en" rows="2">' + escapeHtmlAttr(st.captionEn) + '</textarea></div>' +
+                '<div class="nebras-scm-field nebras-scm-field--full"><label>صورة أو PDF</label>' +
+                '<div class="nebras-scm-media-row"><div class="nebras-scm-media-preview' + (isPdf ? ' scm-entity-card-thumb--pdf' : '') + '" id="scm-cert-media-preview">' + thumb + '</div>' +
+                '<input type="hidden" id="scm-cert-media-url" value="' + escapeHtmlAttr(st.mediaUrl) + '">' +
+                '<button type="button" class="nebras-scm-btn" onclick="scmCertEditorPickMedia()"><i class="fas fa-upload"></i> رفع وسائط</button></div></div></div>' +
+                '<div class="nebras-scm-editor-actions">' +
+                '<button type="button" class="nebras-scm-btn nebras-scm-btn--primary" onclick="saveScmCertEditor()"><i class="fas fa-check"></i> حفظ</button>' +
+                '<button type="button" class="nebras-scm-btn" onclick="cancelScmCertEditor()">إلغاء</button></div>';
+        }
+
+        async function scmCertEditorPickMedia() {
+            const url = await pickMediaPath({ label: 'صورة الشهادة أو PDF', defaultValue: scmCertEditorState ? scmCertEditorState.mediaUrl : '', accept: NEBRAS_MEDIA_ACCEPT_ALL });
+            if (!url || !scmCertEditorState) return;
+            scmCertEditorState.mediaUrl = url;
+            scmCertEditorState.mediaType = /\.pdf(\?|$)/i.test(url) ? 'pdf' : 'image';
+            const prev = document.getElementById('scm-cert-media-preview');
+            const inp = document.getElementById('scm-cert-media-url');
+            if (inp) inp.value = url;
+            if (prev) {
+                prev.innerHTML = scmCertEditorState.mediaType === 'pdf'
+                    ? '<i class="fas fa-file-pdf"></i>'
+                    : '<img src="' + escapeHtmlAttr(normalizeMediaPath(url)) + '" alt="">';
+            }
+        }
+
+        function saveScmCertEditor() {
+            if (!requirePermission('content') || !scmCertEditorState) return;
+            const titleAr = (document.getElementById('scm-cert-title-ar') || {}).value || '';
+            const titleEn = (document.getElementById('scm-cert-title-en') || {}).value || '';
+            const captionAr = (document.getElementById('scm-cert-caption-ar') || {}).value || '';
+            const captionEn = (document.getElementById('scm-cert-caption-en') || {}).value || '';
+            const mediaUrl = (document.getElementById('scm-cert-media-url') || {}).value || scmCertEditorState.mediaUrl || '';
+            if (!titleAr.trim()) { alert('أدخل عنوان الاعتماد بالعربية.'); return; }
             const mediaType = mediaUrl && /\.pdf(\?|$)/i.test(mediaUrl) ? 'pdf' : (mediaUrl ? 'image' : 'pending');
-            siteCertifications.push({
-                id: 'cert-' + Date.now(),
+            const payload = {
+                id: scmCertEditorState.id,
                 titleAr: titleAr.trim(),
                 titleEn: titleEn.trim(),
                 captionAr: captionAr.trim(),
                 captionEn: captionEn.trim(),
-                mediaUrl: mediaUrl,
+                mediaUrl: mediaUrl.trim(),
                 mediaType: mediaType,
-                sortOrder: siteCertifications.length + 1,
                 visible: true
-            });
-            saveContentData();
-            displayCertificationsAdmin();
-            addAuditLog('إضافة اعتماد/شهادة', titleAr);
-        }
-
-        async function editSiteCertification(certId) {
-            if (!requirePermission('content')) return;
-            const c = siteCertifications.find(function(x) { return x.id === certId; });
-            if (!c) return;
-            const titleAr = prompt('العنوان (عربي):', c.titleAr || '');
-            if (titleAr === null) return;
-            c.titleAr = titleAr.trim();
-            c.titleEn = (prompt('العنوان (إنجليزي):', c.titleEn || '') || '').trim();
-            c.captionAr = (prompt('الشرح (عربي):', c.captionAr || '') || '').trim();
-            c.captionEn = (prompt('الشرح (إنجليزي):', c.captionEn || '') || '').trim();
-            const mediaUrl = await pickMediaPath({ label: 'صورة أو PDF', defaultValue: c.mediaUrl || '' });
-            if (mediaUrl) {
-                c.mediaUrl = mediaUrl;
-                c.mediaType = /\.pdf(\?|$)/i.test(mediaUrl) ? 'pdf' : 'image';
+            };
+            if (scmCertEditorState.isNew) {
+                siteCertifications.push(payload);
+                addAuditLog('إضافة اعتماد/شهادة', titleAr);
+            } else {
+                const idx = siteCertifications.findIndex(function(c) { return c.id === scmCertEditorState.id; });
+                if (idx >= 0) siteCertifications[idx] = Object.assign({}, siteCertifications[idx], payload);
+                addAuditLog('تعديل اعتماد', titleAr);
             }
             saveContentData();
+            cancelScmCertEditor();
             displayCertificationsAdmin();
+            renderDashboardCommandCenter();
         }
+
+        function cancelScmCertEditor() {
+            scmCertEditorState = null;
+            const host = document.getElementById('scm-cert-editor');
+            if (host) { host.hidden = true; host.innerHTML = ''; }
+        }
+
+        function addSiteCertification() { openScmCertEditor(); }
+
+        function editSiteCertification(certId) { openScmCertEditor(certId); }
 
         function deleteSiteCertification(certId) {
             if (!requirePermission('content')) return;
@@ -8607,19 +8730,34 @@
             siteCertifications = siteCertifications.filter(function(c) { return c.id !== certId; });
             saveContentData();
             displayCertificationsAdmin();
+            renderDashboardCommandCenter();
         }
 
         function displayCertificationsAdmin() {
             const list = document.getElementById('scm-certifications-list');
             if (!list) return;
+            if (!(siteCertifications || []).length) {
+                list.innerHTML = '<p class="scm-hint">لا توجد شهادات — اضغط «اعتماد / شهادة» للإضافة.</p>';
+                return;
+            }
             list.innerHTML = (siteCertifications || []).map(function(c) {
-                const mediaLabel = (c.mediaUrl && String(c.mediaUrl).trim()) ? (c.mediaType || 'image') : 'بانتظار الرفع';
-                return '<li><strong>' + escapeHtmlAttr(c.titleAr || c.id) + '</strong> [' + escapeHtmlAttr(mediaLabel) + ']' +
-                    '<small>' + escapeHtmlAttr(c.captionAr || '') + '</small>' +
-                    '<div class="scm-row-actions">' +
-                    '<button type="button" onclick="editSiteCertification(\'' + c.id + '\')">تعديل</button>' +
-                    '<button type="button" onclick="deleteSiteCertification(\'' + c.id + '\')">حذف</button></div></li>';
-            }).join('') || '<li>لا توجد شهادات — اضغطي + اعتماد / شهادة</li>';
+                const mediaUrl = normalizeMediaPath(c.mediaUrl || '');
+                const isPdf = mediaUrl && /\.pdf(\?|$)/i.test(mediaUrl);
+                let thumb = '<i class="fas fa-award"></i>';
+                if (mediaUrl) {
+                    thumb = isPdf
+                        ? '<i class="fas fa-file-pdf"></i>'
+                        : '<img src="' + escapeHtmlAttr(mediaUrl) + '" alt="' + escapeHtmlAttr(c.titleAr || '') + '">';
+                }
+                const mediaLabel = mediaUrl ? (c.mediaType || 'image') : 'بانتظار الرفع';
+                return '<article class="scm-entity-card">' +
+                    '<div class="scm-entity-card-thumb' + (isPdf ? ' scm-entity-card-thumb--pdf' : '') + '">' + thumb + '</div>' +
+                    '<h4>' + escapeHtmlAttr(c.titleAr || c.id) + '</h4>' +
+                    '<p>' + escapeHtmlAttr(c.captionAr || '') + ' <small>[' + escapeHtmlAttr(mediaLabel) + ']</small></p>' +
+                    '<div class="scm-entity-card-actions">' +
+                    '<button type="button" onclick="editSiteCertification(\'' + c.id + '\')"><i class="fas fa-pen"></i> تعديل</button>' +
+                    '<button type="button" onclick="deleteSiteCertification(\'' + c.id + '\')"><i class="fas fa-trash"></i> حذف</button></div></article>';
+            }).join('');
         }
 
         function renderDashboardTiles() {
@@ -8644,7 +8782,12 @@
                 const text = getLocalizedCatalogField(tile, 'text', lang);
                 const extraClass = tile.cssClass ? ' ' + escapeHtmlAttr(tile.cssClass) : '';
                 const zoneClass = zone === 'grid' ? ' dashboard-tile-card--grid' : ' dashboard-tile-card--quick';
+                const grp = tile.dashGroup && DASHBOARD_GROUP_LABELS[tile.dashGroup]
+                    ? (lang === 'en' ? DASHBOARD_GROUP_LABELS[tile.dashGroup].en : DASHBOARD_GROUP_LABELS[tile.dashGroup].ar)
+                    : '';
+                const grpHtml = grp ? '<span class="dashboard-tile-group">' + escapeHtmlAttr(grp) + '</span>' : '';
                 return '<div class="dashboard-tile-card' + zoneClass + extraClass + '" data-tile-id="' + escapeHtmlAttr(tile.id) + '" style="--tile-i:' + index + '" onclick="onDashboardTileClick(\'' + String(tile.id).replace(/'/g, "\\'") + '\')" role="button" tabindex="0">' +
+                    grpHtml +
                     '<div class="dashboard-tile-glow" aria-hidden="true"></div>' +
                     '<div class="dashboard-tile-icon"><i class="' + escapeHtmlAttr(tile.iconClass || 'fas fa-star') + '"></i></div>' +
                     '<h3>' + escapeHtmlAttr(title) + '</h3>' +
@@ -10166,14 +10309,105 @@
             const lowStock = erpInventory.filter(function(i) {
                 return Number(i.qty) <= Number(i.minQty || 0);
             }).length;
+            const today = erpToday();
+            let productionToday = 0;
+            (erpProduction || []).forEach(function(p) {
+                if (p && p.date === today) productionToday += erpNum(p.qty);
+            });
+            let purchasesTotal = 0;
+            (erpPurchases || []).forEach(function(p) { purchasesTotal += erpNum(p.cost || p.total); });
             return {
                 skuCount: erpInventory.length,
                 lowStock: lowStock,
                 salesCount: (salesData || []).length,
                 ordersCount: erpOrders.length,
                 complaintsCount: Object.keys(complaints || {}).length,
-                branchesCount: (branchesData || []).length
+                branchesCount: (branchesData || []).length,
+                productionToday: productionToday,
+                productionEntries: (erpProduction || []).length,
+                purchasesCount: (erpPurchases || []).length,
+                purchasesTotal: purchasesTotal,
+                priceListCount: (salesPriceList || []).length,
+                usersCount: (adminUsers || []).length,
+                partnersCount: (sitePartners || []).length,
+                certsCount: (siteCertifications || []).length
             };
+        }
+
+        const DASHBOARD_GROUP_LABELS = {
+            command: { ar: 'حوكمة', en: 'Governance' },
+            erp: { ar: 'ERP', en: 'ERP' }
+        };
+
+        function renderDashboardCommandCenter() {
+            const root = document.getElementById('dashboard-command-center');
+            if (!root || !currentAdmin) return;
+            const lang = currentLang || 'ar';
+            const roleDef = getRoleDefinition(currentAdmin.role);
+            const roleLabel = lang === 'en' && roleDef ? roleDef.labelEn : getRoleLabel(currentAdmin.role);
+            const roleIcon = roleDef ? roleDef.icon : 'fas fa-user-shield';
+            const welcomeEl = document.getElementById('dcc-welcome-title');
+            const subEl = document.getElementById('dcc-welcome-sub');
+            const roleText = document.getElementById('dcc-role-text');
+            const roleBadge = document.getElementById('dcc-role-badge');
+            if (welcomeEl) welcomeEl.textContent = (lang === 'en' ? 'Welcome, ' : 'مرحباً، ') + (currentAdmin.username || '');
+            if (subEl) subEl.textContent = lang === 'en'
+                ? 'Dynamic platform — admin · ERP · store · showroom'
+                : 'منصة ديناميكية — إدارة · ERP · متجر · معرض';
+            if (roleText) roleText.textContent = roleLabel || currentAdmin.role;
+            if (roleBadge && roleDef && roleDef.accent) {
+                roleBadge.style.background = 'linear-gradient(135deg, ' + roleDef.accent + ' 0%, ' + (roleDef.accent) + 'cc 100%)';
+            }
+            const roleIconEl = roleBadge ? roleBadge.querySelector('i') : null;
+            if (roleIconEl && roleIcon) roleIconEl.className = roleIcon;
+
+            const syncEl = document.getElementById('dcc-sync-status');
+            const syncText = document.getElementById('dcc-sync-text');
+            const cloudOn = !!(supabaseClient && typeof supabaseClient.from === 'function');
+            if (syncEl) syncEl.classList.toggle('is-offline', !cloudOn);
+            if (syncText) {
+                syncText.textContent = cloudOn
+                    ? (lang === 'en' ? 'Live sync — Supabase + local' : 'مزامنة حية — Supabase + محلي')
+                    : (lang === 'en' ? 'Local mode — configure Supabase' : 'وضع محلي — فعّل Supabase للمزامنة');
+            }
+
+            const kpis = getErpKpis();
+            const kpiStrip = document.getElementById('dcc-kpi-strip');
+            if (kpiStrip) {
+                const items = [
+                    { v: kpis.skuCount, l: lang === 'en' ? 'SKU items' : 'أصناف المخزون', alert: false },
+                    { v: kpis.lowStock, l: lang === 'en' ? 'Low stock' : 'تحت الحد الأدنى', alert: kpis.lowStock > 0 },
+                    { v: kpis.productionToday, l: lang === 'en' ? 'Produced today' : 'إنتاج اليوم', alert: false },
+                    { v: kpis.salesCount, l: lang === 'en' ? 'Sales records' : 'عمليات مبيعات', alert: false },
+                    { v: kpis.purchasesCount, l: lang === 'en' ? 'Purchases' : 'مشتريات', alert: false },
+                    { v: kpis.priceListCount, l: lang === 'en' ? 'Price list' : 'قائمة أسعار', alert: false },
+                    { v: kpis.usersCount, l: lang === 'en' ? 'Team users' : 'مستخدمون', alert: false },
+                    { v: kpis.branchesCount, l: lang === 'en' ? 'Branches' : 'فروع', alert: false }
+                ];
+                kpiStrip.innerHTML = items.map(function(k) {
+                    return '<div class="dcc-kpi' + (k.alert ? ' dcc-kpi--alert' : '') + '">' +
+                        '<strong>' + escapeHtmlAttr(String(k.v)) + '</strong>' +
+                        '<span>' + escapeHtmlAttr(k.l) + '</span></div>';
+                }).join('');
+            }
+
+            const quickEl = document.getElementById('dcc-quick-actions');
+            if (quickEl) {
+                const actions = [];
+                if (canManage('content')) actions.push({ icon: 'fas fa-pen-to-square', label: lang === 'en' ? 'Site content' : 'محتوى الموقع', fn: 'openSiteContentManager()', primary: true });
+                if (canManage('users')) actions.push({ icon: 'fas fa-users-cog', label: lang === 'en' ? 'Users' : 'المستخدمون', fn: 'openUserManagement()' });
+                if (canManage('inventory')) actions.push({ icon: 'fas fa-warehouse', label: lang === 'en' ? 'Inventory' : 'المخزون', fn: 'openErpInventory()' });
+                if (canManage('production')) actions.push({ icon: 'fas fa-industry', label: lang === 'en' ? 'Production' : 'الإنتاج', fn: 'openErpProduction()' });
+                if (canManage('sales')) actions.push({ icon: 'fas fa-tags', label: lang === 'en' ? 'Price list' : 'قائمة الأسعار', fn: 'openSalesPriceList()' });
+                if (canManage('quotes')) actions.push({ icon: 'fas fa-file-signature', label: lang === 'en' ? 'Quote builder' : 'عرض سعر', fn: 'openRepQuoteBuilder()' });
+                if (canManage('accounting')) actions.push({ icon: 'fas fa-calculator', label: lang === 'en' ? 'Accounting' : 'المحاسبة', fn: 'openErpAccounting()' });
+                if (canManage('audit')) actions.push({ icon: 'fas fa-chart-pie', label: lang === 'en' ? 'Analytics' : 'التحليلات', fn: 'openAdminAnalytics()' });
+                if (isMainGovernanceAdmin()) actions.push({ icon: 'fas fa-sliders', label: lang === 'en' ? 'Settings' : 'الإعدادات', fn: 'openSystemSettings()' });
+                quickEl.innerHTML = actions.map(function(a) {
+                    return '<button type="button" class="dcc-quick-btn' + (a.primary ? ' dcc-quick-btn--primary' : '') + '" onclick="' + a.fn + '">' +
+                        '<i class="' + escapeHtmlAttr(a.icon) + '" aria-hidden="true"></i> ' + escapeHtmlAttr(a.label) + '</button>';
+                }).join('');
+            }
         }
 
         function openErpModule(moduleId) {
@@ -10261,6 +10495,7 @@
                     return '<tr><td>' + escapeHtmlAttr(area) + '</td><td>' + escapeHtmlAttr(global) + '</td><td class="' + pc + '">' + escapeHtmlAttr(nebras) + '</td></tr>';
                 }).join('');
             }
+            renderDashboardCommandCenter();
         }
 
         function openErpInventory() {
@@ -11403,6 +11638,7 @@
             syncAdminSessionClass();
             renderPlatformHubPanel();
             renderErpHubPanel();
+            renderDashboardCommandCenter();
             renderDashboardTiles();
             renderCompanyLegalBars();
             applyStaticUiTranslations(siteText[currentLang || 'ar'] || siteText.ar);
@@ -20242,6 +20478,18 @@
         window.addSitePartner = addSitePartner;
         window.editSitePartner = editSitePartner;
         window.deleteSitePartner = deleteSitePartner;
+        window.openScmPartnerEditor = openScmPartnerEditor;
+        window.saveScmPartnerEditor = saveScmPartnerEditor;
+        window.cancelScmPartnerEditor = cancelScmPartnerEditor;
+        window.scmPartnerEditorPickLogo = scmPartnerEditorPickLogo;
+        window.addSiteCertification = addSiteCertification;
+        window.editSiteCertification = editSiteCertification;
+        window.deleteSiteCertification = deleteSiteCertification;
+        window.openScmCertEditor = openScmCertEditor;
+        window.saveScmCertEditor = saveScmCertEditor;
+        window.cancelScmCertEditor = cancelScmCertEditor;
+        window.scmCertEditorPickMedia = scmCertEditorPickMedia;
+        window.renderDashboardCommandCenter = renderDashboardCommandCenter;
         window.openUserManagement = openUserManagement;
         window.openSalesManagement = openSalesManagement;
         window.openErpInventory = openErpInventory;

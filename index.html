@@ -87,6 +87,7 @@
     <link rel="stylesheet" href="css/23-cart-premium.css">
     <link rel="stylesheet" href="css/24-wpc-strengths-light.css">
     <link rel="stylesheet" href="css/27-governance-users.css">
+    <link rel="stylesheet" href="css/28-dashboard-erp-command.css">
 </head>
 <body id="nebras-platform" class="platform-storefront" data-platform-layer="storefront">
 
@@ -154,22 +155,22 @@
             <div class="header-hero-band" id="header-hero-band">
                 <div class="header-hero-core" id="header-campaign-panel" aria-label="حملة نبراس">
                     <div class="header-brand-row">
-                        <div class="lang-dropdown">
-                            <button type="button" class="lang-btn" id="lang-toggle-btn" aria-haspopup="true" aria-expanded="false" title="اختيار اللغة / Language">
-                                <i class="fas fa-language" aria-hidden="true"></i>
-                                <span id="lang-current-label">العربية</span>
-                            </button>
-                            <div class="lang-menu" id="lang-menu">
-                                <a href="#" data-lang="ar">العربية</a>
-                                <a href="#" data-lang="en">English</a>
-                                <a href="#" data-lang="zh">中文</a>
-                            </div>
-                        </div>
-                        <p class="header-campaign-title" id="hero-title"></p>
+                <div class="lang-dropdown">
+                    <button type="button" class="lang-btn" id="lang-toggle-btn" aria-haspopup="true" aria-expanded="false" title="اختيار اللغة / Language">
+                        <i class="fas fa-language" aria-hidden="true"></i>
+                        <span id="lang-current-label">العربية</span>
+                    </button>
+                    <div class="lang-menu" id="lang-menu">
+                        <a href="#" data-lang="ar">العربية</a>
+                        <a href="#" data-lang="en">English</a>
+                        <a href="#" data-lang="zh">中文</a>
                     </div>
+                </div>
+                        <p class="header-campaign-title" id="hero-title"></p>
+            </div>
                     <div class="header-hero-divider" aria-hidden="true"></div>
                     <h1 class="header-campaign-headline" id="header-campaign-headline"></h1>
-                    <p class="header-campaign-tagline" id="header-campaign-tagline"></p>
+                <p class="header-campaign-tagline" id="header-campaign-tagline"></p>
                     <div class="header-campaign-action-strip" id="header-campaign-action-strip">
                         <div class="header-campaign-door-aside" id="header-campaign-door-aside" role="button" tabindex="0" aria-label="صمّم بابك — معاينة أبواب WPC">
                             <span class="header-showcase-chip header-showcase-chip--doors"><i class="fas fa-pencil-ruler" aria-hidden="true"></i> صمّم بابك</span>
@@ -177,12 +178,12 @@
                                 <div class="nebras-mini-showcase nebras-mini-showcase--doors nebras-mini-showcase--hero nebras-mini-showcase--interactive" id="header-hero-door-showcase"></div>
                             </div>
                         </div>
-                        <div class="header-campaign-cta">
-                            <button type="button" class="header-cta header-cta--primary" id="header-explore-btn" onclick="openNebrasWorkspace({pillar:'store',view:'catalog-all'})"></button>
-                            <button type="button" class="header-cta header-cta--ghost" id="header-quote-btn" onclick="confirmAndOpenQuote()"></button>
+                <div class="header-campaign-cta">
+                    <button type="button" class="header-cta header-cta--primary" id="header-explore-btn" onclick="openNebrasWorkspace({pillar:'store',view:'catalog-all'})"></button>
+                    <button type="button" class="header-cta header-cta--ghost" id="header-quote-btn" onclick="confirmAndOpenQuote()"></button>
                         </div>
-                    </div>
-                    <div class="header-campaign-stats" id="header-campaign-stats" aria-label="إنجازات المصنع"></div>
+                </div>
+                <div class="header-campaign-stats" id="header-campaign-stats" aria-label="إنجازات المصنع"></div>
                 </div>
                 <aside class="header-hero-rail header-hero-rail--partners" id="header-aside-partners" aria-label="شركاؤنا">
                     <span class="header-showcase-chip header-showcase-chip--partners"><i class="fas fa-handshake" aria-hidden="true"></i> شركاؤنا</span>
@@ -601,7 +602,7 @@
             </div>
         </div>
         <div class="quote-a4-preview-stage" id="quote-a4-preview-stage">
-            <div class="quote-a4" id="quote-a4-document"></div>
+        <div class="quote-a4" id="quote-a4-document"></div>
         </div>
     </div>
 
@@ -622,7 +623,7 @@
                 <div class="nebras-mini-showcase nebras-mini-showcase--doors" id="dashboard-door-showcase" aria-label="معاينة أبواب WPC"></div>
                 <div class="dashboard-identity-headcopy">
                     <p class="dashboard-identity-kicker" id="dashboard-identity-kicker"><i class="fas fa-star" aria-hidden="true"></i> شركة مصنع نبراس للبلاستيك</p>
-                    <h3 id="dashboard-legal-title" class="admin-only-ui">بيانات مصنع نبراس الرسمية (داخلية + خارجية)</h3>
+            <h3 id="dashboard-legal-title" class="admin-only-ui">بيانات مصنع نبراس الرسمية (داخلية + خارجية)</h3>
                 </div>
             </div>
             <div class="legal-grid" id="dashboard-legal-grid"></div>
@@ -638,6 +639,22 @@
             <button type="button" id="dash-nav-settings" onclick="openDashboardNavSettings()">الإعدادات</button>
             <button type="button" id="dash-nav-official" onclick="scrollToDashboardSection('dashboard-official-hub')">لينكتري و QR</button>
         </nav>
+        <section class="dashboard-command-center admin-only-ui" id="dashboard-command-center" aria-label="مركز قيادة نبراس ERP">
+            <div class="dcc-head">
+                <div class="dcc-welcome">
+                    <p class="dcc-kicker"><i class="fas fa-crown" aria-hidden="true"></i> مركز قيادة نبراس ERP</p>
+                    <h2 id="dcc-welcome-title">مرحباً بك في منصة نبراس</h2>
+                    <p id="dcc-welcome-sub">منصة ديناميكية متكاملة — إدارة · ERP · متجر · معرض</p>
+                    <span class="dcc-role-badge" id="dcc-role-badge"><i class="fas fa-user-shield" aria-hidden="true"></i> <span id="dcc-role-text"></span></span>
+                </div>
+                <div class="dcc-sync" id="dcc-sync-status" role="status">
+                    <i class="fas fa-cloud" aria-hidden="true"></i>
+                    <span id="dcc-sync-text">منصة ديناميكية — Git + Supabase</span>
+                </div>
+            </div>
+            <div class="dcc-kpis" id="dcc-kpi-strip" aria-live="polite"></div>
+            <div class="dcc-quick" id="dcc-quick-actions"></div>
+        </section>
         <div class="dashboard-hub-intro admin-only-ui" id="dashboard-hub-intro">
             <h3 id="dashboard-hub-intro-title">مركز التحكم — نبراس</h3>
             <p id="dashboard-hub-intro-text">منصة · معرض · متجر — كل أيقونة إدارية تفتح نظامها. المحتوى والصور والـ PDF من إدارة المحتوى دون برمجة.</p>
@@ -1060,11 +1077,24 @@
     </div>
 
     <div class="admin-section" id="site-content-management">
-        <div class="admin-modal site-content-modal">
-            <h2 id="scm-main-title">إدارة محتوى الموقع — بدون تعديل الكود</h2>
-            <p class="scm-hint admin-only-ui" id="scm-main-hint">صلاحية <strong>المحتوى</strong> (مدير الإدارة / Super Admin): تحكم كامل بالموقع — منتجات، أيقونات (صور · PDF · أصناف)، <strong>معرض نبراس</strong> (منتجات + مشاريع)، شركاء، شهادات، بانر الهيدر. متجر = سلة وعرض سعر.</p>
+        <div class="admin-modal site-content-modal nebras-scm-modal">
+            <div class="nebras-scm-head">
+                <div class="nebras-scm-head-title">
+                    <i class="fas fa-pen-to-square" aria-hidden="true"></i>
+                    <div>
+                        <h2 id="scm-main-title">إدارة محتوى الموقع</h2>
+                        <p class="nebras-scm-sub" id="scm-main-hint">تحكم كامل بالموقع — منتجات · معرض · شركاء · شهادات — ديناميكي بدون كود. كل تعديل يُحفظ ويُزامَن تلقائياً.</p>
+                    </div>
+                </div>
+                <button type="button" class="nebras-scm-close" onclick="closeAdminSection('site-content-management')" aria-label="إغلاق"><i class="fas fa-xmark"></i></button>
+            </div>
+            <div class="nebras-scm-body">
             <div id="scm-governance-status" class="scm-governance-status" aria-live="polite"></div>
-            <button type="button" class="primary admin-only-ui" style="margin:0 0 12px" onclick="openDoorDesignerAdmin()"><i class="fas fa-pencil-ruler"></i> إعداد «صمّم بابك مع نبراس» (3D)</button>
+            <div class="nebras-scm-toolbar">
+                <button type="button" class="nebras-scm-btn nebras-scm-btn--primary" onclick="openDoorDesignerAdmin()"><i class="fas fa-pencil-ruler"></i> مصمم الأبواب 3D</button>
+                <button type="button" class="nebras-scm-btn" onclick="switchScmTab('showroom')"><i class="fas fa-images"></i> معرض نبراس</button>
+                <button type="button" class="nebras-scm-btn" onclick="switchScmTab('partners')"><i class="fas fa-handshake"></i> الشركاء</button>
+            </div>
             <div class="scm-tabs" role="tablist">
                 <button type="button" class="active" id="scm-tab-products" data-scm-tab="products" onclick="switchScmTab('products')">المنتجات</button>
                 <button type="button" id="scm-tab-visitor" data-scm-tab="visitor" onclick="switchScmTab('visitor')">أيقونات الزوار</button>
@@ -1105,20 +1135,26 @@
                 <ul id="scm-about-list" class="scm-list"></ul>
             </div>
             <div id="scm-panel-partners" class="scm-panel">
-                <p class="scm-hint admin-only-ui">شعارات الشركاء (صورة + رابط اختياري) — شريط متحرك في الموقع وداخل الداشبورد مثل موقع مرجعي. ابدأوا فارغين ثم أضيفوا من هنا.</p>
-                <button class="primary" type="button" onclick="addSitePartner()">+ شريك جديد</button>
-                <ul id="scm-partners-list" class="scm-list"></ul>
+                <p class="scm-hint admin-only-ui">شعارات الشركاء (صورة + رابط اختياري) — شريط متحرك في الموقع وداخل الداشبورد.</p>
+                <div class="nebras-scm-toolbar">
+                    <button class="nebras-scm-btn nebras-scm-btn--primary" type="button" onclick="openScmPartnerEditor()"><i class="fas fa-plus"></i> شريك جديد</button>
+                </div>
+                <div class="nebras-scm-editor" id="scm-partner-editor" hidden></div>
+                <div id="scm-partners-list" class="scm-cards-grid"></div>
             </div>
             <div id="scm-panel-certifications" class="scm-panel">
-                <p class="scm-hint admin-only-ui">اعتمادات وشهادات نبراس — ارفعوا صور الشهادات أو ملفات PDF فقط (لا صور أبواب). يمكن إضافة العنوان أولاً ثم رفع الوثيقة لاحقاً من «تعديل».</p>
-                <button class="primary" type="button" onclick="addSiteCertification()">+ اعتماد / شهادة</button>
-                <ul id="scm-certifications-list" class="scm-list"></ul>
+                <p class="scm-hint admin-only-ui">اعتمادات وشهادات نبراس — صور أو PDF. يمكن إضافة العنوان أولاً ثم رفع الوثيقة لاحقاً.</p>
+                <div class="nebras-scm-toolbar">
+                    <button class="nebras-scm-btn nebras-scm-btn--primary" type="button" onclick="openScmCertEditor()"><i class="fas fa-plus"></i> اعتماد / شهادة</button>
+                </div>
+                <div class="nebras-scm-editor" id="scm-cert-editor" hidden></div>
+                <div id="scm-certifications-list" class="scm-cards-grid"></div>
             </div>
             <div id="scm-panel-showroom" class="scm-panel">
                 <p class="scm-hint admin-only-ui" id="scm-showroom-hint">معرض نبراس — 5 أقسام: <strong>أبواب نبراس · خزائن نبراس · أبواب WPC · خزائن WPC · قطع CNC</strong> + مشاريع NHC. ارفعي صور بجودة كاملة — الضغط يفتح الصورة الأصلية.</p>
                 <div id="scm-showroom-sections-root"></div>
             </div>
-            <button type="button" onclick="closeAdminSection('site-content-management')">إغلاق</button>
+            </div>
         </div>
     </div>
 
@@ -1197,7 +1233,7 @@
                 <h3><i class="fas fa-images"></i> ألبوم الصور</h3>
                 <ul id="nebras-vicon-album-list" class="nebras-media-item-list"></ul>
                 <div class="nebras-vicon-media-actions">
-                    <button type="button" class="secondary" onclick="nebrasViconEditorAddAlbum()"><i class="fas fa-plus"></i> إضافة صورة للألبوم</button>
+                <button type="button" class="secondary" onclick="nebrasViconEditorAddAlbum()"><i class="fas fa-plus"></i> إضافة صورة للألبوم</button>
                     <button type="button" class="secondary scm-btn-danger" onclick="nebrasViconEditorClearAlbum()"><i class="fas fa-trash"></i> حذف كل الصور</button>
                 </div>
             </div>
@@ -1205,7 +1241,7 @@
                 <h3><i class="fas fa-file-pdf"></i> وثائق وPDF</h3>
                 <ul id="nebras-vicon-docs-list" class="nebras-media-item-list"></ul>
                 <div class="nebras-vicon-media-actions">
-                    <button type="button" class="secondary" onclick="nebrasViconEditorAddDocument()"><i class="fas fa-plus"></i> إضافة وثيقة / PDF</button>
+                <button type="button" class="secondary" onclick="nebrasViconEditorAddDocument()"><i class="fas fa-plus"></i> إضافة وثيقة / PDF</button>
                     <button type="button" class="secondary scm-btn-danger" onclick="nebrasViconEditorClearDocs()"><i class="fas fa-trash"></i> حذف كل الوثائق</button>
                 </div>
             </div>
