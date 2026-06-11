@@ -707,3 +707,46 @@
         grid-template-columns: 1fr;
     }
 }
+
+
+/* Phase 17 — HR dept governance */
+.hr-gov-owner-banner {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    padding: 16px 18px;
+    margin-bottom: 16px;
+    border-radius: 12px;
+    border: 1px solid #bee3f8;
+    background: linear-gradient(135deg, #ebf8ff 0%, #f0fff4 100%);
+}
+
+.hr-gov-owner-banner--main {
+    border-color: #f6e05e;
+    background: linear-gradient(135deg, #fffff0 0%, #ebf8ff 100%);
+}
+
+.hr-gov-owner-banner > i {
+    font-size: 1.6rem;
+    color: #2b6cb0;
+    margin-top: 2px;
+}
+
+.hr-gov-owner-banner strong {
+    display: block;
+    color: #1a365d;
+    margin-bottom: 4px;
+}
+
+.hr-gov-owner-banner p {
+    margin: 0;
+    font-size: 0.85rem;
+    color: #4a5568;
+    line-height: 1.5;
+}
+
+.hr-gov-owner-banner em {
+    font-style: normal;
+    font-weight: 600;
+    color: #2c5282;
+}

@@ -265,8 +265,9 @@
             sales_rep: {
                 labelAr: 'مندوب مبيعات', labelEn: 'Sales Representative',
                 icon: 'fas fa-user-headset', accent: '#2aa9c9',
-                descAr: 'ينشئ عروض الأسعار للعملاء من البيانات التي يحددها مدير المبيعات.',
-                permissions: ['quotes', 'customerService']
+                descAr: 'عروض أسعار فقط — إنشاء · معاينة · استخراج PDF · تنزيل للعملاء. لا صلاحيات أخرى.',
+                permissions: ['quotes'],
+                quotesOnly: true
             },
             accountant: {
                 labelAr: 'المحاسب', labelEn: 'Accountant',
@@ -2199,6 +2200,7 @@
             { id: 'dash-accounting', zone: 'grid', dashGroup: 'erp', sortOrder: 8, iconClass: 'fas fa-calculator', titleAr: 'المحاسبة', titleEn: 'Accounting', textAr: 'تحويلات بنكية ومبيعات وأرباح.', textEn: 'Transfers, sales, margins.', cssClass: 'card-accounting', handler: 'openErpAccounting', permission: 'accounting', visible: true },
             { id: 'dash-pricelist', zone: 'grid', dashGroup: 'erp', sortOrder: 9, iconClass: 'fas fa-tags', titleAr: 'قائمة الأسعار', titleEn: 'Price List', textAr: 'أسعار معتمدة للمندوبين.', textEn: 'Approved rep pricing.', cssClass: 'card-pricelist', handler: 'openSalesPriceList', permission: 'sales', visible: true },
             { id: 'dash-rep-quotes', zone: 'grid', dashGroup: 'erp', sortOrder: 10, iconClass: 'fas fa-file-signature', titleAr: 'بناء عرض سعر', titleEn: 'Quote Builder', textAr: 'للمندوبين — من القائمة المعتمدة.', textEn: 'Sales rep quote builder.', cssClass: 'card-rep-quotes', handler: 'openRepQuoteBuilder', permission: 'quotes', visible: true },
+            { id: 'dash-rep-my-quotes', zone: 'grid', dashGroup: 'erp', sortOrder: 11, iconClass: 'fas fa-folder-open', titleAr: 'عروضي المحفوظة', titleEn: 'My Quotes', textAr: 'معاينة وتنزيل عروضك المحفوظة.', textEn: 'Preview and download your saved quotes.', cssClass: 'card-rep-my-quotes', handler: 'openRepMyQuotes', permission: 'quotes', visible: true },
             { id: 'dash-orders', zone: 'grid', dashGroup: 'erp', sortOrder: 11, iconClass: 'fas fa-truck', titleAr: 'الطلبات OMS', titleEn: 'Orders OMS', textAr: 'تسجيل ومتابعة حالات التنفيذ.', textEn: 'Order fulfillment tracking.', cssClass: 'card-orders', handler: 'openErpOrders', permission: 'orders', visible: true },
             { id: 'dash-warehouse-transfers', zone: 'grid', dashGroup: 'erp', sortOrder: 12, iconClass: 'fas fa-dolly', titleAr: 'تحويلات المستودع', titleEn: 'Stock Transfers', textAr: 'نقل الكميات بين الفروع.', textEn: 'Inter-branch stock moves.', cssClass: 'card-warehouse-transfers', handler: 'openErpWarehouseTransfers', permission: 'warehouse', visible: true },
             { id: 'dash-settings', zone: 'quick', dashGroup: 'command', sortOrder: 11, iconClass: 'fas fa-sliders-h', titleAr: 'إعدادات المنصة', titleEn: 'Platform Settings', textAr: 'بانر، بنوك، ضريبة، احتفال — Super Admin.', textEn: 'Banner, banks, VAT, occasions.', handler: 'openSystemSettings', permission: 'users', superadminOnly: true, visible: true }
@@ -4796,6 +4798,7 @@
                 delete complaints[id];
             });
             saveSystemData();
+            if (typeof persistAnalyticsGovernanceLocal === 'function') persistAnalyticsGovernanceLocal();
             renderAdminAnalyticsPanel();
         }
 
@@ -8250,7 +8253,11 @@
 
         function openSalesQuoteA4Preview(entry, options) {
             options = options || {};
-            if (!requirePermission('sales', 'معاينة عرض السعر تتطلب صلاحية المبيعات.')) return;
+            if (!options.repAccess && !canAccessQuoteDocumentOps()) {
+                if (!requirePermission('sales', 'معاينة عرض السعر تتطلب صلاحية المبيعات.')) return;
+            } else if (!canAccessQuoteDocumentOps()) {
+                if (!requirePermission('quotes', 'صلاحية عروض الأسعار مطلوبة.')) return;
+            }
             const overlay = document.getElementById('quote-print-overlay');
             const doc = document.getElementById('quote-a4-document');
             if (!overlay || !doc) return;
@@ -12373,7 +12380,8 @@
                     '<button type="button" class="nebras-users-btn" onclick="previewRepQuoteA4()"><i class="fas fa-eye"></i> معاينة A4 (ورقة 1)</button>' +
                     '<button type="button" class="nebras-users-btn" onclick="downloadRepQuoteA4Pdf()"><i class="fas fa-file-pdf"></i> PDF 4 صفحات</button>' +
                     '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="saveRepQuote()"><i class="fas fa-floppy-disk"></i> حفظ وإرسال للمبيعات</button>' +
-                '</div>';
+                '</div>' +
+                (typeof renderRepMyQuotesSection === 'function' ? renderRepMyQuotesSection() : '');
         }
 
         function captureRepQuoteHeader() {
@@ -12426,6 +12434,9 @@
                 quoteType: 'quote',
                 messageFormat: 'a4-quote-pdf',
                 by: erpActor(),
+                repUsername: currentAdmin ? currentAdmin.username : '',
+                repUserId: currentAdmin ? currentAdmin.id : '',
+                branchId: (typeof getAdminAssignedBranchId === 'function' ? getAdminAssignedBranchId(currentAdmin) : null) || 'hq',
                 assignedBranchCity: (currentAdmin && currentAdmin.assignedBranchCity) || ''
             };
             await attachSalesQuoteA4Pdf(entry);
@@ -12885,11 +12896,16 @@
         /** تخصيص لوحة التحكم حسب الدور — المرحلة 3 */
         const DASHBOARD_ROLE_FOCUS = {
             sales_rep: {
-                greetingAr: 'مركز مندوب المبيعات',
-                descAr: 'أنشئ عروض الأسعار للعملاء من قائمة الأسعار التي يحددها مدير المبيعات.',
-                scrollTo: 'erp-hub-panel',
+                greetingAr: 'مركز عروض الأسعار — مندوب المبيعات',
+                descAr: 'مهمتك: بناء عروض سعر للعملاء · معاينة A4 · استخراج وتنزيل PDF — من القائمة المعتمدة فقط.',
+                scrollTo: 'dashboard-actions-grid',
                 openHandler: 'openRepQuoteBuilder',
-                hideSections: ['dashboard-company-identity', 'dashboard-partners-block', 'platform-hub-panel', 'dashboard-channels-panel', 'dashboard-occasion-panel', 'dashboard-official-hub']
+                hideSections: [
+                    'dashboard-company-identity', 'dashboard-partners-block', 'platform-hub-panel',
+                    'dashboard-channels-panel', 'dashboard-occasion-panel', 'dashboard-official-hub',
+                    'erp-hub-panel', 'dashboard-main-nav', 'dashboard-hub-intro', 'dashboard-secondary-grid',
+                    'dashboard-command-extended'
+                ]
             },
             sales_manager: {
                 greetingAr: 'مركز مدير المبيعات',
@@ -13011,7 +13027,9 @@
                 { roles: ['superadmin', 'manager'], icon: 'fas fa-people-roof', label: 'منصة HR', handler: 'openHrPlatform', perm: 'hr' },
                 { roles: ['superadmin', 'manager'], icon: 'fas fa-paint-roller', label: 'محتوى الموقع', handler: 'openSiteContentManager', perm: 'content' },
                 { roles: ['superadmin', 'manager'], icon: 'fas fa-cloud-upload-alt', label: 'رفع وسائط', handler: 'openNebrasMediaHubQuick', perm: 'content' },
-                { roles: ['sales_manager', 'sales_rep', 'branch_manager'], icon: 'fas fa-file-signature', label: 'عروض الأسعار', handler: 'openRepQuoteBuilder', perm: 'quotes' },
+                { roles: ['sales_manager', 'sales_rep', 'branch_manager'], icon: 'fas fa-file-signature', label: 'بناء عرض سعر', handler: 'openRepQuoteBuilder', perm: 'quotes' },
+                { roles: ['sales_rep'], icon: 'fas fa-folder-open', label: 'عروضي المحفوظة', handler: 'openRepMyQuotes', perm: 'quotes' },
+                { roles: ['sales_rep'], icon: 'fas fa-shield-halved', label: 'أمان حسابي', handler: 'openAccountSecurity', perm: null },
                 { roles: ['sales_manager'], icon: 'fas fa-tags', label: 'قائمة الأسعار', handler: 'openSalesPriceList', perm: 'sales' },
                 { roles: ['accountant'], icon: 'fas fa-file-invoice-dollar', label: 'المحاسبة', handler: 'openErpAccounting', perm: 'accounting' },
                 { roles: ['inventory_manager', 'warehouse_manager'], icon: 'fas fa-boxes-stacked', label: 'المخزون', handler: 'openErpInventory', perm: 'inventory' },
@@ -13128,6 +13146,14 @@
                     kpis.push({ v: att.filter(function(a) { return a.date === today && a.checkIn && teamIds.indexOf(a.employeeId) >= 0; }).length, l: 'حضور اليوم', alert: false });
                     if (scope && scope.label) kpis.push({ v: scope.label.length > 18 ? '…' : scope.label, l: 'نطاقك', alert: false });
                 }
+                if (typeof isStrictSalesRep === 'function' && isStrictSalesRep(user)) {
+                    kpis.length = 0;
+                    const myQuotes = typeof getRepQuoteHistory === 'function' ? getRepQuoteHistory(user) : [];
+                    const priceCount = typeof getEffectiveSalesPriceList === 'function' ? getEffectiveSalesPriceList(user).length : 0;
+                    kpis.push({ v: myQuotes.length, l: 'عروضي المحفوظة', alert: false });
+                    kpis.push({ v: priceCount, l: 'أصناف معتمدة', alert: false });
+                    kpis.push({ v: user.assignedBranchCity || '—', l: 'فرعي', alert: false });
+                }
                 if (!kpis.length && isMainGovernanceAdmin(user)) {
                     kpis.push({ v: stats.skuCount, l: 'مخزون' }, { v: stats.salesCount, l: 'مبيعات' }, { v: stats.ordersCount, l: 'طلبات' });
                 }
@@ -13217,13 +13243,15 @@
             renderDashboardTiles();
             renderCompanyLegalBars();
             applyStaticUiTranslations(siteText[currentLang || 'ar'] || siteText.ar);
-            displayUsers();
-            displaySales();
-            displaySalesQuotesInbox();
-            displayCustomerService();
-            displayComplaints();
+            if (!isStrictSalesRep(user)) {
+                displayUsers();
+                displaySales();
+                displaySalesQuotesInbox();
+                displayCustomerService();
+                displayComplaints();
+                renderAdminAnalyticsPanel();
+            }
             updateSalesQuoteFab();
-            renderAdminAnalyticsPanel();
             updateSalesInboxBadge();
             renderDashboardOfficialHub();
             renderDashboardChannelsStatus();
@@ -13244,6 +13272,178 @@
             updateSalesQuoteFab();
             return false;
         }
+
+/* PHASE18_INJECTED */
+/* Phase 18 — Sales rep quotes-only + rep quote library + Odoo-like persistence helpers */
+
+    const ANALYTICS_GOVERNANCE_KEY = 'nebrasAnalyticsGovernance';
+
+    function normalizeAdminUserRecord(user, index) {
+        const role = user && allowedRoles.includes(String(user.role || '').toLowerCase()) ? String(user.role).toLowerCase() : 'manager';
+        const isPrimary = user && (user.isPrimary === true || PRIMARY_GOVERNANCE_ADMIN_IDS.indexOf(user.id) >= 0 ||
+            PRIMARY_GOVERNANCE_USERNAMES.indexOf(String(user.username || '').toUpperCase()) >= 0);
+        let perms = Array.isArray(user && user.permissions) ? user.permissions.filter(Boolean) : null;
+        if (role === 'sales_rep' && !isPrimary) perms = ['quotes'];
+        return {
+            id: user && user.id ? user.id : 'user-' + Date.now() + '-' + index,
+            username: user && user.username ? user.username : 'user' + (index + 1),
+            password: user && user.password ? user.password : 'ChangeMe123',
+            role: role,
+            permissions: perms,
+            assignedBranchCity: (user && user.assignedBranchCity) ? String(user.assignedBranchCity).trim() : '',
+            assignedBranchId: user && user.assignedBranchId != null && user.assignedBranchId !== '' ? user.assignedBranchId : null,
+            hrScopeBranchId: user && user.hrScopeBranchId ? String(user.hrScopeBranchId).trim() : '',
+            hrScopeDepartmentKey: user && user.hrScopeDepartmentKey ? String(user.hrScopeDepartmentKey).trim() : '',
+            isPrimary: !!isPrimary
+        };
+    }
+
+    function canAccessQuoteDocumentOps() {
+        return canManage('sales') || canManage('quotes');
+    }
+
+    function isStrictSalesRep(admin) {
+        admin = admin || currentAdmin;
+        return !!(admin && admin.role === 'sales_rep' && !admin.isPrimary && !isMainGovernanceAdmin(admin));
+    }
+
+    function repQuoteOwnedBy(entry, admin) {
+        if (!entry || !admin) return false;
+        const user = String(admin.username || '').trim().toLowerCase();
+        if (entry.repUsername && String(entry.repUsername).toLowerCase() === user) return true;
+        if (entry.by && String(entry.by).toLowerCase() === user) return true;
+        return false;
+    }
+
+    function getRepQuoteHistory(admin) {
+        admin = admin || currentAdmin;
+        const inbox = (typeof loadSalesQuotesInbox === 'function') ? (loadSalesQuotesInbox() || []) : [];
+        return inbox.filter(function(e) {
+            return (e.quoteKind === 'rep-built' || e.quoteType === 'quote') && repQuoteOwnedBy(e, admin);
+        }).sort(function(a, b) { return String(b.at || '').localeCompare(String(a.at || '')); });
+    }
+
+    async function getMergedRepQuoteHistory(admin) {
+        admin = admin || currentAdmin;
+        let cloud = [];
+        try {
+            if (typeof fetchSalesQuotesFromCloud === 'function') cloud = await fetchSalesQuotesFromCloud();
+        } catch (e) { cloud = []; }
+        const local = (typeof loadSalesQuotesInbox === 'function') ? (loadSalesQuotesInbox() || []) : [];
+        const merged = [];
+        const seen = {};
+        cloud.concat(local).forEach(function(e) {
+            const key = e.quoteNo || e.id;
+            if (!key || seen[key]) return;
+            if (!repQuoteOwnedBy(e, admin)) return;
+            seen[key] = true;
+            merged.push(e);
+        });
+        return merged.sort(function(a, b) { return String(b.at || '').localeCompare(String(a.at || '')); });
+    }
+
+    function renderRepMyQuotesSection() {
+        const history = getRepQuoteHistory(currentAdmin);
+        if (!history.length) {
+            return '<div class="rep-quotes-library"><h4><i class="fas fa-folder-open"></i> عروضي المحفوظة</h4><p class="erp-empty">لا عروض محفوظة بعد — أنشئ عرضاً واحفظه أو نزّل PDF.</p></div>';
+        }
+        const rows = history.slice(0, 30).map(function(e) {
+            const key = String(e.id).replace(/'/g, "\\'");
+            const when = typeof formatNebrasDateTime === 'function' ? formatNebrasDateTime(e.at, currentLang) : (e.at || '');
+            const total = typeof formatSar === 'function' ? formatSar(e.totalIncVat || e.total || 0) : String(e.totalIncVat || e.total || 0);
+            return '<tr><td><strong>' + escapeHtmlAttr(e.quoteNo || '—') + '</strong></td>' +
+                '<td>' + escapeHtmlAttr(e.customerName || '—') + '</td>' +
+                '<td>' + escapeHtmlAttr(when) + '</td>' +
+                '<td>' + escapeHtmlAttr(total) + '</td>' +
+                '<td class="rep-quotes-actions">' +
+                    '<button type="button" class="erp-tag erp-tag--action" onclick="previewRepQuoteEntryA4(\'' + key + '\')"><i class="fas fa-eye"></i></button>' +
+                    '<button type="button" class="erp-tag erp-tag--action" onclick="downloadRepQuoteEntryPdf(\'' + key + '\')"><i class="fas fa-file-pdf"></i></button>' +
+                '</td></tr>';
+        }).join('');
+        return '<div class="rep-quotes-library">' +
+            '<h4><i class="fas fa-folder-open"></i> عروضي المحفوظة <span class="rep-quotes-count">' + history.length + '</span></h4>' +
+            '<div class="hr-leave-table-wrap"><table class="hr-leave-table rep-quotes-table"><thead><tr>' +
+            '<th>رقم العرض</th><th>العميل</th><th>التاريخ</th><th>الإجمالي</th><th>إجراء</th>' +
+            '</tr></thead><tbody>' + rows + '</tbody></table></div></div>';
+    }
+
+    async function previewRepQuoteEntryA4(entryId) {
+        if (!requirePermission('quotes', 'صلاحية عروض الأسعار مطلوبة.')) return;
+        const entry = await resolveSalesQuoteEntry(entryId);
+        if (!entry || !repQuoteOwnedBy(entry, currentAdmin)) {
+            alert('العرض غير موجود أو لا يخصك.');
+            return;
+        }
+        openSalesQuoteA4Preview(entry, { allowEmpty: true, repAccess: true });
+    }
+
+    async function downloadRepQuoteEntryPdf(entryId) {
+        if (!requirePermission('quotes', 'صلاحية عروض الأسعار مطلوبة.')) return;
+        const entry = await resolveSalesQuoteEntry(entryId);
+        if (!entry || !repQuoteOwnedBy(entry, currentAdmin)) {
+            alert('العرض غير موجود أو لا يخصك.');
+            return;
+        }
+        const snap = snapshotQuoteRenderContext();
+        try {
+            applySalesEntryToQuoteRender(entry, { allowEmpty: true });
+            const rendered = await ensureQuoteA4Rendered({ allowEmpty: true });
+            if (!rendered) { alert('تعذّر تجهيز المستند.'); return; }
+            const pdfBlob = await captureQuoteA4AsPdfBlob();
+            if (!pdfBlob) { alert('تعذّر إنشاء PDF.'); return; }
+            triggerQuoteFileDownload(pdfBlob, (entry.quoteNo || 'quote') + '-a4-4pages.pdf');
+            addAuditLog('تصدير PDF عرض مندوب', (entry.quoteNo || entryId));
+        } catch (pdfErr) {
+            console.warn('downloadRepQuoteEntryPdf failed:', pdfErr);
+            alert('تعذّر تنزيل PDF.');
+        } finally {
+            restoreQuoteRenderContext(snap);
+            const overlay = document.getElementById('quote-print-overlay');
+            if (overlay) overlay.classList.remove('show');
+            setSalesQuotePreviewMode(false);
+        }
+    }
+
+    function openRepMyQuotes() {
+        if (!requirePermission('quotes')) return;
+        openRepQuoteBuilder();
+        setTimeout(function() {
+            const lib = document.querySelector('.rep-quotes-library');
+            if (lib) lib.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 300);
+    }
+
+    function loadQuoteRegistryForCloud() {
+        return loadQuoteRegistry();
+    }
+
+    function setQuoteRegistryFromCloud(v) {
+        try {
+            const reg = v && typeof v === 'object' ? v : { byDate: {} };
+            if (!reg.byDate || typeof reg.byDate !== 'object') reg.byDate = {};
+            saveQuoteRegistry(reg);
+        } catch (e) { console.warn('quote registry cloud set', e); }
+    }
+
+    function persistAnalyticsGovernanceLocal() {
+        try {
+            ensureAnalyticsGovernance();
+            localStorage.setItem(ANALYTICS_GOVERNANCE_KEY, JSON.stringify(analyticsGovernance));
+        } catch (e) { console.warn('analytics governance local save', e); }
+    }
+
+    function loadAnalyticsGovernanceLocal() {
+        try {
+            const raw = localStorage.getItem(ANALYTICS_GOVERNANCE_KEY);
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (parsed && typeof parsed === 'object') {
+                    analyticsGovernance = parsed;
+                    ensureAnalyticsGovernance();
+                }
+            }
+        } catch (e) { console.warn('analytics governance local load', e); }
+    }
 
         function openCustomerComplaints() {
             document.getElementById('complaint-overlay').classList.add('show');
@@ -13592,9 +13792,12 @@
             const complaintsOpen = complaintsList.filter(function(c) { return c.status !== 'resolved'; }).length;
 
             const sections = [];
-            function pushSection(id, title, icon, kpis, rows) {
-                if (dept !== 'all' && dept !== id) return;
-                sections.push({ id: id, title: title, icon: icon, kpis: kpis, rows: rows || [] });
+            function pushSection(id, title, icon, kpis, rows, headers) {
+                if (dept !== 'all') {
+                    if ((dept === 'hr' && (id === 'hr' || id === 'hr-gov' || id === 'hr-activity')) || (dept === 'hr-gov' && id === 'hr-gov')) { /* ok */ }
+                    else if (dept !== id) return;
+                }
+                sections.push({ id: id, title: title, icon: icon, kpis: kpis, rows: rows || [], headers: headers || null });
             }
 
             pushSection('sales', 'المبيعات', 'fas fa-chart-line', [
@@ -13657,6 +13860,19 @@
             if (typeof buildHrExecutiveReportData === 'function') {
                 const hrExec = buildHrExecutiveReportData(period, branchId);
                 pushSection('hr', 'الموارد البشرية', 'fas fa-people-roof', hrExec.kpis, hrExec.rows);
+                if (hrExec.deptRows && hrExec.deptRows.length) {
+                    pushSection('hr-gov', 'حوكمة HR — الأقسام والفروع', 'fas fa-sitemap', [
+                        { label: 'أقسام نشطة', val: hrExec.govMatrix ? hrExec.govMatrix.length : hrExec.deptRows.length },
+                        { label: 'عمليات HR', val: (hrExec.kpis.find(function(k) { return k.label === 'عمليات HR'; }) || {}).val || 0 },
+                        { label: 'الفترة', val: periodLabel }
+                    ], hrExec.deptRows, ['قسم HR', 'الفرع', 'القوى العاملة', 'مؤشرات']);
+                }
+                if (hrExec.activityRows && hrExec.activityRows.length) {
+                    pushSection('hr-activity', 'سجل عمليات مسؤولي HR', 'fas fa-clock-rotate-left', [
+                        { label: 'عمليات', val: hrExec.activityRows.length },
+                        { label: 'الفترة', val: periodLabel }
+                    ], hrExec.activityRows, ['الوقت', 'المستخدم', 'الإجراء', 'التفاصيل']);
+                }
             }
 
             return {
@@ -13717,8 +13933,11 @@
                 const kpiHtml = sec.kpis.map(function(k) {
                     return '<div class="exec-report-kpi"><strong>' + escapeHtmlAttr(String(k.val)) + '</strong><span>' + escapeHtmlAttr(k.label) + '</span></div>';
                 }).join('');
+                const hdrs = sec.headers || ['المرجع', 'العميل/الوصف', 'الحالة', 'تفاصيل'];
                 const tableHtml = sec.rows.length
-                    ? '<table class="exec-report-table"><thead><tr><th>المرجع</th><th>العميل/الوصف</th><th>الحالة</th><th>تفاصيل</th></tr></thead><tbody>' +
+                    ? '<table class="exec-report-table"><thead><tr>' + hdrs.map(function(h) {
+                        return '<th>' + escapeHtmlAttr(h) + '</th>';
+                    }).join('') + '</tr></thead><tbody>' +
                         sec.rows.map(function(r) {
                             return '<tr><td>' + escapeHtmlAttr(r[0]) + '</td><td>' + escapeHtmlAttr(r[1]) + '</td><td>' + escapeHtmlAttr(r[2]) + '</td><td>' + escapeHtmlAttr(r[3]) + '</td></tr>';
                         }).join('') + '</tbody></table>'
@@ -20441,6 +20660,16 @@
             }, set: function(v) {
                 if (typeof setHrShiftRosterFromCloud === 'function') setHrShiftRosterFromCloud(v);
             }},
+            { key: 'hr_dept_activity', get: function() {
+                return typeof getHrDeptActivity === 'function' ? getHrDeptActivity() : [];
+            }, set: function(v) {
+                if (typeof setHrDeptActivityFromCloud === 'function') setHrDeptActivityFromCloud(v);
+            }},
+            { key: 'quote_registry', get: function() {
+                return typeof loadQuoteRegistryForCloud === 'function' ? loadQuoteRegistryForCloud() : { byDate: {} };
+            }, set: function(v) {
+                if (typeof setQuoteRegistryFromCloud === 'function') setQuoteRegistryFromCloud(v);
+            }},
             { key: 'callback_leads', get: function() {
                 return typeof getCallbackLeads === 'function' ? getCallbackLeads() : [];
             }, set: function(v) {
@@ -20516,18 +20745,9 @@
                 syncDoorDesignerCatalogFromProductMaster();
             }
             adminUsers = (Array.isArray(adminUsers) ? adminUsers : []).map(function(user, index) {
-                const role = user && allowedRoles.includes(String(user.role || '').toLowerCase()) ? String(user.role).toLowerCase() : 'manager';
-                const isPrimary = user && (user.isPrimary === true || PRIMARY_GOVERNANCE_ADMIN_IDS.indexOf(user.id) >= 0 ||
-                    PRIMARY_GOVERNANCE_USERNAMES.indexOf(String(user.username || '').toUpperCase()) >= 0);
-                return {
-                    id: user && user.id ? user.id : 'user-' + Date.now() + '-' + index,
-                    username: user && user.username ? user.username : 'user' + (index + 1),
-                    password: user && user.password ? user.password : 'ChangeMe123',
-                    role: role,
-                    permissions: Array.isArray(user && user.permissions) ? user.permissions.filter(Boolean) : null,
-                    assignedBranchCity: (user && user.assignedBranchCity) ? String(user.assignedBranchCity).trim() : '',
-                    isPrimary: !!isPrimary
-                };
+                return typeof normalizeAdminUserRecord === 'function'
+                    ? normalizeAdminUserRecord(user, index)
+                    : user;
             });
             if (!Array.isArray(visitorIcons)) visitorIcons = [];
             purgeStaleCatalogReferences();
@@ -20632,6 +20852,7 @@
             localStorage.setItem('nebrasCustomerService', JSON.stringify(customerServiceData || []));
             ensureVisitorAnalytics();
             localStorage.setItem(VISITOR_ANALYTICS_KEY, JSON.stringify(visitorAnalytics));
+            if (typeof persistAnalyticsGovernanceLocal === 'function') persistAnalyticsGovernanceLocal();
             if (typeof saveCallbackLeads === 'function') saveCallbackLeads();
             } catch (storageErr) {
                 console.warn('Local storage save failed:', storageErr);
@@ -20738,21 +20959,13 @@
                 } catch (e) { console.warn('Visitor analytics parse error', e); }
             }
             ensureVisitorAnalytics();
+            if (typeof loadAnalyticsGovernanceLocal === 'function') loadAnalyticsGovernanceLocal();
             if (typeof loadCallbackLeads === 'function') loadCallbackLeads();
             ensureShowroomGallery();
-            adminUsers = (Array.isArray(adminUsers) ? adminUsers : []).map((user, index) => {
-                const role = user && allowedRoles.includes(String(user.role || '').toLowerCase()) ? String(user.role).toLowerCase() : 'manager';
-                const isPrimary = user && (user.isPrimary === true || PRIMARY_GOVERNANCE_ADMIN_IDS.indexOf(user.id) >= 0 ||
-                    PRIMARY_GOVERNANCE_USERNAMES.indexOf(String(user.username || '').toUpperCase()) >= 0);
-                return {
-                id: user && user.id ? user.id : `user-${Date.now()}-${index}`,
-                username: user && user.username ? user.username : `user${index + 1}`,
-                password: user && user.password ? user.password : 'ChangeMe123',
-                    role: role,
-                    permissions: Array.isArray(user && user.permissions) ? user.permissions.filter(Boolean) : null,
-                    assignedBranchCity: (user && user.assignedBranchCity) ? String(user.assignedBranchCity).trim() : '',
-                    isPrimary: !!isPrimary
-                };
+            adminUsers = (Array.isArray(adminUsers) ? adminUsers : []).map(function(user, index) {
+                return typeof normalizeAdminUserRecord === 'function'
+                    ? normalizeAdminUserRecord(user, index)
+                    : user;
             });
             if (!Array.isArray(visitorIcons)) {
                 visitorIcons = [];
@@ -23346,6 +23559,14 @@
         window.previewSalesQuoteA4 = previewSalesQuoteA4;
         window.downloadSalesQuoteA4Pdf = downloadSalesQuoteA4Pdf;
         window.previewRepQuoteA4 = previewRepQuoteA4;
+        window.isStrictSalesRep = isStrictSalesRep;
+        window.openRepMyQuotes = openRepMyQuotes;
+        window.previewRepQuoteEntryA4 = previewRepQuoteEntryA4;
+        window.downloadRepQuoteEntryPdf = downloadRepQuoteEntryPdf;
+        window.normalizeAdminUserRecord = normalizeAdminUserRecord;
+        window.loadQuoteRegistryForCloud = loadQuoteRegistryForCloud;
+        window.setQuoteRegistryFromCloud = setQuoteRegistryFromCloud;
+
         window.downloadRepQuoteA4Pdf = downloadRepQuoteA4Pdf;
         window.openErpInventory = openErpInventory;
         window.openErpProduction = openErpProduction;

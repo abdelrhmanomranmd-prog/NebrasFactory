@@ -149,3 +149,39 @@
 @media (max-width: 640px) {
     .exec-report-dept-grid { grid-template-columns: 1fr; }
 }
+
+
+/* Phase 18 — Rep quote library */
+.rep-quotes-library {
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.rep-quotes-library h4 {
+    margin: 0 0 10px;
+    font-size: 0.95rem;
+    color: #1a5276;
+}
+
+.rep-quotes-count {
+    display: inline-block;
+    margin-right: 6px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: #ebf8ff;
+    color: #2b6cb0;
+    font-size: 0.75rem;
+}
+
+.rep-quotes-actions {
+    white-space: nowrap;
+}
+
+.rep-quotes-table td {
+    font-size: 0.82rem;
+}
+
+.dashboard-role-scoped .dashboard-section--role-hidden {
+    display: none !important;
+}
