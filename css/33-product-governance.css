@@ -1,0 +1,105 @@
+/* مركز المنتجات والأسعار + قسم الألومنيوم */
+.nebras-product-master-modal .product-master-note,
+.nebras-aluminum-dept-modal .aluminum-dept-note {
+    margin: 0 0 14px;
+    padding: 11px 14px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, rgba(10, 77, 140, 0.08), rgba(212, 175, 55, 0.08));
+    border: 1px solid rgba(10, 77, 140, 0.2);
+    font-size: 0.84rem;
+    color: #3d4f5f;
+}
+
+.product-master-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 14px;
+}
+
+.product-master-table-wrap {
+    overflow-x: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: #fff;
+}
+
+.product-master-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+}
+
+.product-master-table th,
+.product-master-table td {
+    padding: 9px 10px;
+    border-bottom: 1px solid #edf1f5;
+    text-align: right;
+    vertical-align: middle;
+}
+
+.product-master-table th {
+    background: #f4f7fb;
+    color: #4a5a6a;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.product-master-table tr:hover td {
+    background: rgba(10, 77, 140, 0.03);
+}
+
+.product-master-product-row td {
+    background: rgba(212, 175, 55, 0.06);
+    font-weight: 600;
+    color: #0a4d8c;
+}
+
+.product-master-price-readonly {
+    margin: 0 0 12px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: #f0f6fc;
+    border: 1px dashed #9eb8d4;
+    font-size: 0.82rem;
+    color: #2c5282;
+}
+
+.aluminum-dept-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.aluminum-dept-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 16px;
+    background: #fff;
+    cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s;
+    text-align: center;
+}
+
+.aluminum-dept-card:hover {
+    border-color: #708090;
+    box-shadow: 0 4px 14px rgba(112, 128, 144, 0.15);
+}
+
+.aluminum-dept-card i {
+    font-size: 1.6rem;
+    color: #708090;
+    margin-bottom: 8px;
+}
+
+.aluminum-dept-card h4 {
+    margin: 0 0 4px;
+    font-size: 0.9rem;
+    color: #2c3e50;
+}
+
+.aluminum-dept-card small {
+    color: #6a7888;
+    font-size: 0.72rem;
+}

@@ -92,6 +92,7 @@
     <link rel="stylesheet" href="css/30-platform-settings-audit.css">
     <link rel="stylesheet" href="css/31-cloud-security.css">
     <link rel="stylesheet" href="css/32-executive-reports.css">
+    <link rel="stylesheet" href="css/33-product-governance.css">
 </head>
 <body id="nebras-platform" class="platform-storefront" data-platform-layer="storefront">
 
@@ -838,6 +839,36 @@
         </div>
     </div>
 
+    <div class="admin-section" id="product-master-hub">
+        <div class="admin-modal site-content-modal nebras-erp-modal nebras-product-master-modal">
+            <div class="nebras-erp-head">
+                <div class="nebras-erp-head-title"><i class="fas fa-database"></i><div><h2>مركز المنتجات والأسعار</h2><p>مصدر واحد — الإدارة الرئيسية تحدد الأسماء والأنواع والمقاسات والأسعار</p></div></div>
+                <button type="button" class="nebras-users-close" onclick="closeAdminSection('product-master-hub')" aria-label="إغلاق"><i class="fas fa-xmark"></i></button>
+            </div>
+            <div class="nebras-erp-stats" id="product-master-summary"></div>
+            <p class="product-master-note" id="product-master-note"><i class="fas fa-crown"></i> كل تعديل هنا يُزامَن تلقائياً: المتجر · قائمة أسعار المندوبين · مصمّم الأبواب · ERP.</p>
+            <div class="product-master-toolbar">
+                <button type="button" class="primary" onclick="syncPlatformFromProductMaster()"><i class="fas fa-sync"></i> مزامنة النظام كاملاً</button>
+                <button type="button" class="secondary" onclick="openSiteContentManager()"><i class="fas fa-pen-to-square"></i> محتوى الموقع (صور)</button>
+                <button type="button" class="secondary" onclick="addSiteProduct()"><i class="fas fa-plus"></i> منتج جديد</button>
+            </div>
+            <div class="product-master-table-wrap" id="product-master-table"></div>
+        </div>
+    </div>
+
+    <div class="admin-section" id="aluminum-department">
+        <div class="admin-modal site-content-modal nebras-erp-modal nebras-aluminum-dept-modal">
+            <div class="nebras-erp-head">
+                <div class="nebras-erp-head-title"><i class="fas fa-industry"></i><div><h2>قسم الألومنيوم</h2><p>مدير القسم — مخزون · إنتاج · عروض · طلبات الألومنيوم فقط</p></div></div>
+                <button type="button" class="nebras-users-close" onclick="closeAdminSection('aluminum-department')" aria-label="إغلاق"><i class="fas fa-xmark"></i></button>
+            </div>
+            <div class="nebras-erp-stats" id="aluminum-dept-summary"></div>
+            <p class="aluminum-dept-note"><i class="fas fa-lock"></i> الأسماء والأسعار والمقاسات من الإدارة الرئيسية — أنت تدير تشغيل قسم الألومنيوم فقط.</p>
+            <div class="aluminum-dept-grid" id="aluminum-dept-actions"></div>
+            <div class="nebras-erp-list" id="aluminum-dept-variants"></div>
+        </div>
+    </div>
+
     <div class="admin-section" id="branch-team-management">
         <div class="admin-modal site-content-modal nebras-users-modal nebras-branch-team-modal">
             <div class="nebras-users-head">
@@ -939,7 +970,7 @@
     <div class="admin-section" id="sales-pricelist">
         <div class="admin-modal site-content-modal nebras-erp-modal">
             <div class="nebras-erp-head">
-                <div class="nebras-erp-head-title"><i class="fas fa-tags"></i><div><h2>قائمة الأسعار المعتمدة</h2><p>مدير المبيعات يحدد المنتجات والأسعار التي يعمل عليها المندوبون</p></div></div>
+                <div class="nebras-erp-head-title"><i class="fas fa-tags"></i><div><h2>قائمة الأسعار المعتمدة</h2><p>تُزامَن تلقائياً من مركز المنتجات — الإدارة الرئيسية تحدد الأسعار</p></div></div>
                 <button type="button" class="nebras-users-close" onclick="closeAdminSection('sales-pricelist')" aria-label="إغلاق"><i class="fas fa-xmark"></i></button>
             </div>
             <div class="nebras-erp-stats" id="sales-pricelist-summary"></div>

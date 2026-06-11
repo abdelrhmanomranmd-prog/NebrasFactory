@@ -54,7 +54,9 @@
             customerService: 'خدمة العملاء',
             complaints: 'الشكاوى',
             branches: 'الفروع',
-            audit: 'التقارير والتحليلات'
+            audit: 'التقارير والتحليلات',
+            aluminum: 'قسم الألومنيوم',
+            productMaster: 'مركز المنتجات والأسعار'
         };
         /** أيقونة + وصف لكل صلاحية — تُستخدم في واجهة إدارة المستخدمين الاحترافية */
         const NEBRAS_PERMISSION_META = {
@@ -72,7 +74,9 @@
             customerService: { icon: 'fas fa-headset', descAr: 'متابعة العملاء وطلبات التواصل' },
             complaints: { icon: 'fas fa-comment-dots', descAr: 'استقبال ومعالجة الشكاوى' },
             branches: { icon: 'fas fa-map-location-dot', descAr: 'إدارة الفروع وبياناتها' },
-            audit: { icon: 'fas fa-chart-pie', descAr: 'التقارير والتحليلات وسجل التدقيق' }
+            audit: { icon: 'fas fa-chart-pie', descAr: 'التقارير والتحليلات وسجل التدقيق' },
+            aluminum: { icon: 'fas fa-industry', descAr: 'إدارة قسم الألومنيوم — مخزون وإنتاج وعروض وطلبات الألومنيوم فقط' },
+            productMaster: { icon: 'fas fa-database', descAr: 'تحديد أسماء المنتجات وأنواعها ومقاساتها وأسعارها — مصدر النظام الديناميكي' }
         };
         const SHOP_CATALOG_PRODUCT_IDS = ['prod-wpc-raw', 'prod-wpc', 'prod-aluminum', 'prod-other'];
 
@@ -232,6 +236,7 @@
             { id: 'base-admin', username: 'NEBRASBASIC', password: 'NEBRASBASIC123', role: 'superadmin', isPrimary: true }
         ];
         const ALL_PERMISSION_KEYS = Object.keys(NEBRAS_PERMISSION_LABELS);
+        const NEBRAS_ALUMINUM_PRODUCT_ID = 'prod-aluminum';
         /**
          * أدوار حوكمة نبراس — كل دور له صلاحيات افتراضية يمكن للإدارة الرئيسية تخصيصها.
          * الإدارة الرئيسية (superadmin/primary) تملك كل الصلاحيات دائماً.
@@ -296,6 +301,13 @@
                 icon: 'fas fa-id-badge', accent: '#7f8c8d',
                 descAr: 'متابعة المستخدمين والتقارير الإدارية.',
                 permissions: ['users', 'audit']
+            },
+            aluminum_manager: {
+                labelAr: 'مدير قسم الألومنيوم', labelEn: 'Aluminum Dept. Manager',
+                icon: 'fas fa-industry', accent: '#708090',
+                descAr: 'صلاحيات الألومنيوم فقط — مخزون · إنتاج · عروض · طلبات قسم الألومنيوم.',
+                permissions: ['aluminum', 'inventory', 'warehouse', 'production', 'quotes', 'orders'],
+                departmentScope: NEBRAS_ALUMINUM_PRODUCT_ID
             }
         };
         const rolePermissions = Object.keys(NEBRAS_ROLE_DEFINITIONS).reduce(function(acc, key) {
@@ -1793,10 +1805,12 @@
                 { id: 'governance', nameAr: 'الحوكمة والتقارير', nameEn: 'Governance & BI' }
             ],
             modules: [
-                { id: 'erp-catalog', pillar: 'master', status: 'live', icon: 'fas fa-database', permission: 'content', handler: 'openSiteContentManager', nameAr: 'كتالوج المنتجات', descAr: 'ربط المتجر بالمواد', nameEn: 'Product master' },
+                { id: 'erp-product-master', pillar: 'master', status: 'live', icon: 'fas fa-database', permission: 'productMaster', handler: 'openProductMasterHub', nameAr: 'مركز المنتجات والأسعار', descAr: 'مصدر ديناميكي — أسماء · أنواع · مقاسات · أسعار', nameEn: 'Product & pricing hub' },
+                { id: 'erp-aluminum-dept', pillar: 'supply', status: 'live', icon: 'fas fa-industry', permission: 'aluminum', handler: 'openAluminumDepartment', nameAr: 'قسم الألومنيوم', descAr: 'مخزون · إنتاج · عروض ALU فقط', nameEn: 'Aluminum department' },
+                { id: 'erp-catalog', pillar: 'master', status: 'live', icon: 'fas fa-database', permission: 'content', handler: 'openSiteContentManager', nameAr: 'كتالوج المنتجات', descAr: 'صور ومحتوى المتجر', nameEn: 'Store catalogue' },
                 { id: 'erp-production', pillar: 'supply', status: 'live', icon: 'fas fa-industry', permission: 'production', handler: 'openErpProduction', nameAr: 'الإنتاج اليومي', descAr: 'كميات الإنتاج المتاحة', nameEn: 'Production' },
                 { id: 'erp-inventory', pillar: 'supply', status: 'live', icon: 'fas fa-warehouse', permission: 'inventory', handler: 'openErpInventory', nameAr: 'المخزون والمستودع', descAr: 'SKU وكميات ومستودعات', nameEn: 'Inventory & WMS' },
-                { id: 'erp-pricelist', pillar: 'commerce', status: 'live', icon: 'fas fa-tags', permission: 'sales', handler: 'openSalesPriceList', nameAr: 'قائمة الأسعار', descAr: 'يحددها مدير المبيعات', nameEn: 'Price list' },
+                { id: 'erp-pricelist', pillar: 'commerce', status: 'live', icon: 'fas fa-tags', permission: 'sales', handler: 'openSalesPriceList', nameAr: 'قائمة الأسعار', descAr: 'مزامَنة من مركز المنتجات', nameEn: 'Price list' },
                 { id: 'erp-quote-builder', pillar: 'commerce', status: 'live', icon: 'fas fa-file-signature', permission: 'quotes', handler: 'openRepQuoteBuilder', nameAr: 'بناء عرض سعر', descAr: 'للمندوبين من القائمة', nameEn: 'Quote builder' },
                 { id: 'erp-sales', pillar: 'commerce', status: 'live', icon: 'fas fa-file-invoice-dollar', permission: 'sales', handler: 'openSalesManagement', nameAr: 'المبيعات', descAr: 'فواتير وعمليات بيع', nameEn: 'Sales' },
                 { id: 'erp-orders', pillar: 'commerce', status: 'live', icon: 'fas fa-truck', permission: 'orders', handler: 'openErpOrders', nameAr: 'الطلبات OMS', descAr: 'تسجيل ومتابعة التنفيذ', nameEn: 'Orders' },
@@ -2154,6 +2168,8 @@
             { id: 'dash-company-profile', zone: 'quick', dashGroup: 'command', sortOrder: 0, iconClass: 'fas fa-book-open', titleAr: 'البروفايل التعريفي لنبراس', titleEn: 'Nebras Company Profile', textAr: 'عرض البروفايل الكامل داخل المنصة — 24 صفحة مع تنزيل PDF.', textEn: 'Full profile viewer with PDF download — 24 pages.', cssClass: 'dashboard-tile-card--profile-2026', backgroundImage: 'images/profile-2026/hero-cover.jpg', handler: 'openCompanyProfileHub', permission: 'content', visible: true },
             { id: 'dash-profile-pdf', zone: 'quick', dashGroup: 'command', sortOrder: 0.5, iconClass: 'fas fa-file-pdf', titleAr: 'تنزيل بروفايل PDF', titleEn: 'Download Profile PDF', textAr: 'تنزيل ملف PDF الرسمي — 24 صفحة A4.', textEn: 'Download official 24-page A4 PDF.', cssClass: 'dashboard-tile-card--profile-2026', backgroundImage: 'images/hero-slide-06-color-catalog.png', handler: 'downloadNebrasProfilePdf', permission: 'content', visible: false },
             { id: 'dash-callback-leads', zone: 'quick', dashGroup: 'command', sortOrder: 55, iconClass: 'fas fa-phone-volume', titleAr: 'نبراس يتصل بك', titleEn: 'Callback Leads', textAr: 'طلبات اتصال الزوار — تظهر في الإدارة الرئيسية والفروع.', textEn: 'Visitor callback requests by branch.', cssClass: 'dashboard-tile-card--callback', backgroundImage: 'images/profile-2026/hero-cover.jpg', handler: 'openCallbackLeadsAdmin', permission: 'sales', visible: true },
+            { id: 'dash-product-master', zone: 'quick', dashGroup: 'command', sortOrder: 0.9, iconClass: 'fas fa-database', titleAr: 'مركز المنتجات والأسعار', titleEn: 'Product Master', textAr: 'أسماء · أنواع · مقاسات · أسعار — مصدر النظام الديناميكي.', textEn: 'Names, types, sizes, prices — single source of truth.', handler: 'openProductMasterHub', permission: 'productMaster', superadminOnly: true, visible: true },
+            { id: 'dash-aluminum-dept', zone: 'quick', dashGroup: 'command', sortOrder: 1.1, iconClass: 'fas fa-industry', titleAr: 'قسم الألومنيوم', titleEn: 'Aluminum Dept.', textAr: 'مخزون · إنتاج · عروض · طلبات ALU.', textEn: 'Aluminum ops only.', handler: 'openAluminumDepartment', permission: 'aluminum', visible: true },
             { id: 'dash-content', zone: 'quick', dashGroup: 'command', sortOrder: 1, iconClass: 'fas fa-pen-to-square', titleAr: 'إدارة محتوى الموقع', titleEn: 'Site Content', textAr: 'منتجات، بوابة الزائر، شركاء، شهادات — ديناميكي بالكامل.', textEn: 'Products, gateway icons, partners, certs — fully dynamic.', handler: 'openSiteContentManager', permission: 'content', visible: true },
             { id: 'dash-about-pages', zone: 'quick', dashGroup: 'command', sortOrder: 2, iconClass: 'fas fa-building', titleAr: 'من نحن ورؤيتنا', titleEn: 'About & Vision', textAr: 'نصوص المصنع ووثائق الصفحات الداخلية.', textEn: 'Factory pages and documents.', handler: 'openAboutContentAdmin', permission: 'content', visible: true },
             { id: 'dash-certs', zone: 'quick', dashGroup: 'command', sortOrder: 3, iconClass: 'fas fa-award', titleAr: 'اعتمادات وشهادات', titleEn: 'Certifications', textAr: 'شهادات المعرض — صور وPDF.', textEn: 'Showroom certificates.', cssClass: 'dashboard-tile-card--certs', handler: 'openCertificationsHub', permission: 'content', visible: true },
@@ -2209,6 +2225,10 @@
             openErpOrders: function() { openErpOrders(); },
             openErpWarehouseTransfers: function() { openErpWarehouseTransfers(); },
             openErpProcurement: function() { openErpProcurement(); },
+            openProductMasterHub: function() { openProductMasterHub(); },
+            openAluminumDepartment: function() { openAluminumDepartment(); },
+            openExecutiveReports: function() { openExecutiveReports(); },
+            syncPlatformFromProductMaster: function() { syncPlatformFromProductMaster(); },
             scrollErpHub: function() { scrollErpHub(); },
             openCertificationsHub: function() { openCertificationsHub(); },
             openShowroomHub: function() { openShowroomHub(); },
@@ -5855,10 +5875,17 @@
         }
 
         function saveContentData(options) {
+            if (isMainGovernanceAdmin(currentAdmin)) {
+                syncSalesPriceListFromProductMaster();
+                syncDoorDesignerCatalogFromProductMaster();
+            }
             saveSystemData(options || {});
             refreshPublicSiteFromGovernance();
             const scm = document.getElementById('site-content-management');
             if (scm && scm.classList.contains('show')) renderGovernanceStatusPanel();
+            if (document.getElementById('product-master-hub') && document.getElementById('product-master-hub').classList.contains('show')) {
+                renderProductMasterPanel();
+            }
         }
 
         window.saveContentData = saveContentData;
@@ -5866,6 +5893,8 @@
 
         /** خريطة حوكمة الـ15+ أيقونة — كل أيقونة مربوطة بوظيفة حقيقية على الموقع */
         const ADMIN_GOVERNANCE_TILE_REGISTRY = [
+            { id: 'dash-product-master', publicEffect: 'أسماء · أنواع · مقاسات · أسعار — مصدر ديناميكي للنظام', handler: 'openProductMasterHub' },
+            { id: 'dash-aluminum-dept', publicEffect: 'تشغيل قسم الألومنيوم فقط', handler: 'openAluminumDepartment' },
             { id: 'dash-content', publicEffect: 'منتجات المتجر · أيقونات الزوار · أقسام إضافية', handler: 'openSiteContentManager' },
             { id: 'dash-about-pages', publicEffect: 'بطاقات من نحن / رؤيتنا + محتوى داخلي', handler: 'openAboutContentAdmin' },
             { id: 'dash-certs', publicEffect: 'اعتمادات وشهادات في المعرض', handler: 'openCertificationsHub' },
@@ -9920,7 +9949,7 @@
         }
 
         async function addSiteProduct() {
-            if (!requireFullSiteContent()) return;
+            if (!requireProductMasterGovernance('إضافة المنتجات — الإدارة الرئيسية فقط.')) return;
             const fields = await promptCatalogFields(null, 'product');
             if (!fields) return;
             const exp = promptCatalogExperience('shop');
@@ -9945,7 +9974,7 @@
         }
 
         async function editSiteProduct(productId) {
-            if (!requireFullSiteContent()) return;
+            if (!requireProductMasterGovernance('تعديل المنتجات — الإدارة الرئيسية فقط.')) return;
             const product = siteProducts.find(function(p) { return p.id === productId; });
             if (!product) return;
             const fields = await promptCatalogFields(product, 'product');
@@ -9963,7 +9992,7 @@
         }
 
         function deleteSiteProduct(productId) {
-            if (!requireFullSiteContent()) return;
+            if (!requireProductMasterGovernance('حذف المنتجات — الإدارة الرئيسية فقط.')) return;
             const product = siteProducts.find(function(p) { return p.id === productId; });
             if (!product) return;
             let warn = 'حذف المنتج نهائياً: ' + (product.titleAr || product.id) + '؟';
@@ -10494,9 +10523,12 @@
 
         function filterErpEntriesForAdmin(entries, admin) {
             admin = admin || currentAdmin;
+            let list = entries || [];
             const bid = getAdminAssignedBranchId(admin);
-            if (bid == null) return entries || [];
-            return (entries || []).filter(function(e) { return adminErpEntryVisible(e, admin); });
+            if (bid != null) {
+                list = list.filter(function(e) { return adminErpEntryVisible(e, admin); });
+            }
+            return filterDepartmentEntriesForAdmin(list, admin);
         }
 
         function canManageBranchTeam(admin) {
@@ -10509,6 +10541,163 @@
 
         function getBranchTeamManagedRoles() {
             return ['sales_rep'];
+        }
+
+        function requireProductMasterGovernance(message) {
+            if (!isMainGovernanceAdmin()) {
+                alert(message || 'مركز المنتجات والأسعار — الإدارة الرئيسية فقط (NEBRASFACTORY / NEBRASBASIC).');
+                return false;
+            }
+            return true;
+        }
+
+        function isAluminumDepartmentAdmin(admin) {
+            admin = admin || currentAdmin;
+            if (!admin) return false;
+            if (isMainGovernanceAdmin(admin)) return false;
+            return admin.role === 'aluminum_manager' || (canManage('aluminum') && !canManage('content'));
+        }
+
+        function getAdminDepartmentProductId(admin) {
+            admin = admin || currentAdmin;
+            if (!admin || isMainGovernanceAdmin(admin)) return null;
+            const def = getRoleDefinition(admin.role);
+            if (def && def.departmentScope) return def.departmentScope;
+            if (admin.role === 'aluminum_manager') return NEBRAS_ALUMINUM_PRODUCT_ID;
+            return null;
+        }
+
+        function isAluminumScopedEntry(entry) {
+            if (!entry) return false;
+            if (entry.productLink === NEBRAS_ALUMINUM_PRODUCT_ID) return true;
+            const sku = String(entry.sku || '').toUpperCase();
+            if (sku.indexOf('ALU') === 0) return true;
+            const hay = [
+                entry.productAr, entry.product, entry.nameAr, entry.productId,
+                entry.priceItemId, entry.sourceProductId
+            ].join(' ').toLowerCase();
+            if (hay.indexOf('ألومنيوم') >= 0 || hay.indexOf('aluminum') >= 0 || hay.indexOf('alu') >= 0) return true;
+            if (entry.sourceProductId === NEBRAS_ALUMINUM_PRODUCT_ID) return true;
+            return false;
+        }
+
+        function filterDepartmentEntriesForAdmin(entries, admin) {
+            admin = admin || currentAdmin;
+            const deptId = getAdminDepartmentProductId(admin);
+            if (!deptId) return entries || [];
+            if (deptId === NEBRAS_ALUMINUM_PRODUCT_ID) {
+                return (entries || []).filter(function(e) { return isAluminumScopedEntry(e); });
+            }
+            return (entries || []).filter(function(e) {
+                return e && (e.productLink === deptId || e.sourceProductId === deptId || e.productId === deptId);
+            });
+        }
+
+        function buildPriceListItemFromVariant(product, variant) {
+            const typeLabel = variant.typeAr || variant.typeEn || '';
+            const productLabel = (product.titleAr || product.id) + (typeLabel ? ' — ' + typeLabel : '');
+            const base = erpNum(variant.price);
+            return {
+                id: 'pl-' + (variant.id || product.id),
+                productAr: productLabel.trim(),
+                productEn: (product.titleEn || product.titleAr || product.id) + (variant.typeEn ? ' — ' + variant.typeEn : ''),
+                sku: variant.sku || '',
+                color: variant.colorAr || variant.colorEn || '',
+                size: variant.sizeAr || variant.sizeEn || '',
+                typeAr: typeLabel,
+                unitAr: 'قطعة',
+                basePrice: base,
+                minPrice: base > 0 ? Math.round(base * 0.9) : 0,
+                maxPrice: base > 0 ? Math.round(base * 1.15) : 0,
+                visible: product.visible !== false,
+                sourceProductId: product.id,
+                sourceVariantId: variant.id,
+                syncedFromMaster: true,
+                updatedAt: new Date().toISOString()
+            };
+        }
+
+        function syncSalesPriceListFromProductMaster() {
+            ensureErpOperationsData();
+            const manualItems = (salesPriceList || []).filter(function(it) { return !it.syncedFromMaster; });
+            const synced = [];
+            (siteProducts || []).forEach(function(product) {
+                if (!product || product.visible === false || !productHasShop(product)) return;
+                (product.variants || []).forEach(function(variant) {
+                    if (!variant) return;
+                    synced.push(buildPriceListItemFromVariant(product, variant));
+                });
+            });
+            salesPriceList = synced.concat(manualItems);
+            return synced.length;
+        }
+
+        function syncDoorDesignerCatalogFromProductMaster() {
+            if (!systemSettings.doorDesigner || typeof systemSettings.doorDesigner !== 'object') {
+                systemSettings.doorDesigner = JSON.parse(JSON.stringify(DEFAULT_DOOR_DESIGNER));
+            }
+            const wpcProducts = (siteProducts || []).filter(function(p) {
+                return p && (p.id === 'prod-wpc' || p.id === 'prod-wpc-raw');
+            });
+            const colors = [];
+            const sizes = [];
+            const seenColor = {};
+            const seenSize = {};
+            wpcProducts.forEach(function(product) {
+                (product.variants || []).forEach(function(v) {
+                    const colorKey = String(v.colorAr || v.colorEn || '').trim();
+                    if (colorKey && !seenColor[colorKey]) {
+                        seenColor[colorKey] = true;
+                        colors.push({
+                            id: 'pm-color-' + colors.length,
+                            nameAr: colorKey,
+                            nameEn: v.colorEn || colorKey,
+                            textureUrl: v.image || 'images/wpc-background.avif',
+                            priceDelta: 0
+                        });
+                    }
+                    const sizeKey = String(v.sizeAr || v.sizeEn || '').trim();
+                    if (sizeKey && !seenSize[sizeKey]) {
+                        seenSize[sizeKey] = true;
+                        sizes.push({
+                            id: 'pm-size-' + sizes.length,
+                            labelAr: sizeKey,
+                            labelEn: v.sizeEn || sizeKey,
+                            widthCm: 90,
+                            heightCm: 210,
+                            priceDelta: erpNum(v.price) > 0 ? Math.round(erpNum(v.price) * 0.05) : 0
+                        });
+                    }
+                });
+            });
+            if (colors.length) systemSettings.doorDesigner.colors = colors;
+            if (sizes.length) systemSettings.doorDesigner.sizes = sizes;
+            return { colors: colors.length, sizes: sizes.length };
+        }
+
+        function syncPlatformFromProductMaster(options) {
+            options = options || {};
+            if (!isMainGovernanceAdmin(currentAdmin) && !options.forceOnLoad) return 0;
+            const count = syncSalesPriceListFromProductMaster();
+            const door = syncDoorDesignerCatalogFromProductMaster();
+            if (!options.silent) {
+                saveSystemData();
+                refreshPublicSiteFromGovernance();
+                addAuditLog('مزامنة مركز المنتجات', count + ' صنف · ألوان ' + door.colors + ' · مقاسات ' + door.sizes);
+                alert('تمت مزامنة ' + count + ' صنف في النظام (متجر · مندوبون · مصمّم أبواب · ERP).');
+            }
+            return count;
+        }
+
+        function getEffectiveSalesPriceList(admin) {
+            admin = admin || currentAdmin;
+            ensureErpOperationsData();
+            let list = salesPriceList || [];
+            const deptId = getAdminDepartmentProductId(admin);
+            if (deptId) {
+                list = list.filter(function(it) { return it.sourceProductId === deptId || isAluminumScopedEntry(it); });
+            }
+            return list.filter(function(it) { return it.visible !== false; });
         }
 
         function userBelongsToBranchTeam(user, manager) {
@@ -10919,7 +11108,9 @@
                 { id: 'account-security', key: null, anyAdmin: true },
                 { id: 'cloud-governance', key: null, superOnly: true },
                 { id: 'executive-reports', key: 'audit' },
-                { id: 'branch-team-management', key: null, branchTeamOnly: true }
+                { id: 'branch-team-management', key: null, branchTeamOnly: true },
+                { id: 'product-master-hub', key: null, productMasterOnly: true },
+                { id: 'aluminum-department', key: 'aluminum' }
             ].forEach(function(block) {
                 const el = document.getElementById(block.id);
                 if (!el) return;
@@ -10929,7 +11120,10 @@
                 }
                 if (block.superOnly && !isSuper) el.classList.remove('show');
                 if (block.branchTeamOnly && !canManageBranchTeam()) el.classList.remove('show');
-                if (block.key && !perm(block.key)) el.classList.remove('show');
+                if (block.productMasterOnly && !isMainGovernanceAdmin()) el.classList.remove('show');
+                if (block.id === 'sales-pricelist' && !(perm('sales') || perm('aluminum'))) el.classList.remove('show');
+                else if (block.id === 'rep-quote-builder' && !(perm('quotes') || perm('aluminum'))) el.classList.remove('show');
+                else if (block.key && !perm(block.key)) el.classList.remove('show');
             });
 
             document.querySelectorAll('.admin-only-ui[data-perm]').forEach(function(node) {
@@ -10976,6 +11170,10 @@
             if (!mod || !currentAdmin) return false;
             if (mod.status === 'planned') return false;
             if (mod.permission && !canManage(mod.permission)) return false;
+            if (isAluminumDepartmentAdmin(currentAdmin)) {
+                const allowed = ['erp-aluminum-dept', 'erp-inventory', 'erp-production', 'erp-warehouse-transfers', 'erp-quote-builder', 'erp-orders', 'erp-pricelist'];
+                if (allowed.indexOf(mod.id) < 0) return false;
+            }
             return true;
         }
 
@@ -11210,20 +11408,22 @@
             const list = document.getElementById('erp-inventory-list');
             if (!list) return;
             ensureBuiltinErpData();
+            const visible = filterErpEntriesForAdmin(erpInventory, currentAdmin);
             const lang = currentLang || 'ar';
-            const lowCount = erpInventory.filter(function(i) { return Number(i.qty) <= Number(i.minQty || 0); }).length;
+            const lowCount = visible.filter(function(i) { return Number(i.qty) <= Number(i.minQty || 0); }).length;
+            const deptNote = getAdminDepartmentProductId(currentAdmin) ? ' — قسم محدود' : '';
             const summary = document.getElementById('erp-inventory-summary');
             if (summary) {
                 summary.innerHTML =
-                    '<div class="erp-stat"><strong>' + erpInventory.length + '</strong><span>أصناف SKU</span></div>' +
+                    '<div class="erp-stat"><strong>' + visible.length + '</strong><span>أصناف SKU' + deptNote + '</span></div>' +
                     '<div class="erp-stat' + (lowCount ? ' erp-stat--alert' : '') + '"><strong>' + lowCount + '</strong><span>تحت الحد الأدنى</span></div>' +
                     '<div class="erp-stat"><strong>' + getErpWarehouseOptions().length + '</strong><span>مستودعات</span></div>';
             }
-            if (!erpInventory.length) {
+            if (!visible.length) {
                 list.innerHTML = '<p class="erp-empty">لا أصناف — أضيفوا SKU من النموذج أعلاه.</p>';
                 return;
             }
-            list.innerHTML = erpInventory.map(function(item) {
+            list.innerHTML = visible.map(function(item) {
                 const name = lang === 'en' && item.nameEn ? item.nameEn : item.nameAr;
                 const wh = lang === 'en' && item.warehouseEn ? item.warehouseEn : item.warehouseAr;
                 const low = Number(item.qty) <= Number(item.minQty || 0);
@@ -11998,8 +12198,11 @@
 
         /* ---------- قائمة الأسعار (مدير المبيعات) ---------- */
         function openSalesPriceList() {
-            if (!requirePermission('sales', 'صلاحية المبيعات مطلوبة.')) return;
+            if (!requirePermission('sales', 'صلاحية المبيعات مطلوبة.') && !canManage('aluminum')) return;
             ensureErpOperationsData();
+            if (!salesPriceList.length || !salesPriceList.some(function(x) { return x.syncedFromMaster; })) {
+                syncSalesPriceListFromProductMaster();
+            }
             renderSalesPriceListForm();
             displaySalesPriceList();
             document.getElementById('sales-pricelist').classList.add('show');
@@ -12008,6 +12211,10 @@
         function renderSalesPriceListForm() {
             const host = document.getElementById('sales-pricelist-form');
             if (!host) return;
+            if (!isMainGovernanceAdmin()) {
+                host.innerHTML = '<p class="product-master-price-readonly"><i class="fas fa-crown"></i> الأسعار والأصناف تُحدَّد من <strong>مركز المنتجات والأسعار</strong> (الإدارة الرئيسية) وتظهر هنا تلقائياً.</p>';
+                return;
+            }
             host.innerHTML =
                 '<div class="erp-form-grid">' +
                     '<label class="nebras-field"><span>المنتج</span><input type="text" id="pl-product" placeholder="باب WPC فلات"></label>' +
@@ -12023,7 +12230,7 @@
         }
 
         function addPriceListItem() {
-            if (!requirePermission('sales')) return;
+            if (!requireProductMasterGovernance('إضافة الأسعار — من مركز المنتجات فقط.')) return;
             ensureErpOperationsData();
             const product = fieldVal('pl-product');
             const base = erpNum(fieldVal('pl-base'));
@@ -12050,7 +12257,7 @@
         }
 
         function deletePriceListItem(id) {
-            if (!requirePermission('sales')) return;
+            if (!requireProductMasterGovernance('حذف الأسعار — من مركز المنتجات فقط.')) return;
             const it = salesPriceList.find(function(x) { return x.id === id; });
             if (!it || !confirm('حذف ' + it.productAr + ' من القائمة؟')) return;
             salesPriceList = salesPriceList.filter(function(x) { return x.id !== id; });
@@ -12062,26 +12269,33 @@
             const list = document.getElementById('sales-pricelist-list');
             if (!list) return;
             ensureErpOperationsData();
+            const visible = getEffectiveSalesPriceList(currentAdmin);
+            const synced = visible.filter(function(x) { return x.syncedFromMaster; }).length;
             const summary = document.getElementById('sales-pricelist-summary');
             if (summary) {
-                summary.innerHTML = '<div class="erp-stat"><strong>' + salesPriceList.length + '</strong><span>أصناف معتمدة للبيع</span></div>';
+                summary.innerHTML =
+                    '<div class="erp-stat"><strong>' + visible.length + '</strong><span>أصناف معتمدة</span></div>' +
+                    '<div class="erp-stat erp-stat--accent"><strong>' + synced + '</strong><span>من مركز المنتجات</span></div>';
             }
-            if (!salesPriceList.length) {
-                list.innerHTML = '<p class="erp-empty">لا أصناف بعد — مدير المبيعات يحدد المنتجات والأسعار التي يعمل عليها المندوبون.</p>';
+            if (!visible.length) {
+                list.innerHTML = '<p class="erp-empty">لا أصناف بعد — الإدارة الرئيسية تحددها من مركز المنتجات والأسعار.</p>';
                 return;
             }
-            list.innerHTML = salesPriceList.map(function(it) {
+            list.innerHTML = visible.map(function(it) {
                 return '<article class="erp-row">' +
                     '<div class="erp-row-main"><strong>' + escapeHtmlAttr(it.productAr) + '</strong>' +
                         '<span class="erp-row-tags">' +
                             (it.sku ? '<span class="erp-tag">' + escapeHtmlAttr(it.sku) + '</span>' : '') +
                             (it.color ? '<span class="erp-tag">' + escapeHtmlAttr(it.color) + '</span>' : '') +
                             (it.size ? '<span class="erp-tag">' + escapeHtmlAttr(it.size) + '</span>' : '') +
+                            (it.syncedFromMaster ? '<span class="erp-tag erp-tag--ok">⟳ ديناميكي</span>' : '') +
                         '</span>' +
                         '<small>المدى المسموح: ' + formatSar(it.minPrice) + ' — ' + formatSar(it.maxPrice) + '</small>' +
                     '</div>' +
                     '<div class="erp-row-qty">' + formatSar(it.basePrice) + '</div>' +
-                    '<button type="button" class="erp-row-del" onclick="deletePriceListItem(\'' + it.id + '\')" aria-label="حذف"><i class="fas fa-trash"></i></button>' +
+                    (isMainGovernanceAdmin() && !it.syncedFromMaster
+                        ? '<button type="button" class="erp-row-del" onclick="deletePriceListItem(\'' + it.id + '\')" aria-label="حذف"><i class="fas fa-trash"></i></button>'
+                        : '') +
                 '</article>';
             }).join('');
         }
@@ -12090,10 +12304,10 @@
         let repQuoteDraft = { customerName: '', phone: '', lines: [] };
 
         function openRepQuoteBuilder() {
-            if (!requirePermission('quotes', 'صلاحية عروض الأسعار مطلوبة.')) return;
+            if (!requirePermission('quotes', 'صلاحية عروض الأسعار مطلوبة.') && !canManage('aluminum')) return;
             ensureErpOperationsData();
-            if (!salesPriceList.length) {
-                alert('لا توجد قائمة أسعار بعد — يحددها مدير المبيعات أولاً من وحدة "قائمة الأسعار".');
+            if (!getEffectiveSalesPriceList(currentAdmin).length) {
+                alert('لا توجد قائمة أسعار — الإدارة الرئيسية تحددها من مركز المنتجات والأسعار.');
             }
             repQuoteDraft = { customerName: '', phone: '', lines: [] };
             renderRepQuoteBuilder();
@@ -12104,7 +12318,8 @@
             const host = document.getElementById('rep-quote-body');
             if (!host) return;
             ensureErpOperationsData();
-            const opts = salesPriceList.map(function(it) {
+            const priceList = getEffectiveSalesPriceList(currentAdmin);
+            const opts = priceList.map(function(it) {
                 return '<option value="' + it.id + '">' + escapeHtmlAttr(it.productAr + ' ' + (it.color || '') + ' ' + (it.size || '')) + ' — ' + formatSar(it.basePrice) + '</option>';
             }).join('');
             const linesHtml = repQuoteDraft.lines.length
@@ -12152,7 +12367,7 @@
             ensureErpOperationsData();
             captureRepQuoteHeader();
             const id = fieldVal('rq-item');
-            const it = salesPriceList.find(function(x) { return x.id === id; });
+            const it = getEffectiveSalesPriceList(currentAdmin).find(function(x) { return x.id === id; });
             if (!it) { alert('اختر صنفاً من القائمة.'); return; }
             const qty = Math.max(1, erpNum(fieldVal('rq-qty')) || 1);
             let price = erpNum(fieldVal('rq-price')) || it.basePrice;
@@ -12698,6 +12913,13 @@
                 descAr: 'مبيعات وعروض وخدمة عملاء وشكاوى فرعك فقط.',
                 scrollTo: 'erp-hub-panel',
                 hideSections: ['dashboard-company-identity', 'dashboard-partners-block']
+            },
+            aluminum_manager: {
+                greetingAr: 'مركز قسم الألومنيوم',
+                descAr: 'مخزون · إنتاج · عروض · طلبات الألومنيوم — الأسعار من الإدارة الرئيسية.',
+                scrollTo: 'erp-hub-panel',
+                openHandler: 'openAluminumDepartment',
+                hideSections: ['dashboard-company-identity', 'dashboard-partners-block', 'platform-hub-panel', 'dashboard-channels-panel', 'dashboard-occasion-panel', 'dashboard-official-hub']
             }
         };
 
@@ -12753,6 +12975,8 @@
                 { roles: ['sales_manager', 'branch_manager'], icon: 'fas fa-user-group', label: 'فريق الفرع', handler: 'openBranchTeamManagement', perm: null },
                 { roles: ['superadmin', 'manager'], icon: 'fas fa-chart-bar', label: 'تقارير تنفيذية', handler: 'openExecutiveReports', perm: 'audit' },
                 { roles: ['sales_manager', 'accountant', 'branch_manager'], icon: 'fas fa-chart-bar', label: 'تقرير الفرع', handler: 'openExecutiveReports', perm: 'audit' },
+                { roles: ['superadmin'], icon: 'fas fa-database', label: 'مركز المنتجات', handler: 'openProductMasterHub', perm: null },
+                { roles: ['aluminum_manager'], icon: 'fas fa-industry', label: 'قسم الألومنيوم', handler: 'openAluminumDepartment', perm: 'aluminum' },
                 { roles: ['superadmin', 'manager'], icon: 'fas fa-paint-roller', label: 'محتوى الموقع', handler: 'openSiteContentManager', perm: 'content' },
                 { roles: ['superadmin', 'manager'], icon: 'fas fa-cloud-upload-alt', label: 'رفع وسائط', handler: 'openNebrasMediaHubQuick', perm: 'content' },
                 { roles: ['sales_manager', 'sales_rep', 'branch_manager'], icon: 'fas fa-file-signature', label: 'عروض الأسعار', handler: 'openRepQuoteBuilder', perm: 'quotes' },
@@ -12771,6 +12995,8 @@
                 if (item.roles.indexOf(role) < 0) return;
                 if (item.handler === 'openBranchTeamManagement' && !canManageBranchTeam()) return;
                 if (item.handler === 'openExecutiveReports' && !canViewExecutiveReports()) return;
+                if (item.handler === 'openProductMasterHub' && !isMainGovernanceAdmin()) return;
+                if (item.handler === 'openAluminumDepartment' && !canManage('aluminum') && !isMainGovernanceAdmin()) return;
                 if (item.perm && !canManage(item.perm)) return;
                 actions.push(item);
             });
@@ -13616,6 +13842,112 @@
             saveSystemData();
             renderBranchTeamPanel();
             addAuditLog('حذف مندوب فرع', user.username);
+        }
+
+        function openProductMasterHub() {
+            if (!requireProductMasterGovernance()) return;
+            renderProductMasterPanel();
+            document.getElementById('product-master-hub').classList.add('show');
+        }
+
+        function renderProductMasterPanel() {
+            const summary = document.getElementById('product-master-summary');
+            const table = document.getElementById('product-master-table');
+            if (!table) return;
+            let variantCount = 0;
+            let pricedCount = 0;
+            (siteProducts || []).forEach(function(p) {
+                (p.variants || []).forEach(function(v) {
+                    variantCount++;
+                    if (erpNum(v.price) > 0) pricedCount++;
+                });
+            });
+            if (summary) {
+                summary.innerHTML =
+                    '<div class="erp-stat erp-stat--accent"><strong>' + (siteProducts || []).filter(function(p) { return p.visible !== false; }).length + '</strong><span>منتجات نشطة</span></div>' +
+                    '<div class="erp-stat"><strong>' + variantCount + '</strong><span>أصناف (نوع·مقاس·لون)</span></div>' +
+                    '<div class="erp-stat"><strong>' + pricedCount + '</strong><span>بأسعار محددة</span></div>' +
+                    '<div class="erp-stat"><strong>' + (salesPriceList || []).filter(function(x) { return x.syncedFromMaster; }).length + '</strong><span>مزامَنة للمندوبين</span></div>';
+            }
+            const rows = [];
+            (siteProducts || []).forEach(function(product) {
+                if (!product || getCatalogExperience(product) === 'complaint') return;
+                rows.push('<tr class="product-master-product-row"><td colspan="7"><i class="fas fa-box"></i> ' + escapeHtmlAttr(product.titleAr || product.id) +
+                    ' <button type="button" class="erp-tag erp-tag--action" onclick="manageProductVariants(\'' + String(product.id).replace(/'/g, "\\'") + '\')"><i class="fas fa-plus"></i> إضافة صنف</button>' +
+                    ' <button type="button" class="erp-tag" onclick="editSiteProduct(\'' + String(product.id).replace(/'/g, "\\'") + '\')"><i class="fas fa-pen"></i> تعديل المنتج</button></td></tr>');
+                const variants = product.variants || [];
+                if (!variants.length) {
+                    rows.push('<tr><td colspan="7" class="erp-empty">لا أصناف — أضيفي نوع · مقاس · لون · سعر</td></tr>');
+                    return;
+                }
+                variants.forEach(function(v, idx) {
+                    const priceTxt = erpNum(v.price) > 0 ? formatSar(v.price) + ' (قبل الضريبة)' : 'عند الطلب';
+                    rows.push('<tr>' +
+                        '<td>' + escapeHtmlAttr(v.typeAr || '—') + '</td>' +
+                        '<td>' + escapeHtmlAttr(v.sizeAr || '—') + '</td>' +
+                        '<td>' + escapeHtmlAttr(v.colorAr || '—') + '</td>' +
+                        '<td>' + escapeHtmlAttr(v.sku || '—') + '</td>' +
+                        '<td><strong>' + escapeHtmlAttr(priceTxt) + '</strong></td>' +
+                        '<td>' + (product.visible !== false ? '<span class="erp-tag erp-tag--ok">نشط</span>' : '<span class="erp-tag">مخفي</span>') + '</td>' +
+                        '<td><button type="button" class="erp-tag erp-tag--action" onclick="manageProductVariants(\'' + String(product.id).replace(/'/g, "\\'") + '\')">تعديل #' + idx + '</button></td>' +
+                    '</tr>');
+                });
+            });
+            table.innerHTML = '<table class="product-master-table"><thead><tr>' +
+                '<th>النوع / الشكل</th><th>المقاس</th><th>اللون</th><th>SKU</th><th>السعر</th><th>الحالة</th><th>إجراء</th>' +
+                '</tr></thead><tbody>' + rows.join('') + '</tbody></table>';
+        }
+
+        function openAluminumDepartment() {
+            if (!canManage('aluminum') && !isMainGovernanceAdmin()) {
+                alert('قسم الألومنيوم — لمدير قسم الألومنيوم أو الإدارة الرئيسية.');
+                return;
+            }
+            renderAluminumDepartmentPanel();
+            document.getElementById('aluminum-department').classList.add('show');
+        }
+
+        function renderAluminumDepartmentPanel() {
+            const summary = document.getElementById('aluminum-dept-summary');
+            const actions = document.getElementById('aluminum-dept-actions');
+            const variantsHost = document.getElementById('aluminum-dept-variants');
+            if (!actions) return;
+            const aluProduct = (siteProducts || []).find(function(p) { return p.id === NEBRAS_ALUMINUM_PRODUCT_ID; });
+            const variants = aluProduct ? (aluProduct.variants || []) : [];
+            const invCount = filterDepartmentEntriesForAdmin(erpInventory, currentAdmin).length;
+            const prodCount = filterDepartmentEntriesForAdmin(erpProduction, currentAdmin).length;
+            if (summary) {
+                summary.innerHTML =
+                    '<div class="erp-stat erp-stat--accent"><strong>' + variants.length + '</strong><span>أصناف ألومنيوم</span></div>' +
+                    '<div class="erp-stat"><strong>' + invCount + '</strong><span>مخزون ALU</span></div>' +
+                    '<div class="erp-stat"><strong>' + prodCount + '</strong><span>سجلات إنتاج</span></div>' +
+                    '<div class="erp-stat"><strong>' + getEffectiveSalesPriceList(currentAdmin).length + '</strong><span>أسعار معتمدة</span></div>';
+            }
+            const cards = [
+                { icon: 'fas fa-boxes-stacked', title: 'مخزون الألومنيوم', desc: 'SKU وكميات قسم ALU', handler: 'openErpInventory' },
+                { icon: 'fas fa-industry', title: 'إنتاج الألومنيوم', desc: 'تسجيل الإنتاج اليومي', handler: 'openErpProduction' },
+                { icon: 'fas fa-file-signature', title: 'عروض الألومنيوم', desc: 'بناء عرض سعر من الأسعار المعتمدة', handler: 'openRepQuoteBuilder' },
+                { icon: 'fas fa-truck', title: 'طلبات الألومنيوم', desc: 'OMS — تنفيذ طلبات القسم', handler: 'openErpOrders' }
+            ];
+            actions.innerHTML = cards.map(function(c) {
+                return '<button type="button" class="aluminum-dept-card" onclick="' + c.handler + '()">' +
+                    '<i class="' + c.icon + '"></i><h4>' + escapeHtmlAttr(c.title) + '</h4><small>' + escapeHtmlAttr(c.desc) + '</small></button>';
+            }).join('');
+            if (variantsHost) {
+                if (!variants.length) {
+                    variantsHost.innerHTML = '<p class="erp-empty">لا أصناف ألومنيوم — الإدارة الرئيسية تضيفها من مركز المنتجات.</p>';
+                } else {
+                    variantsHost.innerHTML = variants.map(function(v) {
+                        const priceTxt = erpNum(v.price) > 0 ? formatSar(v.price) : 'عند الطلب';
+                        return '<article class="erp-row"><div class="erp-row-main"><strong>' + escapeHtmlAttr(v.typeAr || 'صنف') + '</strong>' +
+                            '<span class="erp-row-tags">' +
+                                (v.sizeAr ? '<span class="erp-tag">' + escapeHtmlAttr(v.sizeAr) + '</span>' : '') +
+                                (v.colorAr ? '<span class="erp-tag">' + escapeHtmlAttr(v.colorAr) + '</span>' : '') +
+                                (v.sku ? '<span class="erp-tag">' + escapeHtmlAttr(v.sku) + '</span>' : '') +
+                            '</span><small>السعر: ' + escapeHtmlAttr(priceTxt) + ' — من الإدارة الرئيسية</small></div></article>';
+                    }).join('');
+                }
+            }
         }
 
         function openSystemSettings() {
@@ -20030,6 +20362,10 @@
             ensureDefaultSocialSettings();
             ensureDashboardGovernanceHandlers();
             ensureAnalyticsGovernance();
+            if (typeof syncSalesPriceListFromProductMaster === 'function') {
+                syncSalesPriceListFromProductMaster();
+                syncDoorDesignerCatalogFromProductMaster();
+            }
             adminUsers = (Array.isArray(adminUsers) ? adminUsers : []).map(function(user, index) {
                 const role = user && allowedRoles.includes(String(user.role || '').toLowerCase()) ? String(user.role).toLowerCase() : 'manager';
                 const isPrimary = user && (user.isPrimary === true || PRIMARY_GOVERNANCE_ADMIN_IDS.indexOf(user.id) >= 0 ||
@@ -20397,7 +20733,7 @@
         }
 
         async function manageProductVariants(productId) {
-            if (!requirePermission('content')) return;
+            if (!requireProductMasterGovernance('تحديد الأسماء والأنواع والمقاسات والأسعار — الإدارة الرئيسية فقط.')) return;
             const product = siteProducts.find(function(p) { return p.id === productId; });
             if (!product) return;
             const listPreview = (product.variants || []).map(function(v, i) {
@@ -20462,6 +20798,9 @@
             }
             saveContentData();
             displaySiteProductsAdmin();
+            if (document.getElementById('product-master-hub') && document.getElementById('product-master-hub').classList.contains('show')) {
+                renderProductMasterPanel();
+            }
             addAuditLog('أسعار المنتج', product.titleAr || productId);
         }
 
@@ -22944,4 +23283,7 @@
         window.deleteBranchRep = deleteBranchRep;
         window.filterErpOrders = filterErpOrders;
         window.exportErpOrdersCsv = exportErpOrdersCsv;
+        window.openProductMasterHub = openProductMasterHub;
+        window.syncPlatformFromProductMaster = syncPlatformFromProductMaster;
+        window.openAluminumDepartment = openAluminumDepartment;
 
