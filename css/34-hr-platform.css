@@ -754,3 +754,59 @@
 /* Phase 20 — HR fleet + sales reps */
 .hr-gov-owner-banner--main { border-color: #155e94; background: linear-gradient(135deg, #eaf4fb, #f8fbff); }
 .hr-tracking-section-title { margin: 1rem 0 0.5rem; font-size: 0.92rem; color: #1a5276; display: flex; align-items: center; gap: 0.4rem; }
+
+
+/* Phase 24 — ضمان ظهور منصة HR فوق الداشبورد */
+#hr-platform.admin-section.show {
+    z-index: 10050;
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+}
+body.hr-platform-open {
+    overflow: hidden;
+}
+
+/* Phase 25 — شجرة العمل HR */
+.hr-org-tree-panel { padding: 4px 0; }
+.hr-org-tree-intro {
+    margin: 0 0 16px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(41, 128, 185, 0.08), rgba(39, 174, 96, 0.06));
+    border: 1px solid rgba(41, 128, 185, 0.2);
+}
+.hr-org-tree-intro h4 { margin: 0 0 8px; color: #1a5276; }
+.hr-org-tree-intro p { margin: 0 0 12px; font-size: 0.86rem; color: #2c5282; }
+.hr-org-tree-root { display: flex; flex-direction: column; gap: 14px; }
+.hr-org-branch {
+    border: 1px solid #d8e2ec;
+    border-radius: 14px;
+    background: #f8fafc;
+    overflow: hidden;
+}
+.hr-org-branch-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    background: linear-gradient(135deg, #0d2840, #155e94);
+    color: #fff;
+}
+.hr-org-branch-head h4 { margin: 0; flex: 1; font-size: 0.95rem; }
+.hr-org-count { font-size: 0.78rem; opacity: 0.85; }
+.hr-org-children {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+    padding: 12px;
+}
+.hr-org-node {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 10px 12px;
+    background: #fff;
+}
+.hr-org-node-head { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; }
+.hr-org-node-meta { margin: 6px 0 8px; font-size: 0.78rem; color: #5a6a7a; }
+.hr-org-node-actions { display: flex; flex-wrap: wrap; gap: 6px; }

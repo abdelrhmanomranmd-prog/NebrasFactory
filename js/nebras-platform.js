@@ -2237,7 +2237,11 @@
             openErpProcurement: function() { openErpProcurement(); },
             openProductMasterHub: function() { openProductMasterHub(); },
             openAluminumDepartment: function() { openAluminumDepartment(); },
-            openHrPlatform: function() { if (typeof openHrPlatform === 'function') openHrPlatform(); },
+            openHrPlatform: function() {
+                const fn = window.openHrPlatform;
+                if (typeof fn === 'function') fn();
+                else alert('منصة HR قيد التحميل — أعيدي تحميل الصفحة.');
+            },
             openExecutiveReports: function() { openExecutiveReports(); },
             syncPlatformFromProductMaster: function() { syncPlatformFromProductMaster(); },
             scrollErpHub: function() { scrollErpHub(); },
@@ -4111,22 +4115,26 @@
             complaints: 'الشكاوى (تقرير)',
             audit: 'سجل التدقيق'
         }[category] || category;
-        if (!skipConfirm && !confirm('حذف تحليلات «' + catLabel + '» لـ ' + periodLabel + '؟ لا يمكن التراجع إلا من سلة الاستعادة (إن وُجدت).')) return 0;
+        if (category !== 'quotes' && !skipConfirm && !confirm('حذف تحليلات «' + catLabel + '» لـ ' + periodLabel + '؟ لا يمكن التراجع إلا من سلة الاستعادة (إن وُجدت).')) return 0;
+        if (category === 'quotes' && !skipConfirm && !confirm('حذف تحليلات «عروض الأسعار» لـ ' + periodLabel + '؟')) return 0;
 
         let removed = 0;
         if (category === 'quotes') {
-            const inbox = loadSalesQuotesInbox();
-            const keep = [];
-            inbox.forEach(function(entry) {
-                if (entry && matchesExecutiveReportPeriod(entry, period)) {
-                    archiveAnalyticsRecord('quotes', entry.id || entry.quoteNo, entry, entry.quoteNo || entry.customerName);
-                    removed++;
-                } else {
-                    keep.push(entry);
+            purgeAnalyticsQuotesByPeriod(period, true).then(function(qRemoved) {
+                removed = qRemoved;
+                if (!skipConfirm) {
+                    const pl2 = period === 'daily' ? 'اليوم' : (period === 'monthly' ? 'هذا الشهر' : 'هذه السنة');
+                    if (typeof showNebrasAdminToast === 'function') {
+                        showNebrasAdminToast(qRemoved ? ('تم حذف ' + qRemoved + ' عرض — ' + pl2) : ('لا عروض في هذه الفترة — ' + pl2), qRemoved ? 'ok' : 'warn');
+                    } else if (!qRemoved) alert('لا عروض في الفترة المحددة (' + pl2 + ').');
+                    renderAdminAnalyticsPanel();
+                    if (typeof refreshDashboardExecutiveBi === 'function' && currentAdmin) refreshDashboardExecutiveBi(currentAdmin);
                 }
+            }).catch(function(err) {
+                console.warn('purgeAnalyticsQuotesByPeriod', err);
+                alert('تعذّر حذف العروض — تحققي من الاتصال وأعيدي المحاولة.');
             });
-            saveSalesQuotesInbox(keep);
-            displaySalesQuotesInbox();
+            return 0;
         } else if (category === 'visitors') {
             ensureVisitorAnalytics();
             const keep = [];
@@ -4177,11 +4185,11 @@
             if (typeof displayAuditLog === 'function') displayAuditLog();
         }
 
-        if (!skipConfirm) {
-            addAuditLog('حذف تحليلات بالفترة', catLabel + ' — ' + periodLabel + ' (' + removed + ' سجل)');
+        if (category !== 'quotes') finalizeAnalyticsGovernanceMutation('حذف تحليلات بالفترة', catLabel + ' — ' + periodLabel + ' (' + removed + ')');
+        if (!skipConfirm && category !== 'quotes') {
             if (typeof showNebrasAdminToast === 'function') {
-                showNebrasAdminToast('تم حذف ' + removed + ' سجل — ' + catLabel + ' / ' + periodLabel, 'ok');
-            }
+                showNebrasAdminToast(removed ? ('تم حذف ' + removed + ' سجل — ' + catLabel + ' / ' + periodLabel) : ('لا سجلات في الفترة — ' + catLabel + ' / ' + periodLabel), removed ? 'ok' : 'warn');
+            } else if (!removed) alert('لا سجلات في الفترة المحددة (' + periodLabel + ').');
             renderAdminAnalyticsPanel();
             if (typeof refreshDashboardExecutiveBi === 'function' && currentAdmin) refreshDashboardExecutiveBi(currentAdmin);
         }
@@ -4326,6 +4334,162 @@
             user.dataset.loginBound = '1';
             user.addEventListener('keydown', handler);
         }
+    }
+
+/* PHASE24_INJECTED */
+/* Phase 24 — Analytics purge (cloud+local) + HR platform open reliability */
+
+    function closeAllAdminSections() {
+        document.querySelectorAll('.admin-section.show').forEach(function(el) {
+            el.classList.remove('show');
+            el.setAttribute('aria-hidden', 'true');
+        });
+        document.body.classList.remove('hr-platform-open');
+    }
+
+    async function mergeAllQuotesForGovernanceAsync() {
+        const local = typeof loadSalesQuotesInbox === 'function' ? loadSalesQuotesInbox() : [];
+        let cloud = [];
+        if (typeof fetchSalesQuotesFromCloud === 'function') {
+            try { cloud = await fetchSalesQuotesFromCloud(); } catch (e) { cloud = []; }
+        }
+        const merged = [];
+        const seen = {};
+        cloud.concat(local).forEach(function(e) {
+            if (!e) return;
+            const key = String(e.quoteNo || e.id || '').trim();
+            if (!key || seen[key]) return;
+            seen[key] = true;
+            merged.push(e);
+        });
+        return merged;
+    }
+
+    function archiveAnalyticsQuoteKeys(entry) {
+        if (!entry || typeof archiveAnalyticsRecord !== 'function') return;
+        const label = entry.quoteNo || entry.customerName || entry.id || 'عرض';
+        const keys = [];
+        ['id', 'quoteNo', 'cloudId'].forEach(function(field) {
+            const k = entry[field];
+            if (k && keys.indexOf(String(k)) < 0) keys.push(String(k));
+        });
+        if (!keys.length) return;
+        keys.forEach(function(k) {
+            archiveAnalyticsRecord('quotes', k, entry, label);
+        });
+    }
+
+    function finalizeAnalyticsGovernanceMutation(actionLabel, detail) {
+        if (typeof markGovernanceMutation === 'function') markGovernanceMutation();
+        if (typeof persistAnalyticsGovernanceLocal === 'function') persistAnalyticsGovernanceLocal();
+        if (typeof saveSystemData === 'function') saveSystemData();
+        if (actionLabel && typeof addAuditLog === 'function') addAuditLog(actionLabel, detail || '');
+        if (typeof schedulePushToNebrasCloud === 'function') schedulePushToNebrasCloud();
+    }
+
+    async function purgeAnalyticsQuotesByPeriod(period, skipConfirm) {
+        if (!requireMainGovernanceAdmin()) return 0;
+        const all = await mergeAllQuotesForGovernanceAsync();
+        let removed = 0;
+        all.forEach(function(entry) {
+            if (!entry || !matchesExecutiveReportPeriod(entry, period)) return;
+            const key = entry.id || entry.quoteNo;
+            if (key && typeof isAnalyticsItemDeleted === 'function' && isAnalyticsItemDeleted('quotes', key)) return;
+            archiveAnalyticsQuoteKeys(entry);
+            removed++;
+        });
+        const keepLocal = (typeof loadSalesQuotesInbox === 'function' ? loadSalesQuotesInbox() : []).filter(function(entry) {
+            return !(entry && matchesExecutiveReportPeriod(entry, period));
+        });
+        if (typeof saveSalesQuotesInbox === 'function') saveSalesQuotesInbox(keepLocal);
+        if (typeof displaySalesQuotesInbox === 'function') displaySalesQuotesInbox();
+        finalizeAnalyticsGovernanceMutation('حذف عروض بالفترة', String(removed));
+        return removed;
+    }
+
+    async function clearAllAnalyticsQuotesAsync() {
+        if (!requireMainGovernanceAdmin()) return;
+        const all = await mergeAllQuotesForGovernanceAsync();
+        if (!all.length) {
+            alert('لا عروض أسعار لإفراغها.');
+            return;
+        }
+        if (!confirm('إفراغ كل عروض الأسعار من التقارير (' + all.length + ')؟ تُحفظ في سلة الاستعادة.')) return;
+        all.forEach(function(entry) { archiveAnalyticsQuoteKeys(entry); });
+        if (typeof saveSalesQuotesInbox === 'function') saveSalesQuotesInbox([]);
+        if (typeof displaySalesQuotesInbox === 'function') displaySalesQuotesInbox();
+        finalizeAnalyticsGovernanceMutation('إفراغ كل العروض', String(all.length));
+        if (typeof showNebrasAdminToast === 'function') {
+            showNebrasAdminToast('تم إفراغ ' + all.length + ' عرض سعر من التحليلات', 'ok');
+        }
+        if (typeof renderAdminAnalyticsPanel === 'function') renderAdminAnalyticsPanel();
+        if (typeof refreshDashboardExecutiveBi === 'function' && currentAdmin) refreshDashboardExecutiveBi(currentAdmin);
+    }
+
+/* PHASE25_INJECTED */
+/* Phase 25 — Cloud-delete guard + analytics hardening */
+
+    let nebrasGovernanceMutationAt = 0;
+
+    function markGovernanceMutation() {
+        nebrasGovernanceMutationAt = Date.now();
+    }
+
+    function shouldSkipStaleCloudGovernanceRow(storeKey) {
+        if (storeKey !== 'analytics_governance' && storeKey !== 'sales_quotes_inbox') return false;
+        return (Date.now() - nebrasGovernanceMutationAt) < 45000;
+    }
+
+    async function clearAllAnalyticsTransfersAsync() {
+        if (!requireMainGovernanceAdmin()) return;
+        const all = await mergeAllQuotesForGovernanceAsync();
+        const transferEntries = all.filter(function(e) {
+            return e && (e.transferReceiptDataUrl || e.transferDeclared);
+        });
+        if (!transferEntries.length) { alert('لا حوالات لإفراغها.'); return; }
+        if (!confirm('إفراغ تقرير الحوالات (' + transferEntries.length + ')؟')) return;
+        transferEntries.forEach(function(entry) { archiveAnalyticsQuoteKeys(entry); });
+        const keep = loadSalesQuotesInbox().filter(function(e) {
+            return !e || (!e.transferReceiptDataUrl && !e.transferDeclared);
+        });
+        saveSalesQuotesInbox(keep);
+        markGovernanceMutation();
+        finalizeAnalyticsGovernanceMutation('إفراغ الحوالات', String(transferEntries.length));
+        if (typeof showNebrasAdminToast === 'function') showNebrasAdminToast('تم إفراغ ' + transferEntries.length + ' حوالة', 'ok');
+        displaySalesQuotesInbox();
+        renderAdminAnalyticsPanel();
+    }
+
+    function clearAllAnalyticsTransfers() {
+        clearAllAnalyticsTransfersAsync().catch(function(err) {
+            console.warn('clearAllAnalyticsTransfers', err);
+            alert('تعذّر إفراغ الحوالات.');
+        });
+    }
+
+    async function clearAllAnalyticsCustomersAsync() {
+        if (!requireMainGovernanceAdmin()) return;
+        const all = await mergeAllQuotesForGovernanceAsync();
+        if (!all.length && !(salesData || []).length) { alert('لا بيانات عملاء لإفراغها.'); return; }
+        if (!confirm('إفراغ تقرير العملاء؟ (' + all.length + ' عرض + ' + (salesData || []).length + ' مبيعات)')) return;
+        all.forEach(function(entry) { archiveAnalyticsQuoteKeys(entry); });
+        (salesData || []).slice().forEach(function(s) {
+            archiveAnalyticsRecord('sales', s.id || s.quoteNo, s, s.customerName || s.product);
+        });
+        saveSalesQuotesInbox([]);
+        salesData = [];
+        markGovernanceMutation();
+        finalizeAnalyticsGovernanceMutation('إفراغ العملاء', String(all.length));
+        if (typeof showNebrasAdminToast === 'function') showNebrasAdminToast('تم إفراغ تقرير العملاء', 'ok');
+        displaySales();
+        renderAdminAnalyticsPanel();
+    }
+
+    function clearAllAnalyticsCustomers() {
+        clearAllAnalyticsCustomersAsync().catch(function(err) {
+            console.warn('clearAllAnalyticsCustomers', err);
+            alert('تعذّر إفراغ العملاء.');
+        });
     }
 
         function buildCartBankPaymentHtmlCore(lang) {
@@ -5258,53 +5422,50 @@
         }
 
         function clearAllAnalyticsQuotes() {
+            if (typeof clearAllAnalyticsQuotesAsync === 'function') {
+                clearAllAnalyticsQuotesAsync().catch(function(err) {
+                    console.warn('clearAllAnalyticsQuotes', err);
+                    alert('تعذّر إفراغ العروض — أعيدي تحميل الصفحة.');
+                });
+                return;
+            }
             if (!requireMainGovernanceAdmin()) return;
             const inbox = loadSalesQuotesInbox();
             if (!inbox.length) { alert('لا عروض أسعار لإفراغها.'); return; }
             if (!confirm('إفراغ كل عروض الأسعار من التقارير؟ (تُحفظ في سلة الاستعادة)')) return;
             inbox.forEach(function(entry) {
-                archiveAnalyticsRecord('quotes', entry.id || entry.quoteNo, entry, entry.quoteNo || entry.customerName);
+                if (typeof archiveAnalyticsQuoteKeys === 'function') archiveAnalyticsQuoteKeys(entry);
+                else archiveAnalyticsRecord('quotes', entry.id || entry.quoteNo, entry, entry.quoteNo || entry.customerName);
             });
             saveSalesQuotesInbox([]);
             displaySalesQuotesInbox();
+            if (typeof finalizeAnalyticsGovernanceMutation === 'function') finalizeAnalyticsGovernanceMutation('إفراغ كل العروض', String(inbox.length));
+            else saveSystemData();
             renderAdminAnalyticsPanel();
         }
 
         function clearAllAnalyticsTransfers() {
+            if (typeof clearAllAnalyticsTransfersAsync === 'function') {
+                clearAllAnalyticsTransfersAsync().catch(function(err) {
+                    console.warn('clearAllAnalyticsTransfers', err);
+                    alert('تعذّر إفراغ الحوالات.');
+                });
+                return;
+            }
             if (!requireMainGovernanceAdmin()) return;
-            const inbox = loadSalesQuotesInbox();
-            const transferEntries = inbox.filter(function(e) {
-                return e && (e.transferReceiptDataUrl || e.transferDeclared);
-            });
-            if (!transferEntries.length) { alert('لا حوالات لإفراغها.'); return; }
-            if (!confirm('إفراغ تقرير الحوالات (' + transferEntries.length + ')؟ تُحذف الطلبات المرتبطة من التقارير.')) return;
-            transferEntries.forEach(function(entry) {
-                archiveAnalyticsRecord('quotes', entry.id || entry.quoteNo, entry, 'حوالة: ' + (entry.quoteNo || entry.customerName));
-            });
-            const remaining = inbox.filter(function(e) {
-                return !e || (!e.transferReceiptDataUrl && !e.transferDeclared);
-            });
-            saveSalesQuotesInbox(remaining);
-            displaySalesQuotesInbox();
-            renderAdminAnalyticsPanel();
+            alert('جاري تحميل وحدة الحوكمة — أعيدي المحاولة.');
         }
 
         function clearAllAnalyticsCustomers() {
+            if (typeof clearAllAnalyticsCustomersAsync === 'function') {
+                clearAllAnalyticsCustomersAsync().catch(function(err) {
+                    console.warn('clearAllAnalyticsCustomers', err);
+                    alert('تعذّر إفراغ العملاء.');
+                });
+                return;
+            }
             if (!requireMainGovernanceAdmin()) return;
-            const inbox = loadSalesQuotesInbox();
-            if (!inbox.length && !(salesData || []).length) { alert('لا بيانات عملاء لإفراغها.'); return; }
-            if (!confirm('إفراغ تقرير العملاء؟ تُحذف كل عروض الأسعار والمبيعات المرتبطة (مع الاستعادة لاحقاً).')) return;
-            inbox.forEach(function(entry) {
-                archiveAnalyticsRecord('quotes', entry.id || entry.quoteNo, entry, entry.customerName || entry.quoteNo);
-            });
-            (salesData || []).slice().forEach(function(s) {
-                archiveAnalyticsRecord('sales', s.id || s.quoteNo, s, s.customerName || s.product);
-            });
-            saveSalesQuotesInbox([]);
-            salesData = [];
-            saveSystemData();
-            displaySales();
-            renderAdminAnalyticsPanel();
+            alert('جاري تحميل وحدة الحوكمة — أعيدي المحاولة.');
         }
 
         function clearAllAnalyticsVisitors() {
@@ -5318,6 +5479,8 @@
             });
             visitorAnalytics.sessions = [];
             saveVisitorAnalyticsLocal();
+            if (typeof finalizeAnalyticsGovernanceMutation === 'function') finalizeAnalyticsGovernanceMutation('إفراغ الزوار', String(sessions.length));
+            else saveSystemData();
             renderAdminAnalyticsPanel();
         }
 
@@ -5331,8 +5494,11 @@
                 archiveAnalyticsRecord('complaints', id, c, c && c.customerName ? c.customerName : id);
                 delete complaints[id];
             });
-            saveSystemData();
-            if (typeof persistAnalyticsGovernanceLocal === 'function') persistAnalyticsGovernanceLocal();
+            if (typeof finalizeAnalyticsGovernanceMutation === 'function') finalizeAnalyticsGovernanceMutation('إفراغ الشكاوى', String(keys.length));
+            else {
+                saveSystemData();
+                if (typeof persistAnalyticsGovernanceLocal === 'function') persistAnalyticsGovernanceLocal();
+            }
             if (typeof saveAdminPresenceLocal === 'function') saveAdminPresenceLocal();
             renderAdminAnalyticsPanel();
         }
@@ -5347,8 +5513,13 @@
             if (!total) { alert('سلة الاستعادة فارغة.'); return; }
             if (!confirm('حذف نهائي لـ ' + total + ' عنصر من سلة الاستعادة؟ لا يمكن التراجع.')) return;
             analyticsGovernance.deleted = { quotes: [], visitors: [], complaints: [], sales: [], customers: [] };
-            saveSystemData();
-            addAuditLog('إفراغ سلة الاستعادة', String(total) + ' عنصر');
+            if (typeof finalizeAnalyticsGovernanceMutation === 'function') {
+                finalizeAnalyticsGovernanceMutation('إفراغ سلة الاستعادة', String(total) + ' عنصر');
+            } else {
+                saveSystemData();
+                addAuditLog('إفراغ سلة الاستعادة', String(total) + ' عنصر');
+            }
+            if (typeof showNebrasAdminToast === 'function') showNebrasAdminToast('تم الحذف النهائي لـ ' + total + ' عنصر من سلة الاستعادة', 'ok');
             renderAdminAnalyticsPanel();
         }
 
@@ -13784,7 +13955,7 @@
                     focusBanner.innerHTML = '<h4><i class="fas fa-bolt"></i> ' + escapeHtmlAttr(focus.greetingAr) + '</h4>' +
                         '<p>' + escapeHtmlAttr(focus.descAr) + '</p>' +
                         (typeof handlerFn === 'function'
-                            ? '<button type="button" onclick="' + escapeHtmlAttr(focus.openHandler) + '()"><i class="fas fa-arrow-left"></i> فتح وحدة العمل</button>'
+                            ? '<button type="button" onclick="runDashboardHandler(\'' + escapeHtmlAttr(focus.openHandler) + '\')"><i class="fas fa-arrow-left"></i> فتح وحدة العمل</button>'
                             : '');
                 } else {
                     focusBanner.hidden = true;
@@ -20407,8 +20578,23 @@
             else openNebrasWorkspace({ pillar: 'platform', view: 'sections-hub' });
         }
 
+        function closeAllAdminSections() {
+            document.querySelectorAll('.admin-section.show').forEach(function(el) {
+                el.classList.remove('show');
+                el.setAttribute('aria-hidden', 'true');
+            });
+            document.body.classList.remove('hr-platform-open');
+        }
+
         function closeAdminSection(sectionId) {
-            document.getElementById(sectionId).classList.remove('show');
+            const el = document.getElementById(sectionId);
+            if (el) {
+                el.classList.remove('show');
+                el.setAttribute('aria-hidden', 'true');
+            }
+            if (!document.querySelector('.admin-section.show')) {
+                document.body.classList.remove('hr-platform-open');
+            }
         }
 
         function parseAdminPermissionsInput(raw, fallbackRole) {
@@ -21555,6 +21741,9 @@
         ];
 
         function applyNebrasCloudRow(storeKey, payload) {
+            if (typeof shouldSkipStaleCloudGovernanceRow === 'function' && shouldSkipStaleCloudGovernanceRow(storeKey)) {
+                return;
+            }
             const spec = NEBRAS_CLOUD_STORE_SPECS.find(function(s) { return s.key === storeKey; });
             if (!spec || payload === undefined || payload === null) return;
             if (Array.isArray(payload) && !payload.length) {
@@ -24347,6 +24536,13 @@
         window.viewSalesQuoteDoorDesign = viewSalesQuoteDoorDesign;
         window.closeSalesQuoteDoorDesign = closeSalesQuoteDoorDesign;
         window.openAdminAnalytics = openAdminAnalytics;
+        window.markGovernanceMutation = markGovernanceMutation;
+        window.clearAllAnalyticsTransfersAsync = clearAllAnalyticsTransfersAsync;
+        window.clearAllAnalyticsCustomersAsync = clearAllAnalyticsCustomersAsync;
+        window.closeAllAdminSections = closeAllAdminSections;
+        window.finalizeAnalyticsGovernanceMutation = finalizeAnalyticsGovernanceMutation;
+        window.purgeAnalyticsQuotesByPeriod = purgeAnalyticsQuotesByPeriod;
+        window.clearAllAnalyticsQuotesAsync = clearAllAnalyticsQuotesAsync;
         window.purgeAnalyticsByPeriod = purgeAnalyticsByPeriod;
         window.purgeAllAnalyticsByPeriod = purgeAllAnalyticsByPeriod;
         window.assertQuoteAccess = assertQuoteAccess;
@@ -24393,6 +24589,7 @@
         window.openAdminPanel = openAdminPanel;
         window.closeAdminOverlay = closeAdminOverlay;
         window.onDashboardTileClick = onDashboardTileClick;
+        window.runDashboardHandler = runDashboardHandler;
         window.scrollToDashboardSection = scrollToDashboardSection;
         window.openSiteContentManager = openSiteContentManager;
         window.openIconManagement = openIconManagement;

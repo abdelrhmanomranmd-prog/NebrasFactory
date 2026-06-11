@@ -442,9 +442,19 @@
     function openHrPlatform() {
         if (!requireHrAccess()) return;
         loadHrData();
+        if (typeof closeAllAdminSections === 'function') closeAllAdminSections();
+        else document.querySelectorAll('.admin-section.show').forEach(function(node) { node.classList.remove('show'); });
         renderHrPlatformPanel();
         const el = document.getElementById('hr-platform');
-        if (el) el.classList.add('show');
+        if (!el) {
+            alert('تعذر فتح منصة HR — أعيدي تحميل الصفحة.');
+            return;
+        }
+        el.classList.add('show');
+        el.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('hr-platform-open');
+        try { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) { /* ignore */ }
+        if (typeof showNebrasAdminToast === 'function') showNebrasAdminToast('منصة الموارد البشرية — جاهزة', 'ok');
     }
 
     function switchHrTab(tab) {
@@ -512,6 +522,7 @@
         const tabDefs = [
             { id: 'dashboard', icon: 'fas fa-gauge-high', label: 'لوحة التحكم' },
             { id: 'employees', icon: 'fas fa-users', label: 'الموظفون والعمال' },
+            { id: 'org-tree', icon: 'fas fa-sitemap', label: 'شجرة العمل' },
             { id: 'factory', icon: 'fas fa-industry', label: 'عمليات المصنع WPC' },
             { id: 'vehicles', icon: 'fas fa-car', label: 'سجل السيارات' },
             { id: 'tracking', icon: 'fas fa-location-dot', label: 'تتبع السيارات' },
@@ -553,6 +564,7 @@
             panelHtml = (typeof isStrictHrUser === 'function' && isStrictHrUser()) ? renderHrScopedDashboard(onLeave, assignedVeh, pendingLeave, expiringDocs) : renderHrDashboard(onLeave, assignedVeh, pendingLeave, expiringDocs);
         }
         else if (hrActiveTab === 'employees') panelHtml = renderHrEmployeesPanel(emps);
+        else if (hrActiveTab === 'org-tree') panelHtml = renderHrOrgTreePanel();
         else if (hrActiveTab === 'factory') panelHtml = renderHrFactoryPanel();
         else if (hrActiveTab === 'vehicles') panelHtml = renderHrVehiclesPanel(vehs);
         else if (hrActiveTab === 'tracking') panelHtml = renderHrVehicleTrackingPanel();
@@ -2673,6 +2685,52 @@
         }
     }
 
+    function renderHrOrgTreePanel() {
+        loadHrData();
+        const team = applyHrScopeFilter(hrEmployees.filter(function(e) { return e.status !== 'terminated'; }), 'employee');
+        const depts = typeof HR_FACTORY_DEPTS !== 'undefined' ? HR_FACTORY_DEPTS : {};
+        const deptKeys = Object.keys(depts);
+        const byDept = {};
+        deptKeys.forEach(function(k) { byDept[k] = []; });
+        team.forEach(function(e) {
+            const k = e.departmentKey || 'admin';
+            if (!byDept[k]) byDept[k] = [];
+            byDept[k].push(e);
+        });
+        const branchLabel = function(e) {
+            return typeof resolveHrBranchLabel === 'function' ? resolveHrBranchLabel(e.branchId) : (e.branchId || '—');
+        };
+        const treeHtml = deptKeys.map(function(dk) {
+            const list = byDept[dk] || [];
+            if (!list.length) return '';
+            const cards = list.map(function(e) {
+                const skill = (typeof HR_SKILL_LEVELS !== 'undefined' && e.skillLevel && HR_SKILL_LEVELS[e.skillLevel]) ? HR_SKILL_LEVELS[e.skillLevel] : (e.jobTitle || '—');
+                return '<div class="hr-org-node" role="treeitem">' +
+                    '<div class="hr-org-node-head"><strong>' + esc(e.nameAr || e.nameEn || '—') + '</strong>' +
+                    '<span class="erp-tag">' + esc(e.employeeNo || '') + '</span></div>' +
+                    '<p class="hr-org-node-meta">' + esc(skill) + ' · ' + esc(branchLabel(e)) + '</p>' +
+                    '<div class="hr-org-node-actions">' +
+                        '<button type="button" class="erp-tag erp-tag--action" onclick="openHrEmployeeEditor(\'' + esc(e.id) + '\')"><i class="fas fa-pen"></i> تعديل</button>' +
+                        (e.assignedVehicleId ? '<span class="erp-tag"><i class="fas fa-car"></i> سيارة</span>' : '') +
+                    '</div></div>';
+            }).join('');
+            return '<section class="hr-org-branch" role="group" aria-label="' + esc(depts[dk]) + '">' +
+                '<header class="hr-org-branch-head"><i class="fas fa-folder-tree"></i><h4>' + esc(depts[dk]) + '</h4>' +
+                '<span class="hr-org-count">' + list.length + ' موظف</span></header>' +
+                '<div class="hr-org-children" role="group">' + cards + '</div></section>';
+        }).join('');
+
+        return '<div class="hr-panel is-active hr-org-tree-panel">' +
+            '<div class="hr-org-tree-intro">' +
+                '<h4><i class="fas fa-sitemap"></i> شجرة العمل — هيكل المصنع</h4>' +
+                '<p>بناء الشجرة: أضيفي موظفين وحددي <strong>قسم المصنع</strong> و<strong>المسمى</strong> من تبويب الموظفون — تظهر تلقائياً هنا حسب القسم والفرع.</p>' +
+                '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="openHrEmployeeEditor()"><i class="fas fa-user-plus"></i> إضافة موظف للشجرة</button>' +
+            '</div>' +
+            '<div class="hr-org-tree-root" role="tree">' +
+                (treeHtml || '<p class="erp-empty">لا موظفين في نطاقك — ابدئي بإضافة موظف وتحديد قسمه.</p>') +
+            '</div></div>';
+    }
+
     function renderHrFactoryPanel() {
         const today = new Date().toISOString().slice(0, 10);
         const emps = filterHrFactoryEmployees();
@@ -2983,6 +3041,7 @@
         if (isHrTabAllowedForScope('tracking')) quickTabs.push({ id: 'tracking', icon: 'fas fa-location-dot', label: 'تتبع' });
         if (isHrTabAllowedForScope('fleet-reps')) quickTabs.push({ id: 'fleet-reps', icon: 'fas fa-user-tie', label: 'المندوبون' });
         if (isHrTabAllowedForScope('factory')) quickTabs.push({ id: 'factory', icon: 'fas fa-industry', label: 'المصنع' });
+        quickTabs.push({ id: 'org-tree', icon: 'fas fa-sitemap', label: 'شجرة العمل' });
         quickTabs.push({ id: 'governance', icon: 'fas fa-shield-halved', label: 'حوكمة' });
 
         const quickHtml = quickTabs.map(function(t) {
@@ -3788,6 +3847,7 @@
     global.saveHrEmailWebhookSetting = saveHrEmailWebhookSetting;
     global.getHrShiftRoster = function() { loadHrData(); return hrShiftRoster; };
     global.setHrShiftRosterFromCloud = setHrShiftRosterFromCloud;
+    global.renderHrOrgTreePanel = renderHrOrgTreePanel;
     global.renderHrFactoryPanel = renderHrFactoryPanel;
     global.addHrShiftRoster = addHrShiftRoster;
     global.deleteHrShiftRoster = deleteHrShiftRoster;
