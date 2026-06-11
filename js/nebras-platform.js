@@ -6412,9 +6412,10 @@
             }
         }
 
-        function ensureQuoteA4Rendered() {
+        function ensureQuoteA4Rendered(opts) {
+            opts = opts || {};
             return new Promise(function(resolve) {
-                if (!nebrasCart.length) {
+                if (!nebrasCart.length && !opts.allowEmpty) {
                     resolve(false);
                     return;
                 }
@@ -7055,6 +7056,8 @@
                     '<button type="button" class="erp-tag erp-tag--action" onclick="markSalesQuoteStatus(\'' + entryKey + '\',\'reviewed\')"><i class="fas fa-eye"></i> ' + escapeHtmlAttr(ui.salesInboxReviewed || 'مراجعة') + '</button>' +
                     (canManage('orders') && !e.convertedToOrder ? '<button type="button" class="erp-tag erp-tag--action" onclick="convertQuoteToOrder(\'' + entryKey + '\')"><i class="fas fa-truck"></i> طلب OMS</button>' : '') +
                     '<button type="button" class="erp-tag erp-tag--action" onclick="markSalesQuoteStatus(\'' + entryKey + '\',\'sold\')"><i class="fas fa-check"></i> ' + escapeHtmlAttr(ui.salesInboxSold || 'بيع') + '</button>' +
+                    '<button type="button" class="erp-tag erp-tag--action" onclick="previewSalesQuoteA4(\'' + entryKey + '\')"><i class="fas fa-file-invoice"></i> معاينة A4</button>' +
+                    '<button type="button" class="erp-tag erp-tag--action" onclick="downloadSalesQuoteA4Pdf(\'' + entryKey + '\')"><i class="fas fa-file-pdf"></i> PDF 4 صفحات</button>' +
                     '<button type="button" class="erp-tag erp-tag--action" onclick="viewSalesQuoteEntry(\'' + entryKey + '\')"><i class="fas fa-list"></i> ' + escapeHtmlAttr(ui.salesInboxDetails || 'تفاصيل') + '</button>' +
                     '<button type="button" class="erp-tag erp-tag--action" onclick="markSalesQuoteStatus(\'' + entryKey + '\',\'closed\')">' + escapeHtmlAttr(ui.salesInboxClosed || 'إغلاق') + '</button>' +
                     '</div></div></article>';
@@ -7252,7 +7255,9 @@
             if (!entry) return;
             const img = entry.quoteDocumentPdfUrl || entry.quoteDocumentCloudUrl || entry.quoteDocumentDataUrl || '';
             if (!img) {
-                alert('لا يوجد مستند A4 (PDF) لهذا الطلب.');
+                if (confirm('لا يوجد PDF محفوظ — توليد صيغة A4 (4 صفحات) الآن؟')) {
+                    await previewSalesQuoteA4(entryId);
+                }
                 return;
             }
             if (/\.pdf(\?|$)/i.test(img)) {
@@ -8081,6 +8086,7 @@
             const overlay = document.getElementById('quote-print-overlay');
             if (overlay) overlay.classList.remove('show');
             syncQuoteA4MobilePreviewScale();
+            setSalesQuotePreviewMode(false);
             if (typeof window._restoreQuotePreviewDemo === 'function') {
                 window._restoreQuotePreviewDemo();
                 window._restoreQuotePreviewDemo = null;
@@ -8101,6 +8107,250 @@
             if (input) input.value = url;
             saveContentData();
             addAuditLog('تعديل شعار عرض السعر A4', url);
+        }
+
+        function salesEntryToCartLines(entry) {
+            return (entry && entry.lines ? entry.lines : []).map(function(l) {
+                return {
+                    productTitle: l.productTitle || l.productAr || l.productId || 'صنف',
+                    color: l.color || '',
+                    size: l.size || '',
+                    type: l.type || '',
+                    qty: Number(l.qty) || 1,
+                    unitPrice: Number(l.unitPrice) || Number(l.price) || 0,
+                    note: l.note || ''
+                };
+            });
+        }
+
+        function salesEntryToCustomerProfile(entry) {
+            entry = entry || {};
+            return {
+                customerName: entry.customerName || '',
+                phone: entry.phone || '',
+                email: entry.email || '',
+                city: entry.city || entry.branch || '',
+                address: entry.address || '',
+                note: entry.note || '',
+                customerCode: entry.customerCode || '',
+                vatNo: entry.vatNo || ''
+            };
+        }
+
+        function snapshotQuoteRenderContext() {
+            return {
+                cart: nebrasCart.slice(),
+                quote: Object.assign({}, currentQuoteIssue || {}),
+                profile: getCheckoutProfile()
+            };
+        }
+
+        function restoreQuoteRenderContext(snap) {
+            if (!snap) return;
+            nebrasCart = snap.cart || [];
+            currentQuoteIssue = snap.quote || {};
+            saveCheckoutProfile(snap.profile || {});
+            fillCheckoutFormFromProfile();
+        }
+
+        function applySalesEntryToQuoteRender(entry, options) {
+            options = options || {};
+            entry = entry || {};
+            nebrasCart = salesEntryToCartLines(entry);
+            if (!nebrasCart.length && options.placeholderLine) {
+                nebrasCart = [options.placeholderLine];
+            }
+            const qNo = entry.quoteNo || (currentQuoteIssue && currentQuoteIssue.quoteNo) || ('NEBRAS-' + Date.now().toString(36).toUpperCase());
+            currentQuoteIssue = Object.assign({}, currentQuoteIssue || {}, { quoteNo: qNo });
+            saveCheckoutProfile(salesEntryToCustomerProfile(entry));
+            fillCheckoutFormFromProfile();
+        }
+
+        async function resolveSalesQuoteEntry(entryId) {
+            let entry = loadSalesQuotesInbox().find(function(e) { return e.id === entryId; });
+            if (!entry) {
+                const cloudInbox = await fetchSalesQuotesFromCloud();
+                entry = cloudInbox.find(function(e) { return e.id === entryId; });
+            }
+            return entry || null;
+        }
+
+        function setSalesQuotePreviewMode(active) {
+            const sendRow = document.getElementById('quote-send-channel-row');
+            const markBtn = document.getElementById('quote-mark-finalized-btn');
+            if (sendRow) sendRow.hidden = !!active;
+            if (markBtn) markBtn.hidden = !!active;
+        }
+
+        function openSalesQuoteA4Preview(entry, options) {
+            options = options || {};
+            if (!requirePermission('sales', 'معاينة عرض السعر تتطلب صلاحية المبيعات.')) return;
+            const overlay = document.getElementById('quote-print-overlay');
+            const doc = document.getElementById('quote-a4-document');
+            if (!overlay || !doc) return;
+            const snap = snapshotQuoteRenderContext();
+            applySalesEntryToQuoteRender(entry, options);
+            window._restoreQuotePreviewDemo = function() {
+                restoreQuoteRenderContext(snap);
+                setSalesQuotePreviewMode(false);
+            };
+            setSalesQuotePreviewMode(true);
+            resolveSiteLogoUrl(function(logoUrl) {
+                renderQuotePreviewDocument(doc, overlay, getQuoteA4LogoUrl() || logoUrl);
+            });
+        }
+
+        function previewSalesQuoteA4Empty() {
+            if (!requirePermission('sales')) return;
+            openSalesQuoteA4Preview({
+                quoteNo: 'NEBRAS-PREVIEW',
+                customerName: '—',
+                phone: '',
+                city: '',
+                address: '',
+                lines: []
+            }, { allowEmpty: true });
+        }
+
+        async function previewSalesQuoteA4(entryId) {
+            const entry = await resolveSalesQuoteEntry(entryId);
+            if (!entry) { alert('لم يُعثر على العرض.'); return; }
+            openSalesQuoteA4Preview(entry, { allowEmpty: true });
+        }
+
+        async function downloadSalesQuoteA4Pdf(entryId) {
+            if (!requirePermission('sales')) return;
+            const entry = await resolveSalesQuoteEntry(entryId);
+            if (!entry) { alert('لم يُعثر على العرض.'); return; }
+            const snap = snapshotQuoteRenderContext();
+            try {
+                applySalesEntryToQuoteRender(entry, { allowEmpty: true });
+                const rendered = await ensureQuoteA4Rendered({ allowEmpty: true });
+                if (!rendered) {
+                    alert('تعذّر تجهيز الورقة الديناميكية — أعد المحاولة.');
+                    return;
+                }
+                const pdfBlob = await captureQuoteA4AsPdfBlob();
+                if (!pdfBlob) {
+                    alert('تعذّر إنشاء PDF — تحقق من الاتصال والورق الثابت 2–4.');
+                    return;
+                }
+                const fileName = (entry.quoteNo || 'nebras-quote') + '-a4-4pages.pdf';
+                triggerQuoteFileDownload(pdfBlob, fileName);
+                addAuditLog('تصدير PDF عرض', (entry.quoteNo || entryId) + ' — 4 صفحات');
+            } catch (pdfErr) {
+                console.warn('downloadSalesQuoteA4Pdf failed:', pdfErr);
+                alert('تعذّر تنزيل PDF.');
+            } finally {
+                restoreQuoteRenderContext(snap);
+                const overlay = document.getElementById('quote-print-overlay');
+                if (overlay) overlay.classList.remove('show');
+                setSalesQuotePreviewMode(false);
+            }
+        }
+
+        async function attachSalesQuoteA4Pdf(entry) {
+            if (!entry) return false;
+            const snap = snapshotQuoteRenderContext();
+            try {
+                applySalesEntryToQuoteRender(entry, { allowEmpty: true });
+                const rendered = await ensureQuoteA4Rendered({ allowEmpty: true });
+                if (!rendered) return false;
+                const pdfBlob = await captureQuoteA4AsPdfBlob();
+                if (!pdfBlob) return false;
+                const pdfCloudUrl = await uploadQuotePdfBlob(pdfBlob, entry.quoteNo);
+                entry.messageFormat = 'a4-quote-pdf';
+                entry.quoteType = entry.quoteType || 'quote';
+                if (pdfCloudUrl) {
+                    entry.quoteDocumentPdfUrl = pdfCloudUrl;
+                    entry.quoteDocumentCloudUrl = pdfCloudUrl;
+                }
+                return true;
+            } catch (attachErr) {
+                console.warn('attachSalesQuoteA4Pdf failed:', attachErr);
+                return false;
+            } finally {
+                restoreQuoteRenderContext(snap);
+                const overlay = document.getElementById('quote-print-overlay');
+                if (overlay) overlay.classList.remove('show');
+            }
+        }
+
+        function renderSalesA4FormatPanel() {
+            const host = document.getElementById('sales-a4-pages-hint');
+            if (!host) return;
+            const q = getQuoteA4Settings();
+            const pages = [
+                { n: 1, label: 'ديناميكية — بيانات العميل', file: 'حسب العرض', dynamic: true },
+                { n: 2, label: 'شروط وأحكام نبراس', file: q.staticPage2Url || 'documents/quote-a4-static-page2.png' },
+                { n: 3, label: 'توريد وضمان', file: q.staticPage3Url || 'documents/quote-a4-static-page3.png' },
+                { n: 4, label: 'عقد وبيانات المصنع', file: q.staticPage4Url || 'documents/quote-a4-static-page4.png' }
+            ];
+            host.innerHTML = pages.map(function(p) {
+                return '<div class="sales-a4-page-chip' + (p.dynamic ? ' sales-a4-page-chip--dynamic' : '') + '">' +
+                    '<span class="sales-a4-page-num">' + p.n + '</span>' +
+                    '<div><strong>' + escapeHtmlAttr(p.label) + '</strong>' +
+                    '<small>' + (p.dynamic ? 'تُملأ من بيانات العميل والأصناف' : escapeHtmlAttr(p.file)) + '</small></div></div>';
+            }).join('');
+        }
+
+        function buildRepQuoteEntryFromDraft() {
+            captureRepQuoteHeader();
+            const customer = fieldVal('rq-customer') || repQuoteDraft.customerName;
+            if (!customer) return null;
+            const subtotal = repQuoteDraft.lines.reduce(function(s, ln) { return s + erpNum(ln.qty) * erpNum(ln.price); }, 0);
+            const vat = subtotal * getNebrasVatRate();
+            return {
+                id: 'repq-preview-' + Date.now(),
+                quoteNo: 'NEBRAS-PREVIEW',
+                customerName: customer,
+                phone: fieldVal('rq-phone') || repQuoteDraft.phone,
+                lines: repQuoteDraft.lines.map(function(ln) {
+                    return {
+                        productAr: ln.productAr,
+                        productTitle: ln.productAr,
+                        qty: ln.qty,
+                        price: ln.price,
+                        unitPrice: ln.price
+                    };
+                }),
+                subtotalExVat: subtotal,
+                vatAmount: vat,
+                totalIncVat: subtotal + vat,
+                quoteKind: 'rep-built'
+            };
+        }
+
+        function previewRepQuoteA4() {
+            if (!requirePermission('quotes')) return;
+            const entry = buildRepQuoteEntryFromDraft();
+            if (!entry) { alert('أدخل اسم العميل أولاً.'); return; }
+            if (!entry.lines.length) { alert('أضف صنفاً واحداً على الأقل للمعاينة.'); return; }
+            openSalesQuoteA4Preview(entry);
+        }
+
+        async function downloadRepQuoteA4Pdf() {
+            if (!requirePermission('quotes')) return;
+            const entry = buildRepQuoteEntryFromDraft();
+            if (!entry) { alert('أدخل اسم العميل أولاً.'); return; }
+            if (!entry.lines.length) { alert('أضف صنفاً واحداً على الأقل.'); return; }
+            const snap = snapshotQuoteRenderContext();
+            try {
+                applySalesEntryToQuoteRender(entry, { allowEmpty: true });
+                const rendered = await ensureQuoteA4Rendered({ allowEmpty: true });
+                if (!rendered) { alert('تعذّر تجهيز المستند.'); return; }
+                const pdfBlob = await captureQuoteA4AsPdfBlob();
+                if (!pdfBlob) { alert('تعذّر إنشاء PDF — تحقق من الورق الثابت 2–4.'); return; }
+                triggerQuoteFileDownload(pdfBlob, (entry.quoteNo || 'rep-quote') + '-a4-4pages.pdf');
+            } catch (pdfErr) {
+                console.warn('downloadRepQuoteA4Pdf failed:', pdfErr);
+                alert('تعذّر تنزيل PDF.');
+            } finally {
+                restoreQuoteRenderContext(snap);
+                const overlay = document.getElementById('quote-print-overlay');
+                if (overlay) overlay.classList.remove('show');
+                setSalesQuotePreviewMode(false);
+            }
         }
 
         function previewQuoteA4TemplateFromSettings() {
@@ -11638,7 +11888,11 @@
                     '<div><span>ضريبة 15%</span><strong>' + formatSar(vat) + '</strong></div>' +
                     '<div class="erp-quote-grand"><span>الإجمالي شامل الضريبة</span><strong>' + formatSar(subtotal + vat) + '</strong></div>' +
                 '</div>' +
-                '<div class="erp-form-actions"><button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="saveRepQuote()"><i class="fas fa-floppy-disk"></i> حفظ العرض وإرساله للمبيعات</button></div>';
+                '<div class="erp-form-actions">' +
+                    '<button type="button" class="nebras-users-btn" onclick="previewRepQuoteA4()"><i class="fas fa-eye"></i> معاينة A4 (ورقة 1)</button>' +
+                    '<button type="button" class="nebras-users-btn" onclick="downloadRepQuoteA4Pdf()"><i class="fas fa-file-pdf"></i> PDF 4 صفحات</button>' +
+                    '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="saveRepQuote()"><i class="fas fa-floppy-disk"></i> حفظ وإرسال للمبيعات</button>' +
+                '</div>';
         }
 
         function captureRepQuoteHeader() {
@@ -11666,14 +11920,15 @@
             renderRepQuoteBuilder();
         }
 
-        function saveRepQuote() {
+        async function saveRepQuote() {
             if (!requirePermission('quotes')) return;
             const customer = fieldVal('rq-customer') || repQuoteDraft.customerName;
             if (!customer) { alert('يرجى إدخال اسم العميل.'); return; }
             if (!repQuoteDraft.lines.length) { alert('أضف صنفاً واحداً على الأقل.'); return; }
             const subtotal = repQuoteDraft.lines.reduce(function(s, ln) { return s + erpNum(ln.qty) * erpNum(ln.price); }, 0);
-            const vat = subtotal * 0.15;
-            const quoteNo = (typeof issueNextQuoteNumber === 'function') ? issueNextQuoteNumber() : ('REP-' + Date.now());
+            const vat = subtotal * getNebrasVatRate();
+            const issued = (typeof issueNextQuoteNumber === 'function') ? issueNextQuoteNumber() : { quoteNo: 'REP-' + Date.now() };
+            const quoteNo = issued.quoteNo || issued;
             const entry = {
                 id: 'repq-' + Date.now(),
                 quoteNo: quoteNo,
@@ -11687,9 +11942,12 @@
                 totalIncVat: subtotal + vat,
                 total: subtotal + vat,
                 quoteKind: 'rep-built',
+                quoteType: 'quote',
+                messageFormat: 'a4-quote-pdf',
                 by: erpActor(),
                 assignedBranchCity: (currentAdmin && currentAdmin.assignedBranchCity) || ''
             };
+            await attachSalesQuoteA4Pdf(entry);
             try {
                 const inbox = (typeof loadSalesQuotesInbox === 'function') ? (loadSalesQuotesInbox() || []) : [];
                 inbox.unshift(entry);
@@ -11699,8 +11957,8 @@
             saveSystemData();
             if (typeof displaySalesQuotesInbox === 'function') displaySalesQuotesInbox();
             if (typeof updateSalesInboxBadge === 'function') updateSalesInboxBadge();
-            addAuditLog('عرض سعر مندوب', customer + ' — ' + formatSar(subtotal + vat) + ' (' + quoteNo + ')');
-            alert('تم حفظ العرض ' + quoteNo + ' وإرساله لصندوق المبيعات.');
+            addAuditLog('عرض سعر مندوب', customer + ' — ' + formatSar(subtotal + vat) + ' (' + quoteNo + ') — A4');
+            alert('تم حفظ العرض ' + quoteNo + ' مع صيغة A4 (4 صفحات) وإرساله لصندوق المبيعات.');
             repQuoteDraft = { customerName: '', phone: '', lines: [] };
             document.getElementById('rep-quote-builder').classList.remove('show');
         }
@@ -12647,6 +12905,7 @@
         function openSalesManagement() {
             if (!requirePermission('sales')) return;
             document.getElementById('sales-management').classList.add('show');
+            renderSalesA4FormatPanel();
             renderSalesManagementForm();
             displaySales();
             displaySalesQuotesInbox();
@@ -21783,6 +22042,11 @@
         window.openNebrasMediaHubQuick = openNebrasMediaHubQuick;
         window.openUserManagement = openUserManagement;
         window.openSalesManagement = openSalesManagement;
+        window.previewSalesQuoteA4Empty = previewSalesQuoteA4Empty;
+        window.previewSalesQuoteA4 = previewSalesQuoteA4;
+        window.downloadSalesQuoteA4Pdf = downloadSalesQuoteA4Pdf;
+        window.previewRepQuoteA4 = previewRepQuoteA4;
+        window.downloadRepQuoteA4Pdf = downloadRepQuoteA4Pdf;
         window.openErpInventory = openErpInventory;
         window.openErpProduction = openErpProduction;
         window.addErpProductionEntry = addErpProductionEntry;

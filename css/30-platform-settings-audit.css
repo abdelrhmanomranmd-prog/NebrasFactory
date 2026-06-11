@@ -251,9 +251,78 @@
     box-sizing: border-box;
 }
 
+/* صيغة A4 في المبيعات */
+.sales-a4-format-panel {
+    margin: 8px 24px 12px;
+    padding: 16px 18px;
+    border-radius: 16px;
+    border: 1px solid rgba(10, 77, 140, 0.14);
+    background: linear-gradient(145deg, rgba(212, 175, 55, 0.08) 0%, rgba(10, 77, 140, 0.04) 100%);
+}
+
+.sales-a4-format-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+    margin: 12px 0;
+}
+
+.sales-a4-page-chip {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 12px;
+    background: #fff;
+    border: 1px solid rgba(10, 77, 140, 0.12);
+}
+
+.sales-a4-page-chip--dynamic {
+    border-color: rgba(27, 158, 87, 0.35);
+    background: rgba(27, 158, 87, 0.06);
+}
+
+.sales-a4-page-num {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: grid;
+    place-items: center;
+    font-weight: 800;
+    font-size: 0.85rem;
+    background: #0a4d8c;
+    color: #fff;
+}
+
+.sales-a4-page-chip--dynamic .sales-a4-page-num {
+    background: #1b9e57;
+}
+
+.sales-a4-page-chip strong {
+    display: block;
+    font-size: 0.82rem;
+    color: #062e44;
+}
+
+.sales-a4-page-chip small {
+    display: block;
+    font-size: 0.72rem;
+    color: #5a6b7a;
+    margin-top: 2px;
+    word-break: break-all;
+}
+
+.sales-a4-format-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
 @media (max-width: 720px) {
     .settings-form-grid { grid-template-columns: 1fr; }
     .settings-tabs { gap: 6px; }
     .settings-tab { padding: 8px 11px; font-size: 0.74rem; }
     .audit-toolbar { flex-direction: column; align-items: stretch; }
+    .sales-a4-format-panel { margin-inline: 16px; }
 }

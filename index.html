@@ -925,7 +925,7 @@
     <div class="admin-section" id="rep-quote-builder">
         <div class="admin-modal site-content-modal nebras-erp-modal">
             <div class="nebras-erp-head">
-                <div class="nebras-erp-head-title"><i class="fas fa-file-signature"></i><div><h2>بناء عرض سعر</h2><p>اختر الأصناف من القائمة المعتمدة — يُرسَل العرض لصندوق المبيعات</p></div></div>
+                <div class="nebras-erp-head-title"><i class="fas fa-file-signature"></i><div><h2>بناء عرض سعر</h2><p>ورقة 1 ديناميكية · 2–4 ثابتة (شروط وعقد نبراس) — يُرسَل لصندوق المبيعات</p></div></div>
                 <button type="button" class="nebras-users-close" onclick="closeAdminSection('rep-quote-builder')" aria-label="إغلاق"><i class="fas fa-xmark"></i></button>
             </div>
             <div class="nebras-erp-form" id="rep-quote-body"></div>
@@ -939,9 +939,18 @@
                 <button type="button" class="nebras-users-close" onclick="closeAdminSection('sales-management')" aria-label="إغلاق"><i class="fas fa-xmark"></i></button>
             </div>
             <div class="nebras-erp-stats" id="sales-management-summary"></div>
+            <div class="sales-a4-format-panel admin-only-ui" id="sales-a4-format-panel">
+                <h3 class="nebras-erp-subhead"><i class="fas fa-file-invoice"></i> صيغة عرض السعر A4 — 4 صفحات</h3>
+                <p class="scm-hint">الورقة <strong>1</strong> ديناميكية (بيانات العميل والأصناف) · الورق <strong>2–4</strong> ثابتة (شروط نبراس · توريد وضمان · عقد وبيانات المصنع)</p>
+                <div class="sales-a4-format-grid" id="sales-a4-pages-hint"></div>
+                <div class="sales-a4-format-actions">
+                    <button type="button" class="secondary" onclick="previewSalesQuoteA4Empty()"><i class="fas fa-eye"></i> معاينة ورقة 1 (فارغة)</button>
+                    <button type="button" class="primary" onclick="openRepQuoteBuilder()"><i class="fas fa-file-signature"></i> بناء عرض سعر جديد</button>
+                </div>
+            </div>
             <div class="sales-quotes-inbox-wrap admin-only-ui" data-perm="sales">
                 <h3 class="nebras-erp-subhead" id="sales-quotes-inbox-title"><i class="fas fa-inbox"></i> صندوق عروض الأسعار الواردة</h3>
-                <p class="scm-hint admin-only-ui" id="sales-quotes-inbox-hint">من السلة وصمّم بابك — راجع · حوّل لطلب OMS · سجّل كبيع</p>
+                <p class="scm-hint admin-only-ui" id="sales-quotes-inbox-hint">معاينة A4 · PDF 4 صفحات · راجع · حوّل لطلب OMS · سجّل كبيع</p>
                 <div class="nebras-erp-list" id="sales-quotes-inbox-list"></div>
             </div>
             <h3 class="nebras-erp-subhead"><i class="fas fa-plus-circle"></i> تسجيل عملية بيع</h3>
