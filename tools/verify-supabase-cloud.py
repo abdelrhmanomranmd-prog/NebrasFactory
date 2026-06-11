@@ -8,8 +8,16 @@ import urllib.request
 SUPABASE_URL = 'https://oedldllrjavofpeaputz.supabase.co'
 ANON_KEY = 'sb_publishable_bt6rlHxu_pjc1xpkKEWOcg_HZ43JMR0'
 EXPECTED_KEYS = {
-    'system_settings', 'site_partners', 'visitor_icons', 'site_products',
-    'admin_users', 'dashboard_tiles', 'site_certifications', 'showroom_gallery',
+    'site_products', 'visitor_icons', 'dashboard_tiles', 'site_custom_sections',
+    'about_pages', 'system_settings', 'admin_users', 'branches', 'complaints',
+    'audit_logs', 'erp_inventory', 'erp_orders', 'erp_procurement', 'erp_production',
+    'erp_purchases', 'erp_transfers', 'erp_stock_transfers', 'sales_price_list',
+    'site_partners', 'site_certifications', 'showroom_gallery', 'visitor_analytics',
+    'sales_data', 'customer_service', 'sales_quotes_inbox', 'analytics_governance',
+    'hr_employees', 'hr_vehicles', 'hr_leave', 'hr_vehicle_tracking', 'hr_attendance',
+    'hr_documents', 'hr_payroll', 'hr_notifications', 'hr_notif_settings',
+    'hr_email_queue', 'hr_shift_roster', 'hr_dept_activity', 'quote_registry',
+    'callback_leads',
 }
 
 
