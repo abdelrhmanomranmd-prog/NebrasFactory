@@ -758,6 +758,10 @@
 
     function saveHrEmployee(id) {
         if (!requireHrAccess()) return;
+        if (id) {
+            const existing = getEmployeeById(id);
+            if (existing && typeof requireHrRecordInScope === 'function' && !requireHrRecordInScope(existing, 'employee')) return;
+        }
         const nameAr = hrField('he-name-ar');
         const employeeNo = hrField('he-no');
         if (!nameAr || !employeeNo) { alert('الاسم ورقم الموظف مطلوبان.'); return; }
@@ -829,6 +833,7 @@
                 nv.assignedEmployeeId = record.id;
             }
         }
+        if (typeof assertHrNewRecordInScope === 'function' && !assertHrNewRecordInScope(record)) return;
 
         saveHrData();
         hrEmployeeEditorId = null;
@@ -840,6 +845,7 @@
         if (!requireHrAccess()) return;
         const e = getEmployeeById(id);
         if (!e || !confirm('حذف ' + e.nameAr + ' من سجلات HR؟')) return;
+        if (typeof requireHrRecordInScope === 'function' && !requireHrRecordInScope(e, 'employee')) return;
         hrEmployees = hrEmployees.filter(function(x) { return x.id !== id; });
         hrVehicles.forEach(function(v) {
             if (v.assignedEmployeeId === id) v.assignedEmployeeId = null;
@@ -993,6 +999,7 @@
         if (!requireHrAccess()) return;
         const v = getVehicleById(id);
         if (!v || !confirm('حذف المركبة ' + v.plateNo + '؟')) return;
+        if (typeof requireHrRecordInScope === 'function' && !requireHrRecordInScope(v, 'vehicle')) return;
         hrEmployees.forEach(function(e) {
             if (e.vehicleId === id) e.vehicleId = null;
         });
@@ -1400,6 +1407,7 @@
         if (!requireHrOps()) return;
         const t = hrVehicleTracking.find(function(x) { return x.id === id; });
         if (!t || !confirm('حذف سجل التتبع — ' + t.plateNo + ' / ' + t.driverName + '؟')) return;
+        if (typeof requireHrRecordInScope === 'function' && !requireHrRecordInScope(t, 'tracking')) return;
         hrVehicleTracking = hrVehicleTracking.filter(function(x) { return x.id !== id; });
         saveHrData();
         syncVehicleCurrentDriversFromTracking();
@@ -1445,6 +1453,8 @@
                 '<button type="button" class="nebras-users-btn" onclick="exportHrTrackingCsv()"><i class="fas fa-file-csv"></i> تصدير تتبع CSV</button>' +
                 '<button type="button" class="nebras-users-btn" onclick="switchHrTab(\'payroll\');setTimeout(function(){exportHrPayrollPdf();},400)"><i class="fas fa-file-pdf"></i> PDF مسير الرواتب</button>' +
                 '<button type="button" class="nebras-users-btn" onclick="printHrReport()"><i class="fas fa-print"></i> طباعة</button>' +
+                '<button type="button" class="nebras-users-btn analytics-period-btn" onclick="purgeHrAnalyticsByPeriod(\'daily\')"><i class="fas fa-sun"></i> حذف حضور — اليوم</button>' +
+                '<button type="button" class="nebras-users-btn analytics-period-btn" onclick="purgeHrAnalyticsByPeriod(\'monthly\')"><i class="fas fa-calendar"></i> حذف حضور — الشهر</button>' +
             '</div>' +
             '<div class="hr-leave-table-wrap" id="hr-report-print-area">' +
                 '<h4>توزيع القوى العاملة</h4>' +
@@ -1634,42 +1644,6 @@
         const std = sh ? sh.stdHours : 8;
         if (rec.hours > 0) rec.overtimeHours = calcOvertimeHours(rec.hours, std);
         return rec;
-    }
-
-    function collectHrAlerts() {
-        const alerts = [];
-        const today = new Date();
-        hrDocuments.forEach(function(d) {
-            if (!d.expiryDate) return;
-            const exp = new Date(d.expiryDate + 'T12:00:00');
-            const days = Math.round((exp - today) / (1000 * 60 * 60 * 24));
-            const typeLabel = HR_DOC_TYPES[d.type] || d.type;
-            if (days < 0) {
-                alerts.push({ level: 'danger', cat: 'مستند', ref: d.employeeName, detail: typeLabel + ' منتهي منذ ' + Math.abs(days) + ' يوم', id: d.id, kind: 'doc' });
-            } else if (days <= 60) {
-                alerts.push({ level: 'warn', cat: 'مستند', ref: d.employeeName, detail: typeLabel + ' ينتهي خلال ' + days + ' يوم', id: d.id, kind: 'doc' });
-            }
-        });
-        hrVehicles.forEach(function(v) {
-            [['insuranceExp', 'تأمين'], ['inspectionExp', 'فحص'], ['registrationExp', 'استمارة']].forEach(function(pair) {
-                const dt = v[pair[0]];
-                if (!dt) return;
-                const exp = new Date(dt + 'T12:00:00');
-                const days = Math.round((exp - today) / (1000 * 60 * 60 * 24));
-                if (days < 0) {
-                    alerts.push({ level: 'danger', cat: 'سيارة', ref: v.plateNo, detail: pair[1] + ' منتهي', id: v.id, kind: 'veh' });
-                } else if (days <= 60) {
-                    alerts.push({ level: 'warn', cat: 'سيارة', ref: v.plateNo, detail: pair[1] + ' خلال ' + days + ' يوم', id: v.id, kind: 'veh' });
-                }
-            });
-        });
-        hrLeaveRequests.filter(function(l) { return l.status === 'pending'; }).forEach(function(l) {
-            alerts.push({ level: 'info', cat: 'إجازة', ref: l.employeeName, detail: 'طلب إجازة معلق', id: l.id, kind: 'leave' });
-        });
-        return alerts.sort(function(a, b) {
-            const ord = { danger: 0, warn: 1, info: 2 };
-            return (ord[a.level] || 9) - (ord[b.level] || 9);
-        });
     }
 
     function filterHrAttendance() {
@@ -2628,25 +2602,6 @@
         return emp.shiftId || 'admin';
     }
 
-    function filterHrFactoryEmployees() {
-        let list = hrEmployees.filter(function(e) { return e.status === 'active'; });
-        if (hrBranchFilter) {
-            list = list.filter(function(e) { return String(e.branchId) === String(hrBranchFilter); });
-        }
-        if (hrSearchQuery) {
-            const q = hrSearchQuery.toLowerCase();
-            list = list.filter(function(e) {
-                const hay = [
-                    e.nameAr, e.employeeNo, e.department, e.jobTitle,
-                    HR_FACTORY_DEPTS[e.departmentKey] || e.department,
-                    HR_PROD_LINES[e.productionLine] || e.productionLine
-                ].join(' ').toLowerCase();
-                return hay.indexOf(q) >= 0;
-            });
-        }
-        return list;
-    }
-
     function getTodayShiftRoster(date) {
         const d = date || new Date().toISOString().slice(0, 10);
         return hrShiftRoster.filter(function(r) { return r.date === d; });
@@ -2906,33 +2861,6 @@
             if (hit) return String(hit.id);
         }
         return '';
-    }
-
-    function getHrAdminScope(admin) {
-        admin = admin || (typeof currentAdmin !== 'undefined' ? currentAdmin : null);
-        if (!admin) return { mode: 'full', branchId: '', departmentKey: '', label: '—', icon: 'fas fa-industry' };
-        if (typeof isMainGovernanceAdmin === 'function' && isMainGovernanceAdmin(admin)) {
-            return { mode: 'full', branchId: '', departmentKey: '', label: 'الإدارة الرئيسية — كل الفروع والأقسام', icon: 'fas fa-crown' };
-        }
-        if (!isStrictHrUser(admin)) {
-            return { mode: 'full', branchId: '', departmentKey: '', label: 'وصول كامل', icon: 'fas fa-industry' };
-        }
-        let branchId = String(admin.hrScopeBranchId || '').trim();
-        if (!branchId && admin.assignedBranchCity) branchId = branchCityToHrBranchId(admin.assignedBranchCity);
-        const departmentKey = String(admin.hrScopeDepartmentKey || '').trim();
-        let label = '';
-        let icon = 'fas fa-people-roof';
-        if (departmentKey && typeof HR_FACTORY_DEPTS !== 'undefined' && HR_FACTORY_DEPTS[departmentKey]) {
-            label = HR_FACTORY_DEPTS[departmentKey];
-            icon = HR_SCOPE_DEPT_ICONS[departmentKey] || icon;
-        }
-        if (branchId) {
-            const bl = resolveHrBranchLabel(branchId);
-            label = label ? (label + ' · ' + bl) : bl;
-        }
-        if (!label) label = 'موارد بشرية — كل الفروع';
-        const mode = departmentKey ? 'department' : (branchId ? 'branch' : 'company');
-        return { mode: mode, branchId: branchId, departmentKey: departmentKey, label: label, icon: icon };
     }
 
     function employeeMatchesHrScope(emp, scope) {
@@ -3436,13 +3364,6 @@
 /* PHASE20_HR_INJECTED */
 /* Phase 20 — HR fleet + sales rep monitoring */
 
-    function getSalesRepUsers() {
-        if (typeof adminUsers === 'undefined' || !Array.isArray(adminUsers)) return [];
-        return adminUsers.filter(function(u) {
-            return u && u.role === 'sales_rep' && u.isActive !== false;
-        });
-    }
-
     function matchTrackingToRep(rep, tracking) {
         if (!rep || !tracking) return false;
         const repUser = String(rep.username || '').toLowerCase();
@@ -3538,6 +3459,206 @@
         return true;
     }
 
+/* PHASE22_HR_INJECTED */
+/* Phase 22 — HR scope enforcement + period purge */
+
+    function requireHrRecordInScope(record, kind) {
+        if (!record) return false;
+        if (typeof isMainGovernanceAdmin === 'function' && isMainGovernanceAdmin(currentAdmin)) return true;
+        const scope = getHrAdminScope();
+        if (scope.mode === 'full' || scope.mode === 'company') return true;
+        if (kind === 'employee' && typeof employeeMatchesHrScope === 'function') {
+            if (!employeeMatchesHrScope(record, scope)) {
+                alert('خارج نطاقك — هذا السجل لقسم/فرع آخر.');
+                return false;
+            }
+            return true;
+        }
+        if (kind === 'vehicle' && typeof vehicleMatchesHrScope === 'function') {
+            if (!vehicleMatchesHrScope(record, scope)) {
+                alert('خارج نطاقك — هذه السيارة لفرع/قسم آخر.');
+                return false;
+            }
+            return true;
+        }
+        if (kind === 'tracking' && typeof applyHrScopeFilter === 'function') {
+            const ok = applyHrScopeFilter([record], 'tracking').length > 0;
+            if (!ok) alert('خارج نطاقك — سجل التتبع لفرع/قسم آخر.');
+            return ok;
+        }
+        if (kind === 'attendance' || kind === 'document' || kind === 'leave') {
+            const emp = getEmployeeById(record.employeeId);
+            if (emp && typeof employeeMatchesHrScope === 'function' && !employeeMatchesHrScope(emp, scope)) {
+                alert('خارج نطاقك — هذا السجل لموظف خارج فريقك.');
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function assertHrNewRecordInScope(record) {
+        if (typeof isMainGovernanceAdmin === 'function' && isMainGovernanceAdmin(currentAdmin)) return true;
+        const scope = getHrAdminScope();
+        if (scope.mode === 'full' || scope.mode === 'company') return true;
+        if (scope.branchId && String(record.branchId) !== String(scope.branchId)) {
+            alert('لا يمكنك إضافة سجل لفرع خارج نطاقك.');
+            return false;
+        }
+        if (scope.departmentKey && record.departmentKey && record.departmentKey !== scope.departmentKey) {
+            alert('لا يمكنك إضافة سجل لقسم خارج نطاقك.');
+            return false;
+        }
+        return true;
+    }
+
+    function getHrAdminScope(admin) {
+        admin = admin || (typeof currentAdmin !== 'undefined' ? currentAdmin : null);
+        if (!admin) return { mode: 'full', branchId: '', departmentKey: '', label: '—', icon: 'fas fa-industry' };
+        if (typeof isMainGovernanceAdmin === 'function' && isMainGovernanceAdmin(admin)) {
+            return { mode: 'full', branchId: '', departmentKey: '', label: 'الإدارة الرئيسية — كل الفروع والأقسام', icon: 'fas fa-crown' };
+        }
+        const hasHrScope = String(admin.hrScopeBranchId || '').trim() || String(admin.hrScopeDepartmentKey || '').trim();
+        const strictHr = isStrictHrUser(admin);
+        if (!strictHr && !hasHrScope) {
+            if (admin.assignedBranchCity && typeof branchCityToHrBranchId === 'function') {
+                const bid = branchCityToHrBranchId(admin.assignedBranchCity);
+                if (bid) {
+                    return {
+                        mode: 'branch',
+                        branchId: bid,
+                        departmentKey: '',
+                        label: 'فرع: ' + admin.assignedBranchCity,
+                        icon: 'fas fa-building'
+                    };
+                }
+            }
+            return { mode: 'full', branchId: '', departmentKey: '', label: 'وصول كامل', icon: 'fas fa-industry' };
+        }
+        let branchId = String(admin.hrScopeBranchId || '').trim();
+        if (!branchId && admin.assignedBranchCity) branchId = branchCityToHrBranchId(admin.assignedBranchCity);
+        const departmentKey = String(admin.hrScopeDepartmentKey || '').trim();
+        let label = '';
+        let icon = 'fas fa-people-roof';
+        if (departmentKey && typeof HR_FACTORY_DEPTS !== 'undefined' && HR_FACTORY_DEPTS[departmentKey]) {
+            label = HR_FACTORY_DEPTS[departmentKey];
+            icon = HR_SCOPE_DEPT_ICONS[departmentKey] || icon;
+        }
+        if (branchId) {
+            const bl = resolveHrBranchLabel(branchId);
+            label = label ? (label + ' · ' + bl) : bl;
+        }
+        if (!label) label = strictHr ? 'موارد بشرية — نطاقك' : 'نطاق محدّد';
+        const mode = departmentKey ? 'department' : (branchId ? 'branch' : 'company');
+        return { mode: mode, branchId: branchId, departmentKey: departmentKey, label: label, icon: icon };
+    }
+
+    function collectHrAlerts() {
+        const alerts = [];
+        const today = new Date();
+        const scopedEmpIds = typeof getHrScopedEmployeeIds === 'function' ? getHrScopedEmployeeIds() : null;
+        const scopedVehs = typeof applyHrScopeFilter === 'function' ? applyHrScopeFilter(hrVehicles.slice(), 'vehicle') : hrVehicles;
+
+        hrDocuments.forEach(function(d) {
+            if (!d.expiryDate) return;
+            if (scopedEmpIds && scopedEmpIds.indexOf(d.employeeId) < 0) return;
+            const exp = new Date(d.expiryDate + 'T12:00:00');
+            const days = Math.round((exp - today) / (1000 * 60 * 60 * 24));
+            const typeLabel = HR_DOC_TYPES[d.type] || d.type;
+            if (days < 0) {
+                alerts.push({ level: 'danger', cat: 'مستند', ref: d.employeeName, detail: typeLabel + ' منتهي منذ ' + Math.abs(days) + ' يوم', id: d.id, kind: 'doc' });
+            } else if (days <= 60) {
+                alerts.push({ level: 'warn', cat: 'مستند', ref: d.employeeName, detail: typeLabel + ' ينتهي خلال ' + days + ' يوم', id: d.id, kind: 'doc' });
+            }
+        });
+        scopedVehs.forEach(function(v) {
+            [['insuranceExp', 'تأمين'], ['inspectionExp', 'فحص'], ['registrationExp', 'استمارة']].forEach(function(pair) {
+                const dt = v[pair[0]];
+                if (!dt) return;
+                const exp = new Date(dt + 'T12:00:00');
+                const days = Math.round((exp - today) / (1000 * 60 * 60 * 24));
+                if (days < 0) {
+                    alerts.push({ level: 'danger', cat: 'سيارة', ref: v.plateNo, detail: pair[1] + ' منتهي', id: v.id, kind: 'veh' });
+                } else if (days <= 60) {
+                    alerts.push({ level: 'warn', cat: 'سيارة', ref: v.plateNo, detail: pair[1] + ' خلال ' + days + ' يوم', id: v.id, kind: 'veh' });
+                }
+            });
+        });
+        const scopedLeave = typeof applyHrScopeFilter === 'function' ? applyHrScopeFilter(hrLeaveRequests.slice(), 'leave') : hrLeaveRequests;
+        scopedLeave.filter(function(l) { return l.status === 'pending'; }).forEach(function(l) {
+            alerts.push({ level: 'info', cat: 'إجازة', ref: l.employeeName, detail: 'طلب إجازة معلق', id: l.id, kind: 'leave' });
+        });
+        return alerts.sort(function(a, b) {
+            const ord = { danger: 0, warn: 1, info: 2 };
+            return (ord[a.level] || 9) - (ord[b.level] || 9);
+        });
+    }
+
+    function getSalesRepUsers() {
+        if (typeof adminUsers === 'undefined' || !Array.isArray(adminUsers)) return [];
+        const scope = getHrAdminScope();
+        return adminUsers.filter(function(u) {
+            if (!u || u.role !== 'sales_rep' || u.isActive === false) return false;
+            if (scope.mode === 'full' || scope.mode === 'company') return true;
+            if (scope.branchId && u.assignedBranchId != null && String(u.assignedBranchId) !== String(scope.branchId)) return false;
+            if (scope.branchId && u.assignedBranchCity && typeof branchCityToHrBranchId === 'function') {
+                const bid = branchCityToHrBranchId(u.assignedBranchCity);
+                if (bid && String(bid) !== String(scope.branchId)) return false;
+            }
+            return true;
+        });
+    }
+
+    function filterHrFactoryEmployees(list) {
+        list = list || hrEmployees.slice();
+        list = typeof applyHrScopeFilter === 'function' ? applyHrScopeFilter(list, 'employee') : list;
+        if (hrBranchFilter) list = list.filter(function(e) { return String(e.branchId) === String(hrBranchFilter); });
+        if (hrSearchQuery) {
+            const q = hrSearchQuery.toLowerCase();
+            list = list.filter(function(e) {
+                return [e.nameAr, e.nameEn, e.employeeNo, e.phone, e.jobTitle, e.department].join(' ').toLowerCase().indexOf(q) >= 0;
+            });
+        }
+        return list;
+    }
+
+    function purgeHrAnalyticsByPeriod(period) {
+        if (typeof requireMainGovernanceAdmin === 'function' && !requireMainGovernanceAdmin()) return;
+        let removed = 0;
+        const keepAtt = [];
+        hrAttendance.forEach(function(a) {
+            const raw = a.date || a.checkInAt;
+            if (raw && typeof matchesExecutiveReportPeriod === 'function' && matchesExecutiveReportPeriod({ date: raw }, period)) {
+                removed++;
+            } else {
+                keepAtt.push(a);
+            }
+        });
+        hrAttendance = keepAtt;
+        const keepAct = [];
+        hrDeptActivity.forEach(function(a) {
+            const raw = a.at || a.date || a.createdAt;
+            if (raw && typeof matchesExecutiveReportPeriod === 'function' && matchesExecutiveReportPeriod({ at: raw }, period)) {
+                removed++;
+            } else {
+                keepAct.push(a);
+            }
+        });
+        hrDeptActivity = keepAct;
+        saveHrData();
+        if (typeof hrAudit === 'function') hrAudit('HR حذف تحليلات', period + ' — ' + removed + ' سجل');
+        if (typeof showNebrasAdminToast === 'function') showNebrasAdminToast('HR: حذف ' + removed + ' سجل حضور/نشاط — ' + period, 'ok');
+    }
+
+    function isHrFleetRepsTabAllowed() {
+        if (typeof canViewHrExecutiveReports === 'function' && canViewHrExecutiveReports()) return true;
+        const scope = getHrAdminScope();
+        if (scope.mode === 'full') return true;
+        const fleetDepts = ['installation', 'warehouse', 'sales', 'admin', 'maintenance', 'hr'];
+        if (scope.departmentKey && fleetDepts.indexOf(scope.departmentKey) >= 0) return true;
+        if (scope.mode === 'branch') return true;
+        return false;
+    }
+
     function isHrDepartmentAdmin(admin) {
         admin = admin || (typeof currentAdmin !== 'undefined' ? currentAdmin : null);
         if (!admin) return false;
@@ -3594,6 +3715,8 @@
     global.ensureHrData = loadHrData;
     global.openHrPlatform = openHrPlatform;
     global.renderHrPlatformPanel = renderHrPlatformPanel;
+    global.purgeHrAnalyticsByPeriod = purgeHrAnalyticsByPeriod;
+    global.requireHrRecordInScope = requireHrRecordInScope;
     global.renderHrSalesFleetPanel = renderHrSalesFleetPanel;
     global.switchHrTab = switchHrTab;
     global.setHrBranchFilter = setHrBranchFilter;
