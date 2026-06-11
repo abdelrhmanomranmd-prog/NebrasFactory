@@ -256,9 +256,63 @@
     font-size: 0.72rem;
 }
 
+.hr-tracking-section-title {
+    margin: 16px 0 10px;
+    color: #1a5276;
+    font-size: 0.92rem;
+}
+
+.hr-tracking-active-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.hr-tracking-active-card {
+    border: 2px solid #2980b9;
+    border-radius: 12px;
+    padding: 14px;
+    background: linear-gradient(135deg, #f0f8ff, #fff);
+}
+
+.hr-tracking-active-card .plate-badge {
+    display: inline-block;
+    background: #2980b9;
+    color: #fff;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 6px;
+    margin-bottom: 8px;
+}
+
+.hr-tracking-active-card strong {
+    display: block;
+    margin-bottom: 4px;
+    color: #1a365d;
+}
+
+.hr-tracking-active-card small {
+    color: #718096;
+    font-size: 0.76rem;
+}
+
+.hr-tracking-table td {
+    vertical-align: middle;
+}
+
+.dashboard-hr-only .dashboard-section--role-hidden {
+    display: none !important;
+}
+
+.dashboard-hr-only #dashboard-actions-grid .dashboard-tile-card:not([data-tile-id="dash-hr-platform"]) {
+    display: none !important;
+}
+
 @media (max-width: 640px) {
     .hr-emp-grid,
-    .hr-vehicle-grid {
+    .hr-vehicle-grid,
+    .hr-tracking-active-grid {
         grid-template-columns: 1fr;
     }
 }

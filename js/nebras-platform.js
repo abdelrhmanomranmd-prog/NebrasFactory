@@ -301,8 +301,8 @@
             hr: {
                 labelAr: 'موارد بشرية', labelEn: 'HR Manager',
                 icon: 'fas fa-people-roof', accent: '#2980b9',
-                descAr: 'منصة HR الداخلية — موظفون · عمال · سيارات · إجازات · كل الفروع (مثل Bayzat · Jisr).',
-                permissions: ['hr', 'audit'],
+                descAr: 'منصة HR فقط — موظفون · سيارات · تتبع · إجازات. لا صلاحيات خارج HR.',
+                permissions: ['hr'],
                 companyWide: true
             },
             aluminum_manager: {
@@ -1827,7 +1827,7 @@
                 { id: 'erp-customers', pillar: 'crm', status: 'live', icon: 'fas fa-users', permission: 'customerService', handler: 'openCustomerServiceManagement', nameAr: 'خدمة العملاء', descAr: 'استفسارات وردود', nameEn: 'Customer care' },
                 { id: 'erp-analytics', pillar: 'governance', status: 'live', icon: 'fas fa-chart-pie', permission: 'audit', handler: 'openAdminAnalytics', nameAr: 'ذكاء الأعمال BI', descAr: 'تقارير حية للإدارة', nameEn: 'Analytics' },
                 { id: 'erp-executive-reports', pillar: 'governance', status: 'live', icon: 'fas fa-chart-bar', permission: 'audit', handler: 'openExecutiveReports', nameAr: 'التقارير التنفيذية', descAr: 'يومي · شهري · سنوي لصاحب الشركة', nameEn: 'Executive reports' },
-                { id: 'erp-hr-platform', pillar: 'hr', status: 'live', icon: 'fas fa-people-roof', permission: 'hr', handler: 'openHrPlatform', nameAr: 'منصة الموارد البشرية', descAr: 'موظفون · عمال · سيارات · إجازات — كل الفروع', nameEn: 'HR platform' }
+                { id: 'erp-hr-platform', pillar: 'hr', status: 'live', icon: 'fas fa-people-roof', permission: 'hr', handler: 'openHrPlatform', nameAr: 'منصة الموارد البشرية', descAr: 'موظفون · تتبع سيارات · إجازات — حوكمة HR', nameEn: 'HR platform' }
             ]
         };
 
@@ -9398,12 +9398,15 @@
             const quick = document.getElementById('dashboard-actions-grid');
             const secondary = document.getElementById('dashboard-secondary-grid');
             const lang = currentLang || 'ar';
-            const visible = dashboardTiles.filter(function(t) {
+            let visible = dashboardTiles.filter(function(t) {
                 if (t.visible === false) return false;
                 if (t.superadminOnly && !isMainGovernanceAdmin()) return false;
                 if (t.permission && currentAdmin && !canManage(t.permission)) return false;
                 return true;
             });
+            if (typeof isHrDepartmentAdmin === 'function' && isHrDepartmentAdmin(currentAdmin)) {
+                visible = visible.filter(function(t) { return t.id === 'dash-hr-platform'; });
+            }
 
             function tileTitle(tile) {
                 const t = getLocalizedCatalogField(tile, 'title', lang);
@@ -12937,11 +12940,15 @@
                 hideSections: ['dashboard-company-identity', 'dashboard-partners-block', 'platform-hub-panel', 'dashboard-channels-panel', 'dashboard-occasion-panel', 'dashboard-official-hub']
             },
             hr: {
-                greetingAr: 'منصة الموارد البشرية',
-                descAr: 'إدارة الموظفين والعمال والسيارات والإجازات — المقر الرئيسي وجميع فروع المملكة.',
-                scrollTo: 'erp-hub-panel',
+                greetingAr: 'منصة الموارد البشرية — HR فقط',
+                descAr: 'موظفون · تتبع سيارات · إجازات — صلاحياتك محصورة في HR. التقارير التنفيذية للإدارة الرئيسية.',
+                scrollTo: 'dashboard-actions-grid',
                 openHandler: 'openHrPlatform',
-                hideSections: ['dashboard-company-identity', 'dashboard-partners-block', 'platform-hub-panel', 'dashboard-channels-panel', 'dashboard-occasion-panel', 'dashboard-official-hub', 'erp-hub-panel']
+                hideSections: [
+                    'dashboard-company-identity', 'dashboard-partners-block', 'platform-hub-panel',
+                    'dashboard-channels-panel', 'dashboard-occasion-panel', 'dashboard-official-hub',
+                    'erp-hub-panel', 'dashboard-main-nav', 'dashboard-hub-intro', 'dashboard-secondary-grid'
+                ]
             }
         };
 
@@ -12999,7 +13006,8 @@
                 { roles: ['sales_manager', 'accountant', 'branch_manager'], icon: 'fas fa-chart-bar', label: 'تقرير الفرع', handler: 'openExecutiveReports', perm: 'audit' },
                 { roles: ['superadmin'], icon: 'fas fa-database', label: 'مركز المنتجات', handler: 'openProductMasterHub', perm: null },
                 { roles: ['aluminum_manager'], icon: 'fas fa-industry', label: 'قسم الألومنيوم', handler: 'openAluminumDepartment', perm: 'aluminum' },
-                { roles: ['hr'], icon: 'fas fa-people-roof', label: 'منصة HR', handler: 'openHrPlatform', perm: 'hr' },
+                { roles: ['hr'], icon: 'fas fa-people-roof', label: 'منصة الموارد البشرية', handler: 'openHrPlatform', perm: 'hr' },
+                { roles: ['hr'], icon: 'fas fa-shield-halved', label: 'أمان حسابي', handler: 'openAccountSecurity', perm: null },
                 { roles: ['superadmin', 'manager'], icon: 'fas fa-people-roof', label: 'منصة HR', handler: 'openHrPlatform', perm: 'hr' },
                 { roles: ['superadmin', 'manager'], icon: 'fas fa-paint-roller', label: 'محتوى الموقع', handler: 'openSiteContentManager', perm: 'content' },
                 { roles: ['superadmin', 'manager'], icon: 'fas fa-cloud-upload-alt', label: 'رفع وسائط', handler: 'openNebrasMediaHubQuick', perm: 'content' },
@@ -13022,6 +13030,8 @@
                 if (item.handler === 'openProductMasterHub' && !isMainGovernanceAdmin()) return;
                 if (item.handler === 'openAluminumDepartment' && !canManage('aluminum') && !isMainGovernanceAdmin()) return;
                 if (item.handler === 'openHrPlatform' && typeof canAccessHrPlatform === 'function' && !canAccessHrPlatform()) return;
+                if (item.handler === 'openAccountSecurity' && typeof isHrDepartmentAdmin === 'function' && isHrDepartmentAdmin(currentAdmin)) { /* مسموح */ }
+                else if (item.roles && item.roles.indexOf('hr') >= 0 && item.roles.length === 1 && item.handler !== 'openHrPlatform' && item.handler !== 'openAccountSecurity') return;
                 if (item.perm && !canManage(item.perm)) return;
                 actions.push(item);
             });
@@ -13099,6 +13109,16 @@
                 }
                 if (canManage('complaints')) kpis.push({ v: stats.complaintsCount, l: 'شكاوى', alert: stats.complaintsCount > 0 });
                 if (canManage('branches')) kpis.push({ v: stats.branchesCount, l: 'فروع', alert: false });
+                if (typeof isHrDepartmentAdmin === 'function' && isHrDepartmentAdmin(user) && typeof getHrEmployees === 'function') {
+                    const emps = getHrEmployees();
+                    const vehs = typeof getHrVehicles === 'function' ? getHrVehicles() : [];
+                    const track = typeof getHrVehicleTracking === 'function' ? getHrVehicleTracking() : [];
+                    kpis.length = 0;
+                    kpis.push({ v: emps.length, l: 'موظفون', alert: false });
+                    kpis.push({ v: vehs.length, l: 'سيارات', alert: false });
+                    kpis.push({ v: track.filter(function(t) { return t.status === 'on_road'; }).length, l: 'خارجة الآن', alert: false });
+                    kpis.push({ v: track.length, l: 'سجلات تتبع', alert: false });
+                }
                 if (!kpis.length && isMainGovernanceAdmin(user)) {
                     kpis.push({ v: stats.skuCount, l: 'مخزون' }, { v: stats.salesCount, l: 'مبيعات' }, { v: stats.ordersCount, l: 'طلبات' });
                 }
@@ -13181,6 +13201,7 @@
             syncAdminSessionClass();
             renderDashboardCommandShell(user);
             applyRoleDashboardScope(user);
+            if (typeof applyHrStrictDashboardGovernance === 'function') applyHrStrictDashboardGovernance(user);
             startDashboardClock();
             renderPlatformHubPanel();
             renderErpHubPanel();
@@ -18335,7 +18356,7 @@
             const list = document.getElementById('cloud-governance-stores');
             if (!summary || !list) return;
             const connected = !!supabaseClient;
-            const erpKeys = ['erp_inventory', 'erp_orders', 'erp_production', 'erp_purchases', 'erp_transfers', 'erp_stock_transfers', 'sales_price_list', 'sales_data', 'customer_service', 'hr_employees', 'hr_vehicles', 'hr_leave'];
+            const erpKeys = ['erp_inventory', 'erp_orders', 'erp_production', 'erp_purchases', 'erp_transfers', 'erp_stock_transfers', 'sales_price_list', 'sales_data', 'customer_service', 'hr_employees', 'hr_vehicles', 'hr_leave', 'hr_vehicle_tracking'];
             summary.innerHTML =
                 '<div class="erp-stat' + (connected ? ' erp-stat--ok' : ' erp-stat--danger') + '"><strong>' + (connected ? 'متصل' : 'محلي') + '</strong><span>Supabase</span></div>' +
                 '<div class="erp-stat"><strong>' + NEBRAS_CLOUD_STORE_SPECS.length + '</strong><span>مخازن بيانات</span></div>' +
@@ -20331,6 +20352,11 @@
                 return typeof getHrLeaveRequests === 'function' ? getHrLeaveRequests() : [];
             }, set: function(v) {
                 if (typeof setHrLeaveFromCloud === 'function') setHrLeaveFromCloud(v);
+            }},
+            { key: 'hr_vehicle_tracking', get: function() {
+                return typeof getHrVehicleTracking === 'function' ? getHrVehicleTracking() : [];
+            }, set: function(v) {
+                if (typeof setHrVehicleTrackingFromCloud === 'function') setHrVehicleTrackingFromCloud(v);
             }},
             { key: 'callback_leads', get: function() {
                 return typeof getCallbackLeads === 'function' ? getCallbackLeads() : [];
