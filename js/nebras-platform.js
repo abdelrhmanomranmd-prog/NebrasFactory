@@ -13118,6 +13118,11 @@
                     kpis.push({ v: vehs.length, l: 'سيارات', alert: false });
                     kpis.push({ v: track.filter(function(t) { return t.status === 'on_road'; }).length, l: 'خارجة الآن', alert: false });
                     kpis.push({ v: track.length, l: 'سجلات تتبع', alert: false });
+                    const att = typeof getHrAttendance === 'function' ? getHrAttendance() : [];
+                    const todayAtt = att.filter(function(a) { return a.date === new Date().toISOString().slice(0, 10); }).length;
+                    kpis.push({ v: todayAtt, l: 'حضور اليوم', alert: false });
+                    const docs = typeof getHrDocuments === 'function' ? getHrDocuments() : [];
+                    kpis.push({ v: docs.length, l: 'مستندات', alert: false });
                 }
                 if (!kpis.length && isMainGovernanceAdmin(user)) {
                     kpis.push({ v: stats.skuCount, l: 'مخزون' }, { v: stats.salesCount, l: 'مبيعات' }, { v: stats.ordersCount, l: 'طلبات' });
@@ -18356,7 +18361,7 @@
             const list = document.getElementById('cloud-governance-stores');
             if (!summary || !list) return;
             const connected = !!supabaseClient;
-            const erpKeys = ['erp_inventory', 'erp_orders', 'erp_production', 'erp_purchases', 'erp_transfers', 'erp_stock_transfers', 'sales_price_list', 'sales_data', 'customer_service', 'hr_employees', 'hr_vehicles', 'hr_leave', 'hr_vehicle_tracking'];
+            const erpKeys = ['erp_inventory', 'erp_orders', 'erp_production', 'erp_purchases', 'erp_transfers', 'erp_stock_transfers', 'sales_price_list', 'sales_data', 'customer_service', 'hr_employees', 'hr_vehicles', 'hr_leave', 'hr_vehicle_tracking', 'hr_attendance', 'hr_documents', 'hr_payroll'];
             summary.innerHTML =
                 '<div class="erp-stat' + (connected ? ' erp-stat--ok' : ' erp-stat--danger') + '"><strong>' + (connected ? 'متصل' : 'محلي') + '</strong><span>Supabase</span></div>' +
                 '<div class="erp-stat"><strong>' + NEBRAS_CLOUD_STORE_SPECS.length + '</strong><span>مخازن بيانات</span></div>' +
@@ -20357,6 +20362,21 @@
                 return typeof getHrVehicleTracking === 'function' ? getHrVehicleTracking() : [];
             }, set: function(v) {
                 if (typeof setHrVehicleTrackingFromCloud === 'function') setHrVehicleTrackingFromCloud(v);
+            }},
+            { key: 'hr_attendance', get: function() {
+                return typeof getHrAttendance === 'function' ? getHrAttendance() : [];
+            }, set: function(v) {
+                if (typeof setHrAttendanceFromCloud === 'function') setHrAttendanceFromCloud(v);
+            }},
+            { key: 'hr_documents', get: function() {
+                return typeof getHrDocuments === 'function' ? getHrDocuments() : [];
+            }, set: function(v) {
+                if (typeof setHrDocumentsFromCloud === 'function') setHrDocumentsFromCloud(v);
+            }},
+            { key: 'hr_payroll', get: function() {
+                return typeof getHrPayrollRuns === 'function' ? getHrPayrollRuns() : [];
+            }, set: function(v) {
+                if (typeof setHrPayrollFromCloud === 'function') setHrPayrollFromCloud(v);
             }},
             { key: 'callback_leads', get: function() {
                 return typeof getCallbackLeads === 'function' ? getCallbackLeads() : [];

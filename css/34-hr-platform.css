@@ -309,6 +309,80 @@
     display: none !important;
 }
 
+.hr-alerts-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.hr-alerts-list--compact {
+    margin-bottom: 8px;
+}
+
+.hr-alert-row {
+    border-radius: 10px;
+    padding: 12px 14px;
+    border: 1px solid #e2e8f0;
+    background: #fff;
+}
+
+.hr-alert-row strong {
+    display: block;
+    color: #1a365d;
+    font-size: 0.88rem;
+}
+
+.hr-alert-row p {
+    margin: 4px 0 0;
+    font-size: 0.78rem;
+    color: #4a5568;
+}
+
+.hr-alert-cat {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 999px;
+    margin-bottom: 6px;
+    background: #edf2f7;
+    color: #4a5568;
+}
+
+.hr-alert--danger {
+    border-color: #f5c6cb;
+    background: #fff5f5;
+}
+
+.hr-alert--danger .hr-alert-cat {
+    background: #e74c3c;
+    color: #fff;
+}
+
+.hr-alert--warn {
+    border-color: #ffeaa7;
+    background: #fffdf5;
+}
+
+.hr-alert--warn .hr-alert-cat {
+    background: #f39c12;
+    color: #fff;
+}
+
+.hr-alert--info {
+    border-color: #bee3f8;
+    background: #f7fbff;
+}
+
+.hr-report-card--danger strong {
+    color: #c0392b;
+}
+
+.hr-tab-bar {
+    max-height: 120px;
+    overflow-y: auto;
+}
+
 @media (max-width: 640px) {
     .hr-emp-grid,
     .hr-vehicle-grid,
