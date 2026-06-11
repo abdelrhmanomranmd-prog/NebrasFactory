@@ -1,0 +1,90 @@
+/* Phase 20 — Enterprise store checkout payment methods */
+.cart-enterprise-pay {
+    margin-top: 1rem;
+    padding: 1.1rem 1.15rem;
+    border-radius: 14px;
+    background: linear-gradient(145deg, #f8fbff 0%, #eef4fa 100%);
+    border: 1px solid rgba(13, 40, 64, 0.08);
+}
+.cart-enterprise-pay > h3 {
+    margin: 0 0 0.5rem;
+    font-size: 1.05rem;
+    color: #0d2840;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+.cart-enterprise-trust {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    margin: 0.65rem 0 1rem;
+    font-size: 0.78rem;
+    color: #3d5a73;
+}
+.cart-enterprise-trust span {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+.cart-pay-methods-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 0.65rem;
+    margin-bottom: 1rem;
+}
+.cart-pay-method {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.2rem;
+    padding: 0.75rem 0.85rem;
+    border-radius: 12px;
+    border: 2px solid rgba(13, 40, 64, 0.1);
+    background: #fff;
+    cursor: pointer;
+    text-align: right;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    font-family: inherit;
+}
+.cart-pay-method i {
+    font-size: 1.35rem;
+    color: #155e94;
+}
+.cart-pay-method strong {
+    font-size: 0.82rem;
+    color: #0d2840;
+}
+.cart-pay-method small {
+    font-size: 0.68rem;
+    color: #6b8299;
+    line-height: 1.35;
+}
+.cart-pay-method.is-selected {
+    border-color: #155e94;
+    box-shadow: 0 0 0 3px rgba(21, 94, 148, 0.12);
+}
+.cart-pay-method.is-disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+.cart-pay-method-badge {
+    position: absolute;
+    top: 0.45rem;
+    left: 0.45rem;
+    font-size: 0.62rem;
+    padding: 0.15rem 0.4rem;
+    border-radius: 999px;
+    background: #0d7a4a;
+    color: #fff;
+    font-weight: 600;
+}
+.cart-enterprise-pay .cart-payment-block {
+    margin-top: 0.5rem;
+    border-top: 1px dashed rgba(13, 40, 64, 0.12);
+    padding-top: 1rem;
+}
+@media (max-width: 520px) {
+    .cart-pay-methods-grid { grid-template-columns: repeat(2, 1fr); }
+}

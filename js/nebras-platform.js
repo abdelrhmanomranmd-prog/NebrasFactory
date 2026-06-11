@@ -3779,7 +3779,287 @@
             refreshCheckoutReceiptUi();
         }
 
-        function buildCartBankPaymentHtml(lang) {
+/* PHASE20_INJECTED */
+/* Phase 20 — Enterprise store checkout + payment methods */
+
+    function getCheckoutPaymentMethod() {
+        const p = getCheckoutProfile();
+        return p.paymentMethod || 'bank_transfer';
+    }
+
+    function setCheckoutPaymentMethod(method) {
+        const p = getCheckoutProfile();
+        p.paymentMethod = method || 'bank_transfer';
+        saveCheckoutProfile(p);
+        const mount = document.getElementById('cart-payment-mount');
+        if (mount && nebrasCart.length) {
+            mount.innerHTML = buildCartEnterprisePaymentHtml(currentLang || 'ar');
+        }
+    }
+
+    function buildCartEnterprisePaymentHtml(lang) {
+        lang = lang || currentLang || 'ar';
+        const ui = siteText[lang] || siteText.ar;
+        const method = getCheckoutPaymentMethod();
+        const methods = [
+            { id: 'bank_transfer', icon: 'fas fa-building-columns', label: ui.payBankTransfer || 'حوالة بنكية', sub: ui.payBankSub || 'نشط — حسابات نبراس الرسمية', active: true },
+            { id: 'mada', icon: 'fas fa-credit-card', label: 'mada مدى', sub: ui.paySoon || 'قريباً — بوابة دفع', active: false },
+            { id: 'visa_mc', icon: 'fab fa-cc-visa', label: 'Visa / Mastercard', sub: ui.paySoon || 'قريباً', active: false },
+            { id: 'apple_pay', icon: 'fab fa-apple-pay', label: 'Apple Pay', sub: ui.paySoon || 'قريباً', active: false },
+            { id: 'tabby', icon: 'fas fa-calendar-check', label: 'Tabby تقسيط', sub: ui.paySoon || 'قريباً', active: false },
+            { id: 'tamara', icon: 'fas fa-wallet', label: 'Tamara تمارا', sub: ui.paySoon || 'قريباً', active: false }
+        ];
+        const grid = methods.map(function(m) {
+            const sel = method === m.id ? ' is-selected' : '';
+            const dis = m.active ? '' : ' is-disabled';
+            const click = m.active ? 'onclick="setCheckoutPaymentMethod(\'' + m.id + '\')"' : '';
+            return '<button type="button" class="cart-pay-method' + sel + dis + '" ' + click + '>' +
+                '<i class="' + m.icon + '"></i>' +
+                '<strong>' + escapeHtmlAttr(m.label) + '</strong>' +
+                '<small>' + escapeHtmlAttr(m.sub) + '</small>' +
+                (m.active ? '<span class="cart-pay-method-badge">' + escapeHtmlAttr(ui.payActive || 'متاح') + '</span>' : '') +
+            '</button>';
+        }).join('');
+        const trust = '<div class="cart-enterprise-trust">' +
+            '<span><i class="fas fa-shield-halved"></i> ' + escapeHtmlAttr(ui.cartTrustSecure || 'دفع آمن') + '</span>' +
+            '<span><i class="fas fa-file-invoice"></i> ' + escapeHtmlAttr(ui.cartTrustVat || 'ضريبة 15% — فاتورة رسمية') + '</span>' +
+            '<span><i class="fas fa-truck"></i> ' + escapeHtmlAttr(ui.cartTrustDelivery || 'تسليم لكل فروع المملكة') + '</span>' +
+            '<span><i class="fas fa-headset"></i> ' + escapeHtmlAttr(ui.cartTrustSupport || 'متابعة مبيعات وخدمة عملاء') + '</span></div>';
+        const bankBlock = method === 'bank_transfer' ? buildCartBankPaymentHtmlCore(lang) : '';
+        return '<section class="cart-enterprise-pay" aria-labelledby="cart-enterprise-pay-title">' +
+            '<h3 id="cart-enterprise-pay-title"><i class="fas fa-wallet"></i> ' + escapeHtmlAttr(ui.cartPaymentMethodsTitle || 'طرق الدفع') + '</h3>' +
+            '<p class="cart-payment-intro">' + escapeHtmlAttr(ui.cartPaymentMethodsIntro || 'حوالة بنكية نشطة الآن — بطاقات وتقسيط قريباً عبر بوابة دفع معتمدة.') + '</p>' +
+            trust +
+            '<div class="cart-pay-methods-grid cart-pay-methods-grid--compact">' + grid + '</div>' +
+            '<p class="cart-pay-coming-soon"><i class="fas fa-clock"></i> ' + escapeHtmlAttr(ui.payComingSoonNote || 'مدى · Visa · Apple Pay · Tabby · Tamara — قريباً عبر بوابة دفع معتمدة') + '</p>' +
+            bankBlock +
+        '</section>';
+    }
+
+/* Phase 20 — Executive BI charts for main administration */
+
+    function renderNebrasBiChart(items, emptyMsg) {
+        items = items || [];
+        if (!items.length) return '<p class="analytics-empty">' + escapeHtmlAttr(emptyMsg || 'لا بيانات') + '</p>';
+        const max = Math.max.apply(null, items.map(function(x) { return Number(x.val) || 0; }).concat([1]));
+        const bars = items.map(function(it) {
+            const pct = Math.round((Number(it.val) || 0) / max * 100);
+            return '<div class="nebras-bi-bar-row">' +
+                '<span class="nebras-bi-bar-label">' + escapeHtmlAttr(it.label) + '</span>' +
+                '<div class="nebras-bi-bar-track"><div class="nebras-bi-bar-fill" style="width:' + pct + '%"></div></div>' +
+                '<strong class="nebras-bi-bar-val">' + escapeHtmlAttr(String(it.val)) + '</strong></div>';
+        }).join('');
+        return '<div class="nebras-bi-chart">' + bars + '</div>';
+    }
+
+    function collectFleetStatsForBi() {
+        let onRoad = 0, total = 0;
+        try {
+            if (typeof getHrVehicles === 'function') total = getHrVehicles().length;
+            if (typeof getHrVehicleTracking === 'function') {
+                onRoad = getHrVehicleTracking().filter(function(t) { return t.status === 'on_road'; }).length;
+            }
+        } catch (e) { /* ignore */ }
+        return { onRoad: onRoad, total: total };
+    }
+
+    function collectSalesRepStatsForBi() {
+        const reps = adminUsers.filter(function(u) { return u.role === 'sales_rep'; }).length;
+        let repQuotes = 0;
+        try {
+            const inbox = typeof loadSalesQuotesInbox === 'function' ? (loadSalesQuotesInbox() || []) : [];
+            repQuotes = inbox.filter(function(q) { return q.quoteKind === 'rep-built' || q.repUsername; }).length;
+        } catch (e) { /* ignore */ }
+        return { reps: reps, repQuotes: repQuotes };
+    }
+
+/* PHASE21_INJECTED */
+/* Phase 21 — Admin enterprise polish: compact BI, analytics tabs, live data */
+
+    var analyticsActiveTab = 'overview';
+
+    function buildDashboardExecutiveBiCompact(ctx) {
+        ctx = ctx || {};
+        if (!isMainGovernanceAdmin(currentAdmin)) return '';
+        const erp = ctx.erpStats || {};
+        const tiles = [
+            { icon: 'fas fa-file-invoice', val: ctx.quotesCount || 0, label: 'عروض أسعار' },
+            { icon: 'fas fa-sack-dollar', val: ctx.salesCount || 0, label: 'مبيعات' },
+            { icon: 'fas fa-car-side', val: ctx.fleetOnRoad || 0, label: 'سيارات خارجة' },
+            { icon: 'fas fa-user-tie', val: ctx.salesReps || 0, label: 'مندوبون' },
+            { icon: 'fas fa-users', val: adminUsers.filter(function(u) { return u.isActive !== false; }).length, label: 'مستخدمون نشطون' },
+            { icon: 'fas fa-signal', val: adminUsers.filter(function(u) { return typeof isUserOnline === 'function' && isUserOnline(u); }).length, label: 'متصلون الآن' }
+        ];
+        return '<div class="dashboard-bi-compact" role="region" aria-label="ملخص تنفيذي">' +
+            '<div class="dashboard-bi-compact-head">' +
+                '<h4><i class="fas fa-gauge-high"></i> المؤشرات التنفيذية</h4>' +
+                '<button type="button" class="dashboard-bi-compact-link" onclick="openAdminAnalytics();switchAnalyticsTab(\'overview\')">' +
+                    '<i class="fas fa-chart-line"></i> التحليلات الكاملة</button>' +
+            '</div>' +
+            '<div class="dashboard-bi-compact-grid">' +
+                tiles.map(function(t) {
+                    return '<article class="dashboard-bi-compact-tile">' +
+                        '<i class="' + t.icon + '"></i>' +
+                        '<strong>' + escapeHtmlAttr(String(t.val)) + '</strong>' +
+                        '<span>' + escapeHtmlAttr(t.label) + '</span></article>';
+                }).join('') +
+            '</div></div>';
+    }
+
+    function buildMainAdminExecutiveBiHtml(ctx) {
+        ctx = ctx || {};
+        if (!isMainGovernanceAdmin(currentAdmin)) return '';
+        const panelId = ctx.panelId || 'executive-bi-charts-panel-full';
+        const quotes = ctx.quotes || [];
+        const erp = ctx.erpStats || {};
+        const fleetOnRoad = ctx.fleetOnRoad || 0;
+        const fleetTotal = ctx.fleetTotal || 0;
+        const reps = ctx.salesReps || 0;
+        const repQuotes = ctx.repQuotes || 0;
+        const salesRows = [
+            { label: 'عروض أسعار', val: quotes.length },
+            { label: 'مبيعات مسجّلة', val: (ctx.salesCount || 0) },
+            { label: 'طلبات OMS', val: erp.ordersCount || 0 },
+            { label: 'إنتاج اليوم', val: erp.prodToday || 0 }
+        ];
+        const fleetRows = [
+            { label: 'سيارات خارجة', val: fleetOnRoad },
+            { label: 'أسطول الشركة', val: fleetTotal },
+            { label: 'مندوبو مبيعات', val: reps },
+            { label: 'عروض المندوبين', val: repQuotes }
+        ];
+        const govRows = [
+            { label: 'مستخدمون', val: adminUsers.length },
+            { label: 'نشطون', val: adminUsers.filter(function(u) { return u.isActive !== false; }).length },
+            { label: 'متصلون', val: adminUsers.filter(function(u) { return typeof isUserOnline === 'function' && isUserOnline(u); }).length },
+            { label: 'فروع', val: (branchesData || []).length }
+        ];
+        return '<section class="nebras-executive-bi nebras-executive-bi--full" id="' + escapeHtmlAttr(panelId) + '">' +
+            '<h4><i class="fas fa-chart-pie"></i> لوحة التحليل البياني — الإدارة الرئيسية</h4>' +
+            '<div class="nebras-bi-grid">' +
+                '<article class="nebras-bi-card"><h5>المبيعات والعمليات</h5>' + renderNebrasBiChart(salesRows, 'لا بيانات') + '</article>' +
+                '<article class="nebras-bi-card"><h5>الأسطول والمندوبون</h5>' + renderNebrasBiChart(fleetRows, 'لا بيانات') + '</article>' +
+                '<article class="nebras-bi-card"><h5>حوكمة المستخدمين</h5>' + renderNebrasBiChart(govRows, 'لا بيانات') + '</article>' +
+            '</div></section>';
+    }
+
+    async function refreshDashboardExecutiveBi(user) {
+        const dashBi = document.getElementById('dashboard-executive-bi-mini');
+        if (!dashBi || !user || !isMainGovernanceAdmin(user)) {
+            if (dashBi) { dashBi.hidden = true; dashBi.innerHTML = ''; }
+            return;
+        }
+        const fleetBi = typeof collectFleetStatsForBi === 'function' ? collectFleetStatsForBi() : { onRoad: 0, total: 0 };
+        const repBi = typeof collectSalesRepStatsForBi === 'function' ? collectSalesRepStatsForBi() : { reps: 0, repQuotes: 0 };
+        const st = getDashboardExtendedStats();
+        let quotesCount = 0;
+        try {
+            if (typeof getMergedSalesQuotesForAnalytics === 'function') {
+                let q = await getMergedSalesQuotesForAnalytics();
+                q = typeof filterQuotesForAdmin === 'function' ? filterQuotesForAdmin(q, user) : q;
+                quotesCount = q.length;
+            }
+        } catch (e) { /* ignore */ }
+        dashBi.hidden = false;
+        dashBi.innerHTML = buildDashboardExecutiveBiCompact({
+            quotesCount: quotesCount,
+            erpStats: st,
+            fleetOnRoad: fleetBi.onRoad,
+            fleetTotal: fleetBi.total,
+            salesReps: repBi.reps,
+            repQuotes: repBi.repQuotes,
+            salesCount: st.salesCount || 0
+        });
+    }
+
+    var ANALYTICS_TAB_MAP = {
+        overview: ['admin-analytics-kpis', 'executive-bi-charts-mount', 'admin-analytics-charts'],
+        sales: ['sales-crm-panel', 'quote-ranking-panel', 'quote-catalog-panel', 'bank-transfers-panel', 'callback-leads-panel'],
+        service: ['complaints-report-panel', 'chart-complaints', 'visitor-report-panel'],
+        operations: ['erp-operations-panel', 'analytics-restore-mount']
+    };
+
+    function renderAnalyticsTabNav() {
+        const tabs = [
+            { id: 'overview', icon: 'fas fa-gauge-high', label: 'نظرة عامة' },
+            { id: 'sales', icon: 'fas fa-chart-line', label: 'المبيعات' },
+            { id: 'service', icon: 'fas fa-headset', label: 'العملاء والشكاوى' },
+            { id: 'operations', icon: 'fas fa-industry', label: 'العمليات ERP' }
+        ];
+        return '<nav class="admin-analytics-tabs" id="admin-analytics-tabs" role="tablist" aria-label="أقسام التحليلات">' +
+            tabs.map(function(t) {
+                const active = analyticsActiveTab === t.id ? ' is-active' : '';
+                return '<button type="button" role="tab" class="admin-analytics-tab' + active + '" data-analytics-tab="' + t.id + '" ' +
+                    'aria-selected="' + (analyticsActiveTab === t.id ? 'true' : 'false') + '" onclick="switchAnalyticsTab(\'' + t.id + '\')">' +
+                    '<i class="' + t.icon + '"></i> ' + escapeHtmlAttr(t.label) + '</button>';
+            }).join('') +
+        '</nav>';
+    }
+
+    function switchAnalyticsTab(tabId) {
+        analyticsActiveTab = tabId || 'overview';
+        const navHost = document.getElementById('admin-analytics-tabs-mount');
+        if (navHost) navHost.innerHTML = renderAnalyticsTabNav();
+        applyAnalyticsTabVisibility();
+    }
+
+    function applyAnalyticsTabVisibility() {
+        const hub = document.getElementById('admin-analytics-hub');
+        if (!hub) return;
+        const allIds = [];
+        Object.keys(ANALYTICS_TAB_MAP).forEach(function(k) {
+            ANALYTICS_TAB_MAP[k].forEach(function(id) { if (allIds.indexOf(id) < 0) allIds.push(id); });
+        });
+        allIds.forEach(function(id) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            let show = false;
+            Object.keys(ANALYTICS_TAB_MAP).forEach(function(tab) {
+                if (tab === analyticsActiveTab && ANALYTICS_TAB_MAP[tab].indexOf(id) >= 0) show = true;
+            });
+            el.classList.toggle('analytics-tab-hidden', !show);
+        });
+        const tablesWrap = hub.querySelector('.admin-analytics-tables');
+        if (tablesWrap && analyticsActiveTab === 'overview') {
+            tablesWrap.classList.add('analytics-tables--overview-only');
+        } else if (tablesWrap) {
+            tablesWrap.classList.remove('analytics-tables--overview-only');
+        }
+    }
+
+    function mountAnalyticsTabSystem() {
+        let navHost = document.getElementById('admin-analytics-tabs-mount');
+        if (!navHost) {
+            const kpis = document.getElementById('admin-analytics-kpis');
+            if (kpis && kpis.parentNode) {
+                navHost = document.createElement('div');
+                navHost.id = 'admin-analytics-tabs-mount';
+                kpis.parentNode.insertBefore(navHost, kpis);
+            }
+        }
+        if (navHost) navHost.innerHTML = renderAnalyticsTabNav();
+        applyAnalyticsTabVisibility();
+    }
+
+    function showNebrasAdminToast(msg, type) {
+        let host = document.getElementById('nebras-admin-toast-host');
+        if (!host) {
+            host = document.createElement('div');
+            host.id = 'nebras-admin-toast-host';
+            host.className = 'nebras-admin-toast-host';
+            document.body.appendChild(host);
+        }
+        const el = document.createElement('div');
+        const toastType = type || 'info';
+        el.className = 'nebras-admin-toast nebras-admin-toast--' + toastType;
+        const icon = toastType === 'error' ? 'circle-exclamation' : (toastType === 'ok' ? 'circle-check' : 'info-circle');
+        el.innerHTML = '<i class="fas fa-' + icon + '"></i> ' + escapeHtmlAttr(msg || '');
+        host.appendChild(el);
+        setTimeout(function() { el.classList.add('is-out'); }, 2800);
+        setTimeout(function() { if (el.parentNode) el.parentNode.removeChild(el); }, 3400);
+    }
+
+        function buildCartBankPaymentHtmlCore(lang) {
             ensureDefaultBankAccounts();
             const ui = siteText[lang] || siteText.ar;
             const accounts = (systemSettings.bankAccounts || []).filter(function(b) { return b && b.iban; });
@@ -4602,7 +4882,7 @@
             renderCartCheckoutSteps();
             setCartCheckoutStatus('', false);
             const payMount = document.getElementById('cart-payment-mount');
-            if (payMount) payMount.innerHTML = nebrasCart.length ? buildCartBankPaymentHtml(lang) : '';
+            if (payMount) payMount.innerHTML = nebrasCart.length ? buildCartEnterprisePaymentHtml(lang) : '';
             applyStaticUiTranslations(ui);
             renderCartOrderPreview();
             overlay.classList.add('show');
@@ -5618,6 +5898,21 @@
                     return '<div class="admin-analytics-kpi"><strong>' + k.v + '</strong><span>' + escapeHtmlAttr(k.l) + '</span></div>';
                 }).join('');
             }
+            const biMount = document.getElementById('executive-bi-charts-mount');
+            if (biMount && typeof buildMainAdminExecutiveBiHtml === 'function') {
+                const fleetBi = typeof collectFleetStatsForBi === 'function' ? collectFleetStatsForBi() : { onRoad: 0, total: 0 };
+                const repBi = typeof collectSalesRepStatsForBi === 'function' ? collectSalesRepStatsForBi() : { reps: 0, repQuotes: 0 };
+                biMount.innerHTML = buildMainAdminExecutiveBiHtml({
+                    panelId: 'executive-bi-charts-panel-full',
+                    quotes: quotes,
+                    erpStats: erpStats,
+                    fleetOnRoad: fleetBi.onRoad,
+                    fleetTotal: fleetBi.total,
+                    salesReps: repBi.reps,
+                    repQuotes: repBi.repQuotes,
+                    salesCount: salesFromQuotes + manualSalesCount
+                });
+            }
             if (productsEl) {
                 productsEl.innerHTML = '<h4 id="chart-top-products-title">المنتجات الأكثر طلباً</h4>' +
                     renderAnalyticsBarList(aggregateTopProductsFromQuotes(quotes), 'لا طلبات منتجات بعد — من السلة وعروض الأسعار.');
@@ -5677,6 +5972,7 @@
             }
             const restoreMount = document.getElementById('analytics-restore-mount');
             if (restoreMount) restoreMount.innerHTML = buildAnalyticsRestorePanelHtml();
+            if (typeof mountAnalyticsTabSystem === 'function') mountAnalyticsTabSystem();
         }
 
         function openAdminAnalytics() {
@@ -5685,6 +5981,7 @@
                 return;
             }
             if (!requirePermission('audit', 'التحليلات متاحة لمن لديه صلاحية التدقيق / التقارير.')) return;
+            if (typeof switchAnalyticsTab === 'function') switchAnalyticsTab('overview');
             document.getElementById('admin-dashboard').classList.add('show');
             renderAdminAnalyticsPanel().then(function() {
                 scrollToDashboardSection('admin-analytics-hub');
@@ -12893,6 +13190,9 @@
                 saveSystemData();
                 if (typeof startAdminPresenceHeartbeat === 'function') startAdminPresenceHeartbeat(user);
                 status.textContent = ui.adminLoginOk || 'تم تسجيل الدخول بنجاح.';
+                if (typeof showNebrasAdminToast === 'function') {
+                    showNebrasAdminToast('مرحباً ' + user.username + ' — ' + getRoleLabel(user.role), 'ok');
+                }
                 closeAdminOverlay();
                 showAdminDashboard(user);
                 setLanguage(currentLang || 'ar');
@@ -13180,6 +13480,10 @@
                 kpiStrip.innerHTML = kpis.map(function(k) {
                     return '<div class="dashboard-live-kpi' + (k.alert ? ' dashboard-live-kpi--alert' : '') + '"><strong>' + escapeHtmlAttr(String(k.v)) + '</strong><span>' + escapeHtmlAttr(k.l) + '</span></div>';
                 }).join('');
+            }
+
+            if (typeof refreshDashboardExecutiveBi === 'function') {
+                refreshDashboardExecutiveBi(user);
             }
 
             const focusBanner = document.getElementById('dashboard-role-focus-banner');
@@ -23754,6 +24058,11 @@
         window.viewSalesQuoteDoorDesign = viewSalesQuoteDoorDesign;
         window.closeSalesQuoteDoorDesign = closeSalesQuoteDoorDesign;
         window.openAdminAnalytics = openAdminAnalytics;
+        window.switchAnalyticsTab = switchAnalyticsTab;
+        window.showNebrasAdminToast = showNebrasAdminToast;
+        window.refreshDashboardExecutiveBi = refreshDashboardExecutiveBi;
+        window.setCheckoutPaymentMethod = setCheckoutPaymentMethod;
+        window.buildCartEnterprisePaymentHtml = buildCartEnterprisePaymentHtml;
         window.renderAdminAnalyticsPanel = renderAdminAnalyticsPanel;
         window.viewSalesQuoteDocument = viewSalesQuoteDocument;
         window.submitQuoteA4Pdf = submitQuoteA4Pdf;

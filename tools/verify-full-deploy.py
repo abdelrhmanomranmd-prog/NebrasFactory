@@ -18,8 +18,8 @@ REQUIRED_CLOUD_KEYS = {
     'quote_registry', 'hr_employees', 'sales_quotes_inbox', 'analytics_governance', 'admin_presence',
 }
 LIVE_MARKERS = {
-    'js/nebras-platform.js': ['isStrictSalesRep', 'openRepMyQuotes', 'quotesOnly'],
-    'js/nebras-hr-platform.js': ['PHASE17_INJECTED', 'renderHrGovernancePanel', 'hrDeptActivity'],
+    'js/nebras-platform.js': ['PHASE20_INJECTED', 'PHASE21_INJECTED', 'buildCartEnterprisePaymentHtml', 'switchAnalyticsTab'],
+    'js/nebras-hr-platform.js': ['PHASE20_HR_INJECTED', 'fleet-reps', 'renderHrSalesFleetPanel'],
 }
 
 

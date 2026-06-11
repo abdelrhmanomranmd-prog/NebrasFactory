@@ -750,3 +750,7 @@
     font-weight: 600;
     color: #2c5282;
 }
+
+/* Phase 20 — HR fleet + sales reps */
+.hr-gov-owner-banner--main { border-color: #155e94; background: linear-gradient(135deg, #eaf4fb, #f8fbff); }
+.hr-tracking-section-title { margin: 1rem 0 0.5rem; font-size: 0.92rem; color: #1a5276; display: flex; align-items: center; gap: 0.4rem; }

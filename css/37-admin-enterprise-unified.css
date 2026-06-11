@@ -1,0 +1,341 @@
+/* Phase 21 — توحيد الواجهة الإدارية بجودة ERP احترافية */
+:root {
+    --nu-navy: #0d2840;
+    --nu-navy-deep: #071525;
+    --nu-gold: #c9a227;
+    --nu-accent: #155e94;
+    --nu-sky: #38bdf8;
+    --nu-radius-lg: 20px;
+    --nu-radius-md: 14px;
+    --nu-shadow: 0 20px 50px rgba(7, 21, 37, 0.22);
+    --nu-font-table: 0.875rem;
+}
+
+/* ── تسجيل الدخول ── */
+.admin-overlay--enterprise .admin-modal--enterprise {
+    max-width: 440px;
+    padding: 0;
+    background: linear-gradient(160deg, var(--nu-navy-deep) 0%, var(--nu-navy) 55%, #134e6f 100%);
+    border: 1px solid rgba(56, 189, 248, 0.25);
+    box-shadow: var(--nu-shadow);
+    overflow: hidden;
+}
+.admin-modal-head {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 22px 26px 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.admin-modal-logo {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    background: linear-gradient(145deg, rgba(56, 189, 248, 0.35), rgba(201, 162, 39, 0.3));
+    border: 1px solid rgba(255, 255, 255, 0.18);
+}
+.admin-modal-head h2 { margin: 0; font-size: 1.2rem; }
+.admin-modal-sub { margin: 4px 0 0; font-size: 0.78rem; opacity: 0.78; }
+.admin-modal-body { padding: 18px 26px 22px; }
+.admin-modal-body input {
+    width: 100%;
+    margin-bottom: 12px;
+    padding: 13px 15px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.07);
+    color: #fff;
+    font-size: 0.95rem;
+    font-family: inherit;
+}
+.admin-modal-body input:focus {
+    outline: none;
+    border-color: rgba(56, 189, 248, 0.55);
+    box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+}
+.admin-modal-actions { display: flex; flex-direction: column; gap: 8px; }
+.admin-modal-actions button {
+    width: 100%;
+    padding: 13px 16px;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 700;
+    font-size: 0.95rem;
+    font-family: inherit;
+    transition: 0.2s;
+}
+.admin-modal-actions button.primary {
+    background: linear-gradient(135deg, var(--nu-sky), #0ea5e9);
+    color: var(--nu-navy-deep);
+}
+.admin-modal-actions button.secondary {
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+}
+
+/* ── ERP modals — تجاوز الخلفية الداكنة القديمة ── */
+.admin-section .admin-modal.nebras-erp-modal,
+.admin-section .admin-modal.nebras-users-modal {
+    background: linear-gradient(180deg, #fff 0%, #f8fafc 100%) !important;
+    color: var(--nu-navy) !important;
+    padding: 0 !important;
+    max-width: min(96vw, 1100px);
+    border: 1px solid rgba(13, 40, 64, 0.1);
+    box-shadow: var(--nu-shadow);
+}
+.admin-section .admin-modal.nebras-erp-modal input,
+.admin-section .admin-modal.nebras-users-modal input,
+.admin-section .admin-modal.nebras-erp-modal select,
+.admin-section .admin-modal.nebras-users-modal select,
+.admin-section .admin-modal.nebras-erp-modal textarea {
+    color: var(--nu-navy);
+    background: #fff;
+    border-color: rgba(13, 40, 64, 0.15);
+}
+
+/* ── غلاف الداشبورد — ترتيب منطقي ── */
+#admin-dashboard {
+    display: flex;
+    flex-direction: column;
+}
+#admin-dashboard .dashboard-header.dashboard-erp-header {
+    order: -3;
+    margin-bottom: 0;
+}
+#admin-dashboard .dashboard-celebration-banner { order: -4; }
+#admin-dashboard .dashboard-command-shell { order: -2; }
+
+/* ── حوكمة داخل الغلاف الداكن ── */
+.dashboard-gov-users-strip .gov-users-strip {
+    margin: 0 20px 12px;
+    padding: 12px 16px;
+    border-radius: var(--nu-radius-md);
+    background: rgba(255, 255, 255, 0.07);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px 20px;
+}
+.dashboard-gov-users-strip .gov-users-strip-stat strong { color: #fff; font-size: 1.15rem; }
+.dashboard-gov-users-strip .gov-users-strip-stat span { color: rgba(255, 255, 255, 0.72); }
+.dashboard-gov-users-strip .gov-users-strip-stat--ok strong { color: #6ee7b7; }
+.dashboard-gov-users-strip .gov-users-strip-stat--warn strong { color: #fca5a5; }
+.dashboard-gov-users-strip .gov-users-strip-stat--live strong { color: var(--nu-sky); }
+.dashboard-gov-users-strip .gov-users-strip-btn {
+    margin-right: auto;
+    background: rgba(56, 189, 248, 0.2);
+    border: 1px solid rgba(56, 189, 248, 0.4);
+    color: #fff;
+    padding: 8px 14px;
+    border-radius: 999px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.82rem;
+}
+.dashboard-role-specialization .gov-role-specialization {
+    margin: 0 20px 12px;
+    padding: 12px 16px;
+    border-radius: var(--nu-radius-md);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #fff;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+.dashboard-role-specialization .gov-role-specialization strong { color: #fff; }
+.dashboard-role-specialization .gov-role-specialization span,
+.dashboard-role-specialization .gov-role-specialization small { color: rgba(255, 255, 255, 0.78); }
+.dashboard-role-specialization .gov-role-specialization > i { color: var(--nu-sky); }
+
+/* ── BI مدمج في الغلاف ── */
+.dashboard-bi-compact {
+    margin: 0 20px 14px;
+    padding: 14px 16px;
+    border-radius: var(--nu-radius-md);
+    background: rgba(0, 0, 0, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.dashboard-bi-compact-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+.dashboard-bi-compact-head h4 {
+    margin: 0;
+    font-size: 0.88rem;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+.dashboard-bi-compact-link {
+    font-family: inherit;
+    font-size: 0.75rem;
+    padding: 5px 10px;
+    border-radius: 999px;
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    background: rgba(56, 189, 248, 0.12);
+    color: #bae6fd;
+    cursor: pointer;
+}
+.dashboard-bi-compact-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(108px, 1fr));
+    gap: 8px;
+}
+.dashboard-bi-compact-tile {
+    padding: 10px 8px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.06);
+    text-align: center;
+}
+.dashboard-bi-compact-tile i { font-size: 0.9rem; opacity: 0.75; color: var(--nu-sky); }
+.dashboard-bi-compact-tile strong { display: block; font-size: 1.1rem; margin: 4px 0 2px; }
+.dashboard-bi-compact-tile span { font-size: 0.68rem; opacity: 0.8; line-height: 1.3; }
+
+/* ── تبويبات التحليلات ── */
+.admin-analytics-hub {
+    background: linear-gradient(145deg, #f8fafc 0%, #eef4fa 100%) !important;
+    border: 1px solid rgba(13, 40, 64, 0.1) !important;
+    border-radius: var(--nu-radius-lg) !important;
+    box-shadow: var(--nu-shadow);
+}
+.admin-analytics-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 16px;
+    padding: 6px;
+    border-radius: 999px;
+    background: rgba(13, 40, 64, 0.05);
+    border: 1px solid rgba(13, 40, 64, 0.08);
+}
+.admin-analytics-tab {
+    font-family: inherit;
+    font-size: 0.84rem;
+    padding: 9px 16px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: #3d5a73;
+    cursor: pointer;
+    transition: 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+.admin-analytics-tab.is-active {
+    background: linear-gradient(135deg, var(--nu-navy), var(--nu-accent));
+    color: #fff;
+    border-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 14px rgba(13, 40, 64, 0.2);
+}
+.analytics-tab-hidden { display: none !important; }
+.admin-analytics-tables.analytics-tables--overview-only { display: none; }
+
+/* ── جداول وكروت ── */
+.admin-analytics-table-card {
+    border-radius: var(--nu-radius-md) !important;
+    box-shadow: 0 4px 18px rgba(13, 40, 64, 0.06) !important;
+    border: 1px solid rgba(13, 40, 64, 0.08) !important;
+}
+.admin-analytics-table,
+.hr-leave-table,
+.nebras-users-table {
+    font-size: var(--nu-font-table);
+}
+.admin-analytics-table thead th,
+.hr-leave-table thead th {
+    position: sticky;
+    top: 0;
+    background: #f1f5f9;
+    z-index: 1;
+    font-weight: 700;
+    color: var(--nu-navy);
+}
+.admin-analytics-kpi {
+    border-radius: var(--nu-radius-md);
+    box-shadow: 0 4px 14px rgba(13, 40, 64, 0.06);
+}
+.admin-analytics-chart-card {
+    border-radius: var(--nu-radius-md) !important;
+}
+
+/* ── ERP rows ── */
+.erp-row {
+    border-radius: 12px !important;
+    border: 1px solid rgba(13, 40, 64, 0.08) !important;
+    transition: box-shadow 0.2s, border-color 0.2s;
+}
+.erp-row:hover {
+    box-shadow: 0 6px 20px rgba(13, 40, 64, 0.08);
+    border-color: rgba(21, 94, 148, 0.2) !important;
+}
+
+/* ── Toast إداري ── */
+.nebras-admin-toast-host {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+}
+.nebras-admin-toast {
+    padding: 12px 18px;
+    border-radius: 999px;
+    background: var(--nu-navy);
+    color: #fff;
+    font-size: 0.88rem;
+    box-shadow: var(--nu-shadow);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    animation: nu-toast-in 0.3s ease;
+}
+.nebras-admin-toast--error { background: #9b1c31; }
+.nebras-admin-toast--ok { background: linear-gradient(135deg, #0d7a4a, #1e9e6a); }
+.nebras-admin-toast.is-out { opacity: 0; transform: translateY(8px); transition: 0.35s; }
+@keyframes nu-toast-in {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── دفع المتجر — طرق قادمة مضغوطة ── */
+.cart-pay-methods-grid--compact .cart-pay-method.is-disabled { display: none; }
+.cart-pay-coming-soon {
+    margin-top: 0.5rem;
+    padding: 0.55rem 0.75rem;
+    border-radius: 10px;
+    background: rgba(13, 40, 64, 0.05);
+    font-size: 0.75rem;
+    color: #5a6b7a;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+/* ── HR أسطول ── */
+.hr-gov-owner-banner {
+    display: flex;
+    gap: 14px;
+    padding: 16px 18px;
+    border-radius: var(--nu-radius-md);
+    background: linear-gradient(135deg, #eaf4fb, #f8fbff);
+    border: 1px solid rgba(21, 94, 148, 0.15);
+    margin-bottom: 14px;
+}
+.hr-gov-owner-banner > i { font-size: 1.5rem; color: var(--nu-accent); margin-top: 2px; }
+.hr-gov-owner-banner strong { display: block; color: var(--nu-navy); margin-bottom: 4px; }
+.hr-gov-owner-banner p { margin: 0; font-size: 0.85rem; color: #4a6578; }

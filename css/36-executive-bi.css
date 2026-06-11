@@ -1,0 +1,73 @@
+/* Phase 20 — Executive BI charts */
+.nebras-executive-bi {
+    margin: 1rem 0 1.25rem;
+    padding: 1rem 1.15rem;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #0d2840 0%, #155e94 100%);
+    color: #fff;
+}
+.nebras-executive-bi > h4 {
+    margin: 0 0 0.85rem;
+    font-size: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+.nebras-bi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.75rem;
+}
+.nebras-bi-card {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 12px;
+    padding: 0.75rem 0.85rem;
+}
+.nebras-bi-card h5 {
+    margin: 0 0 0.55rem;
+    font-size: 0.82rem;
+    opacity: 0.92;
+}
+.nebras-bi-chart { display: flex; flex-direction: column; gap: 0.45rem; }
+.nebras-bi-bar-row {
+    display: grid;
+    grid-template-columns: 1fr minmax(60px, 38%) 2.2rem;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.72rem;
+}
+.nebras-bi-bar-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.nebras-bi-bar-track {
+    height: 7px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.15);
+    overflow: hidden;
+}
+.nebras-bi-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    background: linear-gradient(90deg, #5dade2, #85c1e9);
+    min-width: 4px;
+}
+.nebras-bi-bar-val { text-align: left; font-weight: 700; }
+#executive-bi-charts-mount:empty { display: none; }
+.nebras-executive-bi--full {
+    margin: 0 0 1rem;
+    border-radius: 14px;
+}
+.admin-analytics-hub .nebras-executive-bi--full {
+    background: linear-gradient(135deg, #0d2840 0%, #155e94 100%);
+}
+.dashboard-executive-bi-mini {
+    margin: 0.75rem 0;
+    padding: 0.65rem 0.85rem;
+    border-radius: 12px;
+    background: rgba(13, 40, 64, 0.04);
+    border: 1px solid rgba(13, 40, 64, 0.08);
+}
+.dashboard-executive-bi-mini h4 {
+    margin: 0 0 0.5rem;
+    font-size: 0.88rem;
+    color: #0d2840;
+}

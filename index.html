@@ -94,6 +94,9 @@
     <link rel="stylesheet" href="css/32-executive-reports.css">
     <link rel="stylesheet" href="css/33-product-governance.css">
     <link rel="stylesheet" href="css/34-hr-platform.css">
+    <link rel="stylesheet" href="css/35-store-enterprise.css">
+    <link rel="stylesheet" href="css/36-executive-bi.css">
+    <link rel="stylesheet" href="css/37-admin-enterprise-unified.css">
 </head>
 <body id="nebras-platform" class="platform-storefront" data-platform-layer="storefront">
 
@@ -453,14 +456,24 @@
         </div>
     </div>
 
-    <div class="admin-overlay" id="admin-overlay">
-        <div class="admin-modal">
-            <h2 id="admin-login-title">تسجيل دخول الإدارة</h2>
-            <p class="status" id="admin-status-message"></p>
-            <input id="admin-username" type="text" placeholder="اسم المستخدم" autocomplete="username">
-            <input id="admin-password" type="password" placeholder="كلمة المرور" autocomplete="current-password">
-            <button class="primary" id="admin-login-btn" onclick="loginAdmin()">دخول</button>
-            <button class="secondary" id="admin-login-cancel" onclick="closeAdminOverlay()">إلغاء</button>
+    <div class="admin-overlay admin-overlay--enterprise" id="admin-overlay">
+        <div class="admin-modal admin-modal--enterprise">
+            <div class="admin-modal-head">
+                <span class="admin-modal-logo" aria-hidden="true"><i class="fas fa-industry"></i></span>
+                <div>
+                    <h2 id="admin-login-title">تسجيل دخول الإدارة</h2>
+                    <p class="admin-modal-sub">منصة نبراس ERP — للموظفين المصرّح لهم فقط</p>
+                </div>
+            </div>
+            <div class="admin-modal-body">
+                <p class="status" id="admin-status-message"></p>
+                <input id="admin-username" type="text" placeholder="اسم المستخدم" autocomplete="username">
+                <input id="admin-password" type="password" placeholder="كلمة المرور" autocomplete="current-password">
+                <div class="admin-modal-actions">
+                    <button class="primary" id="admin-login-btn" onclick="loginAdmin()"><i class="fas fa-right-to-bracket"></i> دخول آمن</button>
+                    <button class="secondary" id="admin-login-cancel" onclick="closeAdminOverlay()">إلغاء</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -641,6 +654,7 @@
             <div class="dashboard-role-focus-banner" id="dashboard-role-focus-banner" hidden></div>
             <div id="dashboard-role-specialization" class="dashboard-role-specialization"></div>
             <div id="dashboard-gov-users-strip" class="dashboard-gov-users-strip" hidden></div>
+            <div id="dashboard-executive-bi-mini" class="dashboard-executive-bi-mini" hidden></div>
             <div class="dashboard-quick-actions" id="dashboard-quick-actions"></div>
             <div id="hr-command-center" class="hr-command-center dashboard-section" hidden></div>
         </div>
@@ -649,7 +663,7 @@
                 <div class="nebras-mini-showcase nebras-mini-showcase--doors" id="dashboard-door-showcase" aria-label="معاينة أبواب WPC"></div>
                 <div class="dashboard-identity-headcopy">
                     <p class="dashboard-identity-kicker" id="dashboard-identity-kicker"><i class="fas fa-star" aria-hidden="true"></i> شركة مصنع نبراس للبلاستيك</p>
-            <h3 id="dashboard-legal-title" class="admin-only-ui">بيانات مصنع نبراس الرسمية (داخلية + خارجية)</h3>
+                    <h3 id="dashboard-legal-title" class="admin-only-ui">بيانات مصنع نبراس الرسمية (داخلية + خارجية)</h3>
                 </div>
             </div>
             <div class="legal-grid" id="dashboard-legal-grid"></div>
@@ -678,6 +692,7 @@
             </div>
             <div id="analytics-governance-toolbar"></div>
             <div class="admin-analytics-kpis" id="admin-analytics-kpis" aria-live="polite"></div>
+            <div id="executive-bi-charts-mount" aria-live="polite"></div>
             <div class="admin-analytics-charts" id="admin-analytics-charts">
                 <article class="admin-analytics-chart-card" id="chart-top-products" aria-labelledby="chart-top-products-title"></article>
                 <article class="admin-analytics-chart-card" id="chart-top-colors" aria-labelledby="chart-top-colors-title"></article>
@@ -704,10 +719,10 @@
             <div class="nebras-partners-stage nebras-partners-stage--dashboard" id="nebras-partners-stage-dashboard">
                 <div class="nebras-partners-marquee nebras-partners-marquee--premium nebras-partners-marquee--row1">
                     <div class="nebras-partners-track" id="nebras-partners-track-dashboard-a"></div>
-            </div>
+                </div>
                 <div class="nebras-partners-marquee nebras-partners-marquee--premium nebras-partners-marquee--row2">
                     <div class="nebras-partners-track nebras-partners-track--reverse" id="nebras-partners-track-dashboard-b"></div>
-        </div>
+                </div>
             </div>
         </div>
         <div class="dashboard-header dashboard-erp-header dashboard-section" data-dashboard-section="header">
