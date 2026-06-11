@@ -275,6 +275,32 @@
     border-radius: 12px;
     background: #fff;
     border: 1px solid rgba(10, 77, 140, 0.12);
+    position: relative;
+}
+
+.sales-a4-page-chip--static {
+    border-style: dashed;
+    border-color: rgba(10, 77, 140, 0.22);
+}
+
+.sales-a4-page-thumb {
+    width: 44px;
+    height: 58px;
+    object-fit: cover;
+    object-position: top center;
+    border-radius: 6px;
+    border: 1px solid rgba(10, 77, 140, 0.15);
+    flex-shrink: 0;
+    background: #f4f8fc;
+}
+
+.sales-a4-page-thumb--ref {
+    border-color: rgba(27, 158, 87, 0.35);
+}
+
+.sales-a4-page-copy {
+    flex: 1;
+    min-width: 0;
 }
 
 .sales-a4-page-chip--dynamic {

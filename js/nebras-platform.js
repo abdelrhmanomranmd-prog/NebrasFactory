@@ -6337,10 +6337,25 @@
             });
         }
 
+        function normalizeQuoteAssetPath(assetPath) {
+            const p = String(assetPath || '').trim();
+            if (!p) return '';
+            if (/^https?:\/\//i.test(p) || /^data:/i.test(p) || /^blob:/i.test(p)) return p;
+            if (p.indexOf('/') === 0) return p;
+            if (p.indexOf('documents/') === 0 || p.indexOf('images/') === 0) return p;
+            return 'documents/' + p.replace(/^\/+/, '');
+        }
+
+        function resolveQuoteAssetUrl(assetPath) {
+            const rel = normalizeQuoteAssetPath(assetPath);
+            if (!rel) return '';
+            if (/^https?:\/\//i.test(rel) || /^data:/i.test(rel)) return rel;
+            return rel.indexOf('/') === 0 ? rel : '/' + rel;
+        }
+
         async function fetchAssetAsDataUrlForPdf(assetPath) {
-            const rel = normalizeHeroBannerPath(assetPath);
-            const url = heroSlideAssetUrl(rel);
-            if (!url) return '';
+            const url = resolveQuoteAssetUrl(assetPath);
+            if (!url || /^data:/i.test(url)) return url || '';
             try {
                 const res = await fetch(url, { credentials: 'omit' });
                 if (!res.ok) return '';
@@ -7434,7 +7449,12 @@
             q.watermarkScale = Math.min(95, Math.max(40, Number(q.watermarkScale) || DEFAULT_QUOTE_A4_SETTINGS.watermarkScale));
             if (!q.logoUrl) q.logoUrl = 'images/logo-nebras-mark.png';
             if (!q.layout || q.layout === 'nebras-factory') q.layout = 'nebras-official';
+            if (!q.staticPage2Url) q.staticPage2Url = DEFAULT_QUOTE_A4_SETTINGS.staticPage2Url;
+            if (!q.staticPage3Url) q.staticPage3Url = DEFAULT_QUOTE_A4_SETTINGS.staticPage3Url;
             if (!q.staticPage4Url) q.staticPage4Url = DEFAULT_QUOTE_A4_SETTINGS.staticPage4Url;
+            q.staticPage2Url = normalizeQuoteAssetPath(q.staticPage2Url);
+            q.staticPage3Url = normalizeQuoteAssetPath(q.staticPage3Url);
+            q.staticPage4Url = normalizeQuoteAssetPath(q.staticPage4Url);
             return q;
         }
 
@@ -8281,16 +8301,45 @@
             if (!host) return;
             const q = getQuoteA4Settings();
             const pages = [
-                { n: 1, label: 'ديناميكية — بيانات العميل', file: 'حسب العرض', dynamic: true },
-                { n: 2, label: 'شروط وأحكام نبراس', file: q.staticPage2Url || 'documents/quote-a4-static-page2.png' },
-                { n: 3, label: 'توريد وضمان', file: q.staticPage3Url || 'documents/quote-a4-static-page3.png' },
-                { n: 4, label: 'عقد وبيانات المصنع', file: q.staticPage4Url || 'documents/quote-a4-static-page4.png' }
+                {
+                    n: 1,
+                    label: 'ديناميكية — بيانات العميل',
+                    hint: 'رقم العرض · التاريخ · اسم العميل · الأصناف · الإجمالي',
+                    dynamic: true,
+                    ref: 'documents/quote-a4-page1-reference.png'
+                },
+                {
+                    n: 2,
+                    label: 'ثابتة — شروط وأحكام نبراس',
+                    file: q.staticPage2Url,
+                    static: true
+                },
+                {
+                    n: 3,
+                    label: 'ثابتة — توريد وضمان',
+                    file: q.staticPage3Url,
+                    static: true
+                },
+                {
+                    n: 4,
+                    label: 'ثابتة — عقد وبيانات المصنع',
+                    file: q.staticPage4Url,
+                    static: true
+                }
             ];
             host.innerHTML = pages.map(function(p) {
-                return '<div class="sales-a4-page-chip' + (p.dynamic ? ' sales-a4-page-chip--dynamic' : '') + '">' +
+                const thumb = p.static && p.file
+                    ? '<img class="sales-a4-page-thumb" src="' + escapeHtmlAttr(resolveQuoteAssetUrl(p.file)) + '" alt="" loading="lazy">'
+                    : (p.ref
+                        ? '<img class="sales-a4-page-thumb sales-a4-page-thumb--ref" src="' + escapeHtmlAttr(resolveQuoteAssetUrl(p.ref)) + '" alt="" loading="lazy">'
+                        : '');
+                return '<div class="sales-a4-page-chip' + (p.dynamic ? ' sales-a4-page-chip--dynamic' : ' sales-a4-page-chip--static') + '">' +
+                    thumb +
                     '<span class="sales-a4-page-num">' + p.n + '</span>' +
-                    '<div><strong>' + escapeHtmlAttr(p.label) + '</strong>' +
-                    '<small>' + (p.dynamic ? 'تُملأ من بيانات العميل والأصناف' : escapeHtmlAttr(p.file)) + '</small></div></div>';
+                    '<div class="sales-a4-page-copy"><strong>' + escapeHtmlAttr(p.label) + '</strong>' +
+                    '<small>' + (p.dynamic
+                        ? escapeHtmlAttr(p.hint || 'تتغير حسب بيانات كل عميل')
+                        : ('ملف ثابت: ' + escapeHtmlAttr(p.file))) + '</small></div></div>';
             }).join('');
         }
 
