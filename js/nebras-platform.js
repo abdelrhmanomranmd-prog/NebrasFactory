@@ -301,9 +301,9 @@
             hr: {
                 labelAr: 'موارد بشرية', labelEn: 'HR Manager',
                 icon: 'fas fa-people-roof', accent: '#2980b9',
-                descAr: 'منصة HR فقط — موظفون · سيارات · تتبع · إجازات. لا صلاحيات خارج HR.',
+                descAr: 'منصة HR — داشبورد خاص بقسمه/فرعه فقط. الإدارة الرئيسية تحدد النطاق.',
                 permissions: ['hr'],
-                companyWide: true
+                hrScoped: true
             },
             aluminum_manager: {
                 labelAr: 'مدير قسم الألومنيوم', labelEn: 'Aluminum Dept. Manager',
@@ -12940,8 +12940,8 @@
                 hideSections: ['dashboard-company-identity', 'dashboard-partners-block', 'platform-hub-panel', 'dashboard-channels-panel', 'dashboard-occasion-panel', 'dashboard-official-hub']
             },
             hr: {
-                greetingAr: 'HR مصنع نبراس للأبواب WPC — صلاحيات HR فقط',
-                descAr: 'موظفون · تتبع سيارات · إجازات — صلاحياتك محصورة في HR. التقارير التنفيذية للإدارة الرئيسية.',
+                greetingAr: 'مركز HR — قسمك وفرعك فقط',
+                descAr: 'داشبورد خاص بنطاقك — موظفون · سيارات · حضور · إجازات. خصوصية قسمك — لا تظهر أقسام أخرى.',
                 scrollTo: 'dashboard-actions-grid',
                 openHandler: 'openHrPlatform',
                 hideSections: [
@@ -13110,19 +13110,23 @@
                 if (canManage('complaints')) kpis.push({ v: stats.complaintsCount, l: 'شكاوى', alert: stats.complaintsCount > 0 });
                 if (canManage('branches')) kpis.push({ v: stats.branchesCount, l: 'فروع', alert: false });
                 if (typeof isHrDepartmentAdmin === 'function' && isHrDepartmentAdmin(user) && typeof getHrEmployees === 'function') {
-                    const emps = getHrEmployees();
-                    const vehs = typeof getHrVehicles === 'function' ? getHrVehicles() : [];
+                    const scope = typeof getHrAdminScope === 'function' ? getHrAdminScope(user) : null;
+                    const emps = typeof employeeMatchesHrScope === 'function'
+                        ? getHrEmployees().filter(function(e) { return employeeMatchesHrScope(e, scope); })
+                        : getHrEmployees();
+                    const vehs = typeof getHrVehicles === 'function' ? getHrVehicles().filter(function(v) {
+                        return typeof vehicleMatchesHrScope === 'function' ? vehicleMatchesHrScope(v, scope) : true;
+                    }) : [];
                     const track = typeof getHrVehicleTracking === 'function' ? getHrVehicleTracking() : [];
                     kpis.length = 0;
-                    kpis.push({ v: emps.length, l: 'موظفون', alert: false });
-                    kpis.push({ v: vehs.length, l: 'سيارات', alert: false });
-                    kpis.push({ v: track.filter(function(t) { return t.status === 'on_road'; }).length, l: 'خارجة الآن', alert: false });
-                    kpis.push({ v: track.length, l: 'سجلات تتبع', alert: false });
+                    kpis.push({ v: emps.length, l: 'فريق نطاقك', alert: false });
+                    kpis.push({ v: vehs.length, l: 'سيارات النطاق', alert: false });
+                    kpis.push({ v: track.filter(function(t) { return t.status === 'on_road'; }).length, l: 'خارجة', alert: false });
                     const att = typeof getHrAttendance === 'function' ? getHrAttendance() : [];
-                    const todayAtt = att.filter(function(a) { return a.date === new Date().toISOString().slice(0, 10); }).length;
-                    kpis.push({ v: todayAtt, l: 'حضور اليوم', alert: false });
-                    const docs = typeof getHrDocuments === 'function' ? getHrDocuments() : [];
-                    kpis.push({ v: docs.length, l: 'مستندات', alert: false });
+                    const teamIds = emps.map(function(e) { return e.id; });
+                    const today = new Date().toISOString().slice(0, 10);
+                    kpis.push({ v: att.filter(function(a) { return a.date === today && a.checkIn && teamIds.indexOf(a.employeeId) >= 0; }).length, l: 'حضور اليوم', alert: false });
+                    if (scope && scope.label) kpis.push({ v: scope.label.length > 18 ? '…' : scope.label, l: 'نطاقك', alert: false });
                 }
                 if (!kpis.length && isMainGovernanceAdmin(user)) {
                     kpis.push({ v: stats.skuCount, l: 'مخزون' }, { v: stats.salesCount, l: 'مبيعات' }, { v: stats.ordersCount, l: 'طلبات' });
@@ -19334,6 +19338,8 @@
                 password: user ? (user.password || '') : '',
                 role: user ? (user.role || defaultRole) : defaultRole,
                 assignedBranchCity: user ? (user.assignedBranchCity || '') : '',
+                hrScopeBranchId: user ? (user.hrScopeBranchId || '') : '',
+                hrScopeDepartmentKey: user ? (user.hrScopeDepartmentKey || '') : '',
                 permissions: user ? getUserEffectivePermissions(user) : (rolePermissions[defaultRole] || []).slice()
             };
             renderUserEditorForm();
@@ -19382,6 +19388,23 @@
                         '<label class="nebras-field"><span>الدور الوظيفي</span><select id="ue-role" onchange="onUserEditorRoleChange(this.value)" ' + (st.isPrimary ? 'disabled' : '') + '>' + roleOptions + '</select></label>' +
                         '<label class="nebras-field nebras-field--wide"><span>الفرع المخصّص</span><select id="ue-branch" onchange="onUserEditorBranchChange(this.value)" ' + (st.isPrimary ? 'disabled' : '') + '>' + branchOptions + '</select>' + branchHint + '</label>' +
                     '</div>' +
+                    (st.role === 'hr' && !st.isPrimary ? (function() {
+                        const branchOpts = ['<option value="">— كل الفروع —</option><option value="hq"' + (st.hrScopeBranchId === 'hq' ? ' selected' : '') + '>المقر الرئيسي — القصيم</option>']
+                            .concat((branchesData || []).map(function(b) {
+                                return '<option value="' + b.id + '"' + (String(st.hrScopeBranchId) === String(b.id) ? ' selected' : '') + '>' + escapeHtmlAttr(b.city || b.cityAr || '') + '</option>';
+                            })).join('');
+                        const depts = typeof getHrFactoryDepts === 'function' ? getHrFactoryDepts() : {};
+                        const deptOpts = ['<option value="">— كل الأقسام (مدير فرع) —</option>'].concat(
+                            Object.keys(depts).map(function(k) {
+                                return '<option value="' + k + '"' + (st.hrScopeDepartmentKey === k ? ' selected' : '') + '>' + escapeHtmlAttr(depts[k]) + '</option>';
+                            })
+                        ).join('');
+                        return '<div class="nebras-editor-grid nebras-editor-grid--hr-scope">' +
+                            '<label class="nebras-field"><span>فرع HR</span><select id="ue-hr-branch" onchange="onUserEditorHrBranchChange(this.value)">' + branchOpts + '</select></label>' +
+                            '<label class="nebras-field"><span>قسم HR (خصوصية)</span><select id="ue-hr-dept" onchange="onUserEditorHrDeptChange(this.value)">' + deptOpts + '</select></label>' +
+                            '<p class="nebras-editor-hint nebras-field--wide"><i class="fas fa-lock"></i> كل مستخدم HR يرى داشبورد قسمه فقط — لا يطلع على أقسام أخرى. الإدارة الرئيسية تحدد النطاق.</p>' +
+                        '</div>';
+                    })() : '') +
                     (st.isPrimary
                         ? '<p class="nebras-editor-hint nebras-editor-hint--lock"><i class="fas fa-lock"></i> حساب إدارة رئيسية — يملك كل الصلاحيات ولا تُعدَّل.</p>'
                         : '<div class="nebras-editor-perms-head"><h4><i class="fas fa-key"></i> الصلاحيات الممنوحة</h4>' +
@@ -19412,6 +19435,16 @@
         function onUserEditorBranchChange(city) {
             if (!nebrasUserEditorState) return;
             nebrasUserEditorState.assignedBranchCity = String(city || '').trim();
+        }
+
+        function onUserEditorHrBranchChange(branchId) {
+            if (!nebrasUserEditorState) return;
+            nebrasUserEditorState.hrScopeBranchId = String(branchId || '').trim();
+        }
+
+        function onUserEditorHrDeptChange(deptKey) {
+            if (!nebrasUserEditorState) return;
+            nebrasUserEditorState.hrScopeDepartmentKey = String(deptKey || '').trim();
         }
 
         function toggleUserEditorPerm(key, on) {
@@ -19469,6 +19502,8 @@
                     role: st.isPrimary ? 'superadmin' : st.role,
                     permissions: st.isPrimary ? null : st.permissions.slice(),
                     assignedBranchCity: st.isPrimary ? '' : st.assignedBranchCity,
+                    hrScopeBranchId: st.isPrimary || st.role !== 'hr' ? '' : (st.hrScopeBranchId || ''),
+                    hrScopeDepartmentKey: st.isPrimary || st.role !== 'hr' ? '' : (st.hrScopeDepartmentKey || ''),
                     isPrimary: !!st.isPrimary
                 });
                 addAuditLog('تعديل مستخدم', 'تم تعديل ' + username + ' (' + getRoleLabel(st.role) + ')');
@@ -19476,7 +19511,10 @@
                 adminUsers.push({
                     id: id, username: username, password: password,
                     role: st.role, permissions: st.permissions.slice(),
-                    assignedBranchCity: st.assignedBranchCity, isPrimary: false
+                    assignedBranchCity: st.assignedBranchCity,
+                    hrScopeBranchId: st.role === 'hr' ? (st.hrScopeBranchId || '') : '',
+                    hrScopeDepartmentKey: st.role === 'hr' ? (st.hrScopeDepartmentKey || '') : '',
+                    isPrimary: false
                 });
                 addAuditLog('إضافة مستخدم', 'تمت إضافة ' + username + ' بدور ' + getRoleLabel(st.role));
             }
