@@ -11556,12 +11556,26 @@
             }).join('');
         }
 
+        function enforceAdminDashboardGate() {
+            const dash = document.getElementById('admin-dashboard');
+            if (!dash) return;
+            if (currentAdmin) {
+                dash.removeAttribute('hidden');
+                dash.setAttribute('aria-hidden', 'false');
+            } else {
+                dash.classList.remove('show');
+                dash.setAttribute('hidden', '');
+                dash.setAttribute('aria-hidden', 'true');
+            }
+        }
+
         function syncAdminSessionClass() {
             const isAdmin = !!currentAdmin;
             document.body.classList.toggle('admin-session', isAdmin);
             document.body.classList.toggle('platform-storefront', !isAdmin);
             document.body.classList.toggle('platform-command-center', isAdmin);
             document.body.setAttribute('data-platform-layer', isAdmin ? 'command-center' : 'storefront');
+            enforceAdminDashboardGate();
             syncMobileCommerceBar();
             applyAdminPermissionsUI();
         }
@@ -13738,8 +13752,14 @@
         }
 
         function showAdminDashboard(user) {
+            if (!user) return;
             if (typeof loadAdminPresenceLocal === 'function') loadAdminPresenceLocal();
-            document.getElementById('admin-dashboard').classList.add('show');
+            const dash = document.getElementById('admin-dashboard');
+            if (dash) {
+                dash.classList.add('show');
+                dash.removeAttribute('hidden');
+                dash.setAttribute('aria-hidden', 'false');
+            }
             ensureDashboardGovernanceHandlers();
             updateAdminRoleLabel(user);
             applyOccasionTheme();
@@ -22094,6 +22114,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', function() {
+            enforceAdminDashboardGate();
             initNebrasWelcomeAudioEarly();
             bindBrandIntroWelcomeGestures();
             const introSkip = document.getElementById('intro-skip-btn');

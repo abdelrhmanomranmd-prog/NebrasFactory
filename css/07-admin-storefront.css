@@ -637,7 +637,11 @@ body:not(.admin-session) .admin-only-ui {
     display: none !important;
 }
 
-.admin-dashboard .admin-only-ui {
+body:not(.admin-session) #admin-dashboard {
+    display: none !important;
+}
+
+body.admin-session #admin-dashboard.show .admin-only-ui {
     display: block;
 }
 

@@ -626,7 +626,7 @@
         </div>
     </div>
 
-    <section class="admin-dashboard" id="admin-dashboard">
+    <section class="admin-dashboard" id="admin-dashboard" hidden aria-hidden="true">
         <div class="celebration-deco-layer" id="celebration-deco-layer" aria-hidden="true"></div>
         <div class="dashboard-celebration-banner" id="dashboard-celebration-banner" role="status" hidden>
             <div class="celebration-bunting" aria-hidden="true"></div>
@@ -660,7 +660,7 @@
             <div class="dashboard-quick-actions" id="dashboard-quick-actions"></div>
             <div id="hr-command-center" class="hr-command-center dashboard-section" hidden></div>
         </div>
-        <div class="dashboard-company-identity dashboard-section" id="dashboard-company-identity" data-dashboard-section="identity">
+        <div class="dashboard-company-identity dashboard-section admin-only-ui" id="dashboard-company-identity" data-dashboard-section="identity">
             <div class="dashboard-identity-hero">
                 <div class="nebras-mini-showcase nebras-mini-showcase--doors" id="dashboard-door-showcase" aria-label="معاينة أبواب WPC"></div>
                 <div class="dashboard-identity-headcopy">
@@ -670,7 +670,7 @@
             </div>
             <div class="legal-grid" id="dashboard-legal-grid"></div>
         </div>
-        <nav class="dashboard-main-nav dashboard-section" id="dashboard-main-nav" aria-label="تنقل الداشبورد" data-dashboard-section="nav">
+        <nav class="dashboard-main-nav dashboard-section admin-only-ui" id="dashboard-main-nav" aria-label="تنقل الداشبورد" data-dashboard-section="nav">
             <button type="button" id="dash-nav-analytics" onclick="openAdminAnalytics()">التحليلات</button>
             <button type="button" id="dash-nav-partners" onclick="scrollToDashboardSection('dashboard-partners-block')">الشركاء</button>
             <button type="button" id="dash-nav-ops" onclick="scrollToDashboardSection('dashboard-actions-grid')">العمليات</button>
@@ -712,7 +712,7 @@
                 <div id="analytics-restore-mount"></div>
             </div>
         </section>
-        <div class="dashboard-partners-block nebras-partners-showcase dashboard-section" id="dashboard-partners-block" data-dashboard-section="partners">
+        <div class="dashboard-partners-block nebras-partners-showcase dashboard-section admin-only-ui" id="dashboard-partners-block" data-dashboard-section="partners">
             <div class="dashboard-partners-head">
                 <h3 id="dashboard-partners-title"><i class="fas fa-handshake"></i> شركاؤنا</h3>
                 <p class="dashboard-partners-subtitle" id="dashboard-partners-subtitle">شركاؤنا في النجاح</p>
@@ -727,7 +727,7 @@
                 </div>
             </div>
         </div>
-        <div class="dashboard-header dashboard-erp-header dashboard-section" data-dashboard-section="header">
+        <div class="dashboard-header dashboard-erp-header dashboard-section admin-only-ui" data-dashboard-section="header">
             <div>
                 <h2 id="admin-dashboard-title">مركز قيادة منصة نبراس</h2>
                 <p class="admin-role" id="admin-role-name"></p>
@@ -736,8 +736,8 @@
             <a class="admin-action" href="#" id="admin-account-security-link" onclick="openAccountSecurity(); return false;"><i class="fas fa-user-lock"></i> أمان حسابي</a>
             <a class="admin-action" href="#" id="admin-logout-label" onclick="logoutAdmin()"><i class="fas fa-sign-out-alt"></i> تسجيل خروج</a>
         </div>
-        <div class="dashboard-section-block">
-        <div class="erp-hub-panel dashboard-section" id="erp-hub-panel" data-dashboard-section="erp">
+        <div class="dashboard-section-block admin-only-ui">
+        <div class="erp-hub-panel dashboard-section admin-only-ui" id="erp-hub-panel" data-dashboard-section="erp">
             <span class="erp-badge-main" id="erp-badge-main"><i class="fas fa-cubes" aria-hidden="true"></i> NEBRAS ERP SYSTEM</span>
             <div class="platform-hub-head">
                 <div>

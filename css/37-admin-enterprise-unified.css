@@ -98,10 +98,23 @@
     border-color: rgba(13, 40, 64, 0.15);
 }
 
-/* ── غلاف الداشبورد — ترتيب منطقي ── */
+/* ── غلاف الداشبورد — مخفي عن الزوار؛ يظهر فقط بعد تسجيل دخول الإدارة ── */
 #admin-dashboard {
-    display: flex;
+    display: none !important;
     flex-direction: column;
+}
+body.admin-session #admin-dashboard.show {
+    display: flex !important;
+}
+body:not(.admin-session) #admin-dashboard,
+body:not(.admin-session) #admin-dashboard.show {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    height: 0 !important;
+    overflow: hidden !important;
+    padding: 0 !important;
+    margin: 0 !important;
 }
 #admin-dashboard .dashboard-header.dashboard-erp-header {
     order: -3;
