@@ -21,7 +21,8 @@ insert into public.nebras_data_store (store_key, payload) values
   ('hr_email_queue', '[]'::jsonb),
   ('hr_shift_roster', '[]'::jsonb),
   ('hr_dept_activity', '[]'::jsonb),
-  ('quote_registry', '{"byDate":{}}'::jsonb)
+  ('quote_registry', '{"byDate":{}}'::jsonb),
+  ('admin_presence', '{}'::jsonb)
 on conflict (store_key) do nothing;
 
 commit;

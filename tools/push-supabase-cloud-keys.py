@@ -50,6 +50,7 @@ ALL_KEYS = {
     'hr_dept_activity': [],
     'quote_registry': {'byDate': {}},
     'callback_leads': [],
+    'admin_presence': {},
 }
 
 

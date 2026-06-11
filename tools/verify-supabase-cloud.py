@@ -17,7 +17,7 @@ EXPECTED_KEYS = {
     'hr_employees', 'hr_vehicles', 'hr_leave', 'hr_vehicle_tracking', 'hr_attendance',
     'hr_documents', 'hr_payroll', 'hr_notifications', 'hr_notif_settings',
     'hr_email_queue', 'hr_shift_roster', 'hr_dept_activity', 'quote_registry',
-    'callback_leads',
+    'callback_leads', 'admin_presence',
 }
 
 

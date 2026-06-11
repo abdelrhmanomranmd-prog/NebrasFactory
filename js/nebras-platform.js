@@ -4799,6 +4799,7 @@
             });
             saveSystemData();
             if (typeof persistAnalyticsGovernanceLocal === 'function') persistAnalyticsGovernanceLocal();
+            if (typeof saveAdminPresenceLocal === 'function') saveAdminPresenceLocal();
             renderAdminAnalyticsPanel();
         }
 
@@ -12842,20 +12843,15 @@
             return true;
         }
 
-        function addAuditLog(action, details) {
-            const actor = currentAdmin ? `${currentAdmin.username} (${currentAdmin.role})` : 'system';
-            auditLogs.unshift({
-                id: Date.now(),
-                action,
-                details,
-                actor,
-                at: formatNebrasDateTime(new Date(), 'ar')
-            });
-            if (auditLogs.length > 200) {
-                auditLogs = auditLogs.slice(0, 200);
+        function addAuditLog(action, details, actorUser) {
+            if (typeof addAuditLogGoverned === 'function') {
+                addAuditLogGoverned(action, details, actorUser);
+                return;
             }
+            const actor = currentAdmin ? (currentAdmin.username + ' (' + currentAdmin.role + ')') : 'system';
+            auditLogs.unshift({ id: Date.now(), action: action, details: details, actor: actor, at: formatNebrasDateTime(new Date(), 'ar') });
             saveSystemData();
-            displayAuditLog();
+            if (typeof displayAuditLog === 'function') displayAuditLog();
         }
 
         function closeAdminOverlay() {
@@ -12877,19 +12873,33 @@
             }
 
             if (user) {
+                if (user.isActive === false) {
+                    status.textContent = ui.adminLoginDisabled || 'هذا الحساب معطّل — تواصل مع الإدارة الرئيسية.';
+                    addAuditLog('محاولة دخول معطّل', user.username + ' — حساب معطّل');
+                    return;
+                }
                 if (isMainGovernanceAdmin(user)) {
                     user.isPrimary = true;
                     user.role = 'superadmin';
                     user.permissions = null;
                 }
+                const loginNow = new Date().toISOString();
+                const uidx = adminUsers.findIndex(function(u) { return u.id === user.id; });
+                if (uidx >= 0) {
+                    adminUsers[uidx] = Object.assign({}, adminUsers[uidx], user, { lastLoginAt: loginNow, lastSeenAt: loginNow, isActive: true });
+                    user = adminUsers[uidx];
+                }
                 currentAdmin = user;
+                saveSystemData();
+                if (typeof startAdminPresenceHeartbeat === 'function') startAdminPresenceHeartbeat(user);
                 status.textContent = ui.adminLoginOk || 'تم تسجيل الدخول بنجاح.';
                 closeAdminOverlay();
                 showAdminDashboard(user);
                 setLanguage(currentLang || 'ar');
-                addAuditLog('تسجيل دخول', `دخول ناجح بواسطة ${user.username}`);
+                addAuditLog('تسجيل دخول', 'دخول ناجح — ' + user.username + ' (' + getRoleLabel(user.role) + ')');
             } else {
                 status.textContent = ui.adminLoginFail || 'بيانات الدخول غير صحيحة. حاول مرة أخرى.';
+                addAuditLog('محاولة دخول فاشلة', 'اسم مستخدم: ' + username);
             }
         }
 
@@ -13075,6 +13085,16 @@
             const clock = document.getElementById('dashboard-command-clock');
             if (clock) clock.textContent = formatDashboardClockNow();
 
+            const specHost = document.getElementById('dashboard-role-specialization');
+            if (specHost && typeof renderRoleSpecializationBanner === 'function') {
+                specHost.innerHTML = renderRoleSpecializationBanner(user);
+            }
+            const govStrip = document.getElementById('dashboard-gov-users-strip');
+            if (govStrip && typeof renderGovernanceUsersStrip === 'function') {
+                govStrip.innerHTML = isMainGovernanceAdmin(user) ? renderGovernanceUsersStrip() : '';
+                govStrip.hidden = !isMainGovernanceAdmin(user);
+            }
+
             const sync = document.getElementById('dashboard-command-sync');
             if (sync) {
                 const cloudOk = !!supabaseClient;
@@ -13229,6 +13249,7 @@
         }
 
         function showAdminDashboard(user) {
+            if (typeof loadAdminPresenceLocal === 'function') loadAdminPresenceLocal();
             document.getElementById('admin-dashboard').classList.add('show');
             ensureDashboardGovernanceHandlers();
             updateAdminRoleLabel(user);
@@ -13259,7 +13280,10 @@
 
         function logoutAdmin() {
             if (currentAdmin) {
-                addAuditLog('تسجيل خروج', `خروج المستخدم ${currentAdmin.username}`);
+                if (typeof clearAdminPresence === 'function') clearAdminPresence(currentAdmin);
+                if (typeof stopAdminPresenceHeartbeat === 'function') stopAdminPresenceHeartbeat();
+                addAuditLog('تسجيل خروج', 'خروج — ' + currentAdmin.username);
+                saveSystemData();
             }
             if (dashboardClockTimer) {
                 clearInterval(dashboardClockTimer);
@@ -13277,26 +13301,6 @@
 /* Phase 18 — Sales rep quotes-only + rep quote library + Odoo-like persistence helpers */
 
     const ANALYTICS_GOVERNANCE_KEY = 'nebrasAnalyticsGovernance';
-
-    function normalizeAdminUserRecord(user, index) {
-        const role = user && allowedRoles.includes(String(user.role || '').toLowerCase()) ? String(user.role).toLowerCase() : 'manager';
-        const isPrimary = user && (user.isPrimary === true || PRIMARY_GOVERNANCE_ADMIN_IDS.indexOf(user.id) >= 0 ||
-            PRIMARY_GOVERNANCE_USERNAMES.indexOf(String(user.username || '').toUpperCase()) >= 0);
-        let perms = Array.isArray(user && user.permissions) ? user.permissions.filter(Boolean) : null;
-        if (role === 'sales_rep' && !isPrimary) perms = ['quotes'];
-        return {
-            id: user && user.id ? user.id : 'user-' + Date.now() + '-' + index,
-            username: user && user.username ? user.username : 'user' + (index + 1),
-            password: user && user.password ? user.password : 'ChangeMe123',
-            role: role,
-            permissions: perms,
-            assignedBranchCity: (user && user.assignedBranchCity) ? String(user.assignedBranchCity).trim() : '',
-            assignedBranchId: user && user.assignedBranchId != null && user.assignedBranchId !== '' ? user.assignedBranchId : null,
-            hrScopeBranchId: user && user.hrScopeBranchId ? String(user.hrScopeBranchId).trim() : '',
-            hrScopeDepartmentKey: user && user.hrScopeDepartmentKey ? String(user.hrScopeDepartmentKey).trim() : '',
-            isPrimary: !!isPrimary
-        };
-    }
 
     function canAccessQuoteDocumentOps() {
         return canManage('sales') || canManage('quotes');
@@ -13443,6 +13447,337 @@
                 }
             }
         } catch (e) { console.warn('analytics governance local load', e); }
+    }
+
+/* PHASE19_INJECTED */
+/* Phase 19 — High governance: user lifecycle, presence, audit, persistence */
+
+    const ADMIN_PRESENCE_KEY = 'nebrasAdminPresence';
+    const ADMIN_PRESENCE_ONLINE_MS = 3 * 60 * 1000;
+    const AUDIT_LOG_MAX = 1000;
+    let adminPresence = {};
+    let adminPresenceTimer = null;
+
+    function loadAdminPresenceLocal() {
+        try {
+            const raw = localStorage.getItem(ADMIN_PRESENCE_KEY);
+            adminPresence = raw ? JSON.parse(raw) : {};
+            if (!adminPresence || typeof adminPresence !== 'object') adminPresence = {};
+        } catch (e) { adminPresence = {}; }
+    }
+
+    function saveAdminPresenceLocal() {
+        try {
+            localStorage.setItem(ADMIN_PRESENCE_KEY, JSON.stringify(adminPresence));
+        } catch (e) { console.warn('admin presence save', e); }
+    }
+
+    function setAdminPresenceFromCloud(v) {
+        adminPresence = v && typeof v === 'object' && !Array.isArray(v) ? v : {};
+        try { localStorage.setItem(ADMIN_PRESENCE_KEY, JSON.stringify(adminPresence)); } catch (e) { /* ignore */ }
+    }
+
+    function getAdminPresenceForCloud() {
+        loadAdminPresenceLocal();
+        return adminPresence;
+    }
+
+    function touchAdminPresence(user) {
+        if (!user || !user.id) return;
+        loadAdminPresenceLocal();
+        const now = new Date().toISOString();
+        adminPresence[user.id] = {
+            userId: user.id,
+            username: user.username,
+            role: user.role,
+            lastSeenAt: now,
+            lastLoginAt: user.lastLoginAt || now
+        };
+        saveAdminPresenceLocal();
+        const idx = adminUsers.findIndex(function(u) { return u.id === user.id; });
+        if (idx >= 0) {
+            adminUsers[idx] = Object.assign({}, adminUsers[idx], { lastSeenAt: now });
+        }
+    }
+
+    function clearAdminPresence(user) {
+        if (!user || !user.id) return;
+        loadAdminPresenceLocal();
+        delete adminPresence[user.id];
+        saveAdminPresenceLocal();
+    }
+
+    function isUserOnline(user) {
+        if (!user || !user.id) return false;
+        loadAdminPresenceLocal();
+        const p = adminPresence[user.id];
+        if (!p || !p.lastSeenAt) return false;
+        const t = new Date(p.lastSeenAt).getTime();
+        return !isNaN(t) && (Date.now() - t) < ADMIN_PRESENCE_ONLINE_MS;
+    }
+
+    function formatUserLastSeen(user) {
+        if (!user) return '—';
+        if (isUserOnline(user)) return 'متصل الآن';
+        const raw = user.lastSeenAt || (adminPresence[user.id] || {}).lastSeenAt;
+        if (!raw) return 'لم يُسجَّل';
+        return typeof formatNebrasDateTime === 'function' ? formatNebrasDateTime(raw, currentLang || 'ar') : String(raw);
+    }
+
+    function startAdminPresenceHeartbeat(user) {
+        stopAdminPresenceHeartbeat();
+        if (!user) return;
+        touchAdminPresence(user);
+        adminPresenceTimer = setInterval(function() {
+            if (!currentAdmin) { stopAdminPresenceHeartbeat(); return; }
+            touchAdminPresence(currentAdmin);
+            saveAdminPresenceLocal();
+            schedulePushToNebrasCloud();
+        }, 60000);
+    }
+
+    function stopAdminPresenceHeartbeat() {
+        if (adminPresenceTimer) {
+            clearInterval(adminPresenceTimer);
+            adminPresenceTimer = null;
+        }
+    }
+
+    function persistAdminUserRecord(userId, patch) {
+        const idx = adminUsers.findIndex(function(u) { return u.id === userId; });
+        if (idx < 0) return;
+        adminUsers[idx] = Object.assign({}, adminUsers[idx], patch, { updatedAt: new Date().toISOString() });
+        saveSystemData();
+    }
+
+    function normalizeAdminUserRecord(user, index) {
+        const role = user && allowedRoles.includes(String(user.role || '').toLowerCase()) ? String(user.role).toLowerCase() : 'manager';
+        const isPrimary = user && (user.isPrimary === true || PRIMARY_GOVERNANCE_ADMIN_IDS.indexOf(user.id) >= 0 ||
+            PRIMARY_GOVERNANCE_USERNAMES.indexOf(String(user.username || '').toUpperCase()) >= 0);
+        let perms = Array.isArray(user && user.permissions) ? user.permissions.filter(Boolean) : null;
+        if (role === 'sales_rep' && !isPrimary) perms = ['quotes'];
+        const now = new Date().toISOString();
+        return {
+            id: user && user.id ? user.id : 'user-' + Date.now() + '-' + index,
+            username: user && user.username ? user.username : 'user' + (index + 1),
+            password: user && user.password ? user.password : 'ChangeMe123',
+            role: role,
+            permissions: perms,
+            assignedBranchCity: (user && user.assignedBranchCity) ? String(user.assignedBranchCity).trim() : '',
+            assignedBranchId: user && user.assignedBranchId != null && user.assignedBranchId !== '' ? user.assignedBranchId : null,
+            hrScopeBranchId: user && user.hrScopeBranchId ? String(user.hrScopeBranchId).trim() : '',
+            hrScopeDepartmentKey: user && user.hrScopeDepartmentKey ? String(user.hrScopeDepartmentKey).trim() : '',
+            isPrimary: !!isPrimary,
+            isActive: user && user.isActive === false ? false : true,
+            lastLoginAt: user && user.lastLoginAt ? user.lastLoginAt : '',
+            lastSeenAt: user && user.lastSeenAt ? user.lastSeenAt : '',
+            createdAt: user && user.createdAt ? user.createdAt : now,
+            updatedAt: user && user.updatedAt ? user.updatedAt : now,
+            createdBy: user && user.createdBy ? user.createdBy : ''
+        };
+    }
+
+    function addAuditLogGoverned(action, details, actorUser) {
+        const admin = actorUser || currentAdmin;
+        const username = admin ? String(admin.username || '') : 'system';
+        const role = admin ? String(admin.role || '') : '';
+        const actor = admin ? (username + ' (' + role + ')') : 'system';
+        const now = new Date();
+        auditLogs.unshift({
+            id: Date.now(),
+            action: action,
+            details: details,
+            actor: actor,
+            username: username,
+            role: role,
+            at: formatNebrasDateTime(now, 'ar'),
+            atIso: now.toISOString()
+        });
+        if (auditLogs.length > AUDIT_LOG_MAX) auditLogs.length = AUDIT_LOG_MAX;
+        saveSystemData();
+        if (typeof displayAuditLog === 'function') displayAuditLog();
+    }
+
+    function renderGovernanceUsersStrip() {
+        if (!isMainGovernanceAdmin(currentAdmin)) return '';
+        const active = adminUsers.filter(function(u) { return u.isActive !== false; }).length;
+        const inactive = adminUsers.length - active;
+        const online = adminUsers.filter(function(u) { return isUserOnline(u); }).length;
+        return '<div class="gov-users-strip">' +
+            '<div class="gov-users-strip-stat"><strong>' + adminUsers.length + '</strong><span>مستخدمون</span></div>' +
+            '<div class="gov-users-strip-stat gov-users-strip-stat--ok"><strong>' + active + '</strong><span>نشطون</span></div>' +
+            '<div class="gov-users-strip-stat gov-users-strip-stat--warn"><strong>' + inactive + '</strong><span>معطّلون</span></div>' +
+            '<div class="gov-users-strip-stat gov-users-strip-stat--live"><strong>' + online + '</strong><span>متصلون الآن</span></div>' +
+            '<button type="button" class="gov-users-strip-btn" onclick="openUserManagement()"><i class="fas fa-users-cog"></i> إدارة المستخدمين</button>' +
+        '</div>';
+    }
+
+    function renderRoleSpecializationBanner(user) {
+        user = user || currentAdmin;
+        if (!user) return '';
+        const def = getRoleDefinition(user.isPrimary ? 'superadmin' : user.role) || {};
+        const perms = getUserEffectivePermissions(user);
+        const permLabels = user.isPrimary
+            ? 'كل صلاحيات المنصة — الإدارة الرئيسية'
+            : (perms.map(function(k) { return NEBRAS_PERMISSION_LABELS[k] || k; }).join(' · ') || 'بدون صلاحيات');
+        const scope = user.assignedBranchCity
+            ? 'فرع: ' + user.assignedBranchCity
+            : (user.hrScopeDepartmentKey && typeof getHrFactoryDepts === 'function'
+                ? 'قسم HR: ' + (getHrFactoryDepts()[user.hrScopeDepartmentKey] || user.hrScopeDepartmentKey)
+                : 'نطاق المنصة حسب دورك');
+        return '<div class="gov-role-specialization" style="--role-accent:' + (def.accent || '#0a4d8c') + '">' +
+            '<i class="' + (def.icon || 'fas fa-user-shield') + '"></i>' +
+            '<div><strong>' + escapeHtmlAttr(user.username) + ' — ' + escapeHtmlAttr(def.labelAr || user.role) + '</strong>' +
+            '<span>اختصاصك: ' + escapeHtmlAttr(permLabels) + '</span>' +
+            '<small>' + escapeHtmlAttr(scope) + '</small></div></div>';
+    }
+
+    function renderUserStatsGoverned() {
+        const host = document.getElementById('nebras-users-stats');
+        if (!host) return;
+        const total = adminUsers.length;
+        const primary = adminUsers.filter(function(u) { return u.isPrimary; }).length;
+        const active = adminUsers.filter(function(u) { return u.isActive !== false; }).length;
+        const inactive = total - active;
+        const online = adminUsers.filter(function(u) { return isUserOnline(u); }).length;
+        const branchScoped = adminUsers.filter(function(u) { return !u.isPrimary && String(u.assignedBranchCity || '').trim(); }).length;
+        const stats = [
+            { icon: 'fas fa-users', label: 'إجمالي المستخدمين', val: total },
+            { icon: 'fas fa-circle-check', label: 'نشطون', val: active, cls: 'nebras-users-stat--ok' },
+            { icon: 'fas fa-ban', label: 'معطّلون', val: inactive, cls: inactive ? 'nebras-users-stat--warn' : '' },
+            { icon: 'fas fa-signal', label: 'متصلون الآن', val: online, cls: 'nebras-users-stat--live' },
+            { icon: 'fas fa-crown', label: 'إدارة رئيسية', val: primary },
+            { icon: 'fas fa-store', label: 'مخصّصون لفروع', val: branchScoped }
+        ];
+        host.innerHTML = stats.map(function(s) {
+            return '<div class="nebras-users-stat ' + (s.cls || '') + '"><i class="' + s.icon + '"></i><strong>' + s.val + '</strong><span>' + s.label + '</span></div>';
+        }).join('') +
+        '<div class="gov-users-presence-table-wrap"><table class="gov-users-presence-table"><thead><tr>' +
+            '<th>المستخدم</th><th>الدور</th><th>الحالة</th><th>الاتصال</th><th>آخر دخول</th>' +
+        '</tr></thead><tbody>' +
+        adminUsers.map(function(u) {
+            const def = getRoleDefinition(u.isPrimary ? 'superadmin' : u.role) || {};
+            const status = u.isActive === false
+                ? '<span class="gov-user-badge gov-user-badge--off">معطّل</span>'
+                : '<span class="gov-user-badge gov-user-badge--on">نشط</span>';
+            const online = isUserOnline(u)
+                ? '<span class="gov-user-badge gov-user-badge--live"><i class="fas fa-circle"></i> متصل</span>'
+                : '<span class="gov-user-badge gov-user-badge--away">غير متصل</span>';
+            const lastLogin = u.lastLoginAt
+                ? (typeof formatNebrasDateTime === 'function' ? formatNebrasDateTime(u.lastLoginAt, currentLang || 'ar') : u.lastLoginAt)
+                : '—';
+            return '<tr><td><strong>' + escapeHtmlAttr(u.username) + '</strong></td>' +
+                '<td>' + escapeHtmlAttr(def.labelAr || u.role) + '</td>' +
+                '<td>' + status + '</td><td>' + online + '</td><td>' + escapeHtmlAttr(lastLogin) + '</td></tr>';
+        }).join('') + '</tbody></table></div>';
+    }
+
+    function displayUsersGoverned() {
+        const list = document.getElementById('users-list');
+        renderUserStatsGoverned();
+        if (!list) return;
+        if (!adminUsers.length) {
+            list.innerHTML = '<p class="nebras-users-empty">لا يوجد مستخدمون بعد — أضيفي أول مستخدم لفريق العمل.</p>';
+            return;
+        }
+        const isGov = isMainGovernanceAdmin();
+        list.innerHTML = adminUsers.map(function(user, index) {
+            const def = getRoleDefinition(user.isPrimary ? 'superadmin' : user.role) || {};
+            const accent = def.accent || '#0a4d8c';
+            const perms = getUserEffectivePermissions(user);
+            const permChips = user.isPrimary
+                ? '<span class="nebras-user-chip nebras-user-chip--all"><i class="fas fa-infinity"></i> كل الصلاحيات</span>'
+                : (perms.length
+                    ? perms.map(function(k) {
+                        const meta = NEBRAS_PERMISSION_META[k] || {};
+                        return '<span class="nebras-user-chip"><i class="' + (meta.icon || 'fas fa-check') + '"></i> ' + (NEBRAS_PERMISSION_LABELS[k] || k) + '</span>';
+                      }).join('')
+                    : '<span class="nebras-user-chip nebras-user-chip--none">بدون صلاحيات</span>');
+            const branchTag = String(user.assignedBranchCity || '').trim()
+                ? '<span class="nebras-user-branch"><i class="fas fa-store"></i> فرع ' + escapeHtmlAttr(user.assignedBranchCity) + '</span>'
+                : '<span class="nebras-user-branch nebras-user-branch--all"><i class="fas fa-globe"></i> كل الفروع</span>';
+            const statusRow = '<div class="nebras-user-status-row">' +
+                (user.isActive === false
+                    ? '<span class="gov-user-badge gov-user-badge--off"><i class="fas fa-ban"></i> معطّل</span>'
+                    : '<span class="gov-user-badge gov-user-badge--on"><i class="fas fa-check"></i> نشط</span>') +
+                (isUserOnline(user)
+                    ? '<span class="gov-user-badge gov-user-badge--live"><i class="fas fa-circle"></i> متصل</span>'
+                    : '<span class="gov-user-badge gov-user-badge--away">آخر ظهور: ' + escapeHtmlAttr(formatUserLastSeen(user)) + '</span>') +
+            '</div>';
+            let actions = '<button class="nebras-user-act" onclick="editUser(' + index + ')"><i class="fas fa-pen"></i> تعديل</button>';
+            if (!user.isPrimary && isGov) {
+                actions += '<button class="nebras-user-act" onclick="adminResetUserPassword(' + index + ')"><i class="fas fa-key"></i> كلمة المرور</button>';
+                actions += '<button class="nebras-user-act" onclick="toggleUserActive(' + index + ')"><i class="fas fa-power-off"></i> ' +
+                    (user.isActive === false ? 'تفعيل' : 'تعطيل') + '</button>';
+                actions += '<button class="nebras-user-act" onclick="recreateUserInSameRole(' + index + ')"><i class="fas fa-clone"></i> مستخدم جديد بنفس القسم</button>';
+                actions += '<button class="nebras-user-act nebras-user-act--danger" onclick="deleteUser(' + index + ')"><i class="fas fa-trash"></i> حذف</button>';
+            }
+            const inactiveCls = user.isActive === false ? ' nebras-user-card--inactive' : '';
+            return '<article class="nebras-user-card' + inactiveCls + '" style="--role-accent:' + accent + '">' +
+                '<header class="nebras-user-card-head">' +
+                    '<span class="nebras-user-avatar"><i class="' + (def.icon || 'fas fa-user') + '"></i></span>' +
+                    '<div class="nebras-user-id"><strong>' + escapeHtmlAttr(user.username || '') + '</strong><span>' + escapeHtmlAttr(user.id || '') + '</span></div>' +
+                    (user.isPrimary ? '<span class="nebras-user-primary"><i class="fas fa-crown"></i> رئيسي</span>' : '') +
+                '</header>' +
+                statusRow +
+                '<div class="nebras-user-role"><i class="' + (def.icon || 'fas fa-user') + '"></i> ' + escapeHtmlAttr(def.labelAr || user.role || '') + '</div>' +
+                branchTag +
+                '<div class="nebras-user-perms">' + permChips + '</div>' +
+                '<footer class="nebras-user-card-foot">' + actions + '</footer>' +
+            '</article>';
+        }).join('');
+    }
+
+    function toggleUserActive(index) {
+        if (!requirePermission('users')) return;
+        if (!isMainGovernanceAdmin()) { alert('تعطيل/تفعيل المستخدمين — الإدارة الرئيسية فقط.'); return; }
+        const user = adminUsers[index];
+        if (!user || user.isPrimary) return;
+        const next = user.isActive === false;
+        adminUsers[index] = Object.assign({}, user, { isActive: next, updatedAt: new Date().toISOString() });
+        if (!next) clearAdminPresence(user);
+        saveSystemData();
+        addAuditLogGoverned(next ? 'تفعيل مستخدم' : 'تعطيل مستخدم', user.username + ' — ' + getRoleLabel(user.role));
+        displayUsersGoverned();
+    }
+
+    function adminResetUserPassword(index) {
+        if (!requirePermission('users')) return;
+        if (!isMainGovernanceAdmin()) { alert('إعادة تعيين كلمة المرور — الإدارة الرئيسية فقط.'); return; }
+        const user = adminUsers[index];
+        if (!user || user.isPrimary) return;
+        const pwd = prompt('كلمة المرور الجديدة للمستخدم «' + user.username + '»:');
+        if (pwd === null) return;
+        if (!String(pwd).trim()) { alert('كلمة المرور لا يمكن أن تكون فارغة.'); return; }
+        adminUsers[index] = Object.assign({}, user, { password: String(pwd).trim(), updatedAt: new Date().toISOString() });
+        saveSystemData();
+        addAuditLogGoverned('إعادة تعيين كلمة مرور', 'بواسطة الإدارة الرئيسية — ' + user.username);
+        alert('تم تحديث كلمة المرور — يُحفظ في النظام والسحابة فوراً.');
+        displayUsersGoverned();
+    }
+
+    function recreateUserInSameRole(index) {
+        if (!requirePermission('users')) return;
+        if (!isMainGovernanceAdmin()) { alert('إنشاء مستخدم بنفس القسم — الإدارة الرئيسية فقط.'); return; }
+        const source = adminUsers[index];
+        if (!source || source.isPrimary) return;
+        nebrasUserEditorState = {
+            index: -1,
+            isEdit: false,
+            isPrimary: false,
+            id: 'EMP-' + Date.now(),
+            username: '',
+            password: '',
+            role: source.role,
+            assignedBranchCity: source.assignedBranchCity || '',
+            hrScopeBranchId: source.hrScopeBranchId || '',
+            hrScopeDepartmentKey: source.hrScopeDepartmentKey || '',
+            permissions: (rolePermissions[source.role] || []).slice()
+        };
+        renderUserEditorForm();
+        const editor = document.getElementById('nebras-user-editor');
+        if (editor) editor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        addAuditLogGoverned('قالب مستخدم جديد', 'نفس دور ' + source.username + ' — ' + getRoleLabel(source.role));
     }
 
         function openCustomerComplaints() {
@@ -19521,6 +19856,7 @@
         let nebrasUserEditorState = null;
 
         function renderUserStats() {
+            if (typeof renderUserStatsGoverned === 'function') { renderUserStatsGoverned(); return; }
             const host = document.getElementById('nebras-users-stats');
             if (!host) return;
             const total = adminUsers.length;
@@ -19723,17 +20059,22 @@
                     assignedBranchCity: st.isPrimary ? '' : st.assignedBranchCity,
                     hrScopeBranchId: st.isPrimary || st.role !== 'hr' ? '' : (st.hrScopeBranchId || ''),
                     hrScopeDepartmentKey: st.isPrimary || st.role !== 'hr' ? '' : (st.hrScopeDepartmentKey || ''),
-                    isPrimary: !!st.isPrimary
+                    isPrimary: !!st.isPrimary,
+                    isActive: existing.isActive !== false,
+                    updatedAt: new Date().toISOString()
                 });
                 addAuditLog('تعديل مستخدم', 'تم تعديل ' + username + ' (' + getRoleLabel(st.role) + ')');
             } else {
+                const nowIso = new Date().toISOString();
                 adminUsers.push({
                     id: id, username: username, password: password,
                     role: st.role, permissions: st.permissions.slice(),
                     assignedBranchCity: st.assignedBranchCity,
                     hrScopeBranchId: st.role === 'hr' ? (st.hrScopeBranchId || '') : '',
                     hrScopeDepartmentKey: st.role === 'hr' ? (st.hrScopeDepartmentKey || '') : '',
-                    isPrimary: false
+                    isPrimary: false, isActive: true,
+                    createdAt: nowIso, updatedAt: nowIso,
+                    createdBy: currentAdmin ? currentAdmin.username : ''
                 });
                 addAuditLog('إضافة مستخدم', 'تمت إضافة ' + username + ' بدور ' + getRoleLabel(st.role));
             }
@@ -19745,6 +20086,7 @@
         function addNewUser() { openUserEditor(); }
 
         function displayUsers() {
+            if (typeof displayUsersGoverned === 'function') { displayUsersGoverned(); return; }
             const list = document.getElementById('users-list');
             renderUserStats();
             if (!list) return;
@@ -19783,68 +20125,6 @@
                     '<footer class="nebras-user-card-foot">' + actions + '</footer>' +
                 '</article>';
             }).join('');
-        }
-
-        function editUser(index) {
-            if (!requirePermission('users', 'هذه العملية متاحة فقط لمسؤولي المستخدمين.')) return;
-            const user = adminUsers[index];
-            if (!user) return;
-            if (user.isPrimary && !isMainGovernanceAdmin()) {
-                alert('تعديل حساب الإدارة الرئيسية — للإدارة الرئيسية فقط.');
-                return;
-            }
-            const newId = user.isPrimary ? user.id : prompt('معرف الموظف (ID):', user.id || '');
-            if (newId === null) return;
-            const username = prompt('تعديل اسم المستخدم:', user.username);
-            let password = user.password;
-            if (user.isPrimary) {
-                password = user.password;
-                alert('كلمة مرور الإدارة الرئيسية لا تُعدَّل من هنا.');
-            } else {
-                const pwdPrompt = prompt('تعديل كلمة المرور:', user.password);
-                if (pwdPrompt === null) return;
-                password = pwdPrompt.trim();
-            }
-            let normalizedRole = user.role;
-            let permissions = user.permissions;
-            if (!user.isPrimary) {
-                const role = prompt('تعديل الدور (manager/hr):', user.role);
-                if (role === null) return;
-                normalizedRole = role.trim().toLowerCase();
-                if (normalizedRole === 'superadmin') {
-                    alert('لا Super Admin فرعي — استخدم manager مع صلاحيات مخصصة.');
-                    return;
-                }
-                if (!allowedRoles.includes(normalizedRole)) {
-                    alert('الدور غير صحيح. manager / hr');
-                    return;
-                }
-                const permHelp = Object.keys(NEBRAS_PERMISSION_LABELS).join(', ');
-                const permsRaw = prompt('صلاحيات مخصصة:\n' + permHelp, (user.permissions || rolePermissions[normalizedRole] || []).join(','));
-                if (permsRaw === null) return;
-                permissions = parseAdminPermissionsInput(permsRaw, normalizedRole);
-            }
-            let assignedBranchCity = user.assignedBranchCity || '';
-            if (!user.isPrimary) {
-                const branchPrompt = prompt('مدينة/فرع التخصيص (فارغ = وصول كامل):', assignedBranchCity);
-                if (branchPrompt === null) return;
-                assignedBranchCity = String(branchPrompt || '').trim();
-            }
-            if (username && password) {
-                const idVal = user.isPrimary ? user.id : String(newId).trim();
-                adminUsers[index] = Object.assign({}, user, {
-                    id: idVal,
-                    username: username.trim(),
-                    password: password,
-                    role: user.isPrimary ? 'superadmin' : normalizedRole,
-                    permissions: user.isPrimary ? null : permissions,
-                    assignedBranchCity: user.isPrimary ? '' : assignedBranchCity,
-                    isPrimary: !!user.isPrimary
-                });
-                saveSystemData();
-                displayUsers();
-                addAuditLog('تعديل مستخدم', 'تم تعديل المستخدم ' + username);
-            }
         }
 
         function editUser(index) { openUserEditor(index); }
@@ -20670,6 +20950,11 @@
             }, set: function(v) {
                 if (typeof setQuoteRegistryFromCloud === 'function') setQuoteRegistryFromCloud(v);
             }},
+            { key: 'admin_presence', get: function() {
+                return typeof getAdminPresenceForCloud === 'function' ? getAdminPresenceForCloud() : {};
+            }, set: function(v) {
+                if (typeof setAdminPresenceFromCloud === 'function') setAdminPresenceFromCloud(v);
+            }},
             { key: 'callback_leads', get: function() {
                 return typeof getCallbackLeads === 'function' ? getCallbackLeads() : [];
             }, set: function(v) {
@@ -20960,6 +21245,7 @@
             }
             ensureVisitorAnalytics();
             if (typeof loadAnalyticsGovernanceLocal === 'function') loadAnalyticsGovernanceLocal();
+            if (typeof loadAdminPresenceLocal === 'function') loadAdminPresenceLocal();
             if (typeof loadCallbackLeads === 'function') loadCallbackLeads();
             ensureShowroomGallery();
             adminUsers = (Array.isArray(adminUsers) ? adminUsers : []).map(function(user, index) {
@@ -23564,6 +23850,11 @@
         window.previewRepQuoteEntryA4 = previewRepQuoteEntryA4;
         window.downloadRepQuoteEntryPdf = downloadRepQuoteEntryPdf;
         window.normalizeAdminUserRecord = normalizeAdminUserRecord;
+        window.toggleUserActive = toggleUserActive;
+        window.adminResetUserPassword = adminResetUserPassword;
+        window.recreateUserInSameRole = recreateUserInSameRole;
+        window.displayUsersGoverned = displayUsersGoverned;
+
         window.loadQuoteRegistryForCloud = loadQuoteRegistryForCloud;
         window.setQuoteRegistryFromCloud = setQuoteRegistryFromCloud;
 

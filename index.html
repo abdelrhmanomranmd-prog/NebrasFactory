@@ -639,6 +639,8 @@
             </div>
             <div class="dashboard-live-kpi-strip" id="dashboard-live-kpi-strip" aria-live="polite"></div>
             <div class="dashboard-role-focus-banner" id="dashboard-role-focus-banner" hidden></div>
+            <div id="dashboard-role-specialization" class="dashboard-role-specialization"></div>
+            <div id="dashboard-gov-users-strip" class="dashboard-gov-users-strip" hidden></div>
             <div class="dashboard-quick-actions" id="dashboard-quick-actions"></div>
             <div id="hr-command-center" class="hr-command-center dashboard-section" hidden></div>
         </div>
@@ -702,10 +704,10 @@
             <div class="nebras-partners-stage nebras-partners-stage--dashboard" id="nebras-partners-stage-dashboard">
                 <div class="nebras-partners-marquee nebras-partners-marquee--premium nebras-partners-marquee--row1">
                     <div class="nebras-partners-track" id="nebras-partners-track-dashboard-a"></div>
-                </div>
+            </div>
                 <div class="nebras-partners-marquee nebras-partners-marquee--premium nebras-partners-marquee--row2">
                     <div class="nebras-partners-track nebras-partners-track--reverse" id="nebras-partners-track-dashboard-b"></div>
-                </div>
+        </div>
             </div>
         </div>
         <div class="dashboard-header dashboard-erp-header dashboard-section" data-dashboard-section="header">
@@ -819,7 +821,7 @@
                     <i class="fas fa-users-cog" aria-hidden="true"></i>
                     <div>
                         <h2>إدارة المستخدمين والصلاحيات</h2>
-                        <p class="nebras-users-sub">حوكمة كاملة — الإدارة الرئيسية تنشئ فريق العمل وتحدد دور وصلاحية كل مستخدم (مبيعات · محاسبة · مخزون · إنتاج · مستودع · فروع · مندوبون).</p>
+                        <p class="nebras-users-sub">حوكمة عالية — كل مستخدم باسم مستخدم وكلمة سر · نشط/معطّل · متصلون الآن · إعادة تعيين كلمة المرور · حذف وإعادة إنشاء لنفس القسم. كل تعديل يُحفظ فوراً محلياً وفي Supabase مع سجل تدقيق باسم المنفّذ.</p>
                     </div>
                 </div>
                 <button type="button" class="nebras-users-close" onclick="closeAdminSection('user-management')" aria-label="إغلاق"><i class="fas fa-xmark"></i></button>
@@ -1406,7 +1408,7 @@
                 <p class="scm-hint admin-only-ui">اعتمادات وشهادات نبراس — صور أو PDF. يمكن إضافة العنوان أولاً ثم رفع الوثيقة لاحقاً.</p>
                 <div class="scm-panel-toolbar">
                     <button class="primary" type="button" onclick="addSiteCertification()"><i class="fas fa-plus"></i> اعتماد / شهادة</button>
-                </div>
+            </div>
                 <div id="scm-cert-editor" class="scm-editor-mount" hidden></div>
                 <ul id="scm-certifications-list" class="scm-list scm-list--cards"></ul>
             </div>

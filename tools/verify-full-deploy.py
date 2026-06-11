@@ -15,7 +15,7 @@ GITHUB_REPO = 'abdelrhmanomranmd-prog/NebrasFactory'
 
 REQUIRED_CLOUD_KEYS = {
     'system_settings', 'site_products', 'admin_users', 'hr_dept_activity',
-    'quote_registry', 'hr_employees', 'sales_quotes_inbox', 'analytics_governance',
+    'quote_registry', 'hr_employees', 'sales_quotes_inbox', 'analytics_governance', 'admin_presence',
 }
 LIVE_MARKERS = {
     'js/nebras-platform.js': ['isStrictSalesRep', 'openRepMyQuotes', 'quotesOnly'],
