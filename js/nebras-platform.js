@@ -1827,7 +1827,7 @@
                 { id: 'erp-customers', pillar: 'crm', status: 'live', icon: 'fas fa-users', permission: 'customerService', handler: 'openCustomerServiceManagement', nameAr: 'خدمة العملاء', descAr: 'استفسارات وردود', nameEn: 'Customer care' },
                 { id: 'erp-analytics', pillar: 'governance', status: 'live', icon: 'fas fa-chart-pie', permission: 'audit', handler: 'openAdminAnalytics', nameAr: 'ذكاء الأعمال BI', descAr: 'تقارير حية للإدارة', nameEn: 'Analytics' },
                 { id: 'erp-executive-reports', pillar: 'governance', status: 'live', icon: 'fas fa-chart-bar', permission: 'audit', handler: 'openExecutiveReports', nameAr: 'التقارير التنفيذية', descAr: 'يومي · شهري · سنوي لصاحب الشركة', nameEn: 'Executive reports' },
-                { id: 'erp-hr-platform', pillar: 'hr', status: 'live', icon: 'fas fa-people-roof', permission: 'hr', handler: 'openHrPlatform', nameAr: 'منصة الموارد البشرية', descAr: 'موظفون · تتبع سيارات · إجازات — حوكمة HR', nameEn: 'HR platform' }
+                { id: 'erp-hr-platform', pillar: 'hr', status: 'live', icon: 'fas fa-industry', permission: 'hr', handler: 'openHrPlatform', nameAr: 'HR — مصنع نبراس WPC', descAr: 'إنتاج · ورديات · سعودة · حضور · رواتب · أسطول', nameEn: 'Nebras WPC HR' }
             ]
         };
 
@@ -2177,7 +2177,7 @@
             { id: 'dash-callback-leads', zone: 'quick', dashGroup: 'command', sortOrder: 55, iconClass: 'fas fa-phone-volume', titleAr: 'نبراس يتصل بك', titleEn: 'Callback Leads', textAr: 'طلبات اتصال الزوار — تظهر في الإدارة الرئيسية والفروع.', textEn: 'Visitor callback requests by branch.', cssClass: 'dashboard-tile-card--callback', backgroundImage: 'images/profile-2026/hero-cover.jpg', handler: 'openCallbackLeadsAdmin', permission: 'sales', visible: true },
             { id: 'dash-product-master', zone: 'quick', dashGroup: 'command', sortOrder: 0.9, iconClass: 'fas fa-database', titleAr: 'مركز المنتجات والأسعار', titleEn: 'Product Master', textAr: 'أسماء · أنواع · مقاسات · أسعار — مصدر النظام الديناميكي.', textEn: 'Names, types, sizes, prices — single source of truth.', handler: 'openProductMasterHub', permission: 'productMaster', superadminOnly: true, visible: true },
             { id: 'dash-aluminum-dept', zone: 'quick', dashGroup: 'command', sortOrder: 1.1, iconClass: 'fas fa-industry', titleAr: 'قسم الألومنيوم', titleEn: 'Aluminum Dept.', textAr: 'مخزون · إنتاج · عروض · طلبات ALU.', textEn: 'Aluminum ops only.', handler: 'openAluminumDepartment', permission: 'aluminum', visible: true },
-            { id: 'dash-hr-platform', zone: 'quick', dashGroup: 'command', sortOrder: 1.05, iconClass: 'fas fa-people-roof', titleAr: 'منصة الموارد البشرية', titleEn: 'HR Platform', textAr: 'موظفون · عمال · سيارات · إجازات — المقر وجميع الفروع.', textEn: 'Employees, fleet, leave — all branches.', handler: 'openHrPlatform', permission: 'hr', visible: true },
+            { id: 'dash-hr-platform', zone: 'quick', dashGroup: 'command', sortOrder: 1.05, iconClass: 'fas fa-industry', titleAr: 'HR — مصنع نبراس WPC', titleEn: 'Nebras WPC HR', textAr: 'إنتاج أبواب WPC · ورديات · سعودة · حضور · رواتب · أسطول — كل الفروع.', textEn: 'WPC production HR — shifts, Saudization, payroll, fleet.', handler: 'openHrPlatform', permission: 'hr', visible: true },
             { id: 'dash-content', zone: 'quick', dashGroup: 'command', sortOrder: 1, iconClass: 'fas fa-pen-to-square', titleAr: 'إدارة محتوى الموقع', titleEn: 'Site Content', textAr: 'منتجات، بوابة الزائر، شركاء، شهادات — ديناميكي بالكامل.', textEn: 'Products, gateway icons, partners, certs — fully dynamic.', handler: 'openSiteContentManager', permission: 'content', visible: true },
             { id: 'dash-about-pages', zone: 'quick', dashGroup: 'command', sortOrder: 2, iconClass: 'fas fa-building', titleAr: 'من نحن ورؤيتنا', titleEn: 'About & Vision', textAr: 'نصوص المصنع ووثائق الصفحات الداخلية.', textEn: 'Factory pages and documents.', handler: 'openAboutContentAdmin', permission: 'content', visible: true },
             { id: 'dash-certs', zone: 'quick', dashGroup: 'command', sortOrder: 3, iconClass: 'fas fa-award', titleAr: 'اعتمادات وشهادات', titleEn: 'Certifications', textAr: 'شهادات المعرض — صور وPDF.', textEn: 'Showroom certificates.', cssClass: 'dashboard-tile-card--certs', handler: 'openCertificationsHub', permission: 'content', visible: true },
@@ -12940,7 +12940,7 @@
                 hideSections: ['dashboard-company-identity', 'dashboard-partners-block', 'platform-hub-panel', 'dashboard-channels-panel', 'dashboard-occasion-panel', 'dashboard-official-hub']
             },
             hr: {
-                greetingAr: 'منصة الموارد البشرية — HR فقط',
+                greetingAr: 'HR مصنع نبراس للأبواب WPC — صلاحيات HR فقط',
                 descAr: 'موظفون · تتبع سيارات · إجازات — صلاحياتك محصورة في HR. التقارير التنفيذية للإدارة الرئيسية.',
                 scrollTo: 'dashboard-actions-grid',
                 openHandler: 'openHrPlatform',
@@ -18366,7 +18366,7 @@
             const list = document.getElementById('cloud-governance-stores');
             if (!summary || !list) return;
             const connected = !!supabaseClient;
-            const erpKeys = ['erp_inventory', 'erp_orders', 'erp_production', 'erp_purchases', 'erp_transfers', 'erp_stock_transfers', 'sales_price_list', 'sales_data', 'customer_service', 'hr_employees', 'hr_vehicles', 'hr_leave', 'hr_vehicle_tracking', 'hr_attendance', 'hr_documents', 'hr_payroll', 'hr_notifications', 'hr_notif_settings', 'hr_email_queue'];
+            const erpKeys = ['erp_inventory', 'erp_orders', 'erp_production', 'erp_purchases', 'erp_transfers', 'erp_stock_transfers', 'sales_price_list', 'sales_data', 'customer_service', 'hr_employees', 'hr_vehicles', 'hr_leave', 'hr_vehicle_tracking', 'hr_attendance', 'hr_documents', 'hr_payroll', 'hr_notifications', 'hr_notif_settings', 'hr_email_queue', 'hr_shift_roster'];
             summary.innerHTML =
                 '<div class="erp-stat' + (connected ? ' erp-stat--ok' : ' erp-stat--danger') + '"><strong>' + (connected ? 'متصل' : 'محلي') + '</strong><span>Supabase</span></div>' +
                 '<div class="erp-stat"><strong>' + NEBRAS_CLOUD_STORE_SPECS.length + '</strong><span>مخازن بيانات</span></div>' +
@@ -20397,6 +20397,11 @@
                 return typeof getHrEmailQueue === 'function' ? getHrEmailQueue() : [];
             }, set: function(v) {
                 if (typeof setHrEmailQueueFromCloud === 'function') setHrEmailQueueFromCloud(v);
+            }},
+            { key: 'hr_shift_roster', get: function() {
+                return typeof getHrShiftRoster === 'function' ? getHrShiftRoster() : [];
+            }, set: function(v) {
+                if (typeof setHrShiftRosterFromCloud === 'function') setHrShiftRosterFromCloud(v);
             }},
             { key: 'callback_leads', get: function() {
                 return typeof getCallbackLeads === 'function' ? getCallbackLeads() : [];
