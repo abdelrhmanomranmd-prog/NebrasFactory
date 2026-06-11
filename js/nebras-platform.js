@@ -56,7 +56,8 @@
             branches: 'الفروع',
             audit: 'التقارير والتحليلات',
             aluminum: 'قسم الألومنيوم',
-            productMaster: 'مركز المنتجات والأسعار'
+            productMaster: 'مركز المنتجات والأسعار',
+            hr: 'الموارد البشرية'
         };
         /** أيقونة + وصف لكل صلاحية — تُستخدم في واجهة إدارة المستخدمين الاحترافية */
         const NEBRAS_PERMISSION_META = {
@@ -76,7 +77,8 @@
             branches: { icon: 'fas fa-map-location-dot', descAr: 'إدارة الفروع وبياناتها' },
             audit: { icon: 'fas fa-chart-pie', descAr: 'التقارير والتحليلات وسجل التدقيق' },
             aluminum: { icon: 'fas fa-industry', descAr: 'إدارة قسم الألومنيوم — مخزون وإنتاج وعروض وطلبات الألومنيوم فقط' },
-            productMaster: { icon: 'fas fa-database', descAr: 'تحديد أسماء المنتجات وأنواعها ومقاساتها وأسعارها — مصدر النظام الديناميكي' }
+            productMaster: { icon: 'fas fa-database', descAr: 'تحديد أسماء المنتجات وأنواعها ومقاساتها وأسعارها — مصدر النظام الديناميكي' },
+            hr: { icon: 'fas fa-people-roof', descAr: 'منصة HR — موظفون وعمال وسيارات وإجازات لكل الفروع' }
         };
         const SHOP_CATALOG_PRODUCT_IDS = ['prod-wpc-raw', 'prod-wpc', 'prod-aluminum', 'prod-other'];
 
@@ -252,7 +254,7 @@
                 labelAr: 'مدير عام', labelEn: 'General Manager',
                 icon: 'fas fa-user-tie', accent: '#0a4d8c',
                 descAr: 'إدارة شاملة للمحتوى والعمليات والتقارير (بدون إنشاء مستخدمين).',
-                permissions: ['content', 'erp', 'inventory', 'warehouse', 'production', 'procurement', 'accounting', 'orders', 'sales', 'quotes', 'customerService', 'complaints', 'branches', 'audit']
+                permissions: ['content', 'erp', 'inventory', 'warehouse', 'production', 'procurement', 'accounting', 'orders', 'sales', 'quotes', 'customerService', 'complaints', 'branches', 'audit', 'hr']
             },
             sales_manager: {
                 labelAr: 'مدير المبيعات', labelEn: 'Sales Manager',
@@ -297,10 +299,11 @@
                 permissions: ['sales', 'quotes', 'customerService', 'complaints', 'audit'], branchScoped: true
             },
             hr: {
-                labelAr: 'موارد بشرية', labelEn: 'HR',
-                icon: 'fas fa-id-badge', accent: '#7f8c8d',
-                descAr: 'متابعة المستخدمين والتقارير الإدارية.',
-                permissions: ['users', 'audit']
+                labelAr: 'موارد بشرية', labelEn: 'HR Manager',
+                icon: 'fas fa-people-roof', accent: '#2980b9',
+                descAr: 'منصة HR الداخلية — موظفون · عمال · سيارات · إجازات · كل الفروع (مثل Bayzat · Jisr).',
+                permissions: ['hr', 'audit'],
+                companyWide: true
             },
             aluminum_manager: {
                 labelAr: 'مدير قسم الألومنيوم', labelEn: 'Aluminum Dept. Manager',
@@ -1790,6 +1793,7 @@
                 { id: 'procurement', status: 'beta', icon: 'fas fa-truck-loading', permission: 'erp', handler: 'openErpProcurement', nameAr: 'المشتريات', descAr: 'توريد وموردون — تجريبي', nameEn: 'Procurement' },
                 { id: 'analytics', status: 'live', icon: 'fas fa-chart-pie', permission: 'audit', handler: 'openAdminAnalytics', nameAr: 'التحليلات', descAr: 'منتجات · ألوان · شكاوى · زوار · ترتيب العروض', nameEn: 'Analytics' },
                 { id: 'audit', status: 'live', icon: 'fas fa-clipboard-check', permission: 'audit', handler: 'openAuditLog', nameAr: 'سجل العمليات', descAr: 'تتبع كل إجراء إداري', nameEn: 'Audit log' },
+                { id: 'hr', status: 'live', icon: 'fas fa-people-roof', permission: 'hr', handler: 'openHrPlatform', nameAr: 'الموارد البشرية', descAr: 'موظفون وسيارات وإجازات — كل الفروع', nameEn: 'HR platform' },
                 { id: 'system', status: 'live', icon: 'fas fa-sliders', superadminOnly: true, handler: 'openSystemSettings', nameAr: 'إعدادات المنصة', descAr: 'سجل تجاري، ضريبي، بنوك، احتفال', nameEn: 'Platform settings' }
             ]
         };
@@ -1802,7 +1806,8 @@
                 { id: 'commerce', nameAr: 'التجارة والطلبات', nameEn: 'Commerce & OMS' },
                 { id: 'supply', nameAr: 'سلسلة التوريد', nameEn: 'Supply chain' },
                 { id: 'crm', nameAr: 'العملاء والخدمة', nameEn: 'CRM & service' },
-                { id: 'governance', nameAr: 'الحوكمة والتقارير', nameEn: 'Governance & BI' }
+                { id: 'governance', nameAr: 'الحوكمة والتقارير', nameEn: 'Governance & BI' },
+                { id: 'hr', nameAr: 'الموارد البشرية', nameEn: 'Human Resources' }
             ],
             modules: [
                 { id: 'erp-product-master', pillar: 'master', status: 'live', icon: 'fas fa-database', permission: 'productMaster', handler: 'openProductMasterHub', nameAr: 'مركز المنتجات والأسعار', descAr: 'مصدر ديناميكي — أسماء · أنواع · مقاسات · أسعار', nameEn: 'Product & pricing hub' },
@@ -1821,7 +1826,8 @@
                 { id: 'erp-complaints', pillar: 'crm', status: 'live', icon: 'fas fa-headset', permission: 'complaints', handler: 'openComplaintsManagement', nameAr: 'الشكاوى CRM', descAr: 'متابعة العملاء', nameEn: 'Complaints' },
                 { id: 'erp-customers', pillar: 'crm', status: 'live', icon: 'fas fa-users', permission: 'customerService', handler: 'openCustomerServiceManagement', nameAr: 'خدمة العملاء', descAr: 'استفسارات وردود', nameEn: 'Customer care' },
                 { id: 'erp-analytics', pillar: 'governance', status: 'live', icon: 'fas fa-chart-pie', permission: 'audit', handler: 'openAdminAnalytics', nameAr: 'ذكاء الأعمال BI', descAr: 'تقارير حية للإدارة', nameEn: 'Analytics' },
-                { id: 'erp-executive-reports', pillar: 'governance', status: 'live', icon: 'fas fa-chart-bar', permission: 'audit', handler: 'openExecutiveReports', nameAr: 'التقارير التنفيذية', descAr: 'يومي · شهري · سنوي لصاحب الشركة', nameEn: 'Executive reports' }
+                { id: 'erp-executive-reports', pillar: 'governance', status: 'live', icon: 'fas fa-chart-bar', permission: 'audit', handler: 'openExecutiveReports', nameAr: 'التقارير التنفيذية', descAr: 'يومي · شهري · سنوي لصاحب الشركة', nameEn: 'Executive reports' },
+                { id: 'erp-hr-platform', pillar: 'hr', status: 'live', icon: 'fas fa-people-roof', permission: 'hr', handler: 'openHrPlatform', nameAr: 'منصة الموارد البشرية', descAr: 'موظفون · عمال · سيارات · إجازات — كل الفروع', nameEn: 'HR platform' }
             ]
         };
 
@@ -1831,6 +1837,7 @@
             { areaAr: 'طلبات وشحن OMS', areaEn: 'Orders & fulfillment', globalAr: 'تتبع · فروع · شحن', nebrasAr: 'يعمل — تسجيل وحالات تنفيذ', parity: 'mid' },
             { areaAr: 'B2B / مشتريات', areaEn: 'Procurement B2B', globalAr: 'علي بابا · موردون', nebrasAr: 'يعمل — أوامر شراء وموردون', parity: 'mid' },
             { areaAr: 'صلاحيات وموظفين', areaEn: 'RBAC & admin', globalAr: 'أدوار · سجل عمليات', nebrasAr: 'يعمل — كامل', parity: 'high' },
+            { areaAr: 'موارد بشرية HR', areaEn: 'HR & payroll', globalAr: 'Bayzat · Jisr · Zein', nebrasAr: 'يعمل — موظفون وسيارات وإجازات', parity: 'mid' },
             { areaAr: 'CRM وشكاوى', areaEn: 'CRM & support', globalAr: 'تذاكر · فروع', nebrasAr: 'يعمل', parity: 'high' },
             { areaAr: 'دفع إلكتروني', areaEn: 'Payments', globalAr: 'بوابات · محفظة', nebrasAr: 'مرحلة قادمة', parity: 'soon' },
             { areaAr: 'تحليلات BI', areaEn: 'Analytics BI', globalAr: 'لوحات · تنبؤ', nebrasAr: 'مرحلة قادمة', parity: 'soon' }
@@ -2170,6 +2177,7 @@
             { id: 'dash-callback-leads', zone: 'quick', dashGroup: 'command', sortOrder: 55, iconClass: 'fas fa-phone-volume', titleAr: 'نبراس يتصل بك', titleEn: 'Callback Leads', textAr: 'طلبات اتصال الزوار — تظهر في الإدارة الرئيسية والفروع.', textEn: 'Visitor callback requests by branch.', cssClass: 'dashboard-tile-card--callback', backgroundImage: 'images/profile-2026/hero-cover.jpg', handler: 'openCallbackLeadsAdmin', permission: 'sales', visible: true },
             { id: 'dash-product-master', zone: 'quick', dashGroup: 'command', sortOrder: 0.9, iconClass: 'fas fa-database', titleAr: 'مركز المنتجات والأسعار', titleEn: 'Product Master', textAr: 'أسماء · أنواع · مقاسات · أسعار — مصدر النظام الديناميكي.', textEn: 'Names, types, sizes, prices — single source of truth.', handler: 'openProductMasterHub', permission: 'productMaster', superadminOnly: true, visible: true },
             { id: 'dash-aluminum-dept', zone: 'quick', dashGroup: 'command', sortOrder: 1.1, iconClass: 'fas fa-industry', titleAr: 'قسم الألومنيوم', titleEn: 'Aluminum Dept.', textAr: 'مخزون · إنتاج · عروض · طلبات ALU.', textEn: 'Aluminum ops only.', handler: 'openAluminumDepartment', permission: 'aluminum', visible: true },
+            { id: 'dash-hr-platform', zone: 'quick', dashGroup: 'command', sortOrder: 1.05, iconClass: 'fas fa-people-roof', titleAr: 'منصة الموارد البشرية', titleEn: 'HR Platform', textAr: 'موظفون · عمال · سيارات · إجازات — المقر وجميع الفروع.', textEn: 'Employees, fleet, leave — all branches.', handler: 'openHrPlatform', permission: 'hr', visible: true },
             { id: 'dash-content', zone: 'quick', dashGroup: 'command', sortOrder: 1, iconClass: 'fas fa-pen-to-square', titleAr: 'إدارة محتوى الموقع', titleEn: 'Site Content', textAr: 'منتجات، بوابة الزائر، شركاء، شهادات — ديناميكي بالكامل.', textEn: 'Products, gateway icons, partners, certs — fully dynamic.', handler: 'openSiteContentManager', permission: 'content', visible: true },
             { id: 'dash-about-pages', zone: 'quick', dashGroup: 'command', sortOrder: 2, iconClass: 'fas fa-building', titleAr: 'من نحن ورؤيتنا', titleEn: 'About & Vision', textAr: 'نصوص المصنع ووثائق الصفحات الداخلية.', textEn: 'Factory pages and documents.', handler: 'openAboutContentAdmin', permission: 'content', visible: true },
             { id: 'dash-certs', zone: 'quick', dashGroup: 'command', sortOrder: 3, iconClass: 'fas fa-award', titleAr: 'اعتمادات وشهادات', titleEn: 'Certifications', textAr: 'شهادات المعرض — صور وPDF.', textEn: 'Showroom certificates.', cssClass: 'dashboard-tile-card--certs', handler: 'openCertificationsHub', permission: 'content', visible: true },
@@ -2227,6 +2235,7 @@
             openErpProcurement: function() { openErpProcurement(); },
             openProductMasterHub: function() { openProductMasterHub(); },
             openAluminumDepartment: function() { openAluminumDepartment(); },
+            openHrPlatform: function() { if (typeof openHrPlatform === 'function') openHrPlatform(); },
             openExecutiveReports: function() { openExecutiveReports(); },
             syncPlatformFromProductMaster: function() { syncPlatformFromProductMaster(); },
             scrollErpHub: function() { scrollErpHub(); },
@@ -4793,6 +4802,7 @@
         function emptyAnalyticsRestoreBin() {
             if (!requireMainGovernanceAdmin()) return;
             ensureAnalyticsGovernance();
+            if (typeof ensureHrData === 'function') ensureHrData();
             const total = ['quotes', 'visitors', 'complaints', 'sales', 'customers'].reduce(function(n, k) {
                 return n + (analyticsGovernance.deleted[k] || []).length;
             }, 0);
@@ -5895,6 +5905,7 @@
         const ADMIN_GOVERNANCE_TILE_REGISTRY = [
             { id: 'dash-product-master', publicEffect: 'أسماء · أنواع · مقاسات · أسعار — مصدر ديناميكي للنظام', handler: 'openProductMasterHub' },
             { id: 'dash-aluminum-dept', publicEffect: 'تشغيل قسم الألومنيوم فقط', handler: 'openAluminumDepartment' },
+            { id: 'dash-hr-platform', publicEffect: 'سجلات الموظفين والسيارات والإجازات لكل الفروع', handler: 'openHrPlatform' },
             { id: 'dash-content', publicEffect: 'منتجات المتجر · أيقونات الزوار · أقسام إضافية', handler: 'openSiteContentManager' },
             { id: 'dash-about-pages', publicEffect: 'بطاقات من نحن / رؤيتنا + محتوى داخلي', handler: 'openAboutContentAdmin' },
             { id: 'dash-certs', publicEffect: 'اعتمادات وشهادات في المعرض', handler: 'openCertificationsHub' },
@@ -11110,7 +11121,8 @@
                 { id: 'executive-reports', key: 'audit' },
                 { id: 'branch-team-management', key: null, branchTeamOnly: true },
                 { id: 'product-master-hub', key: null, productMasterOnly: true },
-                { id: 'aluminum-department', key: 'aluminum' }
+                { id: 'aluminum-department', key: 'aluminum' },
+                { id: 'hr-platform', key: 'hr' }
             ].forEach(function(block) {
                 const el = document.getElementById(block.id);
                 if (!el) return;
@@ -11173,6 +11185,9 @@
             if (isAluminumDepartmentAdmin(currentAdmin)) {
                 const allowed = ['erp-aluminum-dept', 'erp-inventory', 'erp-production', 'erp-warehouse-transfers', 'erp-quote-builder', 'erp-orders', 'erp-pricelist'];
                 if (allowed.indexOf(mod.id) < 0) return false;
+            }
+            if (typeof isHrDepartmentAdmin === 'function' && isHrDepartmentAdmin(currentAdmin)) {
+                if (mod.id !== 'erp-hr-platform') return false;
             }
             return true;
         }
@@ -12920,6 +12935,13 @@
                 scrollTo: 'erp-hub-panel',
                 openHandler: 'openAluminumDepartment',
                 hideSections: ['dashboard-company-identity', 'dashboard-partners-block', 'platform-hub-panel', 'dashboard-channels-panel', 'dashboard-occasion-panel', 'dashboard-official-hub']
+            },
+            hr: {
+                greetingAr: 'منصة الموارد البشرية',
+                descAr: 'إدارة الموظفين والعمال والسيارات والإجازات — المقر الرئيسي وجميع فروع المملكة.',
+                scrollTo: 'erp-hub-panel',
+                openHandler: 'openHrPlatform',
+                hideSections: ['dashboard-company-identity', 'dashboard-partners-block', 'platform-hub-panel', 'dashboard-channels-panel', 'dashboard-occasion-panel', 'dashboard-official-hub', 'erp-hub-panel']
             }
         };
 
@@ -12971,12 +12993,14 @@
         function getRoleQuickActions(role) {
             const actions = [];
             const map = [
-                { roles: ['superadmin', 'manager', 'hr'], icon: 'fas fa-users-cog', label: 'المستخدمون', handler: 'openUserManagement', perm: 'users' },
+                { roles: ['superadmin', 'manager'], icon: 'fas fa-users-cog', label: 'المستخدمون', handler: 'openUserManagement', perm: 'users' },
                 { roles: ['sales_manager', 'branch_manager'], icon: 'fas fa-user-group', label: 'فريق الفرع', handler: 'openBranchTeamManagement', perm: null },
                 { roles: ['superadmin', 'manager'], icon: 'fas fa-chart-bar', label: 'تقارير تنفيذية', handler: 'openExecutiveReports', perm: 'audit' },
                 { roles: ['sales_manager', 'accountant', 'branch_manager'], icon: 'fas fa-chart-bar', label: 'تقرير الفرع', handler: 'openExecutiveReports', perm: 'audit' },
                 { roles: ['superadmin'], icon: 'fas fa-database', label: 'مركز المنتجات', handler: 'openProductMasterHub', perm: null },
                 { roles: ['aluminum_manager'], icon: 'fas fa-industry', label: 'قسم الألومنيوم', handler: 'openAluminumDepartment', perm: 'aluminum' },
+                { roles: ['hr'], icon: 'fas fa-people-roof', label: 'منصة HR', handler: 'openHrPlatform', perm: 'hr' },
+                { roles: ['superadmin', 'manager'], icon: 'fas fa-people-roof', label: 'منصة HR', handler: 'openHrPlatform', perm: 'hr' },
                 { roles: ['superadmin', 'manager'], icon: 'fas fa-paint-roller', label: 'محتوى الموقع', handler: 'openSiteContentManager', perm: 'content' },
                 { roles: ['superadmin', 'manager'], icon: 'fas fa-cloud-upload-alt', label: 'رفع وسائط', handler: 'openNebrasMediaHubQuick', perm: 'content' },
                 { roles: ['sales_manager', 'sales_rep', 'branch_manager'], icon: 'fas fa-file-signature', label: 'عروض الأسعار', handler: 'openRepQuoteBuilder', perm: 'quotes' },
@@ -12997,6 +13021,7 @@
                 if (item.handler === 'openExecutiveReports' && !canViewExecutiveReports()) return;
                 if (item.handler === 'openProductMasterHub' && !isMainGovernanceAdmin()) return;
                 if (item.handler === 'openAluminumDepartment' && !canManage('aluminum') && !isMainGovernanceAdmin()) return;
+                if (item.handler === 'openHrPlatform' && typeof canAccessHrPlatform === 'function' && !canAccessHrPlatform()) return;
                 if (item.perm && !canManage(item.perm)) return;
                 actions.push(item);
             });
@@ -18310,7 +18335,7 @@
             const list = document.getElementById('cloud-governance-stores');
             if (!summary || !list) return;
             const connected = !!supabaseClient;
-            const erpKeys = ['erp_inventory', 'erp_orders', 'erp_production', 'erp_purchases', 'erp_transfers', 'erp_stock_transfers', 'sales_price_list', 'sales_data', 'customer_service'];
+            const erpKeys = ['erp_inventory', 'erp_orders', 'erp_production', 'erp_purchases', 'erp_transfers', 'erp_stock_transfers', 'sales_price_list', 'sales_data', 'customer_service', 'hr_employees', 'hr_vehicles', 'hr_leave'];
             summary.innerHTML =
                 '<div class="erp-stat' + (connected ? ' erp-stat--ok' : ' erp-stat--danger') + '"><strong>' + (connected ? 'متصل' : 'محلي') + '</strong><span>Supabase</span></div>' +
                 '<div class="erp-stat"><strong>' + NEBRAS_CLOUD_STORE_SPECS.length + '</strong><span>مخازن بيانات</span></div>' +
@@ -20291,6 +20316,21 @@
             { key: 'analytics_governance', get: function() { ensureAnalyticsGovernance(); return analyticsGovernance; }, set: function(v) {
                 analyticsGovernance = v && typeof v === 'object' ? v : { deleted: { quotes: [], visitors: [], complaints: [], sales: [], customers: [] } };
                 ensureAnalyticsGovernance();
+            }},
+            { key: 'hr_employees', get: function() {
+                return typeof getHrEmployees === 'function' ? getHrEmployees() : [];
+            }, set: function(v) {
+                if (typeof setHrEmployeesFromCloud === 'function') setHrEmployeesFromCloud(v);
+            }},
+            { key: 'hr_vehicles', get: function() {
+                return typeof getHrVehicles === 'function' ? getHrVehicles() : [];
+            }, set: function(v) {
+                if (typeof setHrVehiclesFromCloud === 'function') setHrVehiclesFromCloud(v);
+            }},
+            { key: 'hr_leave', get: function() {
+                return typeof getHrLeaveRequests === 'function' ? getHrLeaveRequests() : [];
+            }, set: function(v) {
+                if (typeof setHrLeaveFromCloud === 'function') setHrLeaveFromCloud(v);
             }},
             { key: 'callback_leads', get: function() {
                 return typeof getCallbackLeads === 'function' ? getCallbackLeads() : [];
@@ -23286,4 +23326,5 @@
         window.openProductMasterHub = openProductMasterHub;
         window.syncPlatformFromProductMaster = syncPlatformFromProductMaster;
         window.openAluminumDepartment = openAluminumDepartment;
+        if (typeof openHrPlatform === 'function') window.openHrPlatform = openHrPlatform;
 

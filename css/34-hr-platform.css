@@ -1,0 +1,264 @@
+/* منصة الموارد البشرية — نبراس ERP */
+.nebras-hr-modal {
+    max-width: min(1180px, 96vw);
+}
+
+.hr-platform-note {
+    margin: 0 0 14px;
+    padding: 11px 14px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, rgba(41, 128, 185, 0.08), rgba(39, 174, 96, 0.06));
+    border: 1px solid rgba(41, 128, 185, 0.22);
+    font-size: 0.84rem;
+    color: #2c5282;
+}
+
+.hr-tab-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0 0 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.hr-tab-btn {
+    border: 1px solid #d8e2ec;
+    background: #f8fafc;
+    color: #4a5a6a;
+    border-radius: 999px;
+    padding: 7px 14px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.hr-tab-btn:hover {
+    background: #eef4fb;
+    border-color: #9eb8d4;
+}
+
+.hr-tab-btn.is-active {
+    background: linear-gradient(135deg, #2980b9, #1a5276);
+    border-color: #1a5276;
+    color: #fff;
+}
+
+.hr-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.hr-toolbar .nebras-field {
+    min-width: 160px;
+    margin: 0;
+}
+
+.hr-toolbar .nebras-field select,
+.hr-toolbar .nebras-field input {
+    width: 100%;
+}
+
+.hr-search-input {
+    min-width: 200px;
+    flex: 1;
+}
+
+.hr-panel {
+    display: none;
+}
+
+.hr-panel.is-active {
+    display: block;
+}
+
+.hr-emp-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+}
+
+.hr-emp-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 14px;
+    background: #fff;
+    border-right: 4px solid var(--hr-accent, #2980b9);
+}
+
+.hr-emp-card-head {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.hr-emp-avatar {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #2980b9, #1abc9c);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+.hr-emp-card-head strong {
+    display: block;
+    font-size: 0.92rem;
+    color: #1a365d;
+}
+
+.hr-emp-card-head small {
+    color: #718096;
+    font-size: 0.75rem;
+}
+
+.hr-emp-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin: 8px 0;
+}
+
+.hr-emp-meta .erp-tag {
+    font-size: 0.72rem;
+}
+
+.hr-emp-contacts {
+    font-size: 0.78rem;
+    color: #4a5568;
+    line-height: 1.55;
+}
+
+.hr-emp-contacts i {
+    width: 16px;
+    color: #2980b9;
+    margin-left: 4px;
+}
+
+.hr-emp-actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px dashed #e8edf2;
+}
+
+.hr-vehicle-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 12px;
+}
+
+.hr-vehicle-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 14px;
+    background: #fff;
+}
+
+.hr-vehicle-card .plate-badge {
+    display: inline-block;
+    background: #1a5276;
+    color: #fff;
+    font-weight: 700;
+    letter-spacing: 1px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    margin-bottom: 8px;
+}
+
+.hr-editor-overlay {
+    margin: 12px 0;
+    padding: 14px;
+    border: 1px solid #c5d9ed;
+    border-radius: 12px;
+    background: #f7fbff;
+}
+
+.hr-editor-overlay h4 {
+    margin: 0 0 12px;
+    color: #1a5276;
+    font-size: 0.95rem;
+}
+
+.hr-report-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.hr-report-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 14px;
+    background: #fff;
+}
+
+.hr-report-card strong {
+    display: block;
+    font-size: 1.4rem;
+    color: #2980b9;
+}
+
+.hr-report-card span {
+    font-size: 0.78rem;
+    color: #718096;
+}
+
+.hr-leave-table-wrap {
+    overflow-x: auto;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    background: #fff;
+}
+
+.hr-leave-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+}
+
+.hr-leave-table th,
+.hr-leave-table td {
+    padding: 9px 10px;
+    border-bottom: 1px solid #edf1f5;
+    text-align: right;
+}
+
+.hr-leave-table th {
+    background: #f4f7fb;
+    color: #4a5a6a;
+    font-weight: 600;
+}
+
+.hr-status-active { --hr-accent: #27ae60; }
+.hr-status-on_leave { --hr-accent: #f39c12; }
+.hr-status-suspended { --hr-accent: #e74c3c; }
+.hr-status-terminated { --hr-accent: #95a5a6; }
+
+.hr-exp-warning {
+    color: #c0392b;
+    font-size: 0.72rem;
+}
+
+.hr-exp-ok {
+    color: #27ae60;
+    font-size: 0.72rem;
+}
+
+@media (max-width: 640px) {
+    .hr-emp-grid,
+    .hr-vehicle-grid {
+        grid-template-columns: 1fr;
+    }
+}
