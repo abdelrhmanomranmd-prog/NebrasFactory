@@ -13303,16 +13303,49 @@
             return ui.visitorJumpExternal;
         }
 
+        function setAdminLoginStatus(msg, type) {
+            const status = document.getElementById('admin-status-message');
+            if (!status) return;
+            status.textContent = msg || '';
+            status.className = 'status' + (type === 'ok' ? ' is-ok' : (type === 'error' ? ' is-error' : ''));
+        }
+
+        function bindAdminLoginForm() {
+            if (window._nebrasAdminLoginBound) return;
+            window._nebrasAdminLoginBound = true;
+            const pass = document.getElementById('admin-password');
+            const user = document.getElementById('admin-username');
+            const submit = function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    loginAdmin();
+                }
+            };
+            if (pass) pass.addEventListener('keydown', submit);
+            if (user) user.addEventListener('keydown', submit);
+        }
+
+        function ensureAdminUsersReadyForLogin() {
+            if (typeof finalizePlatformDataAfterLoad === 'function') {
+                finalizePlatformDataAfterLoad();
+            }
+            return Array.isArray(adminUsers) && adminUsers.length > 0;
+        }
+
         function openAdminPanel(event) {
             event.preventDefault();
+            bindAdminLoginForm();
+            ensureAdminUsersReadyForLogin();
             if (currentAdmin) {
                 showAdminDashboard(currentAdmin);
                 return;
             }
             document.getElementById('admin-overlay').classList.add('show');
-            document.getElementById('admin-status-message').textContent = '';
+            setAdminLoginStatus('', '');
             document.getElementById('admin-username').value = '';
             document.getElementById('admin-password').value = '';
+            const userEl = document.getElementById('admin-username');
+            if (userEl) setTimeout(function() { userEl.focus(); }, 120);
         }
 
         function canManage(permissionKey) {
@@ -13349,22 +13382,23 @@
         }
 
         function loginAdmin() {
+            bindAdminLoginForm();
+            ensureAdminUsersReadyForLogin();
             const username = document.getElementById('admin-username').value.trim();
-            const password = document.getElementById('admin-password').value.trim();
-            const status = document.getElementById('admin-status-message');
+            const password = document.getElementById('admin-password').value;
             const user = adminUsers.find(function(u) {
-                return String(u.username || '').toUpperCase() === username.toUpperCase() && u.password === password;
+                return String(u.username || '').toUpperCase() === username.toUpperCase() && String(u.password || '') === password;
             });
 
             const ui = siteText[currentLang || 'ar'] || siteText.ar;
             if (!username || !password) {
-                status.textContent = ui.adminLoginEmpty || 'يرجى إدخال اسم المستخدم وكلمة المرور.';
+                setAdminLoginStatus(ui.adminLoginEmpty || 'يرجى إدخال اسم المستخدم وكلمة المرور.', 'error');
                 return;
             }
 
             if (user) {
                 if (user.isActive === false) {
-                    status.textContent = ui.adminLoginDisabled || 'هذا الحساب معطّل — تواصل مع الإدارة الرئيسية.';
+                    setAdminLoginStatus(ui.adminLoginDisabled || 'هذا الحساب معطّل — تواصل مع الإدارة الرئيسية.', 'error');
                     addAuditLog('محاولة دخول معطّل', user.username + ' — حساب معطّل');
                     return;
                 }
@@ -13382,7 +13416,7 @@
                 currentAdmin = user;
                 saveSystemData();
                 if (typeof startAdminPresenceHeartbeat === 'function') startAdminPresenceHeartbeat(user);
-                status.textContent = ui.adminLoginOk || 'تم تسجيل الدخول بنجاح.';
+                setAdminLoginStatus(ui.adminLoginOk || 'تم تسجيل الدخول بنجاح.', 'ok');
                 if (typeof showNebrasAdminToast === 'function') {
                     showNebrasAdminToast('مرحباً ' + user.username + ' — ' + getRoleLabel(user.role), 'ok');
                 }
@@ -13391,7 +13425,7 @@
                 setLanguage(currentLang || 'ar');
                 addAuditLog('تسجيل دخول', 'دخول ناجح — ' + user.username + ' (' + getRoleLabel(user.role) + ')');
             } else {
-                status.textContent = ui.adminLoginFail || 'بيانات الدخول غير صحيحة. حاول مرة أخرى.';
+                setAdminLoginStatus(ui.adminLoginFail || 'بيانات الدخول غير صحيحة. تحقق من اسم المستخدم وكلمة المرور.', 'error');
                 addAuditLog('محاولة دخول فاشلة', 'اسم مستخدم: ' + username);
             }
         }
@@ -13755,6 +13789,12 @@
             if (!user) return;
             if (typeof loadAdminPresenceLocal === 'function') loadAdminPresenceLocal();
             const dash = document.getElementById('admin-dashboard');
+            const sf = document.getElementById('nebras-storefront');
+            if (sf) {
+                sf.hidden = true;
+                sf.setAttribute('aria-hidden', 'true');
+            }
+            if (typeof closeNebrasWorkspace === 'function') closeNebrasWorkspace();
             if (dash) {
                 dash.classList.add('show');
                 dash.removeAttribute('hidden');
@@ -13785,6 +13825,8 @@
             updateSalesInboxBadge();
             renderDashboardOfficialHub();
             renderDashboardChannelsStatus();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            if (dash) dash.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
         function logoutAdmin() {
@@ -13800,8 +13842,14 @@
             }
             currentAdmin = null;
             document.getElementById('admin-dashboard').classList.remove('show');
+            const sf = document.getElementById('nebras-storefront');
+            if (sf) {
+                sf.hidden = false;
+                sf.removeAttribute('aria-hidden');
+            }
             syncAdminSessionClass();
             setLanguage(currentLang || 'ar');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
             updateSalesQuoteFab();
             return false;
         }
@@ -22115,6 +22163,7 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             enforceAdminDashboardGate();
+            bindAdminLoginForm();
             initNebrasWelcomeAudioEarly();
             bindBrandIntroWelcomeGestures();
             const introSkip = document.getElementById('intro-skip-btn');

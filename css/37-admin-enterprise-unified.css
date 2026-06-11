@@ -57,6 +57,34 @@
     border-color: rgba(56, 189, 248, 0.55);
     box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
 }
+.admin-modal--enterprise .admin-modal-body p.status {
+    min-height: 1.4rem;
+    margin: 0 0 12px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    color: #fde68a;
+    background: rgba(251, 191, 36, 0.12);
+    border: 1px solid rgba(251, 191, 36, 0.28);
+}
+.admin-modal--enterprise .admin-modal-body p.status:empty {
+    display: none;
+    min-height: 0;
+    padding: 0;
+    margin: 0;
+    border: none;
+}
+.admin-modal--enterprise .admin-modal-body p.status.is-ok {
+    color: #86efac;
+    background: rgba(34, 197, 94, 0.12);
+    border-color: rgba(34, 197, 94, 0.28);
+}
+.admin-modal--enterprise .admin-modal-body p.status.is-error {
+    color: #fca5a5;
+    background: rgba(239, 68, 68, 0.12);
+    border-color: rgba(239, 68, 68, 0.28);
+}
 .admin-modal-actions { display: flex; flex-direction: column; gap: 8px; }
 .admin-modal-actions button {
     width: 100%;
@@ -103,8 +131,18 @@
     display: none !important;
     flex-direction: column;
 }
+body.admin-session #nebras-storefront {
+    display: none !important;
+}
 body.admin-session #admin-dashboard.show {
     display: flex !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    height: auto !important;
+    overflow: visible !important;
+    min-height: 100vh;
+    padding: 60px 5% !important;
+    margin: 0 !important;
 }
 body:not(.admin-session) #admin-dashboard,
 body:not(.admin-session) #admin-dashboard.show {
