@@ -666,6 +666,7 @@
                 <h3 id="admin-analytics-title"><i class="fas fa-chart-line" aria-hidden="true"></i> التحليلات والتقارير الداخلية</h3>
                 <p class="scm-hint admin-only-ui" id="admin-analytics-hint">تقارير حية للإدارة فقط — لا تظهر للزوار: المنتجات الأكثر طلباً، الألوان، الشكاوى، زوار الموقع، وترتيب عروض الأسعار.</p>
                 <button type="button" class="admin-analytics-refresh-btn" id="admin-analytics-refresh-btn" onclick="renderAdminAnalyticsPanel()"><i class="fas fa-sync-alt"></i> تحديث التقارير</button>
+                <button type="button" class="admin-analytics-refresh-btn admin-analytics-export-btn" id="admin-analytics-export-btn" onclick="exportAnalyticsReportPdf()"><i class="fas fa-file-pdf"></i> تصدير PDF</button>
             </div>
             <div id="analytics-governance-toolbar"></div>
             <div class="admin-analytics-kpis" id="admin-analytics-kpis" aria-live="polite"></div>
@@ -962,19 +963,28 @@
     </div>
 
     <div class="admin-section" id="complaints-management">
-        <div class="admin-modal">
-            <h2>إدارة الشكاوى</h2>
-            <ul id="complaints-list"></ul>
-            <button onclick="closeAdminSection('complaints-management')">إغلاق</button>
+        <div class="admin-modal site-content-modal nebras-erp-modal">
+            <div class="nebras-erp-head">
+                <div class="nebras-erp-head-title"><i class="fas fa-exclamation-triangle"></i><div><h2>إدارة الشكاوى</h2><p>متابعة · حل · ربط CRM تلقائي</p></div></div>
+                <button type="button" class="nebras-users-close" onclick="closeAdminSection('complaints-management')" aria-label="إغلاق"><i class="fas fa-xmark"></i></button>
+            </div>
+            <div class="nebras-erp-stats" id="complaints-summary"></div>
+            <div class="nebras-erp-list" id="complaints-list"></div>
         </div>
     </div>
 
     <div class="admin-section" id="branches-management">
-        <div class="admin-modal">
-            <h2>إدارة فروع المملكة</h2>
-            <button onclick="addBranch()">إضافة فرع جديد</button>
-            <ul id="branches-admin-list"></ul>
-            <button onclick="closeAdminSection('branches-management')">إغلاق</button>
+        <div class="admin-modal site-content-modal nebras-erp-modal">
+            <div class="nebras-erp-head">
+                <div class="nebras-erp-head-title"><i class="fas fa-map-marked-alt"></i><div><h2>فروع المملكة</h2><p>شبكة الفروع · أرقام المبيعات · الصور</p></div></div>
+                <button type="button" class="nebras-users-close" onclick="closeAdminSection('branches-management')" aria-label="إغلاق"><i class="fas fa-xmark"></i></button>
+            </div>
+            <div class="nebras-erp-stats" id="branches-summary"></div>
+            <div class="scm-panel-toolbar">
+                <button type="button" class="primary" onclick="openBranchEditor()"><i class="fas fa-plus"></i> فرع جديد</button>
+            </div>
+            <div id="branch-editor-mount" class="scm-editor-mount" hidden></div>
+            <div class="nebras-erp-list" id="branches-admin-list"></div>
         </div>
     </div>
 

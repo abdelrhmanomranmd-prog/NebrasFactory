@@ -48,6 +48,94 @@
     border-color: rgba(0, 168, 255, 0.35);
 }
 
+.admin-analytics-export-btn {
+    border-color: rgba(196, 30, 58, 0.28);
+    color: #8b1530;
+}
+
+.admin-analytics-export-btn:hover {
+    background: rgba(196, 30, 58, 0.08);
+    border-color: rgba(196, 30, 58, 0.4);
+}
+
+.admin-analytics-export-btn[disabled] {
+    opacity: 0.55;
+    cursor: wait;
+}
+
+.analytics-pdf-mount {
+    position: fixed;
+    left: -9999px;
+    top: 0;
+    width: 794px;
+    pointer-events: none;
+    opacity: 0;
+    z-index: -1;
+}
+
+.analytics-pdf-doc {
+    width: 794px;
+    padding: 28px 32px;
+    background: #fff;
+    color: #0d2840;
+    font-family: 'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif;
+    line-height: 1.5;
+}
+
+.analytics-pdf-head {
+    margin-bottom: 20px;
+    padding-bottom: 14px;
+    border-bottom: 2px solid rgba(196, 30, 58, 0.25);
+}
+
+.analytics-pdf-head h2 {
+    margin: 0 0 8px;
+    font-size: 1.35rem;
+    color: #c41e3a;
+}
+
+.analytics-pdf-head p {
+    margin: 4px 0;
+    font-size: 0.9rem;
+    color: #4a5568;
+}
+
+.analytics-pdf-section {
+    margin-bottom: 18px;
+}
+
+.analytics-pdf-section h3 {
+    margin: 0 0 8px;
+    font-size: 1rem;
+    color: #0d2840;
+}
+
+.analytics-pdf-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.88rem;
+}
+
+.analytics-pdf-table td {
+    padding: 7px 10px;
+    border: 1px solid rgba(13, 40, 64, 0.12);
+}
+
+.analytics-pdf-table td:last-child {
+    text-align: left;
+    direction: ltr;
+    width: 38%;
+}
+
+.analytics-pdf-foot {
+    margin-top: 22px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(13, 40, 64, 0.12);
+    font-size: 0.82rem;
+    color: #718096;
+    text-align: center;
+}
+
 .admin-analytics-kpis {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));

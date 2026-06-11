@@ -5652,6 +5652,158 @@
             });
         }
 
+        async function buildAnalyticsReportLines() {
+            let quotes = await getMergedSalesQuotesForAnalytics();
+            quotes = filterQuotesForAdmin(quotes, currentAdmin);
+            loadVisitorAnalyticsFromStorage();
+            ensureVisitorAnalytics();
+            const scopedVisitors = filterVisitorsForAdmin(visitorAnalytics.sessions || [], currentAdmin);
+            const openComplaints = Object.values(complaints || {}).filter(function(c) {
+                return c && c.status !== 'resolved';
+            }).length;
+            ensureBuiltinErpData();
+            ensureErpOperationsData();
+            ensureCustomerServiceData();
+            const erpStats = getDashboardExtendedStats();
+            const salesTotal = (salesData || []).reduce(function(s, x) { return s + erpNum(x.amount); }, 0);
+            const csOpen = customerServiceData.filter(function(x) { return x.status !== 'resolved'; }).length;
+            const complaintBars = aggregateComplaintsByStatus();
+            const sections = [
+                {
+                    title: 'ملخص عام',
+                    rows: [
+                        ['زوار (جلسات)', String(scopedVisitors.length)],
+                        ['عروض + مبيعات', String(quotes.length)],
+                        ['مبيعات مسجّلة (ر.س)', formatSar(salesTotal)],
+                        ['شكاوى مفتوحة', String(openComplaints)],
+                        ['CRM مفتوح', String(csOpen)]
+                    ]
+                },
+                {
+                    title: 'عمليات ERP',
+                    rows: [
+                        ['طلبات OMS', String(erpOrders.length)],
+                        ['طلبات قيد المعالجة', String(erpStats.ordersPending)],
+                        ['إنتاج اليوم', String(erpStats.prodToday)],
+                        ['مخزون منخفض', String(erpStats.lowStock)],
+                        ['مشتريات (ر.س)', formatSar(erpStats.purchasesTotal)],
+                        ['تحويلات مستودع اليوم', String(erpStats.stockTransfersToday)]
+                    ]
+                },
+                {
+                    title: 'الشكاوى حسب الحالة',
+                    rows: complaintBars.length
+                        ? complaintBars.map(function(b) { return [b.label, String(b.value)]; })
+                        : [['لا شكاوى', '0']]
+                },
+                {
+                    title: 'المبيعات والعروض',
+                    rows: [
+                        ['عروض سعر فقط', String(quotes.filter(function(q) { return getQuoteActivityType(q) === 'quote'; }).length)],
+                        ['مبيعات من العروض', String(quotes.filter(function(q) { return getQuoteActivityType(q) === 'sale'; }).length)],
+                        ['مبيعات يدوية', String((salesData || []).length)],
+                        ['حوالات بإيصال', String(quotes.filter(function(q) { return q && q.transferReceiptDataUrl; }).length)]
+                    ]
+                }
+            ];
+            return {
+                generatedAt: formatNebrasDateTime(Date.now(), currentLang || 'ar'),
+                actor: currentAdmin ? (currentAdmin.username || currentAdmin.name || 'admin') : '—',
+                sections: sections
+            };
+        }
+
+        function buildAnalyticsReportHtml(report) {
+            const sectionHtml = (report.sections || []).map(function(sec) {
+                const rows = (sec.rows || []).map(function(row) {
+                    return '<tr><td>' + escapeHtmlAttr(row[0]) + '</td><td><strong>' + escapeHtmlAttr(row[1]) + '</strong></td></tr>';
+                }).join('');
+                return '<section class="analytics-pdf-section"><h3>' + escapeHtmlAttr(sec.title) + '</h3>' +
+                    '<table class="analytics-pdf-table"><tbody>' + rows + '</tbody></table></section>';
+            }).join('');
+            return '<div id="nebras-analytics-pdf-doc" class="analytics-pdf-doc" dir="rtl">' +
+                '<header class="analytics-pdf-head">' +
+                '<h2>تقرير تحليلات نبراس</h2>' +
+                '<p>تاريخ التصدير: ' + escapeHtmlAttr(report.generatedAt) + '</p>' +
+                '<p>بواسطة: ' + escapeHtmlAttr(report.actor) + '</p>' +
+                '</header>' + sectionHtml +
+                '<footer class="analytics-pdf-foot">مصنع نبراس — تقرير داخلي للإدارة</footer></div>';
+        }
+
+        async function exportAnalyticsReportPdf() {
+            if (!currentAdmin) {
+                alert('سجّل دخول الإدارة أولاً.');
+                return;
+            }
+            if (!requirePermission('audit', 'تصدير التقارير يتطلب صلاحية التدقيق.')) return;
+            const btn = document.getElementById('admin-analytics-export-btn');
+            if (btn) { btn.disabled = true; btn.setAttribute('aria-busy', 'true'); }
+            let mount = document.getElementById('nebras-analytics-pdf-mount');
+            if (!mount) {
+                mount = document.createElement('div');
+                mount.id = 'nebras-analytics-pdf-mount';
+                mount.className = 'analytics-pdf-mount';
+                mount.setAttribute('aria-hidden', 'true');
+                document.body.appendChild(mount);
+            }
+            try {
+                const report = await buildAnalyticsReportLines();
+                mount.innerHTML = buildAnalyticsReportHtml(report);
+                const doc = document.getElementById('nebras-analytics-pdf-doc');
+                if (!doc) throw new Error('report-doc-missing');
+                if (document.fonts && document.fonts.ready) {
+                    try { await document.fonts.ready; } catch (fontWaitErr) { /* ignore */ }
+                }
+                const html2canvas = await loadHtml2CanvasLib();
+                const jsPDF = await loadJsPdfLib();
+                if (!html2canvas || !jsPDF) throw new Error('pdf-lib-missing');
+                const canvas = await html2canvas(doc, {
+                    scale: 2,
+                    useCORS: true,
+                    allowTaint: true,
+                    backgroundColor: '#ffffff',
+                    logging: false,
+                    width: doc.scrollWidth,
+                    height: doc.scrollHeight,
+                    onclone: function(clonedDoc) {
+                        const cloned = clonedDoc.getElementById('nebras-analytics-pdf-doc');
+                        if (cloned) {
+                            cloned.style.fontFamily = "'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif";
+                            cloned.style.direction = 'rtl';
+                        }
+                        if (clonedDoc.head && !clonedDoc.querySelector('link[data-nebras-cairo]')) {
+                            const link = clonedDoc.createElement('link');
+                            link.rel = 'stylesheet';
+                            link.href = 'https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&display=swap';
+                            link.setAttribute('data-nebras-cairo', '1');
+                            clonedDoc.head.appendChild(link);
+                        }
+                    }
+                });
+                const dataUrl = canvas.toDataURL('image/png');
+                const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
+                const pageW = pdf.internal.pageSize.getWidth();
+                const pageH = pdf.internal.pageSize.getHeight();
+                const imgDims = await getDataUrlImageSize(dataUrl);
+                const pxToMm = 0.264583;
+                let imgW = imgDims.w * pxToMm;
+                let imgH = imgDims.h * pxToMm;
+                const ratio = Math.min(pageW / imgW, pageH / imgH, 1);
+                imgW *= ratio;
+                imgH *= ratio;
+                pdf.addImage(dataUrl, 'PNG', (pageW - imgW) / 2, 0, imgW, imgH);
+                const stamp = 'nebras-analytics-' + new Date().toISOString().slice(0, 10) + '.pdf';
+                pdf.save(stamp);
+                addAuditLog('تصدير تقرير PDF', stamp);
+            } catch (exportErr) {
+                console.warn('Analytics PDF export failed:', exportErr);
+                alert('تعذّر تصدير التقرير — حاول تحديث الصفحة ثم إعادة المحاولة.');
+            } finally {
+                if (mount) mount.innerHTML = '';
+                if (btn) { btn.disabled = false; btn.removeAttribute('aria-busy'); }
+            }
+        }
+
         function renderVisitorQrSection() {
             const section = document.getElementById('nebras-visitor-qr-section');
             if (!section) return;
@@ -9897,6 +10049,12 @@
             { id: 'in_progress', label: 'قيد المتابعة' },
             { id: 'resolved', label: 'مُغلق' }
         ];
+        const COMPLAINT_STATUSES = [
+            { id: 'pending', label: 'قيد الانتظار' },
+            { id: 'inProgress', label: 'قيد المعالجة' },
+            { id: 'resolved', label: 'محلولة' }
+        ];
+        let branchEditorState = null;
 
         const VISITOR_BRANCH_KEY = 'nebras_visitor_branch_id';
 
@@ -12357,6 +12515,7 @@
             document.getElementById('complaint-number').value = complaintId;
             document.getElementById('complaint-description').value = '';
             saveSystemData();
+            linkComplaintToCrm(complaintId, complaints[complaintId]);
             displayComplaints();
             if (currentAdmin && canManage('audit')) renderAdminAnalyticsPanel();
             addAuditLog('شكوى جديدة', `تم تسجيل شكوى رقم ${complaintId} من ${name} (${phone})`);
@@ -12503,6 +12662,7 @@
         function openComplaintsManagement() {
             if (!requirePermission('complaints')) return;
             document.getElementById('complaints-management').classList.add('show');
+            displayComplaints();
         }
 
         function openBranchesManagement() {
@@ -18071,6 +18231,45 @@
 
         function addNewSaleLegacy() { addNewSale(); }
 
+        function isComplaintLinkedToCrm(complaintId) {
+            ensureCustomerServiceData();
+            return customerServiceData.some(function(x) { return x.complaintId === complaintId; });
+        }
+
+        function linkComplaintToCrm(complaintId, complaint) {
+            ensureCustomerServiceData();
+            const comp = complaint || complaints[complaintId];
+            if (!comp || isComplaintLinkedToCrm(complaintId)) return false;
+            const csStatus = comp.status === 'resolved' ? 'resolved' : (comp.status === 'inProgress' ? 'in_progress' : 'new');
+            customerServiceData.unshift({
+                id: 'cs-' + Date.now(),
+                complaintId: complaintId,
+                customerName: comp.customerName || '',
+                phone: comp.phone || '',
+                branch: comp.branch || '',
+                inquiry: 'شكوى #' + complaintId + ': ' + (comp.description || ''),
+                response: comp.adminNote || '',
+                status: csStatus,
+                date: erpToday(),
+                source: 'complaint',
+                by: erpActor(),
+                createdAt: new Date().toISOString()
+            });
+            comp.crmLinked = true;
+            saveSystemData();
+            return true;
+        }
+
+        function syncComplaintToCrm(complaintId, status) {
+            ensureCustomerServiceData();
+            const crm = customerServiceData.find(function(x) { return x.complaintId === complaintId; });
+            if (!crm) return;
+            if (status === 'resolved') crm.status = 'resolved';
+            else if (status === 'inProgress') crm.status = 'in_progress';
+            else if (status === 'pending') crm.status = 'new';
+            crm.updatedAt = new Date().toISOString();
+        }
+
         function displayComplaints() {
             const list = document.getElementById('complaints-list');
             if (!list) return;
@@ -18078,8 +18277,16 @@
             const entries = Object.entries(complaints || {}).sort(function(a, b) {
                 return Date.parse(b[1].createdAt || '') - Date.parse(a[1].createdAt || '');
             });
+            const openCount = entries.filter(function(e) { return e[1].status !== 'resolved'; }).length;
+            const summary = document.getElementById('complaints-summary');
+            if (summary) {
+                summary.innerHTML =
+                    '<div class="erp-stat"><strong>' + entries.length + '</strong><span>إجمالي الشكاوى</span></div>' +
+                    '<div class="erp-stat' + (openCount ? ' erp-stat--alert' : '') + '"><strong>' + openCount + '</strong><span>مفتوحة</span></div>' +
+                    '<div class="erp-stat"><strong>' + entries.filter(function(e) { return isComplaintLinkedToCrm(e[0]); }).length + '</strong><span>مرتبطة CRM</span></div>';
+            }
             if (!entries.length) {
-                list.innerHTML = '<li style="opacity:0.75;">لا شكاوى مسجّلة بعد.</li>';
+                list.innerHTML = '<p class="erp-empty">لا شكاوى مسجّلة بعد.</p>';
                 return;
             }
             list.innerHTML = entries.map(function(entry) {
@@ -18087,35 +18294,69 @@
                 const comp = entry[1];
                 const when = comp.createdAt ? formatNebrasDateTime(Date.parse(comp.createdAt), lang) : '—';
                 const phone = comp.phone || '';
-                return '<li class="complaint-admin-row">' +
-                    '<strong>#' + escapeHtmlAttr(id) + '</strong> · ' + escapeHtmlAttr(when) + '<br>' +
-                    '<strong>العميل:</strong> ' + escapeHtmlAttr(comp.customerName || '—') +
-                    (phone ? ' · <a class="analytics-tel-link" href="tel:' + escapeHtmlAttr(phone) + '">' + escapeHtmlAttr(phone) + '</a>' : '') +
-                    ' · <strong>الفرع:</strong> ' + escapeHtmlAttr(comp.branch || '—') + '<br>' +
-                    '<strong>الشكوى:</strong> ' + escapeHtmlAttr(comp.description || '') + '<br>' +
-                    '<strong>التحويل:</strong> ' + escapeHtmlAttr(comp.routedSalesBranch || '') + ' — ' + escapeHtmlAttr(comp.routedSalesPhone || '') + '<br>' +
-                    '<strong>الحالة:</strong> ' + escapeHtmlAttr(getComplaintStatusLabel(comp.status, lang)) +
-                    ' <button type="button" onclick="updateComplaintStatus(\'' + escapeHtmlAttr(id) + '\')">تحديث الحالة</button>' +
-                    (phone ? ' <a class="analytics-tel-link" href="tel:' + escapeHtmlAttr(phone) + '"><i class="fas fa-phone"></i> اتصل</a>' : '') +
-                    '</li>';
+                const st = comp.status || 'pending';
+                const crmLinked = isComplaintLinkedToCrm(id);
+                const statusBtns = COMPLAINT_STATUSES.filter(function(s) { return s.id !== st; }).map(function(s) {
+                    return '<button type="button" class="erp-tag erp-tag--action" onclick="setComplaintStatus(\'' + escapeHtmlAttr(id) + '\',\'' + s.id + '\')">' + escapeHtmlAttr(s.label) + '</button>';
+                }).join('');
+                return '<article class="erp-row' + (st !== 'resolved' ? ' erp-row--alert' : ' erp-row--muted') + '">' +
+                    '<div class="erp-row-main"><strong>#' + escapeHtmlAttr(id) + '</strong> — ' + escapeHtmlAttr(comp.customerName || '—') +
+                        '<span class="erp-row-tags"><span class="erp-tag erp-tag--status-' + escapeHtmlAttr(st === 'inProgress' ? 'pending' : st) + '">' + escapeHtmlAttr(getComplaintStatusLabel(st, lang)) + '</span>' +
+                            (crmLinked ? '<span class="erp-tag erp-tag--ok"><i class="fas fa-headset"></i> CRM</span>' : '') +
+                            '<span class="erp-tag">' + escapeHtmlAttr(when) + '</span></span>' +
+                        '<small>' + escapeHtmlAttr(comp.description || '') + '<br>' +
+                            'الفرع: ' + escapeHtmlAttr(comp.branch || '—') +
+                            ' · التحويل: ' + escapeHtmlAttr(comp.routedSalesBranch || '') + ' (' + escapeHtmlAttr(comp.routedSalesPhone || '') + ')' +
+                            (phone ? ' · <a class="analytics-tel-link" href="tel:' + escapeHtmlAttr(phone) + '">' + escapeHtmlAttr(phone) + '</a>' : '') + '</small>' +
+                        '<div class="erp-row-quick-actions">' + statusBtns +
+                            (!crmLinked && canManage('customerService') ? '<button type="button" class="erp-tag erp-tag--action" onclick="linkComplaintToCrmManual(\'' + escapeHtmlAttr(id) + '\')"><i class="fas fa-link"></i> ربط CRM</button>' : '') +
+                            (phone ? '<a class="erp-tag erp-tag--action analytics-tel-link" href="tel:' + escapeHtmlAttr(phone) + '"><i class="fas fa-phone"></i> اتصل</a>' : '') +
+                        '</div></div>' +
+                    '<button type="button" class="erp-row-del" onclick="deleteComplaintEntry(\'' + escapeHtmlAttr(id) + '\')" aria-label="حذف"><i class="fas fa-trash"></i></button>' +
+                '</article>';
             }).join('');
         }
 
-        function updateComplaintStatus(complaintId) {
+        function setComplaintStatus(complaintId, newStatus) {
             if (!requirePermission('complaints')) return;
             const complaint = complaints[complaintId];
             if (!complaint) return;
-            const newStatus = prompt('أدخل الحالة الجديدة (pending/inProgress/resolved):', complaint.status);
-            if (!newStatus) return;
-            if (!['pending', 'inProgress', 'resolved'].includes(newStatus)) {
-                alert('الحالة غير صحيحة');
-                return;
-            }
             complaint.status = newStatus;
+            if (!complaint.crmLinked) linkComplaintToCrm(complaintId, complaint);
+            else syncComplaintToCrm(complaintId, newStatus);
             saveSystemData();
             displayComplaints();
+            if (canManage('customerService')) displayCustomerService();
             if (currentAdmin && canManage('audit')) renderAdminAnalyticsPanel();
-            addAuditLog('تحديث شكوى', `تم تحديث الشكوى ${complaintId} إلى ${newStatus}`);
+            if (currentAdmin) renderDashboardCommandShell(currentAdmin);
+            addAuditLog('تحديث شكوى', 'شكوى ' + complaintId + ' → ' + newStatus);
+        }
+
+        function linkComplaintToCrmManual(complaintId) {
+            if (!canManage('customerService') && !canManage('complaints')) {
+                alert('لا تملك الصلاحية لهذا الإجراء.');
+                return;
+            }
+            if (linkComplaintToCrm(complaintId)) {
+                displayComplaints();
+                displayCustomerService();
+                alert('تم ربط الشكوى بخدمة العملاء CRM.');
+            } else {
+                alert('الشكوى مرتبطة مسبقاً أو غير موجودة.');
+            }
+        }
+
+        function deleteComplaintEntry(complaintId) {
+            if (!requirePermission('complaints')) return;
+            if (!confirm('حذف الشكوى #' + complaintId + '؟')) return;
+            delete complaints[complaintId];
+            saveSystemData();
+            displayComplaints();
+            addAuditLog('حذف شكوى', complaintId);
+        }
+
+        function updateComplaintStatus(complaintId) {
+            setComplaintStatus(complaintId, 'inProgress');
         }
 
         function ensureCustomerServiceData() {
@@ -18260,57 +18501,144 @@
 
         function displayBranchesAdmin() {
             const list = document.getElementById('branches-admin-list');
-            list.innerHTML = branchesData.map((branch, index) => `
-                <li>
-                    ${branch.city} | EN: ${branch.city_en || '—'} | ZH: ${branch.city_zh || '—'} — ${branch.salesPhone}
-                    <button onclick="editBranch(${index})">تعديل</button>
-                    <button onclick="deleteBranch(${index})">حذف</button>
-                </li>
-            `).join('');
+            if (!list) return;
+            ensureBuiltinBranches();
+            const summary = document.getElementById('branches-summary');
+            if (summary) {
+                summary.innerHTML =
+                    '<div class="erp-stat"><strong>' + branchesData.length + '</strong><span>فروع نشطة</span></div>' +
+                    '<div class="erp-stat"><strong>' + branchesData.filter(function(b) { return b.salesPhone; }).length + '</strong><span>أرقام مبيعات</span></div>' +
+                    '<div class="erp-stat"><strong>' + branchesData.filter(function(b) { return b.image; }).length + '</strong><span>صور مرفقة</span></div>';
+            }
+            if (!branchesData.length) {
+                list.innerHTML = '<p class="erp-empty">لا فروع مسجّلة — أضف فرعاً جديداً.</p>';
+                return;
+            }
+            list.innerHTML = branchesData.map(function(branch, index) {
+                const imgSrc = branch.image ? normalizeBranchImagePath(branch.image) : '';
+                const thumb = imgSrc
+                    ? '<img src="' + escapeHtmlAttr(imgSrc) + '" alt="" class="scm-list-thumb" loading="lazy">'
+                    : '<span class="scm-editor-thumb scm-editor-thumb--empty"><i class="fas fa-map-marker-alt"></i></span>';
+                return '<article class="erp-row scm-list-card">' + thumb +
+                    '<div class="erp-row-main scm-list-copy"><strong>' + escapeHtmlAttr(branch.city || '—') + '</strong>' +
+                        '<span class="erp-row-tags">' +
+                            '<span class="erp-tag">' + escapeHtmlAttr(branch.city_en || '—') + '</span>' +
+                            (branch.city_zh ? '<span class="erp-tag">' + escapeHtmlAttr(branch.city_zh) + '</span>' : '') +
+                        '</span>' +
+                        '<small><i class="fas fa-phone"></i> ' + escapeHtmlAttr(branch.salesPhone || '—') +
+                            (branch.image ? ' · <i class="fas fa-image"></i> ' + escapeHtmlAttr(branch.image) : '') + '</small>' +
+                    '</div>' +
+                    '<div class="scm-row-actions">' +
+                        '<button type="button" onclick="openBranchEditor(' + index + ')"><i class="fas fa-pen"></i> تعديل</button>' +
+                        '<button type="button" onclick="deleteBranch(' + index + ')"><i class="fas fa-trash"></i> حذف</button>' +
+                    '</div></article>';
+            }).join('');
         }
 
-        function addBranch() {
+        function openBranchEditor(index) {
             if (!requirePermission('branches')) return;
-            const names = promptBranchCityNames(null);
-            if (!names) return;
-            const salesPhone = prompt('رقم مبيعات الفرع:');
-            const image = prompt('اسم أو مسار الصورة (مثال: images/branch-riyadh.jpg):');
-            if (salesPhone && image) {
-                branchesData.push(Object.assign({ id: Date.now(), salesPhone: salesPhone.trim(), image: image.trim() }, names));
-                branchesData = branchesData.map(normalizeBranchRecord);
-                displayBranchesAdmin();
-                saveContentData();
-                addAuditLog('إضافة فرع', names.city + ' - ' + salesPhone);
-            }
+            const existing = typeof index === 'number' ? branchesData[index] : null;
+            branchEditorState = {
+                mode: existing ? 'edit' : 'new',
+                index: existing ? index : -1,
+                draft: existing ? Object.assign({}, existing) : {
+                    id: Date.now(),
+                    city: '',
+                    city_en: '',
+                    city_zh: '',
+                    salesPhone: '',
+                    image: ''
+                }
+            };
+            renderBranchEditorForm();
         }
 
-        function editBranch(index) {
-            if (!requirePermission('branches')) return;
-            const branch = branchesData[index];
-            if (!branch) return;
-            const names = promptBranchCityNames(branch);
-            if (!names) return;
-            const salesPhone = prompt('تعديل رقم المبيعات:', branch.salesPhone);
-            const image = prompt('تعديل مسار الصورة:', branch.image);
-            if (salesPhone && image) {
-                branchesData[index] = Object.assign({}, branch, names, { salesPhone: salesPhone.trim(), image: image.trim() });
-                branchesData[index] = normalizeBranchRecord(branchesData[index]);
-                displayBranchesAdmin();
-                saveContentData();
-                addAuditLog('تعديل فرع', names.city + ' - ' + salesPhone);
-            }
+        function renderBranchEditorForm() {
+            const host = document.getElementById('branch-editor-mount');
+            if (!host || !branchEditorState) return;
+            const d = branchEditorState.draft;
+            const imgPreview = d.image
+                ? '<img src="' + escapeHtmlAttr(normalizeBranchImagePath(d.image)) + '" alt="" class="scm-editor-thumb">'
+                : '<span class="scm-editor-thumb scm-editor-thumb--empty"><i class="fas fa-image"></i></span>';
+            host.hidden = false;
+            host.innerHTML = '<div class="scm-editor-card">' +
+                '<h4><i class="fas fa-map-marked-alt"></i> ' + (branchEditorState.mode === 'edit' ? 'تعديل فرع' : 'فرع جديد') + '</h4>' +
+                '<div class="scm-editor-grid">' +
+                '<label>اسم الفرع (عربي)<input type="text" id="branch-editor-city-ar" value="' + escapeHtmlAttr(d.city || '') + '"></label>' +
+                '<label>Branch name (English)<input type="text" id="branch-editor-city-en" value="' + escapeHtmlAttr(d.city_en || '') + '"></label>' +
+                '<label>分支名称 (中文 — اختياري)<input type="text" id="branch-editor-city-zh" value="' + escapeHtmlAttr(d.city_zh || '') + '"></label>' +
+                '<label>رقم مبيعات الفرع<input type="tel" id="branch-editor-phone" value="' + escapeHtmlAttr(d.salesPhone || '') + '" dir="ltr"></label>' +
+                '<div class="scm-editor-media"><span>صورة الفرع</span>' + imgPreview +
+                '<button type="button" class="secondary" onclick="branchPickImage()"><i class="fas fa-cloud-upload-alt"></i> رفع / اختيار صورة</button></div>' +
+                '</div>' +
+                '<div class="scm-editor-actions">' +
+                '<button type="button" class="primary" onclick="saveBranchFromEditor()"><i class="fas fa-check"></i> حفظ</button>' +
+                '<button type="button" class="secondary" onclick="cancelBranchEditor()">إلغاء</button></div></div>';
         }
+
+        async function branchPickImage() {
+            if (!branchEditorState) return;
+            const url = await pickMediaPath({
+                label: 'صورة الفرع',
+                defaultValue: branchEditorState.draft.image || 'images/branch-riyadh.jpg'
+            });
+            if (!url) return;
+            branchEditorState.draft.image = url;
+            renderBranchEditorForm();
+        }
+
+        function saveBranchFromEditor() {
+            if (!requirePermission('branches') || !branchEditorState) return;
+            const city = (document.getElementById('branch-editor-city-ar') || {}).value || '';
+            const cityEn = (document.getElementById('branch-editor-city-en') || {}).value || '';
+            const cityZh = (document.getElementById('branch-editor-city-zh') || {}).value || '';
+            const salesPhone = (document.getElementById('branch-editor-phone') || {}).value || '';
+            if (!city.trim()) { alert('أدخل اسم الفرع بالعربية.'); return; }
+            if (!cityEn.trim()) { alert('أدخل اسم الفرع بالإنجليزية.'); return; }
+            if (!salesPhone.trim()) { alert('أدخل رقم مبيعات الفرع.'); return; }
+            if (!branchEditorState.draft.image) { alert('يلزم صورة للفرع.'); return; }
+            const payload = Object.assign({}, branchEditorState.draft, {
+                city: city.trim(),
+                city_en: cityEn.trim(),
+                city_zh: cityZh.trim(),
+                salesPhone: salesPhone.trim(),
+                image: branchEditorState.draft.image
+            });
+            const normalized = normalizeBranchRecord(payload);
+            const editorMode = branchEditorState.mode;
+            if (editorMode === 'edit' && branchEditorState.index >= 0) {
+                branchesData[branchEditorState.index] = normalized;
+            } else {
+                branchesData.push(normalized);
+            }
+            branchesData = branchesData.map(normalizeBranchRecord);
+            cancelBranchEditor();
+            displayBranchesAdmin();
+            displayBranches();
+            saveContentData();
+            addAuditLog(editorMode === 'edit' ? 'تعديل فرع' : 'إضافة فرع', normalized.city + ' — ' + normalized.salesPhone);
+        }
+
+        function cancelBranchEditor() {
+            branchEditorState = null;
+            const host = document.getElementById('branch-editor-mount');
+            if (host) { host.hidden = true; host.innerHTML = ''; }
+        }
+
+        function addBranch() { openBranchEditor(); }
+
+        function editBranch(index) { openBranchEditor(index); }
 
         function deleteBranch(index) {
             if (!requirePermission('branches')) return;
             const branch = branchesData[index];
             if (!branch) return;
-            if (confirm(`هل تريد حذف فرع ${branch.city}؟`)) {
-                branchesData.splice(index, 1);
-                displayBranchesAdmin();
-                saveContentData();
-                addAuditLog('حذف فرع', branch.city);
-            }
+            if (!confirm('حذف فرع ' + (branch.city || '') + '؟')) return;
+            branchesData.splice(index, 1);
+            displayBranchesAdmin();
+            displayBranches();
+            saveContentData();
+            addAuditLog('حذف فرع', branch.city);
         }
 
         function displayAuditLog() {
@@ -21323,6 +21651,17 @@
         window.deleteErpStockTransfer = deleteErpStockTransfer;
         window.openComplaintsManagement = openComplaintsManagement;
         window.openBranchesManagement = openBranchesManagement;
+        window.setComplaintStatus = setComplaintStatus;
+        window.linkComplaintToCrmManual = linkComplaintToCrmManual;
+        window.deleteComplaintEntry = deleteComplaintEntry;
+        window.openBranchEditor = openBranchEditor;
+        window.branchPickImage = branchPickImage;
+        window.saveBranchFromEditor = saveBranchFromEditor;
+        window.cancelBranchEditor = cancelBranchEditor;
+        window.addBranch = addBranch;
+        window.editBranch = editBranch;
+        window.deleteBranch = deleteBranch;
+        window.exportAnalyticsReportPdf = exportAnalyticsReportPdf;
         window.openAuditLog = openAuditLog;
         window.markSalesQuoteStatus = markSalesQuoteStatus;
         window.convertQuoteToOrder = convertQuoteToOrder;
