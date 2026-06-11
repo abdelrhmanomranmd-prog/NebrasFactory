@@ -682,6 +682,7 @@
                 <article class="admin-analytics-table-card" id="bank-transfers-panel" aria-labelledby="bank-transfers-title"></article>
                 <article class="admin-analytics-table-card" id="visitor-report-panel" aria-labelledby="visitor-report-title"></article>
                 <article class="admin-analytics-table-card" id="callback-leads-panel" aria-labelledby="callback-leads-title"></article>
+                <article class="admin-analytics-table-card admin-analytics-table-card--wide" id="erp-operations-panel" aria-labelledby="erp-operations-title"></article>
                 <div id="analytics-restore-mount"></div>
             </div>
         </section>
@@ -930,24 +931,33 @@
     </div>
 
     <div class="admin-section" id="sales-management">
-        <div class="admin-modal">
-            <h2 id="erp-sales-modal-title">ERP — المبيعات والفوترة</h2>
-            <div class="sales-quotes-inbox-wrap admin-only-ui" data-perm="sales">
-                <h3 id="sales-quotes-inbox-title">طلبات عروض الأسعار الواردة (من السلة)</h3>
-                <p class="scm-hint admin-only-ui" id="sales-quotes-inbox-hint">يصل هنا كل عرض سعر يرسله العميل من أيقونة الإرسال أو من السلة — مراجعة وردّ المبيعات.</p>
-                <ul id="sales-quotes-inbox-list" class="scm-list"></ul>
+        <div class="admin-modal site-content-modal nebras-erp-modal">
+            <div class="nebras-erp-head">
+                <div class="nebras-erp-head-title"><i class="fas fa-file-invoice-dollar"></i><div><h2 id="erp-sales-modal-title">المبيعات والفوترة</h2><p>عروض واردة · مبيعات فعلية · ربط OMS</p></div></div>
+                <button type="button" class="nebras-users-close" onclick="closeAdminSection('sales-management')" aria-label="إغلاق"><i class="fas fa-xmark"></i></button>
             </div>
-            <button onclick="addNewSale()">إضافة عملية بيع</button>
-            <ul id="sales-list"></ul>
-            <button onclick="closeAdminSection('sales-management')">إغلاق</button>
+            <div class="nebras-erp-stats" id="sales-management-summary"></div>
+            <div class="sales-quotes-inbox-wrap admin-only-ui" data-perm="sales">
+                <h3 class="nebras-erp-subhead" id="sales-quotes-inbox-title"><i class="fas fa-inbox"></i> صندوق عروض الأسعار الواردة</h3>
+                <p class="scm-hint admin-only-ui" id="sales-quotes-inbox-hint">من السلة وصمّم بابك — راجع · حوّل لطلب OMS · سجّل كبيع</p>
+                <div class="nebras-erp-list" id="sales-quotes-inbox-list"></div>
+            </div>
+            <h3 class="nebras-erp-subhead"><i class="fas fa-plus-circle"></i> تسجيل عملية بيع</h3>
+            <div class="nebras-erp-form" id="sales-management-form"></div>
+            <h3 class="nebras-erp-subhead"><i class="fas fa-list"></i> سجل المبيعات</h3>
+            <div class="nebras-erp-list" id="sales-list"></div>
         </div>
     </div>
 
     <div class="admin-section" id="customer-service-management">
-        <div class="admin-modal">
-            <h2>خدمة العملاء</h2>
-            <ul id="customer-service-list"></ul>
-            <button onclick="closeAdminSection('customer-service-management')">إغلاق</button>
+        <div class="admin-modal site-content-modal nebras-erp-modal">
+            <div class="nebras-erp-head">
+                <div class="nebras-erp-head-title"><i class="fas fa-headset"></i><div><h2>خدمة العملاء CRM</h2><p>استفسارات · متابعة · ردود العملاء</p></div></div>
+                <button type="button" class="nebras-users-close" onclick="closeAdminSection('customer-service-management')" aria-label="إغلاق"><i class="fas fa-xmark"></i></button>
+            </div>
+            <div class="nebras-erp-stats" id="customer-service-summary"></div>
+            <div class="nebras-erp-form" id="customer-service-form"></div>
+            <div class="nebras-erp-list" id="customer-service-list"></div>
         </div>
     </div>
 

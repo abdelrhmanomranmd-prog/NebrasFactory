@@ -107,7 +107,8 @@ insert into public.nebras_data_store (store_key, payload) values
   ('sales_price_list', '[]'::jsonb),
   ('site_partners', '[]'::jsonb),
   ('site_certifications', '[]'::jsonb),
-  ('visitor_analytics', '{"sessions":[],"totalVisits":0,"totalPageViews":0}'::jsonb)
+  ('visitor_analytics', '{"sessions":[],"totalVisits":0,"totalPageViews":0}'::jsonb),
+  ('customer_service', '[]'::jsonb)
 on conflict (store_key) do nothing;
 
 commit;

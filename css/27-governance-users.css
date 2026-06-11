@@ -787,6 +787,13 @@
 .erp-tag--action:hover { background: var(--nu-navy-2); color: #fff; }
 
 .erp-row--alert { border-color: rgba(192, 57, 43, 0.35); background: rgba(192, 57, 43, 0.04); }
+.erp-row--muted { opacity: 0.72; }
+
+.sales-quote-inbox-item { align-items: flex-start; }
+.sales-quote-inbox-thumb { flex-shrink: 0; }
+.sales-quote-inbox-item .sales-quote-door-thumb img {
+    width: 64px; height: 64px; object-fit: cover; border-radius: 10px;
+}
 .erp-stat--alert strong { color: #c0392b; }
 .erp-row-actions-inline { display: flex; gap: 6px; flex-shrink: 0; }
 .erp-row-actions-inline button {

@@ -1771,7 +1771,7 @@
                 { id: 'branches', status: 'live', icon: 'fas fa-map-marked-alt', permission: 'branches', handler: 'openBranchesManagement', nameAr: 'الفروع', descAr: 'شبكة فروع المملكة وأرقام المبيعات', nameEn: 'Branches' },
                 { id: 'complaints', status: 'live', icon: 'fas fa-exclamation-triangle', permission: 'complaints', handler: 'openComplaintsManagement', nameAr: 'الشكاوى', descAr: 'استقبال ومتابعة وحل الشكاوى', nameEn: 'Complaints' },
                 { id: 'sales', status: 'beta', icon: 'fas fa-chart-line', permission: 'sales', handler: 'openSalesManagement', nameAr: 'المبيعات', descAr: 'تسجيل مبيعات وتقارير — توسعة قادمة', nameEn: 'Sales' },
-                { id: 'customers', status: 'beta', icon: 'fas fa-headset', permission: 'customerService', handler: 'openCustomerServiceManagement', nameAr: 'خدمة العملاء', descAr: 'استفسارات وردود — توسعة قادمة', nameEn: 'Customer service' },
+                { id: 'customers', status: 'live', icon: 'fas fa-headset', permission: 'customerService', handler: 'openCustomerServiceManagement', nameAr: 'خدمة العملاء', descAr: 'استفسارات وردود ومتابعة CRM', nameEn: 'Customer service' },
                 { id: 'inventory', status: 'live', icon: 'fas fa-warehouse', permission: 'inventory', handler: 'openErpInventory', nameAr: 'المخزون ERP', descAr: 'SKU، مستودعات، تنبيهات — يعمل الآن', nameEn: 'ERP Inventory' },
                 { id: 'erp', status: 'live', icon: 'fas fa-cubes', permission: 'erp', handler: 'scrollErpHub', nameAr: 'لوحة ERP', descAr: 'نظام التخطيط الداخلي الكامل', nameEn: 'ERP console' },
                 { id: 'orders', status: 'live', icon: 'fas fa-truck', permission: 'orders', handler: 'openErpOrders', nameAr: 'الطلبات OMS', descAr: 'تسجيل ومتابعة الطلبات وحالات التنفيذ', nameEn: 'Orders OMS' },
@@ -5455,6 +5455,67 @@
                 }).join('') + '</tbody></table>');
         }
 
+        function buildErpOperationsBiHtml() {
+            ensureBuiltinErpData();
+            ensureErpOperationsData();
+            const stats = getDashboardExtendedStats();
+            const orderStatusCounts = {};
+            ERP_ORDER_STATUSES.forEach(function(s) { orderStatusCounts[s.id] = 0; });
+            (erpOrders || []).forEach(function(o) {
+                const st = o.status || 'pending';
+                orderStatusCounts[st] = (orderStatusCounts[st] || 0) + 1;
+            });
+            const orderBars = ERP_ORDER_STATUSES.map(function(s) {
+                return { label: s.label, value: orderStatusCounts[s.id] || 0 };
+            }).filter(function(b) { return b.value > 0; });
+            const lowItems = (erpInventory || []).filter(function(i) {
+                return Number(i.qty) <= Number(i.minQty || 0);
+            }).slice(0, 6);
+            const recentOrders = (erpOrders || []).slice(0, 5);
+            const recentTransfers = (erpStockTransfers || []).slice(0, 5);
+            const salesTotal = (salesData || []).reduce(function(s, x) { return s + erpNum(x.amount); }, 0);
+            let html = '<h4 id="erp-operations-title"><i class="fas fa-cubes"></i> ذكاء عمليات ERP — ملخص حي</h4>';
+            html += '<div class="admin-analytics-erp-grid">';
+            html += '<div class="admin-analytics-erp-kpis">' +
+                '<div class="admin-analytics-kpi"><strong>' + erpOrders.length + '</strong><span>طلبات OMS</span></div>' +
+                '<div class="admin-analytics-kpi"><strong>' + stats.ordersPending + '</strong><span>قيد المعالجة</span></div>' +
+                '<div class="admin-analytics-kpi"><strong>' + formatSar(salesTotal) + '</strong><span>مبيعات مسجّلة</span></div>' +
+                '<div class="admin-analytics-kpi"><strong>' + stats.prodToday + '</strong><span>إنتاج اليوم</span></div>' +
+                '<div class="admin-analytics-kpi"><strong>' + stats.lowStock + '</strong><span>تحت الحد الأدنى</span></div>' +
+                '<div class="admin-analytics-kpi"><strong>' + formatSar(stats.purchasesTotal) + '</strong><span>مشتريات</span></div>' +
+                '</div>';
+            if (orderBars.length) {
+                html += '<div class="admin-analytics-erp-section"><h5>الطلبات حسب الحالة</h5>' +
+                    renderAnalyticsBarList(orderBars, 'لا طلبات بعد.') + '</div>';
+            }
+            if (lowItems.length) {
+                html += '<div class="admin-analytics-erp-section"><h5>تنبيهات مخزون</h5><ul class="analytics-erp-mini-list">';
+                lowItems.forEach(function(i) {
+                    html += '<li><strong>' + escapeHtmlAttr(i.sku) + '</strong> — ' + escapeHtmlAttr(i.nameAr || '') +
+                        ' <small>(' + escapeHtmlAttr(i.warehouseAr || '') + ': ' + erpNum(i.qty) + ')</small></li>';
+                });
+                html += '</ul></div>';
+            }
+            if (recentOrders.length) {
+                html += '<div class="admin-analytics-erp-section"><h5>آخر الطلبات</h5><ul class="analytics-erp-mini-list">';
+                recentOrders.forEach(function(o) {
+                    html += '<li><strong>' + escapeHtmlAttr(o.orderNo || o.id) + '</strong> — ' + escapeHtmlAttr(o.customer || '') +
+                        ' <small>' + escapeHtmlAttr(o.product || '') + '</small></li>';
+                });
+                html += '</ul></div>';
+            }
+            if (recentTransfers.length) {
+                html += '<div class="admin-analytics-erp-section"><h5>آخر تحويلات المستودع</h5><ul class="analytics-erp-mini-list">';
+                recentTransfers.forEach(function(t) {
+                    html += '<li><strong>' + escapeHtmlAttr(t.sku) + '</strong> ' + erpNum(t.qty) +
+                        ' <small>' + escapeHtmlAttr(t.fromWarehouse) + ' → ' + escapeHtmlAttr(t.toWarehouse) + '</small></li>';
+                });
+                html += '</ul></div>';
+            }
+            html += '</div>';
+            return html;
+        }
+
         async function renderAdminAnalyticsPanel() {
             const hub = document.getElementById('admin-analytics-hub');
             if (!hub || !currentAdmin) return;
@@ -5496,17 +5557,24 @@
                 ? filterCallbackLeadsForAdmin(getCallbackLeads(), currentAdmin)
                 : [];
             const callbackLeadsNew = callbackLeadsScoped.filter(function(l) { return l && (l.status || 'new') === 'new'; }).length;
+            ensureBuiltinErpData();
+            ensureErpOperationsData();
+            ensureCustomerServiceData();
+            const erpStats = getDashboardExtendedStats();
+            const salesTotal = (salesData || []).reduce(function(s, x) { return s + erpNum(x.amount); }, 0);
+            const csOpen = customerServiceData.filter(function(x) { return x.status !== 'resolved'; }).length;
             if (kpisEl) {
                 kpisEl.innerHTML = [
                     { v: uniqueVisitors, l: 'زوار (جلسات)' },
                     { v: callbackLeadsScoped.length, l: 'طلبات «نبراس يتصل بك»' },
-                    { v: callbackLeadsNew, l: 'طلبات اتصال جديدة' },
-                    { v: quotes.length, l: 'طلبات (عروض + مبيعات)' },
-                    { v: quotesOnlyCount, l: 'عروض سعر فقط' },
-                    { v: salesFromQuotes + manualSalesCount, l: 'مبيعات فعلية' },
-                    { v: transfersWithReceipt, l: 'حوالات بإيصال' },
+                    { v: quotes.length, l: 'عروض + مبيعات' },
+                    { v: formatSar(salesTotal).replace(' ر.س', ''), l: 'مبيعات (ر.س)' },
+                    { v: erpStats.ordersPending, l: 'طلبات OMS معلّقة' },
+                    { v: erpStats.lowStock, l: 'مخزون منخفض' },
+                    { v: erpStats.prodToday, l: 'إنتاج اليوم' },
+                    { v: csOpen, l: 'CRM مفتوح' },
                     { v: openComplaints, l: 'شكاوى مفتوحة' },
-                    { v: shopProductCount, l: 'منتجات متجر (ديناميكي)' }
+                    { v: shopProductCount, l: 'منتجات متجر' }
                 ].map(function(k) {
                     return '<div class="admin-analytics-kpi"><strong>' + k.v + '</strong><span>' + escapeHtmlAttr(k.l) + '</span></div>';
                 }).join('');
@@ -5563,6 +5631,10 @@
                 callbackLeadsEl.innerHTML = '<h4 id="callback-leads-title"><i class="fas fa-phone-volume"></i> نبراس يتصل بك — طلبات اتصال الزوار</h4>' +
                     '<p class="scm-hint admin-only-ui">يظهر في الإدارة الرئيسية كاملاً — ومدير الفرع يرى طلبات فرعه فقط. المبيعات وخدمة العملاء يحدّثون الحالة بعد الاتصال.</p>' +
                     buildCallbackLeadsReportHtml(currentAdmin);
+            }
+            const erpOpsEl = document.getElementById('erp-operations-panel');
+            if (erpOpsEl) {
+                erpOpsEl.innerHTML = buildErpOperationsBiHtml();
             }
             const restoreMount = document.getElementById('analytics-restore-mount');
             if (restoreMount) restoreMount.innerHTML = buildAnalyticsRestorePanelHtml();
@@ -6763,7 +6835,7 @@
             const list = document.getElementById('sales-quotes-inbox-list');
             if (!list) return;
             const ui = siteText[currentLang || 'ar'] || siteText.ar;
-            list.innerHTML = '<li style="opacity:0.7;">' + escapeHtmlAttr(ui.salesInboxLoading || 'جاري تحميل الطلبات…') + '</li>';
+            list.innerHTML = '<p class="erp-empty">' + escapeHtmlAttr(ui.salesInboxLoading || 'جاري تحميل الطلبات…') + '</p>';
             const cloudInbox = await fetchSalesQuotesFromCloud();
             const localInbox = loadSalesQuotesInbox();
             const merged = [];
@@ -6780,7 +6852,7 @@
                 const emptyMsg = currentAdmin && String(currentAdmin.assignedBranchCity || '').trim()
                     ? (ui.salesInboxBranchEmpty || 'لا طلبات لفرعك حالياً.')
                     : (ui.salesInboxEmpty || 'لا طلبات عروض أسعار بعد.');
-                list.innerHTML = '<li>' + escapeHtmlAttr(emptyMsg) + '</li>';
+                list.innerHTML = '<p class="erp-empty">' + escapeHtmlAttr(emptyMsg) + '</p>';
                 return;
             }
             list.innerHTML = visible.map(function(e) {
@@ -6814,48 +6886,113 @@
                     ? ('<div class="sales-quote-door-thumb"><img src="' + escapeHtmlAttr(e.doorDesignerImage) + '" alt="" loading="lazy"></div>')
                     : '';
                 const cloudAttr = e.cloudId ? ' data-cloud-id="' + escapeHtmlAttr(e.cloudId) + '"' : '';
-                return '<li class="sales-quote-inbox-item" data-status="' + escapeHtmlAttr(e.status || 'new') + '"' + cloudAttr + ' data-entry-id="' + escapeHtmlAttr(e.id) + '">' +
-                    doorThumb +
-                    '<strong>' + escapeHtmlAttr(e.quoteNo) + '</strong>' + formatBadge + channelBadge + transferBadge + ' · ' + escapeHtmlAttr(when) + ' · ' + escapeHtmlAttr(linesSummary) + '<br>' +
-                    escapeHtmlAttr(e.customerName || '—') + ' · ' + escapeHtmlAttr(e.phone || '—') +
-                    adminStats +
-                    (e.address ? '<br><small>' + escapeHtmlAttr(e.address) + '</small>' : '') +
-                    (e.city ? ' · ' + escapeHtmlAttr(e.city) : '') +
-                    (e.note ? '<br><small>' + escapeHtmlAttr(e.note) + '</small>' : '') +
-                    (e.paymentBankIban ? '<br><small><strong>IBAN:</strong> <code dir="ltr">' + escapeHtmlAttr(e.paymentBankIban) + '</code></small>' : '') +
-                    (e.transferReceiptDataUrl ? '<br><div class="sales-quote-receipt-inline"><img src="' + escapeHtmlAttr(e.transferReceiptDataUrl) + '" alt="" loading="lazy" onclick="event.preventDefault();viewSalesQuoteReceipt(\'' + entryKey + '\')"><a href="#" onclick="event.preventDefault();viewSalesQuoteReceipt(\'' + entryKey + '\')">' + escapeHtmlAttr(ui.salesInboxReceipt || 'عرض إيصال الحوالة') + '</a></div>' : '') +
-                    quoteDocThumb +
-                    (isDesigner && e.doorDesignerImage ? '<br><a href="#" onclick="event.preventDefault();viewSalesQuoteDoorDesign(\'' + entryKey + '\')">' + escapeHtmlAttr(ui.salesInboxDoorDesign || 'عرض تصميم الباب') + '</a>' : '') +
-                    '<div class="scm-row-actions" style="margin-top:8px;">' +
-                    '<button type="button" onclick="markSalesQuoteStatus(\'' + entryKey + '\',\'reviewed\')">' + escapeHtmlAttr(ui.salesInboxReviewed || 'تمت المراجعة') + '</button>' +
-                    '<button type="button" onclick="markSalesQuoteStatus(\'' + entryKey + '\',\'sold\')">' + escapeHtmlAttr(ui.salesInboxSold || 'تسجيل كبيع فعلي') + '</button>' +
-                    '<button type="button" onclick="markSalesQuoteStatus(\'' + entryKey + '\',\'closed\')">' + escapeHtmlAttr(ui.salesInboxClosed || 'إغلاق') + '</button>' +
-                    '<button type="button" onclick="viewSalesQuoteEntry(\'' + entryKey + '\')">' + escapeHtmlAttr(ui.salesInboxDetails || 'تفاصيل') + '</button>' +
-                    '</div></li>';
+                const orderBadge = e.convertedToOrder
+                    ? ' <span class="erp-tag erp-tag--ok"><i class="fas fa-truck"></i> طلب OMS</span>'
+                    : '';
+                return '<article class="erp-row sales-quote-inbox-item" data-status="' + escapeHtmlAttr(e.status || 'new') + '"' + cloudAttr + ' data-entry-id="' + escapeHtmlAttr(e.id) + '">' +
+                    (doorThumb ? '<div class="sales-quote-inbox-thumb">' + doorThumb + '</div>' : '') +
+                    '<div class="erp-row-main">' +
+                    '<strong>' + escapeHtmlAttr(e.quoteNo) + '</strong>' + formatBadge + channelBadge + transferBadge + orderBadge +
+                        '<span class="erp-row-tags"><span class="erp-tag">' + escapeHtmlAttr(when) + '</span><span class="erp-tag">' + escapeHtmlAttr(linesSummary) + '</span></span>' +
+                        '<small>' + escapeHtmlAttr(e.customerName || '—') + ' · ' + escapeHtmlAttr(e.phone || '—') +
+                            (e.city ? ' · ' + escapeHtmlAttr(e.city) : '') + adminStats +
+                            (e.note ? '<br>' + escapeHtmlAttr(e.note) : '') + '</small>' +
+                        (e.transferReceiptDataUrl ? '<div class="sales-quote-receipt-inline"><img src="' + escapeHtmlAttr(e.transferReceiptDataUrl) + '" alt="" loading="lazy" onclick="event.preventDefault();viewSalesQuoteReceipt(\'' + entryKey + '\')"><a href="#" onclick="event.preventDefault();viewSalesQuoteReceipt(\'' + entryKey + '\')">' + escapeHtmlAttr(ui.salesInboxReceipt || 'إيصال الحوالة') + '</a></div>' : '') +
+                        quoteDocThumb +
+                    '<div class="erp-row-quick-actions">' +
+                    '<button type="button" class="erp-tag erp-tag--action" onclick="markSalesQuoteStatus(\'' + entryKey + '\',\'reviewed\')"><i class="fas fa-eye"></i> ' + escapeHtmlAttr(ui.salesInboxReviewed || 'مراجعة') + '</button>' +
+                    (canManage('orders') && !e.convertedToOrder ? '<button type="button" class="erp-tag erp-tag--action" onclick="convertQuoteToOrder(\'' + entryKey + '\')"><i class="fas fa-truck"></i> طلب OMS</button>' : '') +
+                    '<button type="button" class="erp-tag erp-tag--action" onclick="markSalesQuoteStatus(\'' + entryKey + '\',\'sold\')"><i class="fas fa-check"></i> ' + escapeHtmlAttr(ui.salesInboxSold || 'بيع') + '</button>' +
+                    '<button type="button" class="erp-tag erp-tag--action" onclick="viewSalesQuoteEntry(\'' + entryKey + '\')"><i class="fas fa-list"></i> ' + escapeHtmlAttr(ui.salesInboxDetails || 'تفاصيل') + '</button>' +
+                    '<button type="button" class="erp-tag erp-tag--action" onclick="markSalesQuoteStatus(\'' + entryKey + '\',\'closed\')">' + escapeHtmlAttr(ui.salesInboxClosed || 'إغلاق') + '</button>' +
+                    '</div></div></article>';
             }).join('');
+        }
+
+        function getQuoteProductSummary(entry) {
+            return (entry.lines || []).map(function(l) {
+                return (l.productTitle || l.productId || '') + ' ×' + (Number(l.qty) || 1);
+            }).join(' | ') || 'طلب متجر';
         }
 
         function registerQuoteAsSale(entry) {
             if (!entry) return;
             const exists = (salesData || []).some(function(s) { return s.quoteId === entry.id || s.quoteNo === entry.quoteNo; });
             if (exists) return;
-            const productSummary = (entry.lines || []).map(function(l) {
-                return (l.productTitle || l.productId || '') + ' ×' + (Number(l.qty) || 1);
-            }).join(' | ');
-            salesData.push({
+            salesData.unshift({
                 id: 'sale-' + Date.now(),
                 quoteId: entry.id,
                 quoteNo: entry.quoteNo || '',
                 customerName: entry.customerName || '',
                 phone: entry.phone || '',
-                product: productSummary || 'طلب متجر',
+                branch: entry.city || entry.branch || '',
+                product: getQuoteProductSummary(entry),
                 amount: Number(entry.totalIncVat) || Number(entry.total) || 0,
-                date: formatNebrasDateTime(entry.at || Date.now(), 'ar', { year: 'numeric', month: '2-digit', day: '2-digit' }),
-                source: 'quote-converted'
+                date: fieldVal('sale-date') ? fieldVal('sale-date') : erpToday(),
+                source: 'quote-converted',
+                by: erpActor()
             });
             saveSystemData();
             displaySales();
             renderErpHubPanel();
+        }
+
+        async function convertQuoteToOrder(entryId, options) {
+            options = options || {};
+            if (!canManage('orders') && !canManage('sales')) {
+                alert('صلاحية الطلبات أو المبيعات مطلوبة.');
+                return;
+            }
+            let entry = loadSalesQuotesInbox().find(function(e) { return e.id === entryId; });
+            if (!entry) {
+                const cloudInbox = await fetchSalesQuotesFromCloud();
+                entry = cloudInbox.find(function(e) { return e.id === entryId; });
+            }
+            if (!entry) { alert('لم يُعثر على العرض.'); return; }
+            if (entry.convertedToOrder) { alert('تم تحويل هذا العرض لطلب مسبقاً.'); return; }
+            const existing = (erpOrders || []).find(function(o) { return o.quoteRef === entry.quoteNo || o.quoteId === entry.id; });
+            if (existing) {
+                alert('يوجد طلب مرتبط: ' + (existing.orderNo || existing.id));
+                return;
+            }
+            ensureBuiltinErpData();
+            const orderNo = 'NB-' + new Date().getFullYear() + '-' + String(erpOrders.length + 1).padStart(4, '0');
+            const order = {
+                id: 'ORD-' + Date.now(),
+                orderNo: orderNo,
+                quoteId: entry.id,
+                quoteRef: entry.quoteNo || '',
+                date: erpToday(),
+                customer: entry.customerName || '—',
+                phone: entry.phone || '',
+                branch: entry.city || entry.branch || '',
+                product: getQuoteProductSummary(entry),
+                qty: (entry.lines || []).reduce(function(s, l) { return s + (Number(l.qty) || 1); }, 0) || 1,
+                status: 'confirmed',
+                notes: entry.note || '',
+                by: erpActor(),
+                createdAt: new Date().toISOString()
+            };
+            erpOrders.unshift(order);
+            entry.convertedToOrder = true;
+            entry.orderId = order.id;
+            entry.orderNo = order.orderNo;
+            const inbox = loadSalesQuotesInbox();
+            const localEntry = inbox.find(function(e) { return e.id === entryId; });
+            if (localEntry) {
+                Object.assign(localEntry, { convertedToOrder: true, orderId: order.id, orderNo: order.orderNo });
+                saveSalesQuotesInbox(inbox);
+            }
+            saveSystemData();
+            displaySalesQuotesInbox();
+            if (currentAdmin) {
+                renderDashboardCommandShell(currentAdmin);
+                renderErpHubPanel();
+            }
+            addAuditLog('تحويل عرض → طلب OMS', (entry.quoteNo || entryId) + ' → ' + orderNo);
+            if (!options.silent && confirm('تم إنشاء الطلب ' + orderNo + '.\n\nفتح وحدة الطلبات OMS الآن؟')) {
+                openErpOrders();
+            }
         }
 
         async function markSalesQuoteStatus(entryId, status) {
@@ -6868,6 +7005,9 @@
                     entry.quoteType = 'sale';
                     entry.soldAt = Date.now();
                     registerQuoteAsSale(entry);
+                    if (!entry.convertedToOrder && canManage('orders')) {
+                        await convertQuoteToOrder(entryId, { silent: true });
+                    }
                 }
                 saveSalesQuotesInbox(inbox);
             }
@@ -9750,10 +9890,12 @@
         // مبيعات مسجّلة (يدوياً أو من تحويل عرض سعر → بيع)
         let salesData = [];
 
-        // Sample customer service data
-        let customerServiceData = [
-            { id: 1, inquiry: 'استفسار عن المنتجات', response: 'تم الرد' },
-            { id: 2, inquiry: 'شكوى من الجودة', response: 'قيد المراجعة' }
+        let customerServiceData = [];
+        const CS_STATUSES = [
+            { id: 'new', label: 'جديد' },
+            { id: 'contacted', label: 'تم التواصل' },
+            { id: 'in_progress', label: 'قيد المتابعة' },
+            { id: 'resolved', label: 'مُغلق' }
         ];
 
         const VISITOR_BRANCH_KEY = 'nebras_visitor_branch_id';
@@ -12345,6 +12487,7 @@
         function openSalesManagement() {
             if (!requirePermission('sales')) return;
             document.getElementById('sales-management').classList.add('show');
+            renderSalesManagementForm();
             displaySales();
             displaySalesQuotesInbox();
             updateSalesInboxBadge();
@@ -12353,6 +12496,8 @@
         function openCustomerServiceManagement() {
             if (!requirePermission('customerService')) return;
             document.getElementById('customer-service-management').classList.add('show');
+            renderCustomerServiceForm();
+            displayCustomerService();
         }
 
         function openComplaintsManagement() {
@@ -17837,24 +17982,94 @@
             }
         }
 
+        function renderSalesManagementForm() {
+            const host = document.getElementById('sales-management-form');
+            if (!host) return;
+            const branchOpts = buildErpSelectOptions(getBranchCityOptions().length ? getBranchCityOptions() : ['القصيم — الرئيسي'], '');
+            host.innerHTML =
+                '<div class="erp-form-grid">' +
+                    '<label class="nebras-field"><span>التاريخ</span><input type="date" id="sale-date" value="' + erpToday() + '"></label>' +
+                    '<label class="nebras-field"><span>اسم العميل</span><input type="text" id="sale-customer" placeholder="اسم العميل"></label>' +
+                    '<label class="nebras-field"><span>الجوال</span><input type="tel" id="sale-phone" placeholder="05xxxxxxxx"></label>' +
+                    '<label class="nebras-field"><span>الفرع</span><select id="sale-branch"><option value="">—</option>' + branchOpts + '</select></label>' +
+                    '<label class="nebras-field"><span>المنتج / الوصف</span><input type="text" id="sale-product" placeholder="باب WPC 90×210"></label>' +
+                    '<label class="nebras-field"><span>المبلغ (ر.س)</span><input type="number" id="sale-amount" min="0" step="any" placeholder="0"></label>' +
+                    '<label class="nebras-field"><span>طريقة الدفع</span><select id="sale-payment"><option value="transfer">تحويل بنكي</option><option value="cash">نقدي</option><option value="credit">آجل</option></select></label>' +
+                    '<label class="nebras-field nebras-field--wide"><span>ملاحظات</span><input type="text" id="sale-notes" placeholder="اختياري"></label>' +
+                '</div>' +
+                '<div class="erp-form-actions"><button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="addNewSale()"><i class="fas fa-plus"></i> تسجيل البيع</button></div>';
+        }
+
         function displaySales() {
             const list = document.getElementById('sales-list');
-            list.innerHTML = salesData.map(sale => `<li>${sale.product} - ${sale.amount} SAR - ${sale.date}</li>`).join('');
+            if (!list) return;
+            const total = (salesData || []).reduce(function(s, x) { return s + erpNum(x.amount); }, 0);
+            const fromQuotes = (salesData || []).filter(function(s) { return s.source === 'quote-converted'; }).length;
+            const summary = document.getElementById('sales-management-summary');
+            if (summary) {
+                summary.innerHTML =
+                    '<div class="erp-stat"><strong>' + (salesData || []).length + '</strong><span>عمليات مبيعات</span></div>' +
+                    '<div class="erp-stat erp-stat--accent"><strong>' + formatSar(total) + '</strong><span>إجمالي المبيعات</span></div>' +
+                    '<div class="erp-stat"><strong>' + fromQuotes + '</strong><span>من عروض الأسعار</span></div>';
+            }
+            if (!(salesData || []).length) {
+                list.innerHTML = '<p class="erp-empty">لا مبيعات مسجّلة — من النموذج أو تحويل عرض سعر.</p>';
+                return;
+            }
+            list.innerHTML = salesData.map(function(sale) {
+                const srcTag = sale.source === 'quote-converted'
+                    ? '<span class="erp-tag erp-tag--ok">من عرض سعر</span>'
+                    : '<span class="erp-tag">يدوي</span>';
+                return '<article class="erp-row">' +
+                    '<div class="erp-row-main"><strong>' + escapeHtmlAttr(sale.customerName || sale.product || '—') + '</strong>' +
+                        '<span class="erp-row-tags">' + srcTag +
+                            (sale.quoteNo ? '<span class="erp-tag">' + escapeHtmlAttr(sale.quoteNo) + '</span>' : '') +
+                            (sale.branch ? '<span class="erp-tag">' + escapeHtmlAttr(sale.branch) + '</span>' : '') + '</span>' +
+                        '<small>' + escapeHtmlAttr(sale.date || '') + ' · ' + escapeHtmlAttr(sale.product || '') +
+                            (sale.phone ? ' · ' + escapeHtmlAttr(sale.phone) : '') + '</small>' +
+                    '</div>' +
+                    '<div class="erp-row-qty">' + formatSar(sale.amount) + '</div>' +
+                    '<button type="button" class="erp-row-del" onclick="deleteSaleEntry(\'' + sale.id + '\')" aria-label="حذف"><i class="fas fa-trash"></i></button>' +
+                '</article>';
+            }).join('');
         }
 
         function addNewSale() {
             if (!requirePermission('sales')) return;
-            const product = prompt('أدخل اسم المنتج:');
-            const amount = prompt('أدخل المبلغ:');
-            const date = prompt('أدخل التاريخ:');
-            if (product && amount && date) {
-                salesData.push({ id: salesData.length + 1, product, amount: parseFloat(amount), date });
-                alert('تم إضافة البيع بنجاح');
-                displaySales();
-                renderErpHubPanel();
-                addAuditLog('إضافة بيع', `${product} بقيمة ${amount}`);
-            }
+            const product = fieldVal('sale-product');
+            const amount = erpNum(fieldVal('sale-amount'));
+            if (!product || amount <= 0) { alert('المنتج والمبلغ مطلوبان.'); return; }
+            salesData.unshift({
+                id: 'sale-' + Date.now(),
+                customerName: fieldVal('sale-customer'),
+                phone: fieldVal('sale-phone'),
+                branch: fieldVal('sale-branch'),
+                product: product,
+                amount: amount,
+                payment: fieldVal('sale-payment') || 'transfer',
+                notes: fieldVal('sale-notes'),
+                date: fieldVal('sale-date') || erpToday(),
+                source: 'manual',
+                by: erpActor()
+            });
+            saveSystemData();
+            renderSalesManagementForm();
+            displaySales();
+            renderErpHubPanel();
+            if (currentAdmin) renderDashboardCommandShell(currentAdmin);
+            addAuditLog('إضافة بيع', product + ' — ' + formatSar(amount));
         }
+
+        function deleteSaleEntry(id) {
+            if (!requirePermission('sales')) return;
+            if (!confirm('حذف عملية البيع؟')) return;
+            salesData = (salesData || []).filter(function(s) { return s.id !== id; });
+            saveSystemData();
+            displaySales();
+            renderErpHubPanel();
+        }
+
+        function addNewSaleLegacy() { addNewSale(); }
 
         function displayComplaints() {
             const list = document.getElementById('complaints-list');
@@ -17903,9 +18118,109 @@
             addAuditLog('تحديث شكوى', `تم تحديث الشكوى ${complaintId} إلى ${newStatus}`);
         }
 
+        function ensureCustomerServiceData() {
+            if (!Array.isArray(customerServiceData)) customerServiceData = [];
+        }
+
+        function renderCustomerServiceForm() {
+            const host = document.getElementById('customer-service-form');
+            if (!host) return;
+            const branchOpts = buildErpSelectOptions(getBranchCityOptions().length ? getBranchCityOptions() : ['القصيم — الرئيسي'], '');
+            const statusOpts = CS_STATUSES.map(function(s) {
+                return '<option value="' + s.id + '">' + s.label + '</option>';
+            }).join('');
+            host.innerHTML =
+                '<h3 class="nebras-erp-subhead"><i class="fas fa-plus-circle"></i> تسجيل استفسار / متابعة</h3>' +
+                '<div class="erp-form-grid">' +
+                    '<label class="nebras-field"><span>اسم العميل</span><input type="text" id="cs-customer" placeholder="اسم العميل"></label>' +
+                    '<label class="nebras-field"><span>الجوال</span><input type="tel" id="cs-phone" placeholder="05xxxxxxxx"></label>' +
+                    '<label class="nebras-field"><span>الفرع</span><select id="cs-branch"><option value="">—</option>' + branchOpts + '</select></label>' +
+                    '<label class="nebras-field"><span>الحالة</span><select id="cs-status">' + statusOpts + '</select></label>' +
+                    '<label class="nebras-field nebras-field--wide"><span>الاستفسار / الطلب</span><input type="text" id="cs-inquiry" placeholder="استفسار العميل"></label>' +
+                    '<label class="nebras-field nebras-field--wide"><span>الرد / الملاحظات</span><input type="text" id="cs-response" placeholder="ما تم الرد به"></label>' +
+                '</div>' +
+                '<div class="erp-form-actions"><button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="addCustomerServiceEntry()"><i class="fas fa-plus"></i> إضافة</button></div>';
+        }
+
+        function addCustomerServiceEntry() {
+            if (!requirePermission('customerService')) return;
+            ensureCustomerServiceData();
+            const inquiry = fieldVal('cs-inquiry');
+            if (!inquiry) { alert('أدخل نص الاستفسار.'); return; }
+            customerServiceData.unshift({
+                id: 'cs-' + Date.now(),
+                customerName: fieldVal('cs-customer'),
+                phone: fieldVal('cs-phone'),
+                branch: fieldVal('cs-branch'),
+                inquiry: inquiry,
+                response: fieldVal('cs-response'),
+                status: fieldVal('cs-status') || 'new',
+                date: erpToday(),
+                by: erpActor(),
+                createdAt: new Date().toISOString()
+            });
+            saveSystemData();
+            renderCustomerServiceForm();
+            displayCustomerService();
+            addAuditLog('خدمة عملاء', inquiry.slice(0, 60));
+        }
+
+        function updateCustomerServiceStatus(id, status) {
+            if (!requirePermission('customerService')) return;
+            const item = customerServiceData.find(function(x) { return x.id === id; });
+            if (!item) return;
+            item.status = status;
+            item.updatedAt = new Date().toISOString();
+            saveSystemData();
+            displayCustomerService();
+        }
+
+        function deleteCustomerServiceEntry(id) {
+            if (!requirePermission('customerService')) return;
+            if (!confirm('حذف هذا السجل؟')) return;
+            customerServiceData = customerServiceData.filter(function(x) { return x.id !== id; });
+            saveSystemData();
+            displayCustomerService();
+        }
+
         function displayCustomerService() {
             const list = document.getElementById('customer-service-list');
-            list.innerHTML = customerServiceData.map(item => `<li>${item.inquiry} - ${item.response}</li>`).join('');
+            if (!list) return;
+            ensureCustomerServiceData();
+            const statusMap = {};
+            CS_STATUSES.forEach(function(s) { statusMap[s.id] = s.label; });
+            const openCount = customerServiceData.filter(function(x) {
+                return x.status !== 'resolved';
+            }).length;
+            const summary = document.getElementById('customer-service-summary');
+            if (summary) {
+                summary.innerHTML =
+                    '<div class="erp-stat"><strong>' + customerServiceData.length + '</strong><span>سجلات CRM</span></div>' +
+                    '<div class="erp-stat' + (openCount ? ' erp-stat--alert' : '') + '"><strong>' + openCount + '</strong><span>مفتوحة</span></div>';
+            }
+            if (!customerServiceData.length) {
+                list.innerHTML = '<p class="erp-empty">لا استفسارات — أضيفوا من النموذج.</p>';
+                return;
+            }
+            list.innerHTML = customerServiceData.map(function(item) {
+                const st = item.status || 'new';
+                const phoneLink = item.phone
+                    ? ' <a class="analytics-tel-link" href="tel:' + escapeHtmlAttr(item.phone) + '"><i class="fas fa-phone"></i> ' + escapeHtmlAttr(item.phone) + '</a>'
+                    : '';
+                const actions = CS_STATUSES.filter(function(s) { return s.id !== st; }).slice(0, 2).map(function(s) {
+                    return '<button type="button" class="erp-tag erp-tag--action" onclick="updateCustomerServiceStatus(\'' + item.id + '\',\'' + s.id + '\')">' + s.label + '</button>';
+                }).join('');
+                return '<article class="erp-row' + (st !== 'resolved' ? '' : ' erp-row--muted') + '">' +
+                    '<div class="erp-row-main"><strong>' + escapeHtmlAttr(item.customerName || 'عميل') + '</strong>' +
+                        '<span class="erp-row-tags"><span class="erp-tag erp-tag--status-' + escapeHtmlAttr(st === 'in_progress' ? 'pending' : st) + '">' + escapeHtmlAttr(statusMap[st] || st) + '</span>' +
+                            (item.branch ? '<span class="erp-tag">' + escapeHtmlAttr(item.branch) + '</span>' : '') + '</span>' +
+                        '<small>' + escapeHtmlAttr(item.date || '') + phoneLink + '<br>' + escapeHtmlAttr(item.inquiry || '') +
+                            (item.response ? '<br>↳ ' + escapeHtmlAttr(item.response) : '') + '</small>' +
+                        (actions ? '<div class="erp-row-quick-actions">' + actions + '</div>' : '') +
+                    '</div>' +
+                    '<button type="button" class="erp-row-del" onclick="deleteCustomerServiceEntry(\'' + item.id + '\')" aria-label="حذف"><i class="fas fa-trash"></i></button>' +
+                '</article>';
+            }).join('');
         }
 
         function buildBranchCardsHtml(lang) {
@@ -18077,6 +18392,7 @@
                 ensureVisitorAnalytics();
             }},
             { key: 'sales_data', get: function() { return salesData; }, set: function(v) { salesData = Array.isArray(v) ? v : []; } },
+            { key: 'customer_service', get: function() { return customerServiceData; }, set: function(v) { customerServiceData = Array.isArray(v) ? v : []; } },
             { key: 'sales_quotes_inbox', get: function() { return loadSalesQuotesInbox(); }, set: function(v) {
                 saveSalesQuotesInboxLocalOnly(Array.isArray(v) ? v : []);
             }},
@@ -18266,6 +18582,7 @@
             localStorage.setItem('nebrasSiteCertifications', JSON.stringify(siteCertifications));
             localStorage.setItem('nebrasShowroomGallery', JSON.stringify(ensureShowroomGallery()));
             localStorage.setItem('nebrasSalesData', JSON.stringify(salesData || []));
+            localStorage.setItem('nebrasCustomerService', JSON.stringify(customerServiceData || []));
             ensureVisitorAnalytics();
             localStorage.setItem(VISITOR_ANALYTICS_KEY, JSON.stringify(visitorAnalytics));
             if (typeof saveCallbackLeads === 'function') saveCallbackLeads();
@@ -18362,6 +18679,11 @@
             if (savedSalesData) {
                 try { salesData = JSON.parse(savedSalesData); } catch (e) { console.warn('Sales data parse error', e); }
             }
+            try {
+                const v = localStorage.getItem('nebrasCustomerService');
+                if (v) customerServiceData = JSON.parse(v);
+            } catch (e) { console.warn('Customer service parse error', e); }
+            ensureCustomerServiceData();
             if (!Array.isArray(salesData)) salesData = [];
             if (savedVisitorAnalytics) {
                 try {
@@ -21003,6 +21325,12 @@
         window.openBranchesManagement = openBranchesManagement;
         window.openAuditLog = openAuditLog;
         window.markSalesQuoteStatus = markSalesQuoteStatus;
+        window.convertQuoteToOrder = convertQuoteToOrder;
+        window.addNewSale = addNewSale;
+        window.deleteSaleEntry = deleteSaleEntry;
+        window.addCustomerServiceEntry = addCustomerServiceEntry;
+        window.updateCustomerServiceStatus = updateCustomerServiceStatus;
+        window.deleteCustomerServiceEntry = deleteCustomerServiceEntry;
         window.dialNumber = dialNumber;
         window.smartRouteToSales = smartRouteToSales;
         window.openNebrasWorkspace = openNebrasWorkspace;
