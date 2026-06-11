@@ -917,12 +917,12 @@ html[dir="rtl"] .nebras-partners-track--reverse:not(.nebras-partners-track--stat
 }
 
 .dashboard-tile-card.card-production::before { background-image: linear-gradient(135deg, rgba(13, 40, 64, 0.72), rgba(21, 94, 148, 0.55)), url('../images/wpc-background.avif'); }
-.dashboard-tile-card.card-procurement::before { background-image: linear-gradient(135deg, rgba(13, 40, 64, 0.72), rgba(124, 58, 237, 0.45)), url('../images/pvc-background.jpg'); }
-.dashboard-tile-card.card-accounting::before { background-image: linear-gradient(135deg, rgba(13, 40, 64, 0.72), rgba(46, 204, 113, 0.45)), url('../images/background.jpeg'); }
+.dashboard-tile-card.card-procurement::before { background-image: linear-gradient(135deg, rgba(13, 40, 64, 0.72), rgba(124, 58, 237, 0.45)), url('../images/pvc-background.avif'); }
+.dashboard-tile-card.card-accounting::before { background-image: linear-gradient(135deg, rgba(13, 40, 64, 0.72), rgba(46, 204, 113, 0.45)), url('../images/background.png'); }
 .dashboard-tile-card.card-pricelist::before { background-image: linear-gradient(135deg, rgba(13, 40, 64, 0.72), rgba(212, 175, 55, 0.45)), url('../images/hero-slide-06-color-catalog.png'); }
 .dashboard-tile-card.card-rep-quotes::before { background-image: linear-gradient(135deg, rgba(13, 40, 64, 0.72), rgba(56, 189, 248, 0.45)), url('../images/profile-2026/hero-cover.jpg'); }
-.dashboard-tile-card.card-orders::before { background-image: linear-gradient(135deg, rgba(13, 40, 64, 0.72), rgba(3, 105, 161, 0.45)), url('../images/background.jpeg'); }
-.dashboard-tile-card.card-warehouse-transfers::before { background-image: linear-gradient(135deg, rgba(13, 40, 64, 0.72), rgba(192, 57, 43, 0.4)), url('../images/pvc-background.jpg'); }
+.dashboard-tile-card.card-orders::before { background-image: linear-gradient(135deg, rgba(13, 40, 64, 0.72), rgba(3, 105, 161, 0.45)), url('../images/background.png'); }
+.dashboard-tile-card.card-warehouse-transfers::before { background-image: linear-gradient(135deg, rgba(13, 40, 64, 0.72), rgba(192, 57, 43, 0.4)), url('../images/pvc-background.avif'); }
 
 .dashboard-tile-card--callback .dashboard-tile-icon {
     background: linear-gradient(135deg, #062e44, #1a8fa8);
