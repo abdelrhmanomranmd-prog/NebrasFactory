@@ -90,6 +90,8 @@
     <link rel="stylesheet" href="css/28-erp-dashboard-shell.css">
     <link rel="stylesheet" href="css/29-scm-professional.css">
     <link rel="stylesheet" href="css/30-platform-settings-audit.css">
+    <link rel="stylesheet" href="css/31-cloud-security.css">
+    <link rel="stylesheet" href="css/32-executive-reports.css">
 </head>
 <body id="nebras-platform" class="platform-storefront" data-platform-layer="storefront">
 
@@ -836,6 +838,29 @@
         </div>
     </div>
 
+    <div class="admin-section" id="branch-team-management">
+        <div class="admin-modal site-content-modal nebras-users-modal nebras-branch-team-modal">
+            <div class="nebras-users-head">
+                <div class="nebras-users-head-title">
+                    <i class="fas fa-user-group" aria-hidden="true"></i>
+                    <div>
+                        <h2>فريق مبيعات الفرع</h2>
+                        <p class="nebras-users-sub" id="branch-team-subtitle">مدير المبيعات يضيف مندوبي المبيعات لفرعه فقط — الصلاحيات والأدوار العامة للإدارة الرئيسية.</p>
+                    </div>
+                </div>
+                <button type="button" class="nebras-users-close" onclick="closeAdminSection('branch-team-management')" aria-label="إغلاق"><i class="fas fa-xmark"></i></button>
+            </div>
+            <p class="branch-team-hint" id="branch-team-hint"><i class="fas fa-circle-info"></i> أضيفي مندوبي مبيعات لفرعك — يستطيعون إنشاء عروض الأسعار من قائمة الأسعار المعتمدة.</p>
+            <div class="nebras-users-toolbar">
+                <button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="openBranchRepEditor()"><i class="fas fa-user-plus"></i> مندوب جديد</button>
+                <button type="button" class="nebras-users-btn" onclick="openAccountSecurity()"><i class="fas fa-shield-halved"></i> أمان حسابي</button>
+            </div>
+            <div class="nebras-users-stats" id="branch-team-stats"></div>
+            <div class="nebras-users-editor" id="branch-team-editor" hidden></div>
+            <div class="nebras-users-grid" id="branch-team-list"></div>
+        </div>
+    </div>
+
     <div class="admin-section" id="erp-inventory">
         <div class="admin-modal site-content-modal nebras-erp-modal">
             <div class="nebras-erp-head">
@@ -855,6 +880,7 @@
                 <button type="button" class="nebras-users-close" onclick="closeAdminSection('erp-orders')" aria-label="إغلاق"><i class="fas fa-xmark"></i></button>
             </div>
             <div class="nebras-erp-stats" id="erp-orders-summary"></div>
+            <div class="scm-panel-toolbar audit-toolbar" id="erp-orders-toolbar"></div>
             <div class="nebras-erp-form" id="erp-orders-form"></div>
             <div class="nebras-erp-list" id="erp-orders-list"></div>
         </div>
@@ -1022,6 +1048,39 @@
         </div>
     </div>
 
+    <div class="admin-section" id="executive-reports">
+        <div class="admin-modal site-content-modal nebras-erp-modal nebras-executive-reports-modal">
+            <div class="nebras-erp-head">
+                <div class="nebras-erp-head-title"><i class="fas fa-chart-bar"></i><div><h2>التقارير التنفيذية</h2><p>يومي · شهري · سنوي — كل الأقسام والفروع لصاحب الشركة</p></div></div>
+                <button type="button" class="nebras-users-close" onclick="closeAdminSection('executive-reports')" aria-label="إغلاق"><i class="fas fa-xmark"></i></button>
+            </div>
+            <div class="nebras-erp-stats" id="executive-reports-summary"></div>
+            <div class="scm-panel-toolbar executive-reports-toolbar">
+                <div class="exec-report-period-tabs" id="exec-report-period-tabs">
+                    <button type="button" class="exec-report-period-btn is-active" data-period="daily" onclick="setExecutiveReportPeriod('daily')"><i class="fas fa-sun"></i> يومي</button>
+                    <button type="button" class="exec-report-period-btn" data-period="monthly" onclick="setExecutiveReportPeriod('monthly')"><i class="fas fa-calendar"></i> شهري</button>
+                    <button type="button" class="exec-report-period-btn" data-period="yearly" onclick="setExecutiveReportPeriod('yearly')"><i class="fas fa-calendar-alt"></i> سنوي</button>
+                </div>
+                <select id="exec-report-dept" class="exec-report-filter-select" onchange="setExecutiveReportDept(this.value)" aria-label="القسم">
+                    <option value="all">كل الأقسام</option>
+                    <option value="sales">المبيعات</option>
+                    <option value="orders">الطلبات OMS</option>
+                    <option value="production">الإنتاج</option>
+                    <option value="warehouse">المستودع</option>
+                    <option value="accounting">المحاسبة</option>
+                    <option value="complaints">الشكاوى</option>
+                    <option value="crm">خدمة العملاء</option>
+                </select>
+                <select id="exec-report-branch" class="exec-report-filter-select" onchange="setExecutiveReportBranch(this.value)" aria-label="الفرع" hidden>
+                    <option value="">كل الفروع</option>
+                </select>
+                <button type="button" class="secondary" onclick="exportExecutiveReportCsv()"><i class="fas fa-file-csv"></i> تصدير CSV</button>
+                <button type="button" class="secondary" onclick="printExecutiveReport()"><i class="fas fa-print"></i> طباعة</button>
+            </div>
+            <div id="executive-reports-body"></div>
+        </div>
+    </div>
+
     <div class="admin-section" id="system-settings">
         <div class="admin-modal site-content-modal nebras-erp-modal nebras-settings-modal">
             <div class="nebras-erp-head">
@@ -1173,12 +1232,54 @@
     </div>
 
     <div class="admin-section" id="account-security">
-        <div class="admin-modal">
-            <h2>أمان حساب الإدارة</h2>
-            <button type="button" id="account-security-direct-btn" onclick="changeAdminCredentialsByOldPassword()">تغيير البيانات بكلمة المرور القديمة</button>
-            <button type="button" id="account-security-email-btn" onclick="sendRecoveryCodeToEmail()">استرجاع/تغيير عبر الإيميل</button>
-            <p id="account-security-status" class="status"></p>
-            <button onclick="closeAdminSection('account-security')">إغلاق</button>
+        <div class="admin-modal site-content-modal nebras-erp-modal nebras-security-modal">
+            <div class="nebras-erp-head">
+                <div class="nebras-erp-head-title"><i class="fas fa-shield-halved"></i><div><h2>أمان حساب الإدارة</h2><p>تغيير كلمة المرور · استرجاع عبر Gmail المعتمد</p></div></div>
+                <button type="button" class="nebras-users-close" onclick="closeAdminSection('account-security')" aria-label="إغلاق"><i class="fas fa-xmark"></i></button>
+            </div>
+            <div class="nebras-erp-stats" id="account-security-summary"></div>
+            <p id="account-security-status" class="account-security-hint"></p>
+            <div class="account-security-grid">
+                <section class="nebras-erp-form account-security-card" id="account-security-direct-panel">
+                    <h3 class="nebras-erp-subhead"><i class="fas fa-key"></i> تغيير مباشر (موظفو الإدارة)</h3>
+                    <div class="settings-form-grid">
+                        <label class="nebras-field"><span>كلمة المرور الحالية</span><input type="password" id="sec-old-password" autocomplete="current-password"></label>
+                        <label class="nebras-field"><span>اسم المستخدم الجديد</span><input type="text" id="sec-new-username" autocomplete="username"></label>
+                        <label class="nebras-field"><span>كلمة المرور الجديدة</span><input type="password" id="sec-new-password" autocomplete="new-password"></label>
+                        <label class="nebras-field"><span>تأكيد كلمة المرور</span><input type="password" id="sec-new-password-confirm" autocomplete="new-password"></label>
+                    </div>
+                    <div class="erp-form-actions">
+                        <button type="button" class="primary" id="account-security-direct-btn" onclick="submitAccountSecurityDirect()"><i class="fas fa-check"></i> حفظ التغييرات</button>
+                    </div>
+                </section>
+                <section class="nebras-erp-form account-security-card" id="account-security-email-panel">
+                    <h3 class="nebras-erp-subhead"><i class="fas fa-envelope"></i> عبر Gmail المعتمد</h3>
+                    <div class="settings-form-grid">
+                        <label class="nebras-field nebras-field--wide"><span>إيميل الإدارة الرئيسية</span><input type="email" id="sec-recovery-email" readonly dir="ltr"></label>
+                        <label class="nebras-field"><span>رمز التحقق</span><input type="text" id="sec-recovery-code" inputmode="numeric" placeholder="6 أرقام" dir="ltr"></label>
+                        <label class="nebras-field"><span>كلمة المرور الجديدة</span><input type="password" id="sec-email-new-password" autocomplete="new-password"></label>
+                    </div>
+                    <div class="erp-form-actions">
+                        <button type="button" class="secondary" id="account-security-email-btn" onclick="sendRecoveryCodeToEmail()"><i class="fas fa-paper-plane"></i> إرسال رمز التحقق</button>
+                        <button type="button" class="primary" onclick="submitAccountSecurityEmailRecovery()"><i class="fas fa-lock"></i> تأكيد وتغيير كلمة المرور</button>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </div>
+
+    <div class="admin-section" id="cloud-governance">
+        <div class="admin-modal site-content-modal nebras-erp-modal nebras-cloud-modal">
+            <div class="nebras-erp-head">
+                <div class="nebras-erp-head-title"><i class="fas fa-cloud"></i><div><h2>الحوكمة السحابية</h2><p>Supabase · مزامنة البيانات · 25+ مخزن</p></div></div>
+                <button type="button" class="nebras-users-close" onclick="closeAdminSection('cloud-governance')" aria-label="إغلاق"><i class="fas fa-xmark"></i></button>
+            </div>
+            <div class="nebras-erp-stats" id="cloud-governance-summary"></div>
+            <div class="scm-panel-toolbar cloud-governance-toolbar">
+                <button type="button" class="primary" onclick="syncPushToNebrasCloudNow()"><i class="fas fa-cloud-upload-alt"></i> رفع للسحابة الآن</button>
+                <button type="button" class="secondary" onclick="syncLoadFromNebrasCloudNow()"><i class="fas fa-cloud-download-alt"></i> تحميل من السحابة</button>
+            </div>
+            <div class="nebras-erp-list" id="cloud-governance-stores"></div>
         </div>
     </div>
 

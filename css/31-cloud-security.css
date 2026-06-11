@@ -1,0 +1,83 @@
+/* أمان الحساب + الحوكمة السحابية */
+
+.nebras-security-modal,
+.nebras-cloud-modal {
+    max-width: 1080px;
+    width: min(96vw, 1080px);
+}
+
+.account-security-hint {
+    margin: 0 24px 12px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: rgba(10, 77, 140, 0.06);
+    border: 1px solid rgba(10, 77, 140, 0.12);
+    font-size: 0.84rem;
+    line-height: 1.55;
+    color: #0d2233;
+}
+
+.account-security-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+    padding: 0 24px 20px;
+}
+
+.account-security-card {
+    margin: 0;
+}
+
+.account-security-card[hidden] {
+    display: none !important;
+}
+
+.dashboard-command-sync--clickable {
+    cursor: pointer;
+    border: none;
+    font-family: inherit;
+    font-size: inherit;
+    text-align: inherit;
+    padding: 6px 10px;
+    border-radius: 999px;
+    transition: background 0.18s, transform 0.18s;
+}
+
+.dashboard-command-sync--clickable:hover {
+    background: rgba(255, 255, 255, 0.12);
+    transform: translateY(-1px);
+}
+
+.cloud-governance-toolbar {
+    padding: 0 24px 10px;
+}
+
+.cloud-store-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.cloud-store-row .erp-row-main small {
+    font-family: ui-monospace, monospace;
+    font-size: 0.72rem;
+    opacity: 0.85;
+}
+
+.cloud-store-badge {
+    font-size: 0.72rem;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: rgba(10, 77, 140, 0.1);
+    color: #0a4d8c;
+    white-space: nowrap;
+}
+
+.cloud-store-badge--erp {
+    background: rgba(27, 158, 87, 0.12);
+    color: #1b9e57;
+}
+
+@media (max-width: 820px) {
+    .account-security-grid { grid-template-columns: 1fr; }
+}

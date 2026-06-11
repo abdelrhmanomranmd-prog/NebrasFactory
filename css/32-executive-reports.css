@@ -1,0 +1,151 @@
+/* تقارير الإدارة التنفيذية — يومي · شهري · سنوي */
+.nebras-executive-reports-modal .nebras-erp-head-title p {
+    color: #5a6a7a;
+    font-size: 0.82rem;
+}
+
+.executive-reports-toolbar {
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+}
+
+.exec-report-period-tabs {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.exec-report-period-btn {
+    border: 1px solid rgba(10, 77, 140, 0.2);
+    background: #fff;
+    color: #0a4d8c;
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+
+.exec-report-period-btn.is-active {
+    background: #0a4d8c;
+    color: #fff;
+    border-color: #0a4d8c;
+}
+
+.exec-report-filter-select {
+    min-width: 140px;
+    padding: 7px 10px;
+    border-radius: 8px;
+    border: 1px solid #d5dde6;
+    font-size: 0.82rem;
+}
+
+.executive-reports-owner-note {
+    margin: 0 0 12px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.12), rgba(10, 77, 140, 0.06));
+    border: 1px solid rgba(212, 175, 55, 0.35);
+    font-size: 0.84rem;
+    color: #3d4f5f;
+}
+
+.executive-reports-owner-note i {
+    color: #b8860b;
+    margin-left: 6px;
+}
+
+.exec-report-dept-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.exec-report-dept-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 14px;
+    background: #fff;
+}
+
+.exec-report-dept-card h4 {
+    margin: 0 0 10px;
+    font-size: 0.9rem;
+    color: #0a4d8c;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.exec-report-kpi-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.exec-report-kpi {
+    flex: 1 1 80px;
+    min-width: 70px;
+    text-align: center;
+    padding: 8px 6px;
+    border-radius: 8px;
+    background: #f4f7fb;
+}
+
+.exec-report-kpi strong {
+    display: block;
+    font-size: 1.1rem;
+    color: #1a2a3a;
+}
+
+.exec-report-kpi span {
+    font-size: 0.68rem;
+    color: #6a7888;
+}
+
+.exec-report-detail {
+    margin-top: 8px;
+}
+
+.exec-report-detail h5 {
+    margin: 14px 0 8px;
+    font-size: 0.85rem;
+    color: #2c3e50;
+}
+
+.exec-report-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.78rem;
+}
+
+.exec-report-table th,
+.exec-report-table td {
+    padding: 7px 8px;
+    border-bottom: 1px solid #e8edf2;
+    text-align: right;
+}
+
+.exec-report-table th {
+    background: #f4f7fb;
+    color: #4a5a6a;
+    font-weight: 600;
+}
+
+.branch-team-hint {
+    margin: 0 0 12px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: rgba(27, 158, 87, 0.08);
+    border: 1px solid rgba(27, 158, 87, 0.25);
+    font-size: 0.84rem;
+    color: #2d5a3d;
+}
+
+.branch-team-hint i { margin-left: 6px; }
+
+@media (max-width: 640px) {
+    .exec-report-dept-grid { grid-template-columns: 1fr; }
+}
