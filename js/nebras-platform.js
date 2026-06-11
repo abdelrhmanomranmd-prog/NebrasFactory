@@ -11763,6 +11763,7 @@
                 alert(t.channelsSettingsSuperAdminOnly || '');
                 return;
             }
+            settingsActiveTab = 'social';
             openSystemSettings();
         }
 
@@ -12671,6 +12672,20 @@
             displayBranchesAdmin();
         }
 
+        let settingsActiveTab = 'contacts';
+        let auditLogFilterQuery = '';
+        let auditLogFilterAction = '';
+
+        function switchSettingsTab(tabId) {
+            settingsActiveTab = tabId || 'contacts';
+            document.querySelectorAll('#settings-tabs-nav .settings-tab').forEach(function(btn) {
+                btn.classList.toggle('active', btn.getAttribute('data-tab') === settingsActiveTab);
+            });
+            document.querySelectorAll('.settings-tab-panel').forEach(function(panel) {
+                panel.classList.toggle('active', panel.getAttribute('data-settings-tab') === settingsActiveTab);
+            });
+        }
+
         function openAuditLog() {
             if (!requirePermission('audit')) return;
             document.getElementById('audit-log').classList.add('show');
@@ -12680,6 +12695,7 @@
         function openSystemSettings() {
             if (!requireMainGovernanceAdmin('إعدادات المنصة الكاملة متاحة للإدارة الرئيسية فقط.')) return;
             renderSystemSettings();
+            switchSettingsTab(settingsActiveTab || 'contacts');
             document.getElementById('system-settings').classList.add('show');
         }
 
@@ -16494,9 +16510,8 @@
                 alert(ui.occasionSettingsSuperAdminOnly || 'تخصيص الثيم متاح لمسؤول النظام فقط.');
                 return;
             }
+            settingsActiveTab = 'occasion';
             openSystemSettings();
-            const block = document.querySelector('.occasion-settings-block');
-            if (block) block.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
 
         async function pickHeroBannerFromSettings() {
@@ -18270,6 +18285,60 @@
             crm.updatedAt = new Date().toISOString();
         }
 
+        function isComplaintLinkedToOrder(complaintId) {
+            ensureBuiltinErpData();
+            const comp = complaints[complaintId];
+            if (comp && comp.orderId) return true;
+            return (erpOrders || []).some(function(o) {
+                return o && (o.complaintRef === complaintId || o.complaintId === complaintId);
+            });
+        }
+
+        function convertComplaintToOrder(complaintId) {
+            if (!canManage('orders') && !canManage('complaints')) {
+                alert('صلاحية الطلبات أو الشكاوى مطلوبة.');
+                return;
+            }
+            const comp = complaints[complaintId];
+            if (!comp) { alert('الشكوى غير موجودة.'); return; }
+            if (isComplaintLinkedToOrder(complaintId)) {
+                const linked = (erpOrders || []).find(function(o) {
+                    return o && (o.complaintRef === complaintId || o.complaintId === complaintId || o.id === comp.orderId);
+                });
+                alert('مرتبطة بطلب مسبقاً: ' + (linked ? (linked.orderNo || linked.id) : comp.orderId || '—'));
+                return;
+            }
+            ensureBuiltinErpData();
+            const orderNo = 'NB-' + new Date().getFullYear() + '-' + String(erpOrders.length + 1).padStart(4, '0');
+            const order = {
+                id: 'ORD-' + Date.now(),
+                orderNo: orderNo,
+                complaintRef: complaintId,
+                date: erpToday(),
+                customer: comp.customerName || '—',
+                phone: comp.phone || '',
+                branch: comp.branch || comp.routedSalesBranch || '',
+                product: 'متابعة شكوى #' + complaintId,
+                qty: 1,
+                status: 'pending',
+                notes: (comp.description || '') + (comp.adminNote ? ' — ' + comp.adminNote : ''),
+                by: erpActor(),
+                createdAt: new Date().toISOString()
+            };
+            erpOrders.unshift(order);
+            comp.orderLinked = true;
+            comp.orderId = order.id;
+            comp.orderNo = order.orderNo;
+            if (!comp.crmLinked) linkComplaintToCrm(complaintId, comp);
+            saveSystemData();
+            displayComplaints();
+            if (canManage('customerService')) displayCustomerService();
+            if (currentAdmin) renderDashboardCommandShell(currentAdmin);
+            renderErpHubPanel();
+            addAuditLog('شكوى → OMS', '#' + complaintId + ' → ' + orderNo);
+            if (confirm('تم إنشاء طلب OMS ' + orderNo + '. فتح شاشة الطلبات؟')) openErpOrders();
+        }
+
         function displayComplaints() {
             const list = document.getElementById('complaints-list');
             if (!list) return;
@@ -18283,7 +18352,8 @@
                 summary.innerHTML =
                     '<div class="erp-stat"><strong>' + entries.length + '</strong><span>إجمالي الشكاوى</span></div>' +
                     '<div class="erp-stat' + (openCount ? ' erp-stat--alert' : '') + '"><strong>' + openCount + '</strong><span>مفتوحة</span></div>' +
-                    '<div class="erp-stat"><strong>' + entries.filter(function(e) { return isComplaintLinkedToCrm(e[0]); }).length + '</strong><span>مرتبطة CRM</span></div>';
+                    '<div class="erp-stat"><strong>' + entries.filter(function(e) { return isComplaintLinkedToCrm(e[0]); }).length + '</strong><span>مرتبطة CRM</span></div>' +
+                    '<div class="erp-stat"><strong>' + entries.filter(function(e) { return isComplaintLinkedToOrder(e[0]); }).length + '</strong><span>مرتبطة OMS</span></div>';
             }
             if (!entries.length) {
                 list.innerHTML = '<p class="erp-empty">لا شكاوى مسجّلة بعد.</p>';
@@ -18296,6 +18366,7 @@
                 const phone = comp.phone || '';
                 const st = comp.status || 'pending';
                 const crmLinked = isComplaintLinkedToCrm(id);
+                const omsLinked = isComplaintLinkedToOrder(id);
                 const statusBtns = COMPLAINT_STATUSES.filter(function(s) { return s.id !== st; }).map(function(s) {
                     return '<button type="button" class="erp-tag erp-tag--action" onclick="setComplaintStatus(\'' + escapeHtmlAttr(id) + '\',\'' + s.id + '\')">' + escapeHtmlAttr(s.label) + '</button>';
                 }).join('');
@@ -18303,6 +18374,7 @@
                     '<div class="erp-row-main"><strong>#' + escapeHtmlAttr(id) + '</strong> — ' + escapeHtmlAttr(comp.customerName || '—') +
                         '<span class="erp-row-tags"><span class="erp-tag erp-tag--status-' + escapeHtmlAttr(st === 'inProgress' ? 'pending' : st) + '">' + escapeHtmlAttr(getComplaintStatusLabel(st, lang)) + '</span>' +
                             (crmLinked ? '<span class="erp-tag erp-tag--ok"><i class="fas fa-headset"></i> CRM</span>' : '') +
+                            (omsLinked ? '<span class="erp-tag erp-tag--ok"><i class="fas fa-truck"></i> OMS' + (comp.orderNo ? ' ' + escapeHtmlAttr(comp.orderNo) : '') + '</span>' : '') +
                             '<span class="erp-tag">' + escapeHtmlAttr(when) + '</span></span>' +
                         '<small>' + escapeHtmlAttr(comp.description || '') + '<br>' +
                             'الفرع: ' + escapeHtmlAttr(comp.branch || '—') +
@@ -18310,6 +18382,7 @@
                             (phone ? ' · <a class="analytics-tel-link" href="tel:' + escapeHtmlAttr(phone) + '">' + escapeHtmlAttr(phone) + '</a>' : '') + '</small>' +
                         '<div class="erp-row-quick-actions">' + statusBtns +
                             (!crmLinked && canManage('customerService') ? '<button type="button" class="erp-tag erp-tag--action" onclick="linkComplaintToCrmManual(\'' + escapeHtmlAttr(id) + '\')"><i class="fas fa-link"></i> ربط CRM</button>' : '') +
+                            (!omsLinked && (canManage('orders') || canManage('complaints')) ? '<button type="button" class="erp-tag erp-tag--action" onclick="convertComplaintToOrder(\'' + escapeHtmlAttr(id) + '\')"><i class="fas fa-truck"></i> طلب OMS</button>' : '') +
                             (phone ? '<a class="erp-tag erp-tag--action analytics-tel-link" href="tel:' + escapeHtmlAttr(phone) + '"><i class="fas fa-phone"></i> اتصل</a>' : '') +
                         '</div></div>' +
                     '<button type="button" class="erp-row-del" onclick="deleteComplaintEntry(\'' + escapeHtmlAttr(id) + '\')" aria-label="حذف"><i class="fas fa-trash"></i></button>' +
@@ -18641,19 +18714,109 @@
             addAuditLog('حذف فرع', branch.city);
         }
 
+        function getAuditLogIcon(action) {
+            const a = String(action || '');
+            if (/شكوى/i.test(a)) return { icon: 'fa-exclamation-triangle', cls: 'audit-row-icon--alert' };
+            if (/ERP|طلب|مخزون|إنتاج|مشتريات/i.test(a)) return { icon: 'fa-cubes', cls: '' };
+            if (/مبيعات|عرض|quote/i.test(a)) return { icon: 'fa-chart-line', cls: 'audit-row-icon--ok' };
+            if (/فرع/i.test(a)) return { icon: 'fa-map-marker-alt', cls: '' };
+            if (/مستخدم|صلاح/i.test(a)) return { icon: 'fa-users-cog', cls: '' };
+            if (/تصدير|PDF|CSV/i.test(a)) return { icon: 'fa-file-export', cls: '' };
+            if (/حذف/i.test(a)) return { icon: 'fa-trash', cls: 'audit-row-icon--alert' };
+            return { icon: 'fa-clipboard-check', cls: '' };
+        }
+
+        function getFilteredAuditLogs() {
+            const q = String(auditLogFilterQuery || '').trim().toLowerCase();
+            const cat = String(auditLogFilterAction || '').trim();
+            return (auditLogs || []).filter(function(log) {
+                if (!log) return false;
+                if (cat) {
+                    const action = String(log.action || '');
+                    const details = String(log.details || '');
+                    if (action.indexOf(cat) < 0 && details.indexOf(cat) < 0) return false;
+                }
+                if (!q) return true;
+                const hay = [log.action, log.details, log.actor, log.at].join(' ').toLowerCase();
+                return hay.indexOf(q) >= 0;
+            });
+        }
+
+        function filterAuditLog() {
+            const searchEl = document.getElementById('audit-log-search');
+            const filterEl = document.getElementById('audit-log-filter');
+            auditLogFilterQuery = searchEl ? searchEl.value : '';
+            auditLogFilterAction = filterEl ? filterEl.value : '';
+            displayAuditLog();
+        }
+
+        function csvEscapeCell(value) {
+            const s = String(value == null ? '' : value).replace(/"/g, '""');
+            return '"' + s + '"';
+        }
+
+        function exportAuditLogCsv() {
+            if (!requirePermission('audit')) return;
+            const entries = getFilteredAuditLogs();
+            if (!entries.length) {
+                alert('لا سجلات للتصدير.');
+                return;
+            }
+            const lines = ['\uFEFFالإجراء,التفاصيل,المستخدم,الوقت'];
+            entries.forEach(function(log) {
+                lines.push([
+                    csvEscapeCell(log.action),
+                    csvEscapeCell(log.details),
+                    csvEscapeCell(log.actor),
+                    csvEscapeCell(log.at)
+                ].join(','));
+            });
+            const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'nebras-audit-' + new Date().toISOString().slice(0, 10) + '.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            addAuditLog('تصدير CSV', entries.length + ' سجل');
+            displayAuditLog();
+        }
+
         function displayAuditLog() {
             const list = document.getElementById('audit-log-list');
             if (!list) return;
-            if (!auditLogs.length) {
-                list.innerHTML = '<li>لا توجد عمليات مسجلة حتى الآن.</li>';
+            const entries = getFilteredAuditLogs();
+            const todayStr = erpToday();
+            const todayCount = (auditLogs || []).filter(function(log) {
+                return log && String(log.at || '').indexOf(todayStr) >= 0;
+            }).length;
+            const summary = document.getElementById('audit-log-summary');
+            if (summary) {
+                summary.innerHTML =
+                    '<div class="erp-stat"><strong>' + auditLogs.length + '</strong><span>إجمالي السجلات</span></div>' +
+                    '<div class="erp-stat"><strong>' + todayCount + '</strong><span>اليوم</span></div>' +
+                    '<div class="erp-stat"><strong>' + entries.length + '</strong><span>نتائج البحث</span></div>';
+            }
+            if (!entries.length) {
+                list.innerHTML = '<p class="erp-empty">' + (auditLogs.length ? 'لا نتائج مطابقة للبحث.' : 'لا عمليات مسجّلة حتى الآن.') + '</p>';
                 return;
             }
-            list.innerHTML = auditLogs.map(log => `
-                <li>
-                    <strong>${log.action}</strong> - ${log.details}
-                    <small>بواسطة: ${log.actor} | الوقت: ${log.at}</small>
-                </li>
-            `).join('');
+            list.innerHTML = entries.map(function(log) {
+                const meta = getAuditLogIcon(log.action);
+                return '<article class="erp-row audit-row">' +
+                    '<span class="audit-row-icon ' + meta.cls + '"><i class="fas ' + meta.icon + '"></i></span>' +
+                    '<div class="erp-row-main">' +
+                        '<strong>' + escapeHtmlAttr(log.action || '—') + '</strong>' +
+                        '<small>' + escapeHtmlAttr(log.details || '') + '</small>' +
+                        '<div class="audit-row-meta">' +
+                            '<span class="erp-tag"><i class="fas fa-user"></i> ' + escapeHtmlAttr(log.actor || '—') + '</span>' +
+                            '<span class="erp-tag"><i class="fas fa-clock"></i> ' + escapeHtmlAttr(log.at || '—') + '</span>' +
+                        '</div>' +
+                    '</div>' +
+                '</article>';
+            }).join('');
         }
 
         function scrollToSection(selector) {
@@ -21663,6 +21826,10 @@
         window.deleteBranch = deleteBranch;
         window.exportAnalyticsReportPdf = exportAnalyticsReportPdf;
         window.openAuditLog = openAuditLog;
+        window.switchSettingsTab = switchSettingsTab;
+        window.filterAuditLog = filterAuditLog;
+        window.exportAuditLogCsv = exportAuditLogCsv;
+        window.convertComplaintToOrder = convertComplaintToOrder;
         window.markSalesQuoteStatus = markSalesQuoteStatus;
         window.convertQuoteToOrder = convertQuoteToOrder;
         window.addNewSale = addNewSale;

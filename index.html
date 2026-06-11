@@ -89,6 +89,7 @@
     <link rel="stylesheet" href="css/27-governance-users.css">
     <link rel="stylesheet" href="css/28-erp-dashboard-shell.css">
     <link rel="stylesheet" href="css/29-scm-professional.css">
+    <link rel="stylesheet" href="css/30-platform-settings-audit.css">
 </head>
 <body id="nebras-platform" class="platform-storefront" data-platform-layer="storefront">
 
@@ -989,38 +990,82 @@
     </div>
 
     <div class="admin-section" id="audit-log">
-        <div class="admin-modal">
-            <h2>سجل العمليات الإدارية</h2>
-            <ul id="audit-log-list"></ul>
-            <button onclick="closeAdminSection('audit-log')">إغلاق</button>
+        <div class="admin-modal site-content-modal nebras-erp-modal nebras-audit-modal">
+            <div class="nebras-erp-head">
+                <div class="nebras-erp-head-title"><i class="fas fa-clipboard-check"></i><div><h2>سجل العمليات</h2><p>تتبع كل إجراء إداري · بحث · تصدير</p></div></div>
+                <button type="button" class="nebras-users-close" onclick="closeAdminSection('audit-log')" aria-label="إغلاق"><i class="fas fa-xmark"></i></button>
+            </div>
+            <div class="nebras-erp-stats" id="audit-log-summary"></div>
+            <div class="scm-panel-toolbar audit-toolbar">
+                <label class="audit-search-wrap"><i class="fas fa-search"></i><input type="search" id="audit-log-search" placeholder="بحث في السجل…" oninput="filterAuditLog()"></label>
+                <select id="audit-log-filter" class="audit-filter-select" onchange="filterAuditLog()" aria-label="تصفية حسب النوع">
+                    <option value="">كل الإجراءات</option>
+                    <option value="شكوى">الشكاوى</option>
+                    <option value="ERP">ERP</option>
+                    <option value="مبيعات">المبيعات</option>
+                    <option value="فرع">الفروع</option>
+                    <option value="مستخدم">المستخدمون</option>
+                    <option value="تصدير">التصدير</option>
+                </select>
+                <button type="button" class="secondary" onclick="exportAuditLogCsv()"><i class="fas fa-file-csv"></i> تصدير CSV</button>
+            </div>
+            <div class="nebras-erp-list" id="audit-log-list"></div>
         </div>
     </div>
 
     <div class="admin-section" id="system-settings">
-        <div class="admin-modal">
-            <h2>إعدادات النظام</h2>
-            <p class="status">الأرقام الإلزامية للعرض والاتصال:</p>
-            <input id="setting-sales-phone" type="text" placeholder="رقم المبيعات العام">
-            <input id="setting-customer-phone" type="text" placeholder="رقم خدمة العملاء والشكاوى">
-            <input id="setting-recovery-email" type="email" readonly placeholder="إيميل Gmail المعتمد لتغيير كلمة مرور الإدارة الرئيسية">
-            <hr style="margin:14px 0;border:none;border-top:1px solid rgba(0,0,0,0.12);">
-            <p class="status">البيانات الرسمية (تظهر في الموقع والداشبورد وعرض السعر):</p>
-            <input id="setting-commercial-register" type="text" placeholder="السجل التجاري (مثال: 1128185177)">
-            <input id="setting-tax-number" type="text" placeholder="الرقم الضريبي (مثال: 312765384700003)">
-            <input id="setting-vat-rate" type="number" min="0" max="100" step="0.01" placeholder="نسبة ضريبة القيمة المضافة % (افتراضي 15)">
-            <input id="setting-company-address-ar" type="text" placeholder="العنوان بالعربية — القصيم - عنيزة - طريق الزلفي">
-            <input id="setting-company-address-en" type="text" placeholder="Address in English">
-            <input id="setting-hero-banner-url" type="text" placeholder="صورة بانر الرئيسية (مثال: images/hero-nebras-banner.png)">
-            <button type="button" class="admin-only-ui" onclick="pickHeroBannerFromSettings()">رفع / اختيار صورة بانر الرئيسية</button>
+        <div class="admin-modal site-content-modal nebras-erp-modal nebras-settings-modal">
+            <div class="nebras-erp-head">
+                <div class="nebras-erp-head-title"><i class="fas fa-sliders-h"></i><div><h2>إعدادات المنصة</h2><p>تواصل · بيانات رسمية · هيدر · كتالوج · A4 · بنوك · سوشيال · احتفال</p></div></div>
+                <button type="button" class="nebras-users-close" onclick="closeAdminSection('system-settings')" aria-label="إغلاق"><i class="fas fa-xmark"></i></button>
+            </div>
+            <nav class="settings-tabs" id="settings-tabs-nav" role="tablist" aria-label="أقسام الإعدادات">
+                <button type="button" class="settings-tab active" role="tab" data-tab="contacts" onclick="switchSettingsTab('contacts')"><i class="fas fa-phone"></i> التواصل</button>
+                <button type="button" class="settings-tab" role="tab" data-tab="official" onclick="switchSettingsTab('official')"><i class="fas fa-building"></i> رسمي</button>
+                <button type="button" class="settings-tab" role="tab" data-tab="media" onclick="switchSettingsTab('media')"><i class="fas fa-image"></i> الهيدر</button>
+                <button type="button" class="settings-tab" role="tab" data-tab="catalog" onclick="switchSettingsTab('catalog')"><i class="fas fa-palette"></i> كتالوج</button>
+                <button type="button" class="settings-tab" role="tab" data-tab="quote" onclick="switchSettingsTab('quote')"><i class="fas fa-file-invoice"></i> A4</button>
+                <button type="button" class="settings-tab" role="tab" data-tab="banks" onclick="switchSettingsTab('banks')"><i class="fas fa-university"></i> بنوك</button>
+                <button type="button" class="settings-tab" role="tab" data-tab="social" onclick="switchSettingsTab('social')"><i class="fas fa-share-alt"></i> سوشيال</button>
+                <button type="button" class="settings-tab" role="tab" data-tab="occasion" onclick="switchSettingsTab('occasion')"><i class="fas fa-wand-magic-sparkles"></i> احتفال</button>
+            </nav>
+            <div class="settings-body">
+            <section class="settings-tab-panel active" data-settings-tab="contacts" id="settings-tab-contacts">
+            <h3 class="settings-panel-title"><i class="fas fa-phone-volume"></i> أرقام التواصل الإلزامية</h3>
+            <div class="settings-form-grid">
+            <label class="nebras-field"><span>رقم المبيعات العام</span><input id="setting-sales-phone" type="tel" placeholder="رقم المبيعات العام" dir="ltr"></label>
+            <label class="nebras-field"><span>خدمة العملاء والشكاوى</span><input id="setting-customer-phone" type="tel" placeholder="رقم خدمة العملاء والشكاوى" dir="ltr"></label>
+            <label class="nebras-field nebras-field--wide"><span>إيميل استرداد كلمة المرور</span><input id="setting-recovery-email" type="email" readonly placeholder="إيميل Gmail المعتمد لتغيير كلمة مرور الإدارة الرئيسية"></label>
+            </div>
+            </section>
+            <section class="settings-tab-panel" data-settings-tab="official" id="settings-tab-official">
+            <h3 class="settings-panel-title"><i class="fas fa-certificate"></i> البيانات الرسمية</h3>
+            <p class="settings-panel-hint">تظهر في الموقع والداشبورد وعرض السعر</p>
+            <div class="settings-form-grid">
+            <label class="nebras-field"><span>السجل التجاري</span><input id="setting-commercial-register" type="text" placeholder="مثال: 1128185177"></label>
+            <label class="nebras-field"><span>الرقم الضريبي</span><input id="setting-tax-number" type="text" placeholder="مثال: 312765384700003"></label>
+            <label class="nebras-field"><span>ضريبة القيمة المضافة %</span><input id="setting-vat-rate" type="number" min="0" max="100" step="0.01" placeholder="15"></label>
+            <label class="nebras-field nebras-field--wide"><span>العنوان (عربي)</span><input id="setting-company-address-ar" type="text" placeholder="القصيم - عنيزة - طريق الزلفي"></label>
+            <label class="nebras-field nebras-field--wide"><span>Address (English)</span><input id="setting-company-address-en" type="text" placeholder="Address in English"></label>
+            </div>
+            </section>
+            <section class="settings-tab-panel" data-settings-tab="media" id="settings-tab-media">
+            <h3 class="settings-panel-title"><i class="fas fa-panorama"></i> بانر الرئيسية وشرائح الهيدر</h3>
+            <div class="settings-form-grid settings-form-grid--media">
+            <label class="nebras-field nebras-field--wide"><span>صورة بانر الرئيسية</span><input id="setting-hero-banner-url" type="text" placeholder="images/hero-nebras-banner.png"></label>
+            <div class="settings-inline-actions"><button type="button" class="admin-only-ui secondary" onclick="pickHeroBannerFromSettings()"><i class="fas fa-cloud-upload-alt"></i> رفع / اختيار بانر</button></div>
+            </div>
             <div id="hero-slideshow-admin-block" class="hero-slideshow-admin-block">
                 <p class="status">شرائح الهيدر الديناميكي — إضافة / تعديل / حذف (تُحفظ فوراً مع الموقع):</p>
                 <div id="hero-slideshow-admin-list" class="hero-slideshow-admin-list"></div>
                 <button type="button" class="admin-only-ui" onclick="addHeroSlideshowSlideFromSettings()">+ إضافة شريحة هيدر</button>
                 <button type="button" class="admin-only-ui" onclick="resetHeroSlideshowToDefault()">استعادة الشرائح الافتراضية</button>
             </div>
+            </section>
+            <section class="settings-tab-panel" data-settings-tab="catalog" id="settings-tab-catalog">
             <div id="store-catalog-governance-block" class="store-catalog-governance-block">
-                <hr style="margin:14px 0;border:none;border-top:1px solid rgba(0,0,0,0.12);">
-                <p class="status"><strong>كتالوج المتجر الديناميكي</strong> — الألوان والمقاسات تُدار من هنا وتتزامن فوراً مع فلاتر المتجر ومصمم الأبواب (بدون تعديل الكود):</p>
+                <h3 class="settings-panel-title"><i class="fas fa-swatchbook"></i> كتالوج المتجر الديناميكي</h3>
+                <p class="settings-panel-hint">الألوان والمقاسات تتزامن فوراً مع فلاتر المتجر ومصمم الأبواب</p>
             <div id="color-catalog-admin-block" class="color-catalog-admin-block">
                 <p class="status">كتالوج الألوان القياسي (20 رولّة WPC) — إضافة · تعديل · حذف:</p>
                 <div id="color-catalog-admin-list" class="color-catalog-admin-list"></div>
@@ -1036,9 +1081,12 @@
                 <button type="button" class="admin-only-ui" onclick="resetDoorSizeCatalogToDefault()">استعادة الـ4 مقاسات القياسية</button>
             </div>
             </div>
+            </section>
+            <section class="settings-tab-panel" data-settings-tab="quote" id="settings-tab-quote">
             <div id="quote-a4-settings-block" class="quote-a4-settings-block">
-                <hr style="margin:14px 0;border:none;border-top:1px solid rgba(0,0,0,0.12);">
-                <p class="status">صيغة عرض السعر A4 — الإدارة الرئيسية فقط (ديناميكي على الموقع والـ PDF):</p>
+                <h3 class="settings-panel-title"><i class="fas fa-file-invoice-dollar"></i> صيغة عرض السعر A4</h3>
+                <p class="settings-panel-hint">الإدارة الرئيسية فقط — ديناميكي على الموقع والـ PDF</p>
+                <div class="settings-form-grid">
                 <input id="setting-quote-a4-logo" type="text" placeholder="شعار عرض السعر (مثال: images/logo-nebras-mark.png)">
                 <button type="button" class="admin-only-ui" onclick="pickQuoteA4LogoFromSettings()">رفع / اختيار شعار A4</button>
                 <input id="setting-quote-a4-tagline-ar" type="text" placeholder="السطر التعريفي أعلى عرض السعر (عربي)">
@@ -1061,20 +1109,28 @@
                 <button type="button" class="admin-only-ui" onclick="pickQuoteA4StaticPageFromSettings(3)">رفع الورقة 3 (ثابتة)</button>
                 <input id="setting-quote-a4-static-page4" type="text" placeholder="الورقة 4 — بيانات المصنع والحسابات (ثابتة)">
                 <button type="button" class="admin-only-ui" onclick="pickQuoteA4StaticPageFromSettings(4)">رفع الورقة 4 (ثابتة)</button>
-                <button type="button" class="admin-only-ui" onclick="previewQuoteA4TemplateFromSettings()">معاينة صيغة A4 الآن (4 صفحات)</button>
+                <div class="settings-inline-actions settings-inline-actions--wide"><button type="button" class="admin-only-ui primary" onclick="previewQuoteA4TemplateFromSettings()"><i class="fas fa-eye"></i> معاينة A4 (4 صفحات)</button></div>
+                </div>
             </div>
-            <p class="status">حسابات بنكية (صور/شعارات — تُعرض في الموقع):</p>
+            </section>
+            <section class="settings-tab-panel" data-settings-tab="banks" id="settings-tab-banks">
+            <h3 class="settings-panel-title"><i class="fas fa-university"></i> الحسابات البنكية</h3>
+            <p class="settings-panel-hint">صور وشعارات البنوك — تُعرض في الموقع</p>
             <div id="setting-bank-accounts-list" class="scm-list"></div>
-            <button type="button" onclick="addBankAccountFromSettings()">+ حساب بنكي</button>
-            <hr style="margin:14px 0;border:none;border-top:1px solid rgba(0,0,0,0.12);">
-            <p class="status">السوشيال ميديا و Linktree (يُحفظ مع الموقع):</p>
-            <input id="setting-linktree-url" type="url" placeholder="رابط Linktree الرسمي (مثال: https://linktr.ee/NebrasFactory)">
-            <input id="setting-social-whatsapp" type="url" placeholder="رابط واتساب عام (اختياري — الافتراضي: مبيعات + خدمة العملاء)">
-            <input id="setting-social-tiktok" type="url" placeholder="رابط TikTok">
-            <input id="setting-social-facebook" type="url" placeholder="رابط Facebook">
-            <input id="setting-social-instagram" type="url" placeholder="رابط Instagram">
-            <input id="setting-social-snapchat" type="url" placeholder="رابط Snapchat">
-            <hr style="margin:14px 0;border:none;border-top:1px solid rgba(255,255,255,0.15);">
+            <button type="button" class="primary" onclick="addBankAccountFromSettings()"><i class="fas fa-plus"></i> حساب بنكي</button>
+            </section>
+            <section class="settings-tab-panel" data-settings-tab="social" id="settings-tab-social">
+            <h3 class="settings-panel-title"><i class="fas fa-share-nodes"></i> السوشيال ميديا و Linktree</h3>
+            <div class="settings-form-grid">
+            <label class="nebras-field nebras-field--wide"><span>Linktree</span><input id="setting-linktree-url" type="url" placeholder="https://linktr.ee/NebrasFactory" dir="ltr"></label>
+            <label class="nebras-field"><span>واتساب</span><input id="setting-social-whatsapp" type="url" placeholder="رابط واتساب عام" dir="ltr"></label>
+            <label class="nebras-field"><span>TikTok</span><input id="setting-social-tiktok" type="url" placeholder="رابط TikTok" dir="ltr"></label>
+            <label class="nebras-field"><span>Facebook</span><input id="setting-social-facebook" type="url" placeholder="رابط Facebook" dir="ltr"></label>
+            <label class="nebras-field"><span>Instagram</span><input id="setting-social-instagram" type="url" placeholder="رابط Instagram" dir="ltr"></label>
+            <label class="nebras-field"><span>Snapchat</span><input id="setting-social-snapchat" type="url" placeholder="رابط Snapchat" dir="ltr"></label>
+            </div>
+            </section>
+            <section class="settings-tab-panel" data-settings-tab="occasion" id="settings-tab-occasion">
             <div class="occasion-settings-block">
                 <p class="status" id="setting-occasion-section-title">تهيئة الوضع الاحتفالي — النظام الداخلي يغيّر شكل المناسبة</p>
                 <p class="occasion-hint" id="setting-occasion-hint">اختر مناسبة رسمية أو عرضًا مخصصًا: الداشبورد والموقع يتحولان لمظهر احتفالي كامل (ألوان، زينة، بانر). جدولة اختيارية بالتواريخ.</p>
@@ -1099,8 +1155,11 @@
                 <input id="setting-occasion-promo-discount" type="text" placeholder="سطر العرض المختصر تحت اسم المناسبة (مثال: خصم 15% على أبواب WPC)">
                 <div class="occasion-preview-strip" id="setting-occasion-preview" aria-hidden="true"></div>
             </div>
-            <button onclick="saveSystemSettings()">حفظ الإعدادات</button>
-            <button onclick="closeAdminSection('system-settings')">إغلاق</button>
+            </section>
+            </div>
+            <div class="settings-save-bar">
+                <button type="button" class="primary" onclick="saveSystemSettings()"><i class="fas fa-save"></i> حفظ الإعدادات</button>
+            </div>
         </div>
     </div>
 
