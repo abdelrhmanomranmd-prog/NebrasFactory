@@ -418,6 +418,14 @@
     color: #718096;
 }
 
+.hr-bio-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.75rem;
+    color: #276749;
+}
+
 @media (max-width: 640px) {
     .hr-emp-grid,
     .hr-vehicle-grid,

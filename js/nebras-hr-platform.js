@@ -23,6 +23,7 @@
     let hrNotifications = [];
     let hrNotifSettings = { remindDays: [30, 60], notifyEmail: '', lastScan: '' };
     let pendingHrDocAttachment = null;
+    let hrEmailQueue = [];
     let hrActiveTab = 'dashboard';
     let hrBranchFilter = '';
     let hrSearchQuery = '';
@@ -191,6 +192,7 @@
         ensureBuiltinHrPhase12Seed();
         loadHrPhase13Data();
         processHrExpiryReminders();
+        loadHrPhase14Data();
         return { employees: hrEmployees, vehicles: hrVehicles, leave: hrLeaveRequests, tracking: hrVehicleTracking, attendance: hrAttendance, documents: hrDocuments, payroll: hrPayrollRuns };
     }
 
@@ -202,6 +204,7 @@
             localStorage.setItem(HR_TRACK_KEY, JSON.stringify(hrVehicleTracking));
             saveHrPhase12Arrays();
             saveHrPhase13Data();
+            saveHrPhase14Data();
         } catch (err) { console.warn('HR save failed', err); }
         if (typeof saveSystemData === 'function') saveSystemData();
         else if (typeof schedulePushToNebrasCloud === 'function') schedulePushToNebrasCloud();
@@ -675,6 +678,8 @@
             '</div>' +
             '<div class="erp-form-actions">' +
                 '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="saveHrEmployee(\'' + esc(id || '') + '\')"><i class="fas fa-save"></i> حفظ</button>' +
+                (isEdit ? '<button type="button" class="nebras-users-btn" onclick="hrRegisterEmployeeBiometric(\'' + esc(id) + '\')"><i class="fas fa-fingerprint"></i> تسجيل بصمة</button>' +
+                    (e.bioCredentialId ? '<span class="erp-tag erp-tag--ok"><i class="fas fa-check"></i> بصمة مسجّلة</span>' : '') : '') +
                 '<button type="button" class="nebras-users-btn" onclick="cancelHrEmployeeEditor()"><i class="fas fa-xmark"></i> إلغاء</button>' +
             '</div>' +
         '</div>';
@@ -737,6 +742,8 @@
             const idx = hrEmployees.findIndex(function(e) { return e.id === id; });
             if (idx >= 0) {
                 record.createdAt = hrEmployees[idx].createdAt || now;
+                record.bioCredentialId = hrEmployees[idx].bioCredentialId || '';
+                record.bioRegisteredAt = hrEmployees[idx].bioRegisteredAt || '';
                 hrEmployees[idx] = record;
             }
         } else {
@@ -1657,7 +1664,10 @@
         }).join('');
         return '<div class="hr-panel is-active">' +
             '<p class="hr-platform-note"><i class="fas fa-fingerprint"></i> حضور وانصراف — يدوي · جوال/GPS · بصمة. استخدمي «حضور جوال» لتسجيل برقم الموظف.</p>' +
-            '<div class="hr-toolbar"><button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="hrMobileCheckInPrompt()"><i class="fas fa-mobile-screen"></i> حضور جوال (GPS)</button></div>' +
+            '<div class="hr-toolbar">' +
+                '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="hrMobileCheckInPrompt()"><i class="fas fa-mobile-screen"></i> حضور جوال (GPS)</button>' +
+                '<button type="button" class="nebras-users-btn" onclick="hrBiometricCheckInPrompt()"><i class="fas fa-fingerprint"></i> حضور بصمة</button>' +
+            '</div>' +
             '<h4 class="hr-tracking-section-title"><i class="fas fa-bolt"></i> دخول / خروج سريع — اليوم</h4>' +
             '<div class="hr-att-quick-grid">' + (quickCards || '<p class="erp-empty">لا موظفين نشطين</p>') + '</div>' +
             '<div class="hr-editor-overlay"><h4><i class="fas fa-plus"></i> تسجيل حضور يدوي</h4><div class="erp-form-grid">' +
@@ -1712,7 +1722,7 @@
             const exp = expBadge(d.expiryDate);
             return '<tr><td>' + esc(HR_DOC_TYPES[d.type] || d.type) + '</td><td>' + esc(d.employeeName) + '<br><small>' + esc(d.employeeNo) + '</small></td>' +
                 '<td>' + esc(d.docNo || '—') + '</td><td>' + formatHrDate(d.expiryDate) + ' ' + exp + '</td>' +
-                '<td>' + (d.attachmentName ? '<button type="button" class="erp-tag erp-tag--ok" onclick="viewHrDocumentAttachment(\'' + esc(d.id) + '\')"><i class="fas fa-paperclip"></i></button> ' : '') +
+                '<td>' + (d.attachmentName || d.attachmentCloudUrl ? '<button type="button" class="erp-tag erp-tag--ok" onclick="viewHrDocumentAttachment(\'' + esc(d.id) + '\')" title="' + esc(d.attachmentCloudUrl ? 'سحابة' : 'محلي') + '"><i class="fas fa-paperclip"></i>' + (d.attachmentCloudUrl ? ' ☁' : '') + '</button> ' : '') +
                 '<button type="button" class="erp-tag erp-tag--action" onclick="openHrDocEditor(\'' + esc(d.id) + '\')"><i class="fas fa-pen"></i></button> ' +
                 (canViewHrExecutiveReports() ? '<button type="button" class="erp-tag" onclick="sendHrDocumentReminder(\'' + esc(d.id) + '\')"><i class="fas fa-envelope"></i></button> ' : '') +
                 '<button type="button" class="erp-tag" onclick="deleteHrDocument(\'' + esc(d.id) + '\')"><i class="fas fa-trash"></i></button></td></tr>';
@@ -1769,6 +1779,7 @@
             notes: hrField('hd-notes'), createdAt: today,
             attachmentName: pendingHrDocAttachment ? pendingHrDocAttachment.name : '',
             attachmentDataUrl: pendingHrDocAttachment ? pendingHrDocAttachment.dataUrl : '',
+            attachmentCloudUrl: pendingHrDocAttachment ? (pendingHrDocAttachment.cloudUrl || '') : '',
             attachmentMime: pendingHrDocAttachment ? pendingHrDocAttachment.mime : ''
         });
         pendingHrDocAttachment = null;
@@ -1790,6 +1801,7 @@
         if (pendingHrDocAttachment) {
             d.attachmentName = pendingHrDocAttachment.name;
             d.attachmentDataUrl = pendingHrDocAttachment.dataUrl;
+            d.attachmentCloudUrl = pendingHrDocAttachment.cloudUrl || d.attachmentCloudUrl || '';
             d.attachmentMime = pendingHrDocAttachment.mime;
             pendingHrDocAttachment = null;
         }
@@ -1901,8 +1913,12 @@
             return '<tr><td>' + formatHrDate(n.date) + '</td><td>' + esc(n.employeeName || '') + '</td><td>' + esc(n.docTitle || '') + '</td>' +
                 '<td>' + esc(String(n.daysLeft != null ? n.daysLeft : '')) + '</td><td>' + esc(n.status || '') + '</td></tr>';
         }).join('');
+        const webhookVal = esc(hrNotifSettings.emailWebhookUrl || '');
         const govActions = canViewHrExecutiveReports()
-            ? '<div class="erp-form-actions" style="margin-bottom:12px"><button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="sendAllHrExpiryReminders()"><i class="fas fa-envelope-open-text"></i> تقرير بريد — كل المنتهية قريباً</button></div>'
+            ? '<div class="hr-editor-overlay" style="margin-bottom:12px"><h4><i class="fas fa-envelope"></i> بريد API + احتياطي mailto</h4>' +
+                '<label class="nebras-field nebras-field--wide"><span>Webhook URL (اختياري)</span><input id="hr-email-webhook" value="' + webhookVal + '" placeholder="https://..."></label>' +
+                '<div class="erp-form-actions"><button type="button" class="nebras-users-btn" onclick="saveHrEmailWebhookSetting()"><i class="fas fa-save"></i> حفظ Webhook</button>' +
+                '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="sendAllHrExpiryReminders()"><i class="fas fa-envelope-open-text"></i> تقرير بريد — كل المنتهية قريباً</button></div></div>'
             : '';
         return '<div class="hr-panel is-active">' +
             '<p class="hr-platform-note"><i class="fas fa-bell"></i> تنبيهات تلقائية + تذكيرات إقامة/عقود — مسح يومي · بريد للإدارة الرئيسية.</p>' +
@@ -1931,10 +1947,6 @@
     const HR_NOTIF_KEY = 'nebrasHrNotifications';
     const HR_NOTIF_SETTINGS_KEY = 'nebrasHrNotifSettings';
     const HR_DOC_ATTACH_MAX = 480000;
-
-    let hrNotifications = [];
-    let hrNotifSettings = { remindDays: [30, 60], notifyEmail: '', lastScan: '' };
-    let pendingHrDocAttachment = null;
 
     function loadHrPhase13Data() {
         try {
@@ -2010,25 +2022,28 @@
         }
         const d = hrDocuments.find(function(x) { return x.id === docId; });
         if (!d) return;
-        const email = getHrNotifyEmail();
-        const subject = encodeURIComponent('تنبيه HR — انتهاء ' + (HR_DOC_TYPES[d.type] || d.type) + ' — ' + d.employeeName);
-        const body = encodeURIComponent(
+        const subject = 'تنبيه HR — انتهاء ' + (HR_DOC_TYPES[d.type] || d.type) + ' — ' + d.employeeName;
+        const body =
             'مصنع نبراس — تنبيه موارد بشرية\n\n' +
             'الموظف: ' + d.employeeName + ' (' + d.employeeNo + ')\n' +
             'المستند: ' + (d.title || '') + '\n' +
             'رقم الوثيقة: ' + (d.docNo || '') + '\n' +
             'تاريخ الانتهاء: ' + d.expiryDate + '\n\n' +
-            'يرجى المتابعة مع قسم HR.'
-        );
-        const mail = 'mailto:' + encodeURIComponent(email) + '?subject=' + subject + '&body=' + body;
-        window.location.href = mail;
-        hrNotifications.unshift({
-            id: 'hn-sent-' + Date.now(), docId: d.id, employeeName: d.employeeName,
-            docTitle: d.title, expiryDate: d.expiryDate, date: new Date().toISOString().slice(0, 10),
-            status: 'sent', channel: 'email'
+            'يرجى المتابعة مع قسم HR.';
+        sendNebrasHrNotificationEmail({
+            subject: subject,
+            body: body,
+            meta: { docId: d.id, type: 'doc-expiry' }
+        }).then(function(entry) {
+            hrNotifications.unshift({
+                id: 'hn-sent-' + Date.now(), docId: d.id, employeeName: d.employeeName,
+                docTitle: d.title, expiryDate: d.expiryDate, date: new Date().toISOString().slice(0, 10),
+                status: entry.status || 'sent', channel: entry.channel || 'email'
+            });
+            saveHrData();
+            hrAudit('HR تنبيه إقامة', (entry.channel || 'بريد') + ' — ' + d.employeeName);
+            renderHrPlatformPanel();
         });
-        saveHrData();
-        hrAudit('HR تنبيه إقامة', 'بريد — ' + d.employeeName);
     }
 
     function sendAllHrExpiryReminders() {
@@ -2039,14 +2054,16 @@
             return days >= 0 && days <= 60;
         });
         if (!urgent.length) { alert('لا مستندات تنتهي خلال 60 يوم.'); return; }
-        const email = getHrNotifyEmail();
         const lines = urgent.map(function(d) {
             return '- ' + d.employeeName + ': ' + (HR_DOC_TYPES[d.type] || d.type) + ' ينتهي ' + d.expiryDate;
-        }).join('%0A');
-        const subject = encodeURIComponent('تقرير تنبيهات HR — مستندات تنتهي قريباً');
-        const body = encodeURIComponent('مصنع نبراس — تنبيهات المستندات:%0A%0A') + lines;
-        window.location.href = 'mailto:' + encodeURIComponent(email) + '?subject=' + subject + '&body=' + body;
-        hrAudit('HR تنبيهات جماعية', urgent.length + ' مستند');
+        }).join('\n');
+        sendNebrasHrNotificationEmail({
+            subject: 'تقرير تنبيهات HR — مستندات تنتهي قريباً',
+            body: 'مصنع نبراس — تنبيهات المستندات:\n\n' + lines,
+            meta: { type: 'bulk-expiry', count: urgent.length }
+        }).then(function() {
+            hrAudit('HR تنبيهات جماعية', urgent.length + ' مستند');
+        });
     }
 
     function hrReadDocAttachment(input, mode) {
@@ -2057,24 +2074,41 @@
             input.value = '';
             return;
         }
+        const hint = document.getElementById('hd-attach-hint') || document.getElementById('hde-attach-hint');
+        if (hint) hint.textContent = 'جاري المعالجة…';
         const reader = new FileReader();
         reader.onload = function(ev) {
-            pendingHrDocAttachment = { name: file.name, dataUrl: ev.target.result, mime: file.type };
-            const hint = document.getElementById('hd-attach-hint') || document.getElementById('hde-attach-hint');
-            if (hint) hint.textContent = '✓ مرفق: ' + file.name;
+            pendingHrDocAttachment = { name: file.name, dataUrl: ev.target.result, mime: file.type, cloudUrl: '' };
+            if (hint) hint.textContent = '✓ محلي: ' + file.name;
+            if (typeof uploadNebrasMediaFile === 'function') {
+                if (hint) hint.textContent = 'جاري الرفع للسحابة…';
+                uploadNebrasMediaFile(file).then(function(url) {
+                    if (url && pendingHrDocAttachment && pendingHrDocAttachment.name === file.name) {
+                        pendingHrDocAttachment.cloudUrl = url;
+                        if (hint) hint.textContent = '✓ سحابة: ' + file.name;
+                    }
+                }).catch(function() {
+                    if (hint) hint.textContent = '✓ محلي (فشل السحابة): ' + file.name;
+                });
+            }
         };
         reader.readAsDataURL(file);
     }
 
     function viewHrDocumentAttachment(docId) {
         const d = hrDocuments.find(function(x) { return x.id === docId; });
-        if (!d || !d.attachmentDataUrl) { alert('لا مرفق لهذا المستند.'); return; }
+        const src = d && (d.attachmentCloudUrl || d.attachmentDataUrl);
+        if (!d || !src) { alert('لا مرفق لهذا المستند.'); return; }
+        if (d.attachmentCloudUrl && d.attachmentCloudUrl.indexOf('http') === 0) {
+            window.open(d.attachmentCloudUrl, '_blank');
+            return;
+        }
         const w = window.open('', '_blank');
         if (!w) { alert('فعّلي النوافذ المنبثقة.'); return; }
         if (d.attachmentMime && d.attachmentMime.indexOf('pdf') >= 0) {
-            w.document.write('<iframe src="' + d.attachmentDataUrl + '" style="width:100%;height:100%;border:0"></iframe>');
+            w.document.write('<iframe src="' + src + '" style="width:100%;height:100%;border:0"></iframe>');
         } else {
-            w.document.write('<img src="' + d.attachmentDataUrl + '" style="max-width:100%">');
+            w.document.write('<img src="' + src + '" style="max-width:100%">');
         }
         w.document.close();
     }
@@ -2213,6 +2247,265 @@
         hrAudit('HR قسائم جماعية', month + ' — ' + items.length);
     }
 
+/* PHASE14_INJECTED */
+/* Phase 14 — biometric WebAuthn, Supabase doc upload, email queue API, executive HR report */
+
+    const HR_EMAIL_QUEUE_KEY = 'nebrasHrEmailQueue';
+    let hrEmailQueue = [];
+
+    function loadHrPhase14Data() {
+        try {
+            const q = localStorage.getItem(HR_EMAIL_QUEUE_KEY);
+            hrEmailQueue = q ? JSON.parse(q) : [];
+            if (!Array.isArray(hrEmailQueue)) hrEmailQueue = [];
+        } catch (e) { hrEmailQueue = []; }
+        if (!hrNotifSettings.emailWebhookUrl && typeof systemSettings !== 'undefined' && systemSettings.hrEmailWebhookUrl) {
+            hrNotifSettings.emailWebhookUrl = systemSettings.hrEmailWebhookUrl;
+        }
+    }
+
+    function saveHrPhase14Data() {
+        try {
+            localStorage.setItem(HR_EMAIL_QUEUE_KEY, JSON.stringify(hrEmailQueue));
+        } catch (e) { console.warn('HR phase14 save', e); }
+    }
+
+    function setHrEmailQueueFromCloud(v) {
+        hrEmailQueue = Array.isArray(v) ? v : [];
+        try { localStorage.setItem(HR_EMAIL_QUEUE_KEY, JSON.stringify(hrEmailQueue)); } catch (e) { /* ignore */ }
+    }
+
+    function hrBufferToBase64Url(buf) {
+        const bytes = new Uint8Array(buf);
+        let str = '';
+        bytes.forEach(function(b) { str += String.fromCharCode(b); });
+        return btoa(str).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    }
+
+    function hrBase64UrlToBuffer(b64) {
+        const pad = '='.repeat((4 - (b64.length % 4)) % 4);
+        const str = (b64 + pad).replace(/-/g, '+').replace(/_/g, '/');
+        const raw = atob(str);
+        const out = new Uint8Array(raw.length);
+        for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+        return out;
+    }
+
+    function hrBiometricSupported() {
+        return !!(window.PublicKeyCredential && navigator.credentials && window.crypto && crypto.getRandomValues);
+    }
+
+    async function sendNebrasHrNotificationEmail(opts) {
+        opts = opts || {};
+        const to = opts.to || getHrNotifyEmail();
+        const subject = opts.subject || 'تنبيه HR — مصنع نبراس';
+        const body = opts.body || '';
+        const entry = {
+            id: 'he-' + Date.now(),
+            to: to,
+            subject: subject,
+            body: body,
+            meta: opts.meta || {},
+            status: 'queued',
+            channel: 'queue',
+            createdAt: new Date().toISOString()
+        };
+        hrEmailQueue.unshift(entry);
+
+        const webhook = hrNotifSettings.emailWebhookUrl ||
+            (typeof systemSettings !== 'undefined' ? systemSettings.hrEmailWebhookUrl : '') || '';
+
+        if (webhook) {
+            try {
+                const res = await fetch(webhook, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        to: to,
+                        subject: subject,
+                        body: body,
+                        source: 'nebras-hr',
+                        meta: entry.meta
+                    })
+                });
+                if (res.ok) {
+                    entry.status = 'sent';
+                    entry.channel = 'api';
+                } else {
+                    entry.status = 'api-failed';
+                    entry.channel = 'api';
+                }
+            } catch (err) {
+                entry.status = 'api-failed';
+                entry.error = String(err && err.message ? err.message : err);
+                entry.channel = 'api';
+            }
+        }
+
+        if (entry.status === 'queued' || entry.status === 'api-failed') {
+            const mail = 'mailto:' + encodeURIComponent(to) +
+                '?subject=' + encodeURIComponent(subject) +
+                '&body=' + encodeURIComponent(body);
+            window.location.href = mail;
+            entry.status = entry.status === 'api-failed' ? 'api-failed-mailto' : 'mailto';
+            entry.channel = entry.channel === 'api' ? 'api+mailto' : 'mailto';
+        }
+
+        saveHrData();
+        return entry;
+    }
+
+    function saveHrEmailWebhookSetting() {
+        if (!canViewHrExecutiveReports()) return;
+        const el = document.getElementById('hr-email-webhook');
+        if (el) hrNotifSettings.emailWebhookUrl = String(el.value || '').trim();
+        saveHrData();
+        hrAudit('HR إعداد بريد', 'Webhook API');
+        alert('تم حفظ رابط Webhook — التنبيهات تُرسل عبر API ثم mailto احتياطي.');
+        renderHrPlatformPanel();
+    }
+
+    async function hrRegisterEmployeeBiometric(empId) {
+        if (!requireHrOps()) return;
+        const emp = getEmployeeById(empId);
+        if (!emp) return;
+        if (!hrBiometricSupported()) {
+            alert('المتصفح لا يدعم البصمة — استخدمي Chrome/Edge مع Windows Hello أو Touch ID.');
+            return;
+        }
+        try {
+            const challenge = new Uint8Array(32);
+            crypto.getRandomValues(challenge);
+            const cred = await navigator.credentials.create({
+                publicKey: {
+                    challenge: challenge,
+                    rp: { name: 'نبراس HR', id: window.location.hostname || 'localhost' },
+                    user: {
+                        id: new TextEncoder().encode(emp.id),
+                        name: emp.employeeNo,
+                        displayName: emp.nameAr
+                    },
+                    pubKeyCredParams: [{ alg: -7, type: 'public-key' }],
+                    authenticatorSelection: { userVerification: 'required', authenticatorAttachment: 'platform' },
+                    timeout: 60000
+                }
+            });
+            if (cred && cred.rawId) {
+                emp.bioCredentialId = hrBufferToBase64Url(cred.rawId);
+                emp.bioRegisteredAt = new Date().toISOString().slice(0, 10);
+                saveHrData();
+                hrAudit('HR بصمة', 'تسجيل ' + emp.nameAr);
+                alert('تم تسجيل البصمة لـ ' + emp.nameAr);
+                renderHrPlatformPanel();
+            }
+        } catch (err) {
+            alert('تعذّر تسجيل البصمة: ' + (err && err.message ? err.message : 'أعدي المحاولة'));
+        }
+    }
+
+    async function hrBiometricCheckInPrompt() {
+        if (!requireHrOps()) return;
+        const no = prompt('رقم الموظف للحضور بالبصمة:', '');
+        if (!no) return;
+        const emp = findEmployeeByNo(no);
+        if (!emp) { alert('رقم موظف غير موجود.'); return; }
+
+        if (emp.bioCredentialId && hrBiometricSupported()) {
+            try {
+                const challenge = new Uint8Array(32);
+                crypto.getRandomValues(challenge);
+                const assertion = await navigator.credentials.get({
+                    publicKey: {
+                        challenge: challenge,
+                        allowCredentials: [{
+                            id: hrBase64UrlToBuffer(emp.bioCredentialId),
+                            type: 'public-key'
+                        }],
+                        userVerification: 'required',
+                        timeout: 60000
+                    }
+                });
+                if (assertion) {
+                    hrQuickCheckIn(emp.id, 'biometric');
+                    const r = findTodayAttendance(emp.id);
+                    if (r) { r.bioVerified = true; saveHrData(); }
+                    return;
+                }
+            } catch (err) {
+                alert('فشل التحقق بالبصمة — ' + (err && err.message ? err.message : 'أعدي المحاولة'));
+                return;
+            }
+        }
+
+        if (confirm(emp.nameAr + ' — لم تُسجَّل بصمة بعد. تسجيل الآن؟')) {
+            await hrRegisterEmployeeBiometric(emp.id);
+        } else {
+            hrQuickCheckIn(emp.id, 'biometric');
+        }
+    }
+
+    function buildHrExecutiveReportData(period, branchId) {
+        loadHrData();
+        const scopeBranch = function(entry) {
+            if (branchId == null || branchId === '') return true;
+            const bid = String(branchId);
+            if (bid === 'hq') return String(entry.branchId) === 'hq';
+            return String(entry.branchId) === bid;
+        };
+        const scopePeriod = function(entry) {
+            const raw = entry.date || entry.createdAt;
+            if (!raw) return false;
+            if (typeof matchesExecutiveReportPeriod === 'function') {
+                return matchesExecutiveReportPeriod({ date: raw }, period);
+            }
+            const dd = new Date(String(raw).length === 10 ? raw + 'T12:00:00' : raw);
+            if (isNaN(dd.getTime())) return false;
+            const now = new Date();
+            if (period === 'daily') return dd.toDateString() === now.toDateString();
+            if (period === 'monthly') return dd.getFullYear() === now.getFullYear() && dd.getMonth() === now.getMonth();
+            if (period === 'yearly') return dd.getFullYear() === now.getFullYear();
+            return true;
+        };
+
+        const att = hrAttendance.filter(function(a) { return scopeBranch(a) && scopePeriod(a); });
+        const emps = hrEmployees.filter(scopeBranch);
+        const activeEmps = emps.filter(function(e) { return e.status === 'active'; }).length;
+        const withCheckIn = att.filter(function(a) { return a.checkIn; }).length;
+        const bioCount = att.filter(function(a) { return a.checkInMethod === 'biometric' || a.bioVerified; }).length;
+        const mobileCount = att.filter(function(a) { return a.checkInMethod === 'mobile'; }).length;
+        const onRoad = hrVehicleTracking.filter(function(t) {
+            return t.status === 'on_road' && scopeBranch(t);
+        }).length;
+        const expDocs = hrDocuments.filter(function(d) {
+            if (!scopeBranch(d) || !d.expiryDate) return false;
+            const days = Math.round((new Date(d.expiryDate + 'T12:00:00') - new Date()) / (1000 * 60 * 60 * 24));
+            return days <= 60;
+        }).length;
+
+        const rows = att.slice(0, 12).map(function(a) {
+            const meth = (typeof HR_ATT_METHOD !== 'undefined' && HR_ATT_METHOD[a.checkInMethod]) || a.checkInMethod || '—';
+            return [
+                a.date,
+                (a.employeeNo || '') + ' — ' + (a.employeeName || ''),
+                (a.checkIn || '—') + ' → ' + (a.checkOut || '—'),
+                meth
+            ];
+        });
+
+        return {
+            kpis: [
+                { label: 'موظفون', val: emps.length },
+                { label: 'نشطون', val: activeEmps },
+                { label: 'سجلات حضور', val: att.length },
+                { label: 'دخول مسجّل', val: withCheckIn },
+                { label: 'بصمة / GPS', val: bioCount + ' / ' + mobileCount },
+                { label: 'سيارات خارجة', val: onRoad },
+                { label: 'مستندات قريبة الانتهاء', val: expDocs }
+            ],
+            rows: rows
+        };
+    }
+
     function isHrDepartmentAdmin(admin) {
         admin = admin || (typeof currentAdmin !== 'undefined' ? currentAdmin : null);
         if (!admin) return false;
@@ -2318,6 +2611,13 @@
     global.exportAllHrPayslipsPdf = exportAllHrPayslipsPdf;
     global.sendHrDocumentReminder = sendHrDocumentReminder;
     global.sendAllHrExpiryReminders = sendAllHrExpiryReminders;
+    global.getHrEmailQueue = function() { loadHrData(); return hrEmailQueue; };
+    global.setHrEmailQueueFromCloud = setHrEmailQueueFromCloud;
+    global.sendNebrasHrNotificationEmail = sendNebrasHrNotificationEmail;
+    global.hrBiometricCheckInPrompt = hrBiometricCheckInPrompt;
+    global.hrRegisterEmployeeBiometric = hrRegisterEmployeeBiometric;
+    global.buildHrExecutiveReportData = buildHrExecutiveReportData;
+    global.saveHrEmailWebhookSetting = saveHrEmailWebhookSetting;
 
     loadHrData();
 })(typeof window !== 'undefined' ? window : globalThis);
