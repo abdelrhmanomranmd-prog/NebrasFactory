@@ -20,6 +20,9 @@
     let hrAttendance = [];
     let hrDocuments = [];
     let hrPayrollRuns = [];
+    let hrNotifications = [];
+    let hrNotifSettings = { remindDays: [30, 60], notifyEmail: '', lastScan: '' };
+    let pendingHrDocAttachment = null;
     let hrActiveTab = 'dashboard';
     let hrBranchFilter = '';
     let hrSearchQuery = '';
@@ -186,6 +189,8 @@
         loadHrPhase12Arrays();
         ensureBuiltinHrSeed();
         ensureBuiltinHrPhase12Seed();
+        loadHrPhase13Data();
+        processHrExpiryReminders();
         return { employees: hrEmployees, vehicles: hrVehicles, leave: hrLeaveRequests, tracking: hrVehicleTracking, attendance: hrAttendance, documents: hrDocuments, payroll: hrPayrollRuns };
     }
 
@@ -196,6 +201,7 @@
             localStorage.setItem(HR_LEAVE_KEY, JSON.stringify(hrLeaveRequests));
             localStorage.setItem(HR_TRACK_KEY, JSON.stringify(hrVehicleTracking));
             saveHrPhase12Arrays();
+            saveHrPhase13Data();
         } catch (err) { console.warn('HR save failed', err); }
         if (typeof saveSystemData === 'function') saveSystemData();
         else if (typeof schedulePushToNebrasCloud === 'function') schedulePushToNebrasCloud();
@@ -1626,25 +1632,45 @@
         const statusOpts = Object.keys(HR_ATT_STATUS).map(function(k) {
             return '<option value="' + k + '">' + HR_ATT_STATUS[k].label + '</option>';
         }).join('');
+        const methodOpts = Object.keys(HR_ATT_METHOD).map(function(k) {
+            return '<option value="' + k + '">' + HR_ATT_METHOD[k] + '</option>';
+        }).join('');
+        const quickCards = hrEmployees.filter(function(e) { return e.status === 'active'; }).slice(0, 12).map(function(e) {
+            const att = findTodayAttendance(e.id);
+            return '<article class="hr-att-quick-card">' +
+                '<strong>' + esc(e.nameAr) + '</strong><small>' + esc(e.employeeNo) + '</small>' +
+                '<div class="hr-emp-actions">' +
+                    '<button type="button" class="erp-tag erp-tag--ok" onclick="hrQuickCheckIn(\'' + esc(e.id) + '\',\'manual\')"><i class="fas fa-right-to-bracket"></i> دخول</button>' +
+                    '<button type="button" class="erp-tag" onclick="hrQuickCheckOut(\'' + esc(e.id) + '\')"><i class="fas fa-right-from-bracket"></i> خروج</button>' +
+                '</div>' +
+                (att && att.checkIn ? '<small>اليوم: ' + esc(att.checkIn) + (att.checkOut ? ' → ' + esc(att.checkOut) : '') + '</small>' : '') +
+            '</article>';
+        }).join('');
         const rows = filterHrAttendance().map(function(a) {
             const st = HR_ATT_STATUS[a.status] || HR_ATT_STATUS.present;
+            const meth = HR_ATT_METHOD[a.checkInMethod] || a.checkInMethod || '—';
             return '<tr><td>' + formatHrDate(a.date) + '</td><td>' + esc(a.employeeNo) + '<br><small>' + esc(a.employeeName) + '</small></td>' +
                 '<td>' + esc(a.checkIn || '—') + '</td><td>' + esc(a.checkOut || '—') + '</td><td>' + esc(String(a.hours || 0)) + '</td>' +
+                '<td><span class="erp-tag">' + esc(meth) + '</span></td>' +
                 '<td><span class="erp-tag ' + (st.tag || '') + '">' + esc(st.label) + '</span></td>' +
                 '<td><button type="button" class="erp-tag" onclick="deleteHrAttendance(\'' + esc(a.id) + '\')"><i class="fas fa-trash"></i></button></td></tr>';
         }).join('');
         return '<div class="hr-panel is-active">' +
-            '<p class="hr-platform-note"><i class="fas fa-fingerprint"></i> حضور وانصراف يومي — تسجيل دخول وخروج لكل موظف وعامل في كل الفروع.</p>' +
-            '<div class="hr-editor-overlay"><h4><i class="fas fa-plus"></i> تسجيل حضور</h4><div class="erp-form-grid">' +
+            '<p class="hr-platform-note"><i class="fas fa-fingerprint"></i> حضور وانصراف — يدوي · جوال/GPS · بصمة. استخدمي «حضور جوال» لتسجيل برقم الموظف.</p>' +
+            '<div class="hr-toolbar"><button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="hrMobileCheckInPrompt()"><i class="fas fa-mobile-screen"></i> حضور جوال (GPS)</button></div>' +
+            '<h4 class="hr-tracking-section-title"><i class="fas fa-bolt"></i> دخول / خروج سريع — اليوم</h4>' +
+            '<div class="hr-att-quick-grid">' + (quickCards || '<p class="erp-empty">لا موظفين نشطين</p>') + '</div>' +
+            '<div class="hr-editor-overlay"><h4><i class="fas fa-plus"></i> تسجيل حضور يدوي</h4><div class="erp-form-grid">' +
                 '<label class="nebras-field"><span>الموظف</span><select id="ha-employee">' + empOpts + '</select></label>' +
                 '<label class="nebras-field"><span>التاريخ</span><input type="date" id="ha-date" value="' + today + '"></label>' +
                 '<label class="nebras-field"><span>دخول</span><input type="time" id="ha-in" value="08:00"></label>' +
                 '<label class="nebras-field"><span>خروج</span><input type="time" id="ha-out"></label>' +
+                '<label class="nebras-field"><span>طريقة التسجيل</span><select id="ha-method">' + methodOpts + '</select></label>' +
                 '<label class="nebras-field"><span>الحالة</span><select id="ha-status">' + statusOpts + '</select></label>' +
                 '<label class="nebras-field nebras-field--wide"><span>ملاحظة</span><input id="ha-note"></label>' +
             '</div><div class="erp-form-actions"><button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="addHrAttendance()"><i class="fas fa-save"></i> حفظ</button></div></div>' +
-            '<div class="hr-leave-table-wrap"><table class="hr-leave-table"><thead><tr><th>التاريخ</th><th>الموظف</th><th>دخول</th><th>خروج</th><th>ساعات</th><th>الحالة</th><th></th></tr></thead><tbody>' +
-            (rows || '<tr><td colspan="7" class="erp-empty">لا سجلات حضور</td></tr>') + '</tbody></table></div></div>';
+            '<div class="hr-leave-table-wrap"><table class="hr-leave-table"><thead><tr><th>التاريخ</th><th>الموظف</th><th>دخول</th><th>خروج</th><th>ساعات</th><th>الطريقة</th><th>الحالة</th><th></th></tr></thead><tbody>' +
+            (rows || '<tr><td colspan="8" class="erp-empty">لا سجلات حضور</td></tr>') + '</tbody></table></div></div>';
     }
 
     function addHrAttendance() {
@@ -1659,6 +1685,7 @@
             id: 'att-' + Date.now(), employeeId: emp.id, employeeNo: emp.employeeNo, employeeName: emp.nameAr,
             branchId: emp.branchId || 'hq', date: date, checkIn: checkIn, checkOut: checkOut,
             hours: calcAttHours(checkIn, checkOut), status: hrField('ha-status') || 'present',
+            checkInMethod: hrField('ha-method') || 'manual', geoNote: '',
             note: hrField('ha-note'), createdAt: date
         });
         saveHrData();
@@ -1685,7 +1712,9 @@
             const exp = expBadge(d.expiryDate);
             return '<tr><td>' + esc(HR_DOC_TYPES[d.type] || d.type) + '</td><td>' + esc(d.employeeName) + '<br><small>' + esc(d.employeeNo) + '</small></td>' +
                 '<td>' + esc(d.docNo || '—') + '</td><td>' + formatHrDate(d.expiryDate) + ' ' + exp + '</td>' +
-                '<td><button type="button" class="erp-tag erp-tag--action" onclick="openHrDocEditor(\'' + esc(d.id) + '\')"><i class="fas fa-pen"></i></button> ' +
+                '<td>' + (d.attachmentName ? '<button type="button" class="erp-tag erp-tag--ok" onclick="viewHrDocumentAttachment(\'' + esc(d.id) + '\')"><i class="fas fa-paperclip"></i></button> ' : '') +
+                '<button type="button" class="erp-tag erp-tag--action" onclick="openHrDocEditor(\'' + esc(d.id) + '\')"><i class="fas fa-pen"></i></button> ' +
+                (canViewHrExecutiveReports() ? '<button type="button" class="erp-tag" onclick="sendHrDocumentReminder(\'' + esc(d.id) + '\')"><i class="fas fa-envelope"></i></button> ' : '') +
                 '<button type="button" class="erp-tag" onclick="deleteHrDocument(\'' + esc(d.id) + '\')"><i class="fas fa-trash"></i></button></td></tr>';
         }).join('');
         const quickForm = hrDocEditorId === null
@@ -1697,12 +1726,13 @@
                 '<label class="nebras-field"><span>تاريخ الإصدار</span><input type="date" id="hd-issue"></label>' +
                 '<label class="nebras-field"><span>تاريخ الانتهاء</span><input type="date" id="hd-expiry"></label>' +
                 '<label class="nebras-field nebras-field--wide"><span>ملاحظات</span><input id="hd-notes"></label>' +
+                '<label class="nebras-field nebras-field--wide"><span>مرفق (PDF/صورة)</span><input type="file" accept="image/*,application/pdf" onchange="hrReadDocAttachment(this,\'new\')"><small id="hd-attach-hint" class="hr-attach-hint">حتى ~450 كيلوبايت</small></label>' +
             '</div><div class="erp-form-actions"><button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="saveHrDocumentQuick()"><i class="fas fa-plus"></i> إضافة</button></div></div>'
             : '';
         return '<div class="hr-panel is-active">' +
             '<p class="hr-platform-note"><i class="fas fa-folder-open"></i> مستندات الموظفين — إقامة · عقود · تأمين · رخص — مع تنبيهات الانتهاء.</p>' +
             quickForm + editor +
-            '<div class="hr-leave-table-wrap"><table class="hr-leave-table"><thead><tr><th>النوع</th><th>الموظف</th><th>رقم الوثيقة</th><th>الانتهاء</th><th>إجراء</th></tr></thead><tbody>' +
+            '<div class="hr-leave-table-wrap"><table class="hr-leave-table"><thead><tr><th>النوع</th><th>الموظف</th><th>رقم الوثيقة</th><th>الانتهاء</th><th>مرفق · إجراء</th></tr></thead><tbody>' +
             (rows || '<tr><td colspan="5" class="erp-empty">لا مستندات</td></tr>') + '</tbody></table></div></div>';
     }
 
@@ -1718,6 +1748,7 @@
             '<label class="nebras-field"><span>تاريخ الإصدار</span><input type="date" id="hde-issue" value="' + esc(d.issueDate || '') + '"></label>' +
             '<label class="nebras-field"><span>تاريخ الانتهاء</span><input type="date" id="hde-expiry" value="' + esc(d.expiryDate || '') + '"></label>' +
             '<label class="nebras-field nebras-field--wide"><span>ملاحظات</span><input id="hde-notes" value="' + esc(d.notes || '') + '"></label>' +
+            '<label class="nebras-field nebras-field--wide"><span>مرفق جديد</span><input type="file" accept="image/*,application/pdf" onchange="hrReadDocAttachment(this,\'edit\')"><small id="hde-attach-hint" class="hr-attach-hint">' + (d.attachmentName ? esc(d.attachmentName) : 'اختياري') + '</small></label>' +
         '</div><div class="erp-form-actions">' +
             '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="saveHrDocumentEdit(\'' + esc(id) + '\')"><i class="fas fa-save"></i> حفظ</button>' +
             '<button type="button" class="nebras-users-btn" onclick="cancelHrDocEditor()"><i class="fas fa-xmark"></i> إلغاء</button></div></div>';
@@ -1735,8 +1766,12 @@
             id: 'doc-' + Date.now(), employeeId: emp.id, employeeNo: emp.employeeNo, employeeName: emp.nameAr,
             branchId: emp.branchId || 'hq', type: hrField('hd-type') || 'other', title: hrField('hd-title') || HR_DOC_TYPES[hrField('hd-type')],
             docNo: hrField('hd-no'), issueDate: hrField('hd-issue'), expiryDate: hrField('hd-expiry'),
-            notes: hrField('hd-notes'), createdAt: today
+            notes: hrField('hd-notes'), createdAt: today,
+            attachmentName: pendingHrDocAttachment ? pendingHrDocAttachment.name : '',
+            attachmentDataUrl: pendingHrDocAttachment ? pendingHrDocAttachment.dataUrl : '',
+            attachmentMime: pendingHrDocAttachment ? pendingHrDocAttachment.mime : ''
         });
+        pendingHrDocAttachment = null;
         saveHrData();
         hrAudit('HR مستند', 'إضافة ' + emp.nameAr);
         renderHrPlatformPanel();
@@ -1752,6 +1787,12 @@
         d.issueDate = hrField('hde-issue');
         d.expiryDate = hrField('hde-expiry');
         d.notes = hrField('hde-notes');
+        if (pendingHrDocAttachment) {
+            d.attachmentName = pendingHrDocAttachment.name;
+            d.attachmentDataUrl = pendingHrDocAttachment.dataUrl;
+            d.attachmentMime = pendingHrDocAttachment.mime;
+            pendingHrDocAttachment = null;
+        }
         saveHrData();
         hrDocEditorId = null;
         hrAudit('HR مستند', 'تعديل ' + d.employeeName);
@@ -1778,7 +1819,8 @@
                 '<td>' + (typeof formatSar === 'function' ? formatSar(it.base) : it.base) + '</td>' +
                 '<td>' + (typeof formatSar === 'function' ? formatSar(it.housing + it.transport) : (it.housing + it.transport)) + '</td>' +
                 '<td>' + (typeof formatSar === 'function' ? formatSar(it.deductions) : it.deductions) + '</td>' +
-                '<td><strong>' + (typeof formatSar === 'function' ? formatSar(it.net) : it.net) + '</strong></td></tr>';
+                '<td><strong>' + (typeof formatSar === 'function' ? formatSar(it.net) : it.net) + '</strong></td>' +
+                '<td><button type="button" class="erp-tag erp-tag--action" onclick="exportHrPayslipPdf(\'' + esc(it.employeeId) + '\')"><i class="fas fa-file-pdf"></i> قسيمة</button></td></tr>';
         }).join('');
         return '<div class="hr-panel is-active">' +
             '<p class="hr-platform-note"><i class="fas fa-money-check-dollar"></i> مسير رواتب شهري — HR يُعدّ المسودة' +
@@ -1787,6 +1829,7 @@
                 '<label class="nebras-field"><span>الشهر</span><input type="month" id="hp-month" value="' + esc(month) + '" onchange="setHrPayrollMonth(this.value)"></label>' +
                 '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="saveHrPayrollDraft()"><i class="fas fa-save"></i> حفظ مسودة</button>' +
                 (canApprove ? '<button type="button" class="nebras-users-btn" onclick="exportHrPayrollPdf()"><i class="fas fa-file-pdf"></i> PDF مسير الرواتب</button>' : '') +
+                '<button type="button" class="nebras-users-btn" onclick="exportAllHrPayslipsPdf()"><i class="fas fa-files"></i> قسائم فردية (الكل)</button>' +
             '</div>' +
             '<div class="hr-report-grid">' +
                 '<div class="hr-report-card"><strong>' + items.length + '</strong><span>موظف في المسير</span></div>' +
@@ -1794,8 +1837,8 @@
                 '<div class="hr-report-card"><strong>' + (typeof formatSar === 'function' ? formatSar(totalNet) : totalNet) + '</strong><span>صافي بعد خصم GOSI 9%</span></div>' +
             '</div>' +
             '<div class="hr-leave-table-wrap" id="hr-payroll-print-area"><table class="hr-leave-table"><thead><tr>' +
-                '<th>رقم</th><th>الاسم</th><th>القسم</th><th>أساسي</th><th>بدلات</th><th>خصومات</th><th>الصافي</th>' +
-            '</tr></thead><tbody>' + (rows || '<tr><td colspan="7">لا موظفين</td></tr>') + '</tbody></table></div></div>';
+                '<th>رقم</th><th>الاسم</th><th>القسم</th><th>أساسي</th><th>بدلات</th><th>خصومات</th><th>الصافي</th><th>قسيمة PDF</th>' +
+            '</tr></thead><tbody>' + (rows || '<tr><td colspan="8">لا موظفين</td></tr>') + '</tbody></table></div></div>';
     }
 
     function setHrPayrollMonth(val) {
@@ -1847,17 +1890,327 @@
         const warn = alerts.filter(function(a) { return a.level === 'warn'; }).length;
         const rows = alerts.map(function(a) {
             const cls = a.level === 'danger' ? 'hr-alert--danger' : (a.level === 'warn' ? 'hr-alert--warn' : 'hr-alert--info');
+            let action = '';
+            if (canViewHrExecutiveReports() && a.kind === 'doc' && a.id) {
+                action = '<button type="button" class="erp-tag" onclick="sendHrDocumentReminder(\'' + esc(a.id) + '\')"><i class="fas fa-envelope"></i> تنبيه بريد</button>';
+            }
             return '<article class="hr-alert-row ' + cls + '"><span class="hr-alert-cat">' + esc(a.cat) + '</span>' +
-                '<strong>' + esc(a.ref) + '</strong><p>' + esc(a.detail) + '</p></article>';
+                '<strong>' + esc(a.ref) + '</strong><p>' + esc(a.detail) + '</p>' + action + '</article>';
         }).join('');
+        const notifRows = hrNotifications.slice(0, 20).map(function(n) {
+            return '<tr><td>' + formatHrDate(n.date) + '</td><td>' + esc(n.employeeName || '') + '</td><td>' + esc(n.docTitle || '') + '</td>' +
+                '<td>' + esc(String(n.daysLeft != null ? n.daysLeft : '')) + '</td><td>' + esc(n.status || '') + '</td></tr>';
+        }).join('');
+        const govActions = canViewHrExecutiveReports()
+            ? '<div class="erp-form-actions" style="margin-bottom:12px"><button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="sendAllHrExpiryReminders()"><i class="fas fa-envelope-open-text"></i> تقرير بريد — كل المنتهية قريباً</button></div>'
+            : '';
         return '<div class="hr-panel is-active">' +
-            '<p class="hr-platform-note"><i class="fas fa-bell"></i> تنبيهات تلقائية — انتهاء إقامات · عقود · تأمين · وثائق سيارات · إجازات معلقة.</p>' +
+            '<p class="hr-platform-note"><i class="fas fa-bell"></i> تنبيهات تلقائية + تذكيرات إقامة/عقود — مسح يومي · بريد للإدارة الرئيسية.</p>' +
+            govActions +
             '<div class="hr-report-grid">' +
                 '<div class="hr-report-card hr-report-card--danger"><strong>' + danger + '</strong><span>منتهي / عاجل</span></div>' +
                 '<div class="hr-report-card"><strong>' + warn + '</strong><span>ينتهي خلال 60 يوم</span></div>' +
-                '<div class="hr-report-card"><strong>' + alerts.length + '</strong><span>إجمالي التنبيهات</span></div>' +
+                '<div class="hr-report-card"><strong>' + alerts.length + '</strong><span>تنبيهات نشطة</span></div>' +
+                '<div class="hr-report-card"><strong>' + hrNotifications.length + '</strong><span>سجل تذكيرات</span></div>' +
             '</div>' +
-            '<div class="hr-alerts-list">' + (rows || '<p class="erp-empty">لا تنبيهات — كل شيء ساري.</p>') + '</div></div>';
+            '<div class="hr-alerts-list">' + (rows || '<p class="erp-empty">لا تنبيهات — كل شيء ساري.</p>') + '</div>' +
+            '<h4 class="hr-tracking-section-title"><i class="fas fa-clock-rotate-left"></i> سجل التذكيرات (30/60 يوم)</h4>' +
+            '<div class="hr-leave-table-wrap"><table class="hr-leave-table"><thead><tr><th>التاريخ</th><th>الموظف</th><th>المستند</th><th>أيام متبقية</th><th>الحالة</th></tr></thead><tbody>' +
+            (notifRows || '<tr><td colspan="5" class="erp-empty">لا سجل بعد</td></tr>') + '</tbody></table></div></div>';
+    }
+
+/* PHASE13_INJECTED */
+/* Phase 13 — payslips, mobile attendance, doc attachments, expiry reminders */
+
+    const HR_ATT_METHOD = {
+        manual: 'يدوي',
+        mobile: 'جوال / GPS',
+        biometric: 'بصمة / جهاز'
+    };
+
+    const HR_NOTIF_KEY = 'nebrasHrNotifications';
+    const HR_NOTIF_SETTINGS_KEY = 'nebrasHrNotifSettings';
+    const HR_DOC_ATTACH_MAX = 480000;
+
+    let hrNotifications = [];
+    let hrNotifSettings = { remindDays: [30, 60], notifyEmail: '', lastScan: '' };
+    let pendingHrDocAttachment = null;
+
+    function loadHrPhase13Data() {
+        try {
+            const n = localStorage.getItem(HR_NOTIF_KEY);
+            hrNotifications = n ? JSON.parse(n) : [];
+            if (!Array.isArray(hrNotifications)) hrNotifications = [];
+        } catch (e) { hrNotifications = []; }
+        try {
+            const s = localStorage.getItem(HR_NOTIF_SETTINGS_KEY);
+            const parsed = s ? JSON.parse(s) : null;
+            hrNotifSettings = parsed && typeof parsed === 'object' ? parsed : { remindDays: [30, 60], notifyEmail: '', lastScan: '' };
+        } catch (e) { hrNotifSettings = { remindDays: [30, 60], notifyEmail: '', lastScan: '' }; }
+        if (typeof PRIMARY_RECOVERY_EMAIL !== 'undefined' && !hrNotifSettings.notifyEmail) {
+            hrNotifSettings.notifyEmail = PRIMARY_RECOVERY_EMAIL;
+        }
+    }
+
+    function saveHrPhase13Data() {
+        try {
+            localStorage.setItem(HR_NOTIF_KEY, JSON.stringify(hrNotifications));
+            localStorage.setItem(HR_NOTIF_SETTINGS_KEY, JSON.stringify(hrNotifSettings));
+        } catch (e) { console.warn('HR phase13 save', e); }
+    }
+
+    function setHrNotificationsFromCloud(v) {
+        hrNotifications = Array.isArray(v) ? v : [];
+        try { localStorage.setItem(HR_NOTIF_KEY, JSON.stringify(hrNotifications)); } catch (e) { /* ignore */ }
+    }
+
+    function setHrNotifSettingsFromCloud(v) {
+        if (v && typeof v === 'object') hrNotifSettings = v;
+        try { localStorage.setItem(HR_NOTIF_SETTINGS_KEY, JSON.stringify(hrNotifSettings)); } catch (e) { /* ignore */ }
+    }
+
+    function getHrNotifyEmail() {
+        if (hrNotifSettings.notifyEmail) return hrNotifSettings.notifyEmail;
+        if (typeof PRIMARY_RECOVERY_EMAIL !== 'undefined') return PRIMARY_RECOVERY_EMAIL;
+        return '';
+    }
+
+    function processHrExpiryReminders() {
+        const today = new Date().toISOString().slice(0, 10);
+        if (hrNotifSettings.lastScan === today) return;
+        hrDocuments.forEach(function(d) {
+            if (!d.expiryDate) return;
+            const exp = new Date(d.expiryDate + 'T12:00:00');
+            const days = Math.round((exp - new Date()) / (1000 * 60 * 60 * 24));
+            const thresholds = hrNotifSettings.remindDays || [30, 60];
+            thresholds.forEach(function(th) {
+                if (days === th || (days < th && days >= th - 2)) {
+                    const exists = hrNotifications.some(function(n) {
+                        return n.docId === d.id && n.threshold === th && n.date === today;
+                    });
+                    if (!exists) {
+                        hrNotifications.unshift({
+                            id: 'hn-' + Date.now() + '-' + th,
+                            docId: d.id, employeeName: d.employeeName, docTitle: d.title,
+                            expiryDate: d.expiryDate, threshold: th, daysLeft: days,
+                            date: today, status: 'pending', channel: 'system'
+                        });
+                    }
+                }
+            });
+        });
+        hrNotifSettings.lastScan = today;
+        saveHrPhase13Data();
+    }
+
+    function sendHrDocumentReminder(docId) {
+        if (!canViewHrExecutiveReports()) {
+            alert('إرسال تنبيهات الإقامة — الإدارة الرئيسية فقط.');
+            return;
+        }
+        const d = hrDocuments.find(function(x) { return x.id === docId; });
+        if (!d) return;
+        const email = getHrNotifyEmail();
+        const subject = encodeURIComponent('تنبيه HR — انتهاء ' + (HR_DOC_TYPES[d.type] || d.type) + ' — ' + d.employeeName);
+        const body = encodeURIComponent(
+            'مصنع نبراس — تنبيه موارد بشرية\n\n' +
+            'الموظف: ' + d.employeeName + ' (' + d.employeeNo + ')\n' +
+            'المستند: ' + (d.title || '') + '\n' +
+            'رقم الوثيقة: ' + (d.docNo || '') + '\n' +
+            'تاريخ الانتهاء: ' + d.expiryDate + '\n\n' +
+            'يرجى المتابعة مع قسم HR.'
+        );
+        const mail = 'mailto:' + encodeURIComponent(email) + '?subject=' + subject + '&body=' + body;
+        window.location.href = mail;
+        hrNotifications.unshift({
+            id: 'hn-sent-' + Date.now(), docId: d.id, employeeName: d.employeeName,
+            docTitle: d.title, expiryDate: d.expiryDate, date: new Date().toISOString().slice(0, 10),
+            status: 'sent', channel: 'email'
+        });
+        saveHrData();
+        hrAudit('HR تنبيه إقامة', 'بريد — ' + d.employeeName);
+    }
+
+    function sendAllHrExpiryReminders() {
+        if (!canViewHrExecutiveReports()) return;
+        const urgent = hrDocuments.filter(function(d) {
+            if (!d.expiryDate) return false;
+            const days = Math.round((new Date(d.expiryDate + 'T12:00:00') - new Date()) / (1000 * 60 * 60 * 24));
+            return days >= 0 && days <= 60;
+        });
+        if (!urgent.length) { alert('لا مستندات تنتهي خلال 60 يوم.'); return; }
+        const email = getHrNotifyEmail();
+        const lines = urgent.map(function(d) {
+            return '- ' + d.employeeName + ': ' + (HR_DOC_TYPES[d.type] || d.type) + ' ينتهي ' + d.expiryDate;
+        }).join('%0A');
+        const subject = encodeURIComponent('تقرير تنبيهات HR — مستندات تنتهي قريباً');
+        const body = encodeURIComponent('مصنع نبراس — تنبيهات المستندات:%0A%0A') + lines;
+        window.location.href = 'mailto:' + encodeURIComponent(email) + '?subject=' + subject + '&body=' + body;
+        hrAudit('HR تنبيهات جماعية', urgent.length + ' مستند');
+    }
+
+    function hrReadDocAttachment(input, mode) {
+        if (!input || !input.files || !input.files[0]) return;
+        const file = input.files[0];
+        if (file.size > HR_DOC_ATTACH_MAX) {
+            alert('الملف كبير — الحد الأقصى ~450 كيلوبايت. استخدمي PDF مضغوط أو صورة أصغر.');
+            input.value = '';
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            pendingHrDocAttachment = { name: file.name, dataUrl: ev.target.result, mime: file.type };
+            const hint = document.getElementById('hd-attach-hint') || document.getElementById('hde-attach-hint');
+            if (hint) hint.textContent = '✓ مرفق: ' + file.name;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function viewHrDocumentAttachment(docId) {
+        const d = hrDocuments.find(function(x) { return x.id === docId; });
+        if (!d || !d.attachmentDataUrl) { alert('لا مرفق لهذا المستند.'); return; }
+        const w = window.open('', '_blank');
+        if (!w) { alert('فعّلي النوافذ المنبثقة.'); return; }
+        if (d.attachmentMime && d.attachmentMime.indexOf('pdf') >= 0) {
+            w.document.write('<iframe src="' + d.attachmentDataUrl + '" style="width:100%;height:100%;border:0"></iframe>');
+        } else {
+            w.document.write('<img src="' + d.attachmentDataUrl + '" style="max-width:100%">');
+        }
+        w.document.close();
+    }
+
+    function findTodayAttendance(empId) {
+        const today = new Date().toISOString().slice(0, 10);
+        return hrAttendance.find(function(a) {
+            return a.employeeId === empId && a.date === today;
+        }) || null;
+    }
+
+    function hrQuickCheckIn(empId, method) {
+        if (!requireHrOps()) return;
+        const emp = getEmployeeById(empId);
+        if (!emp) return;
+        const today = new Date().toISOString().slice(0, 10);
+        const now = new Date().toTimeString().slice(0, 5);
+        let existing = findTodayAttendance(empId);
+        if (existing && existing.checkIn) {
+            alert(emp.nameAr + ' سجّل دخولاً اليوم عند ' + existing.checkIn);
+            return;
+        }
+        const geoNote = method === 'mobile' ? 'GPS' : '';
+        if (existing) {
+            existing.checkIn = now;
+            existing.checkInMethod = method || 'manual';
+            existing.status = 'present';
+            if (geoNote) existing.geoNote = geoNote;
+        } else {
+            hrAttendance.unshift({
+                id: 'att-' + Date.now(), employeeId: emp.id, employeeNo: emp.employeeNo, employeeName: emp.nameAr,
+                branchId: emp.branchId || 'hq', date: today, checkIn: now, checkOut: '', hours: 0,
+                status: 'present', checkInMethod: method || 'manual', geoNote: geoNote,
+                note: '', createdAt: today
+            });
+        }
+        saveHrData();
+        hrAudit('HR حضور دخول', emp.nameAr + ' — ' + (HR_ATT_METHOD[method] || method));
+        renderHrPlatformPanel();
+    }
+
+    function hrQuickCheckOut(empId) {
+        if (!requireHrOps()) return;
+        const emp = getEmployeeById(empId);
+        if (!emp) return;
+        const today = new Date().toISOString().slice(0, 10);
+        const now = new Date().toTimeString().slice(0, 5);
+        let existing = findTodayAttendance(empId);
+        if (!existing || !existing.checkIn) {
+            alert('لا يوجد تسجيل دخول اليوم لـ ' + emp.nameAr);
+            return;
+        }
+        existing.checkOut = now;
+        existing.hours = calcAttHours(existing.checkIn, now);
+        saveHrData();
+        hrAudit('HR حضور خروج', emp.nameAr);
+        renderHrPlatformPanel();
+    }
+
+    function hrMobileCheckInPrompt() {
+        if (!requireHrOps()) return;
+        const no = prompt('رقم الموظف للحضور عبر الجوال:', '');
+        if (!no) return;
+        const emp = findEmployeeByNo(no);
+        if (!emp) { alert('رقم موظف غير موجود.'); return; }
+        if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(function(pos) {
+                const rec = findTodayAttendance(emp.id);
+                const geo = pos.coords.latitude.toFixed(4) + ',' + pos.coords.longitude.toFixed(4);
+                hrQuickCheckIn(emp.id, 'mobile');
+                const r = findTodayAttendance(emp.id);
+                if (r) { r.geoNote = geo; saveHrData(); }
+            }, function() {
+                hrQuickCheckIn(emp.id, 'mobile');
+            }, { timeout: 8000 });
+        } else {
+            hrQuickCheckIn(emp.id, 'mobile');
+        }
+    }
+
+    function buildHrPayslipHtml(item, month) {
+        const fmt = typeof formatSar === 'function' ? formatSar : function(v) { return v + ' ر.س'; };
+        return '<div class="hr-payslip-page">' +
+            '<div class="hr-payslip-head"><img src="images/logo.png" alt="" onerror="this.style.display=\'none\'" style="height:40px">' +
+            '<div><h2>مصنع نبراس للبلاستيك</h2><p>قسيمة راتب — ' + esc(month) + '</p></div></div>' +
+            '<table class="hr-payslip-meta"><tr><td>الموظف</td><td><strong>' + esc(item.employeeName) + '</strong></td></tr>' +
+            '<tr><td>رقم الموظف</td><td>' + esc(item.employeeNo) + '</td></tr>' +
+            '<tr><td>القسم</td><td>' + esc(item.department || '—') + '</td></tr>' +
+            '<tr><td>المسمى</td><td>' + esc(item.jobTitle || '—') + '</td></tr>' +
+            '<tr><td>الفرع</td><td>' + esc(resolveHrBranchLabel(item.branchId)) + '</td></tr></table>' +
+            '<table class="hr-payslip-lines"><tr><th>البند</th><th>المبلغ</th></tr>' +
+            '<tr><td>الراتب الأساسي</td><td>' + fmt(item.base) + '</td></tr>' +
+            '<tr><td>بدل سكن</td><td>' + fmt(item.housing) + '</td></tr>' +
+            '<tr><td>بدل نقل</td><td>' + fmt(item.transport) + '</td></tr>' +
+            '<tr><td><strong>إجمالي المستحقات</strong></td><td><strong>' + fmt(item.gross) + '</strong></td></tr>' +
+            '<tr><td>خصم GOSI (9%)</td><td>' + fmt(item.deductions) + '</td></tr>' +
+            '<tr class="hr-payslip-net"><td><strong>صافي الراتب</strong></td><td><strong>' + fmt(item.net) + '</strong></td></tr></table>' +
+            '<p class="hr-payslip-foot">هذا المستند صادر من منصة HR — مصنع نبراس · ' + new Date().toLocaleDateString('ar-SA') + '</p></div>';
+    }
+
+    function exportHrPayslipPdf(employeeId) {
+        if (!requireHrOps()) return;
+        const month = getHrPayrollMonth();
+        const items = buildPayrollItemsForMonth(month, hrBranchFilter);
+        const item = items.find(function(i) { return i.employeeId === employeeId; });
+        if (!item) { alert('الموظف غير موجود في مسير هذا الشهر.'); return; }
+        const w = window.open('', '_blank');
+        if (!w) { alert('فعّلي النوافذ المنبثقة.'); return; }
+        w.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>قسيمة ' + item.employeeNo + '</title>' +
+            '<style>.hr-payslip-page{font-family:Tahoma,sans-serif;padding:24px;max-width:520px;margin:0 auto;color:#1a365d}' +
+            '.hr-payslip-head{display:flex;gap:12px;align-items:center;border-bottom:2px solid #2980b9;padding-bottom:12px;margin-bottom:16px}' +
+            '.hr-payslip-head h2{margin:0;font-size:16px}.hr-payslip-meta,.hr-payslip-lines{width:100%;border-collapse:collapse;margin:12px 0;font-size:13px}' +
+            '.hr-payslip-meta td,.hr-payslip-lines td,.hr-payslip-lines th{border:1px solid #ddd;padding:8px}.hr-payslip-lines th{background:#e8f0f8}' +
+            '.hr-payslip-net td{background:#f0f8ff}.hr-payslip-foot{font-size:10px;color:#666;margin-top:20px}</style></head><body>');
+        w.document.write(buildHrPayslipHtml(item, month));
+        w.document.write('</body></html>');
+        w.document.close();
+        w.print();
+        hrAudit('HR قسيمة راتب', item.employeeName + ' — ' + month);
+    }
+
+    function exportAllHrPayslipsPdf() {
+        if (!requireHrExecutiveReport()) return;
+        const month = getHrPayrollMonth();
+        const items = buildPayrollItemsForMonth(month, hrBranchFilter);
+        if (!items.length) { alert('لا موظفين.'); return; }
+        const w = window.open('', '_blank');
+        if (!w) return;
+        w.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>قسائم ' + month + '</title>' +
+            '<style>.hr-payslip-page{font-family:Tahoma,sans-serif;padding:24px;page-break-after:always}.hr-payslip-head{display:flex;gap:12px;align-items:center;border-bottom:2px solid #2980b9;padding-bottom:12px}' +
+            'table{width:100%;border-collapse:collapse;margin:10px 0;font-size:12px}td,th{border:1px solid #ccc;padding:6px}th{background:#e8f0f8}</style></head><body>');
+        items.forEach(function(it) { w.document.write(buildHrPayslipHtml(it, month)); });
+        w.document.write('</body></html>');
+        w.document.close();
+        w.print();
+        hrAudit('HR قسائم جماعية', month + ' — ' + items.length);
     }
 
     function isHrDepartmentAdmin(admin) {
@@ -1952,6 +2305,19 @@
     global.setHrPayrollMonth = setHrPayrollMonth;
     global.saveHrPayrollDraft = saveHrPayrollDraft;
     global.exportHrPayrollPdf = exportHrPayrollPdf;
+    global.getHrNotifications = function() { loadHrData(); return hrNotifications; };
+    global.getHrNotifSettings = function() { loadHrData(); return hrNotifSettings; };
+    global.setHrNotificationsFromCloud = setHrNotificationsFromCloud;
+    global.setHrNotifSettingsFromCloud = setHrNotifSettingsFromCloud;
+    global.hrQuickCheckIn = hrQuickCheckIn;
+    global.hrQuickCheckOut = hrQuickCheckOut;
+    global.hrMobileCheckInPrompt = hrMobileCheckInPrompt;
+    global.hrReadDocAttachment = hrReadDocAttachment;
+    global.viewHrDocumentAttachment = viewHrDocumentAttachment;
+    global.exportHrPayslipPdf = exportHrPayslipPdf;
+    global.exportAllHrPayslipsPdf = exportAllHrPayslipsPdf;
+    global.sendHrDocumentReminder = sendHrDocumentReminder;
+    global.sendAllHrExpiryReminders = sendAllHrExpiryReminders;
 
     loadHrData();
 })(typeof window !== 'undefined' ? window : globalThis);

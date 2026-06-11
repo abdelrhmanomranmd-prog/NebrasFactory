@@ -18361,7 +18361,7 @@
             const list = document.getElementById('cloud-governance-stores');
             if (!summary || !list) return;
             const connected = !!supabaseClient;
-            const erpKeys = ['erp_inventory', 'erp_orders', 'erp_production', 'erp_purchases', 'erp_transfers', 'erp_stock_transfers', 'sales_price_list', 'sales_data', 'customer_service', 'hr_employees', 'hr_vehicles', 'hr_leave', 'hr_vehicle_tracking', 'hr_attendance', 'hr_documents', 'hr_payroll'];
+            const erpKeys = ['erp_inventory', 'erp_orders', 'erp_production', 'erp_purchases', 'erp_transfers', 'erp_stock_transfers', 'sales_price_list', 'sales_data', 'customer_service', 'hr_employees', 'hr_vehicles', 'hr_leave', 'hr_vehicle_tracking', 'hr_attendance', 'hr_documents', 'hr_payroll', 'hr_notifications', 'hr_notif_settings'];
             summary.innerHTML =
                 '<div class="erp-stat' + (connected ? ' erp-stat--ok' : ' erp-stat--danger') + '"><strong>' + (connected ? 'متصل' : 'محلي') + '</strong><span>Supabase</span></div>' +
                 '<div class="erp-stat"><strong>' + NEBRAS_CLOUD_STORE_SPECS.length + '</strong><span>مخازن بيانات</span></div>' +
@@ -20377,6 +20377,16 @@
                 return typeof getHrPayrollRuns === 'function' ? getHrPayrollRuns() : [];
             }, set: function(v) {
                 if (typeof setHrPayrollFromCloud === 'function') setHrPayrollFromCloud(v);
+            }},
+            { key: 'hr_notifications', get: function() {
+                return typeof getHrNotifications === 'function' ? getHrNotifications() : [];
+            }, set: function(v) {
+                if (typeof setHrNotificationsFromCloud === 'function') setHrNotificationsFromCloud(v);
+            }},
+            { key: 'hr_notif_settings', get: function() {
+                return typeof getHrNotifSettings === 'function' ? getHrNotifSettings() : {};
+            }, set: function(v) {
+                if (typeof setHrNotifSettingsFromCloud === 'function') setHrNotifSettingsFromCloud(v);
             }},
             { key: 'callback_leads', get: function() {
                 return typeof getCallbackLeads === 'function' ? getCallbackLeads() : [];
