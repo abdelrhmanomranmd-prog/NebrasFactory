@@ -1,0 +1,143 @@
+#!/usr/bin/env python3
+"""Full deploy readiness: local git, GitHub, Supabase, live site markers."""
+import json
+import os
+import subprocess
+import sys
+import urllib.error
+import urllib.request
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SUPABASE_URL = 'https://oedldllrjavofpeaputz.supabase.co'
+ANON_KEY = 'sb_publishable_bt6rlHxu_pjc1xpkKEWOcg_HZ43JMR0'
+LIVE = 'https://www.nebrasplasticcompany.com'
+GITHUB_REPO = 'abdelrhmanomranmd-prog/NebrasFactory'
+
+REQUIRED_CLOUD_KEYS = {
+    'system_settings', 'site_products', 'admin_users', 'hr_dept_activity',
+    'quote_registry', 'hr_employees', 'sales_quotes_inbox', 'analytics_governance',
+}
+LIVE_MARKERS = {
+    'js/nebras-platform.js': ['isStrictSalesRep', 'openRepMyQuotes', 'quotesOnly'],
+    'js/nebras-hr-platform.js': ['PHASE17_INJECTED', 'renderHrGovernancePanel', 'hrDeptActivity'],
+}
+
+
+def run_script(name):
+    path = os.path.join(ROOT, 'tools', name)
+    if not os.path.isfile(path):
+        return name, 'MISSING', ''
+    try:
+        out = subprocess.check_output([sys.executable, path], cwd=ROOT, stderr=subprocess.STDOUT, timeout=120)
+        text = out.decode('utf-8', errors='replace')
+        ok = 'RESULT: PASS' in text or 'OK:' in text or 'All expected' in text
+        return name, 'PASS' if ok else 'REVIEW', text.strip().split('\n')[-3:]
+    except subprocess.CalledProcessError as e:
+        return name, 'FAIL', e.output.decode('utf-8', errors='replace')[-400:]
+
+
+def git_check():
+    try:
+        head = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()[:12]
+        remote = subprocess.check_output(['git', 'rev-parse', 'origin/main'], cwd=ROOT, text=True).strip()[:12]
+        status = subprocess.check_output(['git', 'status', '--porcelain'], cwd=ROOT, text=True).strip()
+        return head == remote, head, remote, status
+    except Exception as e:
+        return False, '', '', str(e)
+
+
+def github_check(local_head):
+    url = f'https://api.github.com/repos/{GITHUB_REPO}/commits/main'
+    req = urllib.request.Request(url, headers={'User-Agent': 'NebrasVerify'})
+    with urllib.request.urlopen(req, timeout=20) as r:
+        d = json.loads(r.read())
+    gh = d['sha'][:12]
+    return gh == local_head[:12], gh, d['commit']['message'].split('\n')[0]
+
+
+def supabase_check():
+    url = SUPABASE_URL + '/rest/v1/nebras_data_store?select=store_key'
+    req = urllib.request.Request(url, headers={'apikey': ANON_KEY, 'Authorization': 'Bearer ' + ANON_KEY})
+    with urllib.request.urlopen(req, timeout=20) as r:
+        keys = {row['store_key'] for row in json.loads(r.read())}
+    missing = REQUIRED_CLOUD_KEYS - keys
+    return not missing, len(keys), sorted(missing)
+
+
+def live_check():
+    results = []
+    all_ok = True
+    for rel, markers in LIVE_MARKERS.items():
+        url = LIVE + '/' + rel
+        req = urllib.request.Request(url, headers={'User-Agent': 'NebrasVerify'})
+        with urllib.request.urlopen(req, timeout=25) as r:
+            body = r.read().decode('utf-8', errors='replace')
+        miss = [m for m in markers if m not in body]
+        ok = not miss
+        all_ok = all_ok and ok
+        results.append((rel, ok, miss))
+    req = urllib.request.Request(LIVE + '/', headers={'User-Agent': 'NebrasVerify'})
+    with urllib.request.urlopen(req, timeout=20) as r:
+        home_ok = r.status == 200
+    return all_ok and home_ok, results, home_ok
+
+
+def main():
+    print('=== NEBRAS FULL DEPLOY VERIFICATION ===\n')
+    errors = []
+
+    synced, head, remote, status = git_check()
+    print(f'GIT local={head} remote={remote} synced={synced} clean={not status}')
+    if not synced:
+        errors.append('git not synced with origin/main')
+    if status:
+        errors.append('uncommitted changes: ' + status[:120])
+
+    try:
+        gh_ok, gh_sha, gh_msg = github_check(head)
+        print(f'GITHUB main={gh_sha} match={gh_ok} — {gh_msg}')
+        if not gh_ok:
+            errors.append('GitHub main differs from local HEAD')
+    except Exception as e:
+        errors.append('GitHub API: ' + str(e))
+        print('GITHUB FAIL:', e)
+
+    try:
+        sb_ok, count, missing = supabase_check()
+        print(f'SUPABASE keys={count} required_ok={sb_ok}')
+        if missing:
+            print('  missing:', ', '.join(missing))
+            errors.append('Supabase missing keys')
+    except Exception as e:
+        errors.append('Supabase: ' + str(e))
+        print('SUPABASE FAIL:', e)
+
+    try:
+        live_ok, markers, home = live_check()
+        print(f'LIVE site home={home} markers_ok={live_ok}')
+        for rel, ok, miss in markers:
+            print(f'  {rel}:', 'PASS' if ok else 'FAIL missing ' + str(miss))
+        if not live_ok:
+            errors.append('Live site missing latest JS markers — redeploy needed')
+    except Exception as e:
+        errors.append('Live site: ' + str(e))
+        print('LIVE FAIL:', e)
+
+    for script in ['verify-governance.py', 'verify-site-full.py', 'verify-project-health.py', 'verify-supabase-cloud.py']:
+        name, state, tail = run_script(script)
+        print(f'TOOL {name}: {state}')
+        if state == 'FAIL':
+            errors.append(name + ' failed')
+
+    print('\n=== SUMMARY ===')
+    if errors:
+        print('ISSUES:', len(errors))
+        for e in errors:
+            print(' -', e)
+        sys.exit(1)
+    print('ALL CHECKS PASSED — GitHub · Supabase · Live site are in sync.')
+    sys.exit(0)
+
+
+if __name__ == '__main__':
+    main()
