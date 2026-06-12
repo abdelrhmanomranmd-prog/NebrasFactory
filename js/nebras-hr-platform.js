@@ -226,7 +226,12 @@
 
     function setHrEmployeesFromCloud(v) {
         hrEmployees = Array.isArray(v) ? v : [];
-        try { localStorage.setItem(HR_EMP_KEY, JSON.stringify(hrEmployees)); } catch (e) { /* ignore */ }
+        if (!hrEmployees.length) {
+            ensureBuiltinHrSeed();
+        } else {
+            hrEmployees.forEach(mapEmployeeDepartmentKey);
+            try { localStorage.setItem(HR_EMP_KEY, JSON.stringify(hrEmployees)); } catch (e) { /* ignore */ }
+        }
     }
 
     function setHrVehiclesFromCloud(v) {
@@ -244,13 +249,26 @@
         try { localStorage.setItem(HR_TRACK_KEY, JSON.stringify(hrVehicleTracking)); } catch (e) { /* ignore */ }
     }
 
+    function mapEmployeeDepartmentKey(emp) {
+        if (!emp || emp.departmentKey) return;
+        if (typeof HR_FACTORY_DEPTS === 'undefined') return;
+        const hit = Object.keys(HR_FACTORY_DEPTS).find(function(k) {
+            return emp.department === HR_FACTORY_DEPTS[k] || (emp.department && emp.department.indexOf(HR_FACTORY_DEPTS[k]) >= 0);
+        });
+        if (hit) emp.departmentKey = hit;
+        else if (emp.department === 'الإدارة') emp.departmentKey = 'admin';
+        else if (emp.department === 'المبيعات') emp.departmentKey = 'sales';
+        else if (emp.department === 'الإنتاج') emp.departmentKey = 'production_alu';
+        else if (emp.department === 'الورشة') emp.departmentKey = 'workshop';
+    }
+
     function ensureBuiltinHrSeed() {
         const now = new Date().toISOString().slice(0, 10);
         if (!hrEmployees.length) {
             hrEmployees = [
                 {
                     id: 'emp-hq-001', employeeNo: 'NEB-001', nameAr: 'أحمد محمد العتيبي', nameEn: 'Ahmed Al-Otaibi',
-                    nationalId: '1*********', nationality: 'سعودي', branchId: 'hq', department: 'الإدارة', jobTitle: 'مدير مصنع',
+                    nationalId: '1*********', nationality: 'سعودي', branchId: 'hq', departmentKey: 'admin', department: 'الإدارة', jobTitle: 'مدير مصنع',
                     employmentType: 'fulltime', status: 'active', joinDate: '2018-03-01', phone: '0500000001', phone2: '0160000001',
                     email: 'ahmed@nebras.factory', emergencyName: 'فاطمة العتيبي', emergencyPhone: '0500000099',
                     salary: 18000, housingAllowance: 3000, transportAllowance: 1500, bankName: 'الراجحي', iban: 'SA00****',
@@ -258,25 +276,27 @@
                 },
                 {
                     id: 'emp-riy-002', employeeNo: 'NEB-002', nameAr: 'خالد سعد القحطاني', nameEn: 'Khaled Al-Qahtani',
-                    nationalId: '2*********', nationality: 'سعودي', branchId: '2', department: 'المبيعات', jobTitle: 'مشرف مبيعات',
+                    nationalId: '2*********', nationality: 'سعودي', branchId: '2', departmentKey: 'sales', department: 'المبيعات', jobTitle: 'مشرف مبيعات',
                     employmentType: 'fulltime', status: 'active', joinDate: '2020-06-15', phone: '0500000002', email: 'khaled@nebras.factory',
                     emergencyName: 'نورة القحطاني', emergencyPhone: '0500000088', salary: 12000, housingAllowance: 2000,
                     transportAllowance: 1000, vehicleId: 'veh-002', notes: 'فرع الرياض', createdAt: now, updatedAt: now
                 },
                 {
                     id: 'emp-jed-003', employeeNo: 'NEB-003', nameAr: 'محمد علي الزهراني', nameEn: 'Mohammed Al-Zahrani',
-                    nationalId: '3*********', nationality: 'سعودي', branchId: '3', department: 'الإنتاج', jobTitle: 'فني ألومنيوم',
+                    nationalId: '3*********', nationality: 'سعودي', branchId: '3', departmentKey: 'production_alu', department: 'الإنتاج', jobTitle: 'فني ألومنيوم',
                     employmentType: 'fulltime', status: 'active', joinDate: '2021-01-10', phone: '0500000003', salary: 9000,
                     transportAllowance: 800, notes: 'فرع جدة', createdAt: now, updatedAt: now
                 },
                 {
                     id: 'emp-hq-004', employeeNo: 'NEB-004', nameAr: 'عبدالله حسن', nameEn: 'Abdullah Hassan',
-                    nationalId: '4*********', nationality: 'مصري', branchId: 'hq', department: 'الورشة', jobTitle: 'عامل إنتاج',
+                    nationalId: '4*********', nationality: 'مصري', branchId: 'hq', departmentKey: 'workshop', department: 'الورشة', jobTitle: 'عامل إنتاج',
                     employmentType: 'daily', status: 'active', joinDate: '2023-05-01', phone: '0500000004', salary: 4500,
                     notes: 'عمال يومية — WPC', createdAt: now, updatedAt: now
                 }
             ];
+            saveHrData();
         }
+        hrEmployees.forEach(mapEmployeeDepartmentKey);
         if (!hrVehicles.length) {
             const nextYear = String(new Date().getFullYear() + 1);
             hrVehicles = [
@@ -681,7 +701,9 @@
                 tabDefs.push({ id: 'reports', icon: 'fas fa-file-export', label: 'تقارير الإدارة الرئيسية', group: 'الإدارة الرئيسية' });
             }
             if (typeof isHrTabAllowedForScope === 'function') {
+                const hrGov = typeof isHrGovernorScope === 'function' && isHrGovernorScope();
                 tabDefs = tabDefs.filter(function(t) {
+                    if (hrGov) return t.id !== 'reports';
                     if (t.id === 'fleet-hub' || t.id === 'travel' || t.id === 'deductions' || t.id === 'saudization') return true;
                     return isHrTabAllowedForScope(t.id);
                 });
@@ -1043,7 +1065,7 @@
             nameEn: hrField('he-name-en'),
             nationalId: hrField('he-national'),
             nationality: hrField('he-nationality'),
-            branchId: hrField('he-branch') || 'hq',
+            branchId: hrField('he-branch') || getHrAdminScope().branchId || 'hq',
             departmentKey: hrField('he-dept-key'),
             department: (typeof HR_FACTORY_DEPTS !== 'undefined' && HR_FACTORY_DEPTS[hrField('he-dept-key')]) ? HR_FACTORY_DEPTS[hrField('he-dept-key')] : hrField('he-dept-key'),
             jobTitle: hrField('he-job'),
@@ -1083,6 +1105,7 @@
                 hrEmployees[idx] = record;
             }
         } else {
+            if (typeof assertHrNewRecordInScope === 'function' && !assertHrNewRecordInScope(record)) return;
             record.createdAt = now;
             hrEmployees.unshift(record);
         }
@@ -1102,8 +1125,6 @@
                 nv.assignedEmployeeId = record.id;
             }
         }
-        if (typeof assertHrNewRecordInScope === 'function' && !assertHrNewRecordInScope(record)) return;
-
         saveHrData();
         hrEmployeeEditorId = null;
         hrAudit('HR موظف', (id ? 'تعديل ' : 'إضافة ') + nameAr);
@@ -3186,10 +3207,19 @@
         return '';
     }
 
+    function isHrGovernorScope(scope) {
+        scope = scope || getHrAdminScope();
+        return scope.departmentKey === 'hr';
+    }
+
     function employeeMatchesHrScope(emp, scope) {
         if (!emp) return false;
         scope = scope || getHrAdminScope();
         if (scope.mode === 'full' || scope.mode === 'company') return true;
+        if (isHrGovernorScope(scope)) {
+            if (scope.branchId && String(emp.branchId) !== String(scope.branchId)) return false;
+            return true;
+        }
         if (scope.branchId && String(emp.branchId) !== String(scope.branchId)) return false;
         if (scope.departmentKey) {
             if (emp.departmentKey === scope.departmentKey) return true;
@@ -3204,6 +3234,7 @@
         scope = scope || getHrAdminScope();
         if (scope.mode === 'full' || scope.mode === 'company') return true;
         if (scope.branchId && String(veh.branchId) !== String(scope.branchId)) return false;
+        if (isHrGovernorScope(scope)) return true;
         if (scope.departmentKey) {
             if (!veh.assignedEmployeeId) return false;
             return employeeMatchesHrScope(getEmployeeById(veh.assignedEmployeeId), scope);
@@ -3257,9 +3288,12 @@
     function renderHrScopeBanner() {
         const scope = getHrAdminScope();
         if (scope.mode === 'full') return '';
+        const sub = scope.hrGovernor
+            ? 'مدير موارد بشرية — إدارة كاملة: موظفون · رواتب · إقامات · سيارات · سعودة داخل نطاقك'
+            : 'خصوصية القسم — لا تظهر بيانات أقسام أو فروع أخرى';
         return '<div class="hr-scope-banner"><i class="' + esc(scope.icon) + '"></i>' +
             '<div><strong>نطاقك: ' + esc(scope.label) + '</strong>' +
-            '<span>خصوصية القسم — لا تظهر بيانات أقسام أو فروع أخرى</span></div></div>';
+            '<span>' + sub + '</span></div></div>';
     }
 
     function renderHrScopedDashboard(onLeave, assignedVeh, pendingLeave, expiringDocs) {
@@ -3830,6 +3864,13 @@
         if (typeof isMainGovernanceAdmin === 'function' && isMainGovernanceAdmin(currentAdmin)) return true;
         const scope = getHrAdminScope();
         if (scope.mode === 'full' || scope.mode === 'company') return true;
+        if (isHrGovernorScope(scope)) {
+            if (scope.branchId && String(record.branchId) !== String(scope.branchId)) {
+                alert('لا يمكنك إضافة سجل لفرع خارج نطاقك.');
+                return false;
+            }
+            return true;
+        }
         if (scope.branchId && String(record.branchId) !== String(scope.branchId)) {
             alert('لا يمكنك إضافة سجل لفرع خارج نطاقك.');
             return false;
@@ -3877,9 +3918,18 @@
             const bl = resolveHrBranchLabel(branchId);
             label = label ? (label + ' · ' + bl) : bl;
         }
-        if (!label) label = strictHr ? 'موارد بشرية — نطاقك' : 'نطاق محدّد';
-        const mode = departmentKey ? 'department' : (branchId ? 'branch' : 'company');
-        return { mode: mode, branchId: branchId, departmentKey: departmentKey, label: label, icon: icon };
+        if (departmentKey === 'hr' && strictHr) {
+            label = branchId
+                ? ('موارد بشرية — ' + resolveHrBranchLabel(branchId) + ' · إدارة كاملة')
+                : 'موارد بشرية — إدارة كاملة للمصنع';
+            icon = 'fas fa-people-roof';
+        } else if (!label) {
+            label = strictHr ? 'موارد بشرية — نطاقك' : 'نطاق محدّد';
+        }
+        const mode = departmentKey === 'hr' && strictHr
+            ? (branchId ? 'branch' : 'company')
+            : (departmentKey ? 'department' : (branchId ? 'branch' : 'company'));
+        return { mode: mode, branchId: branchId, departmentKey: departmentKey, label: label, icon: icon, hrGovernor: departmentKey === 'hr' };
     }
 
     function collectHrAlerts() {
