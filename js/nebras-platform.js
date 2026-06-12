@@ -3024,6 +3024,65 @@
             return '';
         }
 
+        function canRunDashboardHandler(handlerKey, admin) {
+            admin = admin || currentAdmin;
+            if (!handlerKey) return false;
+            const key = String(handlerKey).trim();
+            if (key.indexOf('iconDetail:') === 0) return true;
+            const productId = resolveProductIdFromHandler(key);
+            if (productId && siteProducts.some(function(p) { return p.id === productId; })) return true;
+            if (!admin) return false;
+            if (isMainGovernanceAdmin(admin)) return true;
+            const gate = {
+                openUserManagement: function() { return canManage('users', admin); },
+                openProductMasterHub: function() { return false; },
+                openNebrasEmpireHub: function() { return admin.role === 'manager' || admin.role === 'superadmin'; },
+                openCloudGovernance: function() { return false; },
+                openSystemSettings: function() { return false; },
+                openWpcProductionDepartment: function() { return canManage('production', admin); },
+                openAluminumDepartment: function() { return canManage('aluminum', admin); },
+                openHrPlatform: function() {
+                    return typeof canAccessHrPlatform === 'function' ? canAccessHrPlatform(admin) : canManage('hr', admin);
+                },
+                openLegalPlatform: function() {
+                    return typeof canAccessLegalPlatform === 'function' ? canAccessLegalPlatform(admin) : canManage('legal', admin);
+                },
+                openAccountingPlatform: function() {
+                    return typeof canAccessAccountingPlatform === 'function' ? canAccessAccountingPlatform(admin) : canManage('accounting', admin);
+                },
+                openCrmPlatform: function() { return canManage('customerService', admin); },
+                openErpInventory: function() { return canManage('inventory', admin) || canManage('erp', admin); },
+                openErpWarehouseTransfers: function() { return canManage('warehouse', admin) || canManage('inventory', admin); },
+                openErpProcurement: function() { return canManage('procurement', admin); },
+                openErpProduction: function() { return canManage('production', admin); },
+                openErpAccounting: function() { return canManage('accounting', admin); },
+                openErpOrders: function() { return canManage('orders', admin); },
+                openBranchesManagement: function() { return canManage('branches', admin); },
+                openSalesManagement: function() { return canManage('sales', admin); },
+                openSalesPriceList: function() { return canManage('sales', admin); },
+                openRepQuoteBuilder: function() { return canManage('quotes', admin); },
+                openRepMyQuotes: function() { return canManage('quotes', admin); },
+                openBranchTeamManagement: function() { return canManageBranchTeam(admin); },
+                openBranchCommandCenter: function() { return canAccessBranchCommandCenter(admin); },
+                openExecutiveReports: function() {
+                    return typeof canViewExecutiveReports === 'function' && canViewExecutiveReports(admin);
+                },
+                openCustomerPortalGovernance: function() {
+                    return typeof canManageCustomerPortalUsers === 'function' && canManageCustomerPortalUsers(admin);
+                },
+                openCustomerLoyaltyAnalytics: function() {
+                    return typeof canManageCustomerPortalUsers === 'function' && canManageCustomerPortalUsers(admin);
+                },
+                openSiteContentManager: function() { return canManage('content', admin); },
+                openAdminAnalytics: function() { return canManage('audit', admin); },
+                openCustomerServiceManagement: function() { return canManage('customerService', admin); },
+                openComplaintsManagement: function() { return canManage('complaints', admin); },
+                openAuditLog: function() { return canManage('audit', admin); }
+            };
+            if (gate[key]) return gate[key]();
+            return typeof DASHBOARD_HANDLER_MAP[key] === 'function';
+        }
+
         function runDashboardHandler(handlerKey) {
             if (!handlerKey) return;
             const key = String(handlerKey).trim();
@@ -3034,6 +3093,10 @@
             }
             if (key.indexOf('iconDetail:') === 0) {
                 openIconDetails(key.split(':')[1]);
+                return;
+            }
+            if (currentAdmin && !canRunDashboardHandler(key, currentAdmin)) {
+                alert('هذا الإجراء خارج صلاحياتك أو نطاق فرعك — تواصلي مع الإدارة الرئيسية.');
                 return;
             }
             const fn = DASHBOARD_HANDLER_MAP[key];
@@ -13225,6 +13288,19 @@
             if (!host) return;
             ensureBuiltinBranches();
             const reg = getProcurementBranchRegistry();
+            const branchLocked = currentAdmin && !isMainGovernanceAdmin(currentAdmin) && isBranchScopedAdmin(currentAdmin);
+            if (branchLocked) {
+                const bid = String(getAdminAssignedBranchId(currentAdmin));
+                const branch = reg.find(function(b) { return String(b.id) === bid; }) ||
+                    reg.find(function(b) { return b.type === 'branch'; });
+                const label = branch ? branch.label : (currentAdmin.assignedBranchCity || 'فرعي');
+                host.innerHTML =
+                    '<div class="proc-scope-tabs proc-scope-tabs--locked">' +
+                        '<span class="proc-scope-lock-badge"><i class="fas fa-lock"></i> نطاق فرعك فقط</span>' +
+                        '<button type="button" class="proc-scope-tab proc-scope-tab--branch proc-scope-tab--active" onclick="setProcurementViewScope(\'' + escapeHtmlAttr(bid) + '\')"><i class="fas fa-store"></i> ' + escapeHtmlAttr(label) + '</button>' +
+                    '</div>';
+                return;
+            }
             const branchChips = reg.filter(function(b) { return b.type === 'branch'; }).map(function(b) {
                 const active = String(procurementViewScope) === String(b.id) ? ' proc-scope-tab--active' : '';
                 return '<button type="button" class="proc-scope-tab proc-scope-tab--branch' + active + '" onclick="setProcurementViewScope(\'' + escapeHtmlAttr(String(b.id)) + '\')"><i class="fas fa-store"></i> ' + escapeHtmlAttr(b.label) + '</button>';
@@ -13359,7 +13435,7 @@
             let branchId = fieldVal('pur-branch') || procurementViewScope;
             if (branchId === 'all-branches') branchId = resolveProcurementDefaultsForAdmin().branchId;
             const branchMeta = resolveProcurementBranchMeta(branchId);
-            erpPurchases.unshift(normalizePurchaseRecord({
+            const draft = normalizePurchaseRecord({
                 id: 'pur-' + Date.now(),
                 date: fieldVal('pur-date') || erpToday(),
                 supplier: supplier,
@@ -13375,7 +13451,9 @@
                 departmentKey: deptKey,
                 department: deptMap[deptKey] || deptKey,
                 by: erpActor()
-            }));
+            });
+            if (!assertErpEntryInAdminScope(draft, currentAdmin, 'لا يمكنك تسجيل مشتريات خارج نطاق فرعك أو قسمك.')) return;
+            erpPurchases.unshift(draft);
             saveSystemData();
             renderErpProcurementForm();
             displayErpProcurement();
@@ -14479,6 +14557,8 @@
             const prodToday = (erpProduction || []).filter(function(e) { return e.date === today; })
                 .reduce(function(s, e) { return s + erpNum(e.qty); }, 0);
             const purchasesTotal = (erpPurchases || []).reduce(function(s, p) { return s + erpNum(p.total); }, 0);
+            const scopedPurchases = filterErpEntriesForAdmin(erpPurchases || [], currentAdmin);
+            const scopedPurchasesTotal = scopedPurchases.reduce(function(s, p) { return s + erpNum(p.total); }, 0);
             const transfersTotal = (erpTransfers || []).reduce(function(s, t) { return s + erpNum(t.amount); }, 0);
             const salesTotal = (salesData || []).reduce(function(s, x) { return s + erpNum(x.amount); }, 0);
             let quoteInbox = 0;
@@ -14497,8 +14577,8 @@
                 complaintsCount: erp.complaintsCount,
                 branchesCount: erp.branchesCount,
                 prodToday: prodToday,
-                purchasesCount: (erpPurchases || []).length,
-                purchasesTotal: purchasesTotal,
+                purchasesCount: scopedPurchases.length,
+                purchasesTotal: scopedPurchasesTotal,
                 transfersCount: (erpTransfers || []).length,
                 transfersTotal: transfersTotal,
                 priceListCount: (salesPriceList || []).length,
@@ -14544,14 +14624,14 @@
                 { roles: ['sales_manager'], icon: 'fas fa-tags', label: 'قائمة الأسعار', handler: 'openSalesPriceList', perm: 'sales' },
                 { roles: ['superadmin', 'manager', 'sales_manager', 'branch_manager'], icon: 'fas fa-handshake', label: 'CRM', handler: 'openCrmPlatform', perm: 'customerService' },
                 { roles: ['superadmin', 'manager', 'sales_manager', 'branch_manager'], icon: 'fas fa-user-circle', label: 'مستخدمي العملاء', handler: 'openCustomerPortalGovernance', perm: 'customerPortal' },
-                { roles: ['superadmin', 'manager', 'sales_manager'], icon: 'fas fa-chart-pie', label: 'ولاء العملاء', handler: 'openCustomerLoyaltyAnalytics', perm: 'customerPortal' },
+                { roles: ['superadmin', 'manager', 'sales_manager', 'branch_manager'], icon: 'fas fa-chart-pie', label: 'ولاء العملاء', handler: 'openCustomerLoyaltyAnalytics', perm: 'customerPortal' },
                 { roles: ['accountant', 'accounting_manager'], icon: 'fas fa-calculator', label: 'قسم الحسابات', handler: 'openAccountingPlatform', perm: 'accounting' },
                 { roles: ['accountant', 'accounting_manager'], icon: 'fas fa-file-pdf', label: 'تقرير PDF', handler: 'openAccountingPlatform', perm: 'accounting' },
                 { roles: ['inventory_manager', 'warehouse_manager'], icon: 'fas fa-boxes-stacked', label: 'المخزون', handler: 'openErpInventory', perm: 'inventory' },
                 { roles: ['warehouse_manager'], icon: 'fas fa-dolly', label: 'تحويلات', handler: 'openErpWarehouseTransfers', perm: 'warehouse' },
                 { roles: ['sales_manager', 'branch_manager', 'manager'], icon: 'fas fa-truck', label: 'الطلبات', handler: 'openErpOrders', perm: 'orders' },
                 { roles: ['production_manager'], icon: 'fas fa-industry', label: 'الإنتاج', handler: 'openErpProduction', perm: 'production' },
-                { roles: ['accountant', 'manager', 'superadmin'], icon: 'fas fa-truck-ramp-box', label: 'المشتريات', handler: 'openErpProcurement', perm: 'procurement' },
+                { roles: ['accountant', 'accounting_manager', 'manager', 'superadmin'], icon: 'fas fa-truck-ramp-box', label: 'المشتريات', handler: 'openErpProcurement', perm: 'procurement' },
                 { roles: ['superadmin', 'manager', 'sales_manager', 'accountant'], icon: 'fas fa-chart-line', label: 'التحليلات', handler: 'openAdminAnalytics', perm: 'audit' },
                 { roles: ['superadmin'], icon: 'fas fa-sliders-h', label: 'إعدادات النظام', handler: 'openSystemSettings', perm: 'users' },
                 { roles: ['superadmin'], icon: 'fas fa-cloud', label: 'السحابة', handler: 'openCloudGovernance', perm: 'users' }
@@ -14638,6 +14718,92 @@
                 }).join('') + '</div>';
         }
 
+        function buildGovernanceOrgNodes(user) {
+            if (!user) return [];
+            const nodes = [];
+            const hqNode = { icon: 'fas fa-crown', label: 'الإدارة الرئيسية', sub: 'حوكمة مركزية', handler: isMainGovernanceAdmin(user) ? 'openNebrasEmpireHub' : null };
+            if (isMainGovernanceAdmin(user)) {
+                nodes.push(hqNode);
+                if (canRunDashboardHandler('openHrPlatform', user)) {
+                    nodes.push({ icon: 'fas fa-people-roof', label: 'الموارد البشرية', sub: 'موظفون · رواتب · أسطول', handler: 'openHrPlatform' });
+                }
+                if (canRunDashboardHandler('openErpProcurement', user)) {
+                    nodes.push({ icon: 'fas fa-truck-loading', label: 'المشتريات', sub: 'مصنع + فروع', handler: 'openErpProcurement' });
+                }
+                if (canRunDashboardHandler('openSalesManagement', user)) {
+                    nodes.push({ icon: 'fas fa-chart-line', label: 'المبيعات', sub: 'فروع · عروض', handler: 'openSalesManagement' });
+                }
+                if (canRunDashboardHandler('openCustomerPortalGovernance', user)) {
+                    nodes.push({ icon: 'fas fa-user-circle', label: 'بوابة العملاء', sub: 'مستخدمون · ولاء', handler: 'openCustomerPortalGovernance' });
+                }
+                if (canRunDashboardHandler('openAccountingPlatform', user)) {
+                    nodes.push({ icon: 'fas fa-calculator', label: 'الحسابات', sub: 'تحويلات · تقارير', handler: 'openAccountingPlatform' });
+                }
+                return nodes;
+            }
+            if (user.role === 'sales_manager' || user.role === 'branch_manager') {
+                nodes.push({ icon: 'fas fa-crown', label: 'الإدارة الرئيسية', sub: 'قيادة وأسعار معتمدة', handler: null });
+                nodes.push({ icon: 'fas fa-store', label: user.assignedBranchCity || 'فرعي', sub: 'لوحة قيادة الفرع', handler: 'openBranchCommandCenter' });
+                if (canRunDashboardHandler('openBranchTeamManagement', user)) {
+                    nodes.push({ icon: 'fas fa-user-group', label: 'مندوبو المبيعات', sub: 'فريقك', handler: 'openBranchTeamManagement' });
+                }
+                if (canRunDashboardHandler('openCrmPlatform', user)) {
+                    nodes.push({ icon: 'fas fa-handshake', label: 'CRM', sub: 'عملاء · فرص', handler: 'openCrmPlatform' });
+                }
+                if (canRunDashboardHandler('openCustomerPortalGovernance', user)) {
+                    nodes.push({ icon: 'fas fa-user-circle', label: 'عملاء البوابة', sub: 'حسابات وولاء', handler: 'openCustomerPortalGovernance' });
+                }
+                return nodes;
+            }
+            if (typeof canAccessHrPlatform === 'function' && canAccessHrPlatform(user)) {
+                const scope = typeof getHrAdminScope === 'function' ? getHrAdminScope(user) : null;
+                nodes.push(hqNode);
+                nodes.push({
+                    icon: (scope && scope.icon) || 'fas fa-people-roof',
+                    label: (scope && scope.label) || 'موارد بشرية',
+                    sub: 'نطاقك المعيّن',
+                    handler: 'openHrPlatform'
+                });
+                return nodes;
+            }
+            if (canManage('procurement', user) || canManage('accounting', user)) {
+                nodes.push(hqNode);
+                const branchLabel = user.assignedBranchCity || (isBranchScopedAdmin(user) ? 'فرعي' : 'المصنع');
+                nodes.push({ icon: 'fas fa-building', label: branchLabel, sub: 'نطاق مالي', handler: null });
+                if (canRunDashboardHandler('openErpProcurement', user)) {
+                    nodes.push({ icon: 'fas fa-truck-loading', label: 'المشتريات', sub: 'أوامر الشراء', handler: 'openErpProcurement' });
+                }
+                if (canRunDashboardHandler('openAccountingPlatform', user)) {
+                    nodes.push({ icon: 'fas fa-calculator', label: 'الحسابات', sub: 'تحويلات · PDF', handler: 'openAccountingPlatform' });
+                }
+                return nodes;
+            }
+            if (user.role === 'manager') {
+                nodes.push(hqNode);
+                NEBRAS_GOVERNANCE_PILLARS.filter(function(p) { return p.type !== 'hq' && (!p.perm || canManage(p.perm, user)); }).slice(0, 4).forEach(function(p) {
+                    const h = (p.handlers || []).find(function(x) { return canRunDashboardHandler(x, user); });
+                    if (h) nodes.push({ icon: p.icon, label: p.labelAr, sub: p.descAr.slice(0, 28), handler: h });
+                });
+            }
+            return nodes;
+        }
+
+        function renderGovernanceOrgStrip(user) {
+            const nodes = buildGovernanceOrgNodes(user);
+            if (!nodes.length) return '';
+            const chips = nodes.map(function(n, i) {
+                const clickable = n.handler && canRunDashboardHandler(n.handler, user);
+                const tag = clickable ? 'button' : 'span';
+                const click = clickable ? ' onclick="runDashboardHandler(\'' + escapeHtmlAttr(n.handler) + '\')"' : '';
+                const arrow = i < nodes.length - 1 ? '<i class="gov-org-arrow fas fa-chevron-left" aria-hidden="true"></i>' : '';
+                return '<' + tag + ' type="button" class="gov-org-node' + (clickable ? ' gov-org-node--click' : '') + '"' + click + '>' +
+                    '<i class="' + escapeHtmlAttr(n.icon) + '"></i>' +
+                    '<span class="gov-org-node-copy"><strong>' + escapeHtmlAttr(n.label) + '</strong>' +
+                    (n.sub ? '<small>' + escapeHtmlAttr(n.sub) + '</small>' : '') + '</span></' + tag + '>' + arrow;
+            }).join('');
+            return '<div class="gov-org-strip-inner"><span class="gov-org-kicker"><i class="fas fa-sitemap"></i> سلسلة الحوكمة والربط الديناميكي</span><div class="gov-org-chain">' + chips + '</div></div>';
+        }
+
         const NEBRAS_GOVERNANCE_PILLARS = [
             { id: 'hq', type: 'hq', labelAr: 'الإدارة الرئيسية', descAr: 'تحكم كامل — مستخدمون · منتجات · أسعار · سحابة · كل المنصة', icon: 'fas fa-crown', color: '#d4af37', handlers: ['openUserManagement', 'openProductMasterHub', 'openNebrasEmpireHub', 'openCloudGovernance'] },
             { id: 'wpc', type: 'dept', labelAr: 'إنتاج أبواب WPC', descAr: 'مصنع نبراس — مخزون · إنتاج · مستودع · عروض', icon: 'fas fa-door-closed', color: '#0d2840', handlers: ['openWpcProductionDepartment'], perm: 'production' },
@@ -14661,27 +14827,32 @@
                 return;
             }
             host.hidden = false;
-            const pillars = NEBRAS_GOVERNANCE_PILLARS.map(function(p) {
-                const btns = (p.handlers || []).map(function(h) {
-                    const labels = {
-                        openUserManagement: 'المستخدمون',
-                        openProductMasterHub: 'المنتجات',
-                        openNebrasEmpireHub: 'الإمبراطورية',
-                        openCloudGovernance: 'السحابة',
-                        openWpcProductionDepartment: 'WPC',
-                        openAluminumDepartment: 'ألومنيوم',
-                        openHrPlatform: 'HR',
-                        openAccountingPlatform: 'حسابات',
-                        openLegalPlatform: 'Legal',
-                        openCrmPlatform: 'CRM',
-                        openErpInventory: 'مخزون',
-                        openErpWarehouseTransfers: 'تحويلات',
-                        openErpProcurement: 'مشتريات',
-                        openBranchesManagement: 'الفروع',
-                        openSalesManagement: 'مبيعات'
-                    };
-                    return '<button type="button" class="gov-pillar-btn' + (h === p.handlers[0] ? ' gov-pillar-btn--primary' : '') +
-                        '" onclick="runDashboardHandler(\'' + escapeHtmlAttr(h) + '\')">' + escapeHtmlAttr(labels[h] || h) + '</button>';
+            const handlerLabels = {
+                openUserManagement: 'المستخدمون',
+                openProductMasterHub: 'المنتجات',
+                openNebrasEmpireHub: 'الإمبراطورية',
+                openCloudGovernance: 'السحابة',
+                openWpcProductionDepartment: 'WPC',
+                openAluminumDepartment: 'ألومنيوم',
+                openHrPlatform: 'HR',
+                openAccountingPlatform: 'حسابات',
+                openLegalPlatform: 'Legal',
+                openCrmPlatform: 'CRM',
+                openErpInventory: 'مخزون',
+                openErpWarehouseTransfers: 'تحويلات',
+                openErpProcurement: 'مشتريات',
+                openBranchesManagement: 'الفروع',
+                openSalesManagement: 'مبيعات'
+            };
+            const pillars = NEBRAS_GOVERNANCE_PILLARS.filter(function(p) {
+                if (p.type === 'hq') return isMainGovernanceAdmin(user);
+                if (p.perm && !canManage(p.perm, user)) return false;
+                return (p.handlers || []).some(function(h) { return canRunDashboardHandler(h, user); });
+            }).map(function(p) {
+                const allowed = (p.handlers || []).filter(function(h) { return canRunDashboardHandler(h, user); });
+                const btns = allowed.map(function(h, idx) {
+                    return '<button type="button" class="gov-pillar-btn' + (idx === 0 ? ' gov-pillar-btn--primary' : '') +
+                        '" onclick="runDashboardHandler(\'' + escapeHtmlAttr(h) + '\')">' + escapeHtmlAttr(handlerLabels[h] || h) + '</button>';
                 }).join('');
                 return '<article class="gov-pillar-card' + (p.type === 'hq' ? ' gov-pillar-card--hq' : '') + '">' +
                     '<span class="gov-pillar-icon" style="background:' + escapeHtmlAttr(p.color) + '"><i class="' + escapeHtmlAttr(p.icon) + '"></i></span>' +
@@ -14699,8 +14870,12 @@
                 '<div class="dashboard-governance-pillars-head">' +
                     '<div><h3><i class="fas fa-crown"></i> إمبراطورية نبراس — حوكمة المنصة</h3>' +
                     '<p>شركة مصنع نبراس للبلاستيك — أبواب WPC · إدارة رئيسية · أقسام · فروع</p></div>' +
-                    '<button type="button" class="gov-pillar-btn gov-pillar-btn--primary" onclick="openNebrasEmpireHub()"><i class="fas fa-crown"></i> مركز القيادة</button>' +
-                    '<button type="button" class="gov-pillar-btn" onclick="openExecutiveReports()"><i class="fas fa-chart-bar"></i> تقارير الإمبراطورية</button>' +
+                    (canRunDashboardHandler('openNebrasEmpireHub', user)
+                        ? '<button type="button" class="gov-pillar-btn gov-pillar-btn--primary" onclick="openNebrasEmpireHub()"><i class="fas fa-crown"></i> مركز القيادة</button>'
+                        : '') +
+                    (canRunDashboardHandler('openExecutiveReports', user)
+                        ? '<button type="button" class="gov-pillar-btn" onclick="openExecutiveReports()"><i class="fas fa-chart-bar"></i> تقارير الإمبراطورية</button>'
+                        : '') +
                 '</div>' +
                 '<div class="gov-pillars-grid">' + pillars + '</div>' +
                 (branchChips ? '<div class="gov-branches-strip"><strong style="width:100%;font-size:0.8rem;color:#4a5a6a;margin-bottom:4px"><i class="fas fa-map-marked-alt"></i> شبكة الفروع</strong>' + branchChips + '</div>' : '');
@@ -14722,9 +14897,27 @@
                 const cmdSub = document.getElementById('dashboard-command-subtitle');
                 if (cmdTitle) cmdTitle.textContent = 'إمبراطورية نبراس — الإدارة الرئيسية';
                 if (cmdSub) cmdSub.textContent = 'ERP · HR · Legal · Accounting · WPC · فروع — حوكمة كاملة لمصنع أبواب WPC';
+            } else if (user.role === 'sales_manager' || user.role === 'branch_manager') {
+                const cmdTitle = document.getElementById('dashboard-command-title');
+                const cmdSub = document.getElementById('dashboard-command-subtitle');
+                if (cmdTitle) cmdTitle.textContent = 'قيادة المبيعات — ' + (user.assignedBranchCity || 'فرعي');
+                if (cmdSub) cmdSub.textContent = 'مندوبون · عروض · CRM · بوابة العملاء — تحت قيادة الإدارة الرئيسية';
+            } else if (typeof canAccessHrPlatform === 'function' && canAccessHrPlatform(user)) {
+                const cmdTitle = document.getElementById('dashboard-command-title');
+                const cmdSub = document.getElementById('dashboard-command-subtitle');
+                const scope = typeof getHrAdminScope === 'function' ? getHrAdminScope(user) : null;
+                if (cmdTitle) cmdTitle.textContent = 'منصة الموارد البشرية';
+                if (cmdSub) cmdSub.textContent = (scope && scope.label) ? scope.label + ' — خصوصية نطاقك محمية' : 'HR — تحت الإدارة الرئيسية';
             }
 
             renderGovernancePillarsPanel(user);
+
+            const orgStrip = document.getElementById('dashboard-governance-org-strip');
+            if (orgStrip) {
+                const orgHtml = renderGovernanceOrgStrip(user);
+                orgStrip.innerHTML = orgHtml;
+                orgStrip.hidden = !orgHtml;
+            }
 
             const empireStrip = document.getElementById('dashboard-empire-overview-strip');
             if (empireStrip) {
@@ -14843,14 +15036,21 @@
                     kpis.length = 0;
                     const team = adminUsers.filter(function(u) { return userBelongsToBranchTeam(u, user); }).length;
                     let branchQuotes = 0;
+                    let portalCust = 0;
                     try {
                         const inbox = typeof loadSalesQuotesInbox === 'function' ? (loadSalesQuotesInbox() || []) : [];
                         branchQuotes = inbox.filter(function(e) {
                             return typeof adminQuoteEntryVisible === 'function' ? adminQuoteEntryVisible(e, user) : true;
                         }).length;
                     } catch (e) { branchQuotes = 0; }
+                    try {
+                        if (typeof window.buildCustomerLoyaltyRankings === 'function') {
+                            portalCust = window.buildCustomerLoyaltyRankings().length;
+                        }
+                    } catch (e) { portalCust = 0; }
                     kpis.push({ v: team, l: 'مندوبون', alert: false });
                     kpis.push({ v: branchQuotes, l: 'عروض الفرع', alert: branchQuotes > 0 });
+                    kpis.push({ v: portalCust, l: 'عملاء البوابة', alert: false });
                     kpis.push({ v: stats.ordersPending, l: 'طلبات قيد المعالجة', alert: stats.ordersPending > 0 });
                     kpis.push({ v: user.assignedBranchCity || '—', l: 'فرعي', alert: false });
                 }
@@ -16353,11 +16553,16 @@
             const orders = filterErpEntriesForAdmin(erpOrders || [], currentAdmin);
             const sales = filterErpEntriesForAdmin(salesData || [], currentAdmin);
             const complaintsList = filterErpEntriesForAdmin(Object.keys(complaints || {}).map(function(k) { return complaints[k]; }), currentAdmin);
+            let portalCust = 0;
+            try {
+                if (typeof window.buildCustomerLoyaltyRankings === 'function') portalCust = window.buildCustomerLoyaltyRankings().length;
+            } catch (e) { portalCust = 0; }
             if (summary) {
                 summary.innerHTML =
                     '<div class="erp-stat erp-stat--accent"><strong>' + escapeHtmlAttr(ctx.city) + '</strong><span>الفرع</span></div>' +
                     '<div class="erp-stat"><strong>' + team.length + '</strong><span>فريق العمل</span></div>' +
                     '<div class="erp-stat"><strong>' + quotes.length + '</strong><span>عروض واردة</span></div>' +
+                    '<div class="erp-stat"><strong>' + portalCust + '</strong><span>عملاء البوابة</span></div>' +
                     '<div class="erp-stat"><strong>' + orders.length + '</strong><span>طلبات</span></div>' +
                     '<div class="erp-stat"><strong>' + sales.length + '</strong><span>مبيعات</span></div>' +
                     '<div class="erp-stat"><strong>' + complaintsList.length + '</strong><span>شكاوى</span></div>';
@@ -16368,6 +16573,8 @@
                 { icon: 'fas fa-chart-line', title: 'المبيعات', desc: 'عروض واردة ومبيعات الفرع', handler: 'openSalesManagement', show: canManage('sales') },
                 { icon: 'fas fa-truck', title: 'الطلبات', desc: 'OMS — تنفيذ طلبات الفرع', handler: 'openErpOrders', show: canManage('orders') },
                 { icon: 'fas fa-headset', title: 'خدمة العملاء', desc: 'استفسارات وردود العملاء', handler: 'openCustomerServiceManagement', show: canManage('customerService') },
+                { icon: 'fas fa-handshake', title: 'CRM', desc: 'عملاء وفرص مبيعات فرعك', handler: 'openCrmPlatform', show: canManage('customerService') },
+                { icon: 'fas fa-chart-pie', title: 'ولاء العملاء', desc: 'تحليل ولاء عملاء الفرع', handler: 'openCustomerLoyaltyAnalytics', show: typeof canManageCustomerPortalUsers === 'function' && canManageCustomerPortalUsers() },
                 { icon: 'fas fa-exclamation-triangle', title: 'الشكاوى', desc: 'متابعة شكاوى فرعك', handler: 'openComplaintsManagement', show: canManage('complaints') },
                 { icon: 'fas fa-chart-bar', title: 'تقرير الفرع', desc: 'تقارير تنفيذية لفرعك', handler: 'openExecutiveReports', show: typeof canViewExecutiveReports === 'function' && canViewExecutiveReports() },
                 { icon: 'fas fa-user-circle', title: 'مستخدمي العملاء', desc: 'حسابات بوابة العميل لفرعك', handler: 'openCustomerPortalGovernance', show: typeof canManageCustomerPortalUsers === 'function' && canManageCustomerPortalUsers() }

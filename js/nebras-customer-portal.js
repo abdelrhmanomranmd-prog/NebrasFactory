@@ -1,7 +1,7 @@
 /**
  * نبراس — بوابة العملاء (Customer Portal)
  * كل عميل: مستخدم خاص · لوحة عروضه · طلباته · حوالاته · خصوصية كاملة
- * الإنشاء: الإدارة الرئيسية + مدير المبيعات فقط
+ * الإنشاء: الإدارة الرئيسية + مدير المبيعات + مدير الفرع
  */
 (function(global) {
     'use strict';
@@ -189,7 +189,7 @@
 
     function buildCustomerLoyaltyRankings() {
         loadCpData();
-        return customerPortalUsers
+        return filterCpUsersForManager(customerPortalUsers)
             .filter(function(u) { return u.isActive !== false; })
             .map(function(u) {
                 const loyalty = computeCustomerLoyaltyScore(u);
@@ -364,7 +364,7 @@
     /* ---------- إدارة مستخدمي العملاء (الإدارة + مدير المبيعات) ---------- */
     function openCustomerPortalGovernance() {
         if (!canManageCustomerPortalUsers()) {
-            alert('إنشاء مستخدمي العملاء — الإدارة الرئيسية ومدير المبيعات فقط.');
+            alert('إنشاء مستخدمي العملاء — الإدارة الرئيسية ومدير المبيعات/مدير الفرع فقط.');
             return;
         }
         renderCustomerPortalGovernancePanel();
@@ -407,7 +407,7 @@
     function openCpUserEditor(index) {
         loadCpData();
         if (!canManageCustomerPortalUsers()) {
-            alert('إنشاء مستخدمي العملاء — الإدارة الرئيسية ومدير المبيعات فقط.');
+            alert('إنشاء مستخدمي العملاء — الإدارة الرئيسية ومدير المبيعات/مدير الفرع فقط.');
             return;
         }
         const isEdit = typeof index === 'number' && customerPortalUsers[index];
@@ -525,7 +525,7 @@
 
     function deleteCpUser(index) {
         if (!canManageCustomerPortalUsers()) {
-            alert('حذف مستخدمي العملاء — الإدارة الرئيسية ومدير المبيعات فقط.');
+            alert('حذف مستخدمي العملاء — الإدارة الرئيسية ومدير المبيعات/مدير الفرع فقط.');
             return;
         }
         const u = customerPortalUsers[index];
@@ -544,7 +544,7 @@
     /* ---------- تحليل ولاء العملاء (الإدارة + مدير المبيعات) ---------- */
     function openCustomerLoyaltyAnalytics() {
         if (!canManageCustomerPortalUsers()) {
-            alert('تحليل العملاء — الإدارة الرئيسية ومدير المبيعات فقط.');
+            alert('تحليل العملاء — الإدارة الرئيسية ومدير المبيعات/مدير الفرع فقط.');
             return;
         }
         const gov = document.getElementById('customer-portal-governance');

@@ -1,0 +1,131 @@
+/* سلسلة الحوكمة — ربط ديناميكي HQ → فرع → قسم */
+.dashboard-governance-org-strip {
+    margin: 12px 0 4px;
+    padding: 0;
+}
+
+.gov-org-strip-inner {
+    background: linear-gradient(135deg, #f8fbff 0%, #eef4fa 100%);
+    border: 1px solid #d4e2f0;
+    border-radius: 16px;
+    padding: 14px 18px;
+    box-shadow: 0 2px 12px rgba(13, 40, 64, 0.06);
+}
+
+.gov-org-kicker {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: #4a6278;
+    margin-bottom: 10px;
+}
+
+.gov-org-kicker i {
+    color: #d4af37;
+}
+
+.gov-org-chain {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 4px;
+}
+
+.gov-org-node {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    background: #fff;
+    border: 1px solid #dce6f0;
+    border-radius: 12px;
+    padding: 8px 14px;
+    font-family: inherit;
+    text-align: right;
+    min-width: 0;
+}
+
+.gov-org-node--click {
+    cursor: pointer;
+    transition: border-color 0.15s, box-shadow 0.15s, transform 0.12s;
+}
+
+.gov-org-node--click:hover {
+    border-color: #2980b9;
+    box-shadow: 0 4px 14px rgba(21, 94, 148, 0.12);
+    transform: translateY(-1px);
+}
+
+.gov-org-node > i {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, #155e94, #0d2840);
+    color: #fff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    flex-shrink: 0;
+}
+
+.gov-org-node-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.gov-org-node-copy strong {
+    font-size: 0.82rem;
+    color: #0d2840;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 160px;
+}
+
+.gov-org-node-copy small {
+    font-size: 0.7rem;
+    color: #718096;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 180px;
+}
+
+.gov-org-arrow {
+    color: #a0aec0;
+    font-size: 0.65rem;
+    margin: 0 2px;
+    flex-shrink: 0;
+}
+
+.proc-scope-tabs--locked {
+    align-items: center;
+    gap: 10px;
+}
+
+.proc-scope-lock-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.76rem;
+    color: #6b4c1e;
+    background: #fff8e8;
+    border: 1px solid rgba(212, 175, 55, 0.45);
+    border-radius: 999px;
+    padding: 5px 12px;
+}
+
+.dashboard-main-governance .dashboard-command-shell {
+    border-color: rgba(212, 175, 55, 0.35);
+}
+
+@media (max-width: 720px) {
+    .gov-org-node-copy strong,
+    .gov-org-node-copy small {
+        max-width: 120px;
+    }
+}

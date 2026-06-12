@@ -3338,6 +3338,7 @@
     function employeeMatchesHrScope(emp, scope) {
         if (!emp) return false;
         scope = scope || getHrAdminScope();
+        if (scope.mode === 'restricted') return false;
         if (scope.mode === 'full' || scope.mode === 'company') return true;
         if (isHrGovernorScope(scope)) {
             if (scope.branchId && String(emp.branchId) !== String(scope.branchId)) return false;
@@ -3355,6 +3356,7 @@
     function vehicleMatchesHrScope(veh, scope) {
         if (!veh) return false;
         scope = scope || getHrAdminScope();
+        if (scope.mode === 'restricted') return false;
         if (scope.mode === 'full' || scope.mode === 'company') return true;
         if (scope.branchId && String(veh.branchId) !== String(scope.branchId)) return false;
         if (isHrGovernorScope(scope)) return true;
@@ -4091,7 +4093,15 @@
                     };
                 }
             }
-            return { mode: 'full', branchId: '', departmentKey: '', label: 'وصول كامل', icon: 'fas fa-industry' };
+            if (typeof isMainGovernanceAdmin === 'function' && isMainGovernanceAdmin(admin)) {
+                return { mode: 'full', branchId: '', departmentKey: '', label: 'الإدارة الرئيسية — كل الفروع والأقسام', icon: 'fas fa-crown' };
+            }
+            if (admin.role === 'manager' || admin.role === 'superadmin') {
+                if (typeof canManage === 'function' && canManage('hr', admin)) {
+                    return { mode: 'full', branchId: '', departmentKey: '', label: 'مدير عمليات — HR', icon: 'fas fa-industry' };
+                }
+            }
+            return { mode: 'restricted', branchId: '', departmentKey: '', label: 'نطاق HR غير معيّن — تواصلي مع الإدارة', icon: 'fas fa-lock' };
         }
         let branchId = String(admin.hrScopeBranchId || '').trim();
         if (!branchId && admin.assignedBranchCity) branchId = branchCityToHrBranchId(admin.assignedBranchCity);
