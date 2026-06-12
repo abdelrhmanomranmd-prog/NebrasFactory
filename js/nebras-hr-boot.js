@@ -49,7 +49,7 @@
         global.__hrBootClicksBound = true;
         document.addEventListener('click', function(ev) {
             if (!platformOpen()) return;
-            var tabBtn = ev.target.closest('[data-hr-tab]');
+            var tabBtn = ev.target.closest('[data-hr-tab], .hr-tab-btn[data-hr-tab]');
             if (tabBtn) {
                 ev.preventDefault();
                 ev.stopPropagation();

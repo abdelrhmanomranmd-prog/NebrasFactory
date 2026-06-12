@@ -29,8 +29,8 @@
     let hrActiveTab = 'dashboard';
     let hrBranchFilter = '';
     let hrSearchQuery = '';
-    let hrEmployeeEditorId = null;
-    let hrVehicleEditorId = null;
+    let hrEmployeeEditorId = false;
+    let hrVehicleEditorId = false;
     let hrTrackingEditorId = null;
     let hrDocEditorId = null;
     let hrPayrollMonth = '';
@@ -717,8 +717,8 @@
 
     function switchHrTab(tab) {
         hrActiveTab = tab || 'dashboard';
-        hrEmployeeEditorId = null;
-        hrVehicleEditorId = null;
+        hrEmployeeEditorId = false;
+        hrVehicleEditorId = false;
         hrTrackingEditorId = null;
         hrDocEditorId = null;
         renderHrPlatformPanelSafe();
@@ -798,7 +798,7 @@
                 '<div class="hr-command-kpi"><strong>' + pendingLeave + '</strong><span>إجازات معلقة</span></div>' +
             '</div>' +
             '<div class="hr-command-quick-row">' +
-                '<button type="button" class="hr-command-quick-btn" onclick="switchHrTab(\'employees\')"><i class="fas fa-user-plus"></i> إضافة موظف</button>' +
+                '<button type="button" class="hr-command-quick-btn" onclick="openHrEmployeeEditor(null)"><i class="fas fa-user-plus"></i> إضافة موظف</button>' +
                 '<button type="button" class="hr-command-quick-btn" onclick="switchHrTab(\'attendance\')"><i class="fas fa-fingerprint"></i> حضور اليوم</button>' +
                 '<button type="button" class="hr-command-quick-btn" onclick="switchHrTab(\'payroll\')"><i class="fas fa-money-check-dollar"></i> مسير الرواتب</button>' +
                 '<button type="button" class="hr-command-quick-btn" onclick="switchHrTab(\'vehicles\')"><i class="fas fa-car"></i> السيارات</button>' +
@@ -857,8 +857,10 @@
         if (tabs) {
             tabs.innerHTML = tabDefs.map(function(t) {
                 return '<button type="button" class="hr-tab-btn' + (hrActiveTab === t.id ? ' is-active' : '') +
-                    '" onclick="switchHrTab(\'' + t.id + '\')"><i class="' + t.icon + '"></i> ' + esc(t.label) + '</button>';
+                    '" data-hr-tab="' + esc(t.id) + '" onclick="switchHrTab(\'' + t.id + '\')"><i class="' + t.icon + '"></i> ' + esc(t.label) + '</button>';
             }).join('');
+            tabs.hidden = false;
+            tabs.removeAttribute('hidden');
         }
 
         const branchOpts = getHrBranches().map(function(b) {
@@ -993,7 +995,7 @@
 
     function renderHrEmployeesPanel(list) {
         let editor = '';
-        if (hrEmployeeEditorId !== null) editor = renderHrEmployeeEditor(hrEmployeeEditorId);
+        if (hrEmployeeEditorId !== false) editor = renderHrEmployeeEditor(hrEmployeeEditorId);
 
         const cards = list.map(function(e) {
             const st = HR_EMP_STATUS[e.status] || HR_EMP_STATUS.active;
@@ -1120,15 +1122,18 @@
 
     function openHrEmployeeEditor(id) {
         if (!requireHrAccess()) return;
-        hrEmployeeEditorId = id;
-        renderHrPlatformPanel();
-        const ed = document.getElementById('hr-emp-editor');
-        if (ed) ed.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        hrActiveTab = 'employees';
+        hrEmployeeEditorId = id ? id : null;
+        renderHrPlatformPanelSafe();
+        setTimeout(function() {
+            const ed = document.getElementById('hr-emp-editor');
+            if (ed) ed.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 60);
     }
 
     function cancelHrEmployeeEditor() {
-        hrEmployeeEditorId = null;
-        renderHrPlatformPanel();
+        hrEmployeeEditorId = false;
+        renderHrPlatformPanelSafe();
     }
 
     function saveHrEmployee(id) {
@@ -1214,9 +1219,9 @@
             }
         }
         saveHrData();
-        hrEmployeeEditorId = null;
+        hrEmployeeEditorId = false;
         hrAudit('HR موظف', (id ? 'تعديل ' : 'إضافة ') + nameAr);
-        renderHrPlatformPanel();
+        renderHrPlatformPanelSafe();
     }
 
     function deleteHrEmployee(id) {
@@ -1236,7 +1241,7 @@
 
     function renderHrVehiclesPanel(list) {
         let editor = '';
-        if (hrVehicleEditorId !== null) editor = renderHrVehicleEditor(hrVehicleEditorId);
+        if (hrVehicleEditorId !== false) editor = renderHrVehicleEditor(hrVehicleEditorId);
 
         const cards = list.map(function(v) {
             const st = HR_VEH_STATUS[v.status] || HR_VEH_STATUS.active;
@@ -1317,13 +1322,14 @@
 
     function openHrVehicleEditor(id) {
         if (!requireHrAccess()) return;
-        hrVehicleEditorId = id;
-        renderHrPlatformPanel();
+        hrActiveTab = 'vehicles';
+        hrVehicleEditorId = id ? id : null;
+        renderHrPlatformPanelSafe();
     }
 
     function cancelHrVehicleEditor() {
-        hrVehicleEditorId = null;
-        renderHrPlatformPanel();
+        hrVehicleEditorId = false;
+        renderHrPlatformPanelSafe();
     }
 
     function saveHrVehicle(id) {
@@ -1377,9 +1383,9 @@
         }
 
         saveHrData();
-        hrVehicleEditorId = null;
+        hrVehicleEditorId = false;
         hrAudit('HR سيارة', (id ? 'تعديل ' : 'إضافة ') + plate);
-        renderHrPlatformPanel();
+        renderHrPlatformPanelSafe();
     }
 
     function deleteHrVehicle(id) {

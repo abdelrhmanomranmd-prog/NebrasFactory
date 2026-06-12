@@ -21116,7 +21116,9 @@
         }
 
         function ensureAdminPanelExitChrome() {
+            const workspaceSelfExit = { 'hr-platform': true, 'legal-platform': true, 'crm-platform': true };
             document.querySelectorAll('.admin-section[id]').forEach(function(section) {
+                if (workspaceSelfExit[section.id]) return;
                 if (section.querySelector('.nebras-admin-exit-bar')) return;
                 const sectionId = section.id;
                 const bar = document.createElement('div');
@@ -21145,6 +21147,10 @@
             }
             if (sectionId === 'legal-platform' && typeof closeLegalWorkspace === 'function') {
                 closeLegalWorkspace();
+                return;
+            }
+            if (sectionId === 'crm-platform' && typeof closeCrmWorkspace === 'function') {
+                closeCrmWorkspace();
                 return;
             }
             const el = document.getElementById(sectionId);
