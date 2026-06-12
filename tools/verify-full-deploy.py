@@ -23,12 +23,16 @@ LIVE_MARKERS = {
     'js/nebras-platform.js': [
         'NEBRAS_GOVERNANCE_PILLARS', 'openAccountingPlatform', 'openCrmPlatform',
         'openLegalPlatform', 'renderGovernancePillarsPanel', 'buildExecutiveReportData',
+        'getNebrasCurrentAdmin', 'openUserEditor', 'getNebrasErpOrders',
     ],
     'js/nebras-hr-platform.js': ['__nebrasHrOpenImpl', 'renderHrOrgTreePanel', 'requireHrRecordInScope', 'closeHrWorkspace'],
     'js/nebras-accounting-platform.js': ['exportAccountingPdf', 'openAccountingPlatform', 'closeAccountingWorkspace'],
     'js/nebras-crm-platform.js': ['exportCrmPdf', 'openCrmPlatform', 'closeCrmWorkspace'],
     'js/nebras-legal-platform.js': ['exportLegalPdf', 'openLegalPlatform', 'closeLegalWorkspace'],
-    'js/nebras-customer-portal.js': ['openCustomerPortalLogin', 'loginCustomerPortal', 'openCustomerPortalGovernance', 'buildCustomerLoyaltyRankings'],
+    'js/nebras-customer-portal.js': [
+        'openCustomerPortalLogin', 'loginCustomerPortal', 'openCustomerPortalGovernance',
+        'bindCpGovernanceToolbar', 'openCpUserEditor', 'buildCustomerLoyaltyRankings',
+    ],
 }
 
 

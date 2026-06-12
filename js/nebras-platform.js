@@ -2397,6 +2397,9 @@
             openCustomerLoyaltyAnalytics: function() {
                 if (typeof window.openCustomerLoyaltyAnalytics === 'function') return window.openCustomerLoyaltyAnalytics();
             },
+            openCpUserEditor: function() {
+                if (typeof window.openCpUserEditor === 'function') return window.openCpUserEditor();
+            },
             syncPlatformFromProductMaster: function() { syncPlatformFromProductMaster(); },
             scrollErpHub: function() { scrollErpHub(); },
             openCertificationsHub: function() { openCertificationsHub(); },
@@ -25682,6 +25685,9 @@
         window.ensureAdminPanelExitChrome = ensureAdminPanelExitChrome;
         window.onDashboardTileClick = onDashboardTileClick;
         window.runDashboardHandler = runDashboardHandler;
+        window.getNebrasCurrentAdmin = function() { return currentAdmin; };
+        window.getNebrasErpOrders = function() { return erpOrders || []; };
+        window.getNebrasErpTransfers = function() { return erpTransfers || []; };
         window.scrollToDashboardSection = scrollToDashboardSection;
         window.NEBRAS_ERP_PUBLIC = NEBRAS_ERP;
         window.getNebrasBranchesForEmpire = function() { return branchesData || []; };
@@ -25711,6 +25717,7 @@
         window.openVisitorIcon = openVisitorIcon;
         window.openPlatformModule = openPlatformModule;
         window.openErpModule = openErpModule;
+        window.openUserEditor = openUserEditor;
         window.addNewUser = addNewUser;
         window.editUser = editUser;
         window.deleteUser = deleteUser;

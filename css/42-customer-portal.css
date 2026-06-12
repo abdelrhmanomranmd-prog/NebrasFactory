@@ -153,6 +153,46 @@ body.customer-portal-open { overflow: hidden; }
 }
 .cp-loyalty-table th { font-size: 0.78rem; }
 
+/* لوحات إدارة بوابة العملاء — تمرير وظهور المحرر */
+#customer-portal-governance .nebras-erp-modal,
+#customer-loyalty-analytics .nebras-erp-modal {
+    overflow-x: hidden;
+    overflow-y: auto;
+    max-height: min(88vh, 920px);
+}
+
+#customer-portal-governance .scm-panel-toolbar,
+#customer-loyalty-analytics .scm-panel-toolbar {
+    padding: 0 24px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+#customer-portal-governance .scm-panel-toolbar button,
+#customer-loyalty-analytics .scm-panel-toolbar button {
+    pointer-events: auto;
+    cursor: pointer;
+}
+
+#cp-gov-editor:not([hidden]) {
+    padding: 0 24px 8px;
+    scroll-margin-top: 88px;
+}
+
+#cp-gov-editor .nebras-editor-card {
+    border: 2px solid #1a6fa8;
+    box-shadow: 0 12px 36px rgba(26, 111, 168, 0.18);
+}
+
+#customer-loyalty-analytics.admin-section.show {
+    z-index: 2010;
+}
+
+#cp-loyalty-body {
+    padding: 0 24px 20px;
+}
+
 @media (max-width: 600px) {
     .cp-logout-btn { position: static; margin-top: 12px; }
 }

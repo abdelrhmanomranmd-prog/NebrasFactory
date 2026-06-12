@@ -73,8 +73,20 @@
         saveCpAuditLocal();
     }
 
+    function resolveCpAdminUser(user) {
+        if (user) return user;
+        if (typeof global.getNebrasCurrentAdmin === 'function') {
+            const fromPlatform = global.getNebrasCurrentAdmin();
+            if (fromPlatform) return fromPlatform;
+        }
+        try {
+            if (typeof currentAdmin !== 'undefined' && currentAdmin) return currentAdmin;
+        } catch (e) { /* ignore */ }
+        return null;
+    }
+
     function canManageCustomerPortalUsers(user) {
-        user = user || (typeof currentAdmin !== 'undefined' ? currentAdmin : null);
+        user = resolveCpAdminUser(user);
         if (!user) return false;
         if (typeof isMainGovernanceAdmin === 'function' && isMainGovernanceAdmin(user)) return true;
         if (user.role === 'sales_manager' || user.role === 'branch_manager') return true;
@@ -83,7 +95,7 @@
     }
 
     function cpManagerBranchId() {
-        const u = typeof currentAdmin !== 'undefined' ? currentAdmin : null;
+        const u = resolveCpAdminUser();
         if (!u) return '';
         if (typeof isMainGovernanceAdmin === 'function' && isMainGovernanceAdmin(u)) return '';
         if (typeof getAdminAssignedBranchId === 'function') {
@@ -126,13 +138,17 @@
             });
         } catch (e) { /* ignore */ }
         try {
-            const ords = typeof erpOrders !== 'undefined' ? (erpOrders || []) : [];
+            const ords = typeof global.getNebrasErpOrders === 'function'
+                ? (global.getNebrasErpOrders() || [])
+                : (typeof erpOrders !== 'undefined' ? (erpOrders || []) : []);
             ords.forEach(function(o) {
                 if (entryBelongsToPortalCustomer(o, portalUser)) orders.push(o);
             });
         } catch (e) { /* ignore */ }
         try {
-            const tr = typeof erpTransfers !== 'undefined' ? (erpTransfers || []) : [];
+            const tr = typeof global.getNebrasErpTransfers === 'function'
+                ? (global.getNebrasErpTransfers() || [])
+                : (typeof erpTransfers !== 'undefined' ? (erpTransfers || []) : []);
             tr.forEach(function(t) {
                 if (entryBelongsToPortalCustomer(t, portalUser)) transfers.push(t);
             });
@@ -317,6 +333,34 @@
             '</section>';
     }
 
+    function bindCpGovernanceToolbar() {
+        const root = document.getElementById('customer-portal-governance');
+        if (!root) return;
+        const newBtn = root.querySelector('[data-cp-action="new-user"]');
+        const loyaltyBtn = root.querySelector('[data-cp-action="loyalty"]');
+        if (newBtn) {
+            newBtn.onclick = function(ev) {
+                if (ev) ev.preventDefault();
+                openCpUserEditor();
+            };
+        }
+        if (loyaltyBtn) {
+            loyaltyBtn.onclick = function(ev) {
+                if (ev) ev.preventDefault();
+                openCustomerLoyaltyAnalytics();
+            };
+        }
+    }
+
+    function showCpAdminSection(sectionId) {
+        const el = document.getElementById(sectionId);
+        if (!el) return null;
+        if (typeof closeAllAdminSections === 'function') closeAllAdminSections();
+        el.classList.add('show');
+        el.setAttribute('aria-hidden', 'false');
+        return el;
+    }
+
     /* ---------- إدارة مستخدمي العملاء (الإدارة + مدير المبيعات) ---------- */
     function openCustomerPortalGovernance() {
         if (!canManageCustomerPortalUsers()) {
@@ -324,7 +368,8 @@
             return;
         }
         renderCustomerPortalGovernancePanel();
-        document.getElementById('customer-portal-governance').classList.add('show');
+        bindCpGovernanceToolbar();
+        showCpAdminSection('customer-portal-governance');
     }
 
     function renderCustomerPortalGovernancePanel() {
@@ -360,7 +405,11 @@
     }
 
     function openCpUserEditor(index) {
-        if (!canManageCustomerPortalUsers()) return;
+        loadCpData();
+        if (!canManageCustomerPortalUsers()) {
+            alert('إنشاء مستخدمي العملاء — الإدارة الرئيسية ومدير المبيعات فقط.');
+            return;
+        }
         const isEdit = typeof index === 'number' && customerPortalUsers[index];
         if (isEdit) {
             const u = customerPortalUsers[index];
@@ -371,8 +420,11 @@
         }
         const user = isEdit ? customerPortalUsers[index] : null;
         const bid = cpManagerBranchId();
-        const branch = bid && typeof branchesData !== 'undefined'
-            ? (branchesData || []).find(function(b) { return String(b.id) === bid; })
+        const branches = typeof global.getNebrasBranchesForEmpire === 'function'
+            ? (global.getNebrasBranchesForEmpire() || [])
+            : (typeof branchesData !== 'undefined' ? (branchesData || []) : []);
+        const branch = bid
+            ? branches.find(function(b) { return String(b.id) === bid; })
             : null;
         cpEditorState = {
             index: isEdit ? index : -1,
@@ -412,6 +464,11 @@
                     '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="saveCpUserFromEditor()"><i class="fas fa-floppy-disk"></i> حفظ</button>' +
                     '<button type="button" class="nebras-users-btn" onclick="cancelCpUserEditor()">إلغاء</button>' +
                 '</div></div>';
+        requestAnimationFrame(function() {
+            host.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            const modal = host.closest('.admin-modal');
+            if (modal) modal.scrollTop = Math.max(0, host.offsetTop - 72);
+        });
     }
 
     function cancelCpUserEditor() {
@@ -434,7 +491,7 @@
             return String(u.username).toLowerCase() === username.toLowerCase() && i !== cpEditorState.index;
         });
         if (dup) { alert('اسم المستخدم مستخدم مسبقاً.'); return; }
-        const admin = typeof currentAdmin !== 'undefined' ? currentAdmin : null;
+        const admin = resolveCpAdminUser();
         const payload = {
             id: cpEditorState.id,
             username: username,
@@ -467,7 +524,10 @@
     }
 
     function deleteCpUser(index) {
-        if (!canManageCustomerPortalUsers()) return;
+        if (!canManageCustomerPortalUsers()) {
+            alert('حذف مستخدمي العملاء — الإدارة الرئيسية ومدير المبيعات فقط.');
+            return;
+        }
         const u = customerPortalUsers[index];
         if (!u || !filterCpUsersForManager([u]).length) {
             alert('لا يمكنك حذف عميل خارج فرعك.');
@@ -487,8 +547,14 @@
             alert('تحليل العملاء — الإدارة الرئيسية ومدير المبيعات فقط.');
             return;
         }
+        const gov = document.getElementById('customer-portal-governance');
+        if (gov) {
+            gov.classList.remove('show');
+            gov.setAttribute('aria-hidden', 'true');
+        }
+        cancelCpUserEditor();
         renderCustomerLoyaltyPanel();
-        document.getElementById('customer-loyalty-analytics').classList.add('show');
+        showCpAdminSection('customer-loyalty-analytics');
     }
 
     function renderCustomerLoyaltyPanel() {
@@ -503,11 +569,15 @@
                 '<div class="erp-stat"><strong>' + ranks.filter(function(r) { return r.tier === 'trusted'; }).length + '</strong><span>موثوقون</span></div>' +
                 '<div class="erp-stat"><strong>' + ranks.slice(0, 5).reduce(function(s, r) { return s + r.quotes; }, 0) + '</strong><span>عروض Top 5</span></div>';
         }
+        const toolbar =
+            '<div class="scm-panel-toolbar cp-gov-toolbar">' +
+                '<button type="button" class="nebras-users-btn" onclick="openCustomerPortalGovernance()"><i class="fas fa-arrow-right"></i> رجوع لمستخدمي العملاء</button>' +
+            '</div>';
         if (!ranks.length) {
-            body.innerHTML = '<p class="erp-empty">أنشئي حسابات العملاء أولاً من «مستخدمي العملاء».</p>';
+            body.innerHTML = toolbar + '<p class="erp-empty">أنشئي حسابات العملاء أولاً من «مستخدمي العملاء».</p>';
             return;
         }
-        body.innerHTML =
+        body.innerHTML = toolbar +
             '<p class="cp-loyalty-hint"><i class="fas fa-percent"></i> العملاء VIP والموثوقون — مرشّحون لخصم ولاء من الإدارة أو مدير المبيعات.</p>' +
             '<div class="erp-table-wrap"><table class="erp-table cp-loyalty-table"><thead><tr>' +
             '<th>العميل</th><th>التصنيف</th><th>النقاط</th><th>عروض</th><th>طلبات</th><th>حوالات</th><th>إيراد تقديري</th></tr></thead><tbody>' +

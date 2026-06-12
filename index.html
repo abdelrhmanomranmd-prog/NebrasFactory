@@ -100,7 +100,7 @@
     <link rel="stylesheet" href="css/39-crm-platform.css?v=hrws45">
     <link rel="stylesheet" href="css/40-accounting-platform.css?v=hrws47">
     <link rel="stylesheet" href="css/41-governance-dashboard.css?v=hrws49">
-    <link rel="stylesheet" href="css/42-customer-portal.css?v=hrws50">
+    <link rel="stylesheet" href="css/42-customer-portal.css?v=hrws51">
     <link rel="stylesheet" href="css/38-governance-security.css">
 </head>
 <body id="nebras-platform" class="platform-storefront" data-platform-layer="storefront">
@@ -1327,9 +1327,9 @@
                 <button type="button" class="nebras-users-close" onclick="closeAdminSection('customer-portal-governance')" aria-label="إغلاق"><i class="fas fa-xmark"></i></button>
             </div>
             <div class="nebras-erp-stats" id="cp-gov-stats"></div>
-            <div class="scm-panel-toolbar">
-                <button type="button" class="primary" onclick="openCpUserEditor()"><i class="fas fa-user-plus"></i> حساب عميل جديد</button>
-                <button type="button" class="secondary" onclick="openCustomerLoyaltyAnalytics()"><i class="fas fa-chart-pie"></i> تحليل ولاء العملاء</button>
+            <div class="scm-panel-toolbar cp-gov-toolbar">
+                <button type="button" class="nebras-users-btn nebras-users-btn--primary" data-cp-action="new-user" onclick="openCpUserEditor()"><i class="fas fa-user-plus"></i> حساب عميل جديد</button>
+                <button type="button" class="nebras-users-btn" data-cp-action="loyalty" onclick="openCustomerLoyaltyAnalytics()"><i class="fas fa-chart-pie"></i> تحليل ولاء العملاء</button>
             </div>
             <div id="cp-gov-editor" class="scm-editor-mount" hidden></div>
             <div class="nebras-erp-list" id="cp-gov-list"></div>
@@ -1864,13 +1864,13 @@
     <script src="js/nebras-profile-2026-seed.js" defer></script>
     <script src="js/nebras-profile-hub.js" defer></script>
     <script src="js/nebras-callback-concierge.js" defer></script>
-    <script src="js/nebras-platform.js?v=hrws50" defer></script>
+    <script src="js/nebras-platform.js?v=hrws51" defer></script>
     <script src="js/nebras-hr-hcm-suite.js?v=hrws44" defer></script>
     <script src="js/nebras-hr-gps-tracker.js?v=hrws44" defer></script>
     <script src="js/nebras-hr-companies.js?v=hrws44" defer></script>
     <script src="js/nebras-legal-platform.js?v=hrws48" defer></script>
     <script src="js/nebras-crm-platform.js?v=hrws49" defer></script>
-    <script src="js/nebras-customer-portal.js?v=hrws50" defer></script>
+    <script src="js/nebras-customer-portal.js?v=hrws51" defer></script>
     <script src="js/nebras-accounting-platform.js?v=hrws47" defer></script>
     <script src="js/nebras-empire-hub.js?v=hrws47" defer></script>
     <script src="js/nebras-hr-platform.js?v=hrws46" defer></script>
