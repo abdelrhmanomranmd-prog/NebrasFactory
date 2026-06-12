@@ -198,7 +198,3 @@ body.nebras-ready:not(.nebras-intro-active):not(.nebras-workspace-active):not(.a
     overflow-y: auto !important;
     overflow-x: hidden;
 }
-
-body.nebras-intro-active #nebras-brand-intro:not([hidden]) ~ * {
-    pointer-events: none;
-}

@@ -215,11 +215,13 @@
         }
         const el = document.getElementById('customer-portal-overlay');
         if (el) el.classList.add('show');
+        if (typeof syncPlatformInteractionLayers === 'function') syncPlatformInteractionLayers();
     }
 
     function closeCustomerPortalLogin() {
         const el = document.getElementById('customer-portal-overlay');
         if (el) el.classList.remove('show');
+        if (typeof syncPlatformInteractionLayers === 'function') syncPlatformInteractionLayers();
     }
 
     function loginCustomerPortal() {
@@ -255,6 +257,7 @@
         const app = document.getElementById('customer-portal-app');
         if (app) { app.hidden = true; app.classList.remove('show'); }
         document.body.classList.remove('customer-portal-open');
+        if (typeof syncPlatformInteractionLayers === 'function') syncPlatformInteractionLayers();
         if (name) cpAudit('خروج عميل', name);
     }
 
@@ -275,6 +278,7 @@
         document.body.classList.add('customer-portal-open');
         const app = document.getElementById('customer-portal-app');
         if (app) { app.hidden = false; app.classList.add('show'); }
+        if (typeof syncPlatformInteractionLayers === 'function') syncPlatformInteractionLayers();
         renderCustomerPortalDashboard();
     }
 

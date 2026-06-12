@@ -4665,14 +4665,7 @@
 
 /* PHASE24_INJECTED */
 /* Phase 24 — Analytics purge (cloud+local) + HR platform open reliability */
-
-    function closeAllAdminSections() {
-        document.querySelectorAll('.admin-section.show').forEach(function(el) {
-            el.classList.remove('show');
-            el.setAttribute('aria-hidden', 'true');
-        });
-        document.body.classList.remove('hr-platform-open');
-    }
+/* closeAllAdminSections — see unified implementation below */
 
     async function mergeAllQuotesForGovernanceAsync() {
         const local = typeof loadSalesQuotesInbox === 'function' ? loadSalesQuotesInbox() : [];
@@ -5477,6 +5470,7 @@
                 '<button type="button" class="secondary" onclick="closeProductShop()" style="margin-top:8px;">' + (isEn ? 'Close' : 'إغلاق') + '</button>';
             modal.setAttribute('data-shop-product-id', productId);
             overlay.classList.add('show');
+            syncPlatformInteractionLayers();
             syncShopHeroImage();
             updateShopLinePrice(productId);
             const sel = document.getElementById('shop-variant-select');
@@ -5661,9 +5655,7 @@
             applyStaticUiTranslations(ui);
             renderCartOrderPreview();
             overlay.classList.add('show');
-            overlay.style.display = 'flex';
-            overlay.style.pointerEvents = 'auto';
-            clearStuckInteractionBlockers();
+            syncPlatformInteractionLayers();
             updateCartBadge();
             updateSalesQuoteFab();
             updateTransferReceiptFab();
@@ -5672,12 +5664,13 @@
         function closeCartDrawer() {
             const overlay = document.getElementById('cart-drawer-overlay');
             if (overlay) overlay.classList.remove('show');
-            clearStuckInteractionBlockers();
+            syncPlatformInteractionLayers();
         }
 
         function closeProductShop() {
             const overlay = document.getElementById('product-shop-overlay');
             if (overlay) overlay.classList.remove('show');
+            syncPlatformInteractionLayers();
         }
 
         function removeCartLine(index) {
@@ -6753,7 +6746,7 @@
             }
             if (!requirePermission('audit', 'التحليلات متاحة لمن لديه صلاحية التدقيق / التقارير.')) return;
             if (typeof switchAnalyticsTab === 'function') switchAnalyticsTab('overview');
-            document.getElementById('admin-dashboard').classList.add('show');
+            revealPlatformLayer('admin-dashboard');
             renderAdminAnalyticsPanel().then(function() {
                 scrollToDashboardSection('admin-analytics-hub');
             });
@@ -7564,6 +7557,7 @@
                 resolveSiteLogoUrl(function(logoUrl) {
                     renderQuotePreviewDocument(doc, overlay, logoUrl);
                     overlay.classList.add('show');
+            syncPlatformInteractionLayers();
                     waitForQuoteDocumentImages(doc).then(function() {
                         setTimeout(function() { resolve(true); }, 350);
                     });
@@ -8372,6 +8366,7 @@
                 (linesHtml ? ('<ul class="sales-quote-detail-lines">' + linesHtml + '</ul>') : '') +
                 (entry.totalIncVat > 0 ? '<p class="sales-quote-detail-total"><strong>' + escapeHtmlAttr(ui.cartProductsTotalInc || 'إجمالي المنتجات شامل الضريبة: ') + '</strong> ' + formatSar(entry.totalIncVat) + '</p>' : '');
             overlay.classList.add('show');
+            syncPlatformInteractionLayers();
         }
 
         function closeSalesQuoteDetail() {
@@ -8427,6 +8422,7 @@
                     '<p class="sales-quote-door-customer"><strong>' + escapeHtmlAttr(entry.customerName || '') + '</strong> · ' + escapeHtmlAttr(entry.phone || '') + '</p>';
             }
             overlay.classList.add('show');
+            syncPlatformInteractionLayers();
         }
 
         function closeSalesQuoteDoorDesign() {
@@ -9062,6 +9058,7 @@
                 '<span class="quote-official-web">WWW.NIBRAS-FACTORY.COM</span></div>' +
                 '</div></footer></div>';
             overlay.classList.add('show');
+            syncPlatformInteractionLayers();
             closeCartDrawer();
             updateSalesQuoteFab();
             requestAnimationFrame(function() {
@@ -9212,6 +9209,7 @@
                 '<p class="quote-footer-disclaimer">' + escapeHtmlAttr(footerNote || '') + '</p>' +
                 '</div></footer></div>';
             overlay.classList.add('show');
+            syncPlatformInteractionLayers();
             closeCartDrawer();
             updateSalesQuoteFab();
             requestAnimationFrame(function() {
@@ -10776,7 +10774,7 @@
             displayCertificationsAdmin();
             displayShowroomAdmin();
             renderGovernanceStatusPanel();
-            document.getElementById('site-content-management').classList.add('show');
+            revealPlatformLayer('site-content-management');
         }
 
         function displayAboutPagesAdmin() {
@@ -12535,7 +12533,7 @@
             erpInventoryEditId = null;
             renderErpInventoryForm();
             displayErpInventory();
-            document.getElementById('erp-inventory').classList.add('show');
+            revealPlatformLayer('erp-inventory');
         }
 
         function renderErpInventoryForm(item) {
@@ -12673,7 +12671,7 @@
             renderErpOrdersToolbar();
             renderErpOrdersForm();
             displayErpOrders();
-            document.getElementById('erp-orders').classList.add('show');
+            revealPlatformLayer('erp-orders');
         }
 
         function renderErpOrdersToolbar() {
@@ -12903,7 +12901,7 @@
             ensureErpOperationsData();
             renderErpStockTransferForm();
             displayErpStockTransfers();
-            document.getElementById('erp-warehouse-transfers').classList.add('show');
+            revealPlatformLayer('erp-warehouse-transfers');
         }
 
         function renderErpStockTransferForm() {
@@ -13062,7 +13060,7 @@
             ensureErpOperationsData();
             renderErpProductionForm();
             displayErpProduction();
-            document.getElementById('erp-production').classList.add('show');
+            revealPlatformLayer('erp-production');
         }
 
         function renderErpProductionForm() {
@@ -13369,10 +13367,7 @@
             renderErpProcurementForm();
             displayErpProcurement();
             const el = document.getElementById('erp-procurement');
-            if (el) {
-                el.classList.add('show');
-                el.setAttribute('aria-hidden', 'false');
-            }
+            if (el) revealPlatformLayer('erp-procurement');
         }
 
         function renderErpProcurementForm() {
@@ -13523,7 +13518,7 @@
             ensureErpOperationsData();
             renderErpAccountingForm();
             displayErpAccounting();
-            document.getElementById('erp-accounting').classList.add('show');
+            revealPlatformLayer('erp-accounting');
         }
 
         function getQuoteTransferEntries() {
@@ -13694,7 +13689,7 @@
             }
             renderSalesPriceListForm();
             displaySalesPriceList();
-            document.getElementById('sales-pricelist').classList.add('show');
+            revealPlatformLayer('sales-pricelist');
         }
 
         function renderSalesPriceListForm() {
@@ -13826,7 +13821,7 @@
             }
             repQuoteDraft = { customerName: '', phone: '', lines: [] };
             renderRepQuoteBuilder();
-            document.getElementById('rep-quote-builder').classList.add('show');
+            revealPlatformLayer('rep-quote-builder');
         }
 
         function renderRepQuoteBuilder() {
@@ -14282,6 +14277,7 @@
             }
             if (overlay) {
                 overlay.classList.add('show');
+            syncPlatformInteractionLayers();
                 wireClickableMediaIn(overlay);
             }
         }
@@ -14338,7 +14334,7 @@
                 if (typeof scrollToAdminDashboard === 'function') scrollToAdminDashboard();
                 return;
             }
-            document.getElementById('admin-overlay').classList.add('show');
+            revealPlatformLayer('admin-overlay');
             clearStuckInteractionBlockers();
             if (typeof setAdminLoginStatus === 'function') setAdminLoginStatus('', '');
             else document.getElementById('admin-status-message').textContent = '';
@@ -14358,7 +14354,9 @@
             return allowed.indexOf(permissionKey) >= 0;
         }
 
-        function clearStuckInteractionBlockers() {
+        const NEBRAS_PLATFORM_LAYER_SEL = '.admin-section, .admin-overlay, .cart-drawer-overlay, .product-shop-overlay, .quote-print-overlay, .customer-portal-overlay, .customer-portal-app, .sales-quote-detail-overlay, .nebras-callback-overlay, .nebras-color-overlay, .nebras-media-lightbox, #nebras-brand-intro, #nebras-workspace, #admin-dashboard';
+
+        function syncPlatformInteractionLayers() {
             const intro = document.getElementById('nebras-brand-intro');
             const introOpen = intro && !intro.hidden && !intro.classList.contains('is-leaving');
             if (!introOpen) {
@@ -14369,36 +14367,73 @@
                     intro.style.display = 'none';
                 }
             }
+            document.body.classList.toggle('hr-platform-open', !!(document.getElementById('hr-platform') && document.getElementById('hr-platform').classList.contains('show')));
+            document.body.classList.toggle('legal-platform-open', !!(document.getElementById('legal-platform') && document.getElementById('legal-platform').classList.contains('show')));
+            document.body.classList.toggle('crm-platform-open', !!(document.getElementById('crm-platform') && document.getElementById('crm-platform').classList.contains('show')));
+            document.body.classList.toggle('accounting-platform-open', !!(document.getElementById('accounting-platform') && document.getElementById('accounting-platform').classList.contains('show')));
+            const cpApp = document.getElementById('customer-portal-app');
+            document.body.classList.toggle('customer-portal-open', !!(cpApp && cpApp.classList.contains('show')));
+            const lightbox = document.getElementById('nebras-media-lightbox');
+            document.body.classList.toggle('nebras-lightbox-open', !!(lightbox && !lightbox.hidden));
             const hasOpenLayer = !!document.querySelector(
-                '.admin-section.show, .admin-overlay.show, .cart-drawer-overlay.show, .sales-quote-detail-overlay.show, .nebras-callback-overlay.is-open'
+                '.admin-section.show, .admin-overlay.show, .cart-drawer-overlay.show, .product-shop-overlay.show, ' +
+                '.quote-print-overlay.show, .customer-portal-overlay.show, .customer-portal-app.show, ' +
+                '.sales-quote-detail-overlay.show, .nebras-callback-overlay.is-open, .nebras-media-lightbox:not([hidden])'
             );
-            if (!introOpen && !document.body.classList.contains('nebras-workspace-active') && !hasOpenLayer) {
+            const workspaceActive = document.body.classList.contains('nebras-workspace-active');
+            if (!introOpen && !workspaceActive && !hasOpenLayer) {
                 document.body.style.overflow = '';
                 document.documentElement.style.overflow = '';
             }
-            document.querySelectorAll('.admin-section, .admin-overlay, .cart-drawer-overlay, .sales-quote-detail-overlay, .nebras-callback-overlay').forEach(function(el) {
-                const open = el.classList.contains('show') || el.classList.contains('is-open');
-                if (!open) {
+            document.querySelectorAll(NEBRAS_PLATFORM_LAYER_SEL).forEach(function(el) {
+                if (!el || !el.classList) return;
+                const isDashboard = el.id === 'admin-dashboard';
+                const isWorkspace = el.id === 'nebras-workspace';
+                const isLightbox = el.classList.contains('nebras-media-lightbox');
+                const isIntro = el.id === 'nebras-brand-intro';
+                const open = el.classList.contains('show') ||
+                    el.classList.contains('is-open') ||
+                    (isLightbox && !el.hidden) ||
+                    (isWorkspace && workspaceActive) ||
+                    (isDashboard && document.body.classList.contains('admin-session') && el.classList.contains('show'));
+                if (isIntro && introOpen) {
+                    el.style.display = '';
+                    el.style.pointerEvents = 'auto';
+                    return;
+                }
+                if (!open || (isDashboard && !document.body.classList.contains('admin-session'))) {
                     el.style.pointerEvents = 'none';
                     el.style.display = 'none';
-                    el.setAttribute('aria-hidden', 'true');
+                    if (!isWorkspace) el.setAttribute('aria-hidden', 'true');
                 } else {
                     el.style.pointerEvents = 'auto';
-                    el.style.display = 'flex';
+                    if (el.classList.contains('quote-print-overlay')) el.style.display = 'block';
+                    else if (isDashboard || (cpApp && el === cpApp)) el.style.display = '';
+                    else el.style.display = 'flex';
                     el.setAttribute('aria-hidden', 'false');
                 }
             });
-            ['hr-platform', 'legal-platform', 'crm-platform', 'accounting-platform'].forEach(function(id) {
-                const panel = document.getElementById(id);
-                if (!panel) return;
-                if (!panel.classList.contains('show')) {
-                    panel.style.pointerEvents = 'none';
-                    panel.style.display = 'none';
-                } else {
-                    panel.style.pointerEvents = 'auto';
-                    panel.style.display = 'flex';
-                }
-            });
+        }
+
+        function clearStuckInteractionBlockers() {
+            syncPlatformInteractionLayers();
+        }
+
+        function revealPlatformLayer(id) {
+            const el = typeof id === 'string' ? document.getElementById(id) : id;
+            if (!el) return;
+            el.classList.add('show');
+            el.removeAttribute('hidden');
+            el.setAttribute('aria-hidden', 'false');
+            syncPlatformInteractionLayers();
+        }
+
+        function hidePlatformLayer(id) {
+            const el = typeof id === 'string' ? document.getElementById(id) : id;
+            if (!el) return;
+            el.classList.remove('show');
+            el.setAttribute('aria-hidden', 'true');
+            syncPlatformInteractionLayers();
         }
 
         function initPlatformInteractionLayerGuard() {
@@ -14410,19 +14445,29 @@
                 syncQueued = true;
                 requestAnimationFrame(function() {
                     syncQueued = false;
-                    clearStuckInteractionBlockers();
+                    syncPlatformInteractionLayers();
                 });
             }
-            document.addEventListener('click', queueLayerSync, true);
             document.addEventListener('visibilitychange', function() {
                 if (!document.hidden) queueLayerSync();
             });
+            window.addEventListener('resize', queueLayerSync);
             if (typeof MutationObserver !== 'undefined') {
-                const observer = new MutationObserver(queueLayerSync);
-                document.querySelectorAll('.admin-section, .admin-overlay, .cart-drawer-overlay, .sales-quote-detail-overlay, .nebras-callback-overlay').forEach(function(el) {
-                    observer.observe(el, { attributes: true, attributeFilter: ['class', 'hidden'] });
+                const observer = new MutationObserver(function(mutations) {
+                    for (let i = 0; i < mutations.length; i++) {
+                        const t = mutations[i].target;
+                        if (!t || !t.matches) continue;
+                        if (t.matches(NEBRAS_PLATFORM_LAYER_SEL) || (t.closest && t.closest(NEBRAS_PLATFORM_LAYER_SEL))) {
+                            queueLayerSync();
+                            return;
+                        }
+                    }
                 });
+                observer.observe(document.body, { attributes: true, attributeFilter: ['class', 'hidden'], subtree: true });
             }
+            setTimeout(queueLayerSync, 80);
+            setTimeout(queueLayerSync, 600);
+            setTimeout(queueLayerSync, 3200);
         }
 
         function bindStorefrontCommerceClicks() {
@@ -15338,12 +15383,7 @@
             if (!user) return;
             if (typeof loadAdminPresenceLocal === 'function') loadAdminPresenceLocal();
             const dash = document.getElementById('admin-dashboard');
-            if (dash) {
-                dash.classList.add('show');
-                dash.removeAttribute('hidden');
-                dash.setAttribute('aria-hidden', 'false');
-            }
-            clearStuckInteractionBlockers();
+            if (dash) revealPlatformLayer('admin-dashboard');
             ensureDashboardGovernanceHandlers();
             updateAdminRoleLabel(user);
             applyOccasionTheme();
@@ -15885,7 +15925,7 @@
     }
 
         function openCustomerComplaints() {
-            document.getElementById('complaint-overlay').classList.add('show');
+            revealPlatformLayer('complaint-overlay');
         }
 
         function closeComplaintOverlay() {
@@ -16093,13 +16133,13 @@
             if (settingsBtn) {
                 settingsBtn.style.display = currentAdmin && currentAdmin.role === 'superadmin' ? 'inline-block' : 'none';
             }
-            document.getElementById('user-management').classList.add('show');
+            revealPlatformLayer('user-management');
             displayUsers();
         }
 
         function openSalesManagement() {
             if (!requirePermission('sales')) return;
-            document.getElementById('sales-management').classList.add('show');
+            revealPlatformLayer('sales-management');
             renderSalesA4FormatPanel();
             renderSalesManagementForm();
             displaySales();
@@ -16109,20 +16149,20 @@
 
         function openCustomerServiceManagement() {
             if (!requirePermission('customerService')) return;
-            document.getElementById('customer-service-management').classList.add('show');
+            revealPlatformLayer('customer-service-management');
             renderCustomerServiceForm();
             displayCustomerService();
         }
 
         function openComplaintsManagement() {
             if (!requirePermission('complaints')) return;
-            document.getElementById('complaints-management').classList.add('show');
+            revealPlatformLayer('complaints-management');
             displayComplaints();
         }
 
         function openBranchesManagement() {
             if (!requirePermission('branches')) return;
-            document.getElementById('branches-management').classList.add('show');
+            revealPlatformLayer('branches-management');
             displayBranchesAdmin();
         }
 
@@ -16142,7 +16182,7 @@
 
         function openAuditLog() {
             if (!requirePermission('audit')) return;
-            document.getElementById('audit-log').classList.add('show');
+            revealPlatformLayer('audit-log');
             displayAuditLog();
         }
 
@@ -16165,7 +16205,7 @@
                 return;
             }
             renderExecutiveReportsPanel();
-            document.getElementById('executive-reports').classList.add('show');
+            revealPlatformLayer('executive-reports');
         }
 
         function setExecutiveReportPeriod(period) {
@@ -16487,7 +16527,7 @@
                 return;
             }
             renderBranchTeamPanel();
-            document.getElementById('branch-team-management').classList.add('show');
+            revealPlatformLayer('branch-team-management');
         }
 
         function renderBranchTeamPanel() {
@@ -16623,7 +16663,7 @@
         function openProductMasterHub() {
             if (!requireProductMasterGovernance()) return;
             renderProductMasterPanel();
-            document.getElementById('product-master-hub').classList.add('show');
+            revealPlatformLayer('product-master-hub');
         }
 
         function renderProductMasterPanel() {
@@ -16680,7 +16720,7 @@
                 return;
             }
             renderAluminumDepartmentPanel();
-            document.getElementById('aluminum-department').classList.add('show');
+            revealPlatformLayer('aluminum-department');
         }
 
         function renderAluminumDepartmentPanel() {
@@ -16740,7 +16780,7 @@
                 return;
             }
             renderBranchCommandCenterPanel();
-            document.getElementById('branch-command-center').classList.add('show');
+            revealPlatformLayer('branch-command-center');
         }
 
         function renderBranchCommandCenterPanel() {
@@ -16803,7 +16843,7 @@
                 return;
             }
             renderWpcProductionDepartmentPanel();
-            document.getElementById('wpc-production-dept').classList.add('show');
+            revealPlatformLayer('wpc-production-dept');
         }
 
         function renderWpcProductionDepartmentPanel() {
@@ -16858,7 +16898,7 @@
             if (!requireMainGovernanceAdmin('إعدادات المنصة الكاملة متاحة للإدارة الرئيسية فقط.')) return;
             renderSystemSettings();
             switchSettingsTab(settingsActiveTab || 'contacts');
-            document.getElementById('system-settings').classList.add('show');
+            revealPlatformLayer('system-settings');
         }
 
         function populateOccasionThemeSelect() {
@@ -21036,7 +21076,7 @@
                 return;
             }
             renderAccountSecurityPanel();
-            document.getElementById('account-security').classList.add('show');
+            revealPlatformLayer('account-security');
         }
 
         function submitAccountSecurityDirect() {
@@ -21234,7 +21274,7 @@
         function openCloudGovernance() {
             if (!requireMainGovernanceAdmin('الحوكمة السحابية متاحة للإدارة الرئيسية فقط.')) return;
             renderCloudGovernancePanel();
-            document.getElementById('cloud-governance').classList.add('show');
+            revealPlatformLayer('cloud-governance');
         }
 
         async function syncPushToNebrasCloudNow() {
@@ -21281,7 +21321,7 @@
 
         function openIconManagement() {
             if (!requirePermission('content', 'هذه العملية تتطلب صلاحية إدارة المحتوى.')) return;
-            document.getElementById('icon-management').classList.add('show');
+            revealPlatformLayer('icon-management');
             displayVisitorIconsAdmin();
         }
 
@@ -22114,6 +22154,9 @@
             });
             document.body.classList.remove('hr-platform-open');
             document.body.classList.remove('legal-platform-open');
+            document.body.classList.remove('crm-platform-open');
+            document.body.classList.remove('accounting-platform-open');
+            syncPlatformInteractionLayers();
         }
 
         function ensureAdminPanelExitChrome() {
@@ -22168,7 +22211,7 @@
                 document.body.classList.remove('hr-platform-open');
                 document.body.classList.remove('legal-platform-open');
             }
-            clearStuckInteractionBlockers();
+            syncPlatformInteractionLayers();
         }
 
         function parseAdminPermissionsInput(raw, fallbackRole) {
@@ -26365,6 +26408,9 @@
         window.openCustomerComplaints = openCustomerComplaints;
         window.openBankAccountCard = openBankAccountCard;
         window.clearStuckInteractionBlockers = clearStuckInteractionBlockers;
+        window.syncPlatformInteractionLayers = syncPlatformInteractionLayers;
+        window.revealPlatformLayer = revealPlatformLayer;
+        window.hidePlatformLayer = hidePlatformLayer;
         window.initPlatformInteractionLayerGuard = initPlatformInteractionLayerGuard;
         window.bindStorefrontCommerceClicks = bindStorefrontCommerceClicks;
         window.getNebrasCurrentAdmin = function() { return currentAdmin; };

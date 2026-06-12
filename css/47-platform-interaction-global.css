@@ -1,0 +1,193 @@
+/* ═══════════════════════════════════════════════════════════════
+   نبراس — إصلاح عالمي للنقر والتمرير (كل الطبقات والأقسام)
+   يُحمّل آخراً — يتجاوز أي طبقة شبح مخفية
+   ═══════════════════════════════════════════════════════════════ */
+
+/* ── 1) كل الطبقات الثابتة المغلقة = غير موجودة للتفاعل ── */
+.admin-section:not(.show),
+.admin-overlay:not(.show),
+.cart-drawer-overlay:not(.show),
+.product-shop-overlay:not(.show),
+.quote-print-overlay:not(.show),
+.customer-portal-overlay:not(.show),
+.customer-portal-app:not(.show),
+.sales-quote-detail-overlay:not(.show),
+.nebras-callback-overlay:not(.is-open),
+.nebras-color-overlay.is-hidden,
+.nebras-media-lightbox[hidden],
+#nebras-brand-intro[hidden],
+#nebras-brand-intro.is-leaving,
+#nebras-workspace:not(.nebras-workspace--forced) {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+
+body:not(.nebras-workspace-active) #nebras-workspace {
+    display: none !important;
+    pointer-events: none !important;
+}
+
+/* أي قسم إدارة مغلق — كل أطفاله لا يلتقطون النقر */
+.admin-section:not(.show),
+.admin-section:not(.show) * {
+    pointer-events: none !important;
+}
+
+#hr-platform:not(.show),
+#legal-platform:not(.show),
+#crm-platform:not(.show),
+#accounting-platform:not(.show) {
+    display: none !important;
+    pointer-events: none !important;
+}
+
+/* ── 2) الطبقات المفتوحة ── */
+.admin-section.show,
+.admin-overlay.show {
+    display: flex !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+}
+
+.cart-drawer-overlay.show,
+.product-shop-overlay.show,
+.customer-portal-overlay.show,
+.sales-quote-detail-overlay.show,
+.nebras-callback-overlay.is-open {
+    display: flex !important;
+    pointer-events: auto !important;
+}
+
+.quote-print-overlay.show {
+    display: block !important;
+    pointer-events: auto !important;
+}
+
+.customer-portal-app.show {
+    display: block !important;
+    pointer-events: auto !important;
+}
+
+.nebras-media-lightbox:not([hidden]) {
+    display: flex !important;
+    pointer-events: auto !important;
+}
+
+body.nebras-workspace-active #nebras-workspace {
+    display: block !important;
+    pointer-events: auto !important;
+}
+
+/* ── 3) تمرير داخلي — سلة · متجر · إدارة · ERP · إعدادات ── */
+.cart-drawer-overlay.show .cart-drawer,
+.product-shop-overlay.show .product-shop-modal,
+.customer-portal-overlay.show .customer-portal-modal,
+.customer-portal-app.show,
+.admin-section.show .admin-modal,
+.admin-section.show .site-content-modal,
+.admin-section.show .nebras-erp-modal,
+.admin-section.show .nebras-users-modal,
+.admin-section.show .nebras-scm-modal,
+#system-settings.show .admin-modal,
+#site-content-management.show .admin-modal {
+    max-height: min(90vh, 90dvh);
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    touch-action: pan-y;
+    pointer-events: auto;
+}
+
+.admin-section.show .nebras-erp-list,
+.admin-section.show .scm-list,
+.admin-section.show .nebras-editor-body,
+.admin-section.show .nebras-users-body,
+.admin-section.show .procurement-body,
+.admin-section.show #erp-inventory-list,
+.admin-section.show #erp-orders-list {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    max-height: min(52vh, 52dvh);
+    pointer-events: auto;
+}
+
+#hr-platform.show .hr-ws-sidebar,
+#hr-platform.show .hr-ws-main,
+#legal-platform.show .hr-ws-main,
+#legal-platform.show .hr-ws-sidebar,
+#crm-platform.show .hr-ws-main,
+#crm-platform.show .hr-ws-sidebar,
+#accounting-platform.show .hr-ws-main,
+#accounting-platform.show .hr-ws-sidebar {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    pointer-events: auto;
+}
+
+/* ── 4) الداشبورد — للزوار مخفي تماماً ── */
+body:not(.admin-session) #admin-dashboard,
+body:not(.admin-session) #admin-dashboard.show {
+    display: none !important;
+    pointer-events: none !important;
+    height: 0 !important;
+    overflow: hidden !important;
+}
+
+body.admin-session #admin-dashboard.show {
+    display: flex !important;
+    pointer-events: auto !important;
+    overflow-y: auto;
+    touch-action: pan-y;
+}
+
+/* ── 5) تمرير الصفحة الرئيسية ── */
+html,
+body.nebras-ready:not(.nebras-intro-active):not(.nebras-workspace-active):not(.customer-portal-open):not(.hr-platform-open):not(.legal-platform-open):not(.crm-platform-open):not(.accounting-platform-open):not(.nebras-lightbox-open) {
+    overflow-y: auto !important;
+    overflow-x: hidden;
+    touch-action: pan-y;
+}
+
+/* ── 6) أزرار وروابط تفاعلية — مؤشر واضح ── */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+a[href],
+.dashboard-tile-card,
+.erp-module-card:not(.disabled),
+.platform-module-card:not(.disabled),
+.visitor-icon-card,
+.gov-pillar-btn,
+.gov-branch-chip,
+.gov-org-node--click,
+.nebras-dept-card,
+.branch-command-card,
+.hr-ws-nav-item,
+.proc-scope-tab,
+.admin-action,
+.dashboard-main-nav a,
+.dashboard-main-nav button,
+.nebras-admin-exit-back,
+.nebras-admin-exit-close {
+    cursor: pointer;
+    touch-action: manipulation;
+}
+
+button:disabled,
+.erp-module-card.disabled,
+.platform-module-card.disabled {
+    cursor: not-allowed;
+}
+
+/* ── 7) زخرفة لا تلتقط النقر ── */
+.admin-section.show .admin-modal::before,
+.admin-section.show .admin-modal::after,
+.dashboard-tile-glow,
+.dashboard-tile-icon,
+.celebration-deco-layer,
+.site-celebration-overlay,
+.site-celebration-overlay * {
+    pointer-events: none !important;
+}
