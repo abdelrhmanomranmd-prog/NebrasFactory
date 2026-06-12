@@ -56,7 +56,23 @@
     padding: 10px 8px;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 8px;
+}
+
+.hr-ws-nav-group {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+.hr-ws-nav-group-label {
+    display: block;
+    padding: 6px 12px 4px;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #7a9bb8;
+    opacity: 0.95;
 }
 
 .hr-ws-nav-item {
@@ -1069,3 +1085,94 @@ body.hr-platform-open {
 .hr-org-node-head { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; }
 .hr-org-node-meta { margin: 6px 0 8px; font-size: 0.78rem; color: #5a6a7a; }
 .hr-org-node-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+
+/* Phase 27 — نبراس HCM Suite */
+.hr-fleet-hub-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 12px;
+    margin-bottom: 16px;
+}
+.hr-fleet-hub-card {
+    border: 1px solid #d8e2ec;
+    border-radius: 14px;
+    padding: 14px;
+    background: linear-gradient(135deg, #f8fafc, #fff);
+    box-shadow: 0 2px 8px rgba(13, 40, 64, 0.06);
+}
+.hr-fleet-hub-card--live {
+    border-color: #27ae60;
+    background: linear-gradient(135deg, #eafaf1, #fff);
+}
+.hr-fleet-hub-card-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+.hr-fleet-hub-card-head strong { font-size: 0.95rem; color: #0d2840; }
+.hr-fleet-hub-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    font-size: 0.78rem;
+    color: #5a6a7a;
+    margin-bottom: 10px;
+}
+.hr-fleet-hub-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+
+.hr-saud-center {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 16px;
+    align-items: center;
+    margin-bottom: 20px;
+}
+.hr-saud-gauge-wrap {
+    border-radius: 16px;
+    padding: 20px 24px;
+    border: 2px solid #d8e2ec;
+    background: #f8fafc;
+    text-align: center;
+}
+.hr-saud-gauge-pct strong {
+    display: block;
+    font-size: 2.4rem;
+    line-height: 1.1;
+    color: #0d2840;
+}
+.hr-saud-gauge-pct span { font-size: 0.85rem; color: #5a6a7a; }
+.hr-saud-gauge-meta {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 8px;
+    font-size: 0.82rem;
+    color: #2c5282;
+}
+.hr-nitaqat-band {
+    margin-top: 12px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: rgba(0, 0, 0, 0.04);
+    font-size: 0.84rem;
+}
+.hr-nitaqat--red { border-color: #e74c3c; background: linear-gradient(135deg, #fdecea, #fff); }
+.hr-nitaqat--yellow { border-color: #f39c12; background: linear-gradient(135deg, #fef9e7, #fff); }
+.hr-nitaqat--green { border-color: #27ae60; background: linear-gradient(135deg, #eafaf1, #fff); }
+.hr-nitaqat--plat { border-color: #8e44ad; background: linear-gradient(135deg, #f4ecf7, #fff); }
+.hr-saud-target {
+    padding: 14px 18px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #0d2840, #155e94);
+    color: #e8f0f8;
+    font-size: 0.88rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+@media (max-width: 720px) {
+    .hr-saud-center { grid-template-columns: 1fr; }
+}

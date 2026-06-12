@@ -450,7 +450,9 @@
         const scopeEl = document.getElementById('hr-ws-scope-label');
         const userEl = document.getElementById('hr-ws-user-pill');
         const admin = typeof currentAdmin !== 'undefined' ? currentAdmin : null;
-        if (scopeEl) scopeEl.textContent = scope.label || 'موارد بشرية · قسمك فقط';
+        if (scopeEl) scopeEl.textContent = (isStrictHrUser() ? 'نبراس HCM — ' : '') + (scope.label || 'موارد بشرية · قسمك فقط');
+        const brandEl = document.getElementById('hr-ws-brand-title');
+        if (brandEl) brandEl.textContent = isStrictHrUser() ? 'نبراس HCM — مصنع نبراس WPC' : 'منصة HR — مصنع نبراس WPC';
         if (userEl && admin) {
             userEl.innerHTML = '<i class="fas fa-user-shield"></i> ' + esc(admin.username || '') +
                 (admin.role === 'hr' ? ' · HR' : '');
@@ -461,14 +463,25 @@
         const scope = getHrAdminScope();
         const head = document.querySelector('#hr-ws-sidebar .hr-ws-sidebar-head');
         if (head) {
-            head.innerHTML = '<strong><i class="' + esc(scope.icon || 'fas fa-sitemap') + '"></i> وحدة التحكم</strong>' +
-                '<span>' + esc(scope.label) + ' — صلاحيات كاملة داخل نطاقك</span>';
+            const hcm = isStrictHrUser();
+            head.innerHTML = '<strong><i class="' + (hcm ? 'fas fa-people-roof' : esc(scope.icon || 'fas fa-sitemap')) + '"></i> ' + (hcm ? 'نبراس HCM' : 'وحدة التحكم') + '</strong>' +
+                '<span>' + esc(scope.label) + ' — موظفون · رواتب · أسطول · سعودة</span>';
         }
         const navHost = document.getElementById('hr-ws-nav');
         if (navHost && tabDefs && tabDefs.length) {
-            navHost.innerHTML = tabDefs.map(function(t) {
-                return '<button type="button" class="hr-ws-nav-item' + (hrActiveTab === t.id ? ' is-active' : '') +
-                    '" data-hr-tab="' + esc(t.id) + '" onclick="switchHrTab(\'' + t.id + '\')"><i class="' + t.icon + '"></i> ' + esc(t.label) + '</button>';
+            const groups = [];
+            const groupMap = {};
+            tabDefs.forEach(function(t) {
+                const g = t.group || 'النظام';
+                if (!groupMap[g]) { groupMap[g] = []; groups.push(g); }
+                groupMap[g].push(t);
+            });
+            navHost.innerHTML = groups.map(function(g) {
+                const items = groupMap[g].map(function(t) {
+                    return '<button type="button" class="hr-ws-nav-item' + (hrActiveTab === t.id ? ' is-active' : '') +
+                        '" data-hr-tab="' + esc(t.id) + '" onclick="switchHrTab(\'' + t.id + '\')"><i class="' + t.icon + '"></i> ' + esc(t.label) + '</button>';
+                }).join('');
+                return '<div class="hr-ws-nav-group"><span class="hr-ws-nav-group-label">' + esc(g) + '</span>' + items + '</div>';
             }).join('');
         } else {
             document.querySelectorAll('#hr-ws-nav .hr-ws-nav-item, #hr-ws-sidebar .hr-ws-nav .hr-ws-nav-item').forEach(function(btn) {
@@ -523,6 +536,7 @@
     function renderHrPlatformPanelSafe() {
         try {
             loadHrData();
+            if (typeof loadHcmSuiteData === 'function') loadHcmSuiteData();
             renderHrWorkspaceSidebar(getHrTabDefinitions());
             updateHrWorkspaceChrome();
             renderHrPlatformPanel();
@@ -566,27 +580,39 @@
 
     function getHrTabDefinitions() {
         const base = [
-            { id: 'dashboard', icon: 'fas fa-gauge-high', label: 'لوحة التحكم' },
-            { id: 'employees', icon: 'fas fa-users', label: 'الموظفون والعمال' },
-            { id: 'org-tree', icon: 'fas fa-sitemap', label: 'شجرة العمل' },
-            { id: 'factory', icon: 'fas fa-industry', label: 'عمليات المصنع WPC' },
-            { id: 'vehicles', icon: 'fas fa-car', label: 'سجل السيارات' },
-            { id: 'tracking', icon: 'fas fa-location-dot', label: 'تتبع السيارات' },
-            { id: 'fleet-reps', icon: 'fas fa-user-tie', label: 'أسطول المندوبين' },
-            { id: 'attendance', icon: 'fas fa-fingerprint', label: 'حضور وانصراف' },
-            { id: 'documents', icon: 'fas fa-folder-open', label: 'المستندات' },
-            { id: 'payroll', icon: 'fas fa-money-check-dollar', label: 'مسير الرواتب' },
-            { id: 'alerts', icon: 'fas fa-bell', label: 'التنبيهات' },
-            { id: 'leave', icon: 'fas fa-calendar-days', label: 'الإجازات' },
-            { id: 'governance', icon: 'fas fa-shield-halved', label: 'حوكمة القسم' }
+            { id: 'dashboard', icon: 'fas fa-gauge-high', label: 'لوحة التحكم', group: 'الرئيسية' },
+            { id: 'employees', icon: 'fas fa-users', label: 'الموظفون والعمال', group: 'الموارد البشرية' },
+            { id: 'org-tree', icon: 'fas fa-sitemap', label: 'شجرة العمل', group: 'الموارد البشرية' },
+            { id: 'documents', icon: 'fas fa-folder-open', label: 'المستندات والإقامات', group: 'الموارد البشرية' },
+            { id: 'leave', icon: 'fas fa-calendar-days', label: 'الإجازات', group: 'الموارد البشرية' },
+            { id: 'attendance', icon: 'fas fa-fingerprint', label: 'حضور وانصراف', group: 'الوقت والحضور' },
+            { id: 'payroll', icon: 'fas fa-money-check-dollar', label: 'مسير الرواتب', group: 'الرواتب والمزايا' },
+            { id: 'factory', icon: 'fas fa-industry', label: 'عمليات المصنع WPC', group: 'المصنع' },
+            { id: 'fleet-hub', icon: 'fas fa-truck-fast', label: 'مركز الأسطول', group: 'إدارة الأسطول' },
+            { id: 'vehicles', icon: 'fas fa-car', label: 'سجل السيارات', group: 'إدارة الأسطول' },
+            { id: 'tracking', icon: 'fas fa-location-dot', label: 'تتبع السيارات', group: 'إدارة الأسطول' },
+            { id: 'fleet-reps', icon: 'fas fa-user-tie', label: 'أسطول المندوبين', group: 'إدارة الأسطول' },
+            { id: 'travel', icon: 'fas fa-plane', label: 'تذاكر السفر', group: 'الرواتب والمزايا' },
+            { id: 'deductions', icon: 'fas fa-scale-balanced', label: 'الخصومات الديناميكية', group: 'الرواتب والمزايا' },
+            { id: 'saudization', icon: 'fas fa-flag', label: 'السعودة والامتثال', group: 'الامتثال' },
+            { id: 'alerts', icon: 'fas fa-bell', label: 'التنبيهات', group: 'الامتثال' },
+            { id: 'governance', icon: 'fas fa-shield-halved', label: 'حوكمة القسم', group: 'الامتثال' }
         ];
         try {
-            const tabDefs = base.slice();
+            let tabDefs = base.slice();
+            if (typeof getHcmTabExtensions === 'function') {
+                getHcmTabExtensions().forEach(function(ext) {
+                    if (!tabDefs.some(function(t) { return t.id === ext.id; })) tabDefs.push(ext);
+                });
+            }
             if (canViewHrExecutiveReports()) {
-                tabDefs.push({ id: 'reports', icon: 'fas fa-file-export', label: 'تقارير الإدارة الرئيسية' });
+                tabDefs.push({ id: 'reports', icon: 'fas fa-file-export', label: 'تقارير الإدارة الرئيسية', group: 'الإدارة الرئيسية' });
             }
             if (typeof isHrTabAllowedForScope === 'function') {
-                return tabDefs.filter(function(t) { return isHrTabAllowedForScope(t.id); });
+                tabDefs = tabDefs.filter(function(t) {
+                    if (t.id === 'fleet-hub' || t.id === 'travel' || t.id === 'deductions' || t.id === 'saudization') return true;
+                    return isHrTabAllowedForScope(t.id);
+                });
             }
             return tabDefs;
         } catch (e) {
@@ -600,8 +626,8 @@
         return '<div class="hr-panel is-active">' +
             '<div class="hr-command-hero"><div class="hr-command-hero-inner">' +
                 '<span class="hr-command-pill"><i class="' + esc(scope.icon || 'fas fa-people-roof') + '"></i> ' + esc(scope.label) + '</span>' +
-                '<h2 class="hr-command-title">لوحة إدارة الموارد البشرية</h2>' +
-                '<p class="hr-command-sub">نظام حي — أضيفي موظفين · سجّلي حضور · أديري الرواتب والسيارات</p>' +
+                '<h2 class="hr-command-title">' + (isStrictHrUser() ? 'نبراس HCM' : 'لوحة إدارة الموارد البشرية') + '</h2>' +
+                '<p class="hr-command-sub">نظام حي — موظفون · سعودة · رواتب · خصومات · تذاكر سفر · أسطول وتتبع</p>' +
             '</div></div>' +
             '<div class="hr-command-kpi-ring">' +
                 '<div class="hr-command-kpi"><strong>' + scopedEmps.length + '</strong><span>موظفون</span></div>' +
@@ -703,6 +729,10 @@
         else if (hrActiveTab === 'alerts') { try { panelHtml = renderHrAlertsPanel(); } catch (e) { panelHtml = '<div class="hr-panel is-active"><p class="erp-empty">التنبيهات — ' + esc(e.message) + '</p></div>'; } }
         else if (hrActiveTab === 'leave') { try { panelHtml = renderHrLeavePanel(); } catch (e) { panelHtml = '<div class="hr-panel is-active"><p class="erp-empty">الإجازات — ' + esc(e.message) + '</p></div>'; } }
         else if (hrActiveTab === 'governance') { try { panelHtml = renderHrGovernancePanel(); } catch (e) { panelHtml = '<div class="hr-panel is-active"><p class="erp-empty">الحوكمة — ' + esc(e.message) + '</p></div>'; } }
+        else if (hrActiveTab === 'travel' && typeof renderHrTravelPanel === 'function') { try { panelHtml = renderHrTravelPanel(); } catch (e) { panelHtml = '<div class="hr-panel is-active"><p class="erp-empty">تذاكر السفر — ' + esc(e.message) + '</p></div>'; } }
+        else if (hrActiveTab === 'deductions' && typeof renderHrDeductionsPanel === 'function') { try { panelHtml = renderHrDeductionsPanel(); } catch (e) { panelHtml = '<div class="hr-panel is-active"><p class="erp-empty">الخصومات — ' + esc(e.message) + '</p></div>'; } }
+        else if (hrActiveTab === 'fleet-hub' && typeof renderHrFleetHubPanel === 'function') { try { panelHtml = renderHrFleetHubPanel(); } catch (e) { panelHtml = '<div class="hr-panel is-active"><p class="erp-empty">مركز الأسطول — ' + esc(e.message) + '</p></div>'; } }
+        else if (hrActiveTab === 'saudization' && typeof renderHrSaudizationPanel === 'function') { try { panelHtml = renderHrSaudizationPanel(); } catch (e) { panelHtml = '<div class="hr-panel is-active"><p class="erp-empty">السعودة — ' + esc(e.message) + '</p></div>'; } }
         else if (hrActiveTab === 'reports' && canViewHrExecutiveReports()) { try { panelHtml = renderHrReportsPanel(); } catch (e) { panelHtml = '<div class="hr-panel is-active"><p class="erp-empty">التقارير — ' + esc(e.message) + '</p></div>'; } }
         else if (hrActiveTab === 'reports') {
             hrActiveTab = 'dashboard';
@@ -1835,6 +1865,7 @@
     }
 
     function buildPayrollItemsForMonth(month, branchId) {
+        if (typeof loadHcmSuiteData === 'function') loadHcmSuiteData();
         let emps = applyHrScopeFilter(hrEmployees.filter(function(e) { return e.status === 'active' || e.status === 'on_leave'; }), 'employee');
         if (branchId) emps = emps.filter(function(e) { return String(e.branchId) === String(branchId); });
         return emps.map(function(e) {
@@ -1843,12 +1874,15 @@
             const transport = hrNum(e.transportAllowance);
             const gross = base + housing + transport;
             const gosiDed = Math.round(base * 0.09 * 100) / 100;
-            const net = Math.max(0, gross - gosiDed);
+            const extras = (typeof computeHrPayrollExtras === 'function') ? computeHrPayrollExtras(e.id, month) : { dynamicDed: 0, dedLines: [] };
+            const dynamicDed = hrNum(extras.dynamicDed);
+            const totalDed = Math.round((gosiDed + dynamicDed) * 100) / 100;
+            const net = Math.max(0, gross - totalDed);
             return {
                 employeeId: e.id, employeeNo: e.employeeNo, employeeName: e.nameAr,
                 branchId: e.branchId, department: e.department || '', jobTitle: e.jobTitle || '',
                 base: base, housing: housing, transport: transport, gross: gross,
-                deductions: gosiDed, net: net
+                gosiDed: gosiDed, dynamicDed: dynamicDed, deductions: totalDed, dedLines: extras.dedLines || [], net: net
             };
         });
     }
@@ -2051,16 +2085,19 @@
         const totalGross = items.reduce(function(s, i) { return s + i.gross; }, 0);
         const canApprove = canViewHrExecutiveReports();
         const rows = items.map(function(it) {
+            const dedDetail = (it.dedLines && it.dedLines.length)
+                ? '<small title="' + esc(it.dedLines.map(function(d) { return d.label + ': ' + d.amount; }).join(' · ')) + '">GOSI ' + it.gosiDed + (it.dynamicDed ? ' + خصومات ' + it.dynamicDed : '') + '</small>'
+                : '';
             return '<tr><td>' + esc(it.employeeNo) + '</td><td>' + esc(it.employeeName) + '</td><td>' + esc(it.department) + '</td>' +
                 '<td>' + (typeof formatSar === 'function' ? formatSar(it.base) : it.base) + '</td>' +
                 '<td>' + (typeof formatSar === 'function' ? formatSar(it.housing + it.transport) : (it.housing + it.transport)) + '</td>' +
-                '<td>' + (typeof formatSar === 'function' ? formatSar(it.deductions) : it.deductions) + '</td>' +
+                '<td>' + (typeof formatSar === 'function' ? formatSar(it.deductions) : it.deductions) + dedDetail + '</td>' +
                 '<td><strong>' + (typeof formatSar === 'function' ? formatSar(it.net) : it.net) + '</strong></td>' +
                 '<td><button type="button" class="erp-tag erp-tag--action" onclick="exportHrPayslipPdf(\'' + esc(it.employeeId) + '\')"><i class="fas fa-file-pdf"></i> قسيمة</button></td></tr>';
         }).join('');
         return '<div class="hr-panel is-active">' +
-            '<p class="hr-platform-note"><i class="fas fa-money-check-dollar"></i> مسير رواتب شهري — HR يُعدّ المسودة' +
-            (canApprove ? ' · الإدارة الرئيسية تعتمد وتصدّر PDF' : ' (التصدير PDF للإدارة الرئيسية فقط)') + '.</p>' +
+            '<p class="hr-platform-note"><i class="fas fa-money-check-dollar"></i> <strong>مسير رواتب HCM</strong> — أساسي + بدلات − GOSI 9% − خصومات ديناميكية وتذاكر سفر' +
+            (canApprove ? ' · الإدارة الرئيسية تعتمد وتصدّر PDF' : '') + '.</p>' +
             '<div class="hr-toolbar">' +
                 '<label class="nebras-field"><span>الشهر</span><input type="month" id="hp-month" value="' + esc(month) + '" onchange="setHrPayrollMonth(this.value)"></label>' +
                 '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="saveHrPayrollDraft()"><i class="fas fa-save"></i> حفظ مسودة</button>' +
@@ -2070,7 +2107,7 @@
             '<div class="hr-report-grid">' +
                 '<div class="hr-report-card"><strong>' + items.length + '</strong><span>موظف في المسير</span></div>' +
                 '<div class="hr-report-card"><strong>' + (typeof formatSar === 'function' ? formatSar(totalGross) : totalGross) + '</strong><span>إجمالي مستحقات</span></div>' +
-                '<div class="hr-report-card"><strong>' + (typeof formatSar === 'function' ? formatSar(totalNet) : totalNet) + '</strong><span>صافي بعد خصم GOSI 9%</span></div>' +
+                '<div class="hr-report-card"><strong>' + (typeof formatSar === 'function' ? formatSar(totalNet) : totalNet) + '</strong><span>صافي بعد كل الخصومات</span></div>' +
             '</div>' +
             '<div class="hr-leave-table-wrap" id="hr-payroll-print-area"><table class="hr-leave-table"><thead><tr>' +
                 '<th>رقم</th><th>الاسم</th><th>القسم</th><th>أساسي</th><th>بدلات</th><th>خصومات</th><th>الصافي</th><th>قسيمة PDF</th>' +
@@ -3181,8 +3218,13 @@
         const quickTabs = [
             { id: 'employees', icon: 'fas fa-users', label: 'الفريق' },
             { id: 'attendance', icon: 'fas fa-fingerprint', label: 'حضور' },
-            { id: 'documents', icon: 'fas fa-folder-open', label: 'مستندات' },
-            { id: 'leave', icon: 'fas fa-calendar-days', label: 'إجازات' }
+            { id: 'payroll', icon: 'fas fa-money-check-dollar', label: 'رواتب' },
+            { id: 'documents', icon: 'fas fa-folder-open', label: 'إقامات' },
+            { id: 'leave', icon: 'fas fa-calendar-days', label: 'إجازات' },
+            { id: 'saudization', icon: 'fas fa-flag', label: 'سعودة' },
+            { id: 'fleet-hub', icon: 'fas fa-truck-fast', label: 'مركز الأسطول' },
+            { id: 'travel', icon: 'fas fa-plane', label: 'تذاكر سفر' },
+            { id: 'deductions', icon: 'fas fa-scale-balanced', label: 'خصومات' }
         ];
         if (isHrTabAllowedForScope('vehicles')) quickTabs.push({ id: 'vehicles', icon: 'fas fa-car', label: 'سيارات' });
         if (isHrTabAllowedForScope('tracking')) quickTabs.push({ id: 'tracking', icon: 'fas fa-location-dot', label: 'تتبع' });
@@ -3201,8 +3243,10 @@
                 '<div class="hr-command-hero-glow"></div>' +
                 '<div class="hr-command-hero-inner">' +
                     '<span class="hr-command-pill"><i class="' + esc(scope.icon) + '"></i> ' + esc(scope.label) + '</span>' +
-                    '<h2 class="hr-command-title">مسؤول إدارة وحوكمة القسم</h2>' +
-                    '<p class="hr-command-sub">تدير منظومة HR وموظفي أقسامك داخل نطاقك — صلاحيات كاملة · خصوصية قسمك</p>' +
+                    '<h2 class="hr-command-title">' + (isStrictHrUser() ? 'نبراس HCM — إدارة الموارد البشرية والأسطول' : 'مسؤول إدارة وحوكمة القسم') + '</h2>' +
+                    '<p class="hr-command-sub">' + (isStrictHrUser()
+                        ? 'برنامج كامل مثل جسر HCM — موظفون · سعودة · إقامات · رواتب وبدلات · خصومات · تذاكر سفر · سيارات وتتبع GPS'
+                        : 'تدير منظومة HR وموظفي أقسامك داخل نطاقك — صلاحيات كاملة · خصوصية قسمك') + '</p>' +
                 '</div>' +
             '</div>' +
             '<div class="hr-command-kpi-ring">' +

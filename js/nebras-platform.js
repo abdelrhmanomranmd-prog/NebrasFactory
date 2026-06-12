@@ -19741,7 +19741,7 @@
             const list = document.getElementById('cloud-governance-stores');
             if (!summary || !list) return;
             const connected = !!supabaseClient;
-            const erpKeys = ['erp_inventory', 'erp_orders', 'erp_production', 'erp_purchases', 'erp_transfers', 'erp_stock_transfers', 'sales_price_list', 'sales_data', 'customer_service', 'hr_employees', 'hr_vehicles', 'hr_leave', 'hr_vehicle_tracking', 'hr_attendance', 'hr_documents', 'hr_payroll', 'hr_notifications', 'hr_notif_settings', 'hr_email_queue', 'hr_shift_roster'];
+            const erpKeys = ['erp_inventory', 'erp_orders', 'erp_production', 'erp_purchases', 'erp_transfers', 'erp_stock_transfers', 'sales_price_list', 'sales_data', 'customer_service', 'hr_employees', 'hr_vehicles', 'hr_leave', 'hr_vehicle_tracking', 'hr_attendance', 'hr_documents', 'hr_payroll', 'hr_travel', 'hr_deductions', 'hr_notifications', 'hr_notif_settings', 'hr_email_queue', 'hr_shift_roster'];
             summary.innerHTML =
                 '<div class="erp-stat' + (connected ? ' erp-stat--ok' : ' erp-stat--danger') + '"><strong>' + (connected ? 'متصل' : 'محلي') + '</strong><span>Supabase</span></div>' +
                 '<div class="erp-stat"><strong>' + NEBRAS_CLOUD_STORE_SPECS.length + '</strong><span>مخازن بيانات</span></div>' +
@@ -21755,6 +21755,16 @@
                 return typeof getHrPayrollRuns === 'function' ? getHrPayrollRuns() : [];
             }, set: function(v) {
                 if (typeof setHrPayrollFromCloud === 'function') setHrPayrollFromCloud(v);
+            }},
+            { key: 'hr_travel', get: function() {
+                return typeof getHrTravelTickets === 'function' ? getHrTravelTickets() : [];
+            }, set: function(v) {
+                if (typeof setHrTravelFromCloud === 'function') setHrTravelFromCloud(v);
+            }},
+            { key: 'hr_deductions', get: function() {
+                return typeof getHrDeductions === 'function' ? getHrDeductions() : [];
+            }, set: function(v) {
+                if (typeof setHrDeductionsFromCloud === 'function') setHrDeductionsFromCloud(v);
             }},
             { key: 'hr_notifications', get: function() {
                 return typeof getHrNotifications === 'function' ? getHrNotifications() : [];
