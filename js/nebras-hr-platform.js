@@ -25,6 +25,7 @@
     let pendingHrDocAttachment = null;
     let hrEmailQueue = [];
     let hrShiftRoster = [];
+    let hrDeptActivity = [];
     let hrActiveTab = 'dashboard';
     let hrBranchFilter = '';
     let hrSearchQuery = '';
@@ -2596,7 +2597,6 @@
 /* Phase 14 — biometric WebAuthn, Supabase doc upload, email queue API, executive HR report */
 
     const HR_EMAIL_QUEUE_KEY = 'nebrasHrEmailQueue';
-    let hrEmailQueue = [];
 
     function loadHrPhase14Data() {
         try {
@@ -2834,8 +2834,6 @@
         supervisor: 'مشرف خط',
         manager: 'إداري'
     };
-
-    let hrShiftRoster = [];
 
     function loadHrPhase15Data() {
         try {
@@ -3409,7 +3407,6 @@
 /* Phase 17 — HR dept governor + activity log + executive daily/monthly governance reports */
 
     const HR_DEPT_ACTIVITY_KEY = 'nebrasHrDeptActivity';
-    let hrDeptActivity = [];
 
     function loadHrPhase17Data() {
         try {
