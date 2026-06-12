@@ -1,0 +1,158 @@
+/* نبراس — بوابة العملاء */
+.customer-portal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 12000;
+    background: rgba(8, 22, 40, 0.72);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+.customer-portal-overlay.show { display: flex; }
+
+.customer-portal-modal {
+    background: #fff;
+    border-radius: 18px;
+    max-width: 420px;
+    width: 100%;
+    padding: 28px 24px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+}
+.customer-portal-modal h2 {
+    margin: 0 0 6px;
+    font-size: 1.15rem;
+    color: #0d2840;
+}
+.customer-portal-modal p { margin: 0 0 16px; font-size: 0.85rem; color: #5d6d7e; }
+.customer-portal-modal input {
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 10px 12px;
+    border: 1px solid #d0dbe8;
+    border-radius: 10px;
+    font-family: inherit;
+}
+.cp-login-status { font-size: 0.82rem; color: #c0392b; min-height: 1.2em; margin-bottom: 8px; }
+.cp-login-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.customer-portal-app {
+    position: fixed;
+    inset: 0;
+    z-index: 11500;
+    background: linear-gradient(160deg, #f4f8fc 0%, #e8f0f8 100%);
+    overflow-y: auto;
+    display: none;
+}
+.customer-portal-app.show { display: block; }
+body.customer-portal-open { overflow: hidden; }
+
+#customer-portal-head {
+    background: linear-gradient(135deg, #0d2840, #155e94);
+    color: #fff;
+    padding: 24px 20px 20px;
+}
+.cp-head-inner { max-width: 960px; margin: 0 auto; position: relative; }
+.cp-head-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.15);
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    margin-bottom: 8px;
+}
+.cp-head-inner h2 { margin: 0 0 4px; font-size: 1.35rem; }
+.cp-head-inner p { margin: 0; opacity: 0.9; font-size: 0.88rem; }
+.cp-logout-btn {
+    position: absolute;
+    top: 0;
+    left: 0;
+    border: 1px solid rgba(255, 255, 255, 0.4);
+    background: transparent;
+    color: #fff;
+    border-radius: 999px;
+    padding: 6px 14px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.8rem;
+}
+
+#customer-portal-body {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 20px 16px 40px;
+}
+
+.cp-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    margin-bottom: 20px;
+}
+.cp-stat {
+    background: #fff;
+    border: 1px solid #dce6f0;
+    border-radius: 14px;
+    padding: 14px;
+    text-align: center;
+}
+.cp-stat strong { display: block; font-size: 1.2rem; color: #0d2840; }
+.cp-stat span { font-size: 0.75rem; color: #718096; }
+.cp-stat--vip { border-color: #d4af37; background: linear-gradient(135deg, #fffef8, #fff); }
+.cp-stat--trusted { border-color: #27ae60; }
+
+.cp-panel {
+    background: #fff;
+    border: 1px solid #dce6f0;
+    border-radius: 16px;
+    padding: 16px 18px;
+    margin-bottom: 14px;
+}
+.cp-panel h3 {
+    margin: 0 0 12px;
+    font-size: 0.95rem;
+    color: #1a5276;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.cp-list { display: flex; flex-direction: column; gap: 8px; }
+.cp-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 4px 12px;
+    padding: 10px 12px;
+    background: #f8fafc;
+    border-radius: 10px;
+    border: 1px solid #edf2f7;
+}
+.cp-row strong { color: #0d2840; font-size: 0.88rem; }
+.cp-row span { color: #2980b9; font-size: 0.82rem; text-align: left; }
+.cp-row small { grid-column: 1 / -1; color: #718096; font-size: 0.76rem; }
+.cp-empty { color: #718096; font-size: 0.85rem; margin: 0; }
+.cp-subtabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
+.cp-subtab {
+    font-size: 0.76rem;
+    background: #e8f2fa;
+    color: #1a5276;
+    padding: 4px 10px;
+    border-radius: 999px;
+}
+
+.cp-gov-card { --role-accent: #1a6fa8; }
+.cp-loyalty-hint {
+    background: #fff8e6;
+    border: 1px solid #f0d78c;
+    border-radius: 10px;
+    padding: 10px 14px;
+    font-size: 0.85rem;
+    color: #7d6608;
+    margin-bottom: 14px;
+}
+.cp-loyalty-table th { font-size: 0.78rem; }
+
+@media (max-width: 600px) {
+    .cp-logout-btn { position: static; margin-top: 12px; }
+}

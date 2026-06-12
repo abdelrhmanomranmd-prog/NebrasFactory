@@ -17,6 +17,7 @@ REQUIRED_CLOUD_KEYS = {
     'system_settings', 'site_products', 'admin_users', 'hr_dept_activity',
     'quote_registry', 'hr_employees', 'sales_quotes_inbox', 'analytics_governance', 'admin_presence',
     'legal_contracts', 'crm_customers', 'crm_opportunities', 'hr_companies', 'hr_gps_positions',
+    'customer_portal_users',
 }
 LIVE_MARKERS = {
     'js/nebras-platform.js': [
@@ -27,6 +28,7 @@ LIVE_MARKERS = {
     'js/nebras-accounting-platform.js': ['exportAccountingPdf', 'openAccountingPlatform', 'closeAccountingWorkspace'],
     'js/nebras-crm-platform.js': ['exportCrmPdf', 'openCrmPlatform', 'closeCrmWorkspace'],
     'js/nebras-legal-platform.js': ['exportLegalPdf', 'openLegalPlatform', 'closeLegalWorkspace'],
+    'js/nebras-customer-portal.js': ['openCustomerPortalLogin', 'loginCustomerPortal', 'openCustomerPortalGovernance', 'buildCustomerLoyaltyRankings'],
 }
 
 

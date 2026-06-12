@@ -8,6 +8,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 JS = os.path.join(ROOT, 'js', 'nebras-platform.js')
 CRM = os.path.join(ROOT, 'js', 'nebras-crm-platform.js')
 HR = os.path.join(ROOT, 'js', 'nebras-hr-platform.js')
+CP = os.path.join(ROOT, 'js', 'nebras-customer-portal.js')
 INDEX = os.path.join(ROOT, 'index.html')
 ERRORS = []
 
@@ -25,6 +26,8 @@ def main():
         hr = f.read()
     with open(INDEX, encoding='utf-8') as f:
         html = f.read()
+    with open(CP, encoding='utf-8') as f:
+        cp = f.read()
 
     required = (
         'NEBRAS_ROLE_DEFINITIONS', 'sales_manager', 'sales_rep', 'branch_manager',
@@ -36,13 +39,22 @@ def main():
         'NEBRAS_GOVERNANCE_PILLARS', 'renderGovernancePillarsPanel', 'buildExecutiveReportData',
         'openExecutiveReports', 'openBranchCommandCenter', 'openSalesManagement',
         'openRepQuoteBuilder', 'isMainGovernanceAdmin',
+        'customerPortal',
     )
     for sym in required:
         if sym not in js:
             err(f'Missing governance symbol: {sym}')
 
+    for sym in ('openCustomerPortalGovernance', 'canManageCustomerPortalUsers', 'loginCustomerPortal', 'buildCustomerLoyaltyRankings'):
+        if sym not in cp:
+            err(f'Missing customer portal symbol: {sym}')
+
     if 'dashboard-empire-overview-strip' not in html:
         err('dashboard-empire-overview-strip missing in index.html')
+    if 'customer-portal-overlay' not in html:
+        err('customer-portal-overlay missing in index.html')
+    if 'customer-portal-governance' not in html:
+        err('customer-portal-governance missing in index.html')
 
     if 'requireCrmRecordInScope' not in crm:
         err('CRM branch scope guard missing: requireCrmRecordInScope')

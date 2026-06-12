@@ -60,7 +60,8 @@
             aluminum: 'قسم الألومنيوم',
             productMaster: 'مركز المنتجات والأسعار',
             hr: 'الموارد البشرية',
-            legal: 'الشؤون القانونية'
+            legal: 'الشؤون القانونية',
+            customerPortal: 'بوابة العملاء — حسابات العملاء'
         };
         /** أيقونة + وصف لكل صلاحية — تُستخدم في واجهة إدارة المستخدمين الاحترافية */
         const NEBRAS_PERMISSION_META = {
@@ -82,7 +83,8 @@
             aluminum: { icon: 'fas fa-industry', descAr: 'إدارة قسم الألومنيوم — مخزون وإنتاج وعروض وطلبات الألومنيوم فقط' },
             productMaster: { icon: 'fas fa-database', descAr: 'تحديد أسماء المنتجات وأنواعها ومقاساتها وأسعارها — مصدر النظام الديناميكي' },
             hr: { icon: 'fas fa-people-roof', descAr: 'منصة HR — موظفون وعمال وسيارات وإجازات لكل الفروع' },
-            legal: { icon: 'fas fa-scale-balanced', descAr: 'منصة Legal — عقود وقضايا وامتثال وPDPL لنبراس والشركات الشريكة' }
+            legal: { icon: 'fas fa-scale-balanced', descAr: 'منصة Legal — عقود وقضايا وامتثال وPDPL لنبراس والشركات الشريكة' },
+            customerPortal: { icon: 'fas fa-user-circle', descAr: 'إنشاء حسابات بوابة العميل — لوحة خاصة لكل عميل' }
         };
         const SHOP_CATALOG_PRODUCT_IDS = ['prod-wpc-raw', 'prod-wpc', 'prod-aluminum', 'prod-other'];
 
@@ -259,13 +261,13 @@
                 labelAr: 'مدير عام', labelEn: 'General Manager',
                 icon: 'fas fa-user-tie', accent: '#0a4d8c',
                 descAr: 'إدارة شاملة للمحتوى والعمليات والتقارير (بدون إنشاء مستخدمين).',
-                permissions: ['content', 'erp', 'inventory', 'warehouse', 'production', 'procurement', 'accounting', 'orders', 'sales', 'quotes', 'customerService', 'complaints', 'branches', 'audit', 'hr', 'legal', 'aluminum']
+                permissions: ['content', 'erp', 'inventory', 'warehouse', 'production', 'procurement', 'accounting', 'orders', 'sales', 'quotes', 'customerService', 'customerPortal', 'complaints', 'branches', 'audit', 'hr', 'legal', 'aluminum']
             },
             sales_manager: {
                 labelAr: 'مدير المبيعات', labelEn: 'Sales Manager',
                 icon: 'fas fa-chart-line', accent: '#1b9e57',
                 descAr: 'يدير مبيعات فرعه ويضيف مندوبي المبيعات وقائمة الأسعار والطلبات.',
-                permissions: ['sales', 'quotes', 'orders', 'customerService', 'audit'], branchScoped: true
+                permissions: ['sales', 'quotes', 'orders', 'customerService', 'customerPortal', 'audit'], branchScoped: true
             },
             sales_rep: {
                 labelAr: 'مندوب مبيعات', labelEn: 'Sales Representative',
@@ -310,7 +312,7 @@
                 labelAr: 'مدير فرع', labelEn: 'Branch Manager',
                 icon: 'fas fa-store', accent: '#2c3e50',
                 descAr: 'يدير فرعه فقط — مبيعات · عروض · طلبات · فريق المندوبين — حسب ما تمنحه الإدارة الرئيسية.',
-                permissions: ['sales', 'quotes', 'orders', 'customerService', 'complaints', 'audit'], branchScoped: true
+                permissions: ['sales', 'quotes', 'orders', 'customerService', 'customerPortal', 'complaints', 'audit'], branchScoped: true
             },
             hr: {
                 labelAr: 'موارد بشرية', labelEn: 'HR Manager',
@@ -2389,6 +2391,12 @@
                 if (typeof window.openNebrasEmpireHub === 'function') return window.openNebrasEmpireHub();
             },
             openExecutiveReports: function() { openExecutiveReports(); },
+            openCustomerPortalGovernance: function() {
+                if (typeof window.openCustomerPortalGovernance === 'function') return window.openCustomerPortalGovernance();
+            },
+            openCustomerLoyaltyAnalytics: function() {
+                if (typeof window.openCustomerLoyaltyAnalytics === 'function') return window.openCustomerLoyaltyAnalytics();
+            },
             syncPlatformFromProductMaster: function() { syncPlatformFromProductMaster(); },
             scrollErpHub: function() { scrollErpHub(); },
             openCertificationsHub: function() { openCertificationsHub(); },
@@ -14289,6 +14297,8 @@
                 { roles: ['sales_rep'], icon: 'fas fa-shield-halved', label: 'أمان حسابي', handler: 'openAccountSecurity', perm: null },
                 { roles: ['sales_manager'], icon: 'fas fa-tags', label: 'قائمة الأسعار', handler: 'openSalesPriceList', perm: 'sales' },
                 { roles: ['superadmin', 'manager', 'sales_manager', 'branch_manager'], icon: 'fas fa-handshake', label: 'CRM', handler: 'openCrmPlatform', perm: 'customerService' },
+                { roles: ['superadmin', 'manager', 'sales_manager', 'branch_manager'], icon: 'fas fa-user-circle', label: 'مستخدمي العملاء', handler: 'openCustomerPortalGovernance', perm: 'customerPortal' },
+                { roles: ['superadmin', 'manager', 'sales_manager'], icon: 'fas fa-chart-pie', label: 'ولاء العملاء', handler: 'openCustomerLoyaltyAnalytics', perm: 'customerPortal' },
                 { roles: ['accountant', 'accounting_manager'], icon: 'fas fa-calculator', label: 'قسم الحسابات', handler: 'openAccountingPlatform', perm: 'accounting' },
                 { roles: ['accountant', 'accounting_manager'], icon: 'fas fa-file-pdf', label: 'تقرير PDF', handler: 'openAccountingPlatform', perm: 'accounting' },
                 { roles: ['inventory_manager', 'warehouse_manager'], icon: 'fas fa-boxes-stacked', label: 'المخزون', handler: 'openErpInventory', perm: 'inventory' },
@@ -14311,6 +14321,8 @@
                 if (item.handler === 'openHrPlatform' && typeof canAccessHrPlatform === 'function' && !canAccessHrPlatform()) return;
                 if (item.handler === 'openLegalPlatform' && typeof canAccessLegalPlatform === 'function' && !canAccessLegalPlatform()) return;
                 if (item.handler === 'openAccountingPlatform' && typeof canAccessAccountingPlatform === 'function' && !canAccessAccountingPlatform()) return;
+                if ((item.handler === 'openCustomerPortalGovernance' || item.handler === 'openCustomerLoyaltyAnalytics') &&
+                    typeof canManageCustomerPortalUsers === 'function' && !canManageCustomerPortalUsers()) return;
                 if (item.handler === 'openAccountSecurity' && typeof isHrDepartmentAdmin === 'function' && isHrDepartmentAdmin(currentAdmin)) { /* مسموح */ }
                 else if (item.roles && item.roles.indexOf('hr') >= 0 && item.roles.length === 1 && item.handler !== 'openHrPlatform' && item.handler !== 'openAccountSecurity') return;
                 else if (item.roles && item.roles.indexOf('legal') >= 0 && item.roles.length === 1 && item.handler !== 'openLegalPlatform' && item.handler !== 'openAccountSecurity') return;
@@ -14338,6 +14350,7 @@
             const branchManagers = adminUsers.filter(function(u) {
                 return u.role === 'sales_manager' || u.role === 'branch_manager';
             }).length;
+            const portalUsers = typeof getCustomerPortalUsers === 'function' ? getCustomerPortalUsers().length : 0;
             return Object.assign({}, ext, {
                 hrCount: hrCount,
                 legalCount: legalCount,
@@ -14347,6 +14360,7 @@
                 aluminumProduction: aluProd,
                 salesReps: reps,
                 branchManagers: branchManagers,
+                portalUsers: portalUsers,
                 branchesCount: (branchesData || []).length,
                 adminUsersCount: adminUsers.length
             });
@@ -14357,6 +14371,7 @@
             const s = collectEmpireGovernanceStats();
             const cells = [
                 { icon: 'fas fa-store', label: 'فروع', val: s.branchesCount, handler: 'openBranchesManagement' },
+                { icon: 'fas fa-user-circle', label: 'بوابة عملاء', val: s.portalUsers || 0, handler: 'openCustomerPortalGovernance' },
                 { icon: 'fas fa-user-headset', label: 'مندوبون', val: s.salesReps, handler: 'openUserManagement' },
                 { icon: 'fas fa-chart-line', label: 'مديرو مبيعات', val: s.branchManagers, handler: 'openUserManagement' },
                 { icon: 'fas fa-file-invoice', label: 'عروض واردة', val: s.quoteInbox, handler: 'openSalesManagement' },
@@ -16106,7 +16121,8 @@
                 { icon: 'fas fa-truck', title: 'الطلبات', desc: 'OMS — تنفيذ طلبات الفرع', handler: 'openErpOrders', show: canManage('orders') },
                 { icon: 'fas fa-headset', title: 'خدمة العملاء', desc: 'استفسارات وردود العملاء', handler: 'openCustomerServiceManagement', show: canManage('customerService') },
                 { icon: 'fas fa-exclamation-triangle', title: 'الشكاوى', desc: 'متابعة شكاوى فرعك', handler: 'openComplaintsManagement', show: canManage('complaints') },
-                { icon: 'fas fa-chart-bar', title: 'تقرير الفرع', desc: 'تقارير تنفيذية لفرعك', handler: 'openExecutiveReports', show: typeof canViewExecutiveReports === 'function' && canViewExecutiveReports() }
+                { icon: 'fas fa-chart-bar', title: 'تقرير الفرع', desc: 'تقارير تنفيذية لفرعك', handler: 'openExecutiveReports', show: typeof canViewExecutiveReports === 'function' && canViewExecutiveReports() },
+                { icon: 'fas fa-user-circle', title: 'مستخدمي العملاء', desc: 'حسابات بوابة العميل لفرعك', handler: 'openCustomerPortalGovernance', show: typeof canManageCustomerPortalUsers === 'function' && canManageCustomerPortalUsers() }
             ];
             actions.innerHTML = cards.filter(function(c) { return c.show; }).map(function(c) {
                 return '<button type="button" class="nebras-dept-card branch-command-card" onclick="' + c.handler + '()">' +
@@ -22759,6 +22775,16 @@
             }, set: function(v) {
                 if (typeof setCallbackLeadsFromCloud === 'function') setCallbackLeadsFromCloud(Array.isArray(v) ? v : []);
                 if (typeof saveCallbackLeads === 'function') saveCallbackLeads();
+            }},
+            { key: 'customer_portal_users', get: function() {
+                return typeof getCustomerPortalUsers === 'function' ? getCustomerPortalUsers() : [];
+            }, set: function(v) {
+                if (typeof setCustomerPortalUsersFromCloud === 'function') setCustomerPortalUsersFromCloud(v);
+            }},
+            { key: 'customer_portal_audit', get: function() {
+                return typeof getCustomerPortalAudit === 'function' ? getCustomerPortalAudit() : [];
+            }, set: function(v) {
+                if (typeof setCustomerPortalAuditFromCloud === 'function') setCustomerPortalAuditFromCloud(v);
             }}
         ];
 

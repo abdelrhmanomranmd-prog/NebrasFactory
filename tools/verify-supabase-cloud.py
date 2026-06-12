@@ -10,7 +10,8 @@ ANON_KEY = 'sb_publishable_bt6rlHxu_pjc1xpkKEWOcg_HZ43JMR0'
 EXPECTED_KEYS = {
     'about_pages', 'admin_presence', 'admin_recovery_otp', 'admin_users', 'analytics_governance',
     'audit_logs', 'branches', 'callback_leads', 'complaints', 'crm_activities', 'crm_audit',
-    'crm_customers', 'crm_opportunities', 'customer_service', 'dashboard_tiles',
+    'crm_customers', 'crm_opportunities', 'customer_portal_audit', 'customer_portal_users',
+    'customer_service', 'dashboard_tiles',
     'erp_inventory', 'erp_orders', 'erp_procurement', 'erp_production', 'erp_purchases',
     'erp_stock_transfers', 'erp_transfers', 'hr_attendance', 'hr_companies', 'hr_deductions',
     'hr_dept_activity', 'hr_documents', 'hr_email_queue', 'hr_employees', 'hr_gps_consents',
