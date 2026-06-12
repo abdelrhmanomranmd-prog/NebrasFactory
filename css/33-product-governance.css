@@ -78,14 +78,40 @@
     color: #2c5282;
 }
 
-.aluminum-dept-grid {
+.wpc-quote-banner {
+    margin: 0 0 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, rgba(13, 40, 64, 0.1), rgba(10, 77, 140, 0.06));
+    border: 1px solid rgba(13, 40, 64, 0.2);
+    font-size: 0.84rem;
+    color: #0d2840;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.nebras-wpc-dept-modal .wpc-dept-note,
+.nebras-branch-command-modal .branch-command-note {
+    margin: 0 0 14px;
+    padding: 11px 14px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, rgba(13, 40, 64, 0.06), rgba(10, 77, 140, 0.05));
+    border: 1px solid rgba(13, 40, 64, 0.14);
+    font-size: 0.84rem;
+    color: #3d4f5f;
+}
+
+.aluminum-dept-grid,
+.nebras-dept-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 12px;
     margin-top: 12px;
 }
 
-.aluminum-dept-card {
+.aluminum-dept-card,
+.nebras-dept-card {
     border: 1px solid #e2e8f0;
     border-radius: 12px;
     padding: 16px;
@@ -95,24 +121,34 @@
     text-align: center;
 }
 
-.aluminum-dept-card:hover {
+.aluminum-dept-card:hover,
+.nebras-dept-card:hover {
     border-color: #708090;
     box-shadow: 0 4px 14px rgba(112, 128, 144, 0.15);
 }
 
-.aluminum-dept-card i {
+.wpc-dept-card:hover { border-color: #0d2840; box-shadow: 0 4px 14px rgba(13, 40, 64, 0.12); }
+.branch-command-card:hover { border-color: #16a085; box-shadow: 0 4px 14px rgba(22, 160, 133, 0.15); }
+
+.aluminum-dept-card i,
+.nebras-dept-card i {
     font-size: 1.6rem;
     color: #708090;
     margin-bottom: 8px;
 }
 
-.aluminum-dept-card h4 {
+.wpc-dept-card i { color: #0d2840; }
+.branch-command-card i { color: #16a085; }
+
+.aluminum-dept-card h4,
+.nebras-dept-card h4 {
     margin: 0 0 4px;
     font-size: 0.9rem;
     color: #2c3e50;
 }
 
-.aluminum-dept-card small {
+.aluminum-dept-card small,
+.nebras-dept-card small {
     color: #6a7888;
     font-size: 0.72rem;
 }

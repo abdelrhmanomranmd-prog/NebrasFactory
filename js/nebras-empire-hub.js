@@ -54,8 +54,9 @@
             { roles: ['sales_rep'], icon: 'fas fa-file-signature', label: 'مندوب مبيعات', desc: 'عروض أسعار فقط — PDF للعملاء', handlers: ['openRepQuoteBuilder'] },
             { roles: ['accountant'], icon: 'fas fa-file-invoice-dollar', label: 'محاسبة الفرع', desc: 'حسابات · تحويلات · مشتريات', handlers: ['openErpAccounting', 'openErpProcurement'] },
             { roles: ['inventory_manager', 'warehouse_manager'], icon: 'fas fa-warehouse', label: 'مخزون ومستودع', desc: 'SKU · جرد · تحويلات', handlers: ['openErpInventory', 'openErpWarehouseTransfers'] },
-            { roles: ['production_manager'], icon: 'fas fa-industry', label: 'إنتاج المصنع', desc: 'كميات يومية WPC/ALU', handlers: ['openErpProduction'] },
-            { roles: ['aluminum_manager'], icon: 'fas fa-industry', label: 'قسم الألومنيوم', desc: 'مخزون · إنتاج · عروض ALU', handlers: ['openAluminumDepartment'] }
+            { roles: ['production_manager', 'wpc_manager'], icon: 'fas fa-door-closed', label: 'إنتاج WPC', desc: 'مصنع الأبواب — مخزون · إنتاج · عروض', handlers: ['openWpcProductionDepartment'] },
+            { roles: ['aluminum_manager'], icon: 'fas fa-industry', label: 'قسم الألومنيوم', desc: 'مخزون · إنتاج · عروض ALU', handlers: ['openAluminumDepartment'] },
+            { roles: ['branch_manager'], icon: 'fas fa-store', label: 'لوحة الفرع', desc: 'مبيعات · فريق · طلبات فرعك', handlers: ['openBranchCommandCenter', 'openBranchTeamManagement'] }
         ];
         if (!role) return all.slice(0, 3);
         const mine = all.filter(function(w) { return w.roles.indexOf(role) >= 0; });

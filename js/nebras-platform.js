@@ -242,6 +242,8 @@
         ];
         const ALL_PERMISSION_KEYS = Object.keys(NEBRAS_PERMISSION_LABELS);
         const NEBRAS_ALUMINUM_PRODUCT_ID = 'prod-aluminum';
+        const NEBRAS_WPC_DEPT_SCOPE = 'wpc-dept';
+        const NEBRAS_WPC_PRODUCT_IDS = ['prod-wpc', 'prod-wpc-raw'];
         /**
          * أدوار حوكمة نبراس — كل دور له صلاحيات افتراضية يمكن للإدارة الرئيسية تخصيصها.
          * الإدارة الرئيسية (superadmin/primary) تملك كل الصلاحيات دائماً.
@@ -322,6 +324,13 @@
                 descAr: 'صلاحيات الألومنيوم فقط — مخزون · إنتاج · عروض · طلبات قسم الألومنيوم.',
                 permissions: ['aluminum', 'inventory', 'warehouse', 'production', 'quotes', 'orders'],
                 departmentScope: NEBRAS_ALUMINUM_PRODUCT_ID
+            },
+            wpc_manager: {
+                labelAr: 'مدير إنتاج WPC', labelEn: 'WPC Production Manager',
+                icon: 'fas fa-door-closed', accent: '#0d2840',
+                descAr: 'أبواب WPC — مخزون · إنتاج · مستودع · عروض · طلبات المصنع.',
+                permissions: ['production', 'inventory', 'warehouse', 'quotes', 'orders'],
+                departmentScope: NEBRAS_WPC_DEPT_SCOPE
             }
         };
         const rolePermissions = Object.keys(NEBRAS_ROLE_DEFINITIONS).reduce(function(acc, key) {
@@ -1828,6 +1837,8 @@
             modules: [
                 { id: 'erp-product-master', pillar: 'master', status: 'live', icon: 'fas fa-database', permission: 'productMaster', handler: 'openProductMasterHub', nameAr: 'مركز المنتجات والأسعار', descAr: 'مصدر ديناميكي — أسماء · أنواع · مقاسات · أسعار', nameEn: 'Product & pricing hub' },
                 { id: 'erp-aluminum-dept', pillar: 'supply', status: 'live', icon: 'fas fa-industry', permission: 'aluminum', handler: 'openAluminumDepartment', nameAr: 'قسم الألومنيوم', descAr: 'مخزون · إنتاج · عروض ALU فقط', nameEn: 'Aluminum department' },
+                { id: 'erp-wpc-dept', pillar: 'supply', status: 'live', icon: 'fas fa-door-closed', permission: 'production', handler: 'openWpcProductionDepartment', nameAr: 'إنتاج WPC', descAr: 'أبواب WPC · مخزون · مستودع · عروض', nameEn: 'WPC production' },
+                { id: 'erp-branch-command', pillar: 'commerce', status: 'live', icon: 'fas fa-store', permission: null, handler: 'openBranchCommandCenter', nameAr: 'لوحة الفرع', descAr: 'مبيعات · فريق · طلبات فرعك', nameEn: 'Branch command' },
                 { id: 'erp-catalog', pillar: 'master', status: 'live', icon: 'fas fa-database', permission: 'content', handler: 'openSiteContentManager', nameAr: 'كتالوج المنتجات', descAr: 'صور ومحتوى المتجر', nameEn: 'Store catalogue' },
                 { id: 'erp-production', pillar: 'supply', status: 'live', icon: 'fas fa-industry', permission: 'production', handler: 'openErpProduction', nameAr: 'الإنتاج اليومي', descAr: 'كميات الإنتاج المتاحة', nameEn: 'Production' },
                 { id: 'erp-inventory', pillar: 'supply', status: 'live', icon: 'fas fa-warehouse', permission: 'inventory', handler: 'openErpInventory', nameAr: 'المخزون والمستودع', descAr: 'SKU وكميات ومستودعات', nameEn: 'Inventory & WMS' },
@@ -2194,6 +2205,8 @@
             { id: 'dash-callback-leads', zone: 'quick', dashGroup: 'command', sortOrder: 55, iconClass: 'fas fa-phone-volume', titleAr: 'نبراس يتصل بك', titleEn: 'Callback Leads', textAr: 'طلبات اتصال الزوار — تظهر في الإدارة الرئيسية والفروع.', textEn: 'Visitor callback requests by branch.', cssClass: 'dashboard-tile-card--callback', backgroundImage: 'images/profile-2026/hero-cover.jpg', handler: 'openCallbackLeadsAdmin', permission: 'sales', visible: true },
             { id: 'dash-product-master', zone: 'quick', dashGroup: 'command', sortOrder: 0.9, iconClass: 'fas fa-database', titleAr: 'مركز المنتجات والأسعار', titleEn: 'Product Master', textAr: 'أسماء · أنواع · مقاسات · أسعار — مصدر النظام الديناميكي.', textEn: 'Names, types, sizes, prices — single source of truth.', handler: 'openProductMasterHub', permission: 'productMaster', superadminOnly: true, visible: true },
             { id: 'dash-aluminum-dept', zone: 'quick', dashGroup: 'command', sortOrder: 1.1, iconClass: 'fas fa-industry', titleAr: 'قسم الألومنيوم', titleEn: 'Aluminum Dept.', textAr: 'مخزون · إنتاج · عروض · طلبات ALU.', textEn: 'Aluminum ops only.', handler: 'openAluminumDepartment', permission: 'aluminum', visible: true },
+            { id: 'dash-wpc-dept', zone: 'quick', dashGroup: 'command', sortOrder: 1.08, iconClass: 'fas fa-door-closed', titleAr: 'إنتاج أبواب WPC', titleEn: 'WPC Production', textAr: 'مصنع الأبواب — مخزون · إنتاج · مستودع · عروض WPC.', textEn: 'WPC factory ops.', handler: 'openWpcProductionDepartment', permission: 'production', visible: true },
+            { id: 'dash-branch-command', zone: 'quick', dashGroup: 'command', sortOrder: 1.07, iconClass: 'fas fa-store', titleAr: 'لوحة تحكم الفرع', titleEn: 'Branch Command', textAr: 'مبيعات · مندوبون · عروض · طلبات · شكاوى فرعك.', textEn: 'Your branch command center.', handler: 'openBranchCommandCenter', permission: null, branchCommandOnly: true, visible: true },
             { id: 'dash-hr-platform', zone: 'quick', dashGroup: 'command', sortOrder: 1.05, iconClass: 'fas fa-industry', titleAr: 'HR — مصنع نبراس WPC', titleEn: 'Nebras WPC HR', textAr: 'إنتاج أبواب WPC · ورديات · سعودة · حضور · رواتب · أسطول — كل الفروع.', textEn: 'WPC production HR — shifts, Saudization, payroll, fleet.', handler: 'openHrPlatform', permission: 'hr', visible: true },
             { id: 'dash-legal-platform', zone: 'quick', dashGroup: 'command', sortOrder: 1.06, iconClass: 'fas fa-scale-balanced', titleAr: 'Legal — الشؤون القانونية', titleEn: 'Nebras Legal', textAr: 'عقود · قضايا · امتثال · PDPL · اتفاقيات شراكة — نبراس والشركات الشريكة.', textEn: 'Contracts, cases, compliance, PDPL — group & partners.', handler: 'openLegalPlatform', permission: 'legal', visible: true },
             { id: 'dash-empire-hub', zone: 'quick', dashGroup: 'command', sortOrder: 0.95, iconClass: 'fas fa-crown', titleAr: 'إمبراطورية نبراس — مركز القيادة', titleEn: 'Nebras Empire HQ', textAr: 'الواجهة الخارجية · ERP · HR · Legal · فروع · شركاء — كل المنصة في مكان واحد.', textEn: 'Full empire command — external + internal platforms.', handler: 'openNebrasEmpireHub', permission: 'audit', visible: true },
@@ -2337,6 +2350,9 @@
             openProductMasterHub: function() { openProductMasterHub(); },
             openAluminumDepartment: function() { openAluminumDepartment(); },
             openAluminumQuoteBuilder: function() { openAluminumQuoteBuilder(); },
+            openWpcProductionDepartment: function() { openWpcProductionDepartment(); },
+            openWpcQuoteBuilder: function() { openWpcQuoteBuilder(); },
+            openBranchCommandCenter: function() { openBranchCommandCenter(); },
             openHrPlatform: openHrPlatformBridge,
             openLegalPlatform: function() {
                 if (typeof window.openLegalPlatform === 'function') {
@@ -10289,6 +10305,9 @@
             let visible = dashboardTiles.filter(function(t) {
                 if (t.visible === false) return false;
                 if (t.superadminOnly && !isMainGovernanceAdmin()) return false;
+                if (t.branchCommandOnly && !canAccessBranchCommandCenter()) return false;
+                if (t.id === 'dash-wpc-dept' && !canManage('production') && !isMainGovernanceAdmin()) return false;
+                if (t.id === 'dash-wpc-dept' && isAluminumDepartmentAdmin(currentAdmin)) return false;
                 if (t.permission && currentAdmin && !canManage(t.permission)) return false;
                 return true;
             });
@@ -11483,12 +11502,43 @@
             return admin.role === 'aluminum_manager' || (canManage('aluminum') && !canManage('content'));
         }
 
+        function isWpcDepartmentAdmin(admin) {
+            admin = admin || currentAdmin;
+            if (!admin) return false;
+            if (isMainGovernanceAdmin(admin)) return false;
+            return admin.role === 'wpc_manager' || admin.role === 'production_manager';
+        }
+
+        function canAccessBranchCommandCenter(admin) {
+            admin = admin || currentAdmin;
+            if (!admin) return false;
+            if (isMainGovernanceAdmin(admin)) return true;
+            if (canManageBranchTeam(admin)) return true;
+            return isBranchScopedAdmin(admin) && (admin.role === 'branch_manager' || admin.role === 'sales_manager');
+        }
+
+        function isWpcScopedEntry(entry) {
+            if (!entry) return false;
+            if (NEBRAS_WPC_PRODUCT_IDS.indexOf(entry.productLink) >= 0) return true;
+            if (NEBRAS_WPC_PRODUCT_IDS.indexOf(entry.sourceProductId) >= 0) return true;
+            if (NEBRAS_WPC_PRODUCT_IDS.indexOf(entry.productId) >= 0) return true;
+            const sku = String(entry.sku || '').toUpperCase();
+            if (sku.indexOf('WPC') === 0) return true;
+            const hay = [
+                entry.productAr, entry.product, entry.nameAr, entry.productId,
+                entry.priceItemId, entry.sourceProductId
+            ].join(' ').toLowerCase();
+            if (hay.indexOf('wpc') >= 0 || hay.indexOf('أبواب') >= 0) return true;
+            return false;
+        }
+
         function getAdminDepartmentProductId(admin) {
             admin = admin || currentAdmin;
             if (!admin || isMainGovernanceAdmin(admin)) return null;
             const def = getRoleDefinition(admin.role);
             if (def && def.departmentScope) return def.departmentScope;
             if (admin.role === 'aluminum_manager') return NEBRAS_ALUMINUM_PRODUCT_ID;
+            if (admin.role === 'wpc_manager' || admin.role === 'production_manager') return NEBRAS_WPC_DEPT_SCOPE;
             return null;
         }
 
@@ -11512,6 +11562,9 @@
             if (!deptId) return entries || [];
             if (deptId === NEBRAS_ALUMINUM_PRODUCT_ID) {
                 return (entries || []).filter(function(e) { return isAluminumScopedEntry(e); });
+            }
+            if (deptId === NEBRAS_WPC_DEPT_SCOPE) {
+                return (entries || []).filter(function(e) { return isWpcScopedEntry(e); });
             }
             return (entries || []).filter(function(e) {
                 return e && (e.productLink === deptId || e.sourceProductId === deptId || e.productId === deptId);
@@ -11620,7 +11673,15 @@
             let list = salesPriceList || [];
             const deptId = getAdminDepartmentProductId(admin);
             if (deptId) {
-                list = list.filter(function(it) { return it.sourceProductId === deptId || isAluminumScopedEntry(it); });
+                if (deptId === NEBRAS_WPC_DEPT_SCOPE) {
+                    list = list.filter(function(it) {
+                        return NEBRAS_WPC_PRODUCT_IDS.indexOf(it.sourceProductId) >= 0 || isWpcScopedEntry(it);
+                    });
+                } else if (deptId === NEBRAS_ALUMINUM_PRODUCT_ID) {
+                    list = list.filter(function(it) { return it.sourceProductId === deptId || isAluminumScopedEntry(it); });
+                } else {
+                    list = list.filter(function(it) { return it.sourceProductId === deptId; });
+                }
             }
             return list.filter(function(it) { return it.visible !== false; });
         }
@@ -12051,6 +12112,8 @@
                 { id: 'branch-team-management', key: null, branchTeamOnly: true },
                 { id: 'product-master-hub', key: null, productMasterOnly: true },
                 { id: 'aluminum-department', key: 'aluminum' },
+                { id: 'wpc-production-dept', key: 'production' },
+                { id: 'branch-command-center', key: null, branchCommandOnly: true },
                 { id: 'hr-platform', key: 'hr' },
                 { id: 'legal-platform', key: 'legal' }
             ].forEach(function(block) {
@@ -12062,7 +12125,9 @@
                 }
                 if (block.superOnly && !isSuper) el.classList.remove('show');
                 if (block.branchTeamOnly && !canManageBranchTeam()) el.classList.remove('show');
+                if (block.branchCommandOnly && !canAccessBranchCommandCenter()) el.classList.remove('show');
                 if (block.productMasterOnly && !isMainGovernanceAdmin()) el.classList.remove('show');
+                if (block.id === 'wpc-production-dept' && !(perm('production') || isMainGovernanceAdmin())) el.classList.remove('show');
                 if (block.id === 'sales-pricelist' && !(perm('sales') || perm('aluminum'))) el.classList.remove('show');
                 else if (block.id === 'rep-quote-builder' && !(perm('quotes') || perm('aluminum'))) el.classList.remove('show');
                 else if (block.key && !perm(block.key)) el.classList.remove('show');
@@ -12114,6 +12179,10 @@
             if (mod.permission && !canManage(mod.permission)) return false;
             if (isAluminumDepartmentAdmin(currentAdmin)) {
                 const allowed = ['erp-aluminum-dept', 'erp-inventory', 'erp-production', 'erp-warehouse-transfers', 'erp-quote-builder', 'erp-orders', 'erp-pricelist'];
+                if (allowed.indexOf(mod.id) < 0) return false;
+            }
+            if (isWpcDepartmentAdmin(currentAdmin)) {
+                const allowed = ['erp-wpc-dept', 'erp-inventory', 'erp-production', 'erp-warehouse-transfers', 'erp-quote-builder', 'erp-orders', 'erp-pricelist'];
                 if (allowed.indexOf(mod.id) < 0) return false;
             }
             if (typeof isHrDepartmentAdmin === 'function' && isHrDepartmentAdmin(currentAdmin)) {
@@ -13262,6 +13331,15 @@
             openRepQuoteBuilder();
         }
 
+        function openWpcQuoteBuilder() {
+            if (!canManage('production') && !canManage('quotes') && !isMainGovernanceAdmin()) {
+                alert('عروض WPC — لقسم إنتاج الأبواب أو الإدارة الرئيسية.');
+                return;
+            }
+            repQuoteBuilderDept = 'wpc';
+            openRepQuoteBuilder();
+        }
+
         function openRepQuoteBuilder() {
             if (!canBuildSalesQuotes()) {
                 alert('صلاحية عروض الأسعار مطلوبة.');
@@ -13279,16 +13357,19 @@
         function renderRepQuoteBuilder() {
             const host = document.getElementById('rep-quote-body');
             if (!host) return;
-            const isAluQuote = repQuoteBuilderDept === 'aluminum' || isAluminumDepartmentAdmin(currentAdmin);
+            const isAluQuote = repQuoteBuilderDept === 'aluminum' || (repQuoteBuilderDept !== 'wpc' && isAluminumDepartmentAdmin(currentAdmin));
+            const isWpcQuote = repQuoteBuilderDept === 'wpc' || (repQuoteBuilderDept !== 'aluminum' && isWpcDepartmentAdmin(currentAdmin));
             const modalHead = document.querySelector('#rep-quote-builder .nebras-erp-head-title h2');
             const modalSub = document.querySelector('#rep-quote-builder .nebras-erp-head-title p');
             if (modalHead) {
-                modalHead.textContent = isAluQuote ? 'عرض سعر — قسم الألومنيوم' : 'بناء عرض سعر';
+                modalHead.textContent = isAluQuote ? 'عرض سعر — قسم الألومنيوم' : (isWpcQuote ? 'عرض سعر — أبواب WPC' : 'بناء عرض سعر');
             }
             if (modalSub) {
                 modalSub.textContent = isAluQuote
                     ? 'أصناف ALU المعتمدة فقط — ورقة 1 ديناميكية · 2–4 ثابتة — يُرسَل لصندوق المبيعات'
-                    : 'ورقة 1 ديناميكية · 2–4 ثابتة (شروط وعقد نبراس) — يُرسَل لصندوق المبيعات';
+                    : (isWpcQuote
+                        ? 'أبواب WPC المعتمدة فقط — ورقة 1 ديناميكية · 2–4 ثابتة — يُرسَل لصندوق المبيعات'
+                        : 'ورقة 1 ديناميكية · 2–4 ثابتة (شروط وعقد نبراس) — يُرسَل لصندوق المبيعات');
             }
             ensureErpOperationsData();
             const priceList = getEffectiveSalesPriceList(currentAdmin);
@@ -13309,7 +13390,9 @@
             const vat = subtotal * 0.15;
             const deptBanner = isAluQuote
                 ? '<p class="aluminum-quote-banner"><i class="fas fa-industry"></i> عرض سعر ألومنيوم — الأصناف والأسعار من مركز المنتجات (قسم ALU)</p>'
-                : '';
+                : (isWpcQuote
+                    ? '<p class="wpc-quote-banner"><i class="fas fa-door-closed"></i> عرض سعر WPC — الأصناف والأسعار من مركز المنتجات (أبواب جاهزة وعضم)</p>'
+                    : '');
             host.innerHTML = deptBanner +
                 '<div class="erp-form-grid">' +
                     '<label class="nebras-field"><span>اسم العميل</span><input type="text" id="rq-customer" value="' + escapeHtmlAttr(repQuoteDraft.customerName) + '" placeholder="اسم العميل"></label>' +
@@ -13392,8 +13475,12 @@
                 repUserId: currentAdmin ? currentAdmin.id : '',
                 branchId: (typeof getAdminAssignedBranchId === 'function' ? getAdminAssignedBranchId(currentAdmin) : null) || 'hq',
                 assignedBranchCity: (currentAdmin && currentAdmin.assignedBranchCity) || '',
-                departmentScope: repQuoteBuilderDept === 'aluminum' || isAluminumDepartmentAdmin(currentAdmin) ? NEBRAS_ALUMINUM_PRODUCT_ID : '',
-                quoteDepartment: repQuoteBuilderDept === 'aluminum' || isAluminumDepartmentAdmin(currentAdmin) ? 'aluminum' : 'wpc'
+                departmentScope: repQuoteBuilderDept === 'aluminum' || isAluminumDepartmentAdmin(currentAdmin)
+                    ? NEBRAS_ALUMINUM_PRODUCT_ID
+                    : (repQuoteBuilderDept === 'wpc' || isWpcDepartmentAdmin(currentAdmin) ? NEBRAS_WPC_DEPT_SCOPE : ''),
+                quoteDepartment: repQuoteBuilderDept === 'aluminum' || isAluminumDepartmentAdmin(currentAdmin)
+                    ? 'aluminum'
+                    : (repQuoteBuilderDept === 'wpc' || isWpcDepartmentAdmin(currentAdmin) ? 'wpc' : 'general')
             };
             await attachSalesQuoteA4Pdf(entry);
             try {
@@ -13904,11 +13991,11 @@
                 ]
             },
             sales_manager: {
-                greetingAr: 'مركز مدير المبيعات',
-                descAr: 'إدارة المبيعات وقائمة الأسعار وعروض المندوبين والطلبات الواردة.',
-                scrollTo: 'erp-hub-panel',
-                openHandler: 'openSalesPriceList',
-                hideSections: ['dashboard-company-identity']
+                greetingAr: 'مركز مدير مبيعات الفرع',
+                descAr: 'لوحة فرعك — فريق المندوبين · عروض · طلبات · مبيعات.',
+                scrollTo: 'dashboard-actions-grid',
+                openHandler: 'openBranchCommandCenter',
+                hideSections: ['dashboard-company-identity', 'dashboard-partners-block', 'platform-hub-panel']
             },
             accountant: {
                 greetingAr: 'مركز المحاسبة',
@@ -13932,17 +14019,25 @@
                 hideSections: ['dashboard-partners-block', 'platform-hub-panel', 'dashboard-channels-panel', 'dashboard-occasion-panel']
             },
             production_manager: {
-                greetingAr: 'مركز الإنتاج',
-                descAr: 'إدخال كميات الإنتاج اليومية المتاحة وربطها بالمخزون.',
-                scrollTo: 'erp-hub-panel',
-                openHandler: 'openErpProduction',
-                hideSections: ['dashboard-partners-block', 'platform-hub-panel', 'dashboard-channels-panel', 'dashboard-occasion-panel']
+                greetingAr: 'مركز إنتاج أبواب WPC',
+                descAr: 'مصنع نبراس — مخزون WPC · إنتاج يومي · مستودع · عروض.',
+                scrollTo: 'dashboard-actions-grid',
+                openHandler: 'openWpcProductionDepartment',
+                hideSections: ['dashboard-partners-block', 'platform-hub-panel', 'dashboard-channels-panel', 'dashboard-occasion-panel', 'dashboard-official-hub']
             },
             branch_manager: {
                 greetingAr: 'مركز إدارة الفرع',
-                descAr: 'مبيعات وعروض وخدمة عملاء وشكاوى فرعك فقط.',
-                scrollTo: 'erp-hub-panel',
-                hideSections: ['dashboard-company-identity', 'dashboard-partners-block']
+                descAr: 'لوحة فرعك — مبيعات · مندوبون · عروض · طلبات · شكاوى.',
+                scrollTo: 'dashboard-actions-grid',
+                openHandler: 'openBranchCommandCenter',
+                hideSections: ['dashboard-company-identity', 'dashboard-partners-block', 'platform-hub-panel', 'dashboard-channels-panel', 'dashboard-occasion-panel']
+            },
+            wpc_manager: {
+                greetingAr: 'مركز إنتاج أبواب WPC',
+                descAr: 'مصنع نبراس — مخزون · إنتاج · مستودع · عروض WPC.',
+                scrollTo: 'dashboard-actions-grid',
+                openHandler: 'openWpcProductionDepartment',
+                hideSections: ['dashboard-company-identity', 'dashboard-partners-block', 'platform-hub-panel', 'dashboard-channels-panel', 'dashboard-occasion-panel', 'dashboard-official-hub']
             },
             aluminum_manager: {
                 greetingAr: 'مركز قسم الألومنيوم',
@@ -14018,6 +14113,8 @@
                 { roles: ['sales_manager', 'accountant', 'branch_manager'], icon: 'fas fa-chart-bar', label: 'تقرير الفرع', handler: 'openExecutiveReports', perm: 'audit' },
                 { roles: ['superadmin'], icon: 'fas fa-database', label: 'مركز المنتجات', handler: 'openProductMasterHub', perm: null },
                 { roles: ['aluminum_manager'], icon: 'fas fa-industry', label: 'قسم الألومنيوم', handler: 'openAluminumDepartment', perm: 'aluminum' },
+                { roles: ['wpc_manager', 'production_manager'], icon: 'fas fa-door-closed', label: 'إنتاج WPC', handler: 'openWpcProductionDepartment', perm: 'production' },
+                { roles: ['branch_manager', 'sales_manager'], icon: 'fas fa-store', label: 'لوحة الفرع', handler: 'openBranchCommandCenter', perm: null },
                 { roles: ['hr'], icon: 'fas fa-people-roof', label: 'منصة الموارد البشرية', handler: 'openHrPlatform', perm: 'hr' },
                 { roles: ['hr'], icon: 'fas fa-shield-halved', label: 'أمان حسابي', handler: 'openAccountSecurity', perm: null },
                 { roles: ['legal'], icon: 'fas fa-scale-balanced', label: 'منصة الشؤون القانونية', handler: 'openLegalPlatform', perm: 'legal' },
@@ -14046,6 +14143,8 @@
                 if (item.handler === 'openExecutiveReports' && !canViewExecutiveReports()) return;
                 if (item.handler === 'openProductMasterHub' && !isMainGovernanceAdmin()) return;
                 if (item.handler === 'openAluminumDepartment' && !canManage('aluminum') && !isMainGovernanceAdmin()) return;
+                if (item.handler === 'openWpcProductionDepartment' && !canManage('production') && !isMainGovernanceAdmin()) return;
+                if (item.handler === 'openBranchCommandCenter' && !canAccessBranchCommandCenter()) return;
                 if (item.handler === 'openHrPlatform' && typeof canAccessHrPlatform === 'function' && !canAccessHrPlatform()) return;
                 if (item.handler === 'openLegalPlatform' && typeof canAccessLegalPlatform === 'function' && !canAccessLegalPlatform()) return;
                 if (item.handler === 'openAccountSecurity' && typeof isHrDepartmentAdmin === 'function' && isHrDepartmentAdmin(currentAdmin)) { /* مسموح */ }
@@ -15579,6 +15678,126 @@
                             '</span><small>السعر: ' + escapeHtmlAttr(priceTxt) + ' — من الإدارة الرئيسية</small></div></article>';
                     }).join('');
                 }
+            }
+        }
+
+        function getBranchCommandContext(admin) {
+            admin = admin || currentAdmin;
+            const branch = getAdminAssignedBranch(admin);
+            const city = (admin && admin.assignedBranchCity) || (branch && branch.city) || (isMainGovernanceAdmin(admin) ? 'كل الفروع' : '—');
+            const bid = getAdminAssignedBranchId(admin);
+            return { branch: branch, city: city, branchId: bid };
+        }
+
+        function openBranchCommandCenter() {
+            if (!canAccessBranchCommandCenter()) {
+                alert('لوحة تحكم الفرع — لمدير الفرع أو مدير المبيعات المخصّص لفرع.');
+                return;
+            }
+            renderBranchCommandCenterPanel();
+            document.getElementById('branch-command-center').classList.add('show');
+        }
+
+        function renderBranchCommandCenterPanel() {
+            const summary = document.getElementById('branch-command-summary');
+            const actions = document.getElementById('branch-command-actions');
+            const feed = document.getElementById('branch-command-feed');
+            if (!actions || !currentAdmin) return;
+            const ctx = getBranchCommandContext(currentAdmin);
+            const team = isMainGovernanceAdmin(currentAdmin)
+                ? adminUsers.filter(function(u) { return !isImmutablePrimaryAdmin(u) && String(u.assignedBranchCity || '').trim(); })
+                : adminUsers.filter(function(u) { return userBelongsToBranchTeam(u, currentAdmin) || (u.role === 'branch_manager' && String(u.assignedBranchCity || '').toLowerCase() === String(ctx.city || '').toLowerCase()); });
+            const quotes = filterErpEntriesForAdmin((typeof loadSalesQuotesInbox === 'function' ? loadSalesQuotesInbox() : []) || [], currentAdmin);
+            const orders = filterErpEntriesForAdmin(erpOrders || [], currentAdmin);
+            const sales = filterErpEntriesForAdmin(salesData || [], currentAdmin);
+            const complaintsList = filterErpEntriesForAdmin(Object.keys(complaints || {}).map(function(k) { return complaints[k]; }), currentAdmin);
+            if (summary) {
+                summary.innerHTML =
+                    '<div class="erp-stat erp-stat--accent"><strong>' + escapeHtmlAttr(ctx.city) + '</strong><span>الفرع</span></div>' +
+                    '<div class="erp-stat"><strong>' + team.length + '</strong><span>فريق العمل</span></div>' +
+                    '<div class="erp-stat"><strong>' + quotes.length + '</strong><span>عروض واردة</span></div>' +
+                    '<div class="erp-stat"><strong>' + orders.length + '</strong><span>طلبات</span></div>' +
+                    '<div class="erp-stat"><strong>' + sales.length + '</strong><span>مبيعات</span></div>' +
+                    '<div class="erp-stat"><strong>' + complaintsList.length + '</strong><span>شكاوى</span></div>';
+            }
+            const cards = [
+                { icon: 'fas fa-user-group', title: 'فريق المندوبين', desc: 'إضافة وتعديل مندوبي فرعك', handler: 'openBranchTeamManagement', show: canManageBranchTeam() },
+                { icon: 'fas fa-file-signature', title: 'بناء عرض سعر', desc: 'عروض للعملاء من القائمة المعتمدة', handler: 'openRepQuoteBuilder', show: canManage('quotes') },
+                { icon: 'fas fa-chart-line', title: 'المبيعات', desc: 'عروض واردة ومبيعات الفرع', handler: 'openSalesManagement', show: canManage('sales') },
+                { icon: 'fas fa-truck', title: 'الطلبات', desc: 'OMS — تنفيذ طلبات الفرع', handler: 'openErpOrders', show: canManage('orders') },
+                { icon: 'fas fa-headset', title: 'خدمة العملاء', desc: 'استفسارات وردود العملاء', handler: 'openCustomerServiceManagement', show: canManage('customerService') },
+                { icon: 'fas fa-exclamation-triangle', title: 'الشكاوى', desc: 'متابعة شكاوى فرعك', handler: 'openComplaintsManagement', show: canManage('complaints') },
+                { icon: 'fas fa-chart-bar', title: 'تقرير الفرع', desc: 'تقارير تنفيذية لفرعك', handler: 'openExecutiveReports', show: typeof canViewExecutiveReports === 'function' && canViewExecutiveReports() }
+            ];
+            actions.innerHTML = cards.filter(function(c) { return c.show; }).map(function(c) {
+                return '<button type="button" class="nebras-dept-card branch-command-card" onclick="' + c.handler + '()">' +
+                    '<i class="' + c.icon + '"></i><h4>' + escapeHtmlAttr(c.title) + '</h4><small>' + escapeHtmlAttr(c.desc) + '</small></button>';
+            }).join('');
+            if (feed) {
+                const recentQuotes = quotes.slice(0, 5);
+                feed.innerHTML = recentQuotes.length
+                    ? recentQuotes.map(function(q) {
+                        return '<article class="erp-row"><div class="erp-row-main"><strong>' + escapeHtmlAttr(q.customerName || '—') + '</strong>' +
+                            '<small>' + escapeHtmlAttr(q.quoteNo || q.id || '') + ' — ' + formatSar(erpNum(q.totalIncVat || q.total)) + '</small></div></article>';
+                      }).join('')
+                    : '<p class="erp-empty">لا عروض حديثة لفرعك — ابدأي ببناء عرض سعر.</p>';
+            }
+        }
+
+        function openWpcProductionDepartment() {
+            if (!canManage('production') && !isMainGovernanceAdmin()) {
+                alert('قسم إنتاج WPC — لمدير الإنتاج أو الإدارة الرئيسية.');
+                return;
+            }
+            renderWpcProductionDepartmentPanel();
+            document.getElementById('wpc-production-dept').classList.add('show');
+        }
+
+        function renderWpcProductionDepartmentPanel() {
+            const summary = document.getElementById('wpc-dept-summary');
+            const actions = document.getElementById('wpc-dept-actions');
+            const variantsHost = document.getElementById('wpc-dept-variants');
+            if (!actions) return;
+            const wpcProducts = (siteProducts || []).filter(function(p) { return p && NEBRAS_WPC_PRODUCT_IDS.indexOf(p.id) >= 0; });
+            const variantCount = wpcProducts.reduce(function(n, p) { return n + ((p.variants || []).length); }, 0);
+            const invCount = filterDepartmentEntriesForAdmin(erpInventory, currentAdmin).length;
+            const prodCount = filterDepartmentEntriesForAdmin(erpProduction, currentAdmin).length;
+            const xfrCount = filterDepartmentEntriesForAdmin(erpStockTransfers || [], currentAdmin).length;
+            if (summary) {
+                summary.innerHTML =
+                    '<div class="erp-stat erp-stat--accent"><strong>' + variantCount + '</strong><span>أصناف WPC</span></div>' +
+                    '<div class="erp-stat"><strong>' + invCount + '</strong><span>مخزون WPC</span></div>' +
+                    '<div class="erp-stat"><strong>' + prodCount + '</strong><span>سجلات إنتاج</span></div>' +
+                    '<div class="erp-stat"><strong>' + xfrCount + '</strong><span>تحويلات مستودع</span></div>' +
+                    '<div class="erp-stat"><strong>' + getEffectiveSalesPriceList(currentAdmin).length + '</strong><span>أسعار معتمدة</span></div>';
+            }
+            const cards = [
+                { icon: 'fas fa-boxes-stacked', title: 'مخزون WPC', desc: 'أبواب جاهزة وعضم — SKU وكميات', handler: 'openErpInventory' },
+                { icon: 'fas fa-industry', title: 'الإنتاج اليومي', desc: 'تسجيل كميات الإنتاج', handler: 'openErpProduction' },
+                { icon: 'fas fa-dolly', title: 'تحويلات المستودع', desc: 'نقل بين فروع المصنع', handler: 'openErpWarehouseTransfers' },
+                { icon: 'fas fa-file-signature', title: 'عروض WPC', desc: 'بناء عرض سعر أبواب من الأسعار المعتمدة', handler: 'openWpcQuoteBuilder' },
+                { icon: 'fas fa-truck', title: 'طلبات WPC', desc: 'OMS — تنفيذ طلبات المصنع', handler: 'openErpOrders' }
+            ];
+            actions.innerHTML = cards.map(function(c) {
+                return '<button type="button" class="nebras-dept-card wpc-dept-card" onclick="' + c.handler + '()">' +
+                    '<i class="' + c.icon + '"></i><h4>' + escapeHtmlAttr(c.title) + '</h4><small>' + escapeHtmlAttr(c.desc) + '</small></button>';
+            }).join('');
+            if (variantsHost) {
+                const rows = [];
+                wpcProducts.forEach(function(product) {
+                    (product.variants || []).forEach(function(v) {
+                        const priceTxt = erpNum(v.price) > 0 ? formatSar(v.price) : 'عند الطلب';
+                        rows.push('<article class="erp-row"><div class="erp-row-main"><strong>' + escapeHtmlAttr(product.titleAr || product.id) + ' — ' + escapeHtmlAttr(v.typeAr || v.sizeAr || 'صنف') + '</strong>' +
+                            '<span class="erp-row-tags">' +
+                                (v.sizeAr ? '<span class="erp-tag">' + escapeHtmlAttr(v.sizeAr) + '</span>' : '') +
+                                (v.colorAr ? '<span class="erp-tag">' + escapeHtmlAttr(v.colorAr) + '</span>' : '') +
+                                (v.sku ? '<span class="erp-tag">' + escapeHtmlAttr(v.sku) + '</span>' : '') +
+                            '</span><small>السعر: ' + escapeHtmlAttr(priceTxt) + ' — من الإدارة الرئيسية</small></div></article>');
+                    });
+                });
+                variantsHost.innerHTML = rows.length
+                    ? rows.join('')
+                    : '<p class="erp-empty">لا أصناف WPC — الإدارة الرئيسية تضيفها من مركز المنتجات.</p>';
             }
         }
 
@@ -25113,6 +25332,9 @@
         window.deletePriceListItem = deletePriceListItem;
         window.openRepQuoteBuilder = openRepQuoteBuilder;
         window.openAluminumQuoteBuilder = openAluminumQuoteBuilder;
+        window.openWpcQuoteBuilder = openWpcQuoteBuilder;
+        window.openWpcProductionDepartment = openWpcProductionDepartment;
+        window.openBranchCommandCenter = openBranchCommandCenter;
         window.openBranchGovernanceUser = openBranchGovernanceUser;
         window.addRepQuoteLine = addRepQuoteLine;
         window.removeRepQuoteLine = removeRepQuoteLine;
