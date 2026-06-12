@@ -6,13 +6,25 @@
 .cart-drawer-overlay:not(.show),
 .sales-quote-detail-overlay:not(.show),
 .nebras-callback-overlay:not(.is-open),
+.nebras-color-overlay.is-hidden,
 #nebras-brand-intro[hidden],
 #nebras-brand-intro.is-leaving {
     pointer-events: none !important;
 }
 
+/* لوحات الإدارة بملء الشاشة — مخفية = لا حجب */
+#hr-platform.hr-workspace-section.admin-section:not(.show),
+#legal-platform.legal-workspace-section.admin-section:not(.show),
+#crm-platform.crm-workspace-section.admin-section:not(.show),
+#accounting-platform.accounting-workspace-section.admin-section:not(.show) {
+    pointer-events: none !important;
+}
+
 .admin-section.show,
-.admin-overlay.show {
+.admin-overlay.show,
+.cart-drawer-overlay.show,
+.sales-quote-detail-overlay.show,
+.nebras-callback-overlay.is-open {
     pointer-events: auto;
 }
 
@@ -34,7 +46,10 @@
 .platform-module-card i,
 .nebras-dept-card i,
 .gov-pillar-icon,
-.gov-org-arrow {
+.gov-org-arrow,
+.hero-slideshow,
+.hero-bg-layer,
+.hero-slide-dots {
     pointer-events: none !important;
 }
 
@@ -54,10 +69,20 @@
 .product-card.clickable-card,
 .about-page-card,
 .dashboard-main-nav button,
-.proc-scope-tab {
+.proc-scope-tab,
+.hero-mobile-btn,
+.header-cta,
+.nebras-mobile-bar-btn,
+.top-commerce-btn,
+.nebras-color-tile,
+.nebras-gateway-cta-btn,
+.nav-menu a,
+.menu-toggle,
+.lang-btn,
+.header-campaign-door-aside {
     cursor: pointer;
     touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
+    -webkit-tap-highlight-color: rgba(196, 30, 58, 0.18);
     pointer-events: auto;
 }
 
@@ -80,8 +105,18 @@ button.dashboard-tile-card {
 button.dashboard-tile-card:active,
 .visitor-icon-card:active,
 .product-card.clickable-card:active,
-.erp-module-card:not(.disabled):active {
+.erp-module-card:not(.disabled):active,
+.hero-mobile-btn:active,
+.header-cta:active,
+.nebras-mobile-bar-btn:active,
+.nebras-color-tile:active {
     transform: scale(0.985);
+}
+
+.hero-mobile-btn--primary:hover,
+.header-cta--primary:hover,
+.nebras-mobile-bar-btn--primary:hover {
+    filter: brightness(1.06);
 }
 
 .dashboard-tile-card:hover,
@@ -98,12 +133,27 @@ button.dashboard-tile-card:active,
     pointer-events: none !important;
 }
 
-/* محتوى البطاقات فوق الخلفيات */
+/* محتوى البطاقات والهيرو فوق الخلفيات */
 .product-card .card-content,
 .product-card .card-shop-btn,
 .dashboard-tile-card > *,
 .visitor-icon-card .card-content,
-.visitor-icon-card .card-icon {
+.visitor-icon-card .card-icon,
+.hero-content-wrap,
+.hero-mobile-panel,
+.hero-mobile-cta {
     position: relative;
     z-index: 2;
+    pointer-events: auto;
+}
+
+/* شريط الموبايل فوق كل شيء عند الظهور */
+body.nebras-mobile-bar-active .nebras-mobile-commerce-bar {
+    pointer-events: auto;
+    z-index: 11050;
+}
+
+body.nebras-mobile-bar-active .nebras-mobile-commerce-bar .nebras-mobile-bar-btn {
+    position: relative;
+    z-index: 1;
 }

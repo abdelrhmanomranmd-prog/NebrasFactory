@@ -172,6 +172,15 @@
     pointer-events: none;
 }
 
+.hero-content-wrap.hero-visual-only .hero-mobile-panel,
+.hero-content-wrap.hero-visual-only .hero-mobile-cta,
+.hero-content-wrap.hero-visual-only .hero-mobile-btn,
+.hero-content-wrap.hero-visual-only .hero-copy,
+.hero-content-wrap.hero-visual-only .hero-copy a,
+.hero-content-wrap.hero-visual-only .hero-copy button {
+    pointer-events: auto;
+}
+
 .hero-mobile-panel {
     display: none;
     width: 100%;

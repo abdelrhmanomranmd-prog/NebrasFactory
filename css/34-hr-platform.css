@@ -7,7 +7,7 @@
     justify-content: stretch !important;
     background: #0a1f33 !important;
     z-index: 10050;
-    pointer-events: auto !important;
+    pointer-events: none !important;
 }
 
 #hr-platform.hr-workspace-section.admin-section.show {

@@ -14356,9 +14356,50 @@
             const intro = document.getElementById('nebras-brand-intro');
             if (intro && (intro.hidden || intro.classList.contains('is-leaving'))) {
                 document.body.classList.remove('nebras-intro-active');
+                intro.style.pointerEvents = 'none';
             }
-            document.querySelectorAll('.admin-section:not(.show), .admin-overlay:not(.show)').forEach(function(el) {
-                el.setAttribute('aria-hidden', 'true');
+            document.querySelectorAll('.admin-section, .admin-overlay, .cart-drawer-overlay, .sales-quote-detail-overlay, .nebras-callback-overlay').forEach(function(el) {
+                const open = el.classList.contains('show') || el.classList.contains('is-open');
+                const hidden = el.hidden || el.hasAttribute('hidden');
+                if (!open || hidden) {
+                    el.style.pointerEvents = 'none';
+                    el.setAttribute('aria-hidden', 'true');
+                } else {
+                    el.style.pointerEvents = '';
+                    el.setAttribute('aria-hidden', 'false');
+                }
+            });
+            ['hr-platform', 'legal-platform', 'crm-platform', 'accounting-platform'].forEach(function(id) {
+                const panel = document.getElementById(id);
+                if (!panel) return;
+                if (!panel.classList.contains('show')) panel.style.pointerEvents = 'none';
+            });
+        }
+
+        function bindStorefrontCommerceClicks() {
+            if (document.body.dataset.nebrasCommerceBound === '1') return;
+            document.body.dataset.nebrasCommerceBound = '1';
+            const actions = [
+                ['hero-mobile-explore', function() { openNebrasWorkspace({ pillar: 'store', view: 'catalog-all' }); }],
+                ['hero-mobile-quote', confirmAndOpenQuote],
+                ['header-explore-btn', function() { openNebrasWorkspace({ pillar: 'store', view: 'catalog-all' }); }],
+                ['header-quote-btn', confirmAndOpenQuote],
+                ['mob-bar-store', function() { openNebrasWorkspace({ pillar: 'store', view: 'catalog-all' }); }],
+                ['mob-bar-cart', openCartDrawer],
+                ['mob-bar-quote', confirmAndOpenQuote],
+                ['top-open-cart-btn', openCartDrawer],
+                ['top-quote-btn', confirmAndOpenQuote]
+            ];
+            actions.forEach(function(pair) {
+                const el = document.getElementById(pair[0]);
+                if (!el || el.dataset.nebrasCommerceClick === '1') return;
+                el.dataset.nebrasCommerceClick = '1';
+                el.removeAttribute('onclick');
+                el.addEventListener('click', function(ev) {
+                    ev.preventDefault();
+                    ev.stopPropagation();
+                    try { pair[1](); } catch (err) { console.error('commerce click', pair[0], err); }
+                });
             });
         }
 
@@ -14391,6 +14432,24 @@
                 if (ev.defaultPrevented) return;
                 const shopBtn = ev.target.closest('.card-shop-btn');
                 if (shopBtn) return;
+                const dashTile = ev.target.closest('.dashboard-tile-card[data-tile-id]');
+                if (dashTile && !dashTile.disabled) {
+                    const tileId = dashTile.getAttribute('data-tile-id');
+                    if (tileId) {
+                        ev.preventDefault();
+                        onDashboardTileClick(tileId);
+                        return;
+                    }
+                }
+                const colorTile = ev.target.closest('.nebras-color-tile');
+                if (colorTile) {
+                    const idx = parseInt(colorTile.getAttribute('data-color-idx'), 10);
+                    if (!isNaN(idx) && typeof openNebrasColorCollection === 'function') {
+                        ev.preventDefault();
+                        openNebrasColorCollection(idx);
+                        return;
+                    }
+                }
                 const vicon = ev.target.closest('.visitor-icon-card[data-icon-id]');
                 if (vicon) {
                     const vid = parseInt(vicon.getAttribute('data-icon-id'), 10);
@@ -14437,6 +14496,7 @@
                     return;
                 }
             }, false);
+            bindStorefrontCommerceClicks();
         }
 
         function requirePermission(permissionKey, message) {
@@ -18354,7 +18414,7 @@
                 const code = String(item.code || getRollCatalogCode(item.nebCode || getNebrasRollCodeByIndex(idx))).trim();
                 const tex = resolveDoorRollTextureUrl(item.textureUrl || getRollSwatchImageUrl(idx));
                 return '' +
-                    '<button type="button" class="nebras-color-tile" onclick="openNebrasColorCollection(' + idx + ')" aria-label="' + escapeHtmlAttr(getPublicColorDisplayCode(code) + ' ' + item.labelEn) + '">' +
+                    '<button type="button" class="nebras-color-tile" data-color-idx="' + idx + '" onclick="openNebrasColorCollection(' + idx + ')" aria-label="' + escapeHtmlAttr(getPublicColorDisplayCode(code) + ' ' + item.labelEn) + '">' +
                     '<span class="nebras-color-tile-swatch"><img src="' + escapeHtmlAttr(tex) + '" alt="" loading="lazy" decoding="async"></span>' +
                     '<span class="nebras-color-tile-code">' + escapeHtmlAttr(getPublicColorDisplayCode(code)) + '</span>' +
                     '<span class="nebras-color-tile-name-ar">' + escapeHtmlAttr(item.labelAr || '') + '</span>' +
@@ -18411,7 +18471,7 @@
                 const code = String(item.code || getRollCatalogCode(item.nebCode || getNebrasRollCodeByIndex(idx))).trim();
                 const tex = resolveDoorRollTextureUrl(item.textureUrl || getRollSwatchImageUrl(idx));
                 return '' +
-                    '<button type="button" class="nebras-color-tile" onclick="openNebrasColorCollection(' + idx + ')" aria-label="' + escapeHtmlAttr(getPublicColorDisplayCode(code) + ' ' + item.labelEn) + '">' +
+                    '<button type="button" class="nebras-color-tile" data-color-idx="' + idx + '" onclick="openNebrasColorCollection(' + idx + ')" aria-label="' + escapeHtmlAttr(getPublicColorDisplayCode(code) + ' ' + item.labelEn) + '">' +
                     '<span class="nebras-color-tile-swatch"><img src="' + escapeHtmlAttr(tex) + '" alt="" loading="lazy" decoding="async"></span>' +
                     '<span class="nebras-color-tile-code">' + escapeHtmlAttr(getPublicColorDisplayCode(code)) + '</span>' +
                     '<span class="nebras-color-tile-name-ar">' + escapeHtmlAttr(item.labelAr || '') + '</span>' +
@@ -20276,6 +20336,7 @@
             intro.classList.add('is-leaving');
             document.body.classList.remove('nebras-intro-active');
             try { sessionStorage.setItem('nebrasIntroSeen', '1'); } catch (e) { /* ignore */ }
+            clearStuckInteractionBlockers();
             setTimeout(function() {
                 intro.hidden = true;
                 intro.setAttribute('aria-hidden', 'true');
@@ -23958,6 +24019,8 @@
             initStorefrontExperience();
             syncNebrasCloudInBackgroundDeferred();
             revealSiteAfterIntro();
+            clearStuckInteractionBlockers();
+            bindStorefrontCommerceClicks();
         }
 
         async function bootstrapNebrasPlatform() {
@@ -24002,6 +24065,12 @@
 
         window.addEventListener('load', function() {
             bindNebrasHrPlatformGlobals();
+            clearStuckInteractionBlockers();
+            bindStorefrontCommerceClicks();
+        });
+
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) clearStuckInteractionBlockers();
         });
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -26240,6 +26309,7 @@
         window.openCustomerComplaints = openCustomerComplaints;
         window.openBankAccountCard = openBankAccountCard;
         window.clearStuckInteractionBlockers = clearStuckInteractionBlockers;
+        window.bindStorefrontCommerceClicks = bindStorefrontCommerceClicks;
         window.getNebrasCurrentAdmin = function() { return currentAdmin; };
         window.getNebrasErpOrders = function() { return erpOrders || []; };
         window.getNebrasErpTransfers = function() { return erpTransfers || []; };

@@ -84,6 +84,12 @@ body {
     pointer-events: none;
 }
 
+.hero-content-wrap.hero-visual-only .hero-mobile-panel,
+.hero-content-wrap.hero-visual-only .hero-mobile-cta,
+.hero-content-wrap.hero-visual-only .hero-mobile-btn {
+    pointer-events: auto;
+}
+
 .hero-content-wrap.hero-visual-only .hero-copy {
     display: none;
 }

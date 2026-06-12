@@ -364,12 +364,14 @@
     z-index: 2000;
     visibility: hidden;
     opacity: 0;
+    pointer-events: none;
     transition: 0.25s ease;
 }
 
 .admin-overlay.show {
     visibility: visible;
     opacity: 1;
+    pointer-events: auto;
 }
 
 .admin-modal {
@@ -830,12 +832,14 @@
     z-index: 2000;
     visibility: hidden;
     opacity: 0;
+    pointer-events: none;
     transition: 0.25s ease;
 }
 
 .admin-section.show {
     visibility: visible;
     opacity: 1;
+    pointer-events: auto;
 }
 
 .admin-section .admin-modal {
