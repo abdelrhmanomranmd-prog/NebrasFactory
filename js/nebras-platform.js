@@ -57,7 +57,8 @@
             audit: 'التقارير والتحليلات',
             aluminum: 'قسم الألومنيوم',
             productMaster: 'مركز المنتجات والأسعار',
-            hr: 'الموارد البشرية'
+            hr: 'الموارد البشرية',
+            legal: 'الشؤون القانونية'
         };
         /** أيقونة + وصف لكل صلاحية — تُستخدم في واجهة إدارة المستخدمين الاحترافية */
         const NEBRAS_PERMISSION_META = {
@@ -78,7 +79,8 @@
             audit: { icon: 'fas fa-chart-pie', descAr: 'التقارير والتحليلات وسجل التدقيق' },
             aluminum: { icon: 'fas fa-industry', descAr: 'إدارة قسم الألومنيوم — مخزون وإنتاج وعروض وطلبات الألومنيوم فقط' },
             productMaster: { icon: 'fas fa-database', descAr: 'تحديد أسماء المنتجات وأنواعها ومقاساتها وأسعارها — مصدر النظام الديناميكي' },
-            hr: { icon: 'fas fa-people-roof', descAr: 'منصة HR — موظفون وعمال وسيارات وإجازات لكل الفروع' }
+            hr: { icon: 'fas fa-people-roof', descAr: 'منصة HR — موظفون وعمال وسيارات وإجازات لكل الفروع' },
+            legal: { icon: 'fas fa-scale-balanced', descAr: 'منصة Legal — عقود وقضايا وامتثال وPDPL لنبراس والشركات الشريكة' }
         };
         const SHOP_CATALOG_PRODUCT_IDS = ['prod-wpc-raw', 'prod-wpc', 'prod-aluminum', 'prod-other'];
 
@@ -254,7 +256,7 @@
                 labelAr: 'مدير عام', labelEn: 'General Manager',
                 icon: 'fas fa-user-tie', accent: '#0a4d8c',
                 descAr: 'إدارة شاملة للمحتوى والعمليات والتقارير (بدون إنشاء مستخدمين).',
-                permissions: ['content', 'erp', 'inventory', 'warehouse', 'production', 'procurement', 'accounting', 'orders', 'sales', 'quotes', 'customerService', 'complaints', 'branches', 'audit', 'hr']
+                permissions: ['content', 'erp', 'inventory', 'warehouse', 'production', 'procurement', 'accounting', 'orders', 'sales', 'quotes', 'customerService', 'complaints', 'branches', 'audit', 'hr', 'legal']
             },
             sales_manager: {
                 labelAr: 'مدير المبيعات', labelEn: 'Sales Manager',
@@ -305,6 +307,13 @@
                 descAr: 'منصة HR — داشبورد خاص بقسمه/فرعه فقط. الإدارة الرئيسية تحدد النطاق.',
                 permissions: ['hr'],
                 hrScoped: true
+            },
+            legal: {
+                labelAr: 'شؤون قانونية', labelEn: 'Legal Affairs',
+                icon: 'fas fa-scale-balanced', accent: '#6c3483',
+                descAr: 'منصة Legal — عقود · قضايا · امتثال · PDPL · شركات شريكة — نبراس والمجموعة.',
+                permissions: ['legal'],
+                legalScoped: true
             },
             aluminum_manager: {
                 labelAr: 'مدير قسم الألومنيوم', labelEn: 'Aluminum Dept. Manager',
@@ -1776,9 +1785,12 @@
             version: '1.0.0',
             codename: 'NebrasGlobal',
             layers: [
-                { id: 'storefront', icon: 'fas fa-store', nameAr: 'الواجهة العامة (زوار / متجر / معرض)', nameEn: 'Public storefront' },
-                { id: 'command', icon: 'fas fa-server', nameAr: 'مركز القيادة (إدارة / صلاحيات / أتمتة)', nameEn: 'Internal command center' },
-                { id: 'erp', icon: 'fas fa-cubes', nameAr: 'نظام ERP (عمليات المصنع الداخلية)', nameEn: 'ERP core (factory operations)' }
+                { id: 'storefront', icon: 'fas fa-globe', nameAr: 'الواجهة الخارجية — دليل نبراس للعالم', nameEn: 'Public empire face' },
+                { id: 'command', icon: 'fas fa-crown', nameAr: 'الإدارة الرئيسية والفروع', nameEn: 'HQ & branches command' },
+                { id: 'erp', icon: 'fas fa-cubes', nameAr: 'Nebras ERP — عمليات المصنع', nameEn: 'ERP core' },
+                { id: 'hcm', icon: 'fas fa-people-roof', nameAr: 'نبراس HCM — موارد بشرية + شركاء', nameEn: 'HCM multi-company' },
+                { id: 'legal', icon: 'fas fa-scale-balanced', nameAr: 'نبراس Legal — شؤون قانونية', nameEn: 'Legal affairs' },
+                { id: 'governance', icon: 'fas fa-shield-halved', nameAr: 'حوكمة · سحابة · تدقيق', nameEn: 'Governance & cloud' }
             ],
             modules: [
                 { id: 'content', status: 'live', icon: 'fas fa-pen-to-square', permission: 'content', handler: 'openSiteContentManager', nameAr: 'المحتوى والكتالوج', descAr: 'منتجات بأصناف وأسعار، من نحن، أيقونات — بدون كود', nameEn: 'Content & catalogue' },
@@ -1795,6 +1807,7 @@
                 { id: 'analytics', status: 'live', icon: 'fas fa-chart-pie', permission: 'audit', handler: 'openAdminAnalytics', nameAr: 'التحليلات', descAr: 'منتجات · ألوان · شكاوى · زوار · ترتيب العروض', nameEn: 'Analytics' },
                 { id: 'audit', status: 'live', icon: 'fas fa-clipboard-check', permission: 'audit', handler: 'openAuditLog', nameAr: 'سجل العمليات', descAr: 'تتبع كل إجراء إداري', nameEn: 'Audit log' },
                 { id: 'hr', status: 'live', icon: 'fas fa-people-roof', permission: 'hr', handler: 'openHrPlatform', nameAr: 'الموارد البشرية', descAr: 'موظفون وسيارات وإجازات — كل الفروع', nameEn: 'HR platform' },
+                { id: 'legal', status: 'live', icon: 'fas fa-scale-balanced', permission: 'legal', handler: 'openLegalPlatform', nameAr: 'الشؤون القانونية', descAr: 'عقود · قضايا · امتثال · PDPL — نبراس والشركاء', nameEn: 'Legal affairs' },
                 { id: 'system', status: 'live', icon: 'fas fa-sliders', superadminOnly: true, handler: 'openSystemSettings', nameAr: 'إعدادات المنصة', descAr: 'سجل تجاري، ضريبي، بنوك، احتفال', nameEn: 'Platform settings' }
             ]
         };
@@ -1808,7 +1821,8 @@
                 { id: 'supply', nameAr: 'سلسلة التوريد', nameEn: 'Supply chain' },
                 { id: 'crm', nameAr: 'العملاء والخدمة', nameEn: 'CRM & service' },
                 { id: 'governance', nameAr: 'الحوكمة والتقارير', nameEn: 'Governance & BI' },
-                { id: 'hr', nameAr: 'الموارد البشرية', nameEn: 'Human Resources' }
+                { id: 'hr', nameAr: 'الموارد البشرية', nameEn: 'Human Resources' },
+                { id: 'legal', nameAr: 'الشؤون القانونية', nameEn: 'Legal Affairs' }
             ],
             modules: [
                 { id: 'erp-product-master', pillar: 'master', status: 'live', icon: 'fas fa-database', permission: 'productMaster', handler: 'openProductMasterHub', nameAr: 'مركز المنتجات والأسعار', descAr: 'مصدر ديناميكي — أسماء · أنواع · مقاسات · أسعار', nameEn: 'Product & pricing hub' },
@@ -1828,7 +1842,8 @@
                 { id: 'erp-customers', pillar: 'crm', status: 'live', icon: 'fas fa-users', permission: 'customerService', handler: 'openCustomerServiceManagement', nameAr: 'خدمة العملاء', descAr: 'استفسارات وردود', nameEn: 'Customer care' },
                 { id: 'erp-analytics', pillar: 'governance', status: 'live', icon: 'fas fa-chart-pie', permission: 'audit', handler: 'openAdminAnalytics', nameAr: 'ذكاء الأعمال BI', descAr: 'تقارير حية للإدارة', nameEn: 'Analytics' },
                 { id: 'erp-executive-reports', pillar: 'governance', status: 'live', icon: 'fas fa-chart-bar', permission: 'audit', handler: 'openExecutiveReports', nameAr: 'التقارير التنفيذية', descAr: 'يومي · شهري · سنوي لصاحب الشركة', nameEn: 'Executive reports' },
-                { id: 'erp-hr-platform', pillar: 'hr', status: 'live', icon: 'fas fa-industry', permission: 'hr', handler: 'openHrPlatform', nameAr: 'HR — مصنع نبراس WPC', descAr: 'إنتاج · ورديات · سعودة · حضور · رواتب · أسطول', nameEn: 'Nebras WPC HR' }
+                { id: 'erp-hr-platform', pillar: 'hr', status: 'live', icon: 'fas fa-industry', permission: 'hr', handler: 'openHrPlatform', nameAr: 'HR — مصنع نبراس WPC', descAr: 'إنتاج · ورديات · سعودة · حضور · رواتب · أسطول', nameEn: 'Nebras WPC HR' },
+                { id: 'erp-legal-platform', pillar: 'legal', status: 'live', icon: 'fas fa-scale-balanced', permission: 'legal', handler: 'openLegalPlatform', nameAr: 'Legal — الشؤون القانونية', descAr: 'عقود · قضايا · امتثال · PDPL · شركات شريكة', nameEn: 'Nebras Legal' }
             ]
         };
 
@@ -2179,6 +2194,8 @@
             { id: 'dash-product-master', zone: 'quick', dashGroup: 'command', sortOrder: 0.9, iconClass: 'fas fa-database', titleAr: 'مركز المنتجات والأسعار', titleEn: 'Product Master', textAr: 'أسماء · أنواع · مقاسات · أسعار — مصدر النظام الديناميكي.', textEn: 'Names, types, sizes, prices — single source of truth.', handler: 'openProductMasterHub', permission: 'productMaster', superadminOnly: true, visible: true },
             { id: 'dash-aluminum-dept', zone: 'quick', dashGroup: 'command', sortOrder: 1.1, iconClass: 'fas fa-industry', titleAr: 'قسم الألومنيوم', titleEn: 'Aluminum Dept.', textAr: 'مخزون · إنتاج · عروض · طلبات ALU.', textEn: 'Aluminum ops only.', handler: 'openAluminumDepartment', permission: 'aluminum', visible: true },
             { id: 'dash-hr-platform', zone: 'quick', dashGroup: 'command', sortOrder: 1.05, iconClass: 'fas fa-industry', titleAr: 'HR — مصنع نبراس WPC', titleEn: 'Nebras WPC HR', textAr: 'إنتاج أبواب WPC · ورديات · سعودة · حضور · رواتب · أسطول — كل الفروع.', textEn: 'WPC production HR — shifts, Saudization, payroll, fleet.', handler: 'openHrPlatform', permission: 'hr', visible: true },
+            { id: 'dash-legal-platform', zone: 'quick', dashGroup: 'command', sortOrder: 1.06, iconClass: 'fas fa-scale-balanced', titleAr: 'Legal — الشؤون القانونية', titleEn: 'Nebras Legal', textAr: 'عقود · قضايا · امتثال · PDPL · اتفاقيات شراكة — نبراس والشركات الشريكة.', textEn: 'Contracts, cases, compliance, PDPL — group & partners.', handler: 'openLegalPlatform', permission: 'legal', visible: true },
+            { id: 'dash-empire-hub', zone: 'quick', dashGroup: 'command', sortOrder: 0.95, iconClass: 'fas fa-crown', titleAr: 'إمبراطورية نبراس — مركز القيادة', titleEn: 'Nebras Empire HQ', textAr: 'الواجهة الخارجية · ERP · HR · Legal · فروع · شركاء — كل المنصة في مكان واحد.', textEn: 'Full empire command — external + internal platforms.', handler: 'openNebrasEmpireHub', permission: 'audit', visible: true },
             { id: 'dash-content', zone: 'quick', dashGroup: 'command', sortOrder: 1, iconClass: 'fas fa-pen-to-square', titleAr: 'إدارة محتوى الموقع', titleEn: 'Site Content', textAr: 'منتجات، بوابة الزائر، شركاء، شهادات — ديناميكي بالكامل.', textEn: 'Products, gateway icons, partners, certs — fully dynamic.', handler: 'openSiteContentManager', permission: 'content', visible: true },
             { id: 'dash-about-pages', zone: 'quick', dashGroup: 'command', sortOrder: 2, iconClass: 'fas fa-building', titleAr: 'من نحن ورؤيتنا', titleEn: 'About & Vision', textAr: 'نصوص المصنع ووثائق الصفحات الداخلية.', textEn: 'Factory pages and documents.', handler: 'openAboutContentAdmin', permission: 'content', visible: true },
             { id: 'dash-certs', zone: 'quick', dashGroup: 'command', sortOrder: 3, iconClass: 'fas fa-award', titleAr: 'اعتمادات وشهادات', titleEn: 'Certifications', textAr: 'شهادات المعرض — صور وPDF.', textEn: 'Showroom certificates.', cssClass: 'dashboard-tile-card--certs', handler: 'openCertificationsHub', permission: 'content', visible: true },
@@ -2319,6 +2336,15 @@
             openProductMasterHub: function() { openProductMasterHub(); },
             openAluminumDepartment: function() { openAluminumDepartment(); },
             openHrPlatform: openHrPlatformBridge,
+            openLegalPlatform: function() {
+                if (typeof window.openLegalPlatform === 'function') {
+                    try { return window.openLegalPlatform(); } catch (e) { console.error('openLegalPlatform', e); }
+                }
+                alert('منصة الشؤون القانونية — أعيدي تحميل الصفحة (Ctrl+Shift+R).');
+            },
+            openNebrasEmpireHub: function() {
+                if (typeof window.openNebrasEmpireHub === 'function') return window.openNebrasEmpireHub();
+            },
             openExecutiveReports: function() { openExecutiveReports(); },
             syncPlatformFromProductMaster: function() { syncPlatformFromProductMaster(); },
             scrollErpHub: function() { scrollErpHub(); },
@@ -13909,7 +13935,10 @@
                 { roles: ['aluminum_manager'], icon: 'fas fa-industry', label: 'قسم الألومنيوم', handler: 'openAluminumDepartment', perm: 'aluminum' },
                 { roles: ['hr'], icon: 'fas fa-people-roof', label: 'منصة الموارد البشرية', handler: 'openHrPlatform', perm: 'hr' },
                 { roles: ['hr'], icon: 'fas fa-shield-halved', label: 'أمان حسابي', handler: 'openAccountSecurity', perm: null },
+                { roles: ['legal'], icon: 'fas fa-scale-balanced', label: 'منصة الشؤون القانونية', handler: 'openLegalPlatform', perm: 'legal' },
+                { roles: ['legal'], icon: 'fas fa-shield-halved', label: 'أمان حسابي', handler: 'openAccountSecurity', perm: null },
                 { roles: ['superadmin', 'manager'], icon: 'fas fa-people-roof', label: 'منصة HR', handler: 'openHrPlatform', perm: 'hr' },
+                { roles: ['superadmin', 'manager'], icon: 'fas fa-scale-balanced', label: 'منصة Legal', handler: 'openLegalPlatform', perm: 'legal' },
                 { roles: ['superadmin', 'manager'], icon: 'fas fa-paint-roller', label: 'محتوى الموقع', handler: 'openSiteContentManager', perm: 'content' },
                 { roles: ['superadmin', 'manager'], icon: 'fas fa-cloud-upload-alt', label: 'رفع وسائط', handler: 'openNebrasMediaHubQuick', perm: 'content' },
                 { roles: ['sales_manager', 'sales_rep', 'branch_manager'], icon: 'fas fa-file-signature', label: 'بناء عرض سعر', handler: 'openRepQuoteBuilder', perm: 'quotes' },
@@ -13933,8 +13962,10 @@
                 if (item.handler === 'openProductMasterHub' && !isMainGovernanceAdmin()) return;
                 if (item.handler === 'openAluminumDepartment' && !canManage('aluminum') && !isMainGovernanceAdmin()) return;
                 if (item.handler === 'openHrPlatform' && typeof canAccessHrPlatform === 'function' && !canAccessHrPlatform()) return;
+                if (item.handler === 'openLegalPlatform' && typeof canAccessLegalPlatform === 'function' && !canAccessLegalPlatform()) return;
                 if (item.handler === 'openAccountSecurity' && typeof isHrDepartmentAdmin === 'function' && isHrDepartmentAdmin(currentAdmin)) { /* مسموح */ }
                 else if (item.roles && item.roles.indexOf('hr') >= 0 && item.roles.length === 1 && item.handler !== 'openHrPlatform' && item.handler !== 'openAccountSecurity') return;
+                else if (item.roles && item.roles.indexOf('legal') >= 0 && item.roles.length === 1 && item.handler !== 'openLegalPlatform' && item.handler !== 'openAccountSecurity') return;
                 if (item.perm && !canManage(item.perm)) return;
                 actions.push(item);
             });
@@ -14157,8 +14188,16 @@
                 else if (typeof openHrPlatform === 'function') setTimeout(function() { openHrPlatform(); }, 0);
                 return;
             }
+            if (typeof applyLegalOnlyDashboard === 'function') applyLegalOnlyDashboard(user);
+            if (typeof isStrictLegalUser === 'function' && isStrictLegalUser(user)) {
+                startDashboardClock();
+                applyStaticUiTranslations(siteText[currentLang || 'ar'] || siteText.ar);
+                if (typeof openLegalPlatform === 'function') setTimeout(function() { openLegalPlatform(); }, 0);
+                return;
+            }
             startDashboardClock();
             renderPlatformHubPanel();
+            if (typeof renderNebrasEmpireHubPanel === 'function') renderNebrasEmpireHubPanel();
             renderErpHubPanel();
             renderDashboardTiles();
             renderCompanyLegalBars();
@@ -20713,11 +20752,16 @@
                 el.setAttribute('aria-hidden', 'true');
             });
             document.body.classList.remove('hr-platform-open');
+            document.body.classList.remove('legal-platform-open');
         }
 
         function closeAdminSection(sectionId) {
             if (sectionId === 'hr-platform' && typeof closeHrWorkspace === 'function') {
                 closeHrWorkspace();
+                return;
+            }
+            if (sectionId === 'legal-platform' && typeof closeLegalWorkspace === 'function') {
+                closeLegalWorkspace();
                 return;
             }
             const el = document.getElementById(sectionId);
@@ -20727,6 +20771,7 @@
             }
             if (!document.querySelector('.admin-section.show')) {
                 document.body.classList.remove('hr-platform-open');
+                document.body.classList.remove('legal-platform-open');
             }
         }
 
@@ -21824,6 +21869,46 @@
                 return typeof getHrGpsSettings === 'function' ? getHrGpsSettings() : {};
             }, set: function(v) {
                 if (typeof setHrGpsSettingsFromCloud === 'function') setHrGpsSettingsFromCloud(v);
+            }},
+            { key: 'hr_gps_consents', get: function() {
+                return typeof getHrGpsConsents === 'function' ? getHrGpsConsents() : [];
+            }, set: function(v) {
+                if (typeof setHrGpsConsentsFromCloud === 'function') setHrGpsConsentsFromCloud(v);
+            }},
+            { key: 'hr_companies', get: function() {
+                return typeof getHrCompanies === 'function' ? getHrCompanies() : [];
+            }, set: function(v) {
+                if (typeof setHrCompaniesFromCloud === 'function') setHrCompaniesFromCloud(v);
+            }},
+            { key: 'legal_contracts', get: function() {
+                return typeof getLegalContracts === 'function' ? getLegalContracts() : [];
+            }, set: function(v) {
+                if (typeof setLegalContractsFromCloud === 'function') setLegalContractsFromCloud(v);
+            }},
+            { key: 'legal_cases', get: function() {
+                return typeof getLegalCases === 'function' ? getLegalCases() : [];
+            }, set: function(v) {
+                if (typeof setLegalCasesFromCloud === 'function') setLegalCasesFromCloud(v);
+            }},
+            { key: 'legal_compliance', get: function() {
+                return typeof getLegalCompliance === 'function' ? getLegalCompliance() : [];
+            }, set: function(v) {
+                if (typeof setLegalComplianceFromCloud === 'function') setLegalComplianceFromCloud(v);
+            }},
+            { key: 'legal_policies', get: function() {
+                return typeof getLegalPolicies === 'function' ? getLegalPolicies() : [];
+            }, set: function(v) {
+                if (typeof setLegalPoliciesFromCloud === 'function') setLegalPoliciesFromCloud(v);
+            }},
+            { key: 'legal_correspondence', get: function() {
+                return typeof getLegalCorrespondence === 'function' ? getLegalCorrespondence() : [];
+            }, set: function(v) {
+                if (typeof setLegalCorrespondenceFromCloud === 'function') setLegalCorrespondenceFromCloud(v);
+            }},
+            { key: 'legal_activity', get: function() {
+                return typeof getLegalActivity === 'function' ? getLegalActivity() : [];
+            }, set: function(v) {
+                if (typeof setLegalActivityFromCloud === 'function') setLegalActivityFromCloud(v);
             }},
             { key: 'hr_attendance', get: function() {
                 return typeof getHrAttendance === 'function' ? getHrAttendance() : [];
@@ -24773,6 +24858,9 @@
         window.onDashboardTileClick = onDashboardTileClick;
         window.runDashboardHandler = runDashboardHandler;
         window.scrollToDashboardSection = scrollToDashboardSection;
+        window.NEBRAS_ERP_PUBLIC = NEBRAS_ERP;
+        window.getNebrasBranchesForEmpire = function() { return branchesData || []; };
+        window.getNebrasCloudStoreCount = function() { return NEBRAS_CLOUD_STORE_SPECS.length; };
         window.openSiteContentManager = openSiteContentManager;
         window.openIconManagement = openIconManagement;
         window.openSystemSettings = openSystemSettings;

@@ -1,0 +1,129 @@
+/* نبراس — مركز الإمبراطورية */
+.empire-hub-panel {
+    margin: 20px 0;
+    padding: 0;
+    border-radius: 16px;
+    overflow: hidden;
+    background: #fff;
+    border: 1px solid #d4e2ef;
+    box-shadow: 0 8px 32px rgba(10, 77, 140, 0.08);
+}
+.empire-hub-hero {
+    position: relative;
+    padding: 28px 24px;
+    background: linear-gradient(135deg, #0a2540 0%, #0a4d8c 40%, #1a6fa8 100%);
+    color: #fff;
+    overflow: hidden;
+}
+.empire-hub-hero-glow {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 80% 20%, rgba(212, 175, 55, 0.25), transparent 55%);
+    pointer-events: none;
+}
+.empire-hub-hero-inner { position: relative; z-index: 1; }
+.empire-hub-hero h2 { margin: 8px 0 6px; font-size: 1.35rem; }
+.empire-hub-hero p { margin: 0; opacity: 0.9; font-size: 0.9rem; max-width: 720px; line-height: 1.6; }
+.empire-codename {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    background: rgba(212, 175, 55, 0.25);
+    font-size: 0.78rem;
+    font-weight: 600;
+}
+.empire-readiness { padding: 16px 24px; background: #f8fbff; border-bottom: 1px solid #e2ebf3; }
+.empire-readiness-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 8px; }
+.empire-readiness-head strong { color: #0a4d8c; }
+.empire-readiness-bar { height: 10px; border-radius: 5px; background: #dce8f2; overflow: hidden; }
+.empire-readiness-bar span { display: block; height: 100%; background: linear-gradient(90deg, #d4af37, #27ae60); border-radius: 5px; }
+.empire-checklist { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.empire-check-item { font-size: 0.76rem; padding: 4px 10px; border-radius: 6px; background: #fff; border: 1px solid #e2ebf3; color: #7f8c9a; }
+.empire-check-item.is-ok { color: #1e8449; border-color: #b8e6c8; background: #f4fcf7; }
+.empire-kpi-ring {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 16px 24px;
+    border-bottom: 1px solid #e8eef4;
+}
+.empire-kpi {
+    flex: 1;
+    min-width: 100px;
+    text-align: center;
+    padding: 10px;
+    border-radius: 10px;
+    background: #f0f6fc;
+}
+.empire-kpi strong { display: block; font-size: 1.4rem; color: #0a4d8c; }
+.empire-kpi span { font-size: 0.72rem; color: #5a7a94; }
+.empire-section { padding: 20px 24px; border-bottom: 1px solid #eef3f8; }
+.empire-section h3 { margin: 0 0 6px; font-size: 1rem; color: #0d3d5c; }
+.empire-section-desc { margin: 0 0 14px; font-size: 0.84rem; color: #6b8299; }
+.empire-module-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 12px;
+}
+.empire-module-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 14px;
+    border-radius: 12px;
+    border: 1px solid #d0dce8;
+    background: #fff;
+    cursor: pointer;
+    text-align: right;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.empire-module-card:hover:not(.empire-module-card--locked) {
+    border-color: var(--empire-accent, #0a4d8c);
+    box-shadow: 0 4px 16px rgba(10, 77, 140, 0.12);
+}
+.empire-module-card--locked { opacity: 0.45; cursor: not-allowed; }
+.empire-module-card i { font-size: 1.3rem; color: var(--empire-accent, #0a4d8c); }
+.empire-module-card strong { font-size: 0.88rem; color: #1a3a52; }
+.empire-module-card small { font-size: 0.72rem; color: #6b8299; line-height: 1.4; }
+.empire-card--external { border-color: #b8d4e8; background: linear-gradient(180deg, #fff, #f8fbff); }
+.empire-ws-head { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; align-items: center; }
+.empire-ws-pill { padding: 6px 12px; border-radius: 8px; background: #e8f4fc; font-size: 0.82rem; color: #1a5276; font-weight: 600; }
+.empire-ws-scope { font-size: 0.78rem; color: #7f8c9a; }
+.empire-ws-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; }
+.empire-ws-card {
+    display: flex;
+    gap: 12px;
+    padding: 14px;
+    border-radius: 10px;
+    background: #f8fafc;
+    border: 1px solid #e2ebf3;
+}
+.empire-ws-card > i { font-size: 1.4rem; color: #0a4d8c; margin-top: 2px; }
+.empire-ws-card strong { display: block; color: #1a3a52; }
+.empire-ws-card p { margin: 4px 0 8px; font-size: 0.78rem; color: #6b8299; }
+.empire-split { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
+@media (max-width: 900px) { .empire-split { grid-template-columns: 1fr; } }
+.empire-section--half { border-bottom: none; }
+.empire-branch-grid, .empire-partner-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.empire-branch-chip, .empire-partner-chip {
+    padding: 10px 14px;
+    border-radius: 8px;
+    background: #f0f6fc;
+    border: 1px solid #d0dce8;
+    font-size: 0.82rem;
+}
+.empire-branch-chip--hq { background: #f4fcf7; border-color: #b8e6c8; font-weight: 600; }
+.empire-partner-chip { flex: 1; min-width: 200px; }
+.empire-partner-chip strong { display: block; }
+.empire-partner-chip small { color: #7f8c9a; }
+.empire-partner-actions { margin-top: 8px; display: flex; gap: 6px; }
+.empire-empty-hint { font-size: 0.86rem; color: #6b8299; }
+.empire-footer-note {
+    margin: 0;
+    padding: 16px 24px;
+    font-size: 0.82rem;
+    color: #1a5276;
+    background: linear-gradient(90deg, #f0f7ff, #f8f0fc);
+    border-top: 1px solid #d7bde2;
+}

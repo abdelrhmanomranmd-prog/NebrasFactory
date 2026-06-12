@@ -1249,6 +1249,165 @@ body.hr-platform-open {
 .hr-gps-settings { margin-top: 16px; padding: 12px; border-radius: 10px; background: #f8fafc; border: 1px dashed #c5d3e0; }
 .hr-gps-settings summary { cursor: pointer; font-weight: 600; color: #1a5276; }
 
+.hr-gps-setup-wizard {
+    margin-bottom: 20px;
+    padding: 16px;
+    border-radius: 12px;
+    background: linear-gradient(180deg, #f8fbff 0%, #f0f5fa 100%);
+    border: 1px solid #d4e2ef;
+}
+.hr-gps-readiness-head { margin-bottom: 14px; }
+.hr-gps-readiness-head strong { display: block; color: #0d3d5c; font-size: 1.05rem; }
+.hr-gps-readiness-head span { font-size: 0.82rem; color: #5a7a94; }
+.hr-gps-readiness-bar {
+    height: 8px;
+    margin-top: 8px;
+    border-radius: 4px;
+    background: #dce8f2;
+    overflow: hidden;
+}
+.hr-gps-readiness-bar span {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, #27ae60, #2ecc71);
+    border-radius: 4px;
+    transition: width 0.4s ease;
+}
+.hr-gps-checklist { display: grid; gap: 8px; margin-bottom: 18px; }
+.hr-gps-check-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: #fff;
+    border: 1px solid #e2ebf3;
+}
+.hr-gps-check-item.is-ok { border-color: #b8e6c8; background: #f4fcf7; }
+.hr-gps-check-item.is-pending .hr-gps-check-icon { color: #95a5b8; }
+.hr-gps-check-item.is-ok .hr-gps-check-icon { color: #27ae60; }
+.hr-gps-check-item strong { display: block; font-size: 0.88rem; color: #1a3a52; }
+.hr-gps-check-item small { display: block; font-size: 0.76rem; color: #6b8299; margin-top: 2px; }
+.hr-gps-check-manual { margin-right: auto; font-size: 0.78rem; color: #2980b9; white-space: nowrap; }
+.hr-gps-imei-input { width: 100%; max-width: 200px; font-family: monospace; font-size: 0.82rem; }
+.hr-gps-setup-form {
+    margin-top: 16px;
+    padding: 14px;
+    border-radius: 10px;
+    background: #fff;
+    border: 1px dashed #b8cfe0;
+}
+.hr-gps-setup-form h4 { margin: 0 0 12px; color: #1a5276; font-size: 0.95rem; }
+.hr-gps-sync-status { font-size: 0.8rem; color: #5d7a92; margin: 8px 0 0; }
+.hr-gps-legal-doc { margin-top: 14px; }
+.hr-gps-legal-doc summary { cursor: pointer; font-weight: 600; color: #8e44ad; padding: 8px 0; }
+.hr-gps-legal-list { margin: 8px 0 0; padding-right: 20px; font-size: 0.84rem; color: #444; line-height: 1.6; }
+.hr-gps-legal-list li { margin-bottom: 6px; }
+
+.hr-company-filter select { min-width: 200px; }
+.hr-company-ctx-banner {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 14px;
+    margin-bottom: 10px;
+    border-radius: 10px;
+    background: linear-gradient(90deg, #e8f4fc, #f0f8ff);
+    border: 1px solid #b8d4e8;
+    font-size: 0.88rem;
+    color: #1a5276;
+}
+.hr-multi-company-block {
+    margin-bottom: 20px;
+    padding: 16px;
+    border-radius: 12px;
+    background: #fff;
+    border: 1px solid #d4e2ef;
+}
+.hr-multi-company-head h4 { margin: 0 0 6px; color: #0d3d5c; }
+.hr-multi-company-head p { margin: 0 0 12px; font-size: 0.86rem; color: #5a7a94; }
+.hr-company-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+}
+.hr-company-card {
+    padding: 14px;
+    border-radius: 10px;
+    background: #f8fbff;
+    border: 1px solid #d0dce8;
+}
+.hr-company-card--primary { border-color: #27ae60; background: #f4fcf7; }
+.hr-company-card-head strong { display: block; color: #1a3a52; margin: 4px 0; }
+.hr-company-type { font-size: 0.72rem; color: #7f8c9a; }
+.hr-company-pending { color: #e67e22; }
+.hr-company-kpis {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 10px 0;
+    font-size: 0.78rem;
+    color: #555;
+}
+.hr-company-kpis strong { color: #1a5276; }
+.hr-company-card-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.hr-company-badge {
+    display: inline-block;
+    font-size: 0.72rem;
+    padding: 2px 8px;
+    border-radius: 6px;
+    margin-bottom: 4px;
+    background: #e8f4fc;
+    color: #1a6fa8;
+}
+.hr-company-badge--partner { background: #f3e8ff; color: #7d3c98; }
+.hr-companies-hero {
+    display: flex;
+    gap: 14px;
+    padding: 14px;
+    margin-bottom: 16px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #f0f7ff, #e8f0f8);
+    border: 1px solid #c5d8e8;
+}
+.hr-companies-hero i { font-size: 1.8rem; color: #2980b9; }
+.hr-companies-guide { margin-top: 16px; font-size: 0.86rem; color: #444; }
+.hr-companies-guide summary { cursor: pointer; font-weight: 600; color: #1a5276; }
+.hr-companies-guide ol { margin: 8px 0 0; padding-right: 22px; line-height: 1.7; }
+
+/* ——— نبراس Legal — الشؤون القانونية ——— */
+body.legal-platform-open { overflow: hidden; }
+.legal-workspace-section .legal-ws-sidebar { border-left-color: #5b2c6f; }
+.legal-workspace-section .hr-ws-sidebar-head strong { color: #5b2c6f; }
+.legal-brand-icon { background: linear-gradient(135deg, #5b2c6f, #8e44ad) !important; }
+.legal-ws-topbar { border-bottom-color: #d7bde2; }
+.legal-kpi-strip .legal-stat strong { color: #6c3483; }
+.legal-command-hero {
+    padding: 18px;
+    margin-bottom: 16px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #f8f0fc 0%, #f5eef8 50%, #ebf5fb 100%);
+    border: 1px solid #d7bde2;
+}
+.legal-command-hero-inner .hr-command-title { color: #4a235a; }
+.legal-pill { background: #5b2c6f !important; color: #fff !important; }
+.legal-pdpl-hero {
+    display: flex;
+    gap: 14px;
+    padding: 14px;
+    margin-bottom: 16px;
+    border-radius: 10px;
+    background: #f4f0f8;
+    border: 1px solid #d7bde2;
+}
+.legal-pdpl-hero i { font-size: 1.6rem; color: #6c3483; }
+.legal-note { border-right: 3px solid #8e44ad; }
+.legal-ctx { background: linear-gradient(90deg, #f5eef8, #f8f0fc); border-color: #d7bde2; }
+.legal-quick-btn:hover { border-color: #8e44ad; }
+.legal-ws-foot { color: #7d3c98; }
+.dashboard-legal-only .dashboard-tile-card:not([data-tile-id="dash-legal-platform"]) { opacity: 0.35; }
+
 .neb-driver-gps-overlay {
     position: fixed;
     inset: 0;
@@ -1272,6 +1431,17 @@ body.hr-platform-open {
 .neb-driver-gps-card h2 { color: #0d2840; margin: 0 0 12px; font-size: 1.15rem; }
 .neb-driver-gps-coords { font-family: monospace; font-size: 0.82rem; color: #2980b9; }
 .neb-driver-gps-legal { font-size: 0.75rem; color: #666; margin-top: 14px; }
+.neb-driver-gps-consent {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin: 14px 0;
+    font-size: 0.82rem;
+    color: #333;
+    text-align: right;
+    line-height: 1.5;
+}
+.neb-driver-gps-consent input { margin-top: 4px; flex-shrink: 0; }
 
 @media (max-width: 720px) {
     .hr-saud-center { grid-template-columns: 1fr; }
