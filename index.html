@@ -98,6 +98,7 @@
     <link rel="stylesheet" href="css/35-store-enterprise.css">
     <link rel="stylesheet" href="css/36-executive-bi.css">
     <link rel="stylesheet" href="css/37-admin-enterprise-unified.css?v=hrws44">
+    <link rel="stylesheet" href="css/39-crm-platform.css?v=hrws45">
     <link rel="stylesheet" href="css/38-governance-security.css">
 </head>
 <body id="nebras-platform" class="platform-storefront" data-platform-layer="storefront">
@@ -1035,6 +1036,49 @@
         </div>
     </div>
 
+    <div class="admin-section hr-workspace-section crm-workspace-section" id="crm-platform" aria-hidden="true">
+        <div class="hr-workspace-app crm-workspace-app" role="application" aria-label="نبراس CRM — علاقات العملاء">
+            <aside class="hr-ws-sidebar crm-ws-sidebar" id="crm-ws-sidebar" aria-label="قائمة وحدات CRM">
+                <div class="hr-ws-sidebar-head">
+                    <strong><i class="fas fa-handshake"></i> نبراس CRM</strong>
+                    <span>عملاء · Pipeline · فرص · Leads</span>
+                </div>
+                <nav class="hr-ws-nav" id="crm-ws-nav" aria-label="وحدات CRM"></nav>
+                <div class="hr-ws-sidebar-foot crm-ws-foot"><i class="fas fa-bullseye"></i> قاعدة عملاء موحّدة — نبراس والفروع</div>
+            </aside>
+            <div class="hr-ws-main">
+                <header class="hr-ws-topbar crm-ws-topbar">
+                    <button type="button" class="hr-ws-back" onclick="closeCrmWorkspace()"><i class="fas fa-arrow-right"></i> الداشبورد</button>
+                    <div class="hr-ws-brand">
+                        <span class="hr-ws-brand-icon crm-brand-icon" aria-hidden="true"><i class="fas fa-handshake"></i></span>
+                        <div>
+                            <strong id="crm-ws-brand-title">نبراس CRM — علاقات العملاء</strong>
+                            <small id="crm-ws-scope-label">Pipeline · فرص · استيراد Leads</small>
+                        </div>
+                    </div>
+                    <div class="hr-ws-topbar-actions">
+                        <span class="hr-ws-user-pill" id="crm-ws-user-pill"></span>
+                        <button type="button" class="hr-ws-close" onclick="closeCrmWorkspace()" aria-label="إغلاق"><i class="fas fa-xmark"></i></button>
+                    </div>
+                </header>
+                <div class="hr-ws-kpi-strip nebras-erp-stats crm-kpi-strip" id="crm-platform-summary">
+                    <div class="erp-stat erp-stat--accent crm-stat"><strong><i class="fas fa-handshake"></i></strong><span>نبراس CRM</span></div>
+                </div>
+                <div class="hr-ws-content hr-platform-content crm-platform-content" id="crm-platform-content">
+                    <div class="hr-panel is-active">
+                        <div class="crm-command-hero">
+                            <div class="crm-command-hero-inner">
+                                <span class="hr-command-pill crm-pill"><i class="fas fa-handshake"></i> نبراس CRM</span>
+                                <h2 class="hr-command-title">علاقات العملاء والمبيعات</h2>
+                                <p class="hr-command-sub">قاعدة عملاء · Pipeline · فرص · ربط عروض وLeads</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="admin-section" id="branch-team-management">
         <div class="admin-modal site-content-modal nebras-users-modal nebras-branch-team-modal">
             <div class="nebras-users-head">
@@ -1734,11 +1778,12 @@
     <script src="js/nebras-profile-2026-seed.js" defer></script>
     <script src="js/nebras-profile-hub.js" defer></script>
     <script src="js/nebras-callback-concierge.js" defer></script>
-    <script src="js/nebras-platform.js?v=hrws44" defer></script>
+    <script src="js/nebras-platform.js?v=hrws45" defer></script>
     <script src="js/nebras-hr-hcm-suite.js?v=hrws44" defer></script>
     <script src="js/nebras-hr-gps-tracker.js?v=hrws44" defer></script>
     <script src="js/nebras-hr-companies.js?v=hrws44" defer></script>
     <script src="js/nebras-legal-platform.js?v=hrws44" defer></script>
+    <script src="js/nebras-crm-platform.js?v=hrws45" defer></script>
     <script src="js/nebras-empire-hub.js?v=hrws44" defer></script>
     <script src="js/nebras-hr-platform.js?v=hrws44" defer></script>
     <script src="js/nebras-hr-boot.js?v=hrws44" defer></script>

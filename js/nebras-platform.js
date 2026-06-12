@@ -1851,7 +1851,8 @@
                 { id: 'erp-accounting', pillar: 'governance', status: 'live', icon: 'fas fa-file-invoice-dollar', permission: 'accounting', handler: 'openErpAccounting', nameAr: 'المحاسبة والتحويلات', descAr: 'تحويلات · مبيعات · أرباح', nameEn: 'Accounting' },
                 { id: 'erp-branches', pillar: 'master', status: 'live', icon: 'fas fa-map-marked-alt', permission: 'branches', handler: 'openBranchesManagement', nameAr: 'الفروع', descAr: 'شبكة المملكة', nameEn: 'Branches' },
                 { id: 'erp-complaints', pillar: 'crm', status: 'live', icon: 'fas fa-headset', permission: 'complaints', handler: 'openComplaintsManagement', nameAr: 'الشكاوى CRM', descAr: 'متابعة العملاء', nameEn: 'Complaints' },
-                { id: 'erp-customers', pillar: 'crm', status: 'live', icon: 'fas fa-users', permission: 'customerService', handler: 'openCustomerServiceManagement', nameAr: 'خدمة العملاء', descAr: 'استفسارات وردود', nameEn: 'Customer care' },
+                { id: 'erp-customers', pillar: 'crm', status: 'live', icon: 'fas fa-handshake', permission: 'customerService', handler: 'openCrmPlatform', nameAr: 'نبراس CRM', descAr: 'عملاء · Pipeline · فرص', nameEn: 'Nebras CRM' },
+                { id: 'erp-customer-service', pillar: 'crm', status: 'live', icon: 'fas fa-headset', permission: 'customerService', handler: 'openCustomerServiceManagement', nameAr: 'خدمة العملاء', descAr: 'استفسارات وردود', nameEn: 'Customer care' },
                 { id: 'erp-analytics', pillar: 'governance', status: 'live', icon: 'fas fa-chart-pie', permission: 'audit', handler: 'openAdminAnalytics', nameAr: 'ذكاء الأعمال BI', descAr: 'تقارير حية للإدارة', nameEn: 'Analytics' },
                 { id: 'erp-executive-reports', pillar: 'governance', status: 'live', icon: 'fas fa-chart-bar', permission: 'audit', handler: 'openExecutiveReports', nameAr: 'التقارير التنفيذية', descAr: 'يومي · شهري · سنوي لصاحب الشركة', nameEn: 'Executive reports' },
                 { id: 'erp-hr-platform', pillar: 'hr', status: 'live', icon: 'fas fa-industry', permission: 'hr', handler: 'openHrPlatform', nameAr: 'HR — مصنع نبراس WPC', descAr: 'إنتاج · ورديات · سعودة · حضور · رواتب · أسطول', nameEn: 'Nebras WPC HR' },
@@ -2217,13 +2218,14 @@
             { id: 'dash-users', zone: 'quick', dashGroup: 'command', sortOrder: 4, iconClass: 'fas fa-users-cog', titleAr: 'المستخدمون والصلاحيات', titleEn: 'Users & RBAC', textAr: 'أدوار وصلاحيات كاملة للموقع.', textEn: 'Roles and full site permissions.', handler: 'openUserManagement', permission: 'users', visible: true },
             { id: 'dash-audit', zone: 'quick', dashGroup: 'command', sortOrder: 5, iconClass: 'fas fa-clipboard-check', titleAr: 'سجل العمليات', titleEn: 'Audit Log', textAr: 'تتبع كل إجراء إداري.', textEn: 'Track admin actions.', handler: 'openAuditLog', permission: 'audit', visible: true },
             { id: 'dash-sales', zone: 'quick', dashGroup: 'command', sortOrder: 6, iconClass: 'fas fa-chart-line', titleAr: 'المبيعات', titleEn: 'Sales', textAr: 'عروض الأسعار الواردة والمبيعات.', textEn: 'Quotes and sales.', handler: 'openSalesManagement', permission: 'sales', visible: true },
+            { id: 'dash-crm', zone: 'quick', dashGroup: 'command', sortOrder: 6.5, iconClass: 'fas fa-handshake', titleAr: 'نبراس CRM', titleEn: 'Nebras CRM', textAr: 'قاعدة عملاء · Pipeline · فرص · استيراد Leads.', textEn: 'Customers, pipeline, opportunities.', handler: 'openCrmPlatform', permission: 'customerService', visible: true },
             { id: 'dash-cs', zone: 'quick', dashGroup: 'command', sortOrder: 7, iconClass: 'fas fa-headset', titleAr: 'خدمة العملاء', titleEn: 'Customer Service', textAr: 'استفسارات وردود العملاء.', textEn: 'Customer care.', handler: 'openCustomerServiceManagement', permission: 'customerService', visible: true },
             { id: 'dash-complaints', zone: 'quick', dashGroup: 'command', sortOrder: 8, iconClass: 'fas fa-exclamation-triangle', titleAr: 'الشكاوى', titleEn: 'Complaints', textAr: 'متابعة وحل الشكاوى.', textEn: 'Complaint resolution.', handler: 'openComplaintsManagement', permission: 'complaints', visible: true },
             { id: 'dash-branches', zone: 'quick', dashGroup: 'command', sortOrder: 9, iconClass: 'fas fa-map-marked-alt', titleAr: 'الفروع', titleEn: 'Branches', textAr: 'شبكة فروع المملكة.', textEn: 'KSA branch network.', handler: 'openBranchesManagement', permission: 'branches', visible: true },
             { id: 'dash-erp', zone: 'grid', dashGroup: 'erp', sortOrder: 1, iconClass: 'fas fa-cubes', titleAr: 'لوحة ERP', titleEn: 'ERP Console', textAr: 'نظام تخطيط موارد المصنع.', textEn: 'Factory ERP hub.', handler: 'scrollErpHub', permission: 'erp', visible: true },
             { id: 'dash-inventory', zone: 'grid', dashGroup: 'erp', sortOrder: 2, iconClass: 'fas fa-warehouse', titleAr: 'مخزون ERP', titleEn: 'Inventory WMS', textAr: 'SKU ومستودعات وتنبيهات.', textEn: 'SKU and warehouses.', cssClass: 'card-inventory-management', backgroundImage: 'pvc-background', handler: 'openErpInventory', permission: 'inventory', visible: true },
             { id: 'dash-sales-report', zone: 'grid', dashGroup: 'erp', sortOrder: 3, iconClass: 'fas fa-file-invoice-dollar', titleAr: 'تقارير المبيعات', titleEn: 'Sales Reports', textAr: 'تحليل أداء المبيعات.', textEn: 'Sales performance.', cssClass: 'card-sales-reports', backgroundImage: 'background', handler: 'openSalesManagement', permission: 'sales', visible: true },
-            { id: 'dash-customers', zone: 'grid', dashGroup: 'erp', sortOrder: 4, iconClass: 'fas fa-user-friends', titleAr: 'إدارة العملاء', titleEn: 'CRM', textAr: 'علاقات العملاء.', textEn: 'Customer relationships.', cssClass: 'card-customer-management', backgroundImage: 'customer-complaints-background', handler: 'openCustomerServiceManagement', permission: 'customerService', visible: true },
+            { id: 'dash-customers', zone: 'grid', dashGroup: 'erp', sortOrder: 4, iconClass: 'fas fa-handshake', titleAr: 'نبراس CRM', titleEn: 'Nebras CRM', textAr: 'عملاء · Pipeline · فرص مبيعات.', textEn: 'Customers & sales pipeline.', cssClass: 'card-customer-management', backgroundImage: 'customer-complaints-background', handler: 'openCrmPlatform', permission: 'customerService', visible: true },
             { id: 'dash-analytics', zone: 'grid', dashGroup: 'erp', sortOrder: 5, iconClass: 'fas fa-chart-pie', titleAr: 'التحليلات', titleEn: 'Analytics', textAr: 'منتجات · ألوان · شكاوى · زوار.', textEn: 'Live BI insights.', cssClass: 'card-analytics', backgroundImage: 'background-other-products', handler: 'openAdminAnalytics', permission: 'audit', visible: true },
             { id: 'dash-executive-reports', zone: 'grid', dashGroup: 'erp', sortOrder: 2, iconClass: 'fas fa-chart-bar', titleAr: 'التقارير التنفيذية', titleEn: 'Executive Reports', textAr: 'يومي · شهري · سنوي — كل الأقسام والفروع.', textEn: 'Daily, monthly, yearly for all departments.', cssClass: 'card-executive-reports', backgroundImage: 'background', handler: 'openExecutiveReports', permission: 'audit', visible: true },
             { id: 'dash-production', zone: 'grid', dashGroup: 'erp', sortOrder: 6, iconClass: 'fas fa-industry', titleAr: 'الإنتاج اليومي', titleEn: 'Daily Production', textAr: 'كميات الإنتاج وربطها بالمخزون.', textEn: 'Production output linked to stock.', cssClass: 'card-production', handler: 'openErpProduction', permission: 'production', visible: true },
@@ -2359,6 +2361,12 @@
                     try { return window.openLegalPlatform(); } catch (e) { console.error('openLegalPlatform', e); }
                 }
                 alert('منصة الشؤون القانونية — أعيدي تحميل الصفحة (Ctrl+Shift+R).');
+            },
+            openCrmPlatform: function() {
+                if (typeof window.openCrmPlatform === 'function') {
+                    try { return window.openCrmPlatform(); } catch (e) { console.error('openCrmPlatform', e); }
+                }
+                alert('منصة CRM — أعيدي تحميل الصفحة (Ctrl+Shift+R).');
             },
             openNebrasEmpireHub: function() {
                 if (typeof window.openNebrasEmpireHub === 'function') return window.openNebrasEmpireHub();
@@ -4422,6 +4430,49 @@
         NEBRASFACTORY: 'NEBRASFACTORYCOMPANYBASIC'
     };
 
+    const NEBRAS_PW_HASH_PREFIX = 'nbh1:';
+
+    function isNebrasPasswordHash(stored) {
+        return String(stored || '').indexOf(NEBRAS_PW_HASH_PREFIX) === 0;
+    }
+
+    function hashNebrasPasswordSync(pw) {
+        let h1 = 5381;
+        let h2 = 0;
+        const s = String(pw) + '|NEBRAS_FACTORY_SALT_v1';
+        for (let i = 0; i < s.length; i++) {
+            const c = s.charCodeAt(i);
+            h1 = ((h1 << 5) + h1 + c) >>> 0;
+            h2 = (h2 * 31 + c) >>> 0;
+        }
+        return NEBRAS_PW_HASH_PREFIX + h1.toString(16) + h2.toString(16);
+    }
+
+    function verifyNebrasPassword(stored, input) {
+        const s = String(stored || '');
+        const p = String(input || '');
+        if (!s || !p) return false;
+        if (isNebrasPasswordHash(s)) return hashNebrasPasswordSync(p) === s;
+        return s === p;
+    }
+
+    function storeNebrasPasswordValue(pw) {
+        const p = String(pw || '');
+        if (!p) return p;
+        if (isNebrasPasswordHash(p)) return p;
+        return hashNebrasPasswordSync(p);
+    }
+
+    function maybeMigrateUserPasswordHash(user, inputPw) {
+        if (!user || isNebrasPasswordHash(user.password)) return user;
+        if (user.password !== inputPw) return user;
+        const idx = adminUsers.findIndex(function(u) { return u.id === user.id; });
+        const hashed = Object.assign({}, user, { password: hashNebrasPasswordSync(inputPw) });
+        if (idx >= 0) adminUsers[idx] = hashed;
+        if (typeof saveSystemData === 'function') saveSystemData();
+        return hashed;
+    }
+
     function isImmutablePrimaryAdmin(user) {
         const u = user || currentAdmin;
         if (!u) return false;
@@ -4449,18 +4500,19 @@
         const pw = String(password || '').trim();
         if (!un || !pw) return null;
         let user = adminUsers.find(function(u) {
-            return String(u.username || '').toUpperCase() === un && String(u.password || '') === pw;
+            return String(u.username || '').toUpperCase() === un && verifyNebrasPassword(u.password, pw);
         });
         if (!user && PRIMARY_DEFAULT_PASSWORDS[un] === pw) {
             user = adminUsers.find(function(u) { return String(u.username || '').toUpperCase() === un; });
             if (user && typeof isMainGovernanceAdmin === 'function' && isMainGovernanceAdmin(user)) {
                 const idx = adminUsers.findIndex(function(u) { return u.id === user.id; });
-                user = Object.assign({}, user, { password: pw, isActive: true, isPrimary: true, role: 'superadmin' });
+                user = Object.assign({}, user, { password: storeNebrasPasswordValue(pw), isActive: true, isPrimary: true, role: 'superadmin' });
                 if (idx >= 0) adminUsers[idx] = user;
             } else {
                 user = null;
             }
         }
+        if (user) user = maybeMigrateUserPasswordHash(user, pw);
         return user || null;
     }
 
@@ -12115,7 +12167,8 @@
                 { id: 'wpc-production-dept', key: 'production' },
                 { id: 'branch-command-center', key: null, branchCommandOnly: true },
                 { id: 'hr-platform', key: 'hr' },
-                { id: 'legal-platform', key: 'legal' }
+                { id: 'legal-platform', key: 'legal' },
+                { id: 'crm-platform', key: 'customerService' }
             ].forEach(function(block) {
                 const el = document.getElementById(block.id);
                 if (!el) return;
@@ -21326,7 +21379,8 @@
             const passEl = document.getElementById('ue-password');
             const id = st.isPrimary ? st.id : String((idEl && idEl.value) || '').trim();
             const username = String((userEl && userEl.value) || '').trim();
-            const password = st.isPrimary ? st.password : String((passEl && passEl.value) || '').trim();
+            const rawPassword = st.isPrimary ? st.password : String((passEl && passEl.value) || '').trim();
+            const password = st.isPrimary ? rawPassword : storeNebrasPasswordValue(rawPassword);
             if (!username) { alert('يرجى إدخال اسم المستخدم.'); return; }
             if (!st.isPrimary && !password) { alert('يرجى إدخال كلمة المرور.'); return; }
             if (!st.isPrimary && !id) { alert('يرجى إدخال معرّف الموظف.'); return; }
@@ -22283,6 +22337,26 @@
                 return typeof getLegalActivity === 'function' ? getLegalActivity() : [];
             }, set: function(v) {
                 if (typeof setLegalActivityFromCloud === 'function') setLegalActivityFromCloud(v);
+            }},
+            { key: 'crm_customers', get: function() {
+                return typeof getCrmCustomers === 'function' ? getCrmCustomers() : [];
+            }, set: function(v) {
+                if (typeof setCrmCustomersFromCloud === 'function') setCrmCustomersFromCloud(v);
+            }},
+            { key: 'crm_opportunities', get: function() {
+                return typeof getCrmOpportunities === 'function' ? getCrmOpportunities() : [];
+            }, set: function(v) {
+                if (typeof setCrmOpportunitiesFromCloud === 'function') setCrmOpportunitiesFromCloud(v);
+            }},
+            { key: 'crm_activities', get: function() {
+                return typeof getCrmActivities === 'function' ? getCrmActivities() : [];
+            }, set: function(v) {
+                if (typeof setCrmActivitiesFromCloud === 'function') setCrmActivitiesFromCloud(v);
+            }},
+            { key: 'crm_audit', get: function() {
+                return typeof getCrmAudit === 'function' ? getCrmAudit() : [];
+            }, set: function(v) {
+                if (typeof setCrmAuditFromCloud === 'function') setCrmAuditFromCloud(v);
             }},
             { key: 'hr_attendance', get: function() {
                 return typeof getHrAttendance === 'function' ? getHrAttendance() : [];

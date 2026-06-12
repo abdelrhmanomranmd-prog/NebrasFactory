@@ -15,7 +15,7 @@
 
     function canViewEmpireHub() {
         if (typeof isMainGovernanceAdmin === 'function' && isMainGovernanceAdmin()) return true;
-        if (typeof canManage === 'function' && (canManage('erp') || canManage('hr') || canManage('legal') || canManage('audit'))) return true;
+        if (typeof canManage === 'function' && (canManage('erp') || canManage('hr') || canManage('legal') || canManage('customerService') || canManage('audit'))) return true;
         return false;
     }
 
@@ -35,6 +35,7 @@
             { id: 'erp', icon: 'fas fa-cubes', label: 'Nebras ERP', desc: 'مخزون · إنتاج · مبيعات · طلبات · محاسبة', handler: 'scrollErpHub', perm: 'erp', color: '#0a4d8c' },
             { id: 'hr', icon: 'fas fa-people-roof', label: 'نبراس HCM', desc: 'موظفون · رواتب · سعودة · أسطول · GPS · شركات شريكة', handler: 'openHrPlatform', perm: 'hr', color: '#2980b9' },
             { id: 'legal', icon: 'fas fa-scale-balanced', label: 'نبراس Legal', desc: 'عقود · قضايا · امتثال · PDPL · شراكات', handler: 'openLegalPlatform', perm: 'legal', color: '#6c3483' },
+            { id: 'crm', icon: 'fas fa-handshake', label: 'نبراس CRM', desc: 'عملاء · Pipeline · فرص · Leads', handler: 'openCrmPlatform', perm: 'customerService', color: '#1a6fa8' },
             { id: 'users', icon: 'fas fa-users-cog', label: 'المستخدمون والصلاحيات', desc: 'كل قسم · كل فرع · RBAC', handler: 'openUserManagement', perm: 'users', color: '#2c3e50' },
             { id: 'branches', icon: 'fas fa-map-marked-alt', label: 'شبكة الفروع', desc: 'المقر + فروع المملكة', handler: 'openBranchesManagement', perm: 'branches', color: '#16a085' },
             { id: 'analytics', icon: 'fas fa-chart-pie', label: 'ذكاء الأعمال BI', desc: 'تحليلات · تقارير تنفيذية', handler: 'openExecutiveReports', perm: 'audit', color: '#8e44ad' },
@@ -50,7 +51,7 @@
             { roles: ['superadmin', 'manager'], icon: 'fas fa-crown', label: 'الإدارة الرئيسية', desc: 'تحكم كامل — كل الفروع والأقسام والشركاء', handlers: ['scrollErpHub', 'openHrPlatform', 'openLegalPlatform', 'openExecutiveReports'] },
             { roles: ['hr'], icon: 'fas fa-people-roof', label: 'موارد بشرية', desc: 'إدارة كاملة — نبراس + الشركات الشريكة', handlers: ['openHrPlatform'] },
             { roles: ['legal'], icon: 'fas fa-scale-balanced', label: 'شؤون قانونية', desc: 'عقود · قضايا · امتثال المجموعة', handlers: ['openLegalPlatform'] },
-            { roles: ['sales_manager', 'branch_manager'], icon: 'fas fa-chart-line', label: 'مبيعات الفرع', desc: 'عروض · طلبات · فريق المندوبين', handlers: ['openRepQuoteBuilder', 'openErpOrders', 'openBranchTeamManagement'] },
+            { roles: ['sales_manager', 'branch_manager'], icon: 'fas fa-chart-line', label: 'مبيعات الفرع', desc: 'CRM · عروض · طلبات · فريق المندوبين', handlers: ['openCrmPlatform', 'openRepQuoteBuilder', 'openErpOrders', 'openBranchTeamManagement'] },
             { roles: ['sales_rep'], icon: 'fas fa-file-signature', label: 'مندوب مبيعات', desc: 'عروض أسعار فقط — PDF للعملاء', handlers: ['openRepQuoteBuilder'] },
             { roles: ['accountant'], icon: 'fas fa-file-invoice-dollar', label: 'محاسبة الفرع', desc: 'حسابات · تحويلات · مشتريات', handlers: ['openErpAccounting', 'openErpProcurement'] },
             { roles: ['inventory_manager', 'warehouse_manager'], icon: 'fas fa-warehouse', label: 'مخزون ومستودع', desc: 'SKU · جرد · تحويلات', handlers: ['openErpInventory', 'openErpWarehouseTransfers'] },
@@ -77,6 +78,9 @@
 
         const contracts = typeof getLegalContracts === 'function' ? getLegalContracts() : [];
         items.push({ ok: contracts.length > 0, label: 'عقود في Legal', weight: 1 });
+
+        const crmCust = typeof getCrmCustomers === 'function' ? getCrmCustomers() : [];
+        items.push({ ok: crmCust.length > 0, label: 'عملاء في CRM', weight: 1 });
 
         const branches = typeof getNebrasBranchesForEmpire === 'function' ? getNebrasBranchesForEmpire().length : 0;
         items.push({ ok: branches > 0, label: 'فروع مسجّلة', weight: 1 });
