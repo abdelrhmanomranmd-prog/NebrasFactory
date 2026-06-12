@@ -3772,7 +3772,9 @@
     global.setHrLeaveFromCloud = setHrLeaveFromCloud;
     global.setHrVehicleTrackingFromCloud = setHrVehicleTrackingFromCloud;
     global.ensureHrData = loadHrData;
+    global.__nebrasHrOpenImpl = openHrPlatform;
     global.openHrPlatform = openHrPlatform;
+    if (typeof global.bindNebrasHrPlatformGlobals === 'function') global.bindNebrasHrPlatformGlobals();
     global.renderHrPlatformPanel = renderHrPlatformPanel;
     global.purgeHrAnalyticsByPeriod = purgeHrAnalyticsByPeriod;
     global.requireHrRecordInScope = requireHrRecordInScope;

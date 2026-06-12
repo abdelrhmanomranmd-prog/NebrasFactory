@@ -2214,6 +2214,51 @@
             otherProducts: 'prod-other'
         };
 
+        function openHrPlatformFallback() {
+            if (typeof canAccessHrPlatform === 'function' && !canAccessHrPlatform()) {
+                alert('منصة الموارد البشرية — لموظف HR أو الإدارة الرئيسية.');
+                return;
+            }
+            if (typeof ensureHrData === 'function') ensureHrData();
+            else if (typeof loadHrData === 'function') loadHrData();
+            if (typeof closeAllAdminSections === 'function') closeAllAdminSections();
+            if (typeof renderHrPlatformPanel === 'function') renderHrPlatformPanel();
+            const el = document.getElementById('hr-platform');
+            if (!el) {
+                alert('تعذّر فتح منصة HR — أعيدي تحميل الصفحة.');
+                return;
+            }
+            el.classList.add('show');
+            el.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('hr-platform-open');
+            try { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) { /* ignore */ }
+            if (typeof showNebrasAdminToast === 'function') showNebrasAdminToast('منصة الموارد البشرية — جاهزة', 'ok');
+        }
+
+        function openHrPlatformBridge() {
+            const impl = (typeof window.__nebrasHrOpenImpl === 'function')
+                ? window.__nebrasHrOpenImpl
+                : ((typeof window.openHrPlatform === 'function' && window.openHrPlatform !== openHrPlatformBridge)
+                    ? window.openHrPlatform
+                    : null);
+            if (typeof impl === 'function') {
+                try { return impl(); } catch (err) {
+                    console.error('openHrPlatform', err);
+                    openHrPlatformFallback();
+                }
+                return;
+            }
+            openHrPlatformFallback();
+        }
+
+        function bindNebrasHrPlatformGlobals() {
+            if (typeof window.__nebrasHrOpenImpl === 'function') {
+                window.openHrPlatform = window.__nebrasHrOpenImpl;
+            } else {
+                window.openHrPlatform = openHrPlatformBridge;
+            }
+        }
+
         const DASHBOARD_HANDLER_MAP = {
             openUserManagement: openUserManagement,
             openSalesManagement: openSalesManagement,
@@ -2237,11 +2282,7 @@
             openErpProcurement: function() { openErpProcurement(); },
             openProductMasterHub: function() { openProductMasterHub(); },
             openAluminumDepartment: function() { openAluminumDepartment(); },
-            openHrPlatform: function() {
-                const fn = window.openHrPlatform;
-                if (typeof fn === 'function') fn();
-                else alert('منصة HR قيد التحميل — أعيدي تحميل الصفحة.');
-            },
+            openHrPlatform: openHrPlatformBridge,
             openExecutiveReports: function() { openExecutiveReports(); },
             syncPlatformFromProductMaster: function() { syncPlatformFromProductMaster(); },
             scrollErpHub: function() { scrollErpHub(); },
@@ -14028,6 +14069,7 @@
             renderDashboardCommandShell(user);
             applyRoleDashboardScope(user);
             if (typeof applyHrStrictDashboardGovernance === 'function') applyHrStrictDashboardGovernance(user);
+            bindNebrasHrPlatformGlobals();
             startDashboardClock();
             renderPlatformHubPanel();
             renderErpHubPanel();
@@ -22392,7 +22434,12 @@
             }
         }
 
+        window.addEventListener('load', function() {
+            bindNebrasHrPlatformGlobals();
+        });
+
         document.addEventListener('DOMContentLoaded', function() {
+            bindNebrasHrPlatformGlobals();
             enforceAdminDashboardGate();
             if (typeof bindAdminLoginForm === "function") bindAdminLoginForm();
             initNebrasWelcomeAudioEarly();
@@ -24745,5 +24792,7 @@
         window.openProductMasterHub = openProductMasterHub;
         window.syncPlatformFromProductMaster = syncPlatformFromProductMaster;
         window.openAluminumDepartment = openAluminumDepartment;
-        if (typeof openHrPlatform === 'function') window.openHrPlatform = openHrPlatform;
+        window.openHrPlatformBridge = openHrPlatformBridge;
+        window.bindNebrasHrPlatformGlobals = bindNebrasHrPlatformGlobals;
+        bindNebrasHrPlatformGlobals();
 
