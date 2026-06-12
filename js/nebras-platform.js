@@ -21815,6 +21815,16 @@
             }, set: function(v) {
                 if (typeof setHrVehicleTrackingFromCloud === 'function') setHrVehicleTrackingFromCloud(v);
             }},
+            { key: 'hr_gps_positions', get: function() {
+                return typeof getHrGpsPositions === 'function' ? getHrGpsPositions() : [];
+            }, set: function(v) {
+                if (typeof setHrGpsPositionsFromCloud === 'function') setHrGpsPositionsFromCloud(v);
+            }},
+            { key: 'hr_gps_settings', get: function() {
+                return typeof getHrGpsSettings === 'function' ? getHrGpsSettings() : {};
+            }, set: function(v) {
+                if (typeof setHrGpsSettingsFromCloud === 'function') setHrGpsSettingsFromCloud(v);
+            }},
             { key: 'hr_attendance', get: function() {
                 return typeof getHrAttendance === 'function' ? getHrAttendance() : [];
             }, set: function(v) {

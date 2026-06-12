@@ -1220,6 +1220,59 @@ body.hr-platform-open {
 }
 .hr-record-meta i { color: #2980b9; margin-left: 4px; }
 
+.hr-gps-live-block { margin-bottom: 20px; }
+.hr-gps-doc-banner {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #e8f4fc, #f8fbff);
+    border: 1px solid #b8d9f0;
+    margin-bottom: 12px;
+}
+.hr-gps-doc-banner i { font-size: 1.5rem; color: #1a6fa8; margin-top: 2px; }
+.hr-gps-doc-banner p { margin: 4px 0 0; font-size: 0.86rem; color: #2c5282; }
+.hr-gps-map-wrap { border-radius: 12px; overflow: hidden; border: 1px solid #d0dce8; }
+.hr-gps-live-map { height: 320px; width: 100%; background: #e8eef4; }
+.hr-gps-live-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    margin: 10px 0 14px;
+    font-size: 0.84rem;
+}
+.hr-gps-live-meta .text-live { color: #27ae60; font-size: 0.55rem; vertical-align: middle; }
+.hr-gps-row--live { background: rgba(39, 174, 96, 0.06); }
+.hr-gps-card-meta { margin: 6px 0; }
+.hr-gps-settings { margin-top: 16px; padding: 12px; border-radius: 10px; background: #f8fafc; border: 1px dashed #c5d3e0; }
+.hr-gps-settings summary { cursor: pointer; font-weight: 600; color: #1a5276; }
+
+.neb-driver-gps-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 120000;
+    background: rgba(13, 40, 64, 0.92);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+.neb-driver-gps-overlay.show { display: flex; }
+.neb-driver-gps-card {
+    max-width: 400px;
+    width: 100%;
+    background: #fff;
+    border-radius: 16px;
+    padding: 24px;
+    text-align: center;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+}
+.neb-driver-gps-card h2 { color: #0d2840; margin: 0 0 12px; font-size: 1.15rem; }
+.neb-driver-gps-coords { font-family: monospace; font-size: 0.82rem; color: #2980b9; }
+.neb-driver-gps-legal { font-size: 0.75rem; color: #666; margin-top: 14px; }
+
 @media (max-width: 720px) {
     .hr-saud-center { grid-template-columns: 1fr; }
 }

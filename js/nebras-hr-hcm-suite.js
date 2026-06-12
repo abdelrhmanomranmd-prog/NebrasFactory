@@ -254,13 +254,17 @@
             return v.insuranceExp || v.inspectionExp;
         }).length;
         const cards = onRoad.slice(0, 8).map(function(t) {
-            const mapsQ = encodeURIComponent((t.plateNo || '') + ' ' + (t.destination || '') + ' السعودية');
+            const pos = typeof getLatestGpsForVehicle === 'function' ? getLatestGpsForVehicle(t.vehicleId, t.id) : null;
+            const mapsHref = pos
+                ? ('https://www.google.com/maps?q=' + encodeURIComponent(pos.lat + ',' + pos.lng))
+                : ('https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent((t.plateNo || '') + ' السعودية'));
             return '<article class="hr-fleet-hub-card hr-fleet-hub-card--live">' +
                 '<span class="plate-badge">' + esc(t.plateNo) + '</span>' +
                 '<strong>' + esc(t.driverName || '—') + '</strong>' +
-                '<small><i class="fas fa-mobile-screen"></i> ' + esc(t.driverPhone || '—') + '</small>' +
+                '<small><i class="fas fa-mobile-screen"></i> ' + esc(t.driverPhone || '—') + (pos ? ' · GPS حي' : '') + '</small>' +
                 '<small><i class="fas fa-location-dot"></i> ' + esc(t.destination || '—') + '</small>' +
-                '<a class="hr-gps-link" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&query=' + mapsQ + '"><i class="fas fa-location-crosshairs"></i> تتبع GPS</a>' +
+                '<a class="hr-gps-link" target="_blank" rel="noopener" href="' + mapsHref + '"><i class="fas fa-location-crosshairs"></i> ' + (pos ? 'موقع موثّق' : 'تتبع') + '</a>' +
+                (t.gpsShareToken ? '<button type="button" class="erp-tag erp-tag--action" onclick="copyDriverGpsLink(\'' + esc(t.gpsShareToken) + '\')"><i class="fas fa-link"></i> رابط السائق</button>' : '') +
                 '<button type="button" class="erp-tag erp-tag--ok" onclick="returnHrVehicleFromTracking(\'' + esc(t.id) + '\')"><i class="fas fa-rotate-left"></i> عودة</button>' +
             '</article>';
         }).join('');

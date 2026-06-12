@@ -196,6 +196,13 @@
         } catch (err) { hrVehicleTracking = []; }
         loadHrPhase12Arrays();
         ensureBuiltinHrSeed();
+        if (typeof loadHrGpsData === 'function') loadHrGpsData();
+        if (typeof seedDemoGpsIfNeeded === 'function') seedDemoGpsIfNeeded();
+        if (typeof ensureTrackingGpsToken === 'function') {
+            hrVehicleTracking.forEach(function(t) {
+                if (t.status === 'on_road') ensureTrackingGpsToken(t);
+            });
+        }
         ensureBuiltinHrPhase12Seed();
         loadHrPhase13Data();
         try { processHrExpiryReminders(); } catch (e) { console.warn('HR reminders', e); }
@@ -897,6 +904,7 @@
             panelHtml = renderHrMinimalDashboard(scopedEmps, activeEmps, scopedVehs, pendingLeave);
         }
         content.innerHTML = govBanner + toolbar + scopeBanner + '<div class="hr-panels">' + panelHtml + '</div>';
+        if (hrActiveTab === 'tracking' && typeof afterHrTrackingPanelPaint === 'function') afterHrTrackingPanelPaint();
         } catch (panelErr) {
             console.error('renderHrPlatformPanel inner', panelErr);
             content.innerHTML = '<div class="hr-panels">' + renderHrMinimalDashboard(
@@ -1274,7 +1282,7 @@
                 '<label class="nebras-field"><span>عداد الكيلومترات</span><input type="number" id="hv-mileage" value="' + esc(v.mileage || '') + '" min="0"></label>' +
                 '<label class="nebras-field"><span>بطاقة وقود</span><input id="hv-fuel" value="' + esc(v.fuelCard || '') + '"></label>' +
                 '<label class="nebras-field"><span>شريحة / جوال المركبة</span><input id="hv-phone" value="' + esc(v.phone || '') + '"></label>' +
-                '<label class="nebras-field"><span>GPS</span><input id="hv-gps" value="' + esc(v.gpsTracker || '') + '"></label>' +
+                '<label class="nebras-field"><span>رقم جهاز GPS (IMEI)</span><input id="hv-gps" value="' + esc(v.gpsTracker || '') + '" placeholder="867530012345678 — إلزامي للتتبع الحي"></label>' +
                 '<label class="nebras-field nebras-field--wide"><span>ملاحظات</span><input id="hv-notes" value="' + esc(v.notes || '') + '"></label>' +
             '</div>' +
             '<div class="erp-form-actions">' +
@@ -1510,12 +1518,21 @@
 
         const onRoad = hrVehicles.filter(function(v) { return v.currentDriverName; });
         const activeCards = onRoad.map(function(v) {
+            const trip = v.currentTrackingId ? hrVehicleTracking.find(function(t) { return t.id === v.currentTrackingId; }) : null;
+            const pos = typeof getLatestGpsForVehicle === 'function' ? getLatestGpsForVehicle(v.id, v.currentTrackingId) : null;
+            const mapHref = pos
+                ? ('https://www.google.com/maps?q=' + encodeURIComponent(pos.lat + ',' + pos.lng))
+                : '';
+            const gpsMeta = pos
+                ? ('<span class="erp-tag erp-tag--ok"><i class="fas fa-satellite-dish"></i> GPS حي — ' + (typeof formatGpsAge === 'function' ? formatGpsAge(pos.recordedAt) : '') + '</span>')
+                : (v.gpsTracker ? '<span class="erp-tag">IMEI: ' + esc(v.gpsTracker) + ' — بانتظار إشارة</span>' : '<span class="erp-tag erp-tag--danger">لا جهاز GPS — أضيفي IMEI في سجل السيارة</span>');
             return '<article class="hr-tracking-active-card">' +
                 '<div class="plate-badge">' + esc(v.plateNo) + '</div>' +
                 '<strong><i class="fas fa-user"></i> ' + esc(v.currentDriverName) + '</strong>' +
-                '<small>رقم السائق: ' + esc(v.currentDriverEmployeeNo || '—') + ' · جوال: ' + esc(v.currentDriverPhone || '—') +
-                    (v.gpsTracker ? ' · GPS: ' + esc(v.gpsTracker) : '') + '</small>' +
-                (v.gpsTracker || v.plateNo ? '<a class="hr-gps-link" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&amp;query=' + encodeURIComponent((v.gpsTracker || v.plateNo || '') + ' السعودية') + '"><i class="fas fa-location-crosshairs"></i> موقع التتبع</a>' : '') +
+                '<small>رقم السائق: ' + esc(v.currentDriverEmployeeNo || '—') + ' · جوال: ' + esc(v.currentDriverPhone || '—') + '</small>' +
+                '<div class="hr-gps-card-meta">' + gpsMeta + '</div>' +
+                (mapHref ? '<a class="hr-gps-link" target="_blank" rel="noopener" href="' + mapHref + '"><i class="fas fa-location-crosshairs"></i> موقع GPS موثّق</a>' : '') +
+                (trip && trip.gpsShareToken ? '<button type="button" class="erp-tag erp-tag--action" onclick="copyDriverGpsLink(\'' + esc(trip.gpsShareToken) + '\')"><i class="fas fa-mobile-screen"></i> رابط جوال السائق</button>' : '') +
                 '<div class="hr-emp-actions">' +
                     '<button type="button" class="erp-tag erp-tag--action" onclick="openHrTrackingEditor(\'' + esc(v.currentTrackingId || '') + '\')"><i class="fas fa-pen"></i> تعديل السائق</button>' +
                     '<button type="button" class="erp-tag erp-tag--ok" onclick="returnHrVehicleFromTracking(\'' + esc(v.currentTrackingId || '') + '\')"><i class="fas fa-check"></i> تسجيل عودة</button>' +
@@ -1568,8 +1585,11 @@
             '</div>'
             : '';
 
+        const gpsLive = typeof renderHrGpsLiveSection === 'function' ? renderHrGpsLiveSection() : '';
+
         return '<div class="hr-panel is-active">' +
             '<p class="hr-platform-note"><i class="fas fa-shield-halved"></i> <strong>حوكمة تتبع السيارات:</strong> السائق ليس ثابتاً — سجّلي رقم اللوحة ورقم السائق وبياناته، وعدّلي أو بدّلي السائق في أي وقت. كل تعديل يُسجَّل في سجل العمليات.</p>' +
+            gpsLive +
             (activeCards ? '<h4 class="hr-tracking-section-title"><i class="fas fa-road"></i> سيارات خارجة الآن</h4><div class="hr-tracking-active-grid">' + activeCards + '</div>' : '<p class="erp-empty">لا سيارات خارجة حالياً.</p>') +
             quickForm + editor +
             '<h4 class="hr-tracking-section-title"><i class="fas fa-list"></i> سجل التتبع الكامل</h4>' +
@@ -1702,10 +1722,15 @@
             if (record.odometerOut > 0) veh.mileage = record.odometerOut;
         }
 
+        if (typeof ensureTrackingGpsToken === 'function') ensureTrackingGpsToken(record);
+        stampHrRecord(record, true);
         hrVehicleTracking.unshift(record);
         saveHrData();
         syncVehicleCurrentDriversFromTracking();
         hrAudit('HR تتبع سيارة', 'خروج ' + plate + ' — سائق ' + record.driverName);
+        if (record.gpsShareToken && typeof buildDriverGpsShareUrl === 'function') {
+            hrAudit('HR رابط GPS سائق', plate + ' — ' + buildDriverGpsShareUrl(record.gpsShareToken));
+        }
         renderHrPlatformPanel();
     }
 
