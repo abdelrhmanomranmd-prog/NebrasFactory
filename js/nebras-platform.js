@@ -2219,9 +2219,12 @@
                 alert('منصة الموارد البشرية — لموظف HR أو الإدارة الرئيسية.');
                 return;
             }
+            if (typeof openHrWorkspace === 'function') {
+                openHrWorkspace();
+                return;
+            }
             if (typeof ensureHrData === 'function') ensureHrData();
             else if (typeof loadHrData === 'function') loadHrData();
-            if (typeof closeAllAdminSections === 'function') closeAllAdminSections();
             const el = document.getElementById('hr-platform');
             if (!el) {
                 alert('تعذّر فتح منصة HR — أعيدي تحميل الصفحة.');
@@ -2230,12 +2233,8 @@
             el.classList.add('show');
             el.setAttribute('aria-hidden', 'false');
             document.body.classList.add('hr-platform-open');
-            try { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) { /* ignore */ }
-            if (typeof switchHrTab === 'function') {
-                try { switchHrTab('dashboard'); } catch (err) { console.error('switchHrTab', err); }
-            } else if (typeof renderHrPlatformPanelSafe === 'function') {
-                renderHrPlatformPanelSafe();
-            } else if (typeof renderHrPlatformPanel === 'function') {
+            if (typeof renderHrPlatformPanelSafe === 'function') renderHrPlatformPanelSafe();
+            else if (typeof renderHrPlatformPanel === 'function') {
                 try { renderHrPlatformPanel(); } catch (err) { console.error('renderHrPlatformPanel', err); }
             }
             if (typeof showNebrasAdminToast === 'function') showNebrasAdminToast('منصة الموارد البشرية — جاهزة', 'ok');
@@ -14076,6 +14075,9 @@
             applyRoleDashboardScope(user);
             if (typeof applyHrStrictDashboardGovernance === 'function') applyHrStrictDashboardGovernance(user);
             bindNebrasHrPlatformGlobals();
+            if (typeof isStrictHrUser === 'function' && isStrictHrUser(user) && typeof openHrPlatform === 'function') {
+                setTimeout(function() { openHrPlatform(); }, 120);
+            }
             startDashboardClock();
             renderPlatformHubPanel();
             renderErpHubPanel();
@@ -20635,6 +20637,10 @@
         }
 
         function closeAdminSection(sectionId) {
+            if (sectionId === 'hr-platform' && typeof closeHrWorkspace === 'function') {
+                closeHrWorkspace();
+                return;
+            }
             const el = document.getElementById(sectionId);
             if (el) {
                 el.classList.remove('show');

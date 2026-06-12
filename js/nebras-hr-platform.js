@@ -439,16 +439,74 @@
         if (typeof logHrDeptActivity === 'function') logHrDeptActivity(action, detail);
     }
 
+    function updateHrWorkspaceChrome() {
+        const scope = getHrAdminScope();
+        const scopeEl = document.getElementById('hr-ws-scope-label');
+        const userEl = document.getElementById('hr-ws-user-pill');
+        const admin = typeof currentAdmin !== 'undefined' ? currentAdmin : null;
+        if (scopeEl) scopeEl.textContent = scope.label || 'موارد بشرية · قسمك فقط';
+        if (userEl && admin) {
+            userEl.innerHTML = '<i class="fas fa-user-shield"></i> ' + esc(admin.username || '') +
+                (admin.role === 'hr' ? ' · HR' : '');
+        }
+    }
+
+    function renderHrWorkspaceSidebar(tabDefs) {
+        const sidebar = document.getElementById('hr-ws-sidebar');
+        if (!sidebar) return;
+        const scope = getHrAdminScope();
+        const nav = (tabDefs || []).map(function(t) {
+            return '<button type="button" class="hr-ws-nav-item' + (hrActiveTab === t.id ? ' is-active' : '') +
+                '" onclick="switchHrTab(\'' + t.id + '\')"><i class="' + t.icon + '"></i> ' + esc(t.label) + '</button>';
+        }).join('');
+        sidebar.innerHTML =
+            '<div class="hr-ws-sidebar-head">' +
+                '<strong><i class="' + esc(scope.icon || 'fas fa-sitemap') + '"></i> وحدة التحكم</strong>' +
+                '<span>' + esc(scope.label) + ' — صلاحيات كاملة داخل نطاقك</span>' +
+            '</div>' +
+            '<nav class="hr-ws-nav" aria-label="وحدات HR">' + nav + '</nav>' +
+            '<div class="hr-ws-sidebar-foot"><i class="fas fa-lock"></i> منصة داخلية — موظفون · سعودة · إقامات · رواتب · سيارات · حضور</div>';
+    }
+
+    function closeHrWorkspace() {
+        const el = document.getElementById('hr-platform');
+        if (el) {
+            el.classList.remove('show');
+            el.setAttribute('aria-hidden', 'true');
+        }
+        document.body.classList.remove('hr-platform-open');
+        const dash = document.getElementById('admin-dashboard');
+        if (dash && typeof currentAdmin !== 'undefined' && currentAdmin) {
+            dash.classList.add('show');
+            dash.removeAttribute('hidden');
+            dash.setAttribute('aria-hidden', 'false');
+        }
+        if (typeof showNebrasAdminToast === 'function') showNebrasAdminToast('عودة للداشبورد', 'ok');
+    }
+
     function showHrPlatformShell() {
         const el = document.getElementById('hr-platform');
         if (!el) {
             alert('تعذر فتح منصة HR — أعيدي تحميل الصفحة.');
             return false;
         }
+        if (typeof closeAllAdminSections === 'function') {
+            document.querySelectorAll('.admin-section.show').forEach(function(node) {
+                if (node.id !== 'hr-platform') {
+                    node.classList.remove('show');
+                    node.setAttribute('aria-hidden', 'true');
+                }
+            });
+        }
+        const dash = document.getElementById('admin-dashboard');
+        if (dash && isStrictHrUser()) {
+            dash.classList.remove('show');
+            dash.setAttribute('aria-hidden', 'true');
+        }
         el.classList.add('show');
         el.setAttribute('aria-hidden', 'false');
         document.body.classList.add('hr-platform-open');
-        try { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) { /* ignore */ }
+        updateHrWorkspaceChrome();
         return true;
     }
 
@@ -474,11 +532,10 @@
         if (!requireHrAccess()) return;
         hrActiveTab = 'dashboard';
         loadHrData();
-        if (typeof closeAllAdminSections === 'function') closeAllAdminSections();
-        else document.querySelectorAll('.admin-section.show').forEach(function(node) { node.classList.remove('show'); });
         if (!showHrPlatformShell()) return;
         renderHrPlatformPanelSafe();
-        if (typeof showNebrasAdminToast === 'function') showNebrasAdminToast('منصة الموارد البشرية — جاهزة', 'ok');
+        requestAnimationFrame(function() { renderHrPlatformPanelSafe(); });
+        if (typeof showNebrasAdminToast === 'function') showNebrasAdminToast('منصة HR — لوحة التحكم جاهزة', 'ok');
     }
 
     function switchHrTab(tab) {
@@ -487,17 +544,17 @@
         hrVehicleEditorId = null;
         hrTrackingEditorId = null;
         hrDocEditorId = null;
-        renderHrPlatformPanel();
+        renderHrPlatformPanelSafe();
     }
 
     function setHrBranchFilter(val) {
         hrBranchFilter = val || '';
-        renderHrPlatformPanel();
+        renderHrPlatformPanelSafe();
     }
 
     function setHrSearch(val) {
         hrSearchQuery = val || '';
-        renderHrPlatformPanel();
+        renderHrPlatformPanelSafe();
     }
 
     function renderHrPlatformPanel() {
@@ -565,6 +622,8 @@
         }
         tabDefs = tabDefs.filter(function(t) { return isHrTabAllowedForScope(t.id); });
 
+        renderHrWorkspaceSidebar(tabDefs);
+        updateHrWorkspaceChrome();
         if (tabs) {
             tabs.innerHTML = tabDefs.map(function(t) {
                 return '<button type="button" class="hr-tab-btn' + (hrActiveTab === t.id ? ' is-active' : '') +
@@ -607,6 +666,9 @@
 
         const scopeBanner = isStrictHrUser() && hrActiveTab !== 'dashboard' ? renderHrScopeBanner() : '';
         const govBanner = typeof renderHrDeptGovernorBanner === 'function' ? renderHrDeptGovernorBanner() : '';
+        if (!panelHtml) {
+            panelHtml = '<div class="hr-panel is-active"><p class="erp-empty">جاري تحميل لوحة HR… <button type="button" class="erp-tag erp-tag--action" onclick="renderHrPlatformPanelSafe()">إعادة التحميل</button></p></div>';
+        }
         content.innerHTML = govBanner + toolbar + scopeBanner + '<div class="hr-panels">' + panelHtml + '</div>';
     }
 
@@ -3817,6 +3879,8 @@
     if (typeof global.bindNebrasHrPlatformGlobals === 'function') global.bindNebrasHrPlatformGlobals();
     global.renderHrPlatformPanel = renderHrPlatformPanel;
     global.renderHrPlatformPanelSafe = renderHrPlatformPanelSafe;
+    global.closeHrWorkspace = closeHrWorkspace;
+    global.openHrWorkspace = openHrPlatform;
     global.purgeHrAnalyticsByPeriod = purgeHrAnalyticsByPeriod;
     global.requireHrRecordInScope = requireHrRecordInScope;
     global.renderHrSalesFleetPanel = renderHrSalesFleetPanel;

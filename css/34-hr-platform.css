@@ -1,41 +1,206 @@
-/* منصة الموارد البشرية — نبراس ERP */
-#hr-platform.admin-section .admin-modal.nebras-erp-modal,
-#hr-platform.admin-section .admin-modal.nebras-hr-modal {
-    max-width: min(1180px, 96vw) !important;
-    width: 100% !important;
-    max-height: 92vh !important;
+/* منصة الموارد البشرية — نبراس ERP (وحدة تحكم بملء الشاشة — Odoo-like) */
+#hr-platform.hr-workspace-section.admin-section {
     padding: 0 !important;
-    margin: 0 !important;
-    background: linear-gradient(180deg, #ffffff 0%, #f4f8fc 100%) !important;
-    color: #0d2840 !important;
-    overflow: hidden !important;
-    display: flex !important;
-    flex-direction: column !important;
-    border-radius: 22px !important;
-    box-shadow: 0 40px 120px rgba(4, 22, 40, 0.55) !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+    background: #0a1f33 !important;
+    z-index: 10050;
 }
 
-#hr-platform .nebras-erp-head {
+#hr-platform.hr-workspace-section.admin-section.show {
+    visibility: visible;
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.hr-workspace-app {
+    display: flex;
+    width: 100%;
+    height: 100vh;
+    max-height: 100vh;
+    background: #eef2f7;
+    color: #0d2840;
+    overflow: hidden;
+}
+
+.hr-ws-sidebar {
+    width: 252px;
+    min-width: 252px;
+    background: linear-gradient(180deg, #0d2840 0%, #123a5c 100%);
+    color: #e8f0f8;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    border-inline-end: 1px solid rgba(255, 255, 255, 0.08);
+    box-shadow: 4px 0 24px rgba(0, 0, 0, 0.18);
+}
+
+.hr-ws-sidebar-head {
+    padding: 20px 16px 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+.hr-ws-sidebar-head strong {
+    display: block;
+    font-size: 0.95rem;
+    color: #fff;
+    margin-bottom: 4px;
+}
+.hr-ws-sidebar-head span {
+    font-size: 0.74rem;
+    color: #9eb8d4;
+    line-height: 1.45;
+}
+
+.hr-ws-nav {
+    flex: 1;
+    padding: 10px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.hr-ws-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 12px;
+    background: transparent;
+    color: #c8d9ea;
+    font-size: 0.84rem;
+    text-align: start;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+}
+.hr-ws-nav-item i {
+    width: 18px;
+    text-align: center;
+    opacity: 0.9;
+}
+.hr-ws-nav-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+}
+.hr-ws-nav-item.is-active {
+    background: linear-gradient(135deg, rgba(41, 128, 185, 0.35), rgba(39, 174, 96, 0.2));
+    color: #fff;
+    font-weight: 600;
+    box-shadow: inset 3px 0 0 #f1c40f;
+}
+
+.hr-ws-sidebar-foot {
+    padding: 12px 14px 16px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 0.72rem;
+    color: #7fa3c4;
+    line-height: 1.5;
+}
+
+.hr-ws-main {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    background: #f4f7fb;
+}
+
+.hr-ws-topbar {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 18px;
+    background: #fff;
+    border-bottom: 1px solid #dce6f0;
     flex-shrink: 0;
 }
 
-#hr-platform .nebras-users-close {
-    color: #fff !important;
-    background: rgba(255, 255, 255, 0.12) !important;
-    border: 1px solid rgba(255, 255, 255, 0.25) !important;
+.hr-ws-back {
+    border: 1px solid #d0dce8;
+    background: #f8fafc;
+    color: #1a5276;
+    border-radius: 999px;
+    padding: 7px 14px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    white-space: nowrap;
+}
+.hr-ws-back:hover { background: #eef4fb; }
+
+.hr-ws-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex: 1;
+    min-width: 0;
+}
+.hr-ws-brand-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #2980b9, #1a5276);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+.hr-ws-brand strong {
+    display: block;
+    font-size: 0.95rem;
+    color: #0d2840;
+}
+.hr-ws-brand small {
+    display: block;
+    font-size: 0.76rem;
+    color: #5a6b7a;
 }
 
-.hr-platform-body {
+.hr-ws-topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+.hr-ws-user-pill {
+    font-size: 0.78rem;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: #eaf4fb;
+    color: #1a5276;
+    border: 1px solid #c5dff0;
+    white-space: nowrap;
+}
+
+.hr-ws-close {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    border: 1px solid #d0dce8;
+    background: #fff;
+    color: #4a5a6a;
+    cursor: pointer;
+}
+.hr-ws-close:hover { background: #fef2f2; color: #c0392b; border-color: #f5c6cb; }
+
+.hr-ws-kpi-strip {
+    padding: 14px 18px 6px !important;
+    background: #fff;
+    border-bottom: 1px solid #e8eef4;
+    flex-shrink: 0;
+}
+
+.hr-ws-content,
+.hr-platform-content {
     flex: 1;
-    min-height: 0;
+    min-height: 200px;
     overflow-x: hidden;
     overflow-y: auto;
-    padding: 0 24px 24px;
+    padding: 16px 18px 24px;
     -webkit-overflow-scrolling: touch;
-}
-
-.hr-platform-content {
-    min-height: 280px;
 }
 
 .hr-platform-content .hr-panels {
@@ -830,15 +995,21 @@
 .hr-tracking-section-title { margin: 1rem 0 0.5rem; font-size: 0.92rem; color: #1a5276; display: flex; align-items: center; gap: 0.4rem; }
 
 
-/* Phase 24 — ضمان ظهور منصة HR فوق الداشبورد */
-#hr-platform.admin-section.show {
-    z-index: 10050;
-    visibility: visible;
-    opacity: 1;
-    pointer-events: auto;
-}
 body.hr-platform-open {
     overflow: hidden;
+}
+
+@media (max-width: 860px) {
+    .hr-workspace-app { flex-direction: column; }
+    .hr-ws-sidebar {
+        width: 100%;
+        min-width: 0;
+        max-height: 42vh;
+        border-inline-end: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .hr-ws-nav { flex-direction: row; flex-wrap: wrap; }
+    .hr-ws-nav-item { width: auto; flex: 1 1 calc(50% - 8px); min-width: 140px; }
 }
 
 /* Phase 25 — شجرة العمل HR */

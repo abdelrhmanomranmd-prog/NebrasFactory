@@ -890,23 +890,27 @@
         </div>
     </div>
 
-    <div class="admin-section" id="hr-platform">
-        <div class="admin-modal site-content-modal nebras-erp-modal nebras-hr-modal">
-            <div class="nebras-erp-head">
-                <div class="nebras-erp-head-title">
-                    <i class="fas fa-people-roof"></i>
-                    <div>
-                        <h2>الموارد البشرية — مصنع نبراس WPC</h2>
-                        <p>إنتاج · ورديات · سعودة · حضور · رواتب · سيارات — المقر والفروع</p>
+    <div class="admin-section hr-workspace-section" id="hr-platform" aria-hidden="true">
+        <div class="hr-workspace-app" role="application" aria-label="منصة الموارد البشرية — نبراس WPC">
+            <aside class="hr-ws-sidebar" id="hr-ws-sidebar" aria-label="قائمة وحدات HR"></aside>
+            <div class="hr-ws-main">
+                <header class="hr-ws-topbar">
+                    <button type="button" class="hr-ws-back" onclick="closeHrWorkspace()"><i class="fas fa-arrow-right"></i> الداشبورد</button>
+                    <div class="hr-ws-brand">
+                        <span class="hr-ws-brand-icon" aria-hidden="true"><i class="fas fa-people-roof"></i></span>
+                        <div>
+                            <strong>منصة HR — مصنع نبراس WPC</strong>
+                            <small id="hr-ws-scope-label">موارد بشرية · قسمك فقط</small>
+                        </div>
                     </div>
-                </div>
-                <button type="button" class="nebras-users-close" onclick="closeAdminSection('hr-platform')" aria-label="إغلاق"><i class="fas fa-xmark"></i></button>
-            </div>
-            <div class="hr-platform-body">
-                <p class="hr-platform-note"><i class="fas fa-shield-halved"></i> منصة HR لمصنع الأبواب WPC: موظفون وعمال الإنتاج · ورديات · سعودة · حضور وبصمة · مستندات وإقامات · رواتب · أسطول وتتبع · تذاكر سفر وبدلات. موظف HR = قسمه فقط · التقارير للإدارة الرئيسية.</p>
-                <div class="nebras-erp-stats" id="hr-platform-summary"></div>
-                <div class="hr-tab-bar" id="hr-tab-bar"></div>
-                <div class="hr-platform-content" id="hr-platform-content"></div>
+                    <div class="hr-ws-topbar-actions">
+                        <span class="hr-ws-user-pill" id="hr-ws-user-pill"></span>
+                        <button type="button" class="hr-ws-close" onclick="closeHrWorkspace()" aria-label="إغلاق المنصة"><i class="fas fa-xmark"></i></button>
+                    </div>
+                </header>
+                <div class="hr-ws-kpi-strip nebras-erp-stats" id="hr-platform-summary"></div>
+                <div class="hr-tab-bar hr-ws-tab-fallback" id="hr-tab-bar" hidden></div>
+                <div class="hr-ws-content hr-platform-content" id="hr-platform-content"></div>
             </div>
         </div>
     </div>
