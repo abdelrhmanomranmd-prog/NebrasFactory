@@ -441,6 +441,7 @@
 
     function openHrPlatform() {
         if (!requireHrAccess()) return;
+        hrActiveTab = 'dashboard';
         loadHrData();
         if (typeof closeAllAdminSections === 'function') closeAllAdminSections();
         else document.querySelectorAll('.admin-section.show').forEach(function(node) { node.classList.remove('show'); });
@@ -582,7 +583,19 @@
         }
 
         const scopeBanner = isStrictHrUser() && hrActiveTab !== 'dashboard' ? renderHrScopeBanner() : '';
-        content.innerHTML = toolbar + scopeBanner + '<div class="hr-panels">' + panelHtml + '</div>';
+        const govBanner = typeof renderHrDeptGovernorBanner === 'function' ? renderHrDeptGovernorBanner() : '';
+        content.innerHTML = govBanner + toolbar + scopeBanner + '<div class="hr-panels">' + panelHtml + '</div>';
+    }
+
+    function renderHrDeptGovernorBanner() {
+        const scope = getHrAdminScope();
+        const admin = typeof currentAdmin !== 'undefined' ? currentAdmin : null;
+        if (!admin) return '';
+        if (typeof isMainGovernanceAdmin === 'function' && isMainGovernanceAdmin(admin) && scope.mode === 'full') return '';
+        return '<div class="hr-dept-governor-banner" role="status">' +
+            '<i class="' + esc(scope.icon || 'fas fa-sitemap') + '"></i>' +
+            '<div><strong>لوحة إدارة قسمك — ' + esc(scope.label) + '</strong>' +
+            '<span>صلاحيات كاملة داخل نطاقك: شجرة العمل · موظفون · سعودة · إقامات · رواتب وبدلات · حضور · سيارات وتتبع (لوحة + جوال السائق + اللوحة). الإدارة الرئيسية فقط ترى كل الأقسام.</span></div></div>';
     }
 
     function renderHrDashboardAlertsBlock() {
@@ -1169,7 +1182,9 @@
             return '<article class="hr-tracking-active-card">' +
                 '<div class="plate-badge">' + esc(v.plateNo) + '</div>' +
                 '<strong><i class="fas fa-user"></i> ' + esc(v.currentDriverName) + '</strong>' +
-                '<small>رقم السائق: ' + esc(v.currentDriverEmployeeNo || '—') + ' · جوال: ' + esc(v.currentDriverPhone || '—') + '</small>' +
+                '<small>رقم السائق: ' + esc(v.currentDriverEmployeeNo || '—') + ' · جوال: ' + esc(v.currentDriverPhone || '—') +
+                    (v.gpsTracker ? ' · GPS: ' + esc(v.gpsTracker) : '') + '</small>' +
+                (v.gpsTracker || v.plateNo ? '<a class="hr-gps-link" target="_blank" rel="noopener" href="https://www.google.com/maps/search/?api=1&amp;query=' + encodeURIComponent((v.gpsTracker || v.plateNo || '') + ' السعودية') + '"><i class="fas fa-location-crosshairs"></i> موقع التتبع</a>' : '') +
                 '<div class="hr-emp-actions">' +
                     '<button type="button" class="erp-tag erp-tag--action" onclick="openHrTrackingEditor(\'' + esc(v.currentTrackingId || '') + '\')"><i class="fas fa-pen"></i> تعديل السائق</button>' +
                     '<button type="button" class="erp-tag erp-tag--ok" onclick="returnHrVehicleFromTracking(\'' + esc(v.currentTrackingId || '') + '\')"><i class="fas fa-check"></i> تسجيل عودة</button>' +
@@ -1181,7 +1196,9 @@
             return '<tr>' +
                 '<td><strong>' + esc(t.plateNo) + '</strong></td>' +
                 '<td>' + esc(t.driverEmployeeNo || '—') + '<br><small>' + esc(t.driverName) + '</small></td>' +
-                '<td>' + esc(t.driverPhone || '—') + '</td>' +
+                '<td>' + esc(t.driverPhone || '—') +
+                    (t.driverPhone ? ' <a class="hr-gps-link" href="tel:' + esc(String(t.driverPhone).replace(/\s/g, '')) + '" title="اتصال السائق"><i class="fas fa-phone"></i></a>' : '') +
+                '</td>' +
                 '<td>' + formatHrDate(t.assignedDate) + ' ' + esc(t.assignedTime || '') + '</td>' +
                 '<td>' + esc(t.destination || '—') + '</td>' +
                 '<td><span class="erp-tag ' + (st.tag || '') + '">' + esc(st.label) + '</span></td>' +

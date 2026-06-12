@@ -1,7 +1,81 @@
 /* منصة الموارد البشرية — نبراس ERP */
+#hr-platform.admin-section .admin-modal.nebras-erp-modal,
+#hr-platform.admin-section .admin-modal.nebras-hr-modal {
+    max-width: min(1180px, 96vw) !important;
+    width: 100% !important;
+    max-height: 92vh !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: linear-gradient(180deg, #ffffff 0%, #f4f8fc 100%) !important;
+    color: #0d2840 !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    border-radius: 22px !important;
+    box-shadow: 0 40px 120px rgba(4, 22, 40, 0.55) !important;
+}
+
+#hr-platform .nebras-erp-head {
+    flex-shrink: 0;
+}
+
+#hr-platform .nebras-users-close {
+    color: #fff !important;
+    background: rgba(255, 255, 255, 0.12) !important;
+    border: 1px solid rgba(255, 255, 255, 0.25) !important;
+}
+
+.hr-platform-body {
+    flex: 1;
+    min-height: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+    padding: 0 24px 24px;
+    -webkit-overflow-scrolling: touch;
+}
+
+.hr-platform-content {
+    min-height: 280px;
+}
+
+.hr-platform-content .hr-panels {
+    margin-top: 8px;
+}
+
 .nebras-hr-modal {
     max-width: min(1180px, 96vw);
 }
+
+.hr-dept-governor-banner {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    margin: 16px 0 12px;
+    padding: 14px 16px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(13, 40, 64, 0.06), rgba(41, 128, 185, 0.08));
+    border: 1px solid rgba(41, 128, 185, 0.22);
+    color: #1a5276;
+}
+.hr-dept-governor-banner > i {
+    font-size: 1.4rem;
+    color: #2980b9;
+    margin-top: 2px;
+}
+.hr-dept-governor-banner strong { display: block; margin-bottom: 4px; color: #0d2840; }
+.hr-dept-governor-banner span { font-size: 0.82rem; line-height: 1.55; color: #2c5282; }
+
+.hr-gps-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 6px;
+    font-size: 0.78rem;
+    color: #155e94;
+    text-decoration: none;
+    font-weight: 600;
+}
+.hr-gps-link:hover { text-decoration: underline; }
 
 .hr-platform-note {
     margin: 0 0 14px;

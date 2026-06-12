@@ -2219,6 +2219,7 @@
                 alert('منصة الموارد البشرية — لموظف HR أو الإدارة الرئيسية.');
                 return;
             }
+            if (typeof switchHrTab === 'function') switchHrTab('dashboard');
             if (typeof ensureHrData === 'function') ensureHrData();
             else if (typeof loadHrData === 'function') loadHrData();
             if (typeof closeAllAdminSections === 'function') closeAllAdminSections();
@@ -20776,7 +20777,7 @@
                         return '<div class="nebras-editor-grid nebras-editor-grid--hr-scope">' +
                             '<label class="nebras-field"><span>فرع HR</span><select id="ue-hr-branch" onchange="onUserEditorHrBranchChange(this.value)">' + branchOpts + '</select></label>' +
                             '<label class="nebras-field"><span>قسم HR (خصوصية)</span><select id="ue-hr-dept" onchange="onUserEditorHrDeptChange(this.value)">' + deptOpts + '</select></label>' +
-                            '<p class="nebras-editor-hint nebras-field--wide"><i class="fas fa-lock"></i> كل مستخدم HR يرى داشبورد قسمه فقط — لا يطلع على أقسام أخرى. الإدارة الرئيسية تحدد النطاق.</p>' +
+                            '<p class="nebras-editor-hint nebras-field--wide"><i class="fas fa-sitemap"></i> <strong>مدير قسم HR (مثل Odoo):</strong> حددي الفرع + القسم — يحصل على لوحة إدارية كاملة: شجرة عمل · موظفون · سعودة · إقامات · رواتب وبدلات · حضور · سيارات وتتبع GPS. لا يرى إلا قسمه.</p>' +
                         '</div>';
                     })() : '') +
                     (st.isPrimary
