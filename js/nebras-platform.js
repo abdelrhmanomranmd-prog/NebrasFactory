@@ -2214,14 +2214,27 @@
             otherProducts: 'prod-other'
         };
 
+        function openHrWhenReady(attempt) {
+            attempt = attempt || 0;
+            if (typeof window.__nebrasHrOpenImpl === 'function') {
+                try { return window.__nebrasHrOpenImpl(); } catch (err) {
+                    console.error('openHrWhenReady', err);
+                }
+            }
+            if (attempt < 50) {
+                setTimeout(function() { openHrWhenReady(attempt + 1); }, 60);
+                return;
+            }
+            openHrPlatformFallback();
+        }
+
         function openHrPlatformFallback() {
             if (typeof canAccessHrPlatform === 'function' && !canAccessHrPlatform()) {
                 alert('منصة الموارد البشرية — لموظف HR أو الإدارة الرئيسية.');
                 return;
             }
-            if (typeof openHrWorkspace === 'function') {
-                openHrWorkspace();
-                return;
+            if (typeof window.__nebrasHrOpenImpl === 'function') {
+                try { return window.__nebrasHrOpenImpl(); } catch (err) { console.error('openHrPlatformFallback impl', err); }
             }
             if (typeof ensureHrData === 'function') ensureHrData();
             else if (typeof loadHrData === 'function') loadHrData();
@@ -2233,7 +2246,10 @@
             el.classList.add('show');
             el.setAttribute('aria-hidden', 'false');
             document.body.classList.add('hr-platform-open');
-            if (typeof renderHrPlatformPanelSafe === 'function') renderHrPlatformPanelSafe();
+            if (typeof paintHrWorkspaceShell === 'function') paintHrWorkspaceShell();
+            if (typeof initHrWorkspaceInteractions === 'function') initHrWorkspaceInteractions();
+            if (typeof scheduleHrWorkspaceRender === 'function') scheduleHrWorkspaceRender(0);
+            else if (typeof renderHrPlatformPanelSafe === 'function') renderHrPlatformPanelSafe();
             else if (typeof renderHrPlatformPanel === 'function') {
                 try { renderHrPlatformPanel(); } catch (err) { console.error('renderHrPlatformPanel', err); }
             }
@@ -14078,9 +14094,8 @@
             if (typeof isStrictHrUser === 'function' && isStrictHrUser(user)) {
                 startDashboardClock();
                 applyStaticUiTranslations(siteText[currentLang || 'ar'] || siteText.ar);
-                if (typeof openHrPlatform === 'function') {
-                    setTimeout(function() { openHrPlatform(); }, 0);
-                }
+                if (typeof openHrWhenReady === 'function') openHrWhenReady(0);
+                else if (typeof openHrPlatform === 'function') setTimeout(function() { openHrPlatform(); }, 0);
                 return;
             }
             startDashboardClock();
@@ -24820,6 +24835,7 @@
         window.syncPlatformFromProductMaster = syncPlatformFromProductMaster;
         window.openAluminumDepartment = openAluminumDepartment;
         window.openHrPlatformBridge = openHrPlatformBridge;
+        window.openHrWhenReady = openHrWhenReady;
         window.bindNebrasHrPlatformGlobals = bindNebrasHrPlatformGlobals;
         bindNebrasHrPlatformGlobals();
 

@@ -459,6 +459,63 @@
         }
     }
 
+    function paintHrWorkspaceShell(message) {
+        const summary = document.getElementById('hr-platform-summary');
+        const content = document.getElementById('hr-platform-content');
+        const msg = message || 'جاري تحميل نبراس HCM…';
+        if (summary && !summary.querySelector('.erp-stat')) {
+            summary.innerHTML =
+                '<div class="erp-stat erp-stat--accent"><strong><i class="fas fa-spinner fa-spin"></i></strong><span>تحميل البيانات</span></div>' +
+                '<div class="erp-stat"><strong>—</strong><span>موظفون</span></div>' +
+                '<div class="erp-stat"><strong>—</strong><span>سيارات</span></div>';
+        }
+        if (content && !content.querySelector('.hr-panel.is-active')) {
+            content.innerHTML = '<div class="hr-ws-loading"><i class="fas fa-spinner fa-spin"></i> ' + esc(msg) + '</div>';
+        }
+    }
+
+    function initHrWorkspaceInteractions() {
+        const root = document.getElementById('hr-platform');
+        if (!root || root.__hrWsBound) return;
+        root.__hrWsBound = true;
+        root.addEventListener('click', function(ev) {
+            const navBtn = ev.target.closest('[data-hr-tab]');
+            if (navBtn) {
+                ev.preventDefault();
+                const tab = navBtn.getAttribute('data-hr-tab');
+                if (tab) switchHrTab(tab);
+                return;
+            }
+            const retryBtn = ev.target.closest('[data-hr-retry]');
+            if (retryBtn) {
+                ev.preventDefault();
+                renderHrPlatformPanelSafe();
+            }
+        });
+    }
+
+    function scheduleHrWorkspaceRender(retries) {
+        retries = retries == null ? 0 : retries;
+        const run = function() {
+            try {
+                renderHrPlatformPanelSafe();
+                const content = document.getElementById('hr-platform-content');
+                const ok = content && content.querySelector('.hr-panel.is-active, .hr-ws-loading');
+                if (!ok && retries < 6) {
+                    setTimeout(function() { scheduleHrWorkspaceRender(retries + 1); }, 80 * (retries + 1));
+                }
+            } catch (e) {
+                console.error('scheduleHrWorkspaceRender', e);
+                if (retries < 6) setTimeout(function() { scheduleHrWorkspaceRender(retries + 1); }, 120);
+            }
+        };
+        if (typeof requestAnimationFrame === 'function') {
+            requestAnimationFrame(function() { requestAnimationFrame(run); });
+        } else {
+            setTimeout(run, 0);
+        }
+    }
+
     function renderHrWorkspaceSidebar(tabDefs) {
         const scope = getHrAdminScope();
         const head = document.querySelector('#hr-ws-sidebar .hr-ws-sidebar-head');
@@ -529,6 +586,8 @@
         el.classList.add('show');
         el.setAttribute('aria-hidden', 'false');
         document.body.classList.add('hr-platform-open');
+        initHrWorkspaceInteractions();
+        paintHrWorkspaceShell();
         updateHrWorkspaceChrome();
         return true;
     }
@@ -544,8 +603,14 @@
         } catch (err) {
             console.error('renderHrPlatformPanel', err);
             const content = document.getElementById('hr-platform-content');
+            const scopedEmps = applyHrScopeFilter(hrEmployees.slice(), 'employee');
+            const scopedVehs = applyHrScopeFilter(hrVehicles.slice(), 'vehicle');
+            const pendingLeave = applyHrScopeFilter(hrLeaveRequests.slice(), 'leave').filter(function(l) { return l.status === 'pending'; }).length;
+            const activeEmps = scopedEmps.filter(function(e) { return e.status === 'active'; }).length;
             if (content) {
-                content.innerHTML = '<div class="hr-panel is-active"><p class="erp-empty">تعذّر تحميل لوحة HR. <button type="button" class="erp-tag erp-tag--action" onclick="openHrPlatform()">إعادة المحاولة</button></p><small>' + esc(String(err.message || err)) + '</small></div>';
+                content.innerHTML = '<div class="hr-panels">' + renderHrMinimalDashboard(scopedEmps, activeEmps, scopedVehs, pendingLeave) +
+                    '<p class="erp-empty">تعذّر تحميل لوحة كاملة — عرض احتياطي. <button type="button" class="erp-tag erp-tag--action" data-hr-retry="1">إعادة المحاولة</button></p>' +
+                    '<small>' + esc(String(err.message || err)) + '</small></div>';
             }
             return false;
         }
@@ -555,7 +620,7 @@
         if (!requireHrAccess()) return;
         hrActiveTab = hrActiveTab || 'dashboard';
         if (!showHrPlatformShell()) return;
-        renderHrPlatformPanelSafe();
+        scheduleHrWorkspaceRender(0);
     }
 
     function switchHrTab(tab) {
@@ -647,8 +712,11 @@
         const summary = document.getElementById('hr-platform-summary');
         const tabs = document.getElementById('hr-tab-bar');
         const content = document.getElementById('hr-platform-content');
-        if (!content) return;
-
+        if (!content) {
+            console.warn('HR: hr-platform-content missing');
+            return;
+        }
+        try {
         const emps = filterHrEmployees();
         const vehs = filterHrVehicles();
         const scopedEmps = applyHrScopeFilter(hrEmployees.slice(), 'employee');
@@ -742,9 +810,18 @@
         const scopeBanner = isStrictHrUser() && hrActiveTab !== 'dashboard' ? renderHrScopeBanner() : '';
         const govBanner = typeof renderHrDeptGovernorBanner === 'function' ? renderHrDeptGovernorBanner() : '';
         if (!panelHtml) {
-            panelHtml = '<div class="hr-panel is-active"><p class="erp-empty">جاري تحميل لوحة HR… <button type="button" class="erp-tag erp-tag--action" onclick="renderHrPlatformPanelSafe()">إعادة التحميل</button></p></div>';
+            panelHtml = renderHrMinimalDashboard(scopedEmps, activeEmps, scopedVehs, pendingLeave);
         }
         content.innerHTML = govBanner + toolbar + scopeBanner + '<div class="hr-panels">' + panelHtml + '</div>';
+        } catch (panelErr) {
+            console.error('renderHrPlatformPanel inner', panelErr);
+            content.innerHTML = '<div class="hr-panels">' + renderHrMinimalDashboard(
+                applyHrScopeFilter(hrEmployees.slice(), 'employee'),
+                hrEmployees.filter(function(e) { return e.status === 'active'; }).length,
+                applyHrScopeFilter(hrVehicles.slice(), 'vehicle'),
+                hrLeaveRequests.filter(function(l) { return l.status === 'pending'; }).length
+            ) + '<p class="erp-empty"><button type="button" class="erp-tag erp-tag--action" data-hr-retry="1">إعادة التحميل</button></p></div>';
+        }
     }
 
     function renderHrDeptGovernorBanner() {
@@ -3965,7 +4042,11 @@
     global.ensureHrData = loadHrData;
     global.__nebrasHrOpenImpl = openHrPlatform;
     global.openHrPlatform = openHrPlatform;
+    global.paintHrWorkspaceShell = paintHrWorkspaceShell;
+    global.scheduleHrWorkspaceRender = scheduleHrWorkspaceRender;
+    global.initHrWorkspaceInteractions = initHrWorkspaceInteractions;
     if (typeof global.bindNebrasHrPlatformGlobals === 'function') global.bindNebrasHrPlatformGlobals();
+    initHrWorkspaceInteractions();
     global.renderHrPlatformPanel = renderHrPlatformPanel;
     global.renderHrPlatformPanelSafe = renderHrPlatformPanelSafe;
     global.closeHrWorkspace = closeHrWorkspace;
@@ -4063,5 +4144,5 @@
     global.getHrDeptActivity = getHrDeptActivity;
     global.setHrDeptActivityFromCloud = setHrDeptActivityFromCloud;
 
-    loadHrData();
+    try { loadHrData(); } catch (bootErr) { console.error('HR boot loadHrData', bootErr); }
 })(typeof window !== 'undefined' ? window : globalThis);
