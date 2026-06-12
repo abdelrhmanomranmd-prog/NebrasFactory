@@ -2219,11 +2219,9 @@
                 alert('منصة الموارد البشرية — لموظف HR أو الإدارة الرئيسية.');
                 return;
             }
-            if (typeof switchHrTab === 'function') switchHrTab('dashboard');
             if (typeof ensureHrData === 'function') ensureHrData();
             else if (typeof loadHrData === 'function') loadHrData();
             if (typeof closeAllAdminSections === 'function') closeAllAdminSections();
-            if (typeof renderHrPlatformPanel === 'function') renderHrPlatformPanel();
             const el = document.getElementById('hr-platform');
             if (!el) {
                 alert('تعذّر فتح منصة HR — أعيدي تحميل الصفحة.');
@@ -2233,6 +2231,13 @@
             el.setAttribute('aria-hidden', 'false');
             document.body.classList.add('hr-platform-open');
             try { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) { /* ignore */ }
+            if (typeof switchHrTab === 'function') {
+                try { switchHrTab('dashboard'); } catch (err) { console.error('switchHrTab', err); }
+            } else if (typeof renderHrPlatformPanelSafe === 'function') {
+                renderHrPlatformPanelSafe();
+            } else if (typeof renderHrPlatformPanel === 'function') {
+                try { renderHrPlatformPanel(); } catch (err) { console.error('renderHrPlatformPanel', err); }
+            }
             if (typeof showNebrasAdminToast === 'function') showNebrasAdminToast('منصة الموارد البشرية — جاهزة', 'ok');
         }
 

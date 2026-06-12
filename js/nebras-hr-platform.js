@@ -439,22 +439,45 @@
         if (typeof logHrDeptActivity === 'function') logHrDeptActivity(action, detail);
     }
 
+    function showHrPlatformShell() {
+        const el = document.getElementById('hr-platform');
+        if (!el) {
+            alert('تعذر فتح منصة HR — أعيدي تحميل الصفحة.');
+            return false;
+        }
+        el.classList.add('show');
+        el.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('hr-platform-open');
+        try { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) { /* ignore */ }
+        return true;
+    }
+
+    function renderHrPlatformPanelSafe() {
+        try {
+            renderHrPlatformPanel();
+            return true;
+        } catch (err) {
+            console.error('renderHrPlatformPanel', err);
+            const summary = document.getElementById('hr-platform-summary');
+            const tabs = document.getElementById('hr-tab-bar');
+            const content = document.getElementById('hr-platform-content');
+            if (summary) summary.innerHTML = '';
+            if (tabs) tabs.innerHTML = '';
+            if (content) {
+                content.innerHTML = '<div class="hr-panel is-active"><p class="erp-empty">تعذّر تحميل لوحة HR. أعيدي تحميل الصفحة (Ctrl+F5).</p></div>';
+            }
+            return false;
+        }
+    }
+
     function openHrPlatform() {
         if (!requireHrAccess()) return;
         hrActiveTab = 'dashboard';
         loadHrData();
         if (typeof closeAllAdminSections === 'function') closeAllAdminSections();
         else document.querySelectorAll('.admin-section.show').forEach(function(node) { node.classList.remove('show'); });
-        renderHrPlatformPanel();
-        const el = document.getElementById('hr-platform');
-        if (!el) {
-            alert('تعذر فتح منصة HR — أعيدي تحميل الصفحة.');
-            return;
-        }
-        el.classList.add('show');
-        el.setAttribute('aria-hidden', 'false');
-        document.body.classList.add('hr-platform-open');
-        try { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); } catch (e) { /* ignore */ }
+        if (!showHrPlatformShell()) return;
+        renderHrPlatformPanelSafe();
         if (typeof showNebrasAdminToast === 'function') showNebrasAdminToast('منصة الموارد البشرية — جاهزة', 'ok');
     }
 
@@ -520,7 +543,7 @@
                 (hrAlertsCount ? '<div class="erp-stat erp-stat--danger"><strong>' + hrAlertsCount + '</strong><span>تنبيهات HR</span></div>' : '');
         }
 
-        const tabDefs = [
+        let tabDefs = [
             { id: 'dashboard', icon: 'fas fa-gauge-high', label: 'لوحة التحكم' },
             { id: 'employees', icon: 'fas fa-users', label: 'الموظفون والعمال' },
             { id: 'org-tree', icon: 'fas fa-sitemap', label: 'شجرة العمل' },
@@ -3793,6 +3816,7 @@
     global.openHrPlatform = openHrPlatform;
     if (typeof global.bindNebrasHrPlatformGlobals === 'function') global.bindNebrasHrPlatformGlobals();
     global.renderHrPlatformPanel = renderHrPlatformPanel;
+    global.renderHrPlatformPanelSafe = renderHrPlatformPanelSafe;
     global.purgeHrAnalyticsByPeriod = purgeHrAnalyticsByPeriod;
     global.requireHrRecordInScope = requireHrRecordInScope;
     global.renderHrSalesFleetPanel = renderHrSalesFleetPanel;
