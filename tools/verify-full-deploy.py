@@ -22,12 +22,11 @@ REQUIRED_CLOUD_KEYS = {
 LIVE_MARKERS = {
     'index.html': [
         '47-platform-interaction-global.css',
-        'hrws59',
-        'syncPlatformInteractionLayers',
+        'data-nebras-deploy="hrws59"',
     ],
     'css/47-platform-interaction-global.css': [
         'admin-section:not(.show)',
-        'syncPlatformInteractionLayers',
+        'pointer-events: none !important',
     ],
     'js/nebras-platform.js': [
         'NEBRAS_GOVERNANCE_PILLARS', 'openAccountingPlatform', 'openCrmPlatform',
