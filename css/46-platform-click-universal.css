@@ -1,6 +1,6 @@
-/* إصلاح شامل — النقر والتفاعل على كل المنصة (داخلية + خارجية) */
+/* إصلاح شامل — النقر والتمرير على كل المنصة (داخلية + خارجية) */
 
-/* الطبقات المخفية لا تحجب النقر أبداً */
+/* الطبقات المخفية لا تحجب النقر ولا التمرير أبداً */
 .admin-section:not(.show),
 .admin-overlay:not(.show),
 .cart-drawer-overlay:not(.show),
@@ -9,22 +9,46 @@
 .nebras-color-overlay.is-hidden,
 #nebras-brand-intro[hidden],
 #nebras-brand-intro.is-leaving {
+    display: none !important;
     pointer-events: none !important;
 }
 
-/* لوحات الإدارة بملء الشاشة — مخفية = لا حجب */
+/* لوحات الإدارة بملء الشاشة — مخفية = إزالة كاملة من التفاعل */
 #hr-platform.hr-workspace-section.admin-section:not(.show),
 #legal-platform.legal-workspace-section.admin-section:not(.show),
 #crm-platform.crm-workspace-section.admin-section:not(.show),
 #accounting-platform.accounting-workspace-section.admin-section:not(.show) {
+    display: none !important;
+    visibility: hidden !important;
     pointer-events: none !important;
 }
 
 .admin-section.show,
-.admin-overlay.show,
+.admin-overlay.show {
+    display: flex !important;
+    pointer-events: auto;
+}
+
 .cart-drawer-overlay.show,
 .sales-quote-detail-overlay.show,
 .nebras-callback-overlay.is-open {
+    display: flex !important;
+    pointer-events: auto;
+}
+
+/* السلة — تمرير داخلي يعمل */
+.cart-drawer-overlay.show .cart-drawer {
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+    pointer-events: auto;
+    touch-action: pan-y;
+    max-height: min(92vh, 92dvh);
+}
+
+.cart-drawer-overlay.show #cart-drawer-lines,
+.cart-drawer-overlay.show .cart-checkout-form {
+    overflow-y: visible;
     pointer-events: auto;
 }
 
@@ -73,13 +97,19 @@
 .hero-mobile-btn,
 .header-cta,
 .nebras-mobile-bar-btn,
+.top-contact-bar button,
 .top-commerce-btn,
 .nebras-color-tile,
 .nebras-gateway-cta-btn,
 .nav-menu a,
 .menu-toggle,
 .lang-btn,
-.header-campaign-door-aside {
+.header-campaign-door-aside,
+#top-call-sales-btn,
+#top-call-customer-btn,
+#top-smart-routing-btn,
+#top-quote-btn,
+#top-open-cart-btn {
     cursor: pointer;
     touch-action: manipulation;
     -webkit-tap-highlight-color: rgba(196, 30, 58, 0.18);
@@ -109,7 +139,8 @@ button.dashboard-tile-card:active,
 .hero-mobile-btn:active,
 .header-cta:active,
 .nebras-mobile-bar-btn:active,
-.nebras-color-tile:active {
+.nebras-color-tile:active,
+.top-contact-bar button:active {
     transform: scale(0.985);
 }
 
@@ -141,13 +172,17 @@ button.dashboard-tile-card:active,
 .visitor-icon-card .card-icon,
 .hero-content-wrap,
 .hero-mobile-panel,
-.hero-mobile-cta {
+.hero-mobile-cta,
+header,
+.top-contact-bar,
+.company-legal-bar,
+#nebras-storefront {
     position: relative;
     z-index: 2;
     pointer-events: auto;
 }
 
-/* شريط الموبايل فوق كل شيء عند الظهور */
+/* شريط الموبايل فوق المحتوى عند الظهور */
 body.nebras-mobile-bar-active .nebras-mobile-commerce-bar {
     pointer-events: auto;
     z-index: 11050;
@@ -156,4 +191,14 @@ body.nebras-mobile-bar-active .nebras-mobile-commerce-bar {
 body.nebras-mobile-bar-active .nebras-mobile-commerce-bar .nebras-mobile-bar-btn {
     position: relative;
     z-index: 1;
+}
+
+/* بعد جاهزية الموقع — تمرير طبيعي */
+body.nebras-ready:not(.nebras-intro-active):not(.nebras-workspace-active):not(.admin-session) {
+    overflow-y: auto !important;
+    overflow-x: hidden;
+}
+
+body.nebras-intro-active #nebras-brand-intro:not([hidden]) ~ * {
+    pointer-events: none;
 }

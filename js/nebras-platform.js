@@ -2307,6 +2307,7 @@
             el.classList.add('show');
             el.setAttribute('aria-hidden', 'false');
             document.body.classList.add('hr-platform-open');
+            clearStuckInteractionBlockers();
             if (typeof paintHrWorkspaceShell === 'function') paintHrWorkspaceShell();
             if (typeof initHrWorkspaceInteractions === 'function') initHrWorkspaceInteractions();
             if (typeof scheduleHrWorkspaceRender === 'function') scheduleHrWorkspaceRender(0);
@@ -5660,6 +5661,9 @@
             applyStaticUiTranslations(ui);
             renderCartOrderPreview();
             overlay.classList.add('show');
+            overlay.style.display = 'flex';
+            overlay.style.pointerEvents = 'auto';
+            clearStuckInteractionBlockers();
             updateCartBadge();
             updateSalesQuoteFab();
             updateTransferReceiptFab();
@@ -5668,6 +5672,7 @@
         function closeCartDrawer() {
             const overlay = document.getElementById('cart-drawer-overlay');
             if (overlay) overlay.classList.remove('show');
+            clearStuckInteractionBlockers();
         }
 
         function closeProductShop() {
@@ -14334,6 +14339,7 @@
                 return;
             }
             document.getElementById('admin-overlay').classList.add('show');
+            clearStuckInteractionBlockers();
             if (typeof setAdminLoginStatus === 'function') setAdminLoginStatus('', '');
             else document.getElementById('admin-status-message').textContent = '';
             document.getElementById('admin-username').value = '';
@@ -14354,25 +14360,44 @@
 
         function clearStuckInteractionBlockers() {
             const intro = document.getElementById('nebras-brand-intro');
-            if (intro && (intro.hidden || intro.classList.contains('is-leaving'))) {
+            const introOpen = intro && !intro.hidden && !intro.classList.contains('is-leaving');
+            if (!introOpen) {
                 document.body.classList.remove('nebras-intro-active');
-                intro.style.pointerEvents = 'none';
+                try { document.documentElement.classList.remove('nebras-first-visit'); } catch (e) { /* ignore */ }
+                if (intro) {
+                    intro.style.pointerEvents = 'none';
+                    intro.style.display = 'none';
+                }
+            }
+            const hasOpenLayer = !!document.querySelector(
+                '.admin-section.show, .admin-overlay.show, .cart-drawer-overlay.show, .sales-quote-detail-overlay.show, .nebras-callback-overlay.is-open'
+            );
+            if (!introOpen && !document.body.classList.contains('nebras-workspace-active') && !hasOpenLayer) {
+                document.body.style.overflow = '';
+                document.documentElement.style.overflow = '';
             }
             document.querySelectorAll('.admin-section, .admin-overlay, .cart-drawer-overlay, .sales-quote-detail-overlay, .nebras-callback-overlay').forEach(function(el) {
                 const open = el.classList.contains('show') || el.classList.contains('is-open');
-                const hidden = el.hidden || el.hasAttribute('hidden');
-                if (!open || hidden) {
+                if (!open) {
                     el.style.pointerEvents = 'none';
+                    el.style.display = 'none';
                     el.setAttribute('aria-hidden', 'true');
                 } else {
-                    el.style.pointerEvents = '';
+                    el.style.pointerEvents = 'auto';
+                    el.style.display = 'flex';
                     el.setAttribute('aria-hidden', 'false');
                 }
             });
             ['hr-platform', 'legal-platform', 'crm-platform', 'accounting-platform'].forEach(function(id) {
                 const panel = document.getElementById(id);
                 if (!panel) return;
-                if (!panel.classList.contains('show')) panel.style.pointerEvents = 'none';
+                if (!panel.classList.contains('show')) {
+                    panel.style.pointerEvents = 'none';
+                    panel.style.display = 'none';
+                } else {
+                    panel.style.pointerEvents = 'auto';
+                    panel.style.display = 'flex';
+                }
             });
         }
 
@@ -14388,7 +14413,10 @@
                 ['mob-bar-cart', openCartDrawer],
                 ['mob-bar-quote', confirmAndOpenQuote],
                 ['top-open-cart-btn', openCartDrawer],
-                ['top-quote-btn', confirmAndOpenQuote]
+                ['top-quote-btn', confirmAndOpenQuote],
+                ['top-call-sales-btn', function() { dialNumber(systemSettings.mainSalesPhone); }],
+                ['top-call-customer-btn', function() { dialNumber(systemSettings.customerServicePhone); }],
+                ['top-smart-routing-btn', smartRouteToSales]
             ];
             actions.forEach(function(pair) {
                 const el = document.getElementById(pair[0]);
@@ -14520,6 +14548,7 @@
 
         function closeAdminOverlay() {
             document.getElementById('admin-overlay').classList.remove('show');
+            clearStuckInteractionBlockers();
         }
 
         async function loginAdmin() {
@@ -15290,6 +15319,7 @@
                 dash.removeAttribute('hidden');
                 dash.setAttribute('aria-hidden', 'false');
             }
+            clearStuckInteractionBlockers();
             ensureDashboardGovernanceHandlers();
             updateAdminRoleLabel(user);
             applyOccasionTheme();
@@ -22114,6 +22144,7 @@
                 document.body.classList.remove('hr-platform-open');
                 document.body.classList.remove('legal-platform-open');
             }
+            clearStuckInteractionBlockers();
         }
 
         function parseAdminPermissionsInput(raw, fallbackRole) {

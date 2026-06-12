@@ -169,6 +169,11 @@ body.nebras-intro-active {
     overflow: hidden;
 }
 
+body.nebras-ready:not(.nebras-intro-active):not(.nebras-workspace-active) {
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
 body.nebras-intro-active #nebras-storefront,
 body.nebras-intro-active header,
 body.nebras-intro-active .top-contact-bar,

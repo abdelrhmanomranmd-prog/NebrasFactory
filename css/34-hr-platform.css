@@ -1,7 +1,17 @@
 /* منصة الموارد البشرية — نبراس ERP (وحدة تحكم بملء الشاشة — Odoo-like) */
+#hr-platform.hr-workspace-section.admin-section:not(.show),
+#legal-platform.hr-workspace-section.admin-section:not(.show),
+#crm-platform.hr-workspace-section.admin-section:not(.show),
+#accounting-platform.accounting-workspace-section.admin-section:not(.show) {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
 #hr-platform.hr-workspace-section.admin-section {
     padding: 0 !important;
-    display: flex !important;
+    display: none !important;
     flex-direction: column !important;
     align-items: stretch !important;
     justify-content: stretch !important;
@@ -11,13 +21,14 @@
 }
 
 #hr-platform.hr-workspace-section.admin-section.show {
+    display: flex !important;
     visibility: visible !important;
     opacity: 1 !important;
     pointer-events: auto !important;
 }
 
 #hr-platform .hr-workspace-app,
-.hr-workspace-app {
+.admin-section.show .hr-workspace-app {
     display: flex;
     flex: 1 1 auto;
     width: 100%;
@@ -28,6 +39,11 @@
     color: #0d2840;
     overflow: hidden;
     pointer-events: auto;
+}
+
+.admin-section:not(.show) .hr-workspace-app,
+.admin-section:not(.show) .hr-workspace-app * {
+    pointer-events: none !important;
 }
 
 .hr-ws-sidebar {
