@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 SUPABASE_URL = 'https://oedldllrjavofpeaputz.supabase.co'
 ANON_KEY = 'sb_publishable_bt6rlHxu_pjc1xpkKEWOcg_HZ43JMR0'
 
+# مطابق لـ supabase/014-nebras-master-cloud-sync.sql (61 مفتاح)
 ALL_KEYS = {
     'site_products': [],
     'visitor_icons': [],
@@ -30,12 +31,13 @@ ALL_KEYS = {
     'sales_price_list': [],
     'site_partners': [],
     'site_certifications': [],
-    'showroom_gallery': {},
-    'visitor_analytics': {'sessions': [], 'totalVisits': 0, 'totalPageViews': 0, 'lastUpdated': 0},
-    'sales_data': [],
+    'visitor_analytics': {'sessions': [], 'totalVisits': 0, 'totalPageViews': 0},
     'customer_service': [],
+    'showroom_gallery': {},
+    'sales_data': [],
     'sales_quotes_inbox': [],
     'analytics_governance': {'deleted': {'quotes': [], 'visitors': [], 'complaints': [], 'sales': [], 'customers': []}},
+    'callback_leads': [],
     'hr_employees': [],
     'hr_vehicles': [],
     'hr_leave': [],
@@ -49,8 +51,27 @@ ALL_KEYS = {
     'hr_shift_roster': [],
     'hr_dept_activity': [],
     'quote_registry': {'byDate': {}},
-    'callback_leads': [],
     'admin_presence': {},
+    'hr_companies': [],
+    'hr_gps_positions': [],
+    'hr_gps_settings': {},
+    'hr_gps_consents': [],
+    'hr_travel': [],
+    'hr_deductions': [],
+    'legal_contracts': [],
+    'legal_cases': [],
+    'legal_compliance': [],
+    'legal_policies': [],
+    'legal_correspondence': [],
+    'legal_activity': [],
+    'crm_customers': [],
+    'crm_opportunities': [],
+    'crm_activities': [],
+    'crm_audit': [],
+    'admin_recovery_otp': {},
+    'customer_portal_users': [],
+    'customer_portal_audit': [],
+    'procurement_custom_depts': [],
 }
 
 
@@ -80,7 +101,7 @@ def api_post(path, body, prefer='return=minimal'):
 
 
 def main():
-    print('=== PUSH NEBRAS SUPABASE CLOUD KEYS ===')
+    print('=== PUSH NEBRAS SUPABASE CLOUD KEYS (hrws58 sync) ===')
     try:
         rows = api_get('/rest/v1/nebras_data_store?select=store_key')
     except urllib.error.HTTPError as e:
@@ -95,7 +116,7 @@ def main():
     print('Existing keys:', len(existing))
     print('Expected keys:', len(ALL_KEYS))
     if not missing:
-        print('OK: all keys already present — nothing to insert.')
+        print('OK: all 61 keys already present — Supabase matches 014 SQL.')
         sys.exit(0)
 
     now = datetime.now(timezone.utc).isoformat()

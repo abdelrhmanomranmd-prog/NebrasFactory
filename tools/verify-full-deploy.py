@@ -20,19 +20,30 @@ REQUIRED_CLOUD_KEYS = {
     'customer_portal_users',
 }
 LIVE_MARKERS = {
+    'index.html': [
+        '47-platform-interaction-global.css',
+        'hrws59',
+        'syncPlatformInteractionLayers',
+    ],
+    'css/47-platform-interaction-global.css': [
+        'admin-section:not(.show)',
+        'syncPlatformInteractionLayers',
+    ],
     'js/nebras-platform.js': [
         'NEBRAS_GOVERNANCE_PILLARS', 'openAccountingPlatform', 'openCrmPlatform',
         'openLegalPlatform', 'renderGovernancePillarsPanel', 'buildExecutiveReportData',
         'getNebrasCurrentAdmin', 'openUserEditor', 'getNebrasErpOrders',
         'getProcurementBranchRegistry', 'setProcurementViewScope', 'bindDashboardTileInteractions',
+        'syncPlatformInteractionLayers', 'revealPlatformLayer', 'NEBRAS_PLATFORM_LAYER_SEL',
     ],
-    'js/nebras-hr-platform.js': ['__nebrasHrOpenImpl', 'renderHrOrgTreePanel', 'requireHrRecordInScope', 'closeHrWorkspace'],
+    'js/nebras-hr-platform.js': ['__nebrasHrOpenImpl', 'renderHrOrgTreePanel', 'requireHrRecordInScope', 'closeHrWorkspace', 'syncPlatformInteractionLayers'],
     'js/nebras-accounting-platform.js': ['exportAccountingPdf', 'openAccountingPlatform', 'closeAccountingWorkspace'],
     'js/nebras-crm-platform.js': ['exportCrmPdf', 'openCrmPlatform', 'closeCrmWorkspace'],
     'js/nebras-legal-platform.js': ['exportLegalPdf', 'openLegalPlatform', 'closeLegalWorkspace'],
     'js/nebras-customer-portal.js': [
         'openCustomerPortalLogin', 'loginCustomerPortal', 'openCustomerPortalGovernance',
         'bindCpGovernanceToolbar', 'openCpUserEditor', 'buildCustomerLoyaltyRankings',
+        'syncPlatformInteractionLayers',
     ],
 }
 
