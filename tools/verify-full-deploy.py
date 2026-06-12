@@ -130,7 +130,7 @@ def main():
         errors.append('Live site: ' + str(e))
         print('LIVE FAIL:', e)
 
-    for script in ['verify-governance.py', 'verify-site-full.py', 'verify-project-health.py', 'verify-supabase-cloud.py']:
+    for script in ['verify-governance.py', 'verify-empire-governance.py', 'verify-site-full.py', 'verify-project-health.py', 'verify-supabase-cloud.py']:
         name, state, tail = run_script(script)
         print(f'TOOL {name}: {state}')
         if state == 'FAIL':

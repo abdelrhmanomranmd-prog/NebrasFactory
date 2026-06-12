@@ -86,6 +86,23 @@
         });
     }
 
+    function crmRecordInScope(record) {
+        if (!record) return false;
+        if (typeof isMainGovernanceAdmin === 'function' && isMainGovernanceAdmin(currentAdmin)) return true;
+        const bid = crmScopeBranchId();
+        if (!bid) return true;
+        return !record.branchId || String(record.branchId) === bid;
+    }
+
+    function requireCrmRecordInScope(record) {
+        if (!requireCrmAccess()) return false;
+        if (!crmRecordInScope(record)) {
+            alert('خارج نطاقك — هذا السجل لفرع آخر.');
+            return false;
+        }
+        return true;
+    }
+
     function crmAuditLog(action, detail) {
         const actor = crmActor();
         const entry = {
@@ -525,6 +542,7 @@
     }
 
     function saveCrmCustomer() {
+        if (!requireCrmAccess()) return;
         const name = String((document.getElementById('crm-c-name') || {}).value || '').trim();
         if (!name) { alert('الاسم مطلوب.'); return; }
         const now = new Date().toISOString();
@@ -541,6 +559,8 @@
             updatedAt: now
         };
         if (crmEditor.id) {
+            const existing = findCrmCustomer(crmEditor.id);
+            if (existing && !requireCrmRecordInScope(existing)) return;
             const idx = crmCustomers.findIndex(function(c) { return c.id === crmEditor.id; });
             if (idx >= 0) {
                 crmCustomers[idx] = Object.assign({}, crmCustomers[idx], payload);
@@ -556,6 +576,9 @@
     }
 
     function deleteCrmCustomer(id) {
+        if (!requireCrmAccess()) return;
+        const existing = findCrmCustomer(id);
+        if (existing && !requireCrmRecordInScope(existing)) return;
         if (!confirm('حذف العميل وجميع فرصه؟')) return;
         crmCustomers = crmCustomers.filter(function(c) { return c.id !== id; });
         crmOpportunities = crmOpportunities.filter(function(o) { return o.customerId !== id; });
@@ -566,6 +589,7 @@
     }
 
     function saveCrmOpportunity() {
+        if (!requireCrmAccess()) return;
         const title = String((document.getElementById('crm-o-title') || {}).value || '').trim();
         const customerId = String((document.getElementById('crm-o-customer') || {}).value || '').trim();
         if (!title || !customerId) { alert('العنوان والعميل مطلوبان.'); return; }
@@ -582,6 +606,8 @@
             updatedAt: now
         };
         if (crmEditor.id) {
+            const existing = crmOpportunities.find(function(o) { return o.id === crmEditor.id; });
+            if (existing && !requireCrmRecordInScope(existing)) return;
             const idx = crmOpportunities.findIndex(function(o) { return o.id === crmEditor.id; });
             if (idx >= 0) {
                 crmOpportunities[idx] = Object.assign({}, crmOpportunities[idx], payload);
@@ -601,9 +627,11 @@
     }
 
     function moveCrmOpportunityStage(id, stage) {
+        if (!requireCrmAccess()) return;
         if (!CRM_STAGES[stage]) return;
         const idx = crmOpportunities.findIndex(function(o) { return o.id === id; });
         if (idx < 0) return;
+        if (!requireCrmRecordInScope(crmOpportunities[idx])) return;
         crmOpportunities[idx] = Object.assign({}, crmOpportunities[idx], {
             stage: stage,
             probability: CRM_STAGES[stage].prob,

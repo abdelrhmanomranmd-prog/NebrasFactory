@@ -129,6 +129,63 @@
     border-bottom: 2px solid rgba(212, 175, 55, 0.35);
 }
 
+.dashboard-empire-overview-strip {
+    margin: 12px 0;
+    padding: 14px 16px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.08), rgba(21, 94, 148, 0.06));
+    border: 1px solid rgba(212, 175, 55, 0.28);
+}
+
+.empire-overview-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+.empire-overview-head h4 {
+    margin: 0;
+    font-size: 0.92rem;
+    color: #0d2840;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.empire-overview-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 8px;
+}
+
+.empire-overview-cell {
+    border: 1px solid #d0dbe8;
+    background: #fff;
+    border-radius: 12px;
+    padding: 10px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    font-family: inherit;
+    color: #1a5276;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.empire-overview-cell:hover {
+    border-color: #2980b9;
+    box-shadow: 0 3px 12px rgba(21, 94, 148, 0.12);
+}
+
+.empire-overview-cell i { font-size: 0.9rem; color: #155e94; }
+.empire-overview-cell strong { font-size: 1rem; color: #0d2840; }
+.empire-overview-cell span { font-size: 0.72rem; color: #718096; }
+
 @media (max-width: 768px) {
     .gov-pillars-grid { grid-template-columns: 1fr; }
+    .empire-overview-grid { grid-template-columns: repeat(3, 1fr); }
 }
