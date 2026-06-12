@@ -2533,14 +2533,45 @@
                 .replace(/\.(jpg|jpeg|png|webp|avif)$/i, '');
         }
 
+        const NEBRAS_KNOWN_IMAGE_PATHS = {
+            'background-about-us': 'images/background-about-us.png',
+            'background-our-vision': 'images/background-our-vision.jpg',
+            'customer-complaints-background': 'images/customer-complaints-background.jpeg',
+            'background-Nebras-colour-catalogue-rolls': 'images/background-Nebras-colour-catalogue-(rolls).jpeg',
+            'background-Nebras-colour-catalogue-(rolls)': 'images/background-Nebras-colour-catalogue-(rolls).jpeg',
+            'wpc-background': 'images/wpc-background.avif',
+            'pvc-background': 'images/pvc-background.avif',
+            'aluminum-background': 'images/aluminum-background.webp',
+            'nebras-complaints-icon-bg': 'images/nebras-complaints-icon-bg.png',
+            'nebras-wpc-raw-icon-bg': 'images/nebras-wpc-raw-icon-bg.png',
+            'nebras-other-products-icon-bg': 'images/nebras-other-products-icon-bg.png',
+            'background-nebras-branches': 'images/nebras-branches-coverage-bg.png',
+            'nebras-bank-accounts-wall': 'images/nebras-bank-accounts-wall.png',
+            'nebras-door-designer-icon-bg': 'images/nebras-door-designer-icon-bg.png',
+            'background-quality-managment': 'images/nebras-certifications-icon-bg.png',
+            'background-quality-management': 'images/nebras-certifications-icon-bg.png',
+            'nebras-certifications-icon-bg': 'images/nebras-certifications-icon-bg.png'
+        };
+
         function buildUrlList(baseNames) {
-            const exts = ['webp', 'avif', 'jpg', 'jpeg', 'png'];
+            const exts = ['png', 'jpg', 'jpeg', 'webp', 'avif'];
             const urls = [];
+            const seen = {};
             (baseNames || []).forEach(function(base) {
-                const clean = stripImageBaseName(base);
+                const raw = String(base || '').trim();
+                if (!raw) return;
+                if (NEBRAS_IMAGE_EXT_RE.test(raw)) {
+                    const direct = normalizeMediaPath(raw);
+                    if (direct && !seen[direct]) { seen[direct] = true; urls.push(direct); }
+                    return;
+                }
+                const clean = stripImageBaseName(raw);
                 if (!clean) return;
+                const known = NEBRAS_KNOWN_IMAGE_PATHS[clean];
+                if (known && !seen[known]) { seen[known] = true; urls.push(known); }
                 exts.forEach(function(ext) {
-                    urls.push('images/' + clean + '.' + ext);
+                    const u = 'images/' + clean + '.' + ext;
+                    if (!seen[u]) { seen[u] = true; urls.push(u); }
                 });
             });
             return urls;
@@ -11065,8 +11096,8 @@
 
         function resolveDashboardBackgrounds() {
             const spotlightList = [
-                ['.spotlight-card--about-who', ['background-about-us']],
-                ['.spotlight-card--about-vision', ['background-our-vision']]
+                ['.spotlight-card--about-who', ['images/background-about-us.png']],
+                ['.spotlight-card--about-vision', ['images/background-our-vision.jpg']]
             ];
             spotlightList.forEach(function(row) {
                 const node = document.querySelector(row[0]);
