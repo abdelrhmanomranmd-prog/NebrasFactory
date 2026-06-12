@@ -1,26 +1,33 @@
 /* منصة الموارد البشرية — نبراس ERP (وحدة تحكم بملء الشاشة — Odoo-like) */
 #hr-platform.hr-workspace-section.admin-section {
     padding: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
     align-items: stretch !important;
     justify-content: stretch !important;
     background: #0a1f33 !important;
     z-index: 10050;
+    pointer-events: auto !important;
 }
 
 #hr-platform.hr-workspace-section.admin-section.show {
-    visibility: visible;
-    opacity: 1;
-    pointer-events: auto;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
 }
 
+#hr-platform .hr-workspace-app,
 .hr-workspace-app {
     display: flex;
+    flex: 1 1 auto;
     width: 100%;
-    height: 100vh;
+    height: 100%;
+    min-height: 100vh;
     max-height: 100vh;
     background: #eef2f7;
     color: #0d2840;
     overflow: hidden;
+    pointer-events: auto;
 }
 
 .hr-ws-sidebar {
@@ -115,11 +122,14 @@
 }
 
 .hr-ws-main {
-    flex: 1;
+    flex: 1 1 0;
     min-width: 0;
+    min-height: 0;
     display: flex;
     flex-direction: column;
     background: #f4f7fb;
+    overflow: hidden;
+    pointer-events: auto;
 }
 
 .hr-ws-topbar {
@@ -211,8 +221,8 @@
 
 .hr-ws-content,
 .hr-platform-content {
-    flex: 1 1 auto;
-    min-height: 280px;
+    flex: 1 1 0;
+    min-height: 0;
     height: auto;
     overflow-x: hidden;
     overflow-y: auto;
@@ -220,7 +230,33 @@
     -webkit-overflow-scrolling: touch;
     background: #f4f7fb;
     position: relative;
-    z-index: 1;
+    z-index: 2;
+    pointer-events: auto;
+}
+
+#hr-static-fallback .hr-command-hero {
+    display: block;
+    visibility: visible;
+}
+
+.hr-ws-cloud-pill {
+    font-size: 0.72rem;
+    padding: 5px 10px;
+    border-radius: 999px;
+    border: 1px solid #c5dff0;
+    background: #eaf4fb;
+    color: #1a5276;
+    white-space: nowrap;
+}
+.hr-ws-cloud-pill.is-live {
+    border-color: #a8e6c5;
+    background: #eafaf1;
+    color: #1b7a43;
+}
+.hr-ws-cloud-pill.is-offline {
+    border-color: #f5c6cb;
+    background: #fef2f2;
+    color: #c0392b;
 }
 
 .hr-ws-loading {

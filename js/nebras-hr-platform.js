@@ -454,7 +454,11 @@
         const brandEl = document.getElementById('hr-ws-brand-title');
         if (brandEl) brandEl.textContent = isStrictHrUser() ? 'نبراس HCM — مصنع نبراس WPC' : 'منصة HR — مصنع نبراس WPC';
         if (userEl && admin) {
-            userEl.innerHTML = '<i class="fas fa-user-shield"></i> ' + esc(admin.username || '') +
+            const cloudOk = typeof isNebrasCloudConnected === 'function' ? isNebrasCloudConnected() : false;
+            const cloudCls = cloudOk ? 'is-live' : 'is-offline';
+            const cloudTxt = cloudOk ? 'سحابة متصلة' : 'وضع محلي';
+            userEl.innerHTML = '<span class="hr-ws-cloud-pill ' + cloudCls + '"><i class="fas fa-cloud"></i> ' + cloudTxt + '</span>' +
+                '<i class="fas fa-user-shield"></i> ' + esc(admin.username || '') +
                 (admin.role === 'hr' ? ' · HR' : '');
         }
     }
@@ -620,7 +624,9 @@
         if (!requireHrAccess()) return;
         hrActiveTab = hrActiveTab || 'dashboard';
         if (!showHrPlatformShell()) return;
+        renderHrPlatformPanelSafe();
         scheduleHrWorkspaceRender(0);
+        if (typeof startNebrasHrBoot === 'function') startNebrasHrBoot();
     }
 
     function switchHrTab(tab) {

@@ -24629,6 +24629,7 @@
         window.clearAllAnalyticsTransfersAsync = clearAllAnalyticsTransfersAsync;
         window.clearAllAnalyticsCustomersAsync = clearAllAnalyticsCustomersAsync;
         window.closeAllAdminSections = closeAllAdminSections;
+        window.isNebrasCloudConnected = function() { return !!supabaseClient; };
         window.finalizeAnalyticsGovernanceMutation = finalizeAnalyticsGovernanceMutation;
         window.purgeAnalyticsQuotesByPeriod = purgeAnalyticsQuotesByPeriod;
         window.clearAllAnalyticsQuotesAsync = clearAllAnalyticsQuotesAsync;
