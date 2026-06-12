@@ -10510,7 +10510,7 @@
                 const group = tile.dashGroup || (zone === 'grid' ? 'erp' : 'command');
                 const groupLabel = group === 'erp' ? 'ERP' : 'قيادة';
                 const groupClass = group === 'erp' ? 'dashboard-tile-group-badge--erp' : 'dashboard-tile-group-badge--command';
-                return '<button type="button" class="dashboard-tile-card' + zoneClass + extraClass + '" data-tile-id="' + escapeHtmlAttr(tile.id) + '" style="--tile-i:' + index + '">' +
+                return '<button type="button" class="dashboard-tile-card' + zoneClass + extraClass + '" data-tile-id="' + escapeHtmlAttr(tile.id) + '" style="--tile-i:' + index + '" onclick="onDashboardTileClick(\'' + String(tile.id).replace(/'/g, "\\'") + '\')">' +
                     '<span class="dashboard-tile-group-badge ' + groupClass + '">' + escapeHtmlAttr(groupLabel) + '</span>' +
                     '<div class="dashboard-tile-glow" aria-hidden="true"></div>' +
                     '<div class="dashboard-tile-icon"><i class="' + escapeHtmlAttr(tile.iconClass || 'fas fa-star') + '"></i></div>' +
@@ -12483,7 +12483,7 @@
                     const desc = lang === 'en' ? (mod.descEn || mod.descAr) : mod.descAr;
                     const ok = canOpenErpModule(mod);
                     const st = mod.status || 'planned';
-                    return '<button type="button" class="erp-module-card' + (ok ? '' : ' disabled') + '" onclick="openErpModule(\'' + mod.id + '\')">' +
+                    return '<button type="button" class="erp-module-card' + (ok ? '' : ' disabled') + '" data-erp-module-id="' + escapeHtmlAttr(mod.id) + '" onclick="openErpModule(\'' + escapeHtmlAttr(mod.id) + '\')">' +
                         '<i class="' + escapeHtmlAttr(mod.icon) + '" aria-hidden="true"></i> ' +
                         '<h4>' + escapeHtmlAttr(name) + '</h4><small>' + escapeHtmlAttr(desc) + '</small>' +
                         '<span class="platform-status ' + escapeHtmlAttr(st) + '">' + escapeHtmlAttr(statusLabel[st] || st) + '</span></button>';
@@ -14012,7 +14012,7 @@
                 const desc = lang === 'en' ? (mod.descEn || mod.descAr) : mod.descAr;
                 const ok = canOpenPlatformModule(mod);
                 const st = mod.status || 'planned';
-                return '<button type="button" class="platform-module-card' + (ok ? '' : ' disabled') + '" role="listitem" onclick="openPlatformModule(\'' + mod.id + '\')">' +
+                return '<button type="button" class="platform-module-card' + (ok ? '' : ' disabled') + '" role="listitem" data-platform-module-id="' + escapeHtmlAttr(mod.id) + '" onclick="openPlatformModule(\'' + escapeHtmlAttr(mod.id) + '\')">' +
                     '<div class="pm-icon"><i class="' + escapeHtmlAttr(mod.icon) + '" aria-hidden="true"></i></div>' +
                     '<h4>' + escapeHtmlAttr(name) + '</h4>' +
                     '<small>' + escapeHtmlAttr(desc) + '</small>' +
@@ -14341,14 +14341,102 @@
             if (typeof bindAdminLoginForm === 'function') bindAdminLoginForm();
         }
 
-        function canManage(permissionKey) {
-            if (!currentAdmin) return false;
-            if (isMainGovernanceAdmin(currentAdmin)) return true;
-            if (Array.isArray(currentAdmin.permissions) && currentAdmin.permissions.length) {
-                return currentAdmin.permissions.indexOf(permissionKey) >= 0;
+        function canManage(permissionKey, admin) {
+            admin = admin || currentAdmin;
+            if (!admin) return false;
+            if (isMainGovernanceAdmin(admin)) return true;
+            if (Array.isArray(admin.permissions) && admin.permissions.length) {
+                return admin.permissions.indexOf(permissionKey) >= 0;
             }
-            const allowed = rolePermissions[currentAdmin.role] || [];
+            const allowed = rolePermissions[admin.role] || [];
             return allowed.indexOf(permissionKey) >= 0;
+        }
+
+        function clearStuckInteractionBlockers() {
+            const intro = document.getElementById('nebras-brand-intro');
+            if (intro && (intro.hidden || intro.classList.contains('is-leaving'))) {
+                document.body.classList.remove('nebras-intro-active');
+            }
+            document.querySelectorAll('.admin-section:not(.show), .admin-overlay:not(.show)').forEach(function(el) {
+                el.setAttribute('aria-hidden', 'true');
+            });
+        }
+
+        function initNebrasConsoleGuard() {
+            if (window.__nebrasConsoleGuard) return;
+            window.__nebrasConsoleGuard = true;
+            window.__nebrasConsoleLog = window.__nebrasConsoleLog || [];
+            function pushLog(level, parts) {
+                try {
+                    window.__nebrasConsoleLog.push({
+                        level: level,
+                        at: new Date().toISOString(),
+                        msg: parts.map(function(x) { return String(x); }).join(' ')
+                    });
+                    if (window.__nebrasConsoleLog.length > 100) window.__nebrasConsoleLog.shift();
+                } catch (e) { /* ignore */ }
+            }
+            window.addEventListener('error', function(ev) {
+                pushLog('error', [ev.message || 'Script error', ev.filename || '', ev.lineno || '']);
+            });
+            window.addEventListener('unhandledrejection', function(ev) {
+                pushLog('error', ['Unhandled promise:', ev.reason]);
+            });
+        }
+
+        function bindPlatformUniversalClicks() {
+            if (document.body.dataset.nebrasClickBridge === '1') return;
+            document.body.dataset.nebrasClickBridge = '1';
+            document.addEventListener('click', function(ev) {
+                if (ev.defaultPrevented) return;
+                const shopBtn = ev.target.closest('.card-shop-btn');
+                if (shopBtn) return;
+                const vicon = ev.target.closest('.visitor-icon-card[data-icon-id]');
+                if (vicon) {
+                    const vid = parseInt(vicon.getAttribute('data-icon-id'), 10);
+                    if (!isNaN(vid)) {
+                        ev.preventDefault();
+                        openVisitorIcon(vid);
+                        return;
+                    }
+                }
+                const customItem = ev.target.closest('[data-section-id][data-item-id].visitor-icon-card');
+                if (customItem) {
+                    ev.preventDefault();
+                    openCustomSectionItem(
+                        customItem.getAttribute('data-section-id'),
+                        customItem.getAttribute('data-item-id')
+                    );
+                    return;
+                }
+                const product = ev.target.closest('.product-card[data-product-id], .clickable-card[data-product-id]');
+                if (product) {
+                    const pid = product.getAttribute('data-product-id');
+                    if (pid) {
+                        ev.preventDefault();
+                        openSiteProduct(pid);
+                        return;
+                    }
+                }
+                const aboutCard = ev.target.closest('.about-page-card[data-about-page]');
+                if (aboutCard) {
+                    ev.preventDefault();
+                    openAboutPage(aboutCard.getAttribute('data-about-page'));
+                    return;
+                }
+                const erpMod = ev.target.closest('.erp-module-card[data-erp-module-id]:not(.disabled)');
+                if (erpMod) {
+                    ev.preventDefault();
+                    openErpModule(erpMod.getAttribute('data-erp-module-id'));
+                    return;
+                }
+                const platMod = ev.target.closest('.platform-module-card[data-platform-module-id]:not(.disabled)');
+                if (platMod) {
+                    ev.preventDefault();
+                    openPlatformModule(platMod.getAttribute('data-platform-module-id'));
+                    return;
+                }
+            }, false);
         }
 
         function requirePermission(permissionKey, message) {
@@ -14422,6 +14510,7 @@
                     showNebrasAdminToast('مرحباً ' + user.username + ' — ' + getRoleLabel(user.role), 'ok');
                 }
                 closeAdminOverlay();
+                clearStuckInteractionBlockers();
                 showAdminDashboard(user);
                 if (typeof scrollToAdminDashboard === 'function') scrollToAdminDashboard();
                 try {
@@ -23916,6 +24005,9 @@
         });
 
         document.addEventListener('DOMContentLoaded', function() {
+            initNebrasConsoleGuard();
+            clearStuckInteractionBlockers();
+            bindPlatformUniversalClicks();
             bindNebrasHrPlatformGlobals();
             enforceAdminDashboardGate();
             if (typeof ensureAdminPanelExitChrome === 'function') ensureAdminPanelExitChrome();
@@ -26141,6 +26233,13 @@
         window.ensureAdminPanelExitChrome = ensureAdminPanelExitChrome;
         window.onDashboardTileClick = onDashboardTileClick;
         window.runDashboardHandler = runDashboardHandler;
+        window.openSiteProduct = openSiteProduct;
+        window.openAboutPage = openAboutPage;
+        window.openCustomSectionItem = openCustomSectionItem;
+        window.openProductShop = openProductShop;
+        window.openCustomerComplaints = openCustomerComplaints;
+        window.openBankAccountCard = openBankAccountCard;
+        window.clearStuckInteractionBlockers = clearStuckInteractionBlockers;
         window.getNebrasCurrentAdmin = function() { return currentAdmin; };
         window.getNebrasErpOrders = function() { return erpOrders || []; };
         window.getNebrasErpTransfers = function() { return erpTransfers || []; };

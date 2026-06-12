@@ -1,0 +1,109 @@
+/* إصلاح شامل — النقر والتفاعل على كل المنصة (داخلية + خارجية) */
+
+/* الطبقات المخفية لا تحجب النقر أبداً */
+.admin-section:not(.show),
+.admin-overlay:not(.show),
+.cart-drawer-overlay:not(.show),
+.sales-quote-detail-overlay:not(.show),
+.nebras-callback-overlay:not(.is-open),
+#nebras-brand-intro[hidden],
+#nebras-brand-intro.is-leaving {
+    pointer-events: none !important;
+}
+
+.admin-section.show,
+.admin-overlay.show {
+    pointer-events: auto;
+}
+
+/* زخرفة البطاقات لا تلتقط النقر */
+.product-card::before,
+.product-card::after,
+.dashboard-tile-card::before,
+.dashboard-tile-card[class*="card-"]::before,
+.spotlight-card::before,
+.visitor-icon-card::before,
+.card-exp-badge,
+.visitor-bank-plates,
+.dashboard-tile-glow,
+.dashboard-tile-icon,
+.dashboard-tile-group-badge,
+.dashboard-tile-arrow,
+.erp-module-card i,
+.empire-overview-cell i,
+.platform-module-card i,
+.nebras-dept-card i,
+.gov-pillar-icon,
+.gov-org-arrow {
+    pointer-events: none !important;
+}
+
+/* كل العناصر التفاعلية — ضغط فعلي */
+.dashboard-tile-card,
+.dashboard-quick-action,
+.empire-overview-cell,
+.erp-module-card:not(.disabled),
+.platform-module-card:not(.disabled),
+.nebras-dept-card,
+.branch-command-card,
+.gov-pillar-btn,
+.gov-branch-chip,
+.gov-org-node--click,
+.visitor-icon-card,
+.spotlight-card.clickable-card,
+.product-card.clickable-card,
+.about-page-card,
+.dashboard-main-nav button,
+.proc-scope-tab {
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    pointer-events: auto;
+}
+
+.erp-module-card.disabled,
+.platform-module-card.disabled {
+    pointer-events: none;
+    cursor: not-allowed;
+    opacity: 0.55;
+}
+
+button.dashboard-tile-card {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 100%;
+    text-align: inherit;
+    font-family: inherit;
+    margin: 0;
+}
+
+button.dashboard-tile-card:active,
+.visitor-icon-card:active,
+.product-card.clickable-card:active,
+.erp-module-card:not(.disabled):active {
+    transform: scale(0.985);
+}
+
+.dashboard-tile-card:hover,
+.visitor-icon-card:hover,
+.product-card.clickable-card:hover {
+    transform: none;
+}
+
+/* احتفال — لا حجب */
+.celebration-deco-layer,
+.celebration-float,
+.site-celebration-overlay,
+.site-celebration-overlay * {
+    pointer-events: none !important;
+}
+
+/* محتوى البطاقات فوق الخلفيات */
+.product-card .card-content,
+.product-card .card-shop-btn,
+.dashboard-tile-card > *,
+.visitor-icon-card .card-content,
+.visitor-icon-card .card-icon {
+    position: relative;
+    z-index: 2;
+}
