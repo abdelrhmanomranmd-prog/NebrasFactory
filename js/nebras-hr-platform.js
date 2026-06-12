@@ -33,6 +33,9 @@
     let hrTrackingEditorId = null;
     let hrDocEditorId = null;
     let hrPayrollMonth = '';
+    let hrDataReady = false;
+    let hrPanelRenderToken = 0;
+    let hrSearchDebounce = null;
 
     const HR_EMP_STATUS = {
         active: { label: 'نشط', cls: 'hr-status-active', tag: 'erp-tag--ok' },
@@ -167,7 +170,10 @@
         return hit ? hit.label : String(branchId);
     }
 
-    function loadHrData() {
+    function loadHrData(force) {
+        if (hrDataReady && !force) {
+            return { employees: hrEmployees, vehicles: hrVehicles, leave: hrLeaveRequests, tracking: hrVehicleTracking, attendance: hrAttendance, documents: hrDocuments, payroll: hrPayrollRuns };
+        }
         try {
             const e = localStorage.getItem(HR_EMP_KEY);
             hrEmployees = e ? JSON.parse(e) : [];
@@ -198,6 +204,7 @@
         loadHrPhase17Data();
         ensureBuiltinHrPhase15Seed();
         applyHrScopeDefaultsOnLogin();
+        hrDataReady = true;
         return { employees: hrEmployees, vehicles: hrVehicles, leave: hrLeaveRequests, tracking: hrVehicleTracking, attendance: hrAttendance, documents: hrDocuments, payroll: hrPayrollRuns };
     }
 
@@ -452,20 +459,24 @@
     }
 
     function renderHrWorkspaceSidebar(tabDefs) {
-        const sidebar = document.getElementById('hr-ws-sidebar');
-        if (!sidebar) return;
         const scope = getHrAdminScope();
-        const nav = (tabDefs || []).map(function(t) {
-            return '<button type="button" class="hr-ws-nav-item' + (hrActiveTab === t.id ? ' is-active' : '') +
-                '" onclick="switchHrTab(\'' + t.id + '\')"><i class="' + t.icon + '"></i> ' + esc(t.label) + '</button>';
-        }).join('');
-        sidebar.innerHTML =
-            '<div class="hr-ws-sidebar-head">' +
-                '<strong><i class="' + esc(scope.icon || 'fas fa-sitemap') + '"></i> وحدة التحكم</strong>' +
-                '<span>' + esc(scope.label) + ' — صلاحيات كاملة داخل نطاقك</span>' +
-            '</div>' +
-            '<nav class="hr-ws-nav" aria-label="وحدات HR">' + nav + '</nav>' +
-            '<div class="hr-ws-sidebar-foot"><i class="fas fa-lock"></i> منصة داخلية — موظفون · سعودة · إقامات · رواتب · سيارات · حضور</div>';
+        const head = document.querySelector('#hr-ws-sidebar .hr-ws-sidebar-head');
+        if (head) {
+            head.innerHTML = '<strong><i class="' + esc(scope.icon || 'fas fa-sitemap') + '"></i> وحدة التحكم</strong>' +
+                '<span>' + esc(scope.label) + ' — صلاحيات كاملة داخل نطاقك</span>';
+        }
+        const navHost = document.getElementById('hr-ws-nav');
+        if (navHost && tabDefs && tabDefs.length) {
+            navHost.innerHTML = tabDefs.map(function(t) {
+                return '<button type="button" class="hr-ws-nav-item' + (hrActiveTab === t.id ? ' is-active' : '') +
+                    '" data-hr-tab="' + esc(t.id) + '" onclick="switchHrTab(\'' + t.id + '\')"><i class="' + t.icon + '"></i> ' + esc(t.label) + '</button>';
+            }).join('');
+        } else {
+            document.querySelectorAll('#hr-ws-nav .hr-ws-nav-item, #hr-ws-sidebar .hr-ws-nav .hr-ws-nav-item').forEach(function(btn) {
+                const tab = btn.getAttribute('data-hr-tab');
+                btn.classList.toggle('is-active', tab === hrActiveTab);
+            });
+        }
     }
 
     function closeHrWorkspace() {
@@ -510,32 +521,59 @@
         return true;
     }
 
+    function showHrLoadingState() {
+        const content = document.getElementById('hr-platform-content');
+        if (content) {
+            content.innerHTML = '<div class="hr-ws-loading" id="hr-ws-loading"><i class="fas fa-spinner fa-spin"></i> جاري تحميل لوحة HR…</div>';
+        }
+    }
+
     function renderHrPlatformPanelSafe() {
+        const token = ++hrPanelRenderToken;
         try {
+            renderHrWorkspaceSidebar(getHrTabDefinitions());
+            updateHrWorkspaceChrome();
             renderHrPlatformPanel();
             return true;
         } catch (err) {
             console.error('renderHrPlatformPanel', err);
-            const summary = document.getElementById('hr-platform-summary');
-            const tabs = document.getElementById('hr-tab-bar');
+            if (token !== hrPanelRenderToken) return false;
             const content = document.getElementById('hr-platform-content');
-            if (summary) summary.innerHTML = '';
-            if (tabs) tabs.innerHTML = '';
             if (content) {
-                content.innerHTML = '<div class="hr-panel is-active"><p class="erp-empty">تعذّر تحميل لوحة HR. أعيدي تحميل الصفحة (Ctrl+F5).</p></div>';
+                content.innerHTML = '<div class="hr-panel is-active"><p class="erp-empty">تعذّر تحميل لوحة HR. <button type="button" class="erp-tag erp-tag--action" onclick="openHrPlatform()">إعادة المحاولة</button></p></div>';
             }
             return false;
         }
     }
 
+    function scheduleHrPanelRender() {
+        const token = ++hrPanelRenderToken;
+        showHrLoadingState();
+        renderHrWorkspaceSidebar(getHrTabDefinitions());
+        updateHrWorkspaceChrome();
+        setTimeout(function() {
+            if (token !== hrPanelRenderToken) return;
+            try {
+                loadHrData();
+                renderHrPlatformPanel();
+            } catch (err) {
+                console.error('renderHrPlatformPanel', err);
+                const content = document.getElementById('hr-platform-content');
+                if (content) {
+                    content.innerHTML = '<div class="hr-panel is-active"><p class="erp-empty">تعذّر تحميل لوحة HR. <button type="button" class="erp-tag erp-tag--action" onclick="openHrPlatform()">إعادة المحاولة</button></p></div>';
+                }
+            }
+        }, 0);
+    }
+
     function openHrPlatform() {
         if (!requireHrAccess()) return;
-        hrActiveTab = 'dashboard';
-        loadHrData();
+        hrActiveTab = hrActiveTab || 'dashboard';
         if (!showHrPlatformShell()) return;
-        renderHrPlatformPanelSafe();
-        requestAnimationFrame(function() { renderHrPlatformPanelSafe(); });
-        if (typeof showNebrasAdminToast === 'function') showNebrasAdminToast('منصة HR — لوحة التحكم جاهزة', 'ok');
+        showHrLoadingState();
+        renderHrWorkspaceSidebar(getHrTabDefinitions());
+        updateHrWorkspaceChrome();
+        scheduleHrPanelRender();
     }
 
     function switchHrTab(tab) {
@@ -554,7 +592,32 @@
 
     function setHrSearch(val) {
         hrSearchQuery = val || '';
-        renderHrPlatformPanelSafe();
+        if (hrSearchDebounce) clearTimeout(hrSearchDebounce);
+        hrSearchDebounce = setTimeout(function() { renderHrPlatformPanelSafe(); }, 220);
+    }
+
+    function getHrTabDefinitions() {
+        let tabDefs = [
+            { id: 'dashboard', icon: 'fas fa-gauge-high', label: 'لوحة التحكم' },
+            { id: 'employees', icon: 'fas fa-users', label: 'الموظفون والعمال' },
+            { id: 'org-tree', icon: 'fas fa-sitemap', label: 'شجرة العمل' },
+            { id: 'factory', icon: 'fas fa-industry', label: 'عمليات المصنع WPC' },
+            { id: 'vehicles', icon: 'fas fa-car', label: 'سجل السيارات' },
+            { id: 'tracking', icon: 'fas fa-location-dot', label: 'تتبع السيارات' },
+            { id: 'fleet-reps', icon: 'fas fa-user-tie', label: 'أسطول المندوبين' },
+            { id: 'attendance', icon: 'fas fa-fingerprint', label: 'حضور وانصراف' },
+            { id: 'documents', icon: 'fas fa-folder-open', label: 'المستندات' },
+            { id: 'payroll', icon: 'fas fa-money-check-dollar', label: 'مسير الرواتب' },
+            { id: 'alerts', icon: 'fas fa-bell', label: 'التنبيهات' },
+            { id: 'leave', icon: 'fas fa-calendar-days', label: 'الإجازات' }
+        ];
+        if (typeof isHrDeptGovernor === 'function' && (isHrDeptGovernor() || canViewHrExecutiveReports())) {
+            tabDefs.push({ id: 'governance', icon: 'fas fa-shield-halved', label: 'حوكمة القسم' });
+        }
+        if (canViewHrExecutiveReports()) {
+            tabDefs.push({ id: 'reports', icon: 'fas fa-file-export', label: 'تقارير الإدارة الرئيسية' });
+        }
+        return tabDefs.filter(function(t) { return isHrTabAllowedForScope(t.id); });
     }
 
     function renderHrPlatformPanel() {
@@ -600,30 +663,8 @@
                 (hrAlertsCount ? '<div class="erp-stat erp-stat--danger"><strong>' + hrAlertsCount + '</strong><span>تنبيهات HR</span></div>' : '');
         }
 
-        let tabDefs = [
-            { id: 'dashboard', icon: 'fas fa-gauge-high', label: 'لوحة التحكم' },
-            { id: 'employees', icon: 'fas fa-users', label: 'الموظفون والعمال' },
-            { id: 'org-tree', icon: 'fas fa-sitemap', label: 'شجرة العمل' },
-            { id: 'factory', icon: 'fas fa-industry', label: 'عمليات المصنع WPC' },
-            { id: 'vehicles', icon: 'fas fa-car', label: 'سجل السيارات' },
-            { id: 'tracking', icon: 'fas fa-location-dot', label: 'تتبع السيارات' },
-            { id: 'fleet-reps', icon: 'fas fa-user-tie', label: 'أسطول المندوبين' },
-            { id: 'attendance', icon: 'fas fa-fingerprint', label: 'حضور وانصراف' },
-            { id: 'documents', icon: 'fas fa-folder-open', label: 'المستندات' },
-            { id: 'payroll', icon: 'fas fa-money-check-dollar', label: 'مسير الرواتب' },
-            { id: 'alerts', icon: 'fas fa-bell', label: 'التنبيهات' },
-            { id: 'leave', icon: 'fas fa-calendar-days', label: 'الإجازات' }
-        ];
-        if (typeof isHrDeptGovernor === 'function' && (isHrDeptGovernor() || canViewHrExecutiveReports())) {
-            tabDefs.push({ id: 'governance', icon: 'fas fa-shield-halved', label: 'حوكمة القسم' });
-        }
-        if (canViewHrExecutiveReports()) {
-            tabDefs.push({ id: 'reports', icon: 'fas fa-file-export', label: 'تقارير الإدارة الرئيسية' });
-        }
-        tabDefs = tabDefs.filter(function(t) { return isHrTabAllowedForScope(t.id); });
-
+        const tabDefs = getHrTabDefinitions();
         renderHrWorkspaceSidebar(tabDefs);
-        updateHrWorkspaceChrome();
         if (tabs) {
             tabs.innerHTML = tabDefs.map(function(t) {
                 return '<button type="button" class="hr-tab-btn' + (hrActiveTab === t.id ? ' is-active' : '') +
@@ -3881,6 +3922,7 @@
     global.renderHrPlatformPanelSafe = renderHrPlatformPanelSafe;
     global.closeHrWorkspace = closeHrWorkspace;
     global.openHrWorkspace = openHrPlatform;
+    global.getHrTabDefinitions = getHrTabDefinitions;
     global.purgeHrAnalyticsByPeriod = purgeHrAnalyticsByPeriod;
     global.requireHrRecordInScope = requireHrRecordInScope;
     global.renderHrSalesFleetPanel = renderHrSalesFleetPanel;

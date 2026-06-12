@@ -14075,8 +14075,13 @@
             applyRoleDashboardScope(user);
             if (typeof applyHrStrictDashboardGovernance === 'function') applyHrStrictDashboardGovernance(user);
             bindNebrasHrPlatformGlobals();
-            if (typeof isStrictHrUser === 'function' && isStrictHrUser(user) && typeof openHrPlatform === 'function') {
-                setTimeout(function() { openHrPlatform(); }, 120);
+            if (typeof isStrictHrUser === 'function' && isStrictHrUser(user)) {
+                startDashboardClock();
+                applyStaticUiTranslations(siteText[currentLang || 'ar'] || siteText.ar);
+                if (typeof openHrPlatform === 'function') {
+                    setTimeout(function() { openHrPlatform(); }, 0);
+                }
+                return;
             }
             startDashboardClock();
             renderPlatformHubPanel();
