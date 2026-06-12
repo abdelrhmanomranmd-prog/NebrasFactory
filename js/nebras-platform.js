@@ -2292,6 +2292,7 @@
                 window.openHrPlatform = openHrPlatformBridge;
             }
             window.getNebrasHrUsers = getNebrasHrUsers;
+            window.renderPlatformHRPage = renderPlatformHRPage;
         }
 
         const DASHBOARD_HANDLER_MAP = {
@@ -13755,7 +13756,20 @@
                 closeAdminOverlay();
                 showAdminDashboard(user);
                 if (typeof scrollToAdminDashboard === 'function') scrollToAdminDashboard();
-                setLanguage(currentLang || 'ar');
+                try {
+                    if (typeof isStrictHrUser === 'function' && isStrictHrUser(user)) {
+                        setLanguage(currentLang || 'ar', { light: true, skipCatalog: true });
+                        setTimeout(function() {
+                            if (typeof window.renderHrPlatformPanelSafe === 'function') window.renderHrPlatformPanelSafe();
+                            else if (typeof window.scheduleHrWorkspaceRender === 'function') window.scheduleHrWorkspaceRender(0);
+                        }, 40);
+                    } else {
+                        setLanguage(currentLang || 'ar');
+                    }
+                } catch (langErr) {
+                    console.error('setLanguage after login', langErr);
+                    if (typeof window.renderHrPlatformPanelSafe === 'function') window.renderHrPlatformPanelSafe();
+                }
                 addAuditLog('تسجيل دخول', 'دخول ناجح — ' + user.username + ' (' + getRoleLabel(user.role) + ')');
             } else {
                 if (typeof setAdminLoginStatus === 'function') setAdminLoginStatus(ui.adminLoginFail || 'بيانات الدخول غير صحيحة. حاول مرة أخرى.', 'error');
@@ -22991,6 +23005,8 @@
                 topCustomerButton: 'اتصال خدمة العملاء',
                 topSmartButton: 'اتصال بالمندوب الأقرب',
                 adminDashboardTitle: 'مركز قيادة منصة نبراس',
+                hrSettlementNote: 'البيانات محفوظة محلياً وفي السحابة — تُزامَن تلقائياً مع اسم المستخدم على كل عملية',
+                settlementText: 'البيانات محفوظة محلياً وفي السحابة — تُزامَن تلقائياً مع اسم المستخدم على كل عملية',
                 platformHubTitle: 'منصة نبراس — التحكم الداخلي والخارجي',
                 platformHubSubtitle: 'نفس فلسفة المنصات العالمية: واجهة عامة للزوار + نظام داخلي محكوم بصلاحيات وأتمتة. اختر وحدة المنصة للتشغيل.',
                 platformStatusLive: 'يعمل الآن',
@@ -23575,6 +23591,8 @@
                 topCustomerButton: 'Call Customer Service',
                 topSmartButton: 'Nearest Sales Rep',
                 adminDashboardTitle: 'Nebras Platform Command Center',
+                hrSettlementNote: 'Data saved locally and in cloud — synced with username on every action',
+                settlementText: 'Data saved locally and in cloud — synced with username on every action',
                 platformHubTitle: 'Nebras Platform — internal & external control',
                 platformHubSubtitle: 'Global-platform model: public storefront plus governed command center. Open a module to operate.',
                 platformStatusLive: 'Live',
@@ -24524,6 +24542,23 @@
             applyStorefrontPremiumUi(text);
         }
 
+        function renderPlatformHRPage(text) {
+            text = text || siteText[currentLang || 'ar'] || siteText.ar;
+            const settlementText = text.hrSettlementNote || text.settlementText || '';
+            window.settlementText = settlementText;
+            try {
+                const hrRoot = document.getElementById('hr-platform');
+                if (!hrRoot || !hrRoot.classList.contains('show')) return;
+                if (typeof window.renderHrPlatformPanelSafe === 'function') {
+                    window.renderHrPlatformPanelSafe();
+                } else if (typeof window.scheduleHrWorkspaceRender === 'function') {
+                    window.scheduleHrWorkspaceRender(0);
+                }
+            } catch (e) {
+                console.warn('renderPlatformHRPage', e);
+            }
+        }
+
         function setLanguage(lang, opts) {
             opts = opts || {};
             const light = !!opts.light;
@@ -24531,6 +24566,7 @@
             currentLang = lang;
             try { localStorage.setItem('nebrasLang', lang); } catch (e) { /* ignore */ }
             const text = siteText[lang] || siteText.ar;
+            window.settlementText = text.hrSettlementNote || text.settlementText || '';
             document.documentElement.lang = text.lang;
             document.documentElement.dir = text.dir;
 
@@ -24660,6 +24696,7 @@
                 updateCartBadge();
                 updateNebrasSiteClock();
             }
+            try { renderPlatformHRPage(text); } catch (hrPageErr) { console.warn('HR page language refresh', hrPageErr); }
             updateNebrasSiteClock();
         }
 
@@ -24883,5 +24920,6 @@
         window.openHrPlatformBridge = openHrPlatformBridge;
         window.openHrWhenReady = openHrWhenReady;
         window.bindNebrasHrPlatformGlobals = bindNebrasHrPlatformGlobals;
+        window.renderPlatformHRPage = renderPlatformHRPage;
         bindNebrasHrPlatformGlobals();
 

@@ -524,6 +524,8 @@
         const summary = document.getElementById('hr-platform-summary');
         const content = document.getElementById('hr-platform-content');
         const msg = message || 'جاري تحميل نبراس HCM…';
+        const hasPanel = content && content.querySelector('.hr-panel.is-active');
+        if (hasPanel) return;
         if (summary && !summary.querySelector('.erp-stat')) {
             summary.innerHTML =
                 '<div class="erp-stat erp-stat--accent"><strong><i class="fas fa-spinner fa-spin"></i></strong><span>تحميل البيانات</span></div>' +
