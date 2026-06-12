@@ -34,7 +34,6 @@
     let hrDocEditorId = null;
     let hrPayrollMonth = '';
     let hrDataReady = false;
-    let hrPanelRenderToken = 0;
     let hrSearchDebounce = null;
 
     const HR_EMP_STATUS = {
@@ -198,7 +197,7 @@
         ensureBuiltinHrSeed();
         ensureBuiltinHrPhase12Seed();
         loadHrPhase13Data();
-        processHrExpiryReminders();
+        try { processHrExpiryReminders(); } catch (e) { console.warn('HR reminders', e); }
         loadHrPhase14Data();
         loadHrPhase15Data();
         loadHrPhase17Data();
@@ -521,59 +520,28 @@
         return true;
     }
 
-    function showHrLoadingState() {
-        const content = document.getElementById('hr-platform-content');
-        if (content) {
-            content.innerHTML = '<div class="hr-ws-loading" id="hr-ws-loading"><i class="fas fa-spinner fa-spin"></i> جاري تحميل لوحة HR…</div>';
-        }
-    }
-
     function renderHrPlatformPanelSafe() {
-        const token = ++hrPanelRenderToken;
         try {
+            loadHrData();
             renderHrWorkspaceSidebar(getHrTabDefinitions());
             updateHrWorkspaceChrome();
             renderHrPlatformPanel();
             return true;
         } catch (err) {
             console.error('renderHrPlatformPanel', err);
-            if (token !== hrPanelRenderToken) return false;
             const content = document.getElementById('hr-platform-content');
             if (content) {
-                content.innerHTML = '<div class="hr-panel is-active"><p class="erp-empty">تعذّر تحميل لوحة HR. <button type="button" class="erp-tag erp-tag--action" onclick="openHrPlatform()">إعادة المحاولة</button></p></div>';
+                content.innerHTML = '<div class="hr-panel is-active"><p class="erp-empty">تعذّر تحميل لوحة HR. <button type="button" class="erp-tag erp-tag--action" onclick="openHrPlatform()">إعادة المحاولة</button></p><small>' + esc(String(err.message || err)) + '</small></div>';
             }
             return false;
         }
-    }
-
-    function scheduleHrPanelRender() {
-        const token = ++hrPanelRenderToken;
-        showHrLoadingState();
-        renderHrWorkspaceSidebar(getHrTabDefinitions());
-        updateHrWorkspaceChrome();
-        setTimeout(function() {
-            if (token !== hrPanelRenderToken) return;
-            try {
-                loadHrData();
-                renderHrPlatformPanel();
-            } catch (err) {
-                console.error('renderHrPlatformPanel', err);
-                const content = document.getElementById('hr-platform-content');
-                if (content) {
-                    content.innerHTML = '<div class="hr-panel is-active"><p class="erp-empty">تعذّر تحميل لوحة HR. <button type="button" class="erp-tag erp-tag--action" onclick="openHrPlatform()">إعادة المحاولة</button></p></div>';
-                }
-            }
-        }, 0);
     }
 
     function openHrPlatform() {
         if (!requireHrAccess()) return;
         hrActiveTab = hrActiveTab || 'dashboard';
         if (!showHrPlatformShell()) return;
-        showHrLoadingState();
-        renderHrWorkspaceSidebar(getHrTabDefinitions());
-        updateHrWorkspaceChrome();
-        scheduleHrPanelRender();
+        renderHrPlatformPanelSafe();
     }
 
     function switchHrTab(tab) {
@@ -597,7 +565,7 @@
     }
 
     function getHrTabDefinitions() {
-        let tabDefs = [
+        const base = [
             { id: 'dashboard', icon: 'fas fa-gauge-high', label: 'لوحة التحكم' },
             { id: 'employees', icon: 'fas fa-users', label: 'الموظفون والعمال' },
             { id: 'org-tree', icon: 'fas fa-sitemap', label: 'شجرة العمل' },
@@ -609,15 +577,44 @@
             { id: 'documents', icon: 'fas fa-folder-open', label: 'المستندات' },
             { id: 'payroll', icon: 'fas fa-money-check-dollar', label: 'مسير الرواتب' },
             { id: 'alerts', icon: 'fas fa-bell', label: 'التنبيهات' },
-            { id: 'leave', icon: 'fas fa-calendar-days', label: 'الإجازات' }
+            { id: 'leave', icon: 'fas fa-calendar-days', label: 'الإجازات' },
+            { id: 'governance', icon: 'fas fa-shield-halved', label: 'حوكمة القسم' }
         ];
-        if (typeof isHrDeptGovernor === 'function' && (isHrDeptGovernor() || canViewHrExecutiveReports())) {
-            tabDefs.push({ id: 'governance', icon: 'fas fa-shield-halved', label: 'حوكمة القسم' });
+        try {
+            const tabDefs = base.slice();
+            if (canViewHrExecutiveReports()) {
+                tabDefs.push({ id: 'reports', icon: 'fas fa-file-export', label: 'تقارير الإدارة الرئيسية' });
+            }
+            if (typeof isHrTabAllowedForScope === 'function') {
+                return tabDefs.filter(function(t) { return isHrTabAllowedForScope(t.id); });
+            }
+            return tabDefs;
+        } catch (e) {
+            console.warn('getHrTabDefinitions', e);
+            return base;
         }
-        if (canViewHrExecutiveReports()) {
-            tabDefs.push({ id: 'reports', icon: 'fas fa-file-export', label: 'تقارير الإدارة الرئيسية' });
-        }
-        return tabDefs.filter(function(t) { return isHrTabAllowedForScope(t.id); });
+    }
+
+    function renderHrMinimalDashboard(scopedEmps, activeEmps, scopedVehs, pendingLeave) {
+        const scope = getHrAdminScope();
+        return '<div class="hr-panel is-active">' +
+            '<div class="hr-command-hero"><div class="hr-command-hero-inner">' +
+                '<span class="hr-command-pill"><i class="' + esc(scope.icon || 'fas fa-people-roof') + '"></i> ' + esc(scope.label) + '</span>' +
+                '<h2 class="hr-command-title">لوحة إدارة الموارد البشرية</h2>' +
+                '<p class="hr-command-sub">نظام حي — أضيفي موظفين · سجّلي حضور · أديري الرواتب والسيارات</p>' +
+            '</div></div>' +
+            '<div class="hr-command-kpi-ring">' +
+                '<div class="hr-command-kpi"><strong>' + scopedEmps.length + '</strong><span>موظفون</span></div>' +
+                '<div class="hr-command-kpi hr-command-kpi--ok"><strong>' + activeEmps + '</strong><span>نشطون</span></div>' +
+                '<div class="hr-command-kpi"><strong>' + scopedVehs.length + '</strong><span>سيارات</span></div>' +
+                '<div class="hr-command-kpi"><strong>' + pendingLeave + '</strong><span>إجازات معلقة</span></div>' +
+            '</div>' +
+            '<div class="hr-command-quick-row">' +
+                '<button type="button" class="hr-command-quick-btn" onclick="switchHrTab(\'employees\')"><i class="fas fa-user-plus"></i> إضافة موظف</button>' +
+                '<button type="button" class="hr-command-quick-btn" onclick="switchHrTab(\'attendance\')"><i class="fas fa-fingerprint"></i> حضور اليوم</button>' +
+                '<button type="button" class="hr-command-quick-btn" onclick="switchHrTab(\'payroll\')"><i class="fas fa-money-check-dollar"></i> مسير الرواتب</button>' +
+                '<button type="button" class="hr-command-quick-btn" onclick="switchHrTab(\'vehicles\')"><i class="fas fa-car"></i> السيارات</button>' +
+            '</div></div>';
     }
 
     function renderHrPlatformPanel() {
@@ -685,21 +682,28 @@
 
         let panelHtml = '';
         if (hrActiveTab === 'dashboard') {
-            panelHtml = (typeof isStrictHrUser === 'function' && isStrictHrUser()) ? renderHrScopedDashboard(onLeave, assignedVeh, pendingLeave, expiringDocs) : renderHrDashboard(onLeave, assignedVeh, pendingLeave, expiringDocs);
+            try {
+                panelHtml = (typeof isStrictHrUser === 'function' && isStrictHrUser())
+                    ? renderHrScopedDashboard(onLeave, assignedVeh, pendingLeave, expiringDocs)
+                    : renderHrDashboard(onLeave, assignedVeh, pendingLeave, expiringDocs);
+            } catch (dashErr) {
+                console.error('HR dashboard', dashErr);
+                panelHtml = renderHrMinimalDashboard(scopedEmps, activeEmps, scopedVehs, pendingLeave);
+            }
         }
-        else if (hrActiveTab === 'employees') panelHtml = renderHrEmployeesPanel(emps);
-        else if (hrActiveTab === 'org-tree') panelHtml = renderHrOrgTreePanel();
-        else if (hrActiveTab === 'factory') panelHtml = renderHrFactoryPanel();
-        else if (hrActiveTab === 'vehicles') panelHtml = renderHrVehiclesPanel(vehs);
-        else if (hrActiveTab === 'tracking') panelHtml = renderHrVehicleTrackingPanel();
-        else if (hrActiveTab === 'fleet-reps' && typeof renderHrSalesFleetPanel === 'function') panelHtml = renderHrSalesFleetPanel();
-        else if (hrActiveTab === 'attendance') panelHtml = renderHrAttendancePanel();
-        else if (hrActiveTab === 'documents') panelHtml = renderHrDocumentsPanel();
-        else if (hrActiveTab === 'payroll') panelHtml = renderHrPayrollPanel();
-        else if (hrActiveTab === 'alerts') panelHtml = renderHrAlertsPanel();
-        else if (hrActiveTab === 'leave') panelHtml = renderHrLeavePanel();
-        else if (hrActiveTab === 'governance') panelHtml = renderHrGovernancePanel();
-        else if (hrActiveTab === 'reports' && canViewHrExecutiveReports()) panelHtml = renderHrReportsPanel();
+        else if (hrActiveTab === 'employees') { try { panelHtml = renderHrEmployeesPanel(emps); } catch (e) { panelHtml = '<div class="hr-panel is-active"><p class="erp-empty">الموظفون — ' + esc(e.message) + '</p></div>'; } }
+        else if (hrActiveTab === 'org-tree') { try { panelHtml = renderHrOrgTreePanel(); } catch (e) { panelHtml = '<div class="hr-panel is-active"><p class="erp-empty">شجرة العمل — ' + esc(e.message) + '</p></div>'; } }
+        else if (hrActiveTab === 'factory') { try { panelHtml = renderHrFactoryPanel(); } catch (e) { panelHtml = '<div class="hr-panel is-active"><p class="erp-empty">المصنع — ' + esc(e.message) + '</p></div>'; } }
+        else if (hrActiveTab === 'vehicles') { try { panelHtml = renderHrVehiclesPanel(vehs); } catch (e) { panelHtml = '<div class="hr-panel is-active"><p class="erp-empty">السيارات — ' + esc(e.message) + '</p></div>'; } }
+        else if (hrActiveTab === 'tracking') { try { panelHtml = renderHrVehicleTrackingPanel(); } catch (e) { panelHtml = '<div class="hr-panel is-active"><p class="erp-empty">التتبع — ' + esc(e.message) + '</p></div>'; } }
+        else if (hrActiveTab === 'fleet-reps' && typeof renderHrSalesFleetPanel === 'function') { try { panelHtml = renderHrSalesFleetPanel(); } catch (e) { panelHtml = '<div class="hr-panel is-active"><p class="erp-empty">أسطول المندوبين — ' + esc(e.message) + '</p></div>'; } }
+        else if (hrActiveTab === 'attendance') { try { panelHtml = renderHrAttendancePanel(); } catch (e) { panelHtml = '<div class="hr-panel is-active"><p class="erp-empty">الحضور — ' + esc(e.message) + '</p></div>'; } }
+        else if (hrActiveTab === 'documents') { try { panelHtml = renderHrDocumentsPanel(); } catch (e) { panelHtml = '<div class="hr-panel is-active"><p class="erp-empty">المستندات — ' + esc(e.message) + '</p></div>'; } }
+        else if (hrActiveTab === 'payroll') { try { panelHtml = renderHrPayrollPanel(); } catch (e) { panelHtml = '<div class="hr-panel is-active"><p class="erp-empty">الرواتب — ' + esc(e.message) + '</p></div>'; } }
+        else if (hrActiveTab === 'alerts') { try { panelHtml = renderHrAlertsPanel(); } catch (e) { panelHtml = '<div class="hr-panel is-active"><p class="erp-empty">التنبيهات — ' + esc(e.message) + '</p></div>'; } }
+        else if (hrActiveTab === 'leave') { try { panelHtml = renderHrLeavePanel(); } catch (e) { panelHtml = '<div class="hr-panel is-active"><p class="erp-empty">الإجازات — ' + esc(e.message) + '</p></div>'; } }
+        else if (hrActiveTab === 'governance') { try { panelHtml = renderHrGovernancePanel(); } catch (e) { panelHtml = '<div class="hr-panel is-active"><p class="erp-empty">الحوكمة — ' + esc(e.message) + '</p></div>'; } }
+        else if (hrActiveTab === 'reports' && canViewHrExecutiveReports()) { try { panelHtml = renderHrReportsPanel(); } catch (e) { panelHtml = '<div class="hr-panel is-active"><p class="erp-empty">التقارير — ' + esc(e.message) + '</p></div>'; } }
         else if (hrActiveTab === 'reports') {
             hrActiveTab = 'dashboard';
             panelHtml = renderHrDashboard(onLeave, assignedVeh, pendingLeave, expiringDocs);
