@@ -2272,12 +2272,26 @@
             openHrPlatformFallback();
         }
 
+        function getNebrasHrUsers() {
+            const scopeFn = typeof window.getHrAdminScope === 'function' ? window.getHrAdminScope : null;
+            return adminUsers.filter(function(u) { return u.role === 'hr'; }).map(function(u) {
+                const sc = scopeFn ? scopeFn(u) : null;
+                return {
+                    username: u.username,
+                    scopeLabel: sc ? sc.label : '—',
+                    isActive: u.isActive !== false,
+                    online: typeof isUserOnline === 'function' ? isUserOnline(u) : false
+                };
+            });
+        }
+
         function bindNebrasHrPlatformGlobals() {
             if (typeof window.__nebrasHrOpenImpl === 'function') {
                 window.openHrPlatform = window.__nebrasHrOpenImpl;
             } else {
                 window.openHrPlatform = openHrPlatformBridge;
             }
+            window.getNebrasHrUsers = getNebrasHrUsers;
         }
 
         const DASHBOARD_HANDLER_MAP = {
@@ -20839,7 +20853,7 @@
                         return '<div class="nebras-editor-grid nebras-editor-grid--hr-scope">' +
                             '<label class="nebras-field"><span>فرع HR</span><select id="ue-hr-branch" onchange="onUserEditorHrBranchChange(this.value)">' + branchOpts + '</select></label>' +
                             '<label class="nebras-field"><span>قسم HR (خصوصية)</span><select id="ue-hr-dept" onchange="onUserEditorHrDeptChange(this.value)">' + deptOpts + '</select></label>' +
-                            '<p class="nebras-editor-hint nebras-field--wide"><i class="fas fa-sitemap"></i> <strong>مدير قسم HR (مثل Odoo):</strong> حددي الفرع + القسم — يحصل على لوحة إدارية كاملة: شجرة عمل · موظفون · سعودة · إقامات · رواتب وبدلات · حضور · سيارات وتتبع GPS. لا يرى إلا قسمه.</p>' +
+                            '<p class="nebras-editor-hint nebras-field--wide"><i class="fas fa-sitemap"></i> <strong>مستخدمو HR (مثل Jisr/Odoo):</strong> يمكن إنشاء أكثر من مستخدم HR — كل عملية تُسجَّل باسم المستخدم في «سجل العمليات». اختاري <em>الموارد البشرية</em> لإدارة كاملة للمصنع، أو قسماً محدداً (إنتاج WPC · مستودع…) لمدير قسم فقط.</p>' +
                         '</div>';
                     })() : '') +
                     (st.isPrimary

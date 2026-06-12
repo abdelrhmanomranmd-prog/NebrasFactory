@@ -137,7 +137,7 @@
         const route = (document.getElementById('htr-route') || {}).value || '';
         if (!route.trim()) { alert('أدخل المسار/الوجهة.'); return; }
         loadHcmSuiteData();
-        hrTravelTickets.unshift({
+        const travelRec = {
             id: 'htr-' + Date.now(),
             employeeId: emp.id,
             employeeName: emp.nameAr,
@@ -148,9 +148,11 @@
             cost: hrNum((document.getElementById('htr-cost') || {}).value),
             payrollMonth: (document.getElementById('htr-payroll-month') || {}).value || new Date().toISOString().slice(0, 7),
             status: (document.getElementById('htr-status') || {}).value || 'pending',
-            note: (document.getElementById('htr-note') || {}).value || '',
-            createdAt: new Date().toISOString().slice(0, 10)
-        });
+            note: (document.getElementById('htr-note') || {}).value || ''
+        };
+        if (typeof stampHrRecord === 'function') stampHrRecord(travelRec, true);
+        else travelRec.createdAt = new Date().toISOString().slice(0, 10);
+        hrTravelTickets.unshift(travelRec);
         saveHcmSuiteData();
         if (typeof hrAudit === 'function') hrAudit('HR تذكرة سفر', emp.nameAr + ' — ' + route);
         if (typeof renderHrPlatformPanelSafe === 'function') renderHrPlatformPanelSafe();
@@ -208,7 +210,7 @@
         const amount = hrNum((document.getElementById('hded-amount') || {}).value);
         if (amount <= 0) { alert('أدخل مبلغ الخصم.'); return; }
         loadHcmSuiteData();
-        hrDeductions.unshift({
+        const dedRec = {
             id: 'hded-' + Date.now(),
             employeeId: emp.id,
             employeeName: emp.nameAr,
@@ -217,9 +219,11 @@
             recurring: (document.getElementById('hded-recurring') || {}).value || 'monthly',
             month: (document.getElementById('hded-month') || {}).value || '',
             note: (document.getElementById('hded-note') || {}).value || '',
-            active: true,
-            createdAt: new Date().toISOString().slice(0, 10)
-        });
+            active: true
+        };
+        if (typeof stampHrRecord === 'function') stampHrRecord(dedRec, true);
+        else dedRec.createdAt = new Date().toISOString().slice(0, 10);
+        hrDeductions.unshift(dedRec);
         saveHcmSuiteData();
         if (typeof hrAudit === 'function') hrAudit('HR خصم', emp.nameAr + ' — ' + amount);
         if (typeof renderHrPlatformPanelSafe === 'function') renderHrPlatformPanelSafe();

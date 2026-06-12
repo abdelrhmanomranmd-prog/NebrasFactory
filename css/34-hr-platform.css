@@ -1213,6 +1213,13 @@ body.hr-platform-open {
     gap: 10px;
 }
 
+.hr-record-meta {
+    margin-top: 6px;
+    font-size: 0.78rem;
+    color: #5a6c7d;
+}
+.hr-record-meta i { color: #2980b9; margin-left: 4px; }
+
 @media (max-width: 720px) {
     .hr-saud-center { grid-template-columns: 1fr; }
 }

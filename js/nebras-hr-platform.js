@@ -461,9 +461,45 @@
         return '<span class="hr-exp-ok"><i class="fas fa-check"></i> ساري</span>';
     }
 
+    function getHrActor() {
+        const admin = typeof currentAdmin !== 'undefined' ? currentAdmin : null;
+        return {
+            userId: admin && admin.id ? String(admin.id) : '',
+            username: admin && admin.username ? String(admin.username) : 'system',
+            role: admin && admin.role ? String(admin.role) : ''
+        };
+    }
+
+    function stampHrRecord(record, isNew) {
+        if (!record || typeof record !== 'object') return record;
+        const actor = getHrActor();
+        const now = new Date().toISOString();
+        record.updatedAt = now.slice(0, 10);
+        record.updatedBy = actor.userId;
+        record.updatedByUsername = actor.username;
+        record.lastEditedBy = actor.username;
+        if (isNew) {
+            record.createdAt = record.createdAt || now.slice(0, 10);
+            record.createdBy = actor.userId;
+            record.createdByUsername = actor.username;
+        }
+        return record;
+    }
+
+    function formatHrRecordEditor(record) {
+        if (!record) return '';
+        const who = record.updatedByUsername || record.createdByUsername || '';
+        if (!who) return '';
+        const when = record.updatedAt || record.createdAt || '';
+        return '<div class="hr-record-meta"><i class="fas fa-user-pen"></i> ' + esc(who) +
+            (when ? ' · ' + formatHrDate(when) : '') + '</div>';
+    }
+
     function hrAudit(action, detail) {
-        if (typeof addAuditLog === 'function') addAuditLog(action, detail);
-        if (typeof logHrDeptActivity === 'function') logHrDeptActivity(action, detail);
+        const actor = getHrActor();
+        const stamped = '[' + actor.username + '] ' + (detail || '');
+        if (typeof addAuditLog === 'function') addAuditLog(action, stamped);
+        if (typeof logHrDeptActivity === 'function') logHrDeptActivity(action, stamped);
     }
 
     function updateHrWorkspaceChrome() {
@@ -617,13 +653,22 @@
         return true;
     }
 
+    let hrRenderBusy = false;
+    let hrRenderQueued = false;
+
     function renderHrPlatformPanelSafe() {
+        if (hrRenderBusy) {
+            hrRenderQueued = true;
+            return false;
+        }
+        hrRenderBusy = true;
         try {
             loadHrData();
             if (typeof loadHcmSuiteData === 'function') loadHcmSuiteData();
             renderHrWorkspaceSidebar(getHrTabDefinitions());
             updateHrWorkspaceChrome();
             renderHrPlatformPanel();
+            if (typeof global !== 'undefined') global.__hrPanelReady = true;
             return true;
         } catch (err) {
             console.error('renderHrPlatformPanel', err);
@@ -638,6 +683,12 @@
                     '<small>' + esc(String(err.message || err)) + '</small></div>';
             }
             return false;
+        } finally {
+            hrRenderBusy = false;
+            if (hrRenderQueued) {
+                hrRenderQueued = false;
+                setTimeout(renderHrPlatformPanelSafe, 16);
+            }
         }
     }
 
@@ -688,7 +739,8 @@
             { id: 'deductions', icon: 'fas fa-scale-balanced', label: 'الخصومات الديناميكية', group: 'الرواتب والمزايا' },
             { id: 'saudization', icon: 'fas fa-flag', label: 'السعودة والامتثال', group: 'الامتثال' },
             { id: 'alerts', icon: 'fas fa-bell', label: 'التنبيهات', group: 'الامتثال' },
-            { id: 'governance', icon: 'fas fa-shield-halved', label: 'حوكمة القسم', group: 'الامتثال' }
+            { id: 'governance', icon: 'fas fa-shield-halved', label: 'حوكمة القسم', group: 'الامتثال' },
+            { id: 'activity', icon: 'fas fa-clock-rotate-left', label: 'سجل العمليات', group: 'الامتثال' }
         ];
         try {
             let tabDefs = base.slice();
@@ -826,6 +878,7 @@
         else if (hrActiveTab === 'alerts') { try { panelHtml = renderHrAlertsPanel(); } catch (e) { panelHtml = '<div class="hr-panel is-active"><p class="erp-empty">التنبيهات — ' + esc(e.message) + '</p></div>'; } }
         else if (hrActiveTab === 'leave') { try { panelHtml = renderHrLeavePanel(); } catch (e) { panelHtml = '<div class="hr-panel is-active"><p class="erp-empty">الإجازات — ' + esc(e.message) + '</p></div>'; } }
         else if (hrActiveTab === 'governance') { try { panelHtml = renderHrGovernancePanel(); } catch (e) { panelHtml = '<div class="hr-panel is-active"><p class="erp-empty">الحوكمة — ' + esc(e.message) + '</p></div>'; } }
+        else if (hrActiveTab === 'activity') { try { panelHtml = renderHrActivityPanel(); } catch (e) { panelHtml = '<div class="hr-panel is-active"><p class="erp-empty">سجل العمليات — ' + esc(e.message) + '</p></div>'; } }
         else if (hrActiveTab === 'travel' && typeof renderHrTravelPanel === 'function') { try { panelHtml = renderHrTravelPanel(); } catch (e) { panelHtml = '<div class="hr-panel is-active"><p class="erp-empty">تذاكر السفر — ' + esc(e.message) + '</p></div>'; } }
         else if (hrActiveTab === 'deductions' && typeof renderHrDeductionsPanel === 'function') { try { panelHtml = renderHrDeductionsPanel(); } catch (e) { panelHtml = '<div class="hr-panel is-active"><p class="erp-empty">الخصومات — ' + esc(e.message) + '</p></div>'; } }
         else if (hrActiveTab === 'fleet-hub' && typeof renderHrFleetHubPanel === 'function') { try { panelHtml = renderHrFleetHubPanel(); } catch (e) { panelHtml = '<div class="hr-panel is-active"><p class="erp-empty">مركز الأسطول — ' + esc(e.message) + '</p></div>'; } }
@@ -936,6 +989,7 @@
                     (e.email ? '<div><i class="fas fa-envelope"></i> ' + esc(e.email) + '</div>' : '') +
                     (veh ? '<div><i class="fas fa-car"></i> ' + esc(veh.plateNo) + ' — ' + esc(veh.make) + ' ' + esc(veh.model) + '</div>' : '') +
                     (e.joinDate ? '<div><i class="fas fa-calendar"></i> منذ ' + formatHrDate(e.joinDate) + '</div>' : '') +
+                    formatHrRecordEditor(e) +
                 '</div>' +
                 '<div class="hr-emp-actions">' +
                     '<button type="button" class="erp-tag erp-tag--action" onclick="openHrEmployeeEditor(\'' + esc(e.id) + '\')"><i class="fas fa-pen"></i> تعديل</button>' +
@@ -1100,13 +1154,16 @@
             const idx = hrEmployees.findIndex(function(e) { return e.id === id; });
             if (idx >= 0) {
                 record.createdAt = hrEmployees[idx].createdAt || now;
+                record.createdBy = hrEmployees[idx].createdBy || '';
+                record.createdByUsername = hrEmployees[idx].createdByUsername || '';
                 record.bioCredentialId = hrEmployees[idx].bioCredentialId || '';
                 record.bioRegisteredAt = hrEmployees[idx].bioRegisteredAt || '';
+                stampHrRecord(record, false);
                 hrEmployees[idx] = record;
             }
         } else {
             if (typeof assertHrNewRecordInScope === 'function' && !assertHrNewRecordInScope(record)) return;
-            record.createdAt = now;
+            stampHrRecord(record, true);
             hrEmployees.unshift(record);
         }
 
@@ -1264,8 +1321,14 @@
 
         if (id) {
             const idx = hrVehicles.findIndex(function(v) { return v.id === id; });
-            if (idx >= 0) hrVehicles[idx] = record;
+            if (idx >= 0) {
+                record.createdAt = hrVehicles[idx].createdAt || record.createdAt;
+                record.createdByUsername = hrVehicles[idx].createdByUsername || record.createdByUsername;
+                stampHrRecord(record, false);
+                hrVehicles[idx] = record;
+            }
         } else {
+            stampHrRecord(record, true);
             hrVehicles.unshift(record);
         }
 
@@ -1353,7 +1416,7 @@
         const d2 = new Date(end + 'T12:00:00');
         const days = Math.max(1, Math.round((d2 - d1) / (1000 * 60 * 60 * 24)) + 1);
 
-        hrLeaveRequests.unshift({
+        const leaveRec = stampHrRecord({
             id: 'lv-' + Date.now(),
             employeeId: empId,
             employeeName: emp.nameAr,
@@ -1362,9 +1425,9 @@
             endDate: end,
             days: days,
             status: 'pending',
-            note: hrField('hl-note'),
-            createdAt: new Date().toISOString().slice(0, 10)
-        });
+            note: hrField('hl-note')
+        }, true);
+        hrLeaveRequests.unshift(leaveRec);
         saveHrData();
         hrAudit('HR إجازة', 'طلب ' + emp.nameAr);
         renderHrPlatformPanel();
@@ -1375,6 +1438,7 @@
         const l = hrLeaveRequests.find(function(x) { return x.id === id; });
         if (!l) return;
         l.status = status;
+        stampHrRecord(l, false);
         if (status === 'approved') {
             const emp = getEmployeeById(l.employeeId);
             if (emp) emp.status = 'on_leave';
@@ -3628,12 +3692,50 @@
 
     function filterHrDeptActivityForScope() {
         const scope = getHrAdminScope();
+        if (scope.mode === 'full' || scope.mode === 'company') return hrDeptActivity.slice();
+        if (isHrGovernorScope(scope)) {
+            if (!scope.branchId) return hrDeptActivity.slice();
+            return hrDeptActivity.filter(function(a) {
+                return !a.branchId || String(a.branchId) === String(scope.branchId);
+            });
+        }
         return hrDeptActivity.filter(function(a) {
-            if (scope.mode === 'full' || scope.mode === 'company') return true;
             if (scope.departmentKey && a.departmentKey !== scope.departmentKey) return false;
             if (scope.branchId && String(a.branchId || '') !== String(scope.branchId)) return false;
             return true;
         });
+    }
+
+    function renderHrActivityPanel() {
+        const scope = getHrAdminScope();
+        const acts = filterHrDeptActivityForScope().slice(0, 80);
+        const rows = acts.map(function(a) {
+            return '<tr><td>' + formatHrDate(a.date) + ' ' + esc(a.time || '') + '</td>' +
+                '<td><strong>' + esc(a.username || '—') + '</strong></td>' +
+                '<td>' + esc(a.action) + '</td>' +
+                '<td>' + esc(a.detail) + '</td>' +
+                '<td>' + esc(a.scopeLabel || '—') + '</td></tr>';
+        }).join('');
+        const onlineHr = typeof global.getNebrasHrUsers === 'function' ? global.getNebrasHrUsers() : [];
+        const hrUserRows = onlineHr.map(function(u) {
+            return '<tr><td><strong>' + esc(u.username) + '</strong></td><td>' + esc(u.scopeLabel || '—') + '</td>' +
+                '<td>' + (u.online ? '<span class="erp-tag erp-tag--ok">متصل</span>' : '<span class="erp-tag">غير متصل</span>') +
+                (u.isActive === false ? ' <span class="erp-tag erp-tag--danger">معطّل</span>' : '') + '</td></tr>';
+        }).join('');
+        return '<div class="hr-panel is-active">' +
+            '<div class="hr-command-hero"><div class="hr-command-hero-inner">' +
+                '<span class="hr-command-pill"><i class="fas fa-clock-rotate-left"></i> سجل العمليات</span>' +
+                '<h2 class="hr-command-title">من فعل ماذا — مثل جسر و Odoo</h2>' +
+                '<p class="hr-command-sub">كل إدخال أو تعديل في HR يُسجَّل باسم المستخدم — ' + esc(scope.label) + '</p>' +
+            '</div></div>' +
+            '<h4 class="hr-tracking-section-title"><i class="fas fa-people-roof"></i> مستخدمو HR في النظام (' + onlineHr.length + ')</h4>' +
+            '<div class="hr-leave-table-wrap"><table class="hr-leave-table"><thead><tr><th>المستخدم</th><th>النطاق</th><th>الحالة</th></tr></thead><tbody>' +
+            (hrUserRows || '<tr><td colspan="3" class="erp-empty">لا مستخدمي HR — أنشئيهم من إدارة المستخدمين (الإدارة الرئيسية)</td></tr>') +
+            '</tbody></table></div>' +
+            '<h4 class="hr-tracking-section-title"><i class="fas fa-list-check"></i> آخر العمليات (' + acts.length + ')</h4>' +
+            '<div class="hr-leave-table-wrap"><table class="hr-leave-table"><thead><tr><th>الوقت</th><th>المستخدم</th><th>الإجراء</th><th>التفاصيل</th><th>النطاق</th></tr></thead><tbody>' +
+            (rows || '<tr><td colspan="5" class="erp-empty">لا عمليات بعد — أضيفي موظفاً أو سيارة لتظهر هنا باسمك</td></tr>') +
+            '</tbody></table></div></div>';
     }
 
     function groupTeamByEmployeeDept(emps) {
@@ -4191,6 +4293,8 @@
     global.employeeMatchesHrScope = employeeMatchesHrScope;
     global.vehicleMatchesHrScope = vehicleMatchesHrScope;
     global.isHrDeptGovernor = isHrDeptGovernor;
+    global.stampHrRecord = stampHrRecord;
+    global.getHrActor = getHrActor;
     global.renderHrGovernancePanel = renderHrGovernancePanel;
     global.buildHrDeptGovernanceMatrix = buildHrDeptGovernanceMatrix;
     global.exportHrGovernanceCsv = exportHrGovernanceCsv;

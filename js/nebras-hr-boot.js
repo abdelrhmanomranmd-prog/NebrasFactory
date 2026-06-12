@@ -10,7 +10,8 @@
     function hasLivePanel() {
         var c = document.getElementById('hr-platform-content');
         if (!c) return false;
-        return !!(c.querySelector('.hr-command-hero, .hr-command-kpi-ring, .hr-emp-grid, .hr-leave-table, .hr-fleet-hub-grid, .hr-editor-overlay'));
+        if (global.__hrPanelReady) return true;
+        return !!(c.querySelector('.hr-panel.is-active, .hr-command-hero, .hr-command-kpi-ring, .hr-emp-grid, .hr-leave-table, .hr-fleet-hub-grid, .hr-editor-overlay'));
     }
 
     function platformOpen() {
@@ -86,15 +87,19 @@
 
     function bootLoop() {
         if (!platformOpen()) return;
+        if (hasLivePanel()) {
+            bootTicks = maxBootTicks;
+            return;
+        }
         bootTicks++;
-        if (!hasLivePanel()) {
+        if (bootTicks <= 8) {
             forceHrRender('loop-' + bootTicks);
             if (typeof global.paintHrWorkspaceShell === 'function') {
                 try { global.paintHrWorkspaceShell(); } catch (e) { /* ignore */ }
             }
         }
         if (bootTicks < maxBootTicks && platformOpen() && !hasLivePanel()) {
-            setTimeout(bootLoop, 500);
+            setTimeout(bootLoop, bootTicks < 4 ? 400 : 1200);
         }
     }
 
@@ -117,10 +122,9 @@
         if (platformOpen()) bootLoop();
     });
 
-    /* مراقبة فتح المنصة من أي مسار */
+    /* مراقبة خفيفة — فقط إن لم تُحمَّل اللوحة بعد 10 ثوانٍ */
     setInterval(function() {
-        if (platformOpen() && !hasLivePanel() && bootTicks < maxBootTicks) {
-            forceHrRender('interval');
-        }
-    }, 2000);
+        if (!platformOpen() || hasLivePanel() || bootTicks >= maxBootTicks) return;
+        if (bootTicks > 0 && bootTicks < 12) forceHrRender('interval');
+    }, 5000);
 })(typeof window !== 'undefined' ? window : globalThis);
