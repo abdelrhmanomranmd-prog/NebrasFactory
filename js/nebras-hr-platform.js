@@ -210,6 +210,8 @@
         loadHrPhase15Data();
         loadHrPhase17Data();
         ensureBuiltinHrPhase15Seed();
+        if (typeof loadHrCompaniesData === 'function') loadHrCompaniesData();
+        if (typeof migrateHrRecordsCompanyId === 'function') migrateHrRecordsCompanyId();
         applyHrScopeDefaultsOnLogin();
         hrDataReady = true;
         return { employees: hrEmployees, vehicles: hrVehicles, leave: hrLeaveRequests, tracking: hrVehicleTracking, attendance: hrAttendance, documents: hrDocuments, payroll: hrPayrollRuns };
@@ -514,9 +516,12 @@
         const scopeEl = document.getElementById('hr-ws-scope-label');
         const userEl = document.getElementById('hr-ws-user-pill');
         const admin = typeof currentAdmin !== 'undefined' ? currentAdmin : null;
-        if (scopeEl) scopeEl.textContent = (isStrictHrUser() ? 'نبراس HCM — ' : '') + (scope.label || 'موارد بشرية · قسمك فقط');
+        const companySuffix = (typeof getHrCompanyFilter === 'function' && getHrCompanyFilter() && typeof resolveHrCompanyLabel === 'function')
+            ? (' · ' + resolveHrCompanyLabel(getHrCompanyFilter()))
+            : ((typeof getActiveHrCompanies === 'function' && getActiveHrCompanies().length > 1) ? ' · مجموعة شركات' : '');
+        if (scopeEl) scopeEl.textContent = (isStrictHrUser() ? 'نبراس HCM — ' : '') + (scope.label || 'موارد بشرية · قسمك فقط') + companySuffix;
         const brandEl = document.getElementById('hr-ws-brand-title');
-        if (brandEl) brandEl.textContent = isStrictHrUser() ? 'نبراس HCM — مصنع نبراس WPC' : 'منصة HR — مصنع نبراس WPC';
+        if (brandEl) brandEl.textContent = isStrictHrUser() ? ('نبراس HCM — إدارة مجموعة الشركات' + companySuffix) : ('منصة HR — مصنع نبراس WPC' + companySuffix);
         if (userEl && admin) {
             const cloudOk = typeof isNebrasCloudConnected === 'function' ? isNebrasCloudConnected() : false;
             const cloudCls = cloudOk ? 'is-live' : 'is-offline';
@@ -733,6 +738,7 @@
     function getHrTabDefinitions() {
         const base = [
             { id: 'dashboard', icon: 'fas fa-gauge-high', label: 'لوحة التحكم', group: 'الرئيسية' },
+            { id: 'companies', icon: 'fas fa-building-circle-check', label: 'الشركات الشريكة', group: 'الموارد البشرية' },
             { id: 'employees', icon: 'fas fa-users', label: 'الموظفون والعمال', group: 'الموارد البشرية' },
             { id: 'org-tree', icon: 'fas fa-sitemap', label: 'شجرة العمل', group: 'الموارد البشرية' },
             { id: 'documents', icon: 'fas fa-folder-open', label: 'المستندات والإقامات', group: 'الموارد البشرية' },
@@ -764,6 +770,7 @@
             if (typeof isHrTabAllowedForScope === 'function') {
                 const hrGov = typeof isHrGovernorScope === 'function' && isHrGovernorScope();
                 tabDefs = tabDefs.filter(function(t) {
+                    if (t.id === 'companies') return typeof canManageHrCompanies === 'function' && canManageHrCompanies();
                     if (hrGov) return t.id !== 'reports';
                     if (t.id === 'fleet-hub' || t.id === 'travel' || t.id === 'deductions' || t.id === 'saudization') return true;
                     return isHrTabAllowedForScope(t.id);
@@ -835,9 +842,10 @@
         if (summary) {
             summary.innerHTML =
                 (scopeLabel ? '<div class="erp-stat erp-stat--accent"><strong><i class="fas fa-lock"></i></strong><span>' + esc(scopeLabel) + '</span></div>' : '') +
+                (typeof getHrCompanyFilter === 'function' && getHrCompanyFilter() ? '<div class="erp-stat erp-stat--accent"><strong><i class="fas fa-building"></i></strong><span>' + esc(typeof resolveHrCompanyLabel === 'function' ? resolveHrCompanyLabel(getHrCompanyFilter()) : '') + '</span></div>' : '') +
                 '<div class="erp-stat erp-stat--accent"><strong>' + scopedEmps.length + '</strong><span>إجمالي الموظفين</span></div>' +
                 '<div class="erp-stat"><strong>' + activeEmps + '</strong><span>نشطون</span></div>' +
-                '<div class="erp-stat"><strong>' + scopedVehs.length + '</strong><span>سيارات الشركة</span></div>' +
+                '<div class="erp-stat"><strong>' + scopedVehs.length + '</strong><span>سيارات' + (typeof getHrCompanyFilter === 'function' && getHrCompanyFilter() ? ' الشركة' : ' الشركة') + '</span></div>' +
                 '<div class="erp-stat erp-stat--accent"><strong>' + onRoadCount + '</strong><span>سيارات خارجة الآن</span></div>' +
                 '<div class="erp-stat"><strong>' + pendingLeave + '</strong><span>إجازات معلقة</span></div>' +
                 (expiringDocs ? '<div class="erp-stat erp-stat--danger"><strong>' + expiringDocs + '</strong><span>تنبيه سيارات</span></div>' : '') +
@@ -857,8 +865,15 @@
             return '<option value="' + esc(b.id) + '"' + (String(hrBranchFilter) === String(b.id) ? ' selected' : '') + '>' + esc(b.label) + '</option>';
         }).join('');
 
+        const companyToolbar = typeof renderHrCompanyFilterToolbar === 'function' ? renderHrCompanyFilterToolbar() : '';
+        const companyCtx = (typeof getHrCompanyFilter === 'function' && getHrCompanyFilter() && typeof resolveHrCompanyLabel === 'function')
+            ? '<div class="hr-company-ctx-banner"><i class="fas fa-filter"></i> تعرض بيانات: <strong>' + esc(resolveHrCompanyLabel(getHrCompanyFilter())) + '</strong>' +
+                ' <button type="button" class="erp-tag" onclick="setHrCompanyFilter(\'\')"><i class="fas fa-xmark"></i> كل الشركات</button></div>'
+            : '';
         const toolbar =
+            companyCtx +
             '<div class="hr-toolbar">' +
+                companyToolbar +
                 '<label class="nebras-field"><span>الفرع</span><select onchange="setHrBranchFilter(this.value)">' + branchOpts + '</select></label>' +
                 '<label class="nebras-field hr-search-input"><span>بحث</span><input type="search" placeholder="اسم · رقم · جوال · قسم…" value="' + esc(hrSearchQuery) +
                     '" oninput="setHrSearch(this.value)"></label>' +
@@ -875,6 +890,7 @@
                 panelHtml = renderHrMinimalDashboard(scopedEmps, activeEmps, scopedVehs, pendingLeave);
             }
         }
+        else if (hrActiveTab === 'companies' && typeof renderHrCompaniesPanel === 'function') { try { panelHtml = renderHrCompaniesPanel(); } catch (e) { panelHtml = '<div class="hr-panel is-active"><p class="erp-empty">الشركات — ' + esc(e.message) + '</p></div>'; } }
         else if (hrActiveTab === 'employees') { try { panelHtml = renderHrEmployeesPanel(emps); } catch (e) { panelHtml = '<div class="hr-panel is-active"><p class="erp-empty">الموظفون — ' + esc(e.message) + '</p></div>'; } }
         else if (hrActiveTab === 'org-tree') { try { panelHtml = renderHrOrgTreePanel(); } catch (e) { panelHtml = '<div class="hr-panel is-active"><p class="erp-empty">شجرة العمل — ' + esc(e.message) + '</p></div>'; } }
         else if (hrActiveTab === 'factory') { try { panelHtml = renderHrFactoryPanel(); } catch (e) { panelHtml = '<div class="hr-panel is-active"><p class="erp-empty">المصنع — ' + esc(e.message) + '</p></div>'; } }
@@ -956,7 +972,9 @@
             return '<article class="erp-row"><div class="erp-row-main"><strong>' + esc(k) + '</strong><span class="erp-row-tags"><span class="erp-tag">' + byDept[k] + ' موظف</span></span></div></article>';
         }).join('');
 
+        const multiCo = typeof renderHrMultiCompanyOverview === 'function' ? renderHrMultiCompanyOverview() : '';
         return '<div class="hr-panel is-active">' +
+            multiCo +
             '<p class="hr-platform-note"><i class="fas fa-industry"></i> <strong>نبراس للأبواب WPC</strong> — موارد بشرية المصنع: إنتاج · ورديات · سعودة · حضور · رواتب. التقارير التنفيذية للإدارة الرئيسية.</p>' +
             '<div class="hr-report-grid">' +
                 '<div class="hr-report-card"><strong>' + onLeave + '</strong><span>في إجازة حالياً</span></div>' +
@@ -986,6 +1004,7 @@
                     '<span class="hr-emp-avatar">' + esc(initials) + '</span>' +
                     '<div><strong>' + esc(e.nameAr) + '</strong><small>' + esc(e.employeeNo) + ' · ' + esc(e.jobTitle || '') + '</small></div>' +
                 '</div>' +
+                (typeof renderHrCompanyBadge === 'function' ? renderHrCompanyBadge(e.companyId) : '') +
                 '<div class="hr-emp-meta">' +
                     '<span class="erp-tag ' + (st.tag || '') + '">' + esc(st.label) + '</span>' +
                     '<span class="erp-tag">' + esc(HR_EMP_TYPES[e.employmentType] || e.employmentType) + '</span>' +
@@ -1041,6 +1060,7 @@
         return '<div class="hr-editor-overlay" id="hr-emp-editor">' +
             '<h4><i class="fas fa-id-card"></i> ' + (isEdit ? 'تعديل موظف' : 'موظف / عامل جديد') + '</h4>' +
             '<div class="erp-form-grid">' +
+                (typeof renderHrCompanyFieldInForm === 'function' ? renderHrCompanyFieldInForm(e.companyId) : '') +
                 '<label class="nebras-field"><span>رقم الموظف</span><input id="he-no" value="' + esc(e.employeeNo || '') + '" placeholder="NEB-100"></label>' +
                 '<label class="nebras-field"><span>الاسم (عربي)</span><input id="he-name-ar" value="' + esc(e.nameAr || '') + '"></label>' +
                 '<label class="nebras-field"><span>الاسم (إنجليزي)</span><input id="he-name-en" value="' + esc(e.nameEn || '') + '"></label>' +
@@ -1129,6 +1149,7 @@
             nameEn: hrField('he-name-en'),
             nationalId: hrField('he-national'),
             nationality: hrField('he-nationality'),
+            companyId: (document.getElementById('he-company') ? hrField('he-company') : '') || (typeof getHrCompanyIdForNewRecord === 'function' ? getHrCompanyIdForNewRecord() : 'comp-nebras'),
             branchId: hrField('he-branch') || getHrAdminScope().branchId || 'hq',
             departmentKey: hrField('he-dept-key'),
             department: (typeof HR_FACTORY_DEPTS !== 'undefined' && HR_FACTORY_DEPTS[hrField('he-dept-key')]) ? HR_FACTORY_DEPTS[hrField('he-dept-key')] : hrField('he-dept-key'),
@@ -1221,6 +1242,7 @@
             const st = HR_VEH_STATUS[v.status] || HR_VEH_STATUS.active;
             const emp = v.assignedEmployeeId ? getEmployeeById(v.assignedEmployeeId) : null;
             return '<article class="hr-vehicle-card">' +
+                (typeof renderHrCompanyBadge === 'function' ? renderHrCompanyBadge(v.companyId) : '') +
                 '<div class="plate-badge">' + esc(v.plateNo) + '</div>' +
                 '<strong>' + esc(v.make) + ' ' + esc(v.model) + (v.year ? ' (' + esc(v.year) + ')' : '') + '</strong>' +
                 '<div class="hr-emp-meta" style="margin-top:8px">' +
@@ -1267,6 +1289,7 @@
         return '<div class="hr-editor-overlay" id="hr-veh-editor">' +
             '<h4><i class="fas fa-car"></i> ' + (id ? 'تعديل سيارة' : 'سيارة جديدة') + '</h4>' +
             '<div class="erp-form-grid">' +
+                (typeof renderHrCompanyFieldInVehicleForm === 'function' ? renderHrCompanyFieldInVehicleForm(v.companyId) : '') +
                 '<label class="nebras-field"><span>رقم اللوحة</span><input id="hv-plate" value="' + esc(v.plateNo || '') + '"></label>' +
                 '<label class="nebras-field"><span>الشركة المصنعة</span><input id="hv-make" value="' + esc(v.make || '') + '"></label>' +
                 '<label class="nebras-field"><span>الموديل</span><input id="hv-model" value="' + esc(v.model || '') + '"></label>' +
@@ -1311,6 +1334,7 @@
         const record = {
             id: id || ('veh-' + Date.now()),
             plateNo: plate,
+            companyId: (document.getElementById('hv-company') ? hrField('hv-company') : '') || (typeof getHrCompanyIdForNewRecord === 'function' ? getHrCompanyIdForNewRecord() : 'comp-nebras'),
             make: hrField('hv-make'),
             model: hrField('hv-model'),
             year: hrField('hv-year'),
@@ -3345,16 +3369,37 @@
 
     function applyHrScopeFilter(list, kind) {
         const scope = getHrAdminScope();
-        if (scope.mode === 'full' || scope.mode === 'company') return list;
-        return list.filter(function(item) {
-            if (kind === 'employee') return employeeMatchesHrScope(item, scope);
-            if (kind === 'vehicle') return vehicleMatchesHrScope(item, scope);
-            if (kind === 'tracking') return trackingMatchesHrScope(item, scope);
-            if (kind === 'attendance' || kind === 'document' || kind === 'leave') {
-                return employeeMatchesHrScope(getEmployeeById(item.employeeId), scope);
+        let result = list;
+        if (scope.mode !== 'full' && scope.mode !== 'company') {
+            result = list.filter(function(item) {
+                if (kind === 'employee') return employeeMatchesHrScope(item, scope);
+                if (kind === 'vehicle') return vehicleMatchesHrScope(item, scope);
+                if (kind === 'tracking') return trackingMatchesHrScope(item, scope);
+                if (kind === 'attendance' || kind === 'document' || kind === 'leave') {
+                    return employeeMatchesHrScope(getEmployeeById(item.employeeId), scope);
+                }
+                return true;
+            });
+        }
+        if (typeof getHrCompanyFilter === 'function' && getHrCompanyFilter()) {
+            const cf = getHrCompanyFilter();
+            if (kind === 'employee' || kind === 'vehicle') {
+                result = typeof applyHrCompanyFilter === 'function' ? applyHrCompanyFilter(result) : result;
+            } else if (kind === 'leave' || kind === 'attendance' || kind === 'document') {
+                result = result.filter(function(item) {
+                    const emp = getEmployeeById(item.employeeId);
+                    return emp && typeof resolveRecordCompanyId === 'function' && resolveRecordCompanyId(emp) === String(cf);
+                });
+            } else if (kind === 'tracking') {
+                result = result.filter(function(t) {
+                    const veh = t.vehicleId ? getVehicleById(t.vehicleId) : null;
+                    if (veh && typeof resolveRecordCompanyId === 'function' && resolveRecordCompanyId(veh) === String(cf)) return true;
+                    const emp = t.driverEmployeeId ? getEmployeeById(t.driverEmployeeId) : null;
+                    return emp && typeof resolveRecordCompanyId === 'function' && resolveRecordCompanyId(emp) === String(cf);
+                });
             }
-            return true;
-        });
+        }
+        return result;
     }
 
     function getHrScopedEmployeeIds() {
@@ -3421,7 +3466,11 @@
             return '<article class="hr-command-mini-card"><span class="plate-badge">' + esc(v.plateNo) + '</span><strong>' + esc(v.currentDriverName) + '</strong><small>خارجة الآن</small></article>';
         }).join('');
 
-        const quickTabs = [
+        const quickTabs = [];
+        if (typeof canManageHrCompanies === 'function' && canManageHrCompanies()) {
+            quickTabs.push({ id: 'companies', icon: 'fas fa-building-circle-check', label: 'الشركات' });
+        }
+        quickTabs.push(
             { id: 'employees', icon: 'fas fa-users', label: 'الفريق' },
             { id: 'attendance', icon: 'fas fa-fingerprint', label: 'حضور' },
             { id: 'payroll', icon: 'fas fa-money-check-dollar', label: 'رواتب' },
@@ -3431,7 +3480,7 @@
             { id: 'fleet-hub', icon: 'fas fa-truck-fast', label: 'مركز الأسطول' },
             { id: 'travel', icon: 'fas fa-plane', label: 'تذاكر سفر' },
             { id: 'deductions', icon: 'fas fa-scale-balanced', label: 'خصومات' }
-        ];
+        );
         if (isHrTabAllowedForScope('vehicles')) quickTabs.push({ id: 'vehicles', icon: 'fas fa-car', label: 'سيارات' });
         if (isHrTabAllowedForScope('tracking')) quickTabs.push({ id: 'tracking', icon: 'fas fa-location-dot', label: 'تتبع' });
         if (isHrTabAllowedForScope('fleet-reps')) quickTabs.push({ id: 'fleet-reps', icon: 'fas fa-user-tie', label: 'المندوبون' });
@@ -3443,7 +3492,9 @@
             return '<button type="button" class="hr-command-quick-btn" onclick="switchHrTab(\'' + t.id + '\')"><i class="' + t.icon + '"></i> ' + esc(t.label) + '</button>';
         }).join('');
 
+        const multiCo = typeof renderHrMultiCompanyOverview === 'function' ? renderHrMultiCompanyOverview() : '';
         return '<div class="hr-panel is-active">' +
+            multiCo +
             renderHrScopeBanner() +
             '<div class="hr-command-hero">' +
                 '<div class="hr-command-hero-glow"></div>' +
