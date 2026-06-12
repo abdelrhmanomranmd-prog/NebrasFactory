@@ -1,4 +1,17 @@
 /* مركز المنتجات والأسعار + قسم الألومنيوم */
+.aluminum-quote-banner {
+    margin: 0 0 12px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, rgba(112, 128, 144, 0.12), rgba(10, 77, 140, 0.08));
+    border: 1px solid rgba(112, 128, 144, 0.28);
+    font-size: 0.84rem;
+    color: #3d4f5f;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
 .nebras-product-master-modal .product-master-note,
 .nebras-aluminum-dept-modal .aluminum-dept-note {
     margin: 0 0 14px;

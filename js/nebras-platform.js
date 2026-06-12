@@ -21,8 +21,10 @@
         window.NEBRAS_IMAGE_ACCEPT = NEBRAS_IMAGE_ACCEPT;
         window.NEBRAS_MEDIA_ACCEPT_ALL = NEBRAS_MEDIA_ACCEPT_ALL;
         window.NEBRAS_SHOWROOM_MEDIA_ACCEPT = NEBRAS_SHOWROOM_MEDIA_ACCEPT;
-        const PRIMARY_GOVERNANCE_ADMIN_IDS = ['base-admin', 'nebras-factory-admin'];
-        const PRIMARY_GOVERNANCE_USERNAMES = ['NEBRASFACTORY', 'NEBRASBASIC'];
+        const PRIMARY_GOVERNANCE_ADMIN_IDS = ['nebras-factory-admin'];
+        const PRIMARY_GOVERNANCE_USERNAMES = ['NEBRASFACTORY'];
+        const IMMUTABLE_PRIMARY_ADMIN_ID = 'nebras-factory-admin';
+        const IMMUTABLE_PRIMARY_ADMIN_USERNAME = 'NEBRASFACTORY';
         const PRIMARY_RECOVERY_EMAIL = 'abdelrhmanomranmd@gmail.com';
         const NEBRAS_LINKTREE_URL = 'https://linktr.ee/abdelrhmanomranmd';
         const NEBRAS_DEFAULT_SOCIAL_LINKS = {
@@ -236,8 +238,7 @@
         }
 
         let adminUsers = [
-            { id: 'nebras-factory-admin', username: 'NEBRASFACTORY', password: 'NEBRASFACTORYCOMPANYBASIC', role: 'superadmin', isPrimary: true },
-            { id: 'base-admin', username: 'NEBRASBASIC', password: 'NEBRASBASIC123', role: 'superadmin', isPrimary: true }
+            { id: 'nebras-factory-admin', username: 'NEBRASFACTORY', password: 'NEBRASFACTORYCOMPANYBASIC', role: 'superadmin', isPrimary: true }
         ];
         const ALL_PERMISSION_KEYS = Object.keys(NEBRAS_PERMISSION_LABELS);
         const NEBRAS_ALUMINUM_PRODUCT_ID = 'prod-aluminum';
@@ -298,8 +299,8 @@
             branch_manager: {
                 labelAr: 'مدير فرع', labelEn: 'Branch Manager',
                 icon: 'fas fa-store', accent: '#2c3e50',
-                descAr: 'يدير فرعه فقط حسب الصلاحيات الممنوحة من الإدارة الرئيسية.',
-                permissions: ['sales', 'quotes', 'customerService', 'complaints', 'audit'], branchScoped: true
+                descAr: 'يدير فرعه فقط — مبيعات · عروض · طلبات · فريق المندوبين — حسب ما تمنحه الإدارة الرئيسية.',
+                permissions: ['sales', 'quotes', 'orders', 'customerService', 'complaints', 'audit'], branchScoped: true
             },
             hr: {
                 labelAr: 'موارد بشرية', labelEn: 'HR Manager',
@@ -346,7 +347,7 @@
             snb: 'images/nebras-bank-snb.png',
             riyad: 'images/nebras-bank-riyad.png',
             alrajhi: 'images/nebras-bank-alrajhi.png',
-            cacheVersion: '4'
+            cacheVersion: '5'
         };
         function withBankMediaVersion(url) {
             const u = String(url || '').trim();
@@ -2335,6 +2336,7 @@
             openErpProcurement: function() { openErpProcurement(); },
             openProductMasterHub: function() { openProductMasterHub(); },
             openAluminumDepartment: function() { openAluminumDepartment(); },
+            openAluminumQuoteBuilder: function() { openAluminumQuoteBuilder(); },
             openHrPlatform: openHrPlatformBridge,
             openLegalPlatform: function() {
                 if (typeof window.openLegalPlatform === 'function') {
@@ -2569,9 +2571,11 @@
 
         function stripImageBaseName(path) {
             return String(path || '').trim()
+                .split('?')[0]
+                .split('#')[0]
                 .replace(/^images\//i, '')
                 .replace(/^\/+/, '')
-                .replace(/\.(jpg|jpeg|png|webp|avif)$/i, '');
+                .replace(/\.(jpg|jpeg|png|webp|avif|gif|svg)$/i, '');
         }
 
         const NEBRAS_KNOWN_IMAGE_PATHS = {
@@ -4399,17 +4403,27 @@
 /* Phase 23 — Login reliability + dashboard reveal after auth */
 
     const PRIMARY_DEFAULT_PASSWORDS = {
-        NEBRASFACTORY: 'NEBRASFACTORYCOMPANYBASIC',
-        NEBRASBASIC: 'NEBRASBASIC123'
+        NEBRASFACTORY: 'NEBRASFACTORYCOMPANYBASIC'
     };
+
+    function isImmutablePrimaryAdmin(user) {
+        const u = user || currentAdmin;
+        if (!u) return false;
+        return u.id === IMMUTABLE_PRIMARY_ADMIN_ID ||
+            String(u.username || '').toUpperCase() === IMMUTABLE_PRIMARY_ADMIN_USERNAME;
+    }
 
     function ensurePrimaryGovernanceAccounts() {
         if (typeof finalizePlatformDataAfterLoad === 'function') finalizePlatformDataAfterLoad();
-        if (!adminUsers.some(function(u) { return String(u.username || '').toUpperCase() === 'NEBRASFACTORY'; })) {
-            adminUsers.unshift({ id: 'nebras-factory-admin', username: 'NEBRASFACTORY', password: PRIMARY_DEFAULT_PASSWORDS.NEBRASFACTORY, role: 'superadmin', isPrimary: true, isActive: true });
-        }
-        if (!adminUsers.some(function(u) { return u.id === 'base-admin'; })) {
-            adminUsers.unshift({ id: 'base-admin', username: 'NEBRASBASIC', password: PRIMARY_DEFAULT_PASSWORDS.NEBRASBASIC, role: 'superadmin', isPrimary: true, isActive: true });
+        if (!adminUsers.some(function(u) { return String(u.username || '').toUpperCase() === IMMUTABLE_PRIMARY_ADMIN_USERNAME; })) {
+            adminUsers.unshift({
+                id: IMMUTABLE_PRIMARY_ADMIN_ID,
+                username: IMMUTABLE_PRIMARY_ADMIN_USERNAME,
+                password: PRIMARY_DEFAULT_PASSWORDS.NEBRASFACTORY,
+                role: 'superadmin',
+                isPrimary: true,
+                isActive: true
+            });
         }
     }
 
@@ -4669,15 +4683,25 @@
                 el.innerHTML = '<p class="cart-bank-quick-empty">' + escapeHtmlAttr(ui.cartBankQuickEmpty || 'حسابات الحوالة تُعرض من إعدادات المنصة.') + '</p>';
                 return;
             }
+            const cards = accounts.map(function(b) {
+                const name = lang === 'en' ? (b.bankNameEn || b.bankNameAr) : (b.bankNameAr || b.bankNameEn);
+                const imgCandidates = b.imageUrl ? bankAccountImageCandidates(b.imageUrl).map(withBankMediaVersion) : [];
+                const imgPath = imgCandidates.length ? imgCandidates[0] : '';
+                const logoHtml = imgPath
+                    ? '<img class="cart-bank-quick-logo" data-bank-media="1" data-bank-candidates="' + escapeHtmlAttr(imgCandidates.join('|')) + '" src="' + escapeHtmlAttr(imgPath) + '" alt="' + escapeHtmlAttr(name || '') + '" loading="lazy" decoding="async">'
+                    : '<span class="cart-bank-quick-logo cart-bank-quick-logo--fallback" aria-hidden="true"><i class="fas fa-university"></i></span>';
+                return '<article class="cart-bank-quick-card">' +
+                    logoHtml +
+                    '<div class="cart-bank-quick-body">' +
+                    '<strong class="cart-bank-quick-name">' + escapeHtmlAttr(name || '') + '</strong>' +
+                    '<code dir="ltr" class="cart-bank-iban">' + escapeHtmlAttr(b.iban) + '</code>' +
+                    '<button type="button" class="cart-bank-copy-btn" onclick="copyBankAccountIban(\'' + escapeHtmlAttr(b.iban) + '\', event)">' +
+                    '<i class="fas fa-copy"></i> ' + escapeHtmlAttr(ui.bankIbanCopyBtn || 'نسخ الآيبان') + '</button>' +
+                    '</div></article>';
+            }).join('');
             el.innerHTML = '<p class="cart-bank-quick-title">' + escapeHtmlAttr(ui.cartBankQuickTitle || 'حسابات مصنع نبراس للحوالة:') + '</p>' +
-                accounts.map(function(b) {
-                    const name = lang === 'en' ? (b.bankNameEn || b.bankNameAr) : (b.bankNameAr || b.bankNameEn);
-                    return '<div class="cart-bank-quick-item">' +
-                        '<strong>' + escapeHtmlAttr(name) + '</strong> ' +
-                        '<code dir="ltr" class="cart-bank-iban">' + escapeHtmlAttr(b.iban) + '</code> ' +
-                        '<button type="button" class="cart-bank-copy-btn cart-bank-copy-btn--inline" onclick="copyBankAccountIban(\'' + escapeHtmlAttr(b.iban) + '\', event)">' +
-                        '<i class="fas fa-copy"></i></button></div>';
-                }).join('');
+                '<div class="cart-bank-quick-grid">' + cards + '</div>';
+            hydrateBankAccountMedia(el);
         }
 
         function onTransferDeclaredChanged(ev) {
@@ -11270,8 +11294,31 @@
 
         const VISITOR_BRANCH_KEY = 'nebras_visitor_branch_id';
 
+        function resolveBranchIdByCity(city) {
+            const needle = String(city || '').trim().toLowerCase();
+            if (!needle) return null;
+            const match = (branchesData || []).find(function(b) {
+                const key = getBranchSearchKey(b);
+                const cityNorm = normalizeText(b.city || '');
+                return cityNorm === normalizeText(city) || key.indexOf(needle) >= 0 || needle.indexOf(cityNorm) >= 0;
+            });
+            return match && match.id != null ? match.id : null;
+        }
+
+        function countBranchGovernedUsers(branch) {
+            if (!branch) return 0;
+            const bid = branch.id != null ? Number(branch.id) : null;
+            const city = String(branch.city || '').trim().toLowerCase();
+            return (adminUsers || []).filter(function(u) {
+                if (!u || isImmutablePrimaryAdmin(u)) return false;
+                if (bid != null && u.assignedBranchId != null && Number(u.assignedBranchId) === bid) return true;
+                return String(u.assignedBranchCity || '').trim().toLowerCase() === city;
+            }).length;
+        }
+
         function normalizeBranchRecord(branch) {
             if (!branch || typeof branch !== 'object') return branch;
+            if (branch.id == null || branch.id === '') branch.id = Date.now() + Math.floor(Math.random() * 1000);
             const ar = String(branch.city || '').trim();
             const known = BRANCH_CITY_I18N[ar];
             if (known) {
@@ -12004,7 +12051,8 @@
                 { id: 'branch-team-management', key: null, branchTeamOnly: true },
                 { id: 'product-master-hub', key: null, productMasterOnly: true },
                 { id: 'aluminum-department', key: 'aluminum' },
-                { id: 'hr-platform', key: 'hr' }
+                { id: 'hr-platform', key: 'hr' },
+                { id: 'legal-platform', key: 'legal' }
             ].forEach(function(block) {
                 const el = document.getElementById(block.id);
                 if (!el) return;
@@ -13197,11 +13245,28 @@
             }).join('');
         }
 
-        /* ---------- بناء عرض سعر (المندوب) ---------- */
+        /* ---------- بناء عرض سعر (المندوب / الألومنيوم) ---------- */
         let repQuoteDraft = { customerName: '', phone: '', lines: [] };
+        let repQuoteBuilderDept = null;
+
+        function canBuildSalesQuotes() {
+            return canManage('quotes') || canManage('aluminum') || isMainGovernanceAdmin();
+        }
+
+        function openAluminumQuoteBuilder() {
+            if (!canManage('aluminum') && !isMainGovernanceAdmin()) {
+                alert('عروض الألومنيوم — لمدير قسم الألومنيوم أو الإدارة الرئيسية.');
+                return;
+            }
+            repQuoteBuilderDept = 'aluminum';
+            openRepQuoteBuilder();
+        }
 
         function openRepQuoteBuilder() {
-            if (!requirePermission('quotes', 'صلاحية عروض الأسعار مطلوبة.') && !canManage('aluminum')) return;
+            if (!canBuildSalesQuotes()) {
+                alert('صلاحية عروض الأسعار مطلوبة.');
+                return;
+            }
             ensureErpOperationsData();
             if (!getEffectiveSalesPriceList(currentAdmin).length) {
                 alert('لا توجد قائمة أسعار — الإدارة الرئيسية تحددها من مركز المنتجات والأسعار.');
@@ -13214,6 +13279,17 @@
         function renderRepQuoteBuilder() {
             const host = document.getElementById('rep-quote-body');
             if (!host) return;
+            const isAluQuote = repQuoteBuilderDept === 'aluminum' || isAluminumDepartmentAdmin(currentAdmin);
+            const modalHead = document.querySelector('#rep-quote-builder .nebras-erp-head-title h2');
+            const modalSub = document.querySelector('#rep-quote-builder .nebras-erp-head-title p');
+            if (modalHead) {
+                modalHead.textContent = isAluQuote ? 'عرض سعر — قسم الألومنيوم' : 'بناء عرض سعر';
+            }
+            if (modalSub) {
+                modalSub.textContent = isAluQuote
+                    ? 'أصناف ALU المعتمدة فقط — ورقة 1 ديناميكية · 2–4 ثابتة — يُرسَل لصندوق المبيعات'
+                    : 'ورقة 1 ديناميكية · 2–4 ثابتة (شروط وعقد نبراس) — يُرسَل لصندوق المبيعات';
+            }
             ensureErpOperationsData();
             const priceList = getEffectiveSalesPriceList(currentAdmin);
             const opts = priceList.map(function(it) {
@@ -13231,7 +13307,10 @@
                 : '<p class="erp-empty">أضف أصنافاً للعرض من القائمة المعتمدة.</p>';
             const subtotal = repQuoteDraft.lines.reduce(function(s, ln) { return s + erpNum(ln.qty) * erpNum(ln.price); }, 0);
             const vat = subtotal * 0.15;
-            host.innerHTML =
+            const deptBanner = isAluQuote
+                ? '<p class="aluminum-quote-banner"><i class="fas fa-industry"></i> عرض سعر ألومنيوم — الأصناف والأسعار من مركز المنتجات (قسم ALU)</p>'
+                : '';
+            host.innerHTML = deptBanner +
                 '<div class="erp-form-grid">' +
                     '<label class="nebras-field"><span>اسم العميل</span><input type="text" id="rq-customer" value="' + escapeHtmlAttr(repQuoteDraft.customerName) + '" placeholder="اسم العميل"></label>' +
                     '<label class="nebras-field"><span>الجوال</span><input type="text" id="rq-phone" value="' + escapeHtmlAttr(repQuoteDraft.phone) + '" placeholder="05..."></label>' +
@@ -13282,7 +13361,10 @@
         }
 
         async function saveRepQuote() {
-            if (!requirePermission('quotes')) return;
+            if (!canBuildSalesQuotes()) {
+                alert('صلاحية عروض الأسعار مطلوبة.');
+                return;
+            }
             const customer = fieldVal('rq-customer') || repQuoteDraft.customerName;
             if (!customer) { alert('يرجى إدخال اسم العميل.'); return; }
             if (!repQuoteDraft.lines.length) { alert('أضف صنفاً واحداً على الأقل.'); return; }
@@ -13309,7 +13391,9 @@
                 repUsername: currentAdmin ? currentAdmin.username : '',
                 repUserId: currentAdmin ? currentAdmin.id : '',
                 branchId: (typeof getAdminAssignedBranchId === 'function' ? getAdminAssignedBranchId(currentAdmin) : null) || 'hq',
-                assignedBranchCity: (currentAdmin && currentAdmin.assignedBranchCity) || ''
+                assignedBranchCity: (currentAdmin && currentAdmin.assignedBranchCity) || '',
+                departmentScope: repQuoteBuilderDept === 'aluminum' || isAluminumDepartmentAdmin(currentAdmin) ? NEBRAS_ALUMINUM_PRODUCT_ID : '',
+                quoteDepartment: repQuoteBuilderDept === 'aluminum' || isAluminumDepartmentAdmin(currentAdmin) ? 'aluminum' : 'wpc'
             };
             await attachSalesQuoteA4Pdf(entry);
             try {
@@ -13324,6 +13408,7 @@
             addAuditLog('عرض سعر مندوب', customer + ' — ' + formatSar(subtotal + vat) + ' (' + quoteNo + ') — A4');
             alert('تم حفظ العرض ' + quoteNo + ' مع صيغة A4 (4 صفحات) وإرساله لصندوق المبيعات.');
             repQuoteDraft = { customerName: '', phone: '', lines: [] };
+            repQuoteBuilderDept = null;
             document.getElementById('rep-quote-builder').classList.remove('show');
         }
 
@@ -14482,8 +14567,7 @@
 
     function normalizeAdminUserRecord(user, index) {
         const role = user && allowedRoles.includes(String(user.role || '').toLowerCase()) ? String(user.role).toLowerCase() : 'manager';
-        const isPrimary = user && (user.isPrimary === true || PRIMARY_GOVERNANCE_ADMIN_IDS.indexOf(user.id) >= 0 ||
-            PRIMARY_GOVERNANCE_USERNAMES.indexOf(String(user.username || '').toUpperCase()) >= 0);
+        const isPrimary = !!(user && isImmutablePrimaryAdmin(user));
         let perms = Array.isArray(user && user.permissions) ? user.permissions.filter(Boolean) : null;
         if (role === 'sales_rep' && !isPrimary) perms = ['quotes'];
         const now = new Date().toISOString();
@@ -14494,7 +14578,10 @@
             role: role,
             permissions: perms,
             assignedBranchCity: (user && user.assignedBranchCity) ? String(user.assignedBranchCity).trim() : '',
-            assignedBranchId: user && user.assignedBranchId != null && user.assignedBranchId !== '' ? user.assignedBranchId : null,
+            assignedBranchId: (function() {
+                if (user && user.assignedBranchId != null && user.assignedBranchId !== '') return user.assignedBranchId;
+                return resolveBranchIdByCity(user && user.assignedBranchCity);
+            })(),
             hrScopeBranchId: user && user.hrScopeBranchId ? String(user.hrScopeBranchId).trim() : '',
             hrScopeDepartmentKey: user && user.hrScopeDepartmentKey ? String(user.hrScopeDepartmentKey).trim() : '',
             isPrimary: !!isPrimary,
@@ -14634,8 +14721,9 @@
                     ? '<span class="gov-user-badge gov-user-badge--live"><i class="fas fa-circle"></i> متصل</span>'
                     : '<span class="gov-user-badge gov-user-badge--away">آخر ظهور: ' + escapeHtmlAttr(formatUserLastSeen(user)) + '</span>') +
             '</div>';
+            const lockedPrimary = isImmutablePrimaryAdmin(user);
             let actions = '<button class="nebras-user-act" onclick="editUser(' + index + ')"><i class="fas fa-pen"></i> تعديل</button>';
-            if (!user.isPrimary && isGov) {
+            if (!lockedPrimary && isGov) {
                 actions += '<button class="nebras-user-act" onclick="adminResetUserPassword(' + index + ')"><i class="fas fa-key"></i> كلمة المرور</button>';
                 actions += '<button class="nebras-user-act" onclick="toggleUserActive(' + index + ')"><i class="fas fa-power-off"></i> ' +
                     (user.isActive === false ? 'تفعيل' : 'تعطيل') + '</button>';
@@ -14662,7 +14750,7 @@
         if (!requirePermission('users')) return;
         if (!isMainGovernanceAdmin()) { alert('تعطيل/تفعيل المستخدمين — الإدارة الرئيسية فقط.'); return; }
         const user = adminUsers[index];
-        if (!user || user.isPrimary) return;
+        if (!user || isImmutablePrimaryAdmin(user)) return;
         const next = user.isActive === false;
         adminUsers[index] = Object.assign({}, user, { isActive: next, updatedAt: new Date().toISOString() });
         if (!next) clearAdminPresence(user);
@@ -14675,7 +14763,7 @@
         if (!requirePermission('users')) return;
         if (!isMainGovernanceAdmin()) { alert('إعادة تعيين كلمة المرور — الإدارة الرئيسية فقط.'); return; }
         const user = adminUsers[index];
-        if (!user || user.isPrimary) return;
+        if (!user || isImmutablePrimaryAdmin(user)) return;
         const pwd = prompt('كلمة المرور الجديدة للمستخدم «' + user.username + '»:');
         if (pwd === null) return;
         if (!String(pwd).trim()) { alert('كلمة المرور لا يمكن أن تكون فارغة.'); return; }
@@ -14690,7 +14778,7 @@
         if (!requirePermission('users')) return;
         if (!isMainGovernanceAdmin()) { alert('إنشاء مستخدم بنفس القسم — الإدارة الرئيسية فقط.'); return; }
         const source = adminUsers[index];
-        if (!source || source.isPrimary) return;
+        if (!source || isImmutablePrimaryAdmin(source)) return;
         nebrasUserEditorState = {
             index: -1,
             isEdit: false,
@@ -15470,7 +15558,7 @@
             const cards = [
                 { icon: 'fas fa-boxes-stacked', title: 'مخزون الألومنيوم', desc: 'SKU وكميات قسم ALU', handler: 'openErpInventory' },
                 { icon: 'fas fa-industry', title: 'إنتاج الألومنيوم', desc: 'تسجيل الإنتاج اليومي', handler: 'openErpProduction' },
-                { icon: 'fas fa-file-signature', title: 'عروض الألومنيوم', desc: 'بناء عرض سعر من الأسعار المعتمدة', handler: 'openRepQuoteBuilder' },
+                { icon: 'fas fa-file-signature', title: 'عروض الألومنيوم', desc: 'بناء عرض سعر ALU من الأسعار المعتمدة', handler: 'openAluminumQuoteBuilder' },
                 { icon: 'fas fa-truck', title: 'طلبات الألومنيوم', desc: 'OMS — تنفيذ طلبات القسم', handler: 'openErpOrders' }
             ];
             actions.innerHTML = cards.map(function(c) {
@@ -20755,6 +20843,29 @@
             document.body.classList.remove('legal-platform-open');
         }
 
+        function ensureAdminPanelExitChrome() {
+            document.querySelectorAll('.admin-section[id]').forEach(function(section) {
+                if (section.querySelector('.nebras-admin-exit-bar')) return;
+                const sectionId = section.id;
+                const bar = document.createElement('div');
+                bar.className = 'nebras-admin-exit-bar';
+                bar.setAttribute('role', 'navigation');
+                bar.setAttribute('aria-label', 'الخروج من اللوحة');
+                bar.innerHTML =
+                    '<button type="button" class="nebras-admin-exit-back" aria-label="رجوع للوحة التحكم">' +
+                    '<i class="fas fa-arrow-right" aria-hidden="true"></i><span>رجوع للوحة التحكم</span></button>' +
+                    '<button type="button" class="nebras-admin-exit-close" aria-label="إغلاق اللوحة">' +
+                    '<i class="fas fa-xmark" aria-hidden="true"></i></button>';
+                section.insertBefore(bar, section.firstChild);
+                bar.querySelector('.nebras-admin-exit-back').addEventListener('click', function() {
+                    closeAdminSection(sectionId);
+                });
+                bar.querySelector('.nebras-admin-exit-close').addEventListener('click', function() {
+                    closeAdminSection(sectionId);
+                });
+            });
+        }
+
         function closeAdminSection(sectionId) {
             if (sectionId === 'hr-platform' && typeof closeHrWorkspace === 'function') {
                 closeHrWorkspace();
@@ -20769,6 +20880,7 @@
                 el.classList.remove('show');
                 el.setAttribute('aria-hidden', 'true');
             }
+            if (sectionId === 'rep-quote-builder') repQuoteBuilderDept = null;
             if (!document.querySelector('.admin-section.show')) {
                 document.body.classList.remove('hr-platform-open');
                 document.body.classList.remove('legal-platform-open');
@@ -20842,12 +20954,13 @@
             nebrasUserEditorState = {
                 index: isEdit ? index : -1,
                 isEdit: !!isEdit,
-                isPrimary: !!(user && user.isPrimary),
+                isPrimary: !!(user && isImmutablePrimaryAdmin(user)),
                 id: user ? (user.id || '') : ('EMP-' + Date.now()),
                 username: user ? (user.username || '') : '',
                 password: user ? (user.password || '') : '',
                 role: user ? (user.role || defaultRole) : defaultRole,
                 assignedBranchCity: user ? (user.assignedBranchCity || '') : '',
+                assignedBranchId: user ? (user.assignedBranchId || resolveBranchIdByCity(user.assignedBranchCity)) : null,
                 hrScopeBranchId: user ? (user.hrScopeBranchId || '') : '',
                 hrScopeDepartmentKey: user ? (user.hrScopeDepartmentKey || '') : '',
                 permissions: user ? getUserEffectivePermissions(user) : (rolePermissions[defaultRole] || []).slice()
@@ -20945,6 +21058,7 @@
         function onUserEditorBranchChange(city) {
             if (!nebrasUserEditorState) return;
             nebrasUserEditorState.assignedBranchCity = String(city || '').trim();
+            nebrasUserEditorState.assignedBranchId = resolveBranchIdByCity(city);
         }
 
         function onUserEditorHrBranchChange(branchId) {
@@ -21012,6 +21126,7 @@
                     role: st.isPrimary ? 'superadmin' : st.role,
                     permissions: st.isPrimary ? null : st.permissions.slice(),
                     assignedBranchCity: st.isPrimary ? '' : st.assignedBranchCity,
+                    assignedBranchId: st.isPrimary ? null : (st.assignedBranchId || resolveBranchIdByCity(st.assignedBranchCity)),
                     hrScopeBranchId: st.isPrimary || st.role !== 'hr' ? '' : (st.hrScopeBranchId || ''),
                     hrScopeDepartmentKey: st.isPrimary || st.role !== 'hr' ? '' : (st.hrScopeDepartmentKey || ''),
                     isPrimary: !!st.isPrimary,
@@ -21025,6 +21140,7 @@
                     id: id, username: username, password: password,
                     role: st.role, permissions: st.permissions.slice(),
                     assignedBranchCity: st.assignedBranchCity,
+                    assignedBranchId: st.assignedBranchId || resolveBranchIdByCity(st.assignedBranchCity),
                     hrScopeBranchId: st.role === 'hr' ? (st.hrScopeBranchId || '') : '',
                     hrScopeDepartmentKey: st.role === 'hr' ? (st.hrScopeDepartmentKey || '') : '',
                     isPrimary: false, isActive: true,
@@ -21064,10 +21180,11 @@
                 const branchTag = String(user.assignedBranchCity || '').trim()
                     ? '<span class="nebras-user-branch"><i class="fas fa-store"></i> فرع ' + escapeHtmlAttr(user.assignedBranchCity) + '</span>'
                     : '<span class="nebras-user-branch nebras-user-branch--all"><i class="fas fa-globe"></i> كل الفروع</span>';
-                const actions = user.isPrimary
-                    ? '<button class="nebras-user-act" onclick="editUser(' + index + ')"><i class="fas fa-pen"></i> تعديل</button>'
-                    : '<button class="nebras-user-act" onclick="editUser(' + index + ')"><i class="fas fa-pen"></i> تعديل</button>' +
-                      '<button class="nebras-user-act nebras-user-act--danger" onclick="deleteUser(' + index + ')"><i class="fas fa-trash"></i> حذف</button>';
+                const lockedPrimary = isImmutablePrimaryAdmin(user);
+                let actions = '<button class="nebras-user-act" onclick="editUser(' + index + ')"><i class="fas fa-pen"></i> تعديل</button>';
+                if (!lockedPrimary) {
+                    actions += '<button class="nebras-user-act nebras-user-act--danger" onclick="deleteUser(' + index + ')"><i class="fas fa-trash"></i> حذف</button>';
+                }
                 return '<article class="nebras-user-card" style="--role-accent:' + accent + '">' +
                     '<header class="nebras-user-card-head">' +
                         '<span class="nebras-user-avatar"><i class="' + (def.icon || 'fas fa-user') + '"></i></span>' +
@@ -21092,8 +21209,8 @@
             }
             const user = adminUsers[index];
             if (!user) return;
-            if (user.isPrimary || user.id === 'base-admin' || PRIMARY_GOVERNANCE_ADMIN_IDS.indexOf(user.id) >= 0) {
-                alert('لا يمكن حذف حساب الإدارة الرئيسية.');
+            if (isImmutablePrimaryAdmin(user)) {
+                alert('لا يمكن حذف حساب الإدارة الرئيسية NEBRASFACTORY.');
                 return;
             }
             if (confirm('هل تريد حذف المستخدم ' + user.username + '؟')) {
@@ -21541,20 +21658,53 @@
                 const thumb = imgSrc
                     ? '<img src="' + escapeHtmlAttr(imgSrc) + '" alt="" class="scm-list-thumb" loading="lazy">'
                     : '<span class="scm-editor-thumb scm-editor-thumb--empty"><i class="fas fa-map-marker-alt"></i></span>';
+                const teamCount = countBranchGovernedUsers(branch);
+                const govBtn = isMainGovernanceAdmin()
+                    ? '<button type="button" onclick="openBranchGovernanceUser(' + index + ')"><i class="fas fa-user-shield"></i> إدارة الفرع</button>'
+                    : '';
                 return '<article class="erp-row scm-list-card">' + thumb +
                     '<div class="erp-row-main scm-list-copy"><strong>' + escapeHtmlAttr(branch.city || '—') + '</strong>' +
                         '<span class="erp-row-tags">' +
                             '<span class="erp-tag">' + escapeHtmlAttr(branch.city_en || '—') + '</span>' +
                             (branch.city_zh ? '<span class="erp-tag">' + escapeHtmlAttr(branch.city_zh) + '</span>' : '') +
+                            '<span class="erp-tag erp-tag--ok"><i class="fas fa-users"></i> ' + teamCount + ' مستخدم</span>' +
                         '</span>' +
                         '<small><i class="fas fa-phone"></i> ' + escapeHtmlAttr(branch.salesPhone || '—') +
-                            (branch.image ? ' · <i class="fas fa-image"></i> ' + escapeHtmlAttr(branch.image) : '') + '</small>' +
+                            (branch.image ? ' · <i class="fas fa-image"></i> ' + escapeHtmlAttr(branch.image) : '') +
+                            ' · <i class="fas fa-id-badge"></i> #' + escapeHtmlAttr(String(branch.id || '')) + '</small>' +
                     '</div>' +
-                    '<div class="scm-row-actions">' +
+                    '<div class="scm-row-actions">' + govBtn +
                         '<button type="button" onclick="openBranchEditor(' + index + ')"><i class="fas fa-pen"></i> تعديل</button>' +
                         '<button type="button" onclick="deleteBranch(' + index + ')"><i class="fas fa-trash"></i> حذف</button>' +
                     '</div></article>';
             }).join('');
+        }
+
+        function openBranchGovernanceUser(branchIndex) {
+            if (!isMainGovernanceAdmin()) {
+                alert('إنشاء مدير فرع — الإدارة الرئيسية فقط.');
+                return;
+            }
+            const branch = branchesData[branchIndex];
+            if (!branch) return;
+            openUserManagement();
+            nebrasUserEditorState = {
+                index: -1,
+                isEdit: false,
+                isPrimary: false,
+                id: 'BR-' + (branch.id || Date.now()),
+                username: '',
+                password: '',
+                role: 'branch_manager',
+                assignedBranchCity: branch.city || '',
+                assignedBranchId: branch.id || resolveBranchIdByCity(branch.city),
+                hrScopeBranchId: '',
+                hrScopeDepartmentKey: '',
+                permissions: (rolePermissions.branch_manager || []).slice()
+            };
+            renderUserEditorForm();
+            const editor = document.getElementById('nebras-user-editor');
+            if (editor) editor.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
         function openBranchEditor(index) {
@@ -21639,6 +21789,11 @@
             displayBranches();
             saveContentData();
             addAuditLog(editorMode === 'edit' ? 'تعديل فرع' : 'إضافة فرع', normalized.city + ' — ' + normalized.salesPhone);
+            if (editorMode !== 'edit' && isMainGovernanceAdmin()) {
+                const msg = 'تم إنشاء فرع «' + normalized.city + '». الخطوة التالية: أضيفي مدير فرع ومندوبي مبيعات من «إدارة الفرع» أو إدارة المستخدمين.';
+                if (typeof showNebrasAdminToast === 'function') showNebrasAdminToast(msg, 'ok');
+                else alert(msg);
+            }
         }
 
         function cancelBranchEditor() {
@@ -22054,16 +22209,22 @@
             });
             if (!Array.isArray(visitorIcons)) visitorIcons = [];
             purgeStaleCatalogReferences();
-            if (!adminUsers.some(function(user) { return user.id === 'base-admin'; })) {
-                adminUsers.unshift({ id: 'base-admin', username: 'NEBRASBASIC', password: 'NEBRASBASIC123', role: 'superadmin', isPrimary: true });
-            }
-            if (!adminUsers.some(function(user) { return String(user.username || '').toUpperCase() === 'NEBRASFACTORY'; })) {
-                adminUsers.unshift({ id: 'nebras-factory-admin', username: 'NEBRASFACTORY', password: 'NEBRASFACTORYCOMPANYBASIC', role: 'superadmin', isPrimary: true });
+            if (!adminUsers.some(function(user) { return String(user.username || '').toUpperCase() === IMMUTABLE_PRIMARY_ADMIN_USERNAME; })) {
+                adminUsers.unshift({
+                    id: IMMUTABLE_PRIMARY_ADMIN_ID,
+                    username: IMMUTABLE_PRIMARY_ADMIN_USERNAME,
+                    password: 'NEBRASFACTORYCOMPANYBASIC',
+                    role: 'superadmin',
+                    isPrimary: true
+                });
             }
             adminUsers.forEach(function(u) {
-                if (u.isPrimary) {
+                if (isImmutablePrimaryAdmin(u)) {
+                    u.isPrimary = true;
                     u.role = 'superadmin';
                     u.permissions = null;
+                } else if (u.isPrimary && !isImmutablePrimaryAdmin(u)) {
+                    u.isPrimary = false;
                 }
             });
         }
@@ -22274,16 +22435,22 @@
             if (!Array.isArray(visitorIcons)) {
                 visitorIcons = [];
             }
-            if (!adminUsers.some(user => user.id === 'base-admin')) {
-                adminUsers.unshift({ id: 'base-admin', username: 'NEBRASBASIC', password: 'NEBRASBASIC123', role: 'superadmin', isPrimary: true });
-            }
-            if (!adminUsers.some(function(user) { return String(user.username || '').toUpperCase() === 'NEBRASFACTORY'; })) {
-                adminUsers.unshift({ id: 'nebras-factory-admin', username: 'NEBRASFACTORY', password: 'NEBRASFACTORYCOMPANYBASIC', role: 'superadmin', isPrimary: true });
+            if (!adminUsers.some(function(user) { return String(user.username || '').toUpperCase() === IMMUTABLE_PRIMARY_ADMIN_USERNAME; })) {
+                adminUsers.unshift({
+                    id: IMMUTABLE_PRIMARY_ADMIN_ID,
+                    username: IMMUTABLE_PRIMARY_ADMIN_USERNAME,
+                    password: 'NEBRASFACTORYCOMPANYBASIC',
+                    role: 'superadmin',
+                    isPrimary: true
+                });
             }
             adminUsers.forEach(function(u) {
-                if (u.isPrimary) {
+                if (isImmutablePrimaryAdmin(u)) {
+                    u.isPrimary = true;
                     u.role = 'superadmin';
                     u.permissions = null;
+                } else if (u.isPrimary && !isImmutablePrimaryAdmin(u)) {
+                    u.isPrimary = false;
                 }
             });
         }
@@ -22637,6 +22804,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             bindNebrasHrPlatformGlobals();
             enforceAdminDashboardGate();
+            if (typeof ensureAdminPanelExitChrome === 'function') ensureAdminPanelExitChrome();
             if (typeof bindAdminLoginForm === "function") bindAdminLoginForm();
             initNebrasWelcomeAudioEarly();
             bindBrandIntroWelcomeGestures();
@@ -24855,6 +25023,8 @@
         window.logoutAdmin = logoutAdmin;
         window.openAdminPanel = openAdminPanel;
         window.closeAdminOverlay = closeAdminOverlay;
+        window.closeAdminSection = closeAdminSection;
+        window.ensureAdminPanelExitChrome = ensureAdminPanelExitChrome;
         window.onDashboardTileClick = onDashboardTileClick;
         window.runDashboardHandler = runDashboardHandler;
         window.scrollToDashboardSection = scrollToDashboardSection;
@@ -24942,6 +25112,8 @@
         window.addPriceListItem = addPriceListItem;
         window.deletePriceListItem = deletePriceListItem;
         window.openRepQuoteBuilder = openRepQuoteBuilder;
+        window.openAluminumQuoteBuilder = openAluminumQuoteBuilder;
+        window.openBranchGovernanceUser = openBranchGovernanceUser;
         window.addRepQuoteLine = addRepQuoteLine;
         window.removeRepQuoteLine = removeRepQuoteLine;
         window.saveRepQuote = saveRepQuote;

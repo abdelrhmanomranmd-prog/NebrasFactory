@@ -997,6 +997,54 @@ body.admin-session #admin-dashboard.show .admin-only-ui {
     color: #155e94;
 }
 
+.cart-bank-quick-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(148px, 1fr));
+    gap: 10px;
+}
+
+.cart-bank-quick-card {
+    display: flex;
+    flex-direction: column;
+    background: #fff;
+    border: 1px solid rgba(13, 40, 64, 0.1);
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 14px rgba(13, 40, 64, 0.06);
+}
+
+.cart-bank-quick-logo {
+    width: 100%;
+    height: auto;
+    display: block;
+    object-fit: contain;
+    background: #f8fafc;
+    min-height: 74px;
+}
+
+.cart-bank-quick-logo--fallback {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 74px;
+    color: #0d2840;
+    font-size: 1.5rem;
+    background: #f0f7ff;
+}
+
+.cart-bank-quick-body {
+    padding: 8px 10px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.cart-bank-quick-name {
+    font-size: 0.78rem;
+    color: #0d2840;
+    line-height: 1.35;
+}
+
 .cart-bank-quick-item {
     display: flex;
     flex-wrap: wrap;

@@ -363,3 +363,103 @@ body:not(.admin-session) #admin-dashboard.show {
 .admin-modal--enterprise .admin-modal-body .status--error { color: #fca5a5; }
 .admin-modal--enterprise .admin-modal-body .status--ok { color: #6ee7b7; }
 .admin-modal-actions button.primary:disabled { opacity: 0.65; cursor: wait; }
+
+/* ── شريط رجوع/إغلاق موحّد لكل لوحات الإدارة ── */
+.admin-section.show {
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: flex-start;
+    padding: 58px 16px 20px;
+}
+
+.nebras-admin-exit-bar {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 2101;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 16px;
+    background: rgba(6, 46, 68, 0.97);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+    backdrop-filter: blur(8px);
+}
+
+.admin-section.show > .nebras-admin-exit-bar {
+    display: flex;
+}
+
+.nebras-admin-exit-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    font-family: inherit;
+    font-size: 0.84rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+}
+
+.nebras-admin-exit-back:hover {
+    background: rgba(56, 189, 248, 0.22);
+    transform: translateY(-1px);
+}
+
+.nebras-admin-exit-close {
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    font-size: 1rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, color 0.2s;
+}
+
+.nebras-admin-exit-close:hover {
+    background: rgba(220, 38, 38, 0.85);
+    border-color: rgba(220, 38, 38, 0.5);
+}
+
+/* تجاوز قاعدة الأزرار العامة القديمة داخل اللوحات */
+.admin-section .admin-modal button.nebras-users-close,
+.admin-section .admin-modal button.nebras-scm-close,
+.admin-section .admin-modal .nebras-erp-head button.nebras-users-close,
+.admin-section .admin-modal .nebras-users-head button.nebras-users-close {
+    width: 40px !important;
+    height: 40px !important;
+    min-width: 40px !important;
+    min-height: 40px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border-radius: 12px !important;
+    border: 1px solid rgba(255, 255, 255, 0.25) !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: #fff !important;
+    font-size: 1.1rem !important;
+    font-weight: 400 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex-shrink: 0 !important;
+    box-shadow: none !important;
+}
+
+.admin-section .admin-modal button.nebras-users-close:hover,
+.admin-section .admin-modal button.nebras-scm-close:hover {
+    background: rgba(255, 80, 80, 0.85) !important;
+    transform: rotate(90deg);
+}
