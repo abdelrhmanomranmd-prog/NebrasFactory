@@ -1,0 +1,82 @@
+/* نبراس Accounting — قسم الحسابات */
+.accounting-workspace-section .acc-workspace-app { --acc-accent: #8e44ad; }
+
+.acc-ws-sidebar { border-inline-start: 4px solid var(--acc-accent); }
+.acc-brand-icon { background: linear-gradient(135deg, #8e44ad, #6c3483); }
+.acc-pill { background: rgba(142, 68, 173, 0.12); color: #6c3483; }
+
+.acc-command-hero {
+    background: linear-gradient(135deg, rgba(142, 68, 173, 0.08), rgba(108, 52, 131, 0.04));
+    border: 1px solid rgba(142, 68, 173, 0.18);
+    border-radius: 16px;
+    padding: 22px;
+    margin-bottom: 18px;
+}
+
+.acc-dash-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 12px;
+    margin-bottom: 18px;
+}
+
+.acc-dash-card {
+    background: #fff;
+    border: 1px solid #e8edf2;
+    border-radius: 12px;
+    padding: 16px;
+}
+
+.acc-dash-card h3 { font-size: 0.82rem; color: #5d6d7e; margin: 0 0 8px; }
+.acc-dash-card strong { font-size: 1.2rem; color: #4a235a; display: block; }
+.acc-dash-card small { color: #95a5a6; font-size: 0.78rem; }
+.acc-dash-card--ok strong { color: #1e8449; }
+.acc-dash-card--danger strong { color: #c0392b; }
+
+.acc-quick-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.acc-toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+.acc-editor { background: #faf8fc; border: 1px solid #e8dff0; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+.acc-editor h4 { margin: 0 0 12px; color: #4a235a; }
+
+.acc-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding: 12px 14px;
+    background: #fff;
+    border: 1px solid #ebe6f0;
+    border-radius: 10px;
+    margin-bottom: 8px;
+}
+
+.acc-row-amt { color: #6c3483; white-space: nowrap; }
+
+.acc-profit-hero {
+    background: #faf8fc;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+    border: 1px solid #e8dff0;
+}
+
+.acc-reports-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 14px;
+}
+
+.acc-report-card {
+    background: #fff;
+    border: 1px solid #e8dff0;
+    border-radius: 14px;
+    padding: 20px;
+    text-align: center;
+}
+
+.acc-report-card i { font-size: 1.8rem; color: #8e44ad; margin-bottom: 10px; }
+.acc-report-card h4 { margin: 0 0 8px; color: #4a235a; }
+.acc-report-card p { font-size: 0.85rem; color: #7f8c8d; margin-bottom: 14px; }
+.acc-report-card--full { grid-column: 1 / -1; }
+
+body.accounting-platform-open .admin-dashboard-overlay { display: none; }

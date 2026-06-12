@@ -1,0 +1,134 @@
+/* إمبراطورية نبراس — لوحة الحوكمة الرئيسية */
+.dashboard-governance-pillars {
+    margin: 16px 0 8px;
+    padding: 18px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, rgba(13, 40, 64, 0.04), rgba(21, 94, 148, 0.06));
+    border: 1px solid rgba(21, 94, 148, 0.14);
+}
+
+.dashboard-governance-pillars-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+}
+
+.dashboard-governance-pillars-head h3 {
+    margin: 0;
+    font-size: 1rem;
+    color: #0d2840;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.dashboard-governance-pillars-head p {
+    margin: 0;
+    font-size: 0.82rem;
+    color: #5d6d7e;
+}
+
+.gov-pillars-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+}
+
+.gov-pillar-card {
+    background: #fff;
+    border: 1px solid #dce6f0;
+    border-radius: 14px;
+    padding: 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.gov-pillar-card:hover {
+    border-color: #2980b9;
+    box-shadow: 0 4px 16px rgba(21, 94, 148, 0.1);
+}
+
+.gov-pillar-card--hq {
+    border-color: rgba(212, 175, 55, 0.45);
+    background: linear-gradient(135deg, #fffef8, #fff);
+}
+
+.gov-pillar-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 1rem;
+}
+
+.gov-pillar-card strong { color: #0d2840; font-size: 0.92rem; }
+.gov-pillar-card span { font-size: 0.78rem; color: #718096; line-height: 1.45; }
+
+.gov-pillar-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 4px;
+}
+
+.gov-pillar-btn {
+    border: 1px solid #d0dbe8;
+    background: #f4f8fc;
+    border-radius: 999px;
+    padding: 5px 12px;
+    font-size: 0.76rem;
+    cursor: pointer;
+    color: #1a5276;
+    font-family: inherit;
+}
+
+.gov-pillar-btn:hover { background: #e8f2fa; border-color: #2980b9; }
+.gov-pillar-btn--primary {
+    background: linear-gradient(135deg, #155e94, #0d2840);
+    border-color: #0d2840;
+    color: #fff;
+}
+
+.gov-branches-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px dashed #d0dbe8;
+}
+
+.gov-branch-chip {
+    border: 1px solid #d0dbe8;
+    background: #fff;
+    border-radius: 999px;
+    padding: 6px 14px;
+    font-size: 0.78rem;
+    cursor: pointer;
+    color: #2c5282;
+}
+
+.gov-branch-chip:hover { border-color: #2980b9; background: #f0f7ff; }
+
+#admin-dashboard.dashboard-main-governance .dashboard-command-title {
+    background: linear-gradient(90deg, #d4af37, #f4e4a6);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+#admin-dashboard.dashboard-main-governance .dashboard-command-shell {
+    border-bottom: 2px solid rgba(212, 175, 55, 0.35);
+}
+
+@media (max-width: 768px) {
+    .gov-pillars-grid { grid-template-columns: 1fr; }
+}

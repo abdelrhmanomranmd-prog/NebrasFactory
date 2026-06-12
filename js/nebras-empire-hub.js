@@ -15,7 +15,7 @@
 
     function canViewEmpireHub() {
         if (typeof isMainGovernanceAdmin === 'function' && isMainGovernanceAdmin()) return true;
-        if (typeof canManage === 'function' && (canManage('erp') || canManage('hr') || canManage('legal') || canManage('customerService') || canManage('audit'))) return true;
+        if (typeof canManage === 'function' && (canManage('erp') || canManage('hr') || canManage('legal') || canManage('accounting') || canManage('customerService') || canManage('audit'))) return true;
         return false;
     }
 
@@ -36,6 +36,7 @@
             { id: 'hr', icon: 'fas fa-people-roof', label: 'نبراس HCM', desc: 'موظفون · رواتب · سعودة · أسطول · GPS · شركات شريكة', handler: 'openHrPlatform', perm: 'hr', color: '#2980b9' },
             { id: 'legal', icon: 'fas fa-scale-balanced', label: 'نبراس Legal', desc: 'عقود · قضايا · امتثال · PDPL · شراكات', handler: 'openLegalPlatform', perm: 'legal', color: '#6c3483' },
             { id: 'crm', icon: 'fas fa-handshake', label: 'نبراس CRM', desc: 'عملاء · Pipeline · فرص · Leads', handler: 'openCrmPlatform', perm: 'customerService', color: '#1a6fa8' },
+            { id: 'accounting', icon: 'fas fa-calculator', label: 'نبراس Accounting', desc: 'حسابات · تحويلات · مبيعات · PDF', handler: 'openAccountingPlatform', perm: 'accounting', color: '#8e44ad' },
             { id: 'users', icon: 'fas fa-users-cog', label: 'المستخدمون والصلاحيات', desc: 'كل قسم · كل فرع · RBAC', handler: 'openUserManagement', perm: 'users', color: '#2c3e50' },
             { id: 'branches', icon: 'fas fa-map-marked-alt', label: 'شبكة الفروع', desc: 'المقر + فروع المملكة', handler: 'openBranchesManagement', perm: 'branches', color: '#16a085' },
             { id: 'analytics', icon: 'fas fa-chart-pie', label: 'ذكاء الأعمال BI', desc: 'تحليلات · تقارير تنفيذية', handler: 'openExecutiveReports', perm: 'audit', color: '#8e44ad' },
@@ -53,7 +54,7 @@
             { roles: ['legal'], icon: 'fas fa-scale-balanced', label: 'شؤون قانونية', desc: 'عقود · قضايا · امتثال المجموعة', handlers: ['openLegalPlatform'] },
             { roles: ['sales_manager', 'branch_manager'], icon: 'fas fa-chart-line', label: 'مبيعات الفرع', desc: 'CRM · عروض · طلبات · فريق المندوبين', handlers: ['openCrmPlatform', 'openRepQuoteBuilder', 'openErpOrders', 'openBranchTeamManagement'] },
             { roles: ['sales_rep'], icon: 'fas fa-file-signature', label: 'مندوب مبيعات', desc: 'عروض أسعار فقط — PDF للعملاء', handlers: ['openRepQuoteBuilder'] },
-            { roles: ['accountant'], icon: 'fas fa-file-invoice-dollar', label: 'محاسبة الفرع', desc: 'حسابات · تحويلات · مشتريات', handlers: ['openErpAccounting', 'openErpProcurement'] },
+            { roles: ['accountant', 'accounting_manager'], icon: 'fas fa-calculator', label: 'قسم الحسابات', desc: 'تحويلات · مبيعات · PDF', handlers: ['openAccountingPlatform', 'openErpProcurement'] },
             { roles: ['inventory_manager', 'warehouse_manager'], icon: 'fas fa-warehouse', label: 'مخزون ومستودع', desc: 'SKU · جرد · تحويلات', handlers: ['openErpInventory', 'openErpWarehouseTransfers'] },
             { roles: ['production_manager', 'wpc_manager'], icon: 'fas fa-door-closed', label: 'إنتاج WPC', desc: 'مصنع الأبواب — مخزون · إنتاج · عروض', handlers: ['openWpcProductionDepartment'] },
             { roles: ['aluminum_manager'], icon: 'fas fa-industry', label: 'قسم الألومنيوم', desc: 'مخزون · إنتاج · عروض ALU', handlers: ['openAluminumDepartment'] },
