@@ -27,6 +27,15 @@
     pointer-events: auto !important;
 }
 
+#legal-platform.hr-workspace-section.admin-section.show,
+#crm-platform.hr-workspace-section.admin-section.show,
+#accounting-platform.accounting-workspace-section.admin-section.show {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
+
 #hr-platform .hr-workspace-app,
 .admin-section.show .hr-workspace-app {
     display: flex;

@@ -14401,6 +14401,30 @@
             });
         }
 
+        function initPlatformInteractionLayerGuard() {
+            if (window.__nebrasLayerGuard) return;
+            window.__nebrasLayerGuard = true;
+            let syncQueued = false;
+            function queueLayerSync() {
+                if (syncQueued) return;
+                syncQueued = true;
+                requestAnimationFrame(function() {
+                    syncQueued = false;
+                    clearStuckInteractionBlockers();
+                });
+            }
+            document.addEventListener('click', queueLayerSync, true);
+            document.addEventListener('visibilitychange', function() {
+                if (!document.hidden) queueLayerSync();
+            });
+            if (typeof MutationObserver !== 'undefined') {
+                const observer = new MutationObserver(queueLayerSync);
+                document.querySelectorAll('.admin-section, .admin-overlay, .cart-drawer-overlay, .sales-quote-detail-overlay, .nebras-callback-overlay').forEach(function(el) {
+                    observer.observe(el, { attributes: true, attributeFilter: ['class', 'hidden'] });
+                });
+            }
+        }
+
         function bindStorefrontCommerceClicks() {
             if (document.body.dataset.nebrasCommerceBound === '1') return;
             document.body.dataset.nebrasCommerceBound = '1';
@@ -24107,6 +24131,7 @@
         document.addEventListener('DOMContentLoaded', function() {
             initNebrasConsoleGuard();
             clearStuckInteractionBlockers();
+            initPlatformInteractionLayerGuard();
             bindPlatformUniversalClicks();
             bindNebrasHrPlatformGlobals();
             enforceAdminDashboardGate();
@@ -26340,6 +26365,7 @@
         window.openCustomerComplaints = openCustomerComplaints;
         window.openBankAccountCard = openBankAccountCard;
         window.clearStuckInteractionBlockers = clearStuckInteractionBlockers;
+        window.initPlatformInteractionLayerGuard = initPlatformInteractionLayerGuard;
         window.bindStorefrontCommerceClicks = bindStorefrontCommerceClicks;
         window.getNebrasCurrentAdmin = function() { return currentAdmin; };
         window.getNebrasErpOrders = function() { return erpOrders || []; };

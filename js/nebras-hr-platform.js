@@ -637,6 +637,7 @@
             dash.setAttribute('aria-hidden', 'false');
         }
         if (typeof showNebrasAdminToast === 'function') showNebrasAdminToast('عودة للداشبورد', 'ok');
+        if (typeof clearStuckInteractionBlockers === 'function') clearStuckInteractionBlockers();
     }
 
     function showHrPlatformShell() {
@@ -664,6 +665,7 @@
         initHrWorkspaceInteractions();
         paintHrWorkspaceShell();
         updateHrWorkspaceChrome();
+        if (typeof clearStuckInteractionBlockers === 'function') clearStuckInteractionBlockers();
         return true;
     }
 

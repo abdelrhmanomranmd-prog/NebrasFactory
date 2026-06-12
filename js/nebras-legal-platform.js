@@ -909,6 +909,7 @@
         el.classList.add('show');
         el.setAttribute('aria-hidden', 'false');
         document.body.classList.add('legal-platform-open');
+        if (typeof clearStuckInteractionBlockers === 'function') clearStuckInteractionBlockers();
         return true;
     }
 
@@ -922,6 +923,7 @@
             dash.removeAttribute('hidden');
             dash.setAttribute('aria-hidden', 'false');
         }
+        if (typeof clearStuckInteractionBlockers === 'function') clearStuckInteractionBlockers();
     }
 
     function openLegalPlatform() {

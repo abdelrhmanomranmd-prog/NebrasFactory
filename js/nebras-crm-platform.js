@@ -484,6 +484,7 @@
         el.setAttribute('aria-hidden', 'false');
         document.body.classList.add('crm-platform-open');
         if (typeof ensureAdminPanelExitChrome === 'function') ensureAdminPanelExitChrome();
+        if (typeof clearStuckInteractionBlockers === 'function') clearStuckInteractionBlockers();
         return true;
     }
 
@@ -497,6 +498,7 @@
             dash.removeAttribute('hidden');
             dash.setAttribute('aria-hidden', 'false');
         }
+        if (typeof clearStuckInteractionBlockers === 'function') clearStuckInteractionBlockers();
     }
 
     function openCrmPlatform() {
