@@ -13,6 +13,7 @@ EXPECTED_KEYS = {
     'crm_customers', 'crm_opportunities', 'customer_portal_audit', 'customer_portal_users',
     'customer_service', 'dashboard_tiles',
     'erp_inventory', 'erp_orders', 'erp_procurement', 'erp_production', 'erp_purchases',
+    'procurement_custom_depts',
     'erp_stock_transfers', 'erp_transfers', 'hr_attendance', 'hr_companies', 'hr_deductions',
     'hr_dept_activity', 'hr_documents', 'hr_email_queue', 'hr_employees', 'hr_gps_consents',
     'hr_gps_positions', 'hr_gps_settings', 'hr_leave', 'hr_notif_settings', 'hr_notifications',

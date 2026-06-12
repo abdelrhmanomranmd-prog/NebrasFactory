@@ -1897,7 +1897,23 @@
         let erpProcurement = [];
         /** NebrasERP — وحدات تشغيلية إضافية (إنتاج · مشتريات · تحويلات · قائمة أسعار) */
         let erpProduction = [];   // { id, date, productAr, color, size, qty, unitAr, lineAr, note, by, branch, addedToStock }
-        let erpPurchases = [];    // { id, date, supplier, item, qty, unitCost, total, status, note, by }
+        let erpPurchases = [];    // { id, date, supplier, item, qty, unitCost, total, status, note, by, branchId, branch, scopeType, departmentKey, department }
+        let procurementCustomDepts = []; // { key, labelAr, addedBy, addedAt } — أقسام مخصّصة تضيفها الإدارة الرئيسية
+        let procurementViewScope = 'hq'; // hq | all-branches | branchId
+        const DEFAULT_PROCUREMENT_DEPTS = {
+            admin: 'الإدارة العامة',
+            production_wpc: 'إنتاج WPC',
+            production_alu: 'خط الألومنيوم',
+            workshop: 'الورشة والتشغيل',
+            mechanical_workshop: 'ورشة ميكانيكا',
+            warehouse: 'المستودع',
+            workers_housing: 'سكن العمال',
+            quality: 'الجودة والفحص',
+            maintenance: 'الصيانة والمرافق',
+            installation: 'التركيب والميداني',
+            sales: 'المبيعات والعروض',
+            hr: 'الموارد البشرية'
+        };
         let erpTransfers = [];    // { id, date, customerName, bankAr, amount, refNo, quoteNo, status, by }
         let erpStockTransfers = []; // { id, date, sku, productAr, qty, fromWarehouse, toWarehouse, status, note, by }
         let salesPriceList = [];  // { id, productAr, productEn, sku, color, size, unitAr, basePrice, minPrice, maxPrice, visible }
@@ -5350,7 +5366,12 @@
 
         function scrollToDashboardSection(elementId) {
             const el = document.getElementById(elementId);
-            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            if (el) {
+                const nav = document.getElementById('dashboard-main-nav');
+                const navH = nav ? nav.getBoundingClientRect().height : 0;
+                const top = el.getBoundingClientRect().top + window.scrollY - navH - 12;
+                window.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
+            }
             const navMap = {
                 'admin-analytics-hub': 'dash-nav-analytics',
                 'dashboard-partners-block': 'dash-nav-partners',
@@ -10381,6 +10402,20 @@
             await pickMediaPath({ label: 'رفع وسائط للموقع', hint: 'صورة · PDF · فيديو — تُرفع إلى Supabase وتُستخدم في المحتوى' });
         }
 
+        function bindDashboardTileInteractions() {
+            ['dashboard-actions-grid', 'dashboard-secondary-grid'].forEach(function(gridId) {
+                const grid = document.getElementById(gridId);
+                if (!grid || grid.dataset.tileBound === '1') return;
+                grid.dataset.tileBound = '1';
+                grid.addEventListener('click', function(ev) {
+                    const card = ev.target.closest('.dashboard-tile-card[data-tile-id]');
+                    if (!card || card.disabled) return;
+                    const tileId = card.getAttribute('data-tile-id');
+                    if (tileId) onDashboardTileClick(tileId);
+                });
+            });
+        }
+
         function renderDashboardTiles() {
             const quick = document.getElementById('dashboard-actions-grid');
             const secondary = document.getElementById('dashboard-secondary-grid');
@@ -10412,13 +10447,13 @@
                 const group = tile.dashGroup || (zone === 'grid' ? 'erp' : 'command');
                 const groupLabel = group === 'erp' ? 'ERP' : 'قيادة';
                 const groupClass = group === 'erp' ? 'dashboard-tile-group-badge--erp' : 'dashboard-tile-group-badge--command';
-                return '<div class="dashboard-tile-card' + zoneClass + extraClass + '" data-tile-id="' + escapeHtmlAttr(tile.id) + '" style="--tile-i:' + index + '" onclick="onDashboardTileClick(\'' + String(tile.id).replace(/'/g, "\\'") + '\')" role="button" tabindex="0">' +
+                return '<button type="button" class="dashboard-tile-card' + zoneClass + extraClass + '" data-tile-id="' + escapeHtmlAttr(tile.id) + '" style="--tile-i:' + index + '">' +
                     '<span class="dashboard-tile-group-badge ' + groupClass + '">' + escapeHtmlAttr(groupLabel) + '</span>' +
                     '<div class="dashboard-tile-glow" aria-hidden="true"></div>' +
                     '<div class="dashboard-tile-icon"><i class="' + escapeHtmlAttr(tile.iconClass || 'fas fa-star') + '"></i></div>' +
                     '<h3>' + escapeHtmlAttr(title) + '</h3>' +
                     '<p>' + escapeHtmlAttr(text) + '</p>' +
-                    '<span class="dashboard-tile-arrow"><i class="fas fa-arrow-left"></i> فتح</span></div>';
+                    '<span class="dashboard-tile-arrow"><i class="fas fa-arrow-left"></i> فتح</span></button>';
             }
 
             if (quick) {
@@ -10440,6 +10475,7 @@
                     if (node && tile.backgroundImage) applyBackgroundToNode(node, tile.backgroundImage, false);
                 });
             }
+            bindDashboardTileInteractions();
             renderPartnersMarquees();
         }
 
@@ -12945,6 +12981,8 @@
         function ensureErpOperationsData() {
             if (!Array.isArray(erpProduction)) erpProduction = [];
             if (!Array.isArray(erpPurchases)) erpPurchases = [];
+            ensureProcurementRegistry();
+            erpPurchases = erpPurchases.map(normalizePurchaseRecord);
             if (!Array.isArray(erpTransfers)) erpTransfers = [];
             if (!Array.isArray(erpStockTransfers)) erpStockTransfers = [];
             if (!Array.isArray(salesPriceList)) salesPriceList = [];
@@ -13093,23 +13131,190 @@
             }).join('');
         }
 
-        /* ---------- المشتريات والموردون ---------- */
+        /* ---------- المشتريات — مصنع + فروع (ديناميكي) ---------- */
+        function ensureProcurementRegistry() {
+            if (!Array.isArray(procurementCustomDepts)) procurementCustomDepts = [];
+        }
+
+        function getProcurementDepartmentMap() {
+            ensureProcurementRegistry();
+            const map = {};
+            Object.keys(DEFAULT_PROCUREMENT_DEPTS).forEach(function(k) { map[k] = DEFAULT_PROCUREMENT_DEPTS[k]; });
+            if (typeof getHrFactoryDepts === 'function') {
+                const hr = getHrFactoryDepts() || {};
+                Object.keys(hr).forEach(function(k) { if (!map[k]) map[k] = hr[k]; });
+            }
+            procurementCustomDepts.forEach(function(d) {
+                if (d && d.key && d.labelAr) map[d.key] = d.labelAr;
+            });
+            return map;
+        }
+
+        function getProcurementBranchRegistry() {
+            ensureBuiltinBranches();
+            const hq = { id: 'hq', city: 'المقر — مصنع نبراس', label: 'مصنع نبراس — المقر', type: 'factory' };
+            const branches = (branchesData || []).map(function(b) {
+                const city = String(b.city || b.cityAr || '').trim();
+                return { id: String(b.id), city: city, label: city, type: 'branch' };
+            }).filter(function(b) { return b.city; });
+            return [hq].concat(branches);
+        }
+
+        function resolveProcurementBranchMeta(branchId) {
+            const reg = getProcurementBranchRegistry();
+            const hit = reg.find(function(b) { return String(b.id) === String(branchId); });
+            if (hit) return { branchId: hit.id, branch: hit.city, scopeType: hit.type === 'factory' ? 'factory' : 'branch' };
+            return { branchId: branchId || 'hq', branch: String(branchId || ''), scopeType: 'branch' };
+        }
+
+        function resolveProcurementDefaultsForAdmin() {
+            const admin = currentAdmin;
+            if (admin && !isMainGovernanceAdmin(admin) && getAdminAssignedBranchId(admin) != null) {
+                const bid = String(getAdminAssignedBranchId(admin));
+                const meta = resolveProcurementBranchMeta(bid);
+                procurementViewScope = bid;
+                return meta;
+            }
+            if (procurementViewScope === 'all-branches') {
+                const firstBranch = getProcurementBranchRegistry().find(function(b) { return b.type === 'branch'; });
+                if (firstBranch) return resolveProcurementBranchMeta(firstBranch.id);
+            }
+            return resolveProcurementBranchMeta(procurementViewScope === 'hq' ? 'hq' : procurementViewScope);
+        }
+
+        function filterPurchasesForProcurementView(purchases) {
+            let list = (purchases || []).map(normalizePurchaseRecord);
+            list = filterErpEntriesForAdmin(list, currentAdmin);
+            if (procurementViewScope === 'all-branches') {
+                return list.filter(function(p) { return String(p.branchId) !== 'hq' && p.scopeType !== 'factory'; });
+            }
+            if (procurementViewScope === 'hq') {
+                return list.filter(function(p) {
+                    return String(p.branchId) === 'hq' || p.scopeType === 'factory' ||
+                        (!p.branchId && !p.branch);
+                });
+            }
+            const branchName = getBranchNameById(procurementViewScope) || '';
+            const needle = normalizeText(branchName);
+            return list.filter(function(p) {
+                if (String(p.branchId) === String(procurementViewScope)) return true;
+                const pb = normalizeText(p.branch || '');
+                return needle && pb && (pb.indexOf(needle) >= 0 || needle.indexOf(pb) >= 0);
+            });
+        }
+
+        function normalizePurchaseRecord(p) {
+            if (!p) return p;
+            const deptMap = getProcurementDepartmentMap();
+            if (p.departmentKey && !p.department) p.department = deptMap[p.departmentKey] || p.departmentKey;
+            if (!p.branchId && p.branch) {
+                const hit = getProcurementBranchRegistry().find(function(b) {
+                    return b.city === p.branch || b.label === p.branch;
+                });
+                if (hit) {
+                    p.branchId = hit.id;
+                    p.scopeType = hit.type === 'factory' ? 'factory' : 'branch';
+                }
+            }
+            if (!p.scopeType && String(p.branchId) === 'hq') p.scopeType = 'factory';
+            return p;
+        }
+
+        function renderProcurementScopeToolbar() {
+            const host = document.getElementById('erp-procurement-toolbar');
+            if (!host) return;
+            ensureBuiltinBranches();
+            const reg = getProcurementBranchRegistry();
+            const branchChips = reg.filter(function(b) { return b.type === 'branch'; }).map(function(b) {
+                const active = String(procurementViewScope) === String(b.id) ? ' proc-scope-tab--active' : '';
+                return '<button type="button" class="proc-scope-tab proc-scope-tab--branch' + active + '" onclick="setProcurementViewScope(\'' + escapeHtmlAttr(String(b.id)) + '\')"><i class="fas fa-store"></i> ' + escapeHtmlAttr(b.label) + '</button>';
+            }).join('');
+            const hqActive = procurementViewScope === 'hq' ? ' proc-scope-tab--active' : '';
+            const allBranchesActive = procurementViewScope === 'all-branches' ? ' proc-scope-tab--active' : '';
+            const canAddDept = isMainGovernanceAdmin();
+            host.innerHTML =
+                '<div class="proc-scope-tabs">' +
+                    '<button type="button" class="proc-scope-tab proc-scope-tab--factory' + hqActive + '" onclick="setProcurementViewScope(\'hq\')"><i class="fas fa-industry"></i> مصنع نبراس</button>' +
+                    '<button type="button" class="proc-scope-tab' + allBranchesActive + '" onclick="setProcurementViewScope(\'all-branches\')"><i class="fas fa-map-marked-alt"></i> كل الفروع</button>' +
+                    branchChips +
+                '</div>' +
+                (canAddDept
+                    ? '<div class="proc-scope-actions"><button type="button" class="nebras-users-btn" onclick="addProcurementDepartmentFromUi()"><i class="fas fa-plus"></i> قسم مشتريات جديد</button></div>'
+                    : '');
+        }
+
+        function setProcurementViewScope(scope) {
+            procurementViewScope = scope || 'hq';
+            renderProcurementScopeToolbar();
+            renderErpProcurementForm();
+            displayErpProcurement();
+        }
+
+        function refreshProcurementPanels() {
+            const panel = document.getElementById('erp-procurement');
+            if (!panel || !panel.classList.contains('show')) return;
+            renderProcurementScopeToolbar();
+            renderErpProcurementForm();
+            displayErpProcurement();
+        }
+
+        function addProcurementDepartmentFromUi() {
+            if (!requireMainGovernanceAdmin('إضافة أقسام المشتريات — الإدارة الرئيسية فقط.')) return;
+            const label = prompt('اسم القسم الجديد (مثال: مختبر الجودة · ورشة لحام):');
+            if (!label || !String(label).trim()) return;
+            ensureProcurementRegistry();
+            const key = 'custom_' + Date.now();
+            procurementCustomDepts.unshift({
+                key: key,
+                labelAr: String(label).trim(),
+                addedBy: erpActor(),
+                addedAt: new Date().toISOString()
+            });
+            saveSystemData();
+            renderErpProcurementForm();
+            displayErpProcurement();
+            addAuditLog('قسم مشتريات', label);
+            if (typeof showNebrasAdminToast === 'function') showNebrasAdminToast('تمت إضافة القسم — يظهر في كل الفروع تلقائياً.', 'ok');
+        }
+
         function openErpProcurement() {
             if (!requirePermission('procurement', 'صلاحية المشتريات مطلوبة.')) return;
             ensureErpOperationsData();
+            ensureProcurementRegistry();
+            if (currentAdmin && !isMainGovernanceAdmin(currentAdmin) && getAdminAssignedBranchId(currentAdmin) != null) {
+                procurementViewScope = String(getAdminAssignedBranchId(currentAdmin));
+            }
+            renderProcurementScopeToolbar();
             renderErpProcurementForm();
             displayErpProcurement();
-            document.getElementById('erp-procurement').classList.add('show');
+            const el = document.getElementById('erp-procurement');
+            if (el) {
+                el.classList.add('show');
+                el.setAttribute('aria-hidden', 'false');
+            }
         }
 
         function renderErpProcurementForm() {
             const host = document.getElementById('erp-procurement-form');
             if (!host) return;
+            const defaults = resolveProcurementDefaultsForAdmin();
+            const branchLocked = currentAdmin && !isMainGovernanceAdmin(currentAdmin) && getAdminAssignedBranchId(currentAdmin) != null;
+            const branchOpts = buildProcurementBranchSelectOptions(defaults.branchId);
+            const deptOpts = Object.keys(getProcurementDepartmentMap()).map(function(k) {
+                const map = getProcurementDepartmentMap();
+                return '<option value="' + escapeHtmlAttr(k) + '">' + escapeHtmlAttr(map[k]) + '</option>';
+            }).join('');
+            const scopeHint = defaults.scopeType === 'factory'
+                ? 'تسجيل مشتريات المصنع — المقر'
+                : ('مشتريات فرع: ' + escapeHtmlAttr(defaults.branch || ''));
             host.innerHTML =
+                '<h3 class="nebras-erp-subhead"><i class="fas fa-plus-circle"></i> أمر شراء جديد — <small>' + scopeHint + '</small></h3>' +
                 '<div class="erp-form-grid">' +
+                    '<label class="nebras-field"><span>النطاق / الفرع</span><select id="pur-branch"' + (branchLocked ? ' disabled' : '') + ' onchange="onProcurementBranchChange()"><option value="">— اختر —</option>' + branchOpts + '</select></label>' +
+                    '<label class="nebras-field"><span>القسم المعني</span><select id="pur-dept" required><option value="">— القسم —</option>' + deptOpts + '</select></label>' +
                     '<label class="nebras-field"><span>التاريخ</span><input type="date" id="pur-date" value="' + erpToday() + '"></label>' +
                     '<label class="nebras-field"><span>المورّد</span><input type="text" id="pur-supplier" placeholder="اسم المورّد"></label>' +
-                    '<label class="nebras-field"><span>الصنف / المادة</span><input type="text" id="pur-item" placeholder="حبيبات PVC"></label>' +
+                    '<label class="nebras-field"><span>الصنف / المادة</span><input type="text" id="pur-item" placeholder="حبيبات PVC · قطع غيار · مواد بناء"></label>' +
                     '<label class="nebras-field"><span>الكمية</span><input type="number" id="pur-qty" min="0" step="any" placeholder="0"></label>' +
                     '<label class="nebras-field"><span>سعر الوحدة (ر.س)</span><input type="number" id="pur-cost" min="0" step="any" placeholder="0" oninput="updatePurchaseTotalHint()"></label>' +
                     '<label class="nebras-field"><span>الحالة</span><select id="pur-status"><option value="pending">قيد الطلب</option><option value="received">مستلَم</option><option value="paid">مدفوع</option></select></label>' +
@@ -13117,6 +13322,13 @@
                 '</div>' +
                 '<div class="erp-form-actions"><span class="erp-total-hint" id="pur-total-hint">الإجمالي: 0 ر.س</span>' +
                     '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="addErpPurchase()"><i class="fas fa-plus"></i> تسجيل أمر شراء</button></div>';
+            const branchSel = document.getElementById('pur-branch');
+            if (branchSel && defaults.branchId) branchSel.value = String(defaults.branchId);
+        }
+
+        function onProcurementBranchChange() {
+            const bid = fieldVal('pur-branch');
+            if (bid) procurementViewScope = bid;
         }
 
         function updatePurchaseTotalHint() {
@@ -13126,6 +13338,13 @@
             hint.textContent = 'الإجمالي: ' + formatSar(total);
         }
 
+        function buildProcurementBranchSelectOptions(selectedId) {
+            return getProcurementBranchRegistry().map(function(b) {
+                const sel = String(selectedId) === String(b.id) ? ' selected' : '';
+                return '<option value="' + escapeHtmlAttr(b.id) + '"' + sel + '>' + escapeHtmlAttr(b.label) + '</option>';
+            }).join('');
+        }
+
         function addErpPurchase() {
             if (!requirePermission('procurement')) return;
             ensureErpOperationsData();
@@ -13133,8 +13352,14 @@
             const item = fieldVal('pur-item');
             const qty = erpNum(fieldVal('pur-qty'));
             const unitCost = erpNum(fieldVal('pur-cost'));
+            const deptKey = fieldVal('pur-dept');
+            const deptMap = getProcurementDepartmentMap();
             if (!supplier || !item) { alert('يرجى إدخال المورّد والصنف.'); return; }
-            erpPurchases.unshift({
+            if (!deptKey) { alert('اختر القسم المعني بالمشتريات.'); return; }
+            let branchId = fieldVal('pur-branch') || procurementViewScope;
+            if (branchId === 'all-branches') branchId = resolveProcurementDefaultsForAdmin().branchId;
+            const branchMeta = resolveProcurementBranchMeta(branchId);
+            erpPurchases.unshift(normalizePurchaseRecord({
                 id: 'pur-' + Date.now(),
                 date: fieldVal('pur-date') || erpToday(),
                 supplier: supplier,
@@ -13144,19 +13369,26 @@
                 total: qty * unitCost,
                 status: fieldVal('pur-status') || 'pending',
                 note: fieldVal('pur-note'),
+                branchId: branchMeta.branchId,
+                branch: branchMeta.branch,
+                scopeType: branchMeta.scopeType,
+                departmentKey: deptKey,
+                department: deptMap[deptKey] || deptKey,
                 by: erpActor()
-            });
+            }));
             saveSystemData();
             renderErpProcurementForm();
             displayErpProcurement();
             renderErpHubPanel();
-            addAuditLog('مشتريات', supplier + ' — ' + item);
+            if (currentAdmin) renderDashboardCommandShell(currentAdmin);
+            addAuditLog('مشتريات', branchMeta.branch + ' · ' + (deptMap[deptKey] || deptKey) + ' — ' + supplier + ' — ' + item);
         }
 
         function deleteErpPurchase(id) {
             if (!requirePermission('procurement')) return;
             const p = erpPurchases.find(function(x) { return x.id === id; });
             if (!p || !confirm('حذف أمر الشراء؟')) return;
+            if (!assertErpEntryInAdminScope(p, currentAdmin, 'لا يمكنك حذف مشتريات خارج نطاقك.')) return;
             erpPurchases = erpPurchases.filter(function(x) { return x.id !== id; });
             saveSystemData();
             displayErpProcurement();
@@ -13166,27 +13398,38 @@
             const list = document.getElementById('erp-procurement-list');
             if (!list) return;
             ensureErpOperationsData();
-            const total = erpPurchases.reduce(function(s, p) { return s + erpNum(p.total); }, 0);
+            const visible = filterPurchasesForProcurementView(erpPurchases);
+            const total = visible.reduce(function(s, p) { return s + erpNum(p.total); }, 0);
             const summary = document.getElementById('erp-procurement-summary');
+            const reg = getProcurementBranchRegistry();
+            const scopeLabel = procurementViewScope === 'hq' ? 'المصنع' :
+                (procurementViewScope === 'all-branches' ? 'كل الفروع' :
+                    ((reg.find(function(b) { return String(b.id) === String(procurementViewScope); }) || {}).label || procurementViewScope));
             if (summary) {
                 summary.innerHTML =
-                    '<div class="erp-stat"><strong>' + erpPurchases.length + '</strong><span>أوامر الشراء</span></div>' +
-                    '<div class="erp-stat"><strong>' + formatSar(total) + '</strong><span>إجمالي المشتريات</span></div>';
+                    '<div class="erp-stat erp-stat--accent"><strong>' + visible.length + '</strong><span>أوامر — ' + escapeHtmlAttr(scopeLabel) + '</span></div>' +
+                    '<div class="erp-stat"><strong>' + formatSar(total) + '</strong><span>إجمالي النطاق</span></div>' +
+                    '<div class="erp-stat"><strong>' + reg.filter(function(b) { return b.type === 'branch'; }).length + '</strong><span>فروع نشطة</span></div>' +
+                    '<div class="erp-stat"><strong>' + Object.keys(getProcurementDepartmentMap()).length + '</strong><span>أقسام معنية</span></div>';
             }
             const statusLabel = { pending: 'قيد الطلب', received: 'مستلَم', paid: 'مدفوع' };
-            if (!erpPurchases.length) {
-                list.innerHTML = '<p class="erp-empty">لا أوامر شراء بعد.</p>';
+            if (!visible.length) {
+                list.innerHTML = '<p class="erp-empty">لا أوامر شراء في هذا النطاق — سجّلي أول أمر من النموذج أعلاه.</p>';
                 return;
             }
-            list.innerHTML = erpPurchases.map(function(p) {
+            list.innerHTML = visible.map(function(p) {
+                p = normalizePurchaseRecord(p);
+                const deptTag = p.department ? '<span class="erp-tag erp-tag--accent">' + escapeHtmlAttr(p.department) + '</span>' : '';
+                const branchTag = p.branch ? '<span class="erp-tag">' + escapeHtmlAttr(p.branch) + '</span>' : '';
                 return '<article class="erp-row">' +
                     '<div class="erp-row-main"><strong>' + escapeHtmlAttr(p.item) + '</strong>' +
                         '<span class="erp-row-tags"><span class="erp-tag">' + escapeHtmlAttr(p.supplier) + '</span>' +
+                            branchTag + deptTag +
                             '<span class="erp-tag erp-tag--status-' + escapeHtmlAttr(p.status) + '">' + escapeHtmlAttr(statusLabel[p.status] || p.status) + '</span></span>' +
                         '<small>' + escapeHtmlAttr(p.date) + ' · ' + erpNum(p.qty) + ' × ' + formatSar(p.unitCost) + (p.note ? ' · ' + escapeHtmlAttr(p.note) : '') + '</small>' +
                     '</div>' +
                     '<div class="erp-row-qty">' + formatSar(p.total) + '</div>' +
-                    '<button type="button" class="erp-row-del" onclick="deleteErpPurchase(\'' + p.id + '\')" aria-label="حذف"><i class="fas fa-trash"></i></button>' +
+                    '<button type="button" class="erp-row-del" onclick="deleteErpPurchase(\'' + escapeHtmlAttr(String(p.id).replace(/'/g, "\\'")) + '\')" aria-label="حذف"><i class="fas fa-trash"></i></button>' +
                 '</article>';
             }).join('');
         }
@@ -14404,6 +14647,7 @@
             { id: 'legal', type: 'dept', labelAr: 'الشؤون القانونية', descAr: 'عقود · قضايا · امتثال · PDPL', icon: 'fas fa-scale-balanced', color: '#6c3483', handlers: ['openLegalPlatform'], perm: 'legal' },
             { id: 'crm', type: 'dept', labelAr: 'CRM والمبيعات', descAr: 'عملاء · Pipeline · Leads', icon: 'fas fa-handshake', color: '#1a6fa8', handlers: ['openCrmPlatform'], perm: 'customerService' },
             { id: 'warehouse', type: 'dept', labelAr: 'المستودع والمخزون', descAr: 'SKU · جرد · تحويلات', icon: 'fas fa-warehouse', color: '#c0392b', handlers: ['openErpInventory', 'openErpWarehouseTransfers'], perm: 'inventory' },
+            { id: 'procurement', type: 'dept', labelAr: 'المشتريات', descAr: 'مصنع نبراس + كل الفروع — حسب القسم', icon: 'fas fa-truck-loading', color: '#e67e22', handlers: ['openErpProcurement'], perm: 'procurement' },
             { id: 'sales', type: 'dept', labelAr: 'المبيعات والفروع', descAr: 'عروض · طلبات · فروع المملكة', icon: 'fas fa-chart-line', color: '#1b9e57', handlers: ['openBranchesManagement', 'openSalesManagement'], perm: 'sales' }
         ];
 
@@ -14432,6 +14676,7 @@
                         openCrmPlatform: 'CRM',
                         openErpInventory: 'مخزون',
                         openErpWarehouseTransfers: 'تحويلات',
+                        openErpProcurement: 'مشتريات',
                         openBranchesManagement: 'الفروع',
                         openSalesManagement: 'مبيعات'
                     };
@@ -22417,6 +22662,7 @@
             displayBranches();
             saveContentData();
             addAuditLog(editorMode === 'edit' ? 'تعديل فرع' : 'إضافة فرع', normalized.city + ' — ' + normalized.salesPhone);
+            if (typeof refreshProcurementPanels === 'function') refreshProcurementPanels();
             if (editorMode !== 'edit' && isMainGovernanceAdmin()) {
                 const msg = 'تم إنشاء فرع «' + normalized.city + '». الخطوة التالية: أضيفي مدير فرع ومندوبي مبيعات من «إدارة الفرع» أو إدارة المستخدمين.';
                 if (typeof showNebrasAdminToast === 'function') showNebrasAdminToast(msg, 'ok');
@@ -22604,6 +22850,7 @@
             { key: 'erp_procurement', get: function() { return erpProcurement; }, set: function(v) { erpProcurement = Array.isArray(v) ? v : []; } },
             { key: 'erp_production', get: function() { return erpProduction; }, set: function(v) { erpProduction = Array.isArray(v) ? v : []; } },
             { key: 'erp_purchases', get: function() { return erpPurchases; }, set: function(v) { erpPurchases = Array.isArray(v) ? v : []; } },
+            { key: 'procurement_custom_depts', get: function() { ensureProcurementRegistry(); return procurementCustomDepts; }, set: function(v) { procurementCustomDepts = Array.isArray(v) ? v : []; } },
             { key: 'erp_transfers', get: function() { return erpTransfers; }, set: function(v) { erpTransfers = Array.isArray(v) ? v : []; } },
             { key: 'erp_stock_transfers', get: function() { return erpStockTransfers; }, set: function(v) { erpStockTransfers = Array.isArray(v) ? v : []; } },
             { key: 'sales_price_list', get: function() { return salesPriceList; }, set: function(v) { salesPriceList = Array.isArray(v) ? v : []; } },
@@ -22963,6 +23210,7 @@
             localStorage.setItem('nebrasErpProcurement', JSON.stringify(erpProcurement));
             localStorage.setItem('nebrasErpProduction', JSON.stringify(erpProduction));
             localStorage.setItem('nebrasErpPurchases', JSON.stringify(erpPurchases));
+            localStorage.setItem('nebrasProcurementCustomDepts', JSON.stringify(procurementCustomDepts || []));
             localStorage.setItem('nebrasErpTransfers', JSON.stringify(erpTransfers));
             localStorage.setItem('nebrasErpStockTransfers', JSON.stringify(erpStockTransfers));
             localStorage.setItem('nebrasSalesPriceList', JSON.stringify(salesPriceList));
@@ -23043,6 +23291,7 @@
             }
             try { const v = localStorage.getItem('nebrasErpProduction'); if (v) erpProduction = JSON.parse(v); } catch (e) { console.warn('ERP production parse error', e); }
             try { const v = localStorage.getItem('nebrasErpPurchases'); if (v) erpPurchases = JSON.parse(v); } catch (e) { console.warn('ERP purchases parse error', e); }
+            try { const v = localStorage.getItem('nebrasProcurementCustomDepts'); if (v) procurementCustomDepts = JSON.parse(v); } catch (e) { console.warn('Procurement depts parse error', e); }
             try { const v = localStorage.getItem('nebrasErpTransfers'); if (v) erpTransfers = JSON.parse(v); } catch (e) { console.warn('ERP transfers parse error', e); }
             try { const v = localStorage.getItem('nebrasErpStockTransfers'); if (v) erpStockTransfers = JSON.parse(v); } catch (e) { console.warn('ERP stock transfers parse error', e); }
             try { const v = localStorage.getItem('nebrasSalesPriceList'); if (v) salesPriceList = JSON.parse(v); } catch (e) { console.warn('Sales price list parse error', e); }
@@ -25764,6 +26013,12 @@
         window.addErpProductionEntry = addErpProductionEntry;
         window.deleteErpProductionEntry = deleteErpProductionEntry;
         window.openErpProcurement = openErpProcurement;
+        window.setProcurementViewScope = setProcurementViewScope;
+        window.addProcurementDepartmentFromUi = addProcurementDepartmentFromUi;
+        window.refreshProcurementPanels = refreshProcurementPanels;
+        window.onProcurementBranchChange = onProcurementBranchChange;
+        window.getProcurementDepartmentMap = getProcurementDepartmentMap;
+        window.getProcurementBranchRegistry = getProcurementBranchRegistry;
         window.addErpPurchase = addErpPurchase;
         window.deleteErpPurchase = deleteErpPurchase;
         window.updatePurchaseTotalHint = updatePurchaseTotalHint;

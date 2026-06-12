@@ -1,0 +1,63 @@
+/* نبراس — مشتريات المصنع والفروع (ديناميكي) */
+
+#erp-procurement .nebras-erp-modal {
+    overflow-x: hidden;
+    overflow-y: auto;
+    max-height: min(90vh, 940px);
+}
+
+.proc-scope-toolbar {
+    padding: 0 24px 12px;
+}
+
+.proc-scope-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.proc-scope-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid #d0dbe8;
+    background: #fff;
+    color: #1a5276;
+    font-family: inherit;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: border-color 0.15s, background 0.15s, box-shadow 0.15s;
+    touch-action: manipulation;
+}
+
+.proc-scope-tab:hover {
+    border-color: #2980b9;
+    background: #f0f7fc;
+}
+
+.proc-scope-tab--active {
+    border-color: #155e94;
+    background: linear-gradient(135deg, #0d2840, #155e94);
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(21, 94, 148, 0.28);
+}
+
+.proc-scope-tab--factory.proc-scope-tab--active {
+    background: linear-gradient(135deg, #1a3a2a, #27ae60);
+    border-color: #27ae60;
+}
+
+.proc-scope-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+#erp-procurement-form .nebras-erp-subhead small {
+    font-weight: 600;
+    color: #2980b9;
+}

@@ -24,6 +24,7 @@ LIVE_MARKERS = {
         'NEBRAS_GOVERNANCE_PILLARS', 'openAccountingPlatform', 'openCrmPlatform',
         'openLegalPlatform', 'renderGovernancePillarsPanel', 'buildExecutiveReportData',
         'getNebrasCurrentAdmin', 'openUserEditor', 'getNebrasErpOrders',
+        'getProcurementBranchRegistry', 'setProcurementViewScope', 'bindDashboardTileInteractions',
     ],
     'js/nebras-hr-platform.js': ['__nebrasHrOpenImpl', 'renderHrOrgTreePanel', 'requireHrRecordInScope', 'closeHrWorkspace'],
     'js/nebras-accounting-platform.js': ['exportAccountingPdf', 'openAccountingPlatform', 'closeAccountingWorkspace'],
