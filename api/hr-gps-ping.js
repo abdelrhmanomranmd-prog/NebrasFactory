@@ -75,6 +75,29 @@ module.exports = async function handler(req, res) {
             res.status(404).json({ ok: false, error: 'Invalid or expired driver token' });
             return;
         }
+        if (body.consented) {
+            const settings = await loadStore(url, key, 'hr_gps_settings');
+            const legalText = (settings && settings.legalConsentAr) || 'موافقة تتبع الموقع أثناء المهمة';
+            const consents = await loadStore(url, key, 'hr_gps_consents');
+            const consentList = Array.isArray(consents) ? consents : [];
+            const already = consentList.some(function(c) {
+                return c.token === token && c.plateNo === (trip.plateNo || '');
+            });
+            if (!already) {
+                consentList.unshift({
+                    id: 'gc-' + Date.now(),
+                    token: token,
+                    plateNo: trip.plateNo || '',
+                    driverName: trip.driverName || '',
+                    driverPhone: body.driverPhone || trip.driverPhone || '',
+                    consentedAt: new Date().toISOString(),
+                    userAgent: String(body.userAgent || '').slice(0, 500),
+                    legalText: legalText
+                });
+                if (consentList.length > 500) consentList.length = 500;
+                await saveStore(url, key, 'hr_gps_consents', consentList);
+            }
+        }
         const positions = await loadStore(url, key, 'hr_gps_positions');
         const posList = Array.isArray(positions) ? positions : [];
         const entry = {
@@ -96,7 +119,13 @@ module.exports = async function handler(req, res) {
         posList.unshift(entry);
         if (posList.length > 800) posList.length = 800;
         await saveStore(url, key, 'hr_gps_positions', posList);
-        res.status(200).json({ ok: true, plateNo: trip.plateNo, recordedAt: entry.recordedAt });
+        res.status(200).json({
+            ok: true,
+            plateNo: trip.plateNo,
+            driverName: trip.driverName || '',
+            driverPhone: body.driverPhone || trip.driverPhone || '',
+            recordedAt: entry.recordedAt
+        });
     } catch (err) {
         res.status(500).json({ ok: false, error: String(err.message || err) });
     }
