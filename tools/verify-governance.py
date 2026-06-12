@@ -9,6 +9,16 @@ JS = os.path.join(ROOT, 'js', 'nebras-platform.js')
 INDEX = os.path.join(ROOT, 'index.html')
 MEDIA_JS = os.path.join(ROOT, 'js', 'nebras-media-admin.js')
 CALLBACK_JS = os.path.join(ROOT, 'js', 'nebras-callback-concierge.js')
+PLATFORM_JS_FILES = (
+    'js/nebras-hr-platform.js',
+    'js/nebras-legal-platform.js',
+    'js/nebras-crm-platform.js',
+    'js/nebras-accounting-platform.js',
+    'js/nebras-empire-hub.js',
+    'js/nebras-hr-companies.js',
+    'js/nebras-hr-boot.js',
+    'js/nebras-hr-hcm-suite.js',
+)
 ERRORS = []
 WARNINGS = []
 
@@ -30,6 +40,12 @@ def main():
         media_js = f.read()
     with open(CALLBACK_JS, encoding='utf-8') as f:
         callback_js = f.read()
+    platform_js = ''
+    for rel in PLATFORM_JS_FILES:
+        path = os.path.join(ROOT, rel)
+        if os.path.isfile(path):
+            with open(path, encoding='utf-8') as f:
+                platform_js += f.read()
 
     # Core governance
     for sym in (
@@ -96,15 +112,17 @@ def main():
     for name in sorted(onclick_names):
         if name == 'window':
             continue
+        bundle = js + platform_js + media_js + callback_js
         ok = (
-            f'function {name}' in js
-            or f'window.{name} =' in js
-            or f'window.{name}=' in js
-            or name in ('dialNumber',) and 'function dialNumber' in js
+            f'function {name}' in bundle
+            or f'window.{name} =' in bundle
+            or f'window.{name}=' in bundle
+            or f'global.{name} =' in bundle
+            or f'global.{name}=' in bundle
+            or (name == 'dialNumber' and 'function dialNumber' in bundle)
         )
-        if not ok and name not in media_js and name not in callback_js:
-            if not (f'global.{name} =' in callback_js or f'global.{name}=' in callback_js):
-                err(f'onclick handler not found in JS: {name}()')
+        if not ok:
+            err(f'onclick handler not found in JS: {name}()')
 
     # Celebration mobile fix
     css_occ = open(os.path.join(ROOT, 'css', '04-occasion.css'), encoding='utf-8').read()

@@ -228,6 +228,7 @@
             '<span class="hr-command-pill crm-pill"><i class="fas fa-handshake"></i> نبراس CRM</span>' +
             '<h2 class="hr-command-title">علاقات العملاء والمبيعات</h2>' +
             '<p class="hr-command-sub">قاعدة عملاء موحّدة · Pipeline · فرص · ربط عروض الأسعار وLeads</p>' +
+            '<button type="button" class="erp-btn erp-btn--primary" style="margin-top:12px" onclick="exportCrmPdf()"><i class="fas fa-file-pdf"></i> تقرير PDF للقسم</button>' +
             '</div></div>' +
             '<div class="crm-dash-grid">' +
             '<article class="crm-dash-card"><h3><i class="fas fa-users"></i> العملاء</h3><strong>' + k.customers + '</strong></article>' +
@@ -717,6 +718,36 @@
         renderCrmPlatformPanelSafe();
     }
 
+    function exportCrmPdf() {
+        if (!requireCrmAccess()) return;
+        loadCrmData();
+        const k = getCrmKpis();
+        const cust = filterCrmByBranch(crmCustomers);
+        const opps = filterCrmByBranch(crmOpportunities);
+        const w = window.open('', '_blank');
+        if (!w) { alert('فعّلي النوافذ المنبثقة للطباعة/PDF.'); return; }
+        let body = '<h1>تقرير CRM — نبراس</h1><p>عملاء: ' + k.customers + ' · فرص مفتوحة: ' + k.openOpps +
+            ' · Pipeline: ' + formatCrmMoney(k.pipelineValue) + ' · فوز: ' + formatCrmMoney(k.wonValue) + '</p>';
+        body += '<h2>العملاء</h2><table><tr><th>الاسم</th><th>الشركة</th><th>الجوال</th><th>المدينة</th></tr>';
+        cust.slice(0, 50).forEach(function(c) {
+            body += '<tr><td>' + esc(c.name) + '</td><td>' + esc(c.company) + '</td><td>' + esc(c.phone) + '</td><td>' + esc(c.city) + '</td></tr>';
+        });
+        body += '</table><h2>Pipeline</h2><table><tr><th>الفرصة</th><th>المرحلة</th><th>القيمة</th><th>العميل</th></tr>';
+        opps.slice(0, 50).forEach(function(o) {
+            const st = (CRM_STAGES[o.stage] || CRM_STAGES.lead).label;
+            body += '<tr><td>' + esc(o.title) + '</td><td>' + esc(st) + '</td><td>' + formatCrmMoney(o.amount) + '</td><td>' + esc(resolveCrmCustomerLabel(o.customerId)) + '</td></tr>';
+        });
+        body += '</table><p class="foot">مستند داخلي — CRM · نبراس</p>';
+        w.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>نبراس CRM</title>' +
+            '<style>body{font-family:Tahoma,Arial,sans-serif;padding:24px;color:#1a365d}h1{font-size:18px}h2{font-size:14px;margin-top:20px}' +
+            'table{width:100%;border-collapse:collapse;margin-top:10px;font-size:11px}th,td{border:1px solid #ccc;padding:6px;text-align:right}th{background:#e8f0f8}.foot{margin-top:24px;font-size:10px;color:#666}</style></head><body>');
+        w.document.write(body);
+        w.document.write('</body></html>');
+        w.document.close();
+        w.print();
+        crmAuditLog('تقرير CRM PDF', cust.length + ' عملاء');
+    }
+
     global.openCrmPlatform = openCrmPlatform;
     global.closeCrmWorkspace = closeCrmWorkspace;
     global.switchCrmTab = switchCrmTab;
@@ -743,5 +774,6 @@
     global.setCrmActivitiesFromCloud = setCrmActivitiesFromCloud;
     global.setCrmAuditFromCloud = setCrmAuditFromCloud;
     global.renderCrmPlatformPanelSafe = renderCrmPlatformPanelSafe;
+    global.exportCrmPdf = exportCrmPdf;
 
 })(typeof window !== 'undefined' ? window : globalThis);

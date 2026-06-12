@@ -1,0 +1,25 @@
+-- ============================================================
+-- نبراس — خارطة أمان المرحلة 2 (لا تُنفَّذ على الإنتاج قبل Auth)
+-- ============================================================
+-- الوضع الحالي (مرحلة 1): الموقع يستخدم مفتاح anon للمزامنة السحابية.
+-- كلمات مرور الإدارة: مُجزَّأة محلياً (SHA-256 + salt) في admin_users — ليست Supabase Auth.
+--
+-- قبل تقييد RLS يجب:
+--   1) تفعيل Supabase Auth (بريد المالك: abdelrhmanomranmd@gmail.com)
+--   2) نقل دخول الإدارة إلى جلسة authenticated
+--   3) Edge Function أو service_role للكتابة الحساسة فقط
+--
+-- توسعة التخزين (ملفات كبيرة — مستندات HR · عقود Legal):
+--   Storage bucket: nebras-media (موجود) — رفع عبر signed URL من Edge Function
+--   لا تخزين كلمات مرور أو OTP في payload السحابي
+--
+-- مفاتيح حساسة — لا تُعرَض للزوار أبداً:
+--   admin_users · admin_recovery_otp · hr_gps_positions · legal_contracts
+--
+-- عند الجاهزية — استبدلي سياسات nebras_store_* بـ:
+--   select: true (قراءة عامة للمحتوى العام فقط — أو تقسيم جدول)
+--   insert/update/delete: auth.role() = 'authenticated' AND claim admin
+--
+-- هذا الملف توثيق فقط — لا يغيّر سياسات RLS الحالية.
+
+select 'Nebras security phase 2 — review before enabling strict RLS' as notice;

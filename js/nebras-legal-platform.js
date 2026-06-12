@@ -863,7 +863,8 @@
         updateLegalSummary();
         const ctx = legalCompanyFilter ? '<div class="hr-company-ctx-banner legal-ctx"><i class="fas fa-filter"></i> ملف قانوني: <strong>' +
             esc(resolveLegalCompanyLabel(legalCompanyFilter)) + '</strong> <button type="button" class="erp-tag" onclick="setLegalCompanyFilter(\'\')">كل الشركات</button></div>' : '';
-        const toolbar = '<div class="hr-toolbar">' + renderLegalCompanyToolbar() + '</div>';
+        const toolbar = '<div class="hr-toolbar">' + renderLegalCompanyToolbar() +
+            '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="exportLegalPdf()"><i class="fas fa-file-pdf"></i> تقرير PDF للقسم</button></div>';
         let panel = '';
         if (legalActiveTab === 'dashboard') panel = renderLegalDashboard();
         else if (legalActiveTab === 'companies') panel = renderLegalCompaniesPanel();
@@ -951,6 +952,38 @@
         if (cmdSub) cmdSub.textContent = 'الشؤون القانونية والامتثال — المجموعة والشركاء';
     }
 
+    function exportLegalPdf() {
+        if (!requireLegalAccess()) return;
+        loadLegalData();
+        const contracts = applyLegalCompanyFilter(legalContracts);
+        const cases = applyLegalCompanyFilter(legalCases);
+        const compliance = applyLegalCompanyFilter(legalCompliance);
+        const openCases = cases.filter(function(c) {
+            return c.status === 'open' || c.status === 'court' || c.status === 'mediation';
+        }).length;
+        const w = window.open('', '_blank');
+        if (!w) { alert('فعّلي النوافذ المنبثقة للطباعة/PDF.'); return; }
+        let body = '<h1>تقرير الشؤون القانونية — نبراس</h1><p>عقود: ' + contracts.length +
+            ' · قضايا نشطة: ' + openCases + ' · امتثال: ' + compliance.length + '</p>';
+        body += '<h2>العقود</h2><table><tr><th>المرجع</th><th>العنوان</th><th>الحالة</th><th>النوع</th></tr>';
+        contracts.slice(0, 40).forEach(function(c) {
+            body += '<tr><td>' + esc(c.refNo || c.id) + '</td><td>' + esc(c.titleAr || c.partyAr) + '</td><td>' + esc(c.status) + '</td><td>' + esc(c.type) + '</td></tr>';
+        });
+        body += '</table><h2>القضايا</h2><table><tr><th>المرجع</th><th>الموضوع</th><th>الحالة</th><th>النوع</th></tr>';
+        cases.slice(0, 40).forEach(function(c) {
+            body += '<tr><td>' + esc(c.refNo || c.id) + '</td><td>' + esc(c.subjectAr || c.titleAr) + '</td><td>' + esc(c.status) + '</td><td>' + esc(c.type) + '</td></tr>';
+        });
+        body += '</table><p class="foot">مستند داخلي — Legal · نبراس</p>';
+        w.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>نبراس Legal</title>' +
+            '<style>body{font-family:Tahoma,Arial,sans-serif;padding:24px;color:#1a365d}h1{font-size:18px}h2{font-size:14px;margin-top:20px}' +
+            'table{width:100%;border-collapse:collapse;margin-top:10px;font-size:11px}th,td{border:1px solid #ccc;padding:6px;text-align:right}th{background:#e8f0f8}.foot{margin-top:24px;font-size:10px;color:#666}</style></head><body>');
+        w.document.write(body);
+        w.document.write('</body></html>');
+        w.document.close();
+        w.print();
+        legalAudit('تقرير Legal PDF', 'عقود ' + contracts.length);
+    }
+
     global.openLegalPlatform = openLegalPlatform;
     global.closeLegalWorkspace = closeLegalWorkspace;
     global.switchLegalTab = switchLegalTab;
@@ -980,5 +1013,6 @@
     global.setLegalActivityFromCloud = setLegalActivityFromCloud;
     global.applyLegalOnlyDashboard = applyLegalOnlyDashboard;
     global.renderLegalPlatformPanelSafe = renderLegalPlatformPanelSafe;
+    global.exportLegalPdf = exportLegalPdf;
 
 })(typeof window !== 'undefined' ? window : globalThis);

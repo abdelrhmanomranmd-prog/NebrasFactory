@@ -14346,6 +14346,7 @@
                     '<div><h3><i class="fas fa-crown"></i> إمبراطورية نبراس — حوكمة المنصة</h3>' +
                     '<p>شركة مصنع نبراس للبلاستيك — أبواب WPC · إدارة رئيسية · أقسام · فروع</p></div>' +
                     '<button type="button" class="gov-pillar-btn gov-pillar-btn--primary" onclick="openNebrasEmpireHub()"><i class="fas fa-crown"></i> مركز القيادة</button>' +
+                    '<button type="button" class="gov-pillar-btn" onclick="openExecutiveReports()"><i class="fas fa-chart-bar"></i> تقارير الإمبراطورية</button>' +
                 '</div>' +
                 '<div class="gov-pillars-grid">' + pillars + '</div>' +
                 (branchChips ? '<div class="gov-branches-strip"><strong style="width:100%;font-size:0.8rem;color:#4a5a6a;margin-bottom:4px"><i class="fas fa-map-marked-alt"></i> شبكة الفروع</strong>' + branchChips + '</div>' : '');
@@ -15533,6 +15534,64 @@
                     ], hrExec.activityRows, ['الوقت', 'المستخدم', 'الإجراء', 'التفاصيل']);
                 }
             }
+
+            if (typeof getLegalContracts === 'function') {
+                const legalContractsList = (getLegalContracts() || []).filter(scope);
+                const legalCasesList = typeof getLegalCases === 'function' ? (getLegalCases() || []).filter(scope) : [];
+                const legalComplianceList = typeof getLegalCompliance === 'function' ? (getLegalCompliance() || []).filter(scope) : [];
+                const openLegal = legalCasesList.filter(function(c) {
+                    return c.status === 'open' || c.status === 'court' || c.status === 'mediation';
+                }).length;
+                pushSection('legal', 'الشؤون القانونية', 'fas fa-scale-balanced', [
+                    { label: 'عقود', val: legalContractsList.length },
+                    { label: 'قضايا نشطة', val: openLegal },
+                    { label: 'امتثال', val: legalComplianceList.length }
+                ], legalContractsList.slice(0, 8).map(function(c) {
+                    return [c.refNo || c.id || '—', c.titleAr || c.partyAr || '—', c.status || '—', c.type || '—'];
+                }), ['المرجع', 'العنوان', 'الحالة', 'النوع']);
+            }
+
+            if (typeof getCrmCustomers === 'function') {
+                const crmCust = (getCrmCustomers() || []).filter(function(c) {
+                    if (!scope(c)) return false;
+                    if (branchId != null && c.branchId && String(c.branchId) !== String(branchId)) return false;
+                    return true;
+                });
+                const crmOpps = typeof getCrmOpportunities === 'function' ? (getCrmOpportunities() || []).filter(function(o) {
+                    if (!scope(o)) return false;
+                    if (branchId != null && o.branchId && String(o.branchId) !== String(branchId)) return false;
+                    return true;
+                }) : [];
+                const openOpps = crmOpps.filter(function(o) { return o.stage !== 'won' && o.stage !== 'lost'; });
+                const pipelineVal = openOpps.reduce(function(s, o) { return s + erpNum(o.amount); }, 0);
+                pushSection('crm-pipeline', 'CRM — Pipeline', 'fas fa-handshake', [
+                    { label: 'عملاء', val: crmCust.length },
+                    { label: 'فرص مفتوحة', val: openOpps.length },
+                    { label: 'قيمة Pipeline', val: formatSar(pipelineVal) }
+                ], crmOpps.slice(0, 8).map(function(o) {
+                    return [o.title || o.id || '—', o.customerId || '—', o.stage || '—', formatSar(o.amount || 0)];
+                }), ['الفرصة', 'العميل', 'المرحلة', 'القيمة']);
+            }
+
+            const wpcProduction = production.filter(function(p) { return isWpcScopedEntry(p); });
+            const wpcQty = wpcProduction.reduce(function(s, p) { return s + erpNum(p.qty); }, 0);
+            pushSection('wpc', 'إنتاج أبواب WPC', 'fas fa-door-closed', [
+                { label: 'سجلات', val: wpcProduction.length },
+                { label: 'كمية', val: wpcQty },
+                { label: 'الفترة', val: periodLabel }
+            ], wpcProduction.slice(0, 8).map(function(p) {
+                return [p.date || '—', p.productAr || '—', String(p.qty) + ' ' + (p.unitAr || ''), p.branch || '—'];
+            }));
+
+            const aluProduction = production.filter(function(p) { return isAluminumScopedEntry(p); });
+            const aluQty = aluProduction.reduce(function(s, p) { return s + erpNum(p.qty); }, 0);
+            pushSection('aluminum', 'قسم الألومنيوم', 'fas fa-industry', [
+                { label: 'سجلات', val: aluProduction.length },
+                { label: 'كمية', val: aluQty },
+                { label: 'الفترة', val: periodLabel }
+            ], aluProduction.slice(0, 8).map(function(p) {
+                return [p.date || '—', p.productAr || '—', String(p.qty) + ' ' + (p.unitAr || ''), p.branch || '—'];
+            }));
 
             return {
                 periodLabel: periodLabel,

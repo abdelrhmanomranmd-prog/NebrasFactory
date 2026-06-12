@@ -16,10 +16,17 @@ GITHUB_REPO = 'abdelrhmanomranmd-prog/NebrasFactory'
 REQUIRED_CLOUD_KEYS = {
     'system_settings', 'site_products', 'admin_users', 'hr_dept_activity',
     'quote_registry', 'hr_employees', 'sales_quotes_inbox', 'analytics_governance', 'admin_presence',
+    'legal_contracts', 'crm_customers', 'crm_opportunities', 'hr_companies', 'hr_gps_positions',
 }
 LIVE_MARKERS = {
-    'js/nebras-platform.js': ['PHASE25_INJECTED', 'openHrPlatformBridge', 'bindNebrasHrPlatformGlobals', 'finalizeAnalyticsGovernanceMutation'],
-    'js/nebras-hr-platform.js': ['PHASE22_HR_INJECTED', '__nebrasHrOpenImpl', 'renderHrOrgTreePanel', 'requireHrRecordInScope'],
+    'js/nebras-platform.js': [
+        'NEBRAS_GOVERNANCE_PILLARS', 'openAccountingPlatform', 'openCrmPlatform',
+        'openLegalPlatform', 'renderGovernancePillarsPanel', 'buildExecutiveReportData',
+    ],
+    'js/nebras-hr-platform.js': ['__nebrasHrOpenImpl', 'renderHrOrgTreePanel', 'requireHrRecordInScope', 'closeHrWorkspace'],
+    'js/nebras-accounting-platform.js': ['exportAccountingPdf', 'openAccountingPlatform', 'closeAccountingWorkspace'],
+    'js/nebras-crm-platform.js': ['exportCrmPdf', 'openCrmPlatform', 'closeCrmWorkspace'],
+    'js/nebras-legal-platform.js': ['exportLegalPdf', 'openLegalPlatform', 'closeLegalWorkspace'],
 }
 
 
