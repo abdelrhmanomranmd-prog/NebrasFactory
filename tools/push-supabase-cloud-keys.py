@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 SUPABASE_URL = 'https://oedldllrjavofpeaputz.supabase.co'
 ANON_KEY = 'sb_publishable_bt6rlHxu_pjc1xpkKEWOcg_HZ43JMR0'
 
-# مطابق لـ supabase/014-nebras-master-cloud-sync.sql (62 مفتاح)
+# مطابق لـ supabase/014-nebras-master-cloud-sync.sql (64 مفتاح)
 ALL_KEYS = {
     'site_products': [],
     'visitor_icons': [],
@@ -72,6 +72,8 @@ ALL_KEYS = {
     'customer_portal_users': [],
     'customer_portal_audit': [],
     'customer_order_journeys': [],
+    'nebras_cloud_snapshots': {'byKey': {}, 'updatedAt': None},
+    'nebras_platform_integrity': {'modules': {}, 'lastAuditAt': None},
     'procurement_custom_depts': [],
 }
 

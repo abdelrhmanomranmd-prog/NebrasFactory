@@ -19,12 +19,16 @@ REQUIRED_CLOUD_KEYS = {
     'legal_contracts', 'crm_customers', 'crm_opportunities', 'hr_companies', 'hr_gps_positions',
     'customer_portal_users',
     'customer_order_journeys',
+    'nebras_cloud_snapshots',
+    'nebras_platform_integrity',
 }
 LIVE_MARKERS = {
     'index.html': [
+        '49-platform-integrity.css',
+        'nebras-platform-integrity.js',
         '48-order-journey.css',
         'nebras-order-journey.js',
-        'data-nebras-deploy="hrws62"',
+        'data-nebras-deploy="hrws63"',
     ],
     'css/47-platform-interaction-global.css': [
         'admin-section:not(.show)',
@@ -37,6 +41,11 @@ LIVE_MARKERS = {
         'getProcurementBranchRegistry', 'setProcurementViewScope', 'bindDashboardTileInteractions',
         'syncPlatformInteractionLayers', 'revealPlatformLayer', 'NEBRAS_PLATFORM_LAYER_SEL',
         'dash-order-journey', 'openRepCustomerJourneys', 'updateNebrasErpOrderFromJourney',
+        'dash-platform-integration', 'openPlatformIntegrationHub', 'guardCloudPushRow',
+    ],
+    'js/nebras-platform-integrity.js': [
+        'openPlatformIntegrationHub', 'guardCloudPushRow', 'guardCloudPullRow',
+        'getCloudSnapshotsForCloud', 'NEBRAS_CRITICAL_CLOUD_KEYS',
     ],
     'js/nebras-hr-platform.js': ['__nebrasHrOpenImpl', 'renderHrOrgTreePanel', 'requireHrRecordInScope', 'closeHrWorkspace', 'syncPlatformInteractionLayers'],
     'js/nebras-accounting-platform.js': ['exportAccountingPdf', 'openAccountingPlatform', 'closeAccountingWorkspace'],

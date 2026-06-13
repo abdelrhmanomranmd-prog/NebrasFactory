@@ -2,7 +2,7 @@
 -- نبراس — سكربت سحابي موحّد (MASTER SYNC) — hrws60
 -- نفّذي في: Supabase → SQL Editor → New query → Run
 -- آمن للتكرار: ON CONFLICT DO NOTHING
--- يشمل: 62 مفتاح — المنصة + HR + Legal + CRM + بوابة العملاء + مسار الطلب + المشتريات
+-- يشمل: 64 مفتاح — المنصة + HR + Legal + CRM + مسار الطلب + نسخ احتياطية
 -- تحقق سريع بعد التنفيذ: supabase/015-hrws58-verify-cloud.sql
 -- ============================================================
 
@@ -94,10 +94,16 @@ insert into public.nebras_data_store (store_key, payload) values
   ('customer_order_journeys', '[]'::jsonb)
 on conflict (store_key) do nothing;
 
+-- ── نسخ احتياطية وحماية (017 / hrws63) ──
+insert into public.nebras_data_store (store_key, payload) values
+  ('nebras_cloud_snapshots', '{"byKey":{},"updatedAt":null}'::jsonb),
+  ('nebras_platform_integrity', '{"modules":{},"lastAuditAt":null}'::jsonb)
+on conflict (store_key) do nothing;
+
 commit;
 
 -- ============================================================
--- تحقق — عدد المفاتيح المتوقعة = 62
+-- تحقق — عدد المفاتيح المتوقعة = 64
 -- ============================================================
 select count(*) as total_keys from public.nebras_data_store;
 

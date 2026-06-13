@@ -2242,6 +2242,7 @@
             { id: 'dash-hr-platform', zone: 'quick', dashGroup: 'command', sortOrder: 1.05, iconClass: 'fas fa-industry', titleAr: 'HR — مصنع نبراس WPC', titleEn: 'Nebras WPC HR', textAr: 'إنتاج أبواب WPC · ورديات · سعودة · حضور · رواتب · أسطول — كل الفروع.', textEn: 'WPC production HR — shifts, Saudization, payroll, fleet.', handler: 'openHrPlatform', permission: 'hr', visible: true },
             { id: 'dash-legal-platform', zone: 'quick', dashGroup: 'command', sortOrder: 1.06, iconClass: 'fas fa-scale-balanced', titleAr: 'Legal — الشؤون القانونية', titleEn: 'Nebras Legal', textAr: 'عقود · قضايا · امتثال · PDPL · اتفاقيات شراكة — نبراس والشركات الشريكة.', textEn: 'Contracts, cases, compliance, PDPL — group & partners.', handler: 'openLegalPlatform', permission: 'legal', visible: true },
             { id: 'dash-accounting-platform', zone: 'quick', dashGroup: 'command', sortOrder: 1.065, iconClass: 'fas fa-calculator', titleAr: 'Accounting — قسم الحسابات', titleEn: 'Nebras Accounting', textAr: 'تحويلات · مبيعات · مشتريات · ربحية · تقارير PDF — المقر والفروع.', textEn: 'Transfers, sales, purchases, PDF reports.', handler: 'openAccountingPlatform', permission: 'accounting', visible: true },
+            { id: 'dash-platform-integration', zone: 'quick', dashGroup: 'command', sortOrder: 0.9, iconClass: 'fas fa-network-wired', titleAr: 'تكامل المنصة', titleEn: 'Platform Integration', textAr: 'ترابط الأقسام · الفروع · السحابة · حماية البيانات.', textEn: 'Departments, branches, cloud safety.', handler: 'openPlatformIntegrationHub', permission: 'audit', visible: true },
             { id: 'dash-empire-hub', zone: 'quick', dashGroup: 'command', sortOrder: 0.95, iconClass: 'fas fa-crown', titleAr: 'إمبراطورية نبراس — مركز القيادة', titleEn: 'Nebras Empire HQ', textAr: 'الواجهة الخارجية · ERP · HR · Legal · فروع · شركاء — كل المنصة في مكان واحد.', textEn: 'Full empire command — external + internal platforms.', handler: 'openNebrasEmpireHub', permission: 'audit', visible: true },
             { id: 'dash-content', zone: 'quick', dashGroup: 'command', sortOrder: 1, iconClass: 'fas fa-pen-to-square', titleAr: 'إدارة محتوى الموقع', titleEn: 'Site Content', textAr: 'منتجات، بوابة الزائر، شركاء، شهادات — ديناميكي بالكامل.', textEn: 'Products, gateway icons, partners, certs — fully dynamic.', handler: 'openSiteContentManager', permission: 'content', visible: true },
             { id: 'dash-about-pages', zone: 'quick', dashGroup: 'command', sortOrder: 2, iconClass: 'fas fa-building', titleAr: 'من نحن ورؤيتنا', titleEn: 'About & Vision', textAr: 'نصوص المصنع ووثائق الصفحات الداخلية.', textEn: 'Factory pages and documents.', handler: 'openAboutContentAdmin', permission: 'content', visible: true },
@@ -2411,6 +2412,9 @@
             },
             openNebrasEmpireHub: function() {
                 if (typeof window.openNebrasEmpireHub === 'function') return window.openNebrasEmpireHub();
+            },
+            openPlatformIntegrationHub: function() {
+                if (typeof window.openPlatformIntegrationHub === 'function') return window.openPlatformIntegrationHub();
             },
             openExecutiveReports: function() { openExecutiveReports(); },
             openCustomerPortalGovernance: function() {
@@ -3093,6 +3097,9 @@
                 },
                 openOrderJourneyOps: function() {
                     return typeof window.canOrderJourney === 'function' && window.canOrderJourney(admin);
+                },
+                openPlatformIntegrationHub: function() {
+                    return canManage('audit', admin) || isMainGovernanceAdmin(admin);
                 },
                 openRepCustomerJourneys: function() {
                     return admin && admin.role === 'sales_rep';
@@ -15929,7 +15936,10 @@
         const pwd = prompt('كلمة المرور الجديدة للمستخدم «' + user.username + '»:');
         if (pwd === null) return;
         if (!String(pwd).trim()) { alert('كلمة المرور لا يمكن أن تكون فارغة.'); return; }
-        adminUsers[index] = Object.assign({}, user, { password: String(pwd).trim(), updatedAt: new Date().toISOString() });
+        adminUsers[index] = Object.assign({}, user, {
+            password: storeNebrasPasswordValue(String(pwd).trim()),
+            updatedAt: new Date().toISOString()
+        });
         saveSystemData();
         addAuditLogGoverned('إعادة تعيين كلمة مرور', 'بواسطة الإدارة الرئيسية — ' + user.username);
         alert('تم تحديث كلمة المرور — يُحفظ في النظام والسحابة فوراً.');
@@ -16663,7 +16673,8 @@
                 return normalizeText(b.city || '') === normalizeText(branchCity);
             });
             const payload = {
-                id: id, username: username, password: password,
+                id: id, username: username,
+                password: storeNebrasPasswordValue(password),
                 role: 'sales_rep',
                 permissions: (rolePermissions.sales_rep || []).slice(),
                 assignedBranchCity: branchCity,
@@ -23531,6 +23542,19 @@
                 return typeof getNebrasOrderJourneys === 'function' ? getNebrasOrderJourneys() : [];
             }, set: function(v) {
                 if (typeof setNebrasOrderJourneysFromCloud === 'function') setNebrasOrderJourneysFromCloud(v);
+            }},
+            { key: 'nebras_cloud_snapshots', get: function() {
+                return typeof getCloudSnapshotsForCloud === 'function' ? getCloudSnapshotsForCloud() : { byKey: {}, updatedAt: null };
+            }, set: function(v) {
+                if (typeof setCloudSnapshotsFromCloud === 'function') setCloudSnapshotsFromCloud(v);
+            }},
+            { key: 'nebras_platform_integrity', get: function() {
+                try {
+                    const raw = localStorage.getItem('nebrasPlatformIntegrity');
+                    return raw ? JSON.parse(raw) : { modules: {}, lastAuditAt: null };
+                } catch (e) { return { modules: {}, lastAuditAt: null }; }
+            }, set: function(v) {
+                try { localStorage.setItem('nebrasPlatformIntegrity', JSON.stringify(v && typeof v === 'object' ? v : { modules: {}, lastAuditAt: null })); } catch (e) { /* ignore */ }
             }}
         ];
 
@@ -23538,12 +23562,15 @@
             if (typeof shouldSkipStaleCloudGovernanceRow === 'function' && shouldSkipStaleCloudGovernanceRow(storeKey)) {
                 return;
             }
+            if (typeof guardCloudPullRow === 'function') payload = guardCloudPullRow(storeKey, payload);
             const spec = NEBRAS_CLOUD_STORE_SPECS.find(function(s) { return s.key === storeKey; });
             if (!spec || payload === undefined || payload === null) return;
             if (Array.isArray(payload) && !payload.length) {
                 if (storeKey === 'branches' || storeKey === 'site_partners' || storeKey === 'site_certifications' ||
                     storeKey === 'admin_users' || storeKey === 'visitor_icons' || storeKey === 'dashboard_tiles' ||
-                    storeKey === 'site_products') {
+                    storeKey === 'site_products' || storeKey === 'sales_quotes_inbox' || storeKey === 'customer_order_journeys' ||
+                    storeKey === 'customer_portal_users' || storeKey === 'hr_employees' || storeKey === 'crm_customers' ||
+                    storeKey === 'erp_orders' || storeKey === 'legal_contracts') {
                 return;
                 }
             }
@@ -23657,9 +23684,11 @@
         async function pushToNebrasCloud() {
             if (!supabaseClient) return false;
             const rows = NEBRAS_CLOUD_STORE_SPECS.map(function(spec) {
+                let payload = spec.get();
+                if (typeof guardCloudPushRow === 'function') payload = guardCloudPushRow(spec.key, payload);
                 return {
                     store_key: spec.key,
-                    payload: spec.get(),
+                    payload: payload,
                     updated_at: new Date().toISOString()
                 };
             });

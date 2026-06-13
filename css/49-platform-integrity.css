@@ -1,0 +1,63 @@
+/* نبراس — تكامل المنصة وحماية السحابة */
+.pi-module-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 0.75rem;
+    margin: 1rem 0;
+}
+.pi-module-card {
+    border: 1px solid #dde6f0;
+    border-radius: 12px;
+    padding: 0.85rem 1rem;
+    background: #fff;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.pi-module-card--on {
+    border-color: #1b9e57;
+    box-shadow: 0 0 0 2px rgba(27, 158, 87, 0.12);
+}
+.pi-module-card header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.4rem;
+}
+.pi-module-card header i {
+    color: #0a4d8c;
+    font-size: 1.1rem;
+}
+.pi-scope {
+    margin: 0 0 0.6rem;
+    font-size: 0.82rem;
+    color: #5a6b7d;
+    line-height: 1.35;
+}
+.pi-module-card footer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+}
+.pi-snapshot-section {
+    margin-top: 1.25rem;
+    padding: 1rem 1.1rem;
+    border-radius: 12px;
+    background: #f8fbff;
+    border: 1px solid #d8e6f5;
+}
+.pi-snapshot-section h3 {
+    margin: 0 0 0.65rem;
+    font-size: 1rem;
+    color: #0a4d8c;
+}
+.pi-snapshot-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 0.35rem 1rem;
+}
+.pi-snapshot-list li {
+    font-size: 0.84rem;
+    padding: 0.25rem 0;
+}

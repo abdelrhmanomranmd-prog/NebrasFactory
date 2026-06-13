@@ -153,7 +153,20 @@
         return typeof resolveHrCompanyLabel === 'function' ? resolveHrCompanyLabel(id) : String(id || 'نبراس');
     }
 
+    function getLegalAdminScope(admin) {
+        admin = admin || (typeof getNebrasCurrentAdmin === 'function' ? getNebrasCurrentAdmin() : null);
+        if (!admin) return { mode: 'none' };
+        if (typeof isMainGovernanceAdmin === 'function' && isMainGovernanceAdmin(admin)) return { mode: 'full' };
+        if (admin.role === 'manager' && typeof canManage === 'function' && canManage('legal', admin)) return { mode: 'full' };
+        if (admin.legalScopeCompanyId) return { mode: 'company', companyId: String(admin.legalScopeCompanyId) };
+        return { mode: 'full' };
+    }
+
     function applyLegalCompanyFilter(list) {
+        const scope = getLegalAdminScope();
+        if (scope.mode === 'company' && scope.companyId) {
+            return list.filter(function(r) { return resolveLegalCompanyId(r) === scope.companyId; });
+        }
         if (!legalCompanyFilter) return list;
         return list.filter(function(r) { return resolveLegalCompanyId(r) === String(legalCompanyFilter); });
     }
@@ -990,6 +1003,7 @@
     global.closeLegalWorkspace = closeLegalWorkspace;
     global.switchLegalTab = switchLegalTab;
     global.setLegalCompanyFilter = setLegalCompanyFilter;
+    global.getLegalAdminScope = getLegalAdminScope;
     global.openLegalEditor = openLegalEditor;
     global.cancelLegalEditor = cancelLegalEditor;
     global.saveLegalContract = saveLegalContract;
