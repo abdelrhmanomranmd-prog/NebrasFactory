@@ -14669,6 +14669,22 @@
             if (loginBtn) loginBtn.disabled = true;
             let user = typeof resolveAdminLoginUser === 'function' ? resolveAdminLoginUser(username, password) : null;
 
+            if (!user && typeof secureApiLogin === 'function') {
+                try {
+                    const apiLogin = await secureApiLogin(username, password);
+                    if (apiLogin && apiLogin.user) {
+                        if (typeof mergeApiAdminUser === 'function') mergeApiAdminUser(apiLogin.user);
+                        if (typeof pullSensitiveCloudAndApply === 'function') {
+                            await pullSensitiveCloudAndApply(applyNebrasCloudRow);
+                        }
+                        if (typeof loadFromNebrasCloud === 'function') await loadFromNebrasCloud();
+                        user = typeof resolveAdminLoginUser === 'function'
+                            ? resolveAdminLoginUser(username, password)
+                            : apiLogin.user;
+                    }
+                } catch (e) { /* ignore */ }
+            }
+
             if (!user && supabaseClient && typeof loadFromNebrasCloud === 'function') {
                 try {
                     await loadFromNebrasCloud();
@@ -14677,6 +14693,9 @@
             }
 
             if (user) {
+                if (typeof establishNebrasSecureSession === 'function') {
+                    try { await establishNebrasSecureSession(username, password); } catch (e) { /* ignore */ }
+                }
                 if (user.isActive === false) {
                     if (typeof setAdminLoginStatus === 'function') setAdminLoginStatus(ui.adminLoginDisabled || 'هذا الحساب معطّل — تواصل مع الإدارة الرئيسية.', 'error');
                     addAuditLog('محاولة دخول معطّل', user.username + ' — حساب معطّل');
@@ -15471,6 +15490,7 @@
         }
 
         function logoutAdmin() {
+            if (typeof clearNebrasSecureSession === 'function') clearNebrasSecureSession();
             if (currentAdmin) {
                 if (typeof clearAdminPresence === 'function') clearAdminPresence(currentAdmin);
                 if (typeof stopAdminPresenceHeartbeat === 'function') stopAdminPresenceHeartbeat();
@@ -23659,18 +23679,45 @@
 
         async function loadFromNebrasCloud() {
             if (!supabaseClient) return false;
+            let loadedAny = false;
             try {
-                const { data, error } = await supabaseClient
-                    .from('nebras_data_store')
-                    .select('store_key, payload, updated_at');
-                if (error) {
-                    console.warn('Nebras cloud load failed:', error.message || error);
-                    return false;
+                const publicKeys = (typeof NEBRAS_PUBLIC_STORE_KEYS !== 'undefined' && NEBRAS_PUBLIC_STORE_KEYS.length)
+                    ? NEBRAS_PUBLIC_STORE_KEYS
+                    : null;
+                if (publicKeys) {
+                    const { data, error } = await supabaseClient
+                        .from('nebras_data_store')
+                        .select('store_key, payload, updated_at')
+                        .in('store_key', publicKeys);
+                    if (error) {
+                        console.warn('Nebras public cloud load failed:', error.message || error);
+                    } else if (data && data.length) {
+                        data.forEach(function(row) {
+                            if (row && row.store_key) applyNebrasCloudRow(row.store_key, row.payload);
+                        });
+                        loadedAny = true;
+                    }
+                } else {
+                    const { data, error } = await supabaseClient
+                        .from('nebras_data_store')
+                        .select('store_key, payload, updated_at');
+                    if (error) {
+                        console.warn('Nebras cloud load failed:', error.message || error);
+                        return false;
+                    }
+                    if (data && data.length) {
+                        data.forEach(function(row) {
+                            if (row && row.store_key) applyNebrasCloudRow(row.store_key, row.payload);
+                        });
+                        loadedAny = true;
+                    }
                 }
-                if (!data || !data.length) return false;
-                data.forEach(function(row) {
-                    if (row && row.store_key) applyNebrasCloudRow(row.store_key, row.payload);
-                });
+                if (typeof getNebrasSecureToken === 'function' && getNebrasSecureToken() &&
+                    typeof pullSensitiveCloudAndApply === 'function') {
+                    const sensOk = await pullSensitiveCloudAndApply(applyNebrasCloudRow);
+                    if (sensOk) loadedAny = true;
+                }
+                if (!loadedAny) return false;
                 nebrasCloudSynced = true;
                 nebrasLastCloudLoadAt = new Date();
                 if (currentAdmin) renderDashboardCommandShell(currentAdmin);
@@ -23692,14 +23739,35 @@
                     updated_at: new Date().toISOString()
                 };
             });
+            const sensFn = typeof isSensitiveStoreKey === 'function' ? isSensitiveStoreKey : function() { return false; };
+            const publicRows = rows.filter(function(r) { return r && r.store_key && !sensFn(r.store_key); });
+            const sensitiveRows = rows.filter(function(r) { return r && r.store_key && sensFn(r.store_key); });
+            let okPublic = true;
+            let okSensitive = true;
             try {
-                const { error } = await supabaseClient
-                    .from('nebras_data_store')
-                    .upsert(rows, { onConflict: 'store_key' });
-                if (error) {
-                    console.warn('Nebras cloud save failed:', error.message || error);
-                    return false;
+                if (publicRows.length) {
+                    const { error } = await supabaseClient
+                        .from('nebras_data_store')
+                        .upsert(publicRows, { onConflict: 'store_key' });
+                    if (error) {
+                        console.warn('Nebras public cloud save failed:', error.message || error);
+                        okPublic = false;
+                    }
                 }
+                if (sensitiveRows.length) {
+                    if (typeof secureCloudPush === 'function' && typeof getNebrasSecureToken === 'function' && getNebrasSecureToken()) {
+                        okSensitive = await secureCloudPush(sensitiveRows);
+                    } else {
+                        const { error } = await supabaseClient
+                            .from('nebras_data_store')
+                            .upsert(sensitiveRows, { onConflict: 'store_key' });
+                        if (error) {
+                            console.warn('Nebras sensitive cloud save failed:', error.message || error);
+                            okSensitive = false;
+                        }
+                    }
+                }
+                if (!okPublic || !okSensitive) return false;
                 nebrasCloudSynced = true;
                 nebrasLastCloudSaveAt = new Date();
                 if (currentAdmin) renderDashboardCommandShell(currentAdmin);

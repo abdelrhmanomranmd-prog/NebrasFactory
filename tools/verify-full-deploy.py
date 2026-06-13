@@ -22,13 +22,18 @@ REQUIRED_CLOUD_KEYS = {
     'nebras_cloud_snapshots',
     'nebras_platform_integrity',
 }
+PUBLIC_CLOUD_KEYS = {
+    'system_settings', 'site_products', 'visitor_icons', 'dashboard_tiles',
+    'about_pages', 'branches', 'site_partners', 'site_certifications', 'showroom_gallery',
+}
 LIVE_MARKERS = {
     'index.html': [
         '49-platform-integrity.css',
         'nebras-platform-integrity.js',
+        'nebras-secure-cloud.js',
         '48-order-journey.css',
         'nebras-order-journey.js',
-        'data-nebras-deploy="hrws63"',
+        'data-nebras-deploy="hrws64"',
     ],
     'css/47-platform-interaction-global.css': [
         'admin-section:not(.show)',
@@ -42,7 +47,14 @@ LIVE_MARKERS = {
         'syncPlatformInteractionLayers', 'revealPlatformLayer', 'NEBRAS_PLATFORM_LAYER_SEL',
         'dash-order-journey', 'openRepCustomerJourneys', 'updateNebrasErpOrderFromJourney',
         'dash-platform-integration', 'openPlatformIntegrationHub', 'guardCloudPushRow',
+        'secureCloudPush', 'pullSensitiveCloudAndApply', 'establishNebrasSecureSession',
     ],
+    'js/nebras-secure-cloud.js': [
+        'NEBRAS_SENSITIVE_STORE_KEYS', 'secureApiLogin', 'secureCloudPull', 'secureCloudPush',
+        'establishNebrasSecureSession', 'clearNebrasSecureSession',
+    ],
+    'api/nebras-auth.js': ['handleLogin', 'handleVerify', 'signSession'],
+    'api/nebras-cloud.js': ['handlePull', 'handlePush', 'requireSession'],
     'js/nebras-platform-integrity.js': [
         'openPlatformIntegrationHub', 'guardCloudPushRow', 'guardCloudPullRow',
         'getCloudSnapshotsForCloud', 'NEBRAS_CRITICAL_CLOUD_KEYS',
@@ -104,8 +116,9 @@ def supabase_check():
     req = urllib.request.Request(url, headers={'apikey': ANON_KEY, 'Authorization': 'Bearer ' + ANON_KEY})
     with urllib.request.urlopen(req, timeout=20) as r:
         keys = {row['store_key'] for row in json.loads(r.read())}
-    missing = REQUIRED_CLOUD_KEYS - keys
-    return not missing, len(keys), sorted(missing)
+    missing_public = PUBLIC_CLOUD_KEYS - keys
+    # بعد RLS (018) المفاتيح الحساسة لا تظهر لـ anon — التحقق منها عبر API بعد الدخول
+    return not missing_public, len(keys), sorted(missing_public)
 
 
 def live_check():
