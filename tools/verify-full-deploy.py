@@ -18,11 +18,13 @@ REQUIRED_CLOUD_KEYS = {
     'quote_registry', 'hr_employees', 'sales_quotes_inbox', 'analytics_governance', 'admin_presence',
     'legal_contracts', 'crm_customers', 'crm_opportunities', 'hr_companies', 'hr_gps_positions',
     'customer_portal_users',
+    'customer_order_journeys',
 }
 LIVE_MARKERS = {
     'index.html': [
-        '47-platform-interaction-global.css',
-        'data-nebras-deploy="hrws59"',
+        '48-order-journey.css',
+        'nebras-order-journey.js',
+        'data-nebras-deploy="hrws62"',
     ],
     'css/47-platform-interaction-global.css': [
         'admin-section:not(.show)',
@@ -34,6 +36,7 @@ LIVE_MARKERS = {
         'getNebrasCurrentAdmin', 'openUserEditor', 'getNebrasErpOrders',
         'getProcurementBranchRegistry', 'setProcurementViewScope', 'bindDashboardTileInteractions',
         'syncPlatformInteractionLayers', 'revealPlatformLayer', 'NEBRAS_PLATFORM_LAYER_SEL',
+        'dash-order-journey', 'openRepCustomerJourneys', 'updateNebrasErpOrderFromJourney',
     ],
     'js/nebras-hr-platform.js': ['__nebrasHrOpenImpl', 'renderHrOrgTreePanel', 'requireHrRecordInScope', 'closeHrWorkspace', 'syncPlatformInteractionLayers'],
     'js/nebras-accounting-platform.js': ['exportAccountingPdf', 'openAccountingPlatform', 'closeAccountingWorkspace'],
@@ -41,8 +44,16 @@ LIVE_MARKERS = {
     'js/nebras-legal-platform.js': ['exportLegalPdf', 'openLegalPlatform', 'closeLegalWorkspace'],
     'js/nebras-customer-portal.js': [
         'openCustomerPortalLogin', 'loginCustomerPortal', 'openCustomerPortalGovernance',
-        'bindCpGovernanceToolbar', 'openCpUserEditor', 'buildCustomerLoyaltyRankings',
-        'syncPlatformInteractionLayers',
+        'bindCpGovernanceToolbar', 'openCpUserEditor', 'openCpUserEditorForRep',
+        'canCreateCustomerPortalUser', 'buildCustomerLoyaltyRankings',
+        'renderCustomerJourneyAlertsHtml', 'syncPlatformInteractionLayers',
+    ],
+    'js/nebras-order-journey.js': [
+        'openOrderJourneyOps', 'openApproveQuoteJourneyModal', 'renderCustomerJourneysHtml',
+        'confirmOrderJourneySalesRelease', 'confirmOrderJourneyAccounting',
+        'confirmJourneyPickup', 'verifyAndConfirmPickup', 'updateOrderJourneyBadge',
+        'openRepCustomerJourneys', 'renderPickupQrBlock',
+        'exportOrderJourneyReport', 'openWhatsAppNotifyCustomerById', 'syncJourneyToOms',
     ],
 }
 

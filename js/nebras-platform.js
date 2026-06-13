@@ -61,7 +61,9 @@
             productMaster: 'مركز المنتجات والأسعار',
             hr: 'الموارد البشرية',
             legal: 'الشؤون القانونية',
-            customerPortal: 'بوابة العملاء — حسابات العملاء'
+            customerPortal: 'بوابة العملاء — حسابات العملاء',
+            createCustomerUser: 'إنشاء حساب عميل (مندوب)',
+            orderJourney: 'مسار نبراس — متابعة الطلب'
         };
         /** أيقونة + وصف لكل صلاحية — تُستخدم في واجهة إدارة المستخدمين الاحترافية */
         const NEBRAS_PERMISSION_META = {
@@ -84,7 +86,9 @@
             productMaster: { icon: 'fas fa-database', descAr: 'تحديد أسماء المنتجات وأنواعها ومقاساتها وأسعارها — مصدر النظام الديناميكي' },
             hr: { icon: 'fas fa-people-roof', descAr: 'منصة HR — موظفون وعمال وسيارات وإجازات لكل الفروع' },
             legal: { icon: 'fas fa-scale-balanced', descAr: 'منصة Legal — عقود وقضايا وامتثال وPDPL لنبراس والشركات الشريكة' },
-            customerPortal: { icon: 'fas fa-user-circle', descAr: 'إنشاء حسابات بوابة العميل — لوحة خاصة لكل عميل' }
+            customerPortal: { icon: 'fas fa-user-circle', descAr: 'إنشاء حسابات بوابة العميل — لوحة خاصة لكل عميل' },
+            createCustomerUser: { icon: 'fas fa-user-plus', descAr: 'مندوب المبيعات — إنشاء حساب عميل (اسم مستخدم وكلمة سر)' },
+            orderJourney: { icon: 'fas fa-route', descAr: 'مسار الطلب — إنتاج · ورشة · مستودع · تأكيد مالي · جاهز للاستلام' }
         };
         const SHOP_CATALOG_PRODUCT_IDS = ['prod-wpc-raw', 'prod-wpc', 'prod-aluminum', 'prod-other'];
 
@@ -261,26 +265,26 @@
                 labelAr: 'مدير عام', labelEn: 'General Manager',
                 icon: 'fas fa-user-tie', accent: '#0a4d8c',
                 descAr: 'إدارة شاملة للمحتوى والعمليات والتقارير (بدون إنشاء مستخدمين).',
-                permissions: ['content', 'erp', 'inventory', 'warehouse', 'production', 'procurement', 'accounting', 'orders', 'sales', 'quotes', 'customerService', 'customerPortal', 'complaints', 'branches', 'audit', 'hr', 'legal', 'aluminum']
+                permissions: ['content', 'erp', 'inventory', 'warehouse', 'production', 'procurement', 'accounting', 'orders', 'sales', 'quotes', 'customerService', 'customerPortal', 'createCustomerUser', 'orderJourney', 'complaints', 'branches', 'audit', 'hr', 'legal', 'aluminum']
             },
             sales_manager: {
                 labelAr: 'مدير المبيعات', labelEn: 'Sales Manager',
                 icon: 'fas fa-chart-line', accent: '#1b9e57',
                 descAr: 'يدير مبيعات فرعه ويضيف مندوبي المبيعات وقائمة الأسعار والطلبات.',
-                permissions: ['sales', 'quotes', 'orders', 'customerService', 'customerPortal', 'audit'], branchScoped: true
+                permissions: ['sales', 'quotes', 'orders', 'customerService', 'customerPortal', 'createCustomerUser', 'orderJourney', 'audit'], branchScoped: true
             },
             sales_rep: {
                 labelAr: 'مندوب مبيعات', labelEn: 'Sales Representative',
                 icon: 'fas fa-user-headset', accent: '#2aa9c9',
-                descAr: 'عروض أسعار فقط — إنشاء · معاينة · استخراج PDF · تنزيل للعملاء. لا صلاحيات أخرى.',
-                permissions: ['quotes'],
+                descAr: 'عروض أسعار · إنشاء حساب عميل · متابعة مسار الطلب للعميل.',
+                permissions: ['quotes', 'createCustomerUser'],
                 quotesOnly: true
             },
             accountant: {
                 labelAr: 'المحاسب', labelEn: 'Accountant',
                 icon: 'fas fa-file-invoice-dollar', accent: '#8e44ad',
                 descAr: 'محاسب فرع — تحويلات · مبيعات · مشتريات · تقارير PDF ضمن نطاق الفرع.',
-                permissions: ['accounting', 'procurement', 'sales', 'orders', 'audit'], branchScoped: true
+                permissions: ['accounting', 'procurement', 'sales', 'orders', 'orderJourney', 'audit'], branchScoped: true
             },
             accounting_manager: {
                 labelAr: 'مدير قسم الحسابات', labelEn: 'Accounting Head',
@@ -294,25 +298,25 @@
                 labelAr: 'مدير المخزون', labelEn: 'Inventory Manager',
                 icon: 'fas fa-boxes-stacked', accent: '#e67e22',
                 descAr: 'يدير المخزون ويعرض المتاح فعلياً للإدارة الرئيسية.',
-                permissions: ['inventory', 'warehouse', 'audit']
+                permissions: ['inventory', 'warehouse', 'orderJourney', 'audit']
             },
             warehouse_manager: {
                 labelAr: 'مدير المستودع', labelEn: 'Warehouse Manager',
                 icon: 'fas fa-warehouse', accent: '#c0392b',
                 descAr: 'يدير حركة المستودع والجرد واستلام/صرف المواد.',
-                permissions: ['warehouse', 'inventory', 'audit']
+                permissions: ['warehouse', 'inventory', 'orderJourney', 'audit']
             },
             production_manager: {
                 labelAr: 'مدير الإنتاج', labelEn: 'Production Manager',
                 icon: 'fas fa-industry', accent: '#16a085',
                 descAr: 'يُدخل كميات الإنتاج المتاحة يومياً.',
-                permissions: ['production', 'inventory', 'audit']
+                permissions: ['production', 'inventory', 'orderJourney', 'audit']
             },
             branch_manager: {
                 labelAr: 'مدير فرع', labelEn: 'Branch Manager',
                 icon: 'fas fa-store', accent: '#2c3e50',
                 descAr: 'يدير فرعه فقط — مبيعات · عروض · طلبات · فريق المندوبين — حسب ما تمنحه الإدارة الرئيسية.',
-                permissions: ['sales', 'quotes', 'orders', 'customerService', 'customerPortal', 'complaints', 'audit'], branchScoped: true
+                permissions: ['sales', 'quotes', 'orders', 'customerService', 'customerPortal', 'createCustomerUser', 'orderJourney', 'complaints', 'audit'], branchScoped: true
             },
             hr: {
                 labelAr: 'موارد بشرية', labelEn: 'HR Manager',
@@ -2251,6 +2255,7 @@
             { id: 'dash-complaints', zone: 'quick', dashGroup: 'command', sortOrder: 8, iconClass: 'fas fa-exclamation-triangle', titleAr: 'الشكاوى', titleEn: 'Complaints', textAr: 'متابعة وحل الشكاوى.', textEn: 'Complaint resolution.', handler: 'openComplaintsManagement', permission: 'complaints', visible: true },
             { id: 'dash-branches', zone: 'quick', dashGroup: 'command', sortOrder: 9, iconClass: 'fas fa-map-marked-alt', titleAr: 'الفروع', titleEn: 'Branches', textAr: 'شبكة فروع المملكة.', textEn: 'KSA branch network.', handler: 'openBranchesManagement', permission: 'branches', visible: true },
             { id: 'dash-erp', zone: 'grid', dashGroup: 'erp', sortOrder: 1, iconClass: 'fas fa-cubes', titleAr: 'لوحة ERP', titleEn: 'ERP Console', textAr: 'نظام تخطيط موارد المصنع.', textEn: 'Factory ERP hub.', handler: 'scrollErpHub', permission: 'erp', visible: true },
+            { id: 'dash-order-journey', zone: 'grid', dashGroup: 'erp', sortOrder: 2.5, iconClass: 'fas fa-route', titleAr: 'مسار نبراس', titleEn: 'Order Journey', textAr: '7 محطات — إنتاج · مستودع · QR استلام.', textEn: '7-stage order journey with pickup QR.', cssClass: 'card-order-journey', handler: 'openOrderJourneyOps', permission: 'orderJourney', visible: true },
             { id: 'dash-inventory', zone: 'grid', dashGroup: 'erp', sortOrder: 2, iconClass: 'fas fa-warehouse', titleAr: 'مخزون ERP', titleEn: 'Inventory WMS', textAr: 'SKU ومستودعات وتنبيهات.', textEn: 'SKU and warehouses.', cssClass: 'card-inventory-management', backgroundImage: 'pvc-background', handler: 'openErpInventory', permission: 'inventory', visible: true },
             { id: 'dash-sales-report', zone: 'grid', dashGroup: 'erp', sortOrder: 3, iconClass: 'fas fa-file-invoice-dollar', titleAr: 'تقارير المبيعات', titleEn: 'Sales Reports', textAr: 'تحليل أداء المبيعات.', textEn: 'Sales performance.', cssClass: 'card-sales-reports', backgroundImage: 'background', handler: 'openSalesManagement', permission: 'sales', visible: true },
             { id: 'dash-customers', zone: 'grid', dashGroup: 'erp', sortOrder: 4, iconClass: 'fas fa-handshake', titleAr: 'نبراس CRM', titleEn: 'Nebras CRM', textAr: 'عملاء · Pipeline · فرص مبيعات.', textEn: 'Customers & sales pipeline.', cssClass: 'card-customer-management', backgroundImage: 'customer-complaints-background', handler: 'openCrmPlatform', permission: 'customerService', visible: true },
@@ -2416,6 +2421,15 @@
             },
             openCpUserEditor: function() {
                 if (typeof window.openCpUserEditor === 'function') return window.openCpUserEditor();
+            },
+            openCpUserEditorForRep: function() {
+                if (typeof window.openCpUserEditorForRep === 'function') return window.openCpUserEditorForRep();
+            },
+            openOrderJourneyOps: function() {
+                if (typeof window.openOrderJourneyOps === 'function') return window.openOrderJourneyOps();
+            },
+            openRepCustomerJourneys: function() {
+                if (typeof window.openRepCustomerJourneys === 'function') return window.openRepCustomerJourneys();
             },
             syncPlatformFromProductMaster: function() { syncPlatformFromProductMaster(); },
             scrollErpHub: function() { scrollErpHub(); },
@@ -3073,6 +3087,15 @@
                 },
                 openCustomerLoyaltyAnalytics: function() {
                     return typeof canManageCustomerPortalUsers === 'function' && canManageCustomerPortalUsers(admin);
+                },
+                openCpUserEditorForRep: function() {
+                    return typeof window.canCreateCustomerPortalUser === 'function' && window.canCreateCustomerPortalUser(admin);
+                },
+                openOrderJourneyOps: function() {
+                    return typeof window.canOrderJourney === 'function' && window.canOrderJourney(admin);
+                },
+                openRepCustomerJourneys: function() {
+                    return admin && admin.role === 'sales_rep';
                 },
                 openSiteContentManager: function() { return canManage('content', admin); },
                 openAdminAnalytics: function() { return canManage('audit', admin); },
@@ -8182,7 +8205,9 @@
                     '<button type="button" class="erp-tag erp-tag--action" onclick="markSalesQuoteStatus(\'' + entryKey + '\',\'reviewed\')"><i class="fas fa-eye"></i> ' + escapeHtmlAttr(ui.salesInboxReviewed || 'مراجعة') + '</button>' +
                     (canManage('orders') && !e.convertedToOrder ? '<button type="button" class="erp-tag erp-tag--action" onclick="convertQuoteToOrder(\'' + entryKey + '\')"><i class="fas fa-truck"></i> طلب OMS</button>' : '') +
                     (e.convertedToOrder && canManage('orders') ? '<button type="button" class="erp-tag erp-tag--action" onclick="openLinkedOmsOrderFromQuote(\'' + entryKey + '\')"><i class="fas fa-external-link-alt"></i> فتح OMS</button>' : '') +
-                    '<button type="button" class="erp-tag erp-tag--action" onclick="markSalesQuoteStatus(\'' + entryKey + '\',\'sold\')"><i class="fas fa-check"></i> ' + escapeHtmlAttr(ui.salesInboxSold || 'بيع') + '</button>' +
+                    (canManage('sales') && e.status !== 'accepted' && e.status !== 'sold' ? '<button type="button" class="erp-tag erp-tag--action erp-tag--ok" onclick="openApproveQuoteJourneyModal(\'' + entryKey + '\')"><i class="fas fa-route"></i> اعتماد وبدء المسار</button>' : '') +
+                    (e.estimatedReadyDate ? ' <span class="erp-tag erp-tag--accent"><i class="fas fa-calendar"></i> ' + escapeHtmlAttr(e.estimatedReadyDate) + '</span>' : '') +
+                    (canManage('sales') && (e.status === 'accepted' || e.status === 'sold') ? '<button type="button" class="erp-tag erp-tag--action" onclick="markSalesQuoteStatus(\'' + entryKey + '\',\'sold\')"><i class="fas fa-check"></i> ' + escapeHtmlAttr(ui.salesInboxSold || 'بيع') + '</button>' : '') +
                     '<button type="button" class="erp-tag erp-tag--action" onclick="previewSalesQuoteA4(\'' + entryKey + '\')"><i class="fas fa-file-invoice"></i> معاينة A4</button>' +
                     '<button type="button" class="erp-tag erp-tag--action" onclick="downloadSalesQuoteA4Pdf(\'' + entryKey + '\')"><i class="fas fa-file-pdf"></i> PDF 4 صفحات</button>' +
                     '<button type="button" class="erp-tag erp-tag--action" onclick="viewSalesQuoteEntry(\'' + entryKey + '\')"><i class="fas fa-list"></i> ' + escapeHtmlAttr(ui.salesInboxDetails || 'تفاصيل') + '</button>' +
@@ -13883,6 +13908,9 @@
                 '<div class="erp-form-actions">' +
                     '<button type="button" class="nebras-users-btn" onclick="previewRepQuoteA4()"><i class="fas fa-eye"></i> معاينة A4 (ورقة 1)</button>' +
                     '<button type="button" class="nebras-users-btn" onclick="downloadRepQuoteA4Pdf()"><i class="fas fa-file-pdf"></i> PDF 4 صفحات</button>' +
+                    (typeof window.canCreateCustomerPortalUser === 'function' && window.canCreateCustomerPortalUser(currentAdmin)
+                        ? '<button type="button" class="nebras-users-btn" onclick="openCpUserEditorFromQuote(fieldVal(\'rq-customer\'), fieldVal(\'rq-phone\'))"><i class="fas fa-user-plus"></i> حساب عميل</button>'
+                        : '') +
                     '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="saveRepQuote()"><i class="fas fa-floppy-disk"></i> حفظ وإرسال للمبيعات</button>' +
                 '</div>' +
                 (typeof renderRepMyQuotesSection === 'function' ? renderRepMyQuotesSection() : '');
@@ -14867,7 +14895,10 @@
                 { roles: ['sales_manager', 'branch_manager'], icon: 'fas fa-inbox', label: 'عروض الفرع', handler: 'openSalesManagement', perm: 'sales' },
                 { roles: ['sales_manager', 'branch_manager'], icon: 'fas fa-user-group', label: 'مندوبي الفرع', handler: 'openBranchTeamManagement', perm: null },
                 { roles: ['sales_rep'], icon: 'fas fa-folder-open', label: 'عروضي المحفوظة', handler: 'openRepMyQuotes', perm: 'quotes' },
+                { roles: ['sales_rep'], icon: 'fas fa-user-plus', label: 'حساب عميل', handler: 'openCpUserEditorForRep', perm: 'createCustomerUser' },
+                { roles: ['sales_rep'], icon: 'fas fa-route', label: 'مسارات عملائي', handler: 'openRepCustomerJourneys', perm: null },
                 { roles: ['sales_rep'], icon: 'fas fa-shield-halved', label: 'أمان حسابي', handler: 'openAccountSecurity', perm: null },
+                { roles: ['sales_manager', 'branch_manager', 'production_manager', 'warehouse_manager', 'accountant', 'accounting_manager', 'manager'], icon: 'fas fa-route', label: 'مسار نبراس', handler: 'openOrderJourneyOps', perm: 'orderJourney' },
                 { roles: ['sales_manager'], icon: 'fas fa-tags', label: 'قائمة الأسعار', handler: 'openSalesPriceList', perm: 'sales' },
                 { roles: ['superadmin', 'manager', 'sales_manager', 'branch_manager'], icon: 'fas fa-handshake', label: 'CRM', handler: 'openCrmPlatform', perm: 'customerService' },
                 { roles: ['superadmin', 'manager', 'sales_manager', 'branch_manager'], icon: 'fas fa-user-circle', label: 'مستخدمي العملاء', handler: 'openCustomerPortalGovernance', perm: 'customerPortal' },
@@ -15239,6 +15270,10 @@
                     kpis.push({ v: stats.salesCount, l: 'عمليات مبيعات', alert: false });
                     kpis.push({ v: stats.quoteInbox, l: 'عروض واردة', alert: stats.quoteInbox > 0 });
                 }
+                if (typeof window.canOrderJourney === 'function' && window.canOrderJourney(user) && typeof window.countJourneyPendingForAdmin === 'function') {
+                    const jPending = window.countJourneyPendingForAdmin(user);
+                    kpis.push({ v: jPending, l: 'مسار نبراس', alert: jPending > 0, handler: 'openOrderJourneyOps' });
+                }
                 if (canManage('accounting')) {
                     kpis.push({ v: formatSar(stats.transfersTotal).replace(' ر.س', ''), l: 'تحويلات (ر.س)', alert: false });
                     kpis.push({ v: stats.purchasesCount, l: 'أوامر شراء', alert: false });
@@ -15423,6 +15458,7 @@
             }
             updateSalesQuoteFab();
             updateSalesInboxBadge();
+            if (typeof window.updateOrderJourneyBadge === 'function') window.updateOrderJourneyBadge();
             renderDashboardOfficialHub();
             renderDashboardChannelsStatus();
         }
@@ -23490,6 +23526,11 @@
                 return typeof getCustomerPortalAudit === 'function' ? getCustomerPortalAudit() : [];
             }, set: function(v) {
                 if (typeof setCustomerPortalAuditFromCloud === 'function') setCustomerPortalAuditFromCloud(v);
+            }},
+            { key: 'customer_order_journeys', get: function() {
+                return typeof getNebrasOrderJourneys === 'function' ? getNebrasOrderJourneys() : [];
+            }, set: function(v) {
+                if (typeof setNebrasOrderJourneysFromCloud === 'function') setNebrasOrderJourneysFromCloud(v);
             }}
         ];
 
@@ -26415,6 +26456,31 @@
         window.bindStorefrontCommerceClicks = bindStorefrontCommerceClicks;
         window.getNebrasCurrentAdmin = function() { return currentAdmin; };
         window.getNebrasErpOrders = function() { return erpOrders || []; };
+        window.updateNebrasErpOrderFromJourney = function(journey) {
+            if (!journey) return false;
+            const orders = erpOrders || [];
+            const ord = orders.find(function(o) {
+                return (journey.orderId && o.id === journey.orderId) ||
+                    (journey.orderNo && o.orderNo === journey.orderNo) ||
+                    (journey.quoteId && o.quoteId === journey.quoteId) ||
+                    (journey.quoteNo && o.quoteRef === journey.quoteNo);
+            });
+            if (!ord) return false;
+            if (journey.pickedUp) {
+                ord.status = 'delivered';
+                ord.deliveredAt = journey.pickedUpAt || new Date().toISOString();
+                ord.journeyPickupCode = journey.pickupCode || '';
+            } else if (journey.readyForPickup) {
+                ord.status = 'ready';
+                ord.readyAt = new Date().toISOString();
+            } else if (journey.currentStage === 'production' || journey.currentStage === 'workshop') {
+                ord.status = 'production';
+            }
+            saveSystemData();
+            if (typeof displayErpOrders === 'function') displayErpOrders();
+            return true;
+        };
+        window.getNebrasSystemSettings = function() { return systemSettings || {}; };
         window.getNebrasErpTransfers = function() { return erpTransfers || []; };
         window.scrollToDashboardSection = scrollToDashboardSection;
         window.NEBRAS_ERP_PUBLIC = NEBRAS_ERP;
@@ -26549,6 +26615,9 @@
         window.exportAuditLogCsv = exportAuditLogCsv;
         window.convertComplaintToOrder = convertComplaintToOrder;
         window.markSalesQuoteStatus = markSalesQuoteStatus;
+        window.registerQuoteAsSale = registerQuoteAsSale;
+        window.loadSalesQuotesInbox = loadSalesQuotesInbox;
+        window.saveSalesQuotesInbox = saveSalesQuotesInbox;
         window.convertQuoteToOrder = convertQuoteToOrder;
         window.addNewSale = addNewSale;
         window.deleteSaleEntry = deleteSaleEntry;

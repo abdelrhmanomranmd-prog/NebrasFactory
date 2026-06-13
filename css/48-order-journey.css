@@ -1,0 +1,291 @@
+/* نبراس — مسار الطلب (Order Journey) */
+
+.noj-hero {
+    margin: 0 0 1.25rem;
+    padding: 1.1rem 1.25rem;
+    border-radius: 14px;
+    background: linear-gradient(135deg, #0a4d8c 0%, #1b9e57 100%);
+    color: #fff;
+}
+.noj-hero h3 {
+    margin: 0 0 0.35rem;
+    font-size: 1.15rem;
+}
+.noj-hero p {
+    margin: 0;
+    opacity: 0.92;
+    font-size: 0.9rem;
+}
+.noj-eta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.65rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.18);
+    font-size: 0.85rem;
+}
+
+.noj-track-wrap {
+    overflow-x: auto;
+    padding: 0.5rem 0 1rem;
+    -webkit-overflow-scrolling: touch;
+}
+.noj-track {
+    display: flex;
+    gap: 0;
+    min-width: min(100%, 720px);
+    position: relative;
+    padding: 0.5rem 0;
+}
+.noj-track::before {
+    content: '';
+    position: absolute;
+    top: 1.65rem;
+    right: 8%;
+    left: 8%;
+    height: 3px;
+    background: #d8e3ef;
+    border-radius: 2px;
+    z-index: 0;
+}
+.noj-station {
+    flex: 1;
+    min-width: 4.5rem;
+    text-align: center;
+    position: relative;
+    z-index: 1;
+}
+.noj-station-dot {
+    width: 2.1rem;
+    height: 2.1rem;
+    margin: 0 auto 0.5rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #e8eef4;
+    color: #6b7c93;
+    font-size: 0.75rem;
+    border: 2px solid #c5d3e3;
+    transition: transform 0.2s, background 0.2s;
+}
+.noj-station--done .noj-station-dot {
+    background: #1b9e57;
+    border-color: #148f4c;
+    color: #fff;
+}
+.noj-station--active .noj-station-dot {
+    background: #0a4d8c;
+    border-color: #083d6f;
+    color: #fff;
+    transform: scale(1.08);
+    box-shadow: 0 0 0 4px rgba(10, 77, 140, 0.2);
+}
+.noj-station--ready .noj-station-dot {
+    background: linear-gradient(135deg, #d4af37, #f0c14b);
+    border-color: #b8962e;
+    color: #1a1a1a;
+}
+.noj-station-label {
+    display: block;
+    font-size: 0.68rem;
+    line-height: 1.25;
+    color: #4a5d73;
+    font-weight: 600;
+}
+.noj-station--done .noj-station-label,
+.noj-station--active .noj-station-label {
+    color: #1a2b3c;
+}
+
+.noj-card {
+    border: 1px solid #dde6f0;
+    border-radius: 12px;
+    padding: 1rem 1.1rem;
+    margin-bottom: 1rem;
+    background: #fff;
+}
+.noj-card-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    margin-bottom: 0.85rem;
+}
+.noj-card-head strong {
+    font-size: 1rem;
+}
+.noj-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    background: #e8f4fd;
+    color: #0a4d8c;
+}
+.noj-badge--ready {
+    background: #fff3cd;
+    color: #856404;
+}
+.noj-badge--done {
+    background: #d4edda;
+    color: #155724;
+}
+
+.noj-ops-list .erp-row {
+    align-items: flex-start;
+}
+.noj-ops-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin-top: 0.5rem;
+}
+
+.noj-approve-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 12050;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(8, 24, 48, 0.55);
+    padding: 1rem;
+}
+.noj-approve-overlay.show {
+    display: flex;
+}
+.noj-approve-modal {
+    width: min(100%, 480px);
+    background: #fff;
+    border-radius: 14px;
+    padding: 1.25rem 1.35rem;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2);
+}
+.noj-approve-modal h3 {
+    margin: 0 0 0.5rem;
+}
+.noj-approve-modal p {
+    margin: 0 0 1rem;
+    color: #5a6b7d;
+    font-size: 0.9rem;
+}
+.noj-approve-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-top: 1rem;
+}
+
+.cp-panel--journey {
+    border: 1px solid #c8e6d8;
+    background: linear-gradient(180deg, #f8fffb 0%, #fff 100%);
+}
+
+@media (max-width: 600px) {
+    .noj-station-label {
+        font-size: 0.6rem;
+    }
+    .noj-station-dot {
+        width: 1.75rem;
+        height: 1.75rem;
+        font-size: 0.65rem;
+    }
+}
+
+/* إشعارات العميل + QR استلام */
+.noj-cp-alerts {
+    margin-bottom: 1rem;
+}
+.noj-cp-alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    padding: 0.85rem 1rem;
+    border-radius: 12px;
+    margin-bottom: 0.5rem;
+    animation: noj-pulse 2s ease-in-out infinite;
+}
+.noj-cp-alert--ready {
+    background: linear-gradient(135deg, #fff8e1 0%, #fff3cd 100%);
+    border: 1px solid #e6c200;
+    color: #5c4a00;
+}
+.noj-cp-alert i {
+    font-size: 1.35rem;
+    color: #d4af37;
+    margin-top: 0.1rem;
+}
+.noj-cp-alert p {
+    margin: 0.25rem 0 0;
+    font-size: 0.88rem;
+    opacity: 0.9;
+}
+@keyframes noj-pulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.25); }
+    50% { box-shadow: 0 0 0 6px rgba(212, 175, 55, 0); }
+}
+
+.noj-pickup-card {
+    margin-top: 0.85rem;
+    padding: 1rem;
+    border-radius: 12px;
+    background: #f8fbff;
+    border: 1px dashed #0a4d8c;
+    text-align: center;
+}
+.noj-pickup-card-head {
+    margin-bottom: 0.65rem;
+    color: #0a4d8c;
+}
+.noj-pickup-qr {
+    width: 160px;
+    height: 160px;
+    border-radius: 8px;
+    background: #fff;
+    padding: 4px;
+}
+.noj-pickup-code {
+    font-size: 1.05rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    margin: 0.5rem 0;
+    color: #1a2b3c;
+}
+.noj-pickup-hint {
+    margin: 0.2rem 0;
+    font-size: 0.82rem;
+    color: #5a6b7d;
+}
+.noj-picked-msg {
+    margin: 0.65rem 0 0;
+    padding: 0.5rem 0.75rem;
+    border-radius: 8px;
+    background: #d4edda;
+    color: #155724;
+    font-size: 0.88rem;
+}
+.noj-pickup-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 0.65rem;
+    margin-bottom: 0.75rem;
+}
+.noj-pickup-scan-field {
+    flex: 1;
+    min-width: 200px;
+}
+.noj-pickup-inline {
+    display: block;
+    margin-top: 0.25rem;
+    font-family: monospace;
+}
+.card-order-journey {
+    --tile-accent: #0a4d8c;
+}
