@@ -14439,11 +14439,15 @@
                 if (!open || (isDashboard && !document.body.classList.contains('admin-session'))) {
                     el.style.pointerEvents = 'none';
                     el.style.display = 'none';
+                    if (isWorkspace) el.style.visibility = 'hidden';
                     if (!isWorkspace) el.setAttribute('aria-hidden', 'true');
                 } else {
                     el.style.pointerEvents = 'auto';
                     if (el.classList.contains('quote-print-overlay')) el.style.display = 'block';
-                    else if (isDashboard || (cpApp && el === cpApp)) el.style.display = '';
+                    else if (isWorkspace) {
+                        el.style.display = 'block';
+                        el.style.visibility = 'visible';
+                    } else if (isDashboard || (cpApp && el === cpApp)) el.style.display = '';
                     else el.style.display = 'flex';
                     el.setAttribute('aria-hidden', 'false');
                 }
@@ -21832,6 +21836,7 @@
                 const hash = '#/ws/' + encodeURIComponent(route.pillar || 'platform') + '/' + encodeURIComponent(route.view || 'home');
                 if (window.location.hash !== hash) history.pushState({ nebrasWs: route }, '', hash);
             } catch (e) { /* ignore */ }
+            if (typeof syncPlatformInteractionLayers === 'function') syncPlatformInteractionLayers();
             window.scrollTo(0, 0);
         }
 
@@ -21855,6 +21860,27 @@
             try {
                 if (window.location.hash.indexOf('#/ws/') === 0) history.pushState({}, '', window.location.pathname + window.location.search);
             } catch (e) { /* ignore */ }
+            if (typeof syncPlatformInteractionLayers === 'function') syncPlatformInteractionLayers();
+        }
+
+        function parseWorkspaceRouteFromHash() {
+            const h = String(window.location.hash || '');
+            const m = h.match(/^#\/ws\/([^/]+)\/([^/?#]+)/);
+            if (!m) return null;
+            const route = {
+                pillar: decodeURIComponent(m[1]),
+                view: decodeURIComponent(m[2])
+            };
+            if (history.state && history.state.nebrasWs) {
+                return Object.assign({}, history.state.nebrasWs, route);
+            }
+            return route;
+        }
+
+        function restoreWorkspaceFromHashIfNeeded() {
+            const route = parseWorkspaceRouteFromHash();
+            if (!route || nebrasWorkspaceState.active) return;
+            openNebrasWorkspace(route);
         }
 
         function switchWorkspacePillar(pillar) {
@@ -24257,6 +24283,7 @@
             revealSiteAfterIntro();
             clearStuckInteractionBlockers();
             bindStorefrontCommerceClicks();
+            restoreWorkspaceFromHashIfNeeded();
         }
 
         async function bootstrapNebrasPlatform() {
@@ -24295,6 +24322,7 @@
                     initStorefrontExperience();
                     syncNebrasCloudInBackgroundDeferred();
                     revealSiteAfterIntro();
+                    restoreWorkspaceFromHashIfNeeded();
                 }
             }
         }

@@ -16,8 +16,7 @@
 .nebras-color-overlay.is-hidden,
 .nebras-media-lightbox[hidden],
 #nebras-brand-intro[hidden],
-#nebras-brand-intro.is-leaving,
-#nebras-workspace:not(.nebras-workspace--forced) {
+#nebras-brand-intro.is-leaving {
     display: none !important;
     visibility: hidden !important;
     pointer-events: none !important;
@@ -76,6 +75,7 @@ body:not(.nebras-workspace-active) #nebras-workspace {
 
 body.nebras-workspace-active #nebras-workspace {
     display: block !important;
+    visibility: visible !important;
     pointer-events: auto !important;
 }
 
