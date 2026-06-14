@@ -8,11 +8,15 @@
     const SNAPSHOTS_KEY = 'nebrasCloudSnapshots';
     const INTEGRITY_KEY = 'nebrasPlatformIntegrity';
     const CRITICAL_STORE_KEYS = [
-        'admin_users', 'branches', 'site_products', 'sales_quotes_inbox',
-        'customer_order_journeys', 'customer_portal_users', 'hr_employees',
-        'crm_customers', 'erp_orders', 'legal_contracts', 'erp_inventory',
-        'sales_data', 'analytics_governance'
+        'admin_users', 'branches', 'site_products', 'visitor_icons', 'dashboard_tiles',
+        'sales_quotes_inbox', 'customer_order_journeys', 'customer_portal_users', 'hr_employees',
+        'crm_customers', 'crm_opportunities', 'erp_orders', 'legal_contracts', 'erp_inventory',
+        'erp_production', 'sales_data', 'sales_price_list', 'analytics_governance',
+        'system_settings', 'about_pages', 'showroom_gallery'
     ];
+    const LOCAL_MUTATION_KEY = 'nebrasLocalCloudMutationAt';
+    const MUTATION_GRACE_MS = 180000;
+    let localCloudMutations = {};
     const MAX_SNAPSHOTS_PER_KEY = 6;
 
     let cloudSnapshots = { byKey: {}, updatedAt: null };
@@ -36,7 +40,61 @@
             platformIntegrity = i ? JSON.parse(i) : { modules: {}, lastAuditAt: null };
             if (!platformIntegrity.modules) platformIntegrity.modules = {};
         } catch (e) { platformIntegrity = { modules: {}, lastAuditAt: null }; }
+        try {
+            const m = localStorage.getItem(LOCAL_MUTATION_KEY);
+            localCloudMutations = m ? JSON.parse(m) : {};
+            if (!localCloudMutations || typeof localCloudMutations !== 'object') localCloudMutations = {};
+        } catch (e2) { localCloudMutations = {}; }
         integrityReady = true;
+    }
+
+    function persistLocalMutations() {
+        try { localStorage.setItem(LOCAL_MUTATION_KEY, JSON.stringify(localCloudMutations)); } catch (e) { /* ignore */ }
+    }
+
+    function markLocalCloudMutation(storeKey) {
+        if (!storeKey) return;
+        loadIntegrityData();
+        localCloudMutations[storeKey] = Date.now();
+        persistLocalMutations();
+    }
+
+    function markLocalCloudMutationBatch(keys) {
+        if (!keys || !keys.length) return;
+        loadIntegrityData();
+        const now = Date.now();
+        keys.forEach(function(k) { if (k) localCloudMutations[k] = now; });
+        persistLocalMutations();
+    }
+
+    function clearLocalCloudMutations(keys) {
+        loadIntegrityData();
+        if (!keys || !keys.length) {
+            localCloudMutations = {};
+        } else {
+            keys.forEach(function(k) { delete localCloudMutations[k]; });
+        }
+        persistLocalMutations();
+    }
+
+    function hasPendingLocalCloudMutations() {
+        loadIntegrityData();
+        const now = Date.now();
+        return Object.keys(localCloudMutations).some(function(k) {
+            return (now - Number(localCloudMutations[k] || 0)) < MUTATION_GRACE_MS;
+        });
+    }
+
+    /** لا نستبدل بيانات محلية أحدث بسحابة قديمة أو فارغة */
+    function shouldRejectStaleCloudPull(storeKey, cloudUpdatedAt, payload) {
+        loadIntegrityData();
+        const localAt = Number(localCloudMutations[storeKey] || 0);
+        if (!localAt) return false;
+        const cloudAt = cloudUpdatedAt ? new Date(cloudUpdatedAt).getTime() : 0;
+        const size = payloadSize(payload);
+        if (size === 0 && (Date.now() - localAt) < MUTATION_GRACE_MS) return true;
+        if (localAt > cloudAt && (Date.now() - localAt) < MUTATION_GRACE_MS) return true;
+        return false;
     }
 
     function saveSnapshotsLocal() {
@@ -121,7 +179,8 @@
             { id: 'portal', nameAr: 'بوابة العملاء', icon: 'fa-user-circle', scope: 'خصوصية كاملة لكل عميل', cloud: true, perm: 'customerPortal' },
             { id: 'erp', nameAr: 'ERP', icon: 'fa-cubes', scope: 'مخزون · طلبات · إنتاج · مشتريات', cloud: true, perm: 'erp' },
             { id: 'production', nameAr: 'الإنتاج WPC', icon: 'fa-industry', scope: 'قسم الإنتاج', cloud: true, perm: 'production' },
-            { id: 'warehouse', nameAr: 'المستودع', icon: 'fa-warehouse', scope: 'فرع/مستودع', cloud: true, perm: 'warehouse' }
+            { id: 'warehouse', nameAr: 'المستودع', icon: 'fa-warehouse', scope: 'فرع/مستودع', cloud: true, perm: 'warehouse' },
+            { id: 'aluminum', nameAr: 'قسم الألومنيوم', icon: 'fa-industry', scope: 'منتجات · مخزون · عملاء ALU', cloud: true, perm: 'aluminum' }
         ];
         return modules.map(function(m) {
             const canAccess = admin && typeof global.canManage === 'function' ? global.canManage(m.perm, admin) : false;
@@ -194,6 +253,11 @@
 
     global.guardCloudPushRow = guardCloudPushRow;
     global.guardCloudPullRow = guardCloudPullRow;
+    global.markLocalCloudMutation = markLocalCloudMutation;
+    global.markLocalCloudMutationBatch = markLocalCloudMutationBatch;
+    global.clearLocalCloudMutations = clearLocalCloudMutations;
+    global.hasPendingLocalCloudMutations = hasPendingLocalCloudMutations;
+    global.shouldRejectStaleCloudPull = shouldRejectStaleCloudPull;
     global.getCloudSnapshotsForCloud = getCloudSnapshotsForCloud;
     global.setCloudSnapshotsFromCloud = setCloudSnapshotsFromCloud;
     global.openPlatformIntegrationHub = openPlatformIntegrationHub;

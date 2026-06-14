@@ -335,8 +335,8 @@
             aluminum_manager: {
                 labelAr: 'مدير قسم الألومنيوم', labelEn: 'Aluminum Dept. Manager',
                 icon: 'fas fa-industry', accent: '#708090',
-                descAr: 'صلاحيات الألومنيوم فقط — مخزون · إنتاج · عروض · طلبات قسم الألومنيوم.',
-                permissions: ['aluminum', 'inventory', 'warehouse', 'production', 'quotes', 'orders'],
+                descAr: 'صلاحيات الألومنيوم — منتجات · مخزون · إنتاج · عروض · طلبات · عملاء ALU.',
+                permissions: ['aluminum', 'inventory', 'warehouse', 'production', 'quotes', 'orders', 'customerPortal', 'createCustomerUser'],
                 departmentScope: NEBRAS_ALUMINUM_PRODUCT_ID
             },
             wpc_manager: {
@@ -2243,6 +2243,7 @@
             { id: 'dash-legal-platform', zone: 'quick', dashGroup: 'command', sortOrder: 1.06, iconClass: 'fas fa-scale-balanced', titleAr: 'Legal — الشؤون القانونية', titleEn: 'Nebras Legal', textAr: 'عقود · قضايا · امتثال · PDPL · اتفاقيات شراكة — نبراس والشركات الشريكة.', textEn: 'Contracts, cases, compliance, PDPL — group & partners.', handler: 'openLegalPlatform', permission: 'legal', visible: true },
             { id: 'dash-accounting-platform', zone: 'quick', dashGroup: 'command', sortOrder: 1.065, iconClass: 'fas fa-calculator', titleAr: 'Accounting — قسم الحسابات', titleEn: 'Nebras Accounting', textAr: 'تحويلات · مبيعات · مشتريات · ربحية · تقارير PDF — المقر والفروع.', textEn: 'Transfers, sales, purchases, PDF reports.', handler: 'openAccountingPlatform', permission: 'accounting', visible: true },
             { id: 'dash-platform-integration', zone: 'quick', dashGroup: 'command', sortOrder: 0.9, iconClass: 'fas fa-network-wired', titleAr: 'تكامل المنصة', titleEn: 'Platform Integration', textAr: 'ترابط الأقسام · الفروع · السحابة · حماية البيانات.', textEn: 'Departments, branches, cloud safety.', handler: 'openPlatformIntegrationHub', permission: 'audit', visible: true },
+            { id: 'dash-admin-ai', zone: 'quick', dashGroup: 'command', sortOrder: 0.95, iconClass: 'fas fa-robot', titleAr: 'مساعد Claude', titleEn: 'Claude AI', textAr: 'ذكاء اصطناعي للإدارة الرئيسية — إدخال بيانات وتصنيف المتجر.', textEn: 'Main admin AI assistant.', handler: 'openNebrasAdminAi', permission: 'users', superadminOnly: true, visible: true },
             { id: 'dash-empire-hub', zone: 'quick', dashGroup: 'command', sortOrder: 0.95, iconClass: 'fas fa-crown', titleAr: 'إمبراطورية نبراس — مركز القيادة', titleEn: 'Nebras Empire HQ', textAr: 'الواجهة الخارجية · ERP · HR · Legal · فروع · شركاء — كل المنصة في مكان واحد.', textEn: 'Full empire command — external + internal platforms.', handler: 'openNebrasEmpireHub', permission: 'audit', visible: true },
             { id: 'dash-content', zone: 'quick', dashGroup: 'command', sortOrder: 1, iconClass: 'fas fa-pen-to-square', titleAr: 'إدارة محتوى الموقع', titleEn: 'Site Content', textAr: 'منتجات، بوابة الزائر، شركاء، شهادات — ديناميكي بالكامل.', textEn: 'Products, gateway icons, partners, certs — fully dynamic.', handler: 'openSiteContentManager', permission: 'content', visible: true },
             { id: 'dash-about-pages', zone: 'quick', dashGroup: 'command', sortOrder: 2, iconClass: 'fas fa-building', titleAr: 'من نحن ورؤيتنا', titleEn: 'About & Vision', textAr: 'نصوص المصنع ووثائق الصفحات الداخلية.', textEn: 'Factory pages and documents.', handler: 'openAboutContentAdmin', permission: 'content', visible: true },
@@ -2415,6 +2416,9 @@
             },
             openPlatformIntegrationHub: function() {
                 if (typeof window.openPlatformIntegrationHub === 'function') return window.openPlatformIntegrationHub();
+            },
+            openNebrasAdminAi: function() {
+                if (typeof window.openNebrasAdminAi === 'function') return window.openNebrasAdminAi();
             },
             openExecutiveReports: function() { openExecutiveReports(); },
             openCustomerPortalGovernance: function() {
@@ -6984,7 +6988,8 @@
                 syncSalesPriceListFromProductMaster();
                 syncDoorDesignerCatalogFromProductMaster();
             }
-            saveSystemData(options || {});
+            const opts = Object.assign({ urgentCloud: true }, options || {});
+            saveSystemData(opts);
             refreshPublicSiteFromGovernance();
             const scm = document.getElementById('site-content-management');
             if (scm && scm.classList.contains('show')) renderGovernanceStatusPanel();
@@ -11719,6 +11724,22 @@
         function requireProductMasterGovernance(message) {
             if (!isMainGovernanceAdmin()) {
                 alert(message || 'مركز المنتجات والأسعار — الإدارة الرئيسية فقط (NEBRASFACTORY / NEBRASBASIC).');
+                return false;
+            }
+            return true;
+        }
+
+        function canManageProductCatalog(admin, productId) {
+            admin = admin || currentAdmin;
+            if (!admin || !productId) return false;
+            if (isMainGovernanceAdmin(admin)) return true;
+            if (productId === NEBRAS_ALUMINUM_PRODUCT_ID && (canManage('aluminum', admin) || admin.role === 'aluminum_manager')) return true;
+            return false;
+        }
+
+        function requireProductCatalogAccess(productId, message) {
+            if (!canManageProductCatalog(currentAdmin, productId)) {
+                alert(message || 'ليس لديك صلاحية تعديل هذا المنتج.');
                 return false;
             }
             return true;
@@ -16814,26 +16835,59 @@
                 { icon: 'fas fa-boxes-stacked', title: 'مخزون الألومنيوم', desc: 'SKU وكميات قسم ALU', handler: 'openErpInventory' },
                 { icon: 'fas fa-industry', title: 'إنتاج الألومنيوم', desc: 'تسجيل الإنتاج اليومي', handler: 'openErpProduction' },
                 { icon: 'fas fa-file-signature', title: 'عروض الألومنيوم', desc: 'بناء عرض سعر ALU من الأسعار المعتمدة', handler: 'openAluminumQuoteBuilder' },
-                { icon: 'fas fa-truck', title: 'طلبات الألومنيوم', desc: 'OMS — تنفيذ طلبات القسم', handler: 'openErpOrders' }
+                { icon: 'fas fa-truck', title: 'طلبات الألومنيوم', desc: 'OMS — تنفيذ طلبات القسم', handler: 'openErpOrders' },
+                { icon: 'fas fa-plus-circle', title: 'أصناف الألومنيوم', desc: 'إضافة وتعديل منتجات وصور ALU', handler: 'manageAluminumCatalogVariants' },
+                { icon: 'fas fa-users', title: 'عملاء الألومنيوم', desc: 'حسابات بوابة عملاء قسم ALU', handler: 'openAluminumCustomerPortal' },
+                { icon: 'fas fa-file-csv', title: 'تصدير Excel', desc: 'CSV لكل أصناف الألومنيوم', handler: 'exportAluminumCatalogCsv' },
+                { icon: 'fas fa-file-pdf', title: 'تصدير PDF', desc: 'طباعة كتالوج الألومنيوم', handler: 'exportAluminumCatalogPdf' }
             ];
             actions.innerHTML = cards.map(function(c) {
                 return '<button type="button" class="aluminum-dept-card" onclick="' + c.handler + '()">' +
                     '<i class="' + c.icon + '"></i><h4>' + escapeHtmlAttr(c.title) + '</h4><small>' + escapeHtmlAttr(c.desc) + '</small></button>';
             }).join('');
             if (variantsHost) {
+                const canEdit = canManageProductCatalog(currentAdmin, NEBRAS_ALUMINUM_PRODUCT_ID);
                 if (!variants.length) {
-                    variantsHost.innerHTML = '<p class="erp-empty">لا أصناف ألومنيوم — الإدارة الرئيسية تضيفها من مركز المنتجات.</p>';
+                    variantsHost.innerHTML = '<p class="erp-empty">لا أصناف ألومنيوم — ' + (canEdit ? 'اضغط «أصناف الألومنيوم» لإضافة منتجات.' : 'تواصل مع الإدارة الرئيسية.') + '</p>';
                 } else {
-                    variantsHost.innerHTML = variants.map(function(v) {
+                    variantsHost.innerHTML = variants.map(function(v, idx) {
                         const priceTxt = erpNum(v.price) > 0 ? formatSar(v.price) : 'عند الطلب';
+                        const editBtn = canEdit
+                            ? ' <button type="button" class="erp-tag erp-tag--action" onclick="manageProductVariants(\'' + NEBRAS_ALUMINUM_PRODUCT_ID + '\')">تعديل #' + idx + '</button>'
+                            : '';
                         return '<article class="erp-row"><div class="erp-row-main"><strong>' + escapeHtmlAttr(v.typeAr || 'صنف') + '</strong>' +
                             '<span class="erp-row-tags">' +
                                 (v.sizeAr ? '<span class="erp-tag">' + escapeHtmlAttr(v.sizeAr) + '</span>' : '') +
                                 (v.colorAr ? '<span class="erp-tag">' + escapeHtmlAttr(v.colorAr) + '</span>' : '') +
                                 (v.sku ? '<span class="erp-tag">' + escapeHtmlAttr(v.sku) + '</span>' : '') +
-                            '</span><small>السعر: ' + escapeHtmlAttr(priceTxt) + ' — من الإدارة الرئيسية</small></div></article>';
+                            '</span><small>السعر: ' + escapeHtmlAttr(priceTxt) + editBtn + '</small></div></article>';
                     }).join('');
                 }
+            }
+        }
+
+        function manageAluminumCatalogVariants() {
+            manageProductVariants(NEBRAS_ALUMINUM_PRODUCT_ID);
+        }
+
+        function exportAluminumCatalogCsv() {
+            exportStoreCatalogCsv(NEBRAS_ALUMINUM_PRODUCT_ID);
+        }
+
+        function exportAluminumCatalogPdf() {
+            exportStoreCatalogPrintPdf(NEBRAS_ALUMINUM_PRODUCT_ID);
+        }
+
+        function openAluminumCustomerPortal() {
+            if (!canManage('aluminum') && !isMainGovernanceAdmin()) {
+                alert('عملاء الألومنيوم — لمدير قسم الألومنيوم أو الإدارة الرئيسية.');
+                return;
+            }
+            if (typeof openCustomerPortalGovernance === 'function') {
+                window._nebrasAluminumPortalFilter = true;
+                openCustomerPortalGovernance();
+            } else {
+                alert('بوابة العملاء غير متاحة.');
             }
         }
 
@@ -22570,7 +22624,7 @@
                 });
                 addAuditLog('إضافة مستخدم', 'تمت إضافة ' + username + ' بدور ' + getRoleLabel(st.role));
             }
-            saveSystemData();
+            saveSystemData({ urgentCloud: true });
             cancelUserEditor();
             displayUsers();
         }
@@ -23604,8 +23658,12 @@
             }}
         ];
 
-        function applyNebrasCloudRow(storeKey, payload) {
+        function applyNebrasCloudRow(storeKey, payload, cloudUpdatedAt) {
             if (typeof shouldSkipStaleCloudGovernanceRow === 'function' && shouldSkipStaleCloudGovernanceRow(storeKey)) {
+                return;
+            }
+            if (typeof shouldRejectStaleCloudPull === 'function' && shouldRejectStaleCloudPull(storeKey, cloudUpdatedAt, payload)) {
+                console.warn('[Nebras Cloud] تجاهل سحابة قديمة لـ ' + storeKey);
                 return;
             }
             if (typeof guardCloudPullRow === 'function') payload = guardCloudPullRow(storeKey, payload);
@@ -23719,7 +23777,7 @@
                         console.warn('Nebras public cloud load failed:', error.message || error);
                     } else if (data && data.length) {
                         data.forEach(function(row) {
-                            if (row && row.store_key) applyNebrasCloudRow(row.store_key, row.payload);
+                            if (row && row.store_key) applyNebrasCloudRow(row.store_key, row.payload, row.updated_at);
                         });
                         loadedAny = true;
                     }
@@ -23733,7 +23791,7 @@
                     }
                     if (data && data.length) {
                         data.forEach(function(row) {
-                            if (row && row.store_key) applyNebrasCloudRow(row.store_key, row.payload);
+                            if (row && row.store_key) applyNebrasCloudRow(row.store_key, row.payload, row.updated_at);
                         });
                         loadedAny = true;
                     }
@@ -23796,6 +23854,9 @@
                 if (!okPublic || !okSensitive) return false;
                 nebrasCloudSynced = true;
                 nebrasLastCloudSaveAt = new Date();
+                if (typeof clearLocalCloudMutations === 'function') {
+                    clearLocalCloudMutations(rows.map(function(r) { return r.store_key; }));
+                }
                 if (currentAdmin) renderDashboardCommandShell(currentAdmin);
                 return true;
             } catch (err) {
@@ -23811,8 +23872,28 @@
             }, 500);
         }
 
+        function flushPushToNebrasCloud() {
+            if (nebrasCloudSaveTimer) {
+                clearTimeout(nebrasCloudSaveTimer);
+                nebrasCloudSaveTimer = null;
+            }
+            return pushToNebrasCloud();
+        }
+
+        const NEBRAS_SAVE_STORE_KEYS = [
+            'admin_users', 'site_products', 'visitor_icons', 'dashboard_tiles', 'site_custom_sections',
+            'branches', 'system_settings', 'about_pages', 'site_partners', 'site_certifications',
+            'showroom_gallery', 'sales_quotes_inbox', 'sales_data', 'sales_price_list',
+            'customer_portal_users', 'customer_order_journeys', 'erp_inventory', 'erp_orders',
+            'erp_production', 'erp_procurement', 'crm_customers', 'crm_opportunities', 'legal_contracts',
+            'complaints', 'audit_logs', 'analytics_governance'
+        ];
+
         function saveSystemData(options) {
             options = options || {};
+            if (typeof markLocalCloudMutationBatch === 'function') {
+                markLocalCloudMutationBatch(NEBRAS_SAVE_STORE_KEYS);
+            }
             purgeDeprecatedVisitorIcons();
             try {
             localStorage.setItem('nebrasComplaints', JSON.stringify(complaints));
@@ -23846,7 +23927,10 @@
             } catch (storageErr) {
                 console.warn('Local storage save failed:', storageErr);
             }
-            if (!options.skipCloud) schedulePushToNebrasCloud();
+            if (!options.skipCloud) {
+                if (options.urgentCloud) flushPushToNebrasCloud();
+                else schedulePushToNebrasCloud();
+            }
         }
 
         function loadSystemData() {
@@ -24092,7 +24176,7 @@
         }
 
         async function manageProductVariants(productId) {
-            if (!requireProductMasterGovernance('تحديد الأسماء والأنواع والمقاسات والأسعار — الإدارة الرئيسية فقط.')) return;
+            if (!requireProductCatalogAccess(productId, 'تحديد الأسماء والأنواع والمقاسات والأسعار — الإدارة الرئيسية أو مدير قسم الألومنيوم للألومنيوم فقط.')) return;
             const product = siteProducts.find(function(p) { return p.id === productId; });
             if (!product) return;
             const listPreview = (product.variants || []).map(function(v, i) {
@@ -24155,12 +24239,81 @@
                 const sku = prompt('SKU:', v.sku || '');
                 if (sku !== null) v.sku = sku.trim();
             }
-            saveContentData();
+            saveContentData({ urgentCloud: true });
             displaySiteProductsAdmin();
             if (document.getElementById('product-master-hub') && document.getElementById('product-master-hub').classList.contains('show')) {
                 renderProductMasterPanel();
             }
+            if (document.getElementById('aluminum-department') && document.getElementById('aluminum-department').classList.contains('show')) {
+                renderAluminumDepartmentPanel();
+            }
             addAuditLog('أسعار المنتج', product.titleAr || productId);
+        }
+
+        function exportStoreCatalogCsv(productFilter) {
+            if (!isMainGovernanceAdmin() && !canManage('aluminum')) {
+                alert('تصدير الكتالوج — الإدارة الرئيسية أو قسم الألومنيوم.');
+                return;
+            }
+            const rows = [];
+            const header = ['product_id', 'product_ar', 'product_en', 'variant_id', 'type_ar', 'size_ar', 'color_ar', 'sku', 'price_ex_vat', 'in_stock', 'visible'];
+            rows.push(header.join(','));
+            (siteProducts || []).forEach(function(p) {
+                if (!p) return;
+                if (productFilter && p.id !== productFilter) return;
+                if (getCatalogExperience(p) === 'complaint') return;
+                const variants = p.variants && p.variants.length ? p.variants : [{ id: '', typeAr: '', sizeAr: '', colorAr: '', sku: '', price: 0 }];
+                variants.forEach(function(v) {
+                    rows.push([
+                        p.id,
+                        '"' + String(p.titleAr || '').replace(/"/g, '""') + '"',
+                        '"' + String(p.titleEn || '').replace(/"/g, '""') + '"',
+                        v.id || '',
+                        '"' + String(v.typeAr || '').replace(/"/g, '""') + '"',
+                        '"' + String(v.sizeAr || '').replace(/"/g, '""') + '"',
+                        '"' + String(v.colorAr || '').replace(/"/g, '""') + '"',
+                        v.sku || '',
+                        erpNum(v.price),
+                        p.inStock === false ? 'no' : 'yes',
+                        p.visible === false ? 'no' : 'yes'
+                    ].join(','));
+                });
+            });
+            const blob = new Blob(['\ufeff' + rows.join('\n')], { type: 'text/csv;charset=utf-8' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'nebras-store-catalog-' + (productFilter || 'all') + '-' + new Date().toISOString().slice(0, 10) + '.csv';
+            a.click();
+            URL.revokeObjectURL(a.href);
+            addAuditLog('تصدير كتالوج', (productFilter || 'كل المنتجات') + ' — CSV');
+            if (typeof showNebrasAdminToast === 'function') showNebrasAdminToast('تم تنزيل ملف CSV — يفتح في Excel', 'ok');
+        }
+
+        function exportStoreCatalogPrintPdf(productFilter) {
+            if (!isMainGovernanceAdmin() && !canManage('aluminum')) {
+                alert('تصدير الكتالوج — الإدارة الرئيسية أو قسم الألومنيوم.');
+                return;
+            }
+            const win = window.open('', '_blank');
+            if (!win) { alert('اسمحي بفتح نافذة جديدة للطباعة/PDF.'); return; }
+            let html = '<html dir="rtl"><head><meta charset="utf-8"><title>كتالوج نبراس</title>' +
+                '<style>body{font-family:Cairo,sans-serif;padding:24px}h1{color:#0d2840}table{width:100%;border-collapse:collapse;margin-top:16px}th,td{border:1px solid #ccc;padding:8px;font-size:12px}th{background:#0d2840;color:#fff}</style></head><body>' +
+                '<h1>كتالوج منتجات نبراس</h1><p>' + new Date().toLocaleString('ar-SA') + '</p><table><thead><tr>' +
+                '<th>المنتج</th><th>النوع</th><th>المقاس</th><th>اللون</th><th>SKU</th><th>السعر</th></tr></thead><tbody>';
+            (siteProducts || []).forEach(function(p) {
+                if (!p || (productFilter && p.id !== productFilter)) return;
+                (p.variants || []).forEach(function(v) {
+                    html += '<tr><td>' + escapeHtmlAttr(p.titleAr || p.id) + '</td><td>' + escapeHtmlAttr(v.typeAr || '') +
+                        '</td><td>' + escapeHtmlAttr(v.sizeAr || '') + '</td><td>' + escapeHtmlAttr(v.colorAr || '') +
+                        '</td><td>' + escapeHtmlAttr(v.sku || '') + '</td><td>' + (erpNum(v.price) > 0 ? formatSar(v.price) : 'عند الطلب') + '</td></tr>';
+                });
+            });
+            html += '</tbody></table></body></html>';
+            win.document.write(html);
+            win.document.close();
+            win.focus();
+            win.print();
+            addAuditLog('تصدير كتالوج', (productFilter || 'كل المنتجات') + ' — PDF/طباعة');
         }
 
         function cloudLoadWithTimeout(ms) {
@@ -24180,7 +24333,7 @@
         let nebrasLastCloudLoadAt = null;
 
         function syncNebrasCloudInBackground() {
-            cloudLoadWithTimeout().then(function(loaded) {
+            function afterCloudLoad(loaded) {
                 if (!loaded) return;
                 finalizePlatformDataAfterLoad();
                 if (document.body.classList.contains('nebras-intro-active')) {
@@ -24196,10 +24349,22 @@
                 }
                 if (currentAdmin) {
                     showAdminDashboard(currentAdmin);
-                    saveSystemData({ skipCloud: true });
-                    pushToNebrasCloud();
                 }
-            }).catch(function(err) {
+            }
+            const pending = typeof hasPendingLocalCloudMutations === 'function' && hasPendingLocalCloudMutations();
+            if (pending || currentAdmin) {
+                flushPushToNebrasCloud().then(function(pushed) {
+                    if (!pushed && pending) return;
+                    return cloudLoadWithTimeout();
+                }).then(function(loaded) {
+                    if (loaded === undefined) return;
+                    afterCloudLoad(loaded);
+                }).catch(function(err) {
+                    console.warn('Background cloud sync:', err);
+                });
+                return;
+            }
+            cloudLoadWithTimeout().then(afterCloudLoad).catch(function(err) {
                 console.warn('Background cloud sync:', err);
             });
         }
@@ -26783,6 +26948,12 @@
         window.openProductMasterHub = openProductMasterHub;
         window.syncPlatformFromProductMaster = syncPlatformFromProductMaster;
         window.openAluminumDepartment = openAluminumDepartment;
+        window.manageAluminumCatalogVariants = manageAluminumCatalogVariants;
+        window.exportAluminumCatalogCsv = exportAluminumCatalogCsv;
+        window.exportAluminumCatalogPdf = exportAluminumCatalogPdf;
+        window.exportStoreCatalogCsv = exportStoreCatalogCsv;
+        window.exportStoreCatalogPrintPdf = exportStoreCatalogPrintPdf;
+        window.openAluminumCustomerPortal = openAluminumCustomerPortal;
         window.openHrPlatformBridge = openHrPlatformBridge;
         window.openHrWhenReady = openHrWhenReady;
         window.bindNebrasHrPlatformGlobals = bindNebrasHrPlatformGlobals;
