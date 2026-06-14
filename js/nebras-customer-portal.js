@@ -684,6 +684,16 @@
     global.canCreateCustomerPortalUser = canCreateCustomerPortalUser;
     global.canManageCustomerPortalUsers = canManageCustomerPortalUsers;
     global.getCustomerPortalUsers = function() { loadCpData(); return customerPortalUsers; };
+
+    function findCustomerPortalUserByPhone(phone) {
+        loadCpData();
+        const norm = String(phone || '').replace(/\D/g, '').slice(-9);
+        if (norm.length < 9) return null;
+        return customerPortalUsers.find(function(u) {
+            return u && u.isActive !== false && String(u.phone || u.username || '').replace(/\D/g, '').slice(-9) === norm;
+        }) || null;
+    }
+    global.findCustomerPortalUserByPhone = findCustomerPortalUserByPhone;
     global.getCustomerPortalAudit = function() { loadCpData(); return customerPortalAudit; };
     global.buildCustomerLoyaltyRankings = buildCustomerLoyaltyRankings;
     global.setCustomerPortalUsersFromCloud = setCustomerPortalUsersFromCloud;

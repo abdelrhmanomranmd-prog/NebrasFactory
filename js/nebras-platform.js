@@ -2244,7 +2244,9 @@
             { id: 'dash-accounting-platform', zone: 'quick', dashGroup: 'command', sortOrder: 1.065, iconClass: 'fas fa-calculator', titleAr: 'Accounting — قسم الحسابات', titleEn: 'Nebras Accounting', textAr: 'تحويلات · مبيعات · مشتريات · ربحية · تقارير PDF — المقر والفروع.', textEn: 'Transfers, sales, purchases, PDF reports.', handler: 'openAccountingPlatform', permission: 'accounting', visible: true },
             { id: 'dash-platform-integration', zone: 'quick', dashGroup: 'command', sortOrder: 0.9, iconClass: 'fas fa-network-wired', titleAr: 'تكامل المنصة', titleEn: 'Platform Integration', textAr: 'ترابط الأقسام · الفروع · السحابة · حماية البيانات.', textEn: 'Departments, branches, cloud safety.', handler: 'openPlatformIntegrationHub', permission: 'audit', visible: true },
             { id: 'dash-admin-ai', zone: 'quick', dashGroup: 'command', sortOrder: 0.95, iconClass: 'fas fa-robot', titleAr: 'مساعد Claude', titleEn: 'Claude AI', textAr: 'ذكاء اصطناعي للإدارة الرئيسية — إدخال بيانات وتصنيف المتجر.', textEn: 'Main admin AI assistant.', handler: 'openNebrasAdminAi', permission: 'users', superadminOnly: true, visible: true },
-            { id: 'dash-empire-hub', zone: 'quick', dashGroup: 'command', sortOrder: 0.95, iconClass: 'fas fa-crown', titleAr: 'إمبراطورية نبراس — مركز القيادة', titleEn: 'Nebras Empire HQ', textAr: 'الواجهة الخارجية · ERP · HR · Legal · فروع · شركاء — كل المنصة في مكان واحد.', textEn: 'Full empire command — external + internal platforms.', handler: 'openNebrasEmpireHub', permission: 'audit', visible: true },
+            { id: 'dash-data-warehouse', zone: 'quick', dashGroup: 'command', sortOrder: 0.96, iconClass: 'fas fa-database', titleAr: 'مستودع البيانات', titleEn: 'Data Warehouse', textAr: 'استخراج Excel · PDF · JSON — كل التخزين الديناميكي.', textEn: 'Export all dynamic storage.', handler: 'openNebrasDataWarehouse', permission: 'audit', visible: true },
+            { id: 'dash-empire-bridges', zone: 'quick', dashGroup: 'command', sortOrder: 0.97, iconClass: 'fas fa-link', titleAr: 'جسور الإمبراطورية', titleEn: 'Empire Bridges', textAr: 'Odoo-like — متجر · HR · CRM · مسار نبراس · محاسبة.', textEn: 'Department bridges.', handler: 'openNebrasEmpireBridges', permission: 'erp', visible: true },
+            { id: 'dash-empire-hub', zone: 'quick', dashGroup: 'command', sortOrder: 0.98, iconClass: 'fas fa-crown', titleAr: 'إمبراطورية نبراس — مركز القيادة', titleEn: 'Nebras Empire HQ', textAr: 'الواجهة الخارجية · ERP · HR · Legal · فروع · شركاء — كل المنصة في مكان واحد.', textEn: 'Full empire command — external + internal platforms.', handler: 'openNebrasEmpireHub', permission: 'audit', visible: true },
             { id: 'dash-content', zone: 'quick', dashGroup: 'command', sortOrder: 1, iconClass: 'fas fa-pen-to-square', titleAr: 'إدارة محتوى الموقع', titleEn: 'Site Content', textAr: 'منتجات، بوابة الزائر، شركاء، شهادات — ديناميكي بالكامل.', textEn: 'Products, gateway icons, partners, certs — fully dynamic.', handler: 'openSiteContentManager', permission: 'content', visible: true },
             { id: 'dash-about-pages', zone: 'quick', dashGroup: 'command', sortOrder: 2, iconClass: 'fas fa-building', titleAr: 'من نحن ورؤيتنا', titleEn: 'About & Vision', textAr: 'نصوص المصنع ووثائق الصفحات الداخلية.', textEn: 'Factory pages and documents.', handler: 'openAboutContentAdmin', permission: 'content', visible: true },
             { id: 'dash-certs', zone: 'quick', dashGroup: 'command', sortOrder: 3, iconClass: 'fas fa-award', titleAr: 'اعتمادات وشهادات', titleEn: 'Certifications', textAr: 'شهادات المعرض — صور وPDF.', textEn: 'Showroom certificates.', cssClass: 'dashboard-tile-card--certs', handler: 'openCertificationsHub', permission: 'content', visible: true },
@@ -2419,6 +2421,12 @@
             },
             openNebrasAdminAi: function() {
                 if (typeof window.openNebrasAdminAi === 'function') return window.openNebrasAdminAi();
+            },
+            openNebrasDataWarehouse: function() {
+                if (typeof window.openNebrasDataWarehouse === 'function') return window.openNebrasDataWarehouse();
+            },
+            openNebrasEmpireBridges: function() {
+                if (typeof window.openNebrasEmpireBridges === 'function') return window.openNebrasEmpireBridges();
             },
             openExecutiveReports: function() { openExecutiveReports(); },
             openCustomerPortalGovernance: function() {
@@ -3951,6 +3959,45 @@
             return 'nebrasCart_' + getVisitorSessionId();
         }
 
+        const CART_BACKUP_TTL_MS = 7 * 24 * 60 * 60 * 1000;
+
+        function normCartPhone(phone) {
+            return String(phone || '').replace(/\D/g, '').slice(-9);
+        }
+
+        function getCartBackupKey(phone) {
+            const p = normCartPhone(phone);
+            if (p.length >= 9) return 'nebrasCartPhone_' + p;
+            return 'nebrasCartBackup_' + getVisitorSessionId();
+        }
+
+        function saveCartBackup() {
+            try {
+                const profile = getCheckoutProfile();
+                const payload = { cart: nebrasCart, at: Date.now(), profile: profile };
+                localStorage.setItem(getCartBackupKey(profile.phone), JSON.stringify(payload));
+                localStorage.setItem('nebrasCartBackup_' + getVisitorSessionId(), JSON.stringify(payload));
+            } catch (e) { /* ignore */ }
+        }
+
+        function restoreCartBackupIfEmpty() {
+            if (nebrasCart.length) return;
+            try {
+                const profile = getCheckoutProfile();
+                const keys = [getCartBackupKey(profile.phone), 'nebrasCartBackup_' + getVisitorSessionId()];
+                for (let i = 0; i < keys.length; i++) {
+                    const raw = localStorage.getItem(keys[i]);
+                    if (!raw) continue;
+                    const data = JSON.parse(raw);
+                    if (!data || !Array.isArray(data.cart) || !data.cart.length) continue;
+                    if (Date.now() - Number(data.at || 0) > CART_BACKUP_TTL_MS) continue;
+                    nebrasCart = data.cart;
+                    sessionStorage.setItem(getCartStorageKey(), JSON.stringify(nebrasCart));
+                    return;
+                }
+            } catch (e) { /* ignore */ }
+        }
+
         function getCheckoutStorageKey() {
             return 'nebrasCheckout_' + getVisitorSessionId();
         }
@@ -4013,17 +4060,46 @@
             } catch (e) {
                 nebrasCart = [];
             }
+            restoreCartBackupIfEmpty();
             loadQuoteSessionState();
         }
 
         function saveNebrasCart() {
             try {
                 sessionStorage.setItem(getCartStorageKey(), JSON.stringify(nebrasCart));
+                saveCartBackup();
             } catch (e) {
                 console.warn('Cart save failed', e);
             }
             updateCartBadge();
             updateSalesQuoteFab();
+        }
+
+        function renderCartEnterpriseChrome(lang, ui) {
+            const totals = calcCartTotals();
+            const itemCount = nebrasCart.reduce(function(n, l) { return n + (Number(l.qty) || 1); }, 0);
+            const badge = document.getElementById('cart-drawer-count-badge');
+            if (badge) {
+                badge.hidden = !itemCount;
+                badge.textContent = String(itemCount);
+            }
+            const ribbon = document.getElementById('cart-summary-ribbon');
+            if (ribbon) {
+                if (!nebrasCart.length) {
+                    ribbon.hidden = true;
+                } else {
+                    ribbon.hidden = false;
+                    ribbon.innerHTML =
+                        '<span class="cart-ribbon-items"><i class="fas fa-shopping-bag"></i> ' + itemCount + ' ' +
+                        escapeHtmlAttr(ui.cartItemsLabel || 'منتج في سلتك') + '</span>' +
+                        '<span class="cart-ribbon-total">' + (totals.totalInc > 0 ? formatSar(totals.totalInc) : (ui.cartOnRequest || 'عند الطلب')) + '</span>';
+                }
+            }
+            const savedHint = document.getElementById('cart-saved-hint');
+            if (savedHint) {
+                savedHint.hidden = !nebrasCart.length;
+                savedHint.innerHTML = '<i class="fas fa-check-circle"></i> ' + escapeHtmlAttr(ui.cartSavedHint || 'سلتك محفوظة — تبقى حتى 7 أيام على نفس الجهاز');
+            }
         }
 
         function getCheckoutProfile() {
@@ -5688,6 +5764,7 @@
             if (payMount) payMount.innerHTML = nebrasCart.length ? buildCartEnterprisePaymentHtml(lang) : '';
             applyStaticUiTranslations(ui);
             renderCartOrderPreview();
+            renderCartEnterpriseChrome(lang, ui);
             overlay.classList.add('show');
             syncPlatformInteractionLayers();
             updateCartBadge();
@@ -8134,6 +8211,9 @@
             } else {
                 doneMsg += '\n\n✓ ' + (ui.sendQuoteCloudOk || 'الطلب محفوظ ويظهر في: المبيعات → طلبات عروض الأسعار + التحليلات.');
             }
+            if (typeof runEmpireBridgeOnQuoteSubmit === 'function') {
+                runEmpireBridgeOnQuoteSubmit(entry);
+            }
                 alert(doneMsg);
         }
 
@@ -9021,6 +9101,11 @@
             const cust = readCheckoutFormToProfile();
             const customerDisplay = [cust.customerName, cust.city].filter(Boolean).join(' - ') || cust.customerName || '—';
             const cartTotals = calcCartTotals();
+            const itemCount = nebrasCart.reduce(function(n, l) { return n + (Number(l.qty) || 1); }, 0);
+            const customerRibbon =
+                '<div class="quote-a4-customer-ribbon"><strong>عميل: ' + escapeHtmlAttr(cust.customerName || '—') + '</strong> · ' +
+                escapeHtmlAttr(cust.phone || '') + ' · ' + itemCount + ' صنف · ' +
+                (cartTotals.totalInc > 0 ? formatSar(cartTotals.totalInc) + ' شامل الضريبة' : 'عند الطلب') + '</div>';
             const vatRate = getNebrasVatRate();
             const rows = nebrasCart.map(function(line) {
                 const unit = Number(line.unitPrice) || 0;

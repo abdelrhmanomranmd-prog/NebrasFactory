@@ -543,6 +543,37 @@
         renderCrmPlatformPanelSafe();
     }
 
+    /** جسر تلقائي من المتجر/السلة */
+    function addCrmCustomer(data) {
+        loadCrmData();
+        if (!data) return null;
+        const phone = String(data.phone || '').replace(/\D/g, '');
+        if (phone.length >= 9) {
+            const dup = crmCustomers.find(function(c) {
+                return c && String(c.phone || '').replace(/\D/g, '') === phone;
+            });
+            if (dup) return dup;
+        }
+        const now = new Date().toISOString();
+        const cust = {
+            id: newCrmId('cust'),
+            name: data.nameAr || data.name || 'عميل متجر',
+            company: data.company || '',
+            phone: data.phone || '',
+            email: data.email || '',
+            city: data.city || '',
+            source: data.source || 'store-cart',
+            notes: (data.notes || '') + (data.quoteNo ? ' — عرض ' + data.quoteNo : ''),
+            branchId: data.branchId || crmScopeBranchId() || null,
+            createdAt: now,
+            updatedAt: now
+        };
+        crmCustomers.unshift(cust);
+        saveCrmData();
+        crmAuditLog('جسر متجر → CRM', cust.name);
+        return cust;
+    }
+
     function saveCrmCustomer() {
         if (!requireCrmAccess()) return;
         const name = String((document.getElementById('crm-c-name') || {}).value || '').trim();
@@ -785,6 +816,7 @@
     global.openCrmOpportunityEditor = openCrmOpportunityEditor;
     global.openCrmActivityEditor = openCrmActivityEditor;
     global.cancelCrmEditor = cancelCrmEditor;
+    global.addCrmCustomer = addCrmCustomer;
     global.saveCrmCustomer = saveCrmCustomer;
     global.deleteCrmCustomer = deleteCrmCustomer;
     global.saveCrmOpportunity = saveCrmOpportunity;
