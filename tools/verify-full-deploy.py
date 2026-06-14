@@ -33,8 +33,8 @@ LIVE_MARKERS = {
         'nebras-secure-cloud.js',
         '48-order-journey.css',
         'nebras-order-journey.js',
-        'data-nebras-deploy="hrws69"',
-        'exportNebrasGovernanceBundle', 'openNebrasGovernanceImportPicker',
+        'data-nebras-deploy="hrws70"',
+        'assignedRepId', 'getBranchSalesRepsForCp', 'getNebrasColorCatalog',
         'nebras-data-warehouse.js',
         'nebras-empire-bridges.js',
         '51-data-warehouse.css',
@@ -60,6 +60,8 @@ LIVE_MARKERS = {
         'dash-data-warehouse', 'openNebrasDataWarehouse', 'dash-empire-bridges', 'openNebrasEmpireBridges',
         'saveCartBackup', 'restoreCartBackupIfEmpty', 'renderCartEnterpriseChrome', 'quote-a4-customer-ribbon',
         'dash-platform-integration', 'openPlatformIntegrationHub', 'guardCloudPushRow',
+        'exportNebrasGovernanceBundle', 'importNebrasGovernanceBundleFromFile',
+        'getNebrasColorCatalog', 'getBranchSalesRepsForCp', 'pickNebrasCatalogColorAr',
         'secureCloudPush', 'pullSensitiveCloudAndApply', 'establishNebrasSecureSession',
     ],
     'js/nebras-secure-cloud.js': [
@@ -85,6 +87,7 @@ LIVE_MARKERS = {
     'js/nebras-customer-portal.js': [
         'openCustomerPortalLogin', 'loginCustomerPortal', 'openCustomerPortalGovernance',
         'bindCpGovernanceToolbar', 'openCpUserEditor', 'openCpUserEditorForRep',
+        'assignedRepId', 'assignedRepUsername', 'saveCpUserFromEditor',
         'canCreateCustomerPortalUser', 'buildCustomerLoyaltyRankings',
         'renderCustomerJourneyAlertsHtml', 'syncPlatformInteractionLayers',
     ],

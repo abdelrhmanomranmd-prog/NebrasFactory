@@ -114,11 +114,26 @@
     }
 
     function filterCpUsersForManager(list) {
+        const admin = resolveCpAdminUser();
+        if (admin && admin.role === 'sales_rep') {
+            return (list || []).filter(function(u) {
+                if (String(u.assignedRepId || '') === String(admin.id || '')) return true;
+                if (!u.assignedRepId && u.createdBy === admin.username) return true;
+                return false;
+            });
+        }
         const bid = cpManagerBranchId();
         if (!bid) return list || [];
         return (list || []).filter(function(u) {
             return !u.branchId || String(u.branchId) === bid;
         });
+    }
+
+    function getCpBranchSalesReps() {
+        if (typeof global.getBranchSalesRepsForCp === 'function') {
+            return global.getBranchSalesRepsForCp(resolveCpAdminUser()) || [];
+        }
+        return [];
     }
 
     function entryBelongsToPortalCustomer(entry, portalUser) {
@@ -410,11 +425,13 @@
         list.innerHTML = users.map(function(u, idx) {
             const globalIdx = customerPortalUsers.indexOf(u);
             const loyalty = computeCustomerLoyaltyScore(u);
+            const repLabel = u.assignedRepUsername ? ('<span class="nebras-user-branch"><i class="fas fa-user-tie"></i> مندوب: ' + esc(u.assignedRepUsername) + '</span>') : '';
             return '<article class="nebras-user-card cp-gov-card">' +
                 '<header class="nebras-user-card-head">' +
                     '<span class="nebras-user-avatar"><i class="fas fa-user-circle"></i></span>' +
                     '<div><strong>' + esc(u.displayName || u.username) + '</strong><small>' + esc(u.username) + '</small></div>' +
                 '</header>' +
+                repLabel +
                 '<span class="nebras-user-branch"><i class="fas fa-chart-line"></i> ' + loyalty.data.totalQuotes + ' عروض · ' + loyalty.data.totalOrders + ' طلبات · ' + esc(loyalty.tier) + '</span>' +
                 '<footer class="nebras-user-card-foot">' +
                     '<button class="nebras-user-act" onclick="openCpUserEditor(' + globalIdx + ')"><i class="fas fa-pen"></i> تعديل</button>' +
@@ -468,6 +485,21 @@
                 crmSelect += '<option value="' + escAttr(c.id) + '"' + sel + '>' + esc(c.name) + (c.phone ? ' — ' + esc(c.phone) : '') + '</option>';
             });
         }
+        let repSelect = '';
+        const admin = resolveCpAdminUser();
+        const reps = getCpBranchSalesReps();
+        if (canManageCustomerPortalUsers(admin) && reps.length) {
+            repSelect = '<label class="nebras-field"><span>مندوب المبيعات المسؤول</span><select id="cp-e-rep">' +
+                '<option value="">— اختر المندوب —</option>' +
+                reps.map(function(r) {
+                    const sel = (user && String(user.assignedRepId) === String(r.id)) ||
+                        (!user && pre.assignedRepId && String(pre.assignedRepId) === String(r.id)) ? ' selected' : '';
+                    return '<option value="' + escAttr(r.id) + '" data-username="' + escAttr(r.username) + '"' + sel + '>' +
+                        esc(r.username) + (r.assignedBranchCity ? ' — ' + esc(r.assignedBranchCity) : '') + '</option>';
+                }).join('') + '</select></label>';
+        } else if (admin && admin.role === 'sales_rep') {
+            repSelect = '<p class="scm-hint"><i class="fas fa-user-tie"></i> هذا العميل سيُربط بك تلقائياً: ' + esc(admin.username) + '</p>';
+        }
         host.innerHTML =
             '<div class="nebras-editor-card">' +
                 '<div class="nebras-editor-bar" style="--role-accent:#1a6fa8">' +
@@ -483,6 +515,7 @@
                     '<label class="nebras-field"><span>الجوال (لربط العروض)</span><input id="cp-e-phone" value="' + escAttr(user ? user.phone : (pre.phone || '')) + '"></label>' +
                     '<label class="nebras-field"><span>البريد</span><input id="cp-e-email" type="email" value="' + escAttr(user ? user.email : '') + '"></label>' +
                     '<label class="nebras-field"><span>ربط CRM</span><select id="cp-e-crm">' + crmSelect + '</select></label>' +
+                    repSelect +
                     '<label class="nebras-field"><span>الفرع</span><input readonly value="' + escAttr(cpEditorState.branchCity || 'المجموعة') + '"></label>' +
                 '</div>' +
                 '<div class="nebras-editor-footer">' +
@@ -514,13 +547,27 @@
         const phone = String((document.getElementById('cp-e-phone') || {}).value || '').trim();
         const email = String((document.getElementById('cp-e-email') || {}).value || '').trim();
         const crmCustomerId = String((document.getElementById('cp-e-crm') || {}).value || '').trim();
+        const admin = resolveCpAdminUser();
+        const repEl = document.getElementById('cp-e-rep');
+        let assignedRepId = null;
+        let assignedRepUsername = '';
+        if (admin && admin.role === 'sales_rep') {
+            assignedRepId = admin.id;
+            assignedRepUsername = admin.username;
+        } else if (repEl && repEl.value) {
+            assignedRepId = repEl.value;
+            const opt = repEl.options[repEl.selectedIndex];
+            assignedRepUsername = opt ? (opt.getAttribute('data-username') || opt.textContent || '') : '';
+        } else if (cpEditorState.isEdit && customerPortalUsers[cpEditorState.index]) {
+            assignedRepId = customerPortalUsers[cpEditorState.index].assignedRepId || null;
+            assignedRepUsername = customerPortalUsers[cpEditorState.index].assignedRepUsername || '';
+        }
         if (!displayName || !username) { alert('الاسم واسم المستخدم مطلوبان.'); return; }
         if (!cpEditorState.isEdit && !password) { alert('كلمة المرور مطلوبة للحساب الجديد.'); return; }
         const dup = customerPortalUsers.some(function(u, i) {
             return String(u.username).toLowerCase() === username.toLowerCase() && i !== cpEditorState.index;
         });
         if (dup) { alert('اسم المستخدم مستخدم مسبقاً.'); return; }
-        const admin = resolveCpAdminUser();
         const payload = {
             id: cpEditorState.id,
             username: username,
@@ -528,6 +575,8 @@
             phone: phone,
             email: email,
             crmCustomerId: crmCustomerId || null,
+            assignedRepId: assignedRepId,
+            assignedRepUsername: assignedRepUsername,
             branchId: cpEditorState.branchId,
             branchCity: cpEditorState.branchCity,
             isActive: true,
