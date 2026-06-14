@@ -270,8 +270,8 @@
             sales_manager: {
                 labelAr: 'مدير المبيعات', labelEn: 'Sales Manager',
                 icon: 'fas fa-chart-line', accent: '#1b9e57',
-                descAr: 'يدير مبيعات فرعه ويضيف مندوبي المبيعات وقائمة الأسعار والطلبات.',
-                permissions: ['sales', 'quotes', 'orders', 'customerService', 'customerPortal', 'createCustomerUser', 'orderJourney', 'audit'], branchScoped: true
+                descAr: 'يدير مبيعات فرعه · فريق المندوبين · قسم الألومنيوم (نفس صلاحيات مدير ALU) · عروض · طلبات.',
+                permissions: ['sales', 'quotes', 'orders', 'customerService', 'customerPortal', 'createCustomerUser', 'orderJourney', 'audit', 'aluminum', 'inventory', 'warehouse'], branchScoped: true
             },
             sales_rep: {
                 labelAr: 'مندوب مبيعات', labelEn: 'Sales Representative',
@@ -315,8 +315,8 @@
             branch_manager: {
                 labelAr: 'مدير فرع', labelEn: 'Branch Manager',
                 icon: 'fas fa-store', accent: '#2c3e50',
-                descAr: 'يدير فرعه فقط — مبيعات · عروض · طلبات · فريق المندوبين — حسب ما تمنحه الإدارة الرئيسية.',
-                permissions: ['sales', 'quotes', 'orders', 'customerService', 'customerPortal', 'createCustomerUser', 'orderJourney', 'complaints', 'audit'], branchScoped: true
+                descAr: 'يدير فرعه — مبيعات · عروض · طلبات · ألومنيوم · فريق المندوبين — حسب ما تمنحه الإدارة الرئيسية.',
+                permissions: ['sales', 'quotes', 'orders', 'customerService', 'customerPortal', 'createCustomerUser', 'orderJourney', 'complaints', 'audit', 'aluminum', 'inventory', 'warehouse'], branchScoped: true
             },
             hr: {
                 labelAr: 'موارد بشرية', labelEn: 'HR Manager',
@@ -11835,7 +11835,8 @@
             admin = admin || currentAdmin;
             if (!admin) return false;
             if (isMainGovernanceAdmin(admin)) return false;
-            return admin.role === 'aluminum_manager' || (canManage('aluminum') && !canManage('content'));
+            if (admin.role === 'sales_manager' || admin.role === 'branch_manager') return false;
+            return admin.role === 'aluminum_manager' || (canManage('aluminum', admin) && !canManage('content', admin));
         }
 
         function isWpcDepartmentAdmin(admin) {
@@ -14874,7 +14875,7 @@
             },
             sales_manager: {
                 greetingAr: 'مركز مدير مبيعات الفرع',
-                descAr: 'لوحة فرعك — فريق المندوبين · عروض · طلبات · مبيعات.',
+                descAr: 'لوحة فرعك — فريق المندوبين · عروض · طلبات · مبيعات · قسم الألومنيوم.',
                 scrollTo: 'dashboard-actions-grid',
                 openHandler: 'openBranchCommandCenter',
                 hideSections: ['dashboard-company-identity', 'dashboard-partners-block', 'platform-hub-panel']
@@ -15016,7 +15017,7 @@
                 { roles: ['superadmin', 'manager'], icon: 'fas fa-chart-bar', label: 'تقارير تنفيذية', handler: 'openExecutiveReports', perm: 'audit' },
                 { roles: ['sales_manager', 'accountant', 'branch_manager'], icon: 'fas fa-chart-bar', label: 'تقرير الفرع', handler: 'openExecutiveReports', perm: 'audit' },
                 { roles: ['superadmin'], icon: 'fas fa-database', label: 'مركز المنتجات', handler: 'openProductMasterHub', perm: null },
-                { roles: ['aluminum_manager'], icon: 'fas fa-industry', label: 'قسم الألومنيوم', handler: 'openAluminumDepartment', perm: 'aluminum' },
+                { roles: ['aluminum_manager', 'sales_manager', 'branch_manager'], icon: 'fas fa-industry', label: 'قسم الألومنيوم', handler: 'openAluminumDepartment', perm: 'aluminum' },
                 { roles: ['wpc_manager', 'production_manager'], icon: 'fas fa-door-closed', label: 'إنتاج WPC', handler: 'openWpcProductionDepartment', perm: 'production' },
                 { roles: ['branch_manager', 'sales_manager'], icon: 'fas fa-store', label: 'لوحة الفرع', handler: 'openBranchCommandCenter', perm: null },
                 { roles: ['hr'], icon: 'fas fa-people-roof', label: 'منصة الموارد البشرية', handler: 'openHrPlatform', perm: 'hr' },
@@ -16919,6 +16920,7 @@
             }
             const cards = [
                 { icon: 'fas fa-boxes-stacked', title: 'مخزون الألومنيوم', desc: 'SKU وكميات قسم ALU', handler: 'openErpInventory' },
+                { icon: 'fas fa-dolly', title: 'تحويلات المستودع', desc: 'حركة مخزون ALU بين المواقع', handler: 'openErpWarehouseTransfers' },
                 { icon: 'fas fa-industry', title: 'إنتاج الألومنيوم', desc: 'تسجيل الإنتاج اليومي', handler: 'openErpProduction' },
                 { icon: 'fas fa-file-signature', title: 'عروض الألومنيوم', desc: 'بناء عرض سعر ALU من الأسعار المعتمدة', handler: 'openAluminumQuoteBuilder' },
                 { icon: 'fas fa-truck', title: 'طلبات الألومنيوم', desc: 'OMS — تنفيذ طلبات القسم', handler: 'openErpOrders' },
@@ -17022,6 +17024,7 @@
                     '<div class="erp-stat"><strong>' + complaintsList.length + '</strong><span>شكاوى</span></div>';
             }
             const cards = [
+                { icon: 'fas fa-industry', title: 'قسم الألومنيوم', desc: 'مخزون · إنتاج · عروض ALU — نفس صلاحيات مدير القسم', handler: 'openAluminumDepartment', show: canManage('aluminum') },
                 { icon: 'fas fa-user-group', title: 'فريق المندوبين', desc: 'إضافة وتعديل مندوبي فرعك', handler: 'openBranchTeamManagement', show: canManageBranchTeam() },
                 { icon: 'fas fa-file-signature', title: 'بناء عرض سعر', desc: 'عروض للعملاء من القائمة المعتمدة', handler: 'openRepQuoteBuilder', show: canManage('quotes') },
                 { icon: 'fas fa-chart-line', title: 'المبيعات', desc: 'عروض واردة ومبيعات الفرع', handler: 'openSalesManagement', show: canManage('sales') },
@@ -17973,6 +17976,9 @@
         }
 
         function adminQuoteEntryVisible(entry, admin) {
+            if (isAluminumDepartmentAdmin(admin)) {
+                return isAluminumScopedEntry(entry);
+            }
             const bid = getAdminAssignedBranchId(admin);
             if (bid == null) return true;
             return entryMatchesBranchId(entry, bid);
@@ -21521,6 +21527,103 @@
             alert(ok ? 'تم تحميل البيانات من السحابة.' : 'لم يُعثر على بيانات سحابية أو فشل التحميل.');
         }
 
+        function exportNebrasGovernanceBundle() {
+            if (!requireMainGovernanceAdmin('تصدير بيانات الموقع — الإدارة الرئيسية فقط.')) return;
+            const bundle = {
+                version: 'hrws69',
+                codename: 'NebrasGovernanceBundle',
+                exportedAt: new Date().toISOString(),
+                storeCount: NEBRAS_CLOUD_STORE_SPECS.length,
+                stores: {}
+            };
+            NEBRAS_CLOUD_STORE_SPECS.forEach(function(spec) {
+                try {
+                    bundle.stores[spec.key] = spec.get();
+                } catch (e) {
+                    bundle.stores[spec.key] = null;
+                }
+            });
+            const blob = new Blob([JSON.stringify(bundle, null, 2)], { type: 'application/json' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'nebras-site-governance-' + new Date().toISOString().slice(0, 10) + '.json';
+            a.click();
+            URL.revokeObjectURL(a.href);
+            addAuditLog('تصدير حوكمة', 'حزمة كاملة — ' + NEBRAS_CLOUD_STORE_SPECS.length + ' مخزن');
+        }
+
+        function applyNebrasGovernanceBundle(bundle) {
+            if (!bundle || !bundle.stores || typeof bundle.stores !== 'object') return { ok: false, applied: 0 };
+            let applied = 0;
+            NEBRAS_CLOUD_STORE_SPECS.forEach(function(spec) {
+                if (!Object.prototype.hasOwnProperty.call(bundle.stores, spec.key)) return;
+                let payload = bundle.stores[spec.key];
+                if (typeof guardCloudPushRow === 'function') {
+                    payload = guardCloudPushRow(spec.key, payload);
+                }
+                try {
+                    spec.set(payload);
+                    if (typeof markLocalCloudMutation === 'function') markLocalCloudMutation(spec.key);
+                    applied++;
+                } catch (e) { /* skip */ }
+            });
+            return { ok: applied > 0, applied: applied };
+        }
+
+        function importNebrasGovernanceBundleFromFile(file) {
+            if (!requireMainGovernanceAdmin('استيراد بيانات الموقع — الإدارة الرئيسية فقط.')) return;
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function() {
+                try {
+                    const bundle = JSON.parse(String(reader.result || ''));
+                    if (!bundle.stores) {
+                        alert('ملف غير صالح — لا يحتوي مخازن بيانات.');
+                        return;
+                    }
+                    const keys = Object.keys(bundle.stores).length;
+                    if (!confirm('استيراد ' + keys + ' مخزن سيستبدل البيانات المحلية الحالية. المتابعة؟')) return;
+                    const result = applyNebrasGovernanceBundle(bundle);
+                    if (!result.ok) {
+                        alert('فشل الاستيراد — تحققي من صيغة الملف.');
+                        return;
+                    }
+                    saveSystemData();
+                    finalizePlatformDataAfterLoad();
+                    refreshPublicSiteFromGovernance();
+                    if (currentAdmin) {
+                        renderDashboardCommandShell(currentAdmin);
+                        displaySalesQuotesInbox();
+                        displaySales();
+                    }
+                    addAuditLog('استيراد حوكمة', 'حزمة JSON — ' + result.applied + ' مخزن');
+                    alert('تم استيراد ' + result.applied + ' مخزن بنجاح — البيانات محفوظة محلياً.');
+                } catch (e) {
+                    alert('ملف JSON غير صالح.');
+                }
+            };
+            reader.readAsText(file, 'UTF-8');
+        }
+
+        function openNebrasGovernanceImportPicker() {
+            if (!requireMainGovernanceAdmin()) return;
+            let input = document.getElementById('nebras-governance-import-input');
+            if (!input) {
+                input = document.createElement('input');
+                input.type = 'file';
+                input.id = 'nebras-governance-import-input';
+                input.accept = '.json,application/json';
+                input.hidden = true;
+                input.addEventListener('change', function(ev) {
+                    const f = ev.target.files && ev.target.files[0];
+                    if (f) importNebrasGovernanceBundleFromFile(f);
+                    input.value = '';
+                });
+                document.body.appendChild(input);
+            }
+            input.click();
+        }
+
         function openLinkedOmsOrderFromQuote(entryId) {
             const entry = loadSalesQuotesInbox().find(function(e) { return e.id === entryId; });
             if (!entry || !entry.orderId) {
@@ -24353,6 +24456,10 @@
         }
 
         function exportStoreCatalogCsv(productFilter) {
+            if (!productFilter && !isMainGovernanceAdmin()) {
+                alert('تصدير كامل الكتالوج — الإدارة الرئيسية فقط. قسم الألومنيوم يصدّر ALU فقط.');
+                return;
+            }
             if (!isMainGovernanceAdmin() && !canManage('aluminum')) {
                 alert('تصدير الكتالوج — الإدارة الرئيسية أو قسم الألومنيوم.');
                 return;
@@ -27064,6 +27171,9 @@
         window.exportAluminumCatalogCsv = exportAluminumCatalogCsv;
         window.exportAluminumCatalogPdf = exportAluminumCatalogPdf;
         window.exportStoreCatalogCsv = exportStoreCatalogCsv;
+        window.exportNebrasGovernanceBundle = exportNebrasGovernanceBundle;
+        window.importNebrasGovernanceBundleFromFile = importNebrasGovernanceBundleFromFile;
+        window.openNebrasGovernanceImportPicker = openNebrasGovernanceImportPicker;
         window.exportStoreCatalogPrintPdf = exportStoreCatalogPrintPdf;
         window.openAluminumCustomerPortal = openAluminumCustomerPortal;
         window.openHrPlatformBridge = openHrPlatformBridge;

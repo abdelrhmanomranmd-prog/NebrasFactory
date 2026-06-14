@@ -175,6 +175,14 @@
             '<button type="button" class="dw-export-card" onclick="exportStorageAuditJson()"><i class="fas fa-code"></i><strong>تدقيق التخزين</strong><small>JSON</small></button>' +
             '<button type="button" class="dw-export-card" onclick="exportEmpireSummaryPdf()"><i class="fas fa-file-pdf"></i><strong>تقرير الإمبراطورية</strong><small>PDF</small></button>' +
             '</div>' +
+            (global.isMainGovernanceAdmin && global.isMainGovernanceAdmin()
+                ? '<section class="dw-governance-section"><h3><i class="fas fa-shield-halved"></i> حوكمة الموقع — الإدارة الرئيسية فقط</h3>' +
+                '<p class="scm-hint">استيراد/تصدير JSON لكل مخازن المنصة — منتجات · أيقونات · إعدادات · ERP · HR · CRM</p>' +
+                '<div class="workspace-actions-row">' +
+                '<button type="button" class="workspace-action-btn workspace-action-btn--primary" onclick="typeof exportNebrasGovernanceBundle===\'function\'&&exportNebrasGovernanceBundle()"><i class="fas fa-file-export"></i> تصدير حزمة الموقع JSON</button>' +
+                '<button type="button" class="workspace-action-btn" onclick="typeof openNebrasGovernanceImportPicker===\'function\'&&openNebrasGovernanceImportPicker()"><i class="fas fa-file-import"></i> استيراد حزمة الموقع JSON</button>' +
+                '</div></section>'
+                : '') +
             '<div class="workspace-actions-row" style="margin-top:16px">' +
             '<button type="button" class="workspace-action-btn workspace-action-btn--primary" onclick="typeof syncPushToNebrasCloudNow===\'function\'&&syncPushToNebrasCloudNow()"><i class="fas fa-cloud-upload-alt"></i> رفع للسحابة</button>' +
             '<button type="button" class="workspace-action-btn" onclick="typeof openPlatformIntegrationHub===\'function\'&&openPlatformIntegrationHub()"><i class="fas fa-shield-halved"></i> حماية البيانات</button>' +

@@ -72,7 +72,8 @@
     line-height: 1.5;
 }
 
-.pi-quick-actions { margin: 16px 0 8px; }
+.dw-governance-section { margin-top: 20px; padding-top: 16px; border-top: 1px dashed rgba(13,40,64,0.15); }
+.dw-governance-section h3 { font-size: 1rem; color: #0d2840; margin-bottom: 8px; }
 
 .eb-bridge-card--live {
     border-color: rgba(39, 174, 96, 0.35);

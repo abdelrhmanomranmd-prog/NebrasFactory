@@ -54,7 +54,7 @@
             { roles: ['superadmin', 'manager'], icon: 'fas fa-crown', label: 'الإدارة الرئيسية', desc: 'تحكم كامل — كل الفروع والأقسام والشركاء', handlers: ['scrollErpHub', 'openHrPlatform', 'openLegalPlatform', 'openExecutiveReports'] },
             { roles: ['hr'], icon: 'fas fa-people-roof', label: 'موارد بشرية', desc: 'إدارة كاملة — نبراس + الشركات الشريكة', handlers: ['openHrPlatform'] },
             { roles: ['legal'], icon: 'fas fa-scale-balanced', label: 'شؤون قانونية', desc: 'عقود · قضايا · امتثال المجموعة', handlers: ['openLegalPlatform'] },
-            { roles: ['sales_manager', 'branch_manager'], icon: 'fas fa-chart-line', label: 'مبيعات الفرع', desc: 'CRM · عروض · طلبات · فريق المندوبين', handlers: ['openCrmPlatform', 'openRepQuoteBuilder', 'openErpOrders', 'openBranchTeamManagement'] },
+            { roles: ['sales_manager', 'branch_manager'], icon: 'fas fa-chart-line', label: 'مبيعات الفرع', desc: 'CRM · عروض · طلبات · فريق المندوبين · ألومنيوم', handlers: ['openCrmPlatform', 'openRepQuoteBuilder', 'openErpOrders', 'openBranchTeamManagement', 'openAluminumDepartment'] },
             { roles: ['sales_rep'], icon: 'fas fa-file-signature', label: 'مندوب مبيعات', desc: 'عروض أسعار فقط — PDF للعملاء', handlers: ['openRepQuoteBuilder'] },
             { roles: ['accountant', 'accounting_manager'], icon: 'fas fa-calculator', label: 'قسم الحسابات', desc: 'تحويلات · مبيعات · PDF', handlers: ['openAccountingPlatform', 'openErpProcurement'] },
             { roles: ['inventory_manager', 'warehouse_manager'], icon: 'fas fa-warehouse', label: 'مخزون ومستودع', desc: 'SKU · جرد · تحويلات', handlers: ['openErpInventory', 'openErpWarehouseTransfers'] },
