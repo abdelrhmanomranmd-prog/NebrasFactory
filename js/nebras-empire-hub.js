@@ -5,7 +5,7 @@
 (function(global) {
     'use strict';
 
-    const EMPIRE_VERSION = '2.0';
+    const EMPIRE_VERSION = '2.1';
     const EMPIRE_CODENAME = 'NebrasEmpire';
 
     function esc(s) {

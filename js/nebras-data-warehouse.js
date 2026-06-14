@@ -62,6 +62,17 @@
         if (typeof global.addAuditLog === 'function') global.addAuditLog('تصدير مستودع', 'مخزون ERP CSV — ' + inv.length);
     }
 
+    function exportCrmCustomersCsv() {
+        const list = typeof global.getCrmCustomers === 'function' ? global.getCrmCustomers() : [];
+        const rows = [['id', 'name', 'phone', 'email', 'city', 'source', 'created_at'].map(csvCell).join(',')];
+        list.forEach(function(c) {
+            if (!c) return;
+            rows.push([c.id, c.name || c.nameAr, c.phone, c.email, c.city, c.source, c.createdAt].map(csvCell).join(','));
+        });
+        downloadCsv('nebras-crm-customers-' + Date.now() + '.csv', rows);
+        if (typeof global.addAuditLog === 'function') global.addAuditLog('تصدير مستودع', 'عملاء CRM CSV — ' + list.length);
+    }
+
     function exportAdminUsersCsv() {
         if (!global.isMainGovernanceAdmin || !global.isMainGovernanceAdmin()) {
             alert('تصدير المستخدمين — الإدارة الرئيسية فقط.');
@@ -158,6 +169,7 @@
             '<div class="dw-export-grid">' +
             '<button type="button" class="dw-export-card" onclick="exportSalesQuotesCsv()"><i class="fas fa-file-csv"></i><strong>عروض المبيعات</strong><small>Excel CSV</small></button>' +
             '<button type="button" class="dw-export-card" onclick="exportErpInventoryCsv()"><i class="fas fa-boxes-stacked"></i><strong>المخزون ERP</strong><small>Excel CSV</small></button>' +
+            '<button type="button" class="dw-export-card" onclick="exportCrmCustomersCsv()"><i class="fas fa-handshake"></i><strong>عملاء CRM</strong><small>Excel CSV</small></button>' +
             '<button type="button" class="dw-export-card" onclick="typeof exportStoreCatalogCsv===\'function\'&&exportStoreCatalogCsv()"><i class="fas fa-store"></i><strong>كتالوج المتجر</strong><small>Excel CSV</small></button>' +
             '<button type="button" class="dw-export-card" onclick="exportAdminUsersCsv()"><i class="fas fa-users-cog"></i><strong>المستخدمون</strong><small>Excel CSV</small></button>' +
             '<button type="button" class="dw-export-card" onclick="exportStorageAuditJson()"><i class="fas fa-code"></i><strong>تدقيق التخزين</strong><small>JSON</small></button>' +
@@ -192,6 +204,7 @@
     global.renderDataWarehousePanel = renderDataWarehousePanel;
     global.exportSalesQuotesCsv = exportSalesQuotesCsv;
     global.exportErpInventoryCsv = exportErpInventoryCsv;
+    global.exportCrmCustomersCsv = exportCrmCustomersCsv;
     global.exportAdminUsersCsv = exportAdminUsersCsv;
     global.exportStorageAuditJson = exportStorageAuditJson;
     global.exportEmpireSummaryPdf = exportEmpireSummaryPdf;

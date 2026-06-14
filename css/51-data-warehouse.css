@@ -72,6 +72,8 @@
     line-height: 1.5;
 }
 
+.pi-quick-actions { margin: 16px 0 8px; }
+
 .eb-bridge-card--live {
     border-color: rgba(39, 174, 96, 0.35);
     background: linear-gradient(165deg, #fff 0%, #f0faf4 100%);

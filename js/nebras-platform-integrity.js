@@ -180,7 +180,10 @@
             { id: 'erp', nameAr: 'ERP', icon: 'fa-cubes', scope: 'مخزون · طلبات · إنتاج · مشتريات', cloud: true, perm: 'erp' },
             { id: 'production', nameAr: 'الإنتاج WPC', icon: 'fa-industry', scope: 'قسم الإنتاج', cloud: true, perm: 'production' },
             { id: 'warehouse', nameAr: 'المستودع', icon: 'fa-warehouse', scope: 'فرع/مستودع', cloud: true, perm: 'warehouse' },
-            { id: 'aluminum', nameAr: 'قسم الألومنيوم', icon: 'fa-industry', scope: 'منتجات · مخزون · عملاء ALU', cloud: true, perm: 'aluminum' }
+            { id: 'aluminum', nameAr: 'قسم الألومنيوم', icon: 'fa-industry', scope: 'منتجات · مخزون · عملاء ALU', cloud: true, perm: 'aluminum' },
+            { id: 'store', nameAr: 'المتجر والسلة', icon: 'fa-store', scope: 'كتالوج · سلة · عروض 4 صفحات', cloud: true, perm: 'content' },
+            { id: 'dataWarehouse', nameAr: 'مستودع البيانات', icon: 'fa-database', scope: 'Excel · PDF · JSON — كل التخزين', cloud: true, perm: 'audit' },
+            { id: 'empireBridges', nameAr: 'جسور الإمبراطورية', icon: 'fa-link', scope: 'Odoo-like — متجر ↔ CRM ↔ مسار نبراس', cloud: true, perm: 'erp' }
         ];
         return modules.map(function(m) {
             const canAccess = admin && typeof global.canManage === 'function' ? global.canManage(m.perm, admin) : false;
@@ -219,6 +222,11 @@
                         '<span class="erp-tag' + (m.active ? ' erp-tag--accent' : '') + '">' + (m.active ? 'صلاحيتك فعّالة' : 'خارج نطاقك') + '</span>' +
                     '</footer></article>';
             }).join('') + '</div>' +
+            '<div class="workspace-actions-row pi-quick-actions">' +
+            '<button type="button" class="workspace-action-btn workspace-action-btn--primary" onclick="typeof openNebrasDataWarehouse===\'function\'&&openNebrasDataWarehouse()"><i class="fas fa-database"></i> مستودع البيانات</button>' +
+            '<button type="button" class="workspace-action-btn" onclick="typeof openNebrasEmpireBridges===\'function\'&&openNebrasEmpireBridges()"><i class="fas fa-link"></i> جسور الإمبراطورية</button>' +
+            '<button type="button" class="workspace-action-btn" onclick="typeof openNebrasEmpireHub===\'function\'&&openNebrasEmpireHub()"><i class="fas fa-crown"></i> مركز الإمبراطورية</button>' +
+            '</div>' +
             '<section class="pi-snapshot-section"><h3><i class="fas fa-database"></i> حماية التخزين السحابي</h3>' +
             '<ul class="pi-snapshot-list">' + CRITICAL_STORE_KEYS.map(function(k) {
                 const n = (cloudSnapshots.byKey[k] || []).length;

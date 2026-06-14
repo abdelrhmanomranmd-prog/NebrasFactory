@@ -9147,6 +9147,7 @@
                 '<div class="quote-official-header-logo">' + logoHtml + '</div>' +
                 '</header>' +
                 '<div class="quote-official-divider" aria-hidden="true"></div>' +
+                customerRibbon +
                 '<table class="quote-official-meta-table"><tbody>' +
                 buildQuoteOfficialMetaRow('Quotation Number', 'رقم عرض السعر', displayNo) +
                 buildQuoteOfficialMetaRow('Creation Date', 'تاريخ الإنشاء', creationDate) +
@@ -22433,6 +22434,22 @@
                 closeAccountingWorkspace();
                 return;
             }
+            if (sectionId === 'admin-ai-assistant' && typeof closeNebrasAdminAi === 'function') {
+                closeNebrasAdminAi();
+                return;
+            }
+            if (sectionId === 'data-warehouse-hub' && typeof closeNebrasDataWarehouse === 'function') {
+                closeNebrasDataWarehouse();
+                return;
+            }
+            if (sectionId === 'empire-bridges-hub' && typeof closeNebrasEmpireBridges === 'function') {
+                closeNebrasEmpireBridges();
+                return;
+            }
+            if (sectionId === 'platform-integration-hub' && typeof closePlatformIntegrationHub === 'function') {
+                closePlatformIntegrationHub();
+                return;
+            }
             const el = document.getElementById(sectionId);
             if (el) {
                 el.classList.remove('show');
@@ -25199,6 +25216,11 @@
                 cartPaymentConfirmBank: 'الحساب المحوّل إليه: ',
                 cartPaymentReceiptAttached: '✓ مرفق: صورة الحوالة',
                 cartTrustSecure: 'دفع آمن عبر حوالة بنكية رسمية',
+                cartTrustVat: 'ضريبة 15% — فاتورة رسمية',
+                cartTrustDelivery: 'تسليم لكل فروع المملكة',
+                cartTrustSupport: 'متابعة مبيعات وخدمة عملاء',
+                cartItemsLabel: 'منتج في سلتك',
+                cartSavedHint: 'سلتك محفوظة — تبقى حتى 7 أيام على نفس الجهاز',
                 cartTrustOfficial: 'حسابات مصنع نبراس المعتمدة',
                 adminAnalyticsTitle: 'التحليلات والتقارير الداخلية',
                 salesInboxReceipt: 'عرض إيصال الحوالة',
@@ -25833,6 +25855,11 @@
                 cartPaymentConfirmBank: 'Transfer account: ',
                 cartPaymentReceiptAttached: '✓ Attached: transfer receipt',
                 cartTrustSecure: 'Secure payment via official bank transfer',
+                cartTrustVat: '15% VAT — official invoice',
+                cartTrustDelivery: 'Delivery across all Saudi branches',
+                cartTrustSupport: 'Sales & customer service follow-up',
+                cartItemsLabel: 'items in your cart',
+                cartSavedHint: 'Your cart is saved — kept up to 7 days on this device',
                 cartTrustOfficial: 'Verified Nebras factory accounts',
                 cartEmpty: 'Cart is empty. Add shop-enabled products (cart icon on card).',
                 quoteFinalizedOk: 'Quote marked as finalized',
