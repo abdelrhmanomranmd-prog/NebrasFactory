@@ -27,12 +27,12 @@ const SENSITIVE_STORE_KEYS = [
 ];
 
 function apiSecret() {
-    return (
-        process.env.NEBRAS_API_SECRET ||
-        process.env.OTP_SECRET ||
-        process.env.SUPABASE_SERVICE_ROLE_KEY ||
-        'nebras-api-fallback-change-me'
-    );
+    const secret = process.env.NEBRAS_API_SECRET || process.env.OTP_SECRET;
+    if (secret) return String(secret);
+    if (process.env.VERCEL || process.env.NODE_ENV === 'production') {
+        throw new Error('NEBRAS_API_SECRET is required in production');
+    }
+    return 'nebras-dev-local-only';
 }
 
 function supabaseServiceConfig() {
@@ -101,6 +101,13 @@ function sanitizeAdminUser(user) {
     return safe;
 }
 
+function sanitizePayloadForPull(storeKey, payload) {
+    if (storeKey === 'admin_users' && Array.isArray(payload)) {
+        return payload.map(sanitizeAdminUser);
+    }
+    return payload;
+}
+
 async function fetchStoreRow(url, key, storeKey) {
     const res = await fetch(
         url + '/rest/v1/nebras_data_store?store_key=eq.' + encodeURIComponent(storeKey) + '&select=payload',
@@ -162,6 +169,20 @@ function isHqSession(sess) {
     return String(sess.username || '').toUpperCase() === 'NEBRASFACTORY';
 }
 
+const MANAGER_ALLOWED_PREFIXES = ['erp_', 'sales_', 'quote_', 'customer_', 'crm_', 'hr_', 'legal_', 'procurement', 'complaints', 'callback_', 'audit_'];
+const MANAGER_ALLOWED_EXACT = [
+    'complaints', 'callback_leads', 'audit_logs', 'sales_quotes_inbox', 'quote_registry',
+    'customer_order_journeys', 'customer_service', 'customer_portal_users', 'customer_portal_audit',
+    'procurement_custom_depts', 'branches', 'site_products', 'visitor_icons', 'dashboard_tiles',
+    'site_custom_sections', 'about_pages', 'system_settings', 'site_partners', 'site_certifications',
+    'showroom_gallery', 'visitor_analytics', 'sales_data', 'sales_price_list', 'nebras_cloud_snapshots'
+];
+
+function managerMayAccessKey(k) {
+    if (MANAGER_ALLOWED_EXACT.indexOf(k) >= 0) return true;
+    return MANAGER_ALLOWED_PREFIXES.some(function(p) { return k.indexOf(p) === 0; });
+}
+
 const HQ_ONLY_STORE_KEYS = [
     'admin_users', 'admin_recovery_otp', 'analytics_governance', 'nebras_platform_integrity'
 ];
@@ -191,7 +212,7 @@ function keysAllowedForSession(sess, keys) {
             return k.indexOf('sales_') === 0 || k.indexOf('quote_') === 0 || k.indexOf('erp_') === 0 ||
                 k.indexOf('customer_') === 0 || k === 'callback_leads' || k === 'audit_logs';
         }
-        if (role === 'manager') return true;
+        if (role === 'manager') return managerMayAccessKey(k);
         if (role === 'inventory_manager') {
             return k.indexOf('erp_') === 0 || k === 'audit_logs';
         }
@@ -213,6 +234,7 @@ module.exports = {
     signSession,
     verifySession,
     sanitizeAdminUser,
+    sanitizePayloadForPull,
     fetchStoreRow,
     upsertStoreRows,
     loadAdminUsers,

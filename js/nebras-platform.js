@@ -9,8 +9,8 @@
             console.warn('Supabase unavailable — local mode only:', supabaseInitErr);
         }
         const NEBRAS_MEDIA_BUCKET = 'nebras-media';
-        const NEBRAS_MEDIA_MAX_BYTES = 8 * 1024 * 1024;
-        const NEBRAS_PDF_MAX_BYTES = 12 * 1024 * 1024;
+        const NEBRAS_MEDIA_MAX_BYTES = 20 * 1024 * 1024;
+        const NEBRAS_PDF_MAX_BYTES = 20 * 1024 * 1024;
         const NEBRAS_VIDEO_MAX_BYTES = 48 * 1024 * 1024;
         const NEBRAS_IMAGE_ACCEPT = 'image/jpeg,image/jpg,image/png,image/webp,image/gif,image/avif,image/svg+xml,image/bmp,image/heic,image/heif';
         const NEBRAS_VIDEO_ACCEPT = 'video/mp4,video/webm,video/quicktime,video/ogg';
@@ -14907,22 +14907,29 @@
             }
 
             if (loginBtn) loginBtn.disabled = true;
-            let user = typeof resolveAdminLoginUser === 'function' ? resolveAdminLoginUser(username, password) : null;
+            let user = null;
+            let apiAuthenticated = false;
 
-            if (!user && typeof secureApiLogin === 'function') {
+            if (typeof secureApiLogin === 'function') {
                 try {
                     const apiLogin = await secureApiLogin(username, password);
                     if (apiLogin && apiLogin.user) {
+                        apiAuthenticated = true;
                         if (typeof mergeApiAdminUser === 'function') mergeApiAdminUser(apiLogin.user);
                         if (typeof pullSensitiveCloudAndApply === 'function') {
                             await pullSensitiveCloudAndApply(applyNebrasCloudRow);
                         }
                         if (typeof loadFromNebrasCloud === 'function') await loadFromNebrasCloud();
-                        user = typeof resolveAdminLoginUser === 'function'
-                            ? resolveAdminLoginUser(username, password)
-                            : apiLogin.user;
+                        user = apiLogin.user;
                     }
-                } catch (e) { /* ignore */ }
+                } catch (e) { console.warn('API login', e); }
+            }
+
+            if (!user && typeof resolveAdminLoginUser === 'function') {
+                user = resolveAdminLoginUser(username, password);
+                if (user && !apiAuthenticated) {
+                    console.warn('[Nebras] دخول محلي بدون جلسة API — البيانات الحساسة قد تكون محدودة.');
+                }
             }
 
             if (!user && supabaseClient && typeof loadFromNebrasCloud === 'function') {
@@ -14964,6 +14971,12 @@
                 closeAdminOverlay();
                 clearStuckInteractionBlockers();
                 showAdminDashboard(user);
+                if (typeof nebrasStorageHealthReport === 'function') {
+                    const sh = nebrasStorageHealthReport();
+                    if (sh.warn && typeof showNebrasAdminToast === 'function') {
+                        showNebrasAdminToast('تنبيه تخزين محلي: ' + Math.round(sh.totalBytes / 1024) + ' KB — البيانات الأساسية في السحابة.', 'warn');
+                    }
+                }
                 if (typeof scrollToAdminDashboard === 'function') scrollToAdminDashboard();
                 try {
                     if (typeof isStrictHrUser === 'function' && isStrictHrUser(user)) {
@@ -15902,7 +15915,7 @@
 
     const ADMIN_PRESENCE_KEY = 'nebrasAdminPresence';
     const ADMIN_PRESENCE_ONLINE_MS = 3 * 60 * 1000;
-    const AUDIT_LOG_MAX = 1000;
+    const AUDIT_LOG_MAX = 8000;
     let adminPresence = {};
     let adminPresenceTimer = null;
 
@@ -24212,13 +24225,15 @@
             if (!supabaseClient) return false;
             const rows = NEBRAS_CLOUD_STORE_SPECS.map(function(spec) {
                 let payload = spec.get();
+                if (typeof slimNebrasCloudPayload === 'function') payload = slimNebrasCloudPayload(spec.key, payload);
                 if (typeof guardCloudPushRow === 'function') payload = guardCloudPushRow(spec.key, payload);
+                if (payload === undefined) return null;
                 return {
                     store_key: spec.key,
                     payload: payload,
                     updated_at: new Date().toISOString()
                 };
-            });
+            }).filter(Boolean);
             const sensFn = typeof isSensitiveStoreKey === 'function' ? isSensitiveStoreKey : function() { return false; };
             const publicRows = rows.filter(function(r) { return r && r.store_key && !sensFn(r.store_key); });
             const sensitiveRows = rows.filter(function(r) { return r && r.store_key && sensFn(r.store_key); });

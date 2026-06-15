@@ -4,6 +4,8 @@ function requireSession(req) {
     return sec.verifySession(sec.getBearerToken(req));
 }
 
+const MAX_CLOUD_PAYLOAD_BYTES = 6 * 1024 * 1024;
+
 async function handlePull(req, sess) {
     const q = String(req.query.keys || '').trim();
     let keys = q ? q.split(',').map(function(k) { return k.trim(); }).filter(Boolean) : sec.SENSITIVE_STORE_KEYS.slice();
@@ -16,7 +18,7 @@ async function handlePull(req, sess) {
     for (let i = 0; i < keys.length; i++) {
         const payload = await sec.fetchStoreRow(url, key, keys[i]);
         if (payload !== null && payload !== undefined) {
-            rows.push({ store_key: keys[i], payload: payload });
+            rows.push({ store_key: keys[i], payload: sec.sanitizePayloadForPull(keys[i], payload) });
         }
     }
     return { code: 200, data: { ok: true, rows: rows, by: sess.username } };
@@ -30,6 +32,14 @@ async function handlePush(body, sess) {
     });
     const allowed = sec.keysAllowedForSession(sess, safe.map(function(r) { return r.store_key; }));
     const filtered = safe.filter(function(r) { return allowed.indexOf(r.store_key) >= 0; });
+    const oversized = filtered.filter(function(r) {
+        try {
+            return JSON.stringify(r.payload || {}).length > MAX_CLOUD_PAYLOAD_BYTES;
+        } catch (e) { return true; }
+    });
+    if (oversized.length) {
+        return { code: 413, data: { ok: false, error: 'payload_too_large', keys: oversized.map(function(r) { return r.store_key; }) } };
+    }
     if (!filtered.length) return { code: 403, data: { ok: false, error: 'forbidden_keys' } };
     const { url, key } = sec.supabaseServiceConfig();
     if (!url || !key) return { code: 503, data: { ok: false, error: 'service_unavailable' } };

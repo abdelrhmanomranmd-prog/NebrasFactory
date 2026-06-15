@@ -150,7 +150,7 @@
             recordedAt: new Date().toISOString()
         };
         legalActivity.unshift(entry);
-        if (legalActivity.length > 600) legalActivity.length = 600;
+        if (legalActivity.length > 5000) legalActivity.length = 5000;
         try { localStorage.setItem(LEGAL_ACTIVITY_KEY, JSON.stringify(legalActivity)); } catch (e) { /* ignore */ }
         if (typeof addAuditLog === 'function') addAuditLog(action, '[' + actor.username + '] ' + (detail || ''));
     }
@@ -269,6 +269,7 @@
                     if (url && pendingLegalAttachment && pendingLegalAttachment.name === file.name) {
                         pendingLegalAttachment.cloudUrl = url;
                         if (hint) hint.textContent = '✓ سحابة: ' + file.name;
+                        pendingLegalAttachment.dataUrl = '';
                     }
                 }).catch(function() {
                     if (hint) hint.textContent = '✓ محلي (فشل السحابة): ' + file.name;

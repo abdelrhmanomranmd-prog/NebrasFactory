@@ -2579,6 +2579,7 @@
                     if (url && pendingHrDocAttachment && pendingHrDocAttachment.name === file.name) {
                         pendingHrDocAttachment.cloudUrl = url;
                         if (hint) hint.textContent = '✓ سحابة: ' + file.name;
+                        pendingHrDocAttachment.dataUrl = '';
                     }
                 }).catch(function() {
                     if (hint) hint.textContent = '✓ محلي (فشل السحابة): ' + file.name;
@@ -3646,7 +3647,7 @@
             userId: admin ? admin.id : '',
             username: admin ? admin.username : ''
         });
-        if (hrDeptActivity.length > 500) hrDeptActivity.length = 500;
+        if (hrDeptActivity.length > 5000) hrDeptActivity.length = 5000;
         saveHrPhase17Data();
     }
 

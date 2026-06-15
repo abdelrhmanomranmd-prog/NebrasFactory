@@ -134,21 +134,22 @@
         loadIntegrityData();
         if (!CRITICAL_STORE_KEYS.includes(storeKey)) return payload;
         const size = payloadSize(payload);
+        const bytes = typeof global.nebrasJsonBytes === 'function' ? global.nebrasJsonBytes(payload) : 0;
         if (size > 0) {
             if (!cloudSnapshots.byKey[storeKey]) cloudSnapshots.byKey[storeKey] = [];
             cloudSnapshots.byKey[storeKey].unshift({
                 at: new Date().toISOString(),
-                size: size,
-                payload: clonePayload(payload)
+                recordCount: size,
+                bytes: bytes
             });
             cloudSnapshots.byKey[storeKey] = cloudSnapshots.byKey[storeKey].slice(0, MAX_SNAPSHOTS_PER_KEY);
             saveSnapshotsLocal();
             return payload;
         }
         const hist = cloudSnapshots.byKey[storeKey];
-        if (hist && hist.length && hist[0].payload && payloadSize(hist[0].payload) > 0) {
-            console.warn('[Nebras Cloud Guard] منع مسح ' + storeKey + ' — استعادة آخر نسخة محمية');
-            return clonePayload(hist[0].payload);
+        if (hist && hist.length && (hist[0].recordCount > 0 || (hist[0].payload && payloadSize(hist[0].payload) > 0))) {
+            console.warn('[Nebras Cloud Guard] منع مسح ' + storeKey + ' — رفض رفع بيانات فارغة');
+            return undefined;
         }
         return payload;
     }
@@ -161,6 +162,10 @@
         const hist = cloudSnapshots.byKey[storeKey];
         if (hist && hist.length && hist[0].payload && payloadSize(hist[0].payload) > 0) {
             return clonePayload(hist[0].payload);
+        }
+        if (hist && hist.length && hist[0].recordCount > 0) {
+            console.warn('[Nebras Cloud Guard] سحابة فارغة لـ ' + storeKey + ' — الاحتفاظ بالمحلي');
+            return undefined;
         }
         return payload;
     }
