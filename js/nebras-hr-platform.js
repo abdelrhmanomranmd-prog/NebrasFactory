@@ -740,7 +740,7 @@
     function getHrTabDefinitions() {
         const base = [
             { id: 'dashboard', icon: 'fas fa-gauge-high', label: 'لوحة التحكم', group: 'الرئيسية' },
-            { id: 'companies', icon: 'fas fa-building-circle-check', label: 'الشركات الشريكة', group: 'الموارد البشرية' },
+            { id: 'companies', icon: 'fas fa-building-circle-check', label: 'الشركات — نبراس والشقيقة', group: 'الموارد البشرية' },
             { id: 'employees', icon: 'fas fa-users', label: 'الموظفون والعمال', group: 'الموارد البشرية' },
             { id: 'org-tree', icon: 'fas fa-sitemap', label: 'شجرة العمل', group: 'الموارد البشرية' },
             { id: 'documents', icon: 'fas fa-folder-open', label: 'المستندات والإقامات', group: 'الموارد البشرية' },

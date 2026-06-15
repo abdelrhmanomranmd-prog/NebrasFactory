@@ -1,0 +1,120 @@
+/**
+ * نبراس — وضوح النص في لوحات الإدارة (HR · المستخدمون · المحتوى · عرض السعر)
+ * يمنع النص الأبيض على خلفية فاتحة
+ */
+
+/* ── عرض السعر A4 ── */
+.quote-a4--nebras-official .quote-official-header {
+    background: #fff;
+    padding: 4px 0 8px;
+    border-radius: 4px;
+}
+
+.quote-a4--nebras-official .quote-official-header-meta {
+    color: #111 !important;
+    font-weight: 700;
+}
+
+.quote-a4--nebras-official .quote-official-meta-val,
+.quote-a4--nebras-official .quote-official-totals-val {
+    color: #111 !important;
+}
+
+/* ── لوحات المنصات الإدارية ── */
+#hr-platform .hr-platform-content,
+#hr-platform .hr-ws-main,
+#legal-platform .hr-platform-content,
+#crm-platform .hr-platform-content,
+#accounting-platform .hr-platform-content,
+.nebras-users-body,
+.nebras-editor-body,
+.nebras-erp-body,
+.nebras-scm-body,
+.hr-editor-overlay,
+.hr-company-media-block,
+.hr-companies-hero,
+.hr-multi-company-block,
+.erp-form-grid,
+.settings-form-grid {
+    color: #0d2233;
+}
+
+#hr-platform .nebras-field > span,
+#legal-platform .nebras-field > span,
+#crm-platform .nebras-field > span,
+.nebras-users-body .nebras-field > span,
+.nebras-editor-body .nebras-field > span,
+.hr-attach-hint,
+.hr-companies-guide,
+.hr-companies-hero p,
+.hr-companies-hero strong,
+.hr-multi-company-head p,
+.hr-multi-company-head h4 {
+    color: #0d2233;
+}
+
+#hr-platform .nebras-field input,
+#hr-platform .nebras-field select,
+#hr-platform .nebras-field textarea,
+#hr-platform input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+#hr-platform select,
+#hr-platform textarea,
+#legal-platform .nebras-field input,
+#legal-platform .nebras-field select,
+#crm-platform .nebras-field input,
+#crm-platform .nebras-field select,
+.nebras-users-body .nebras-field input,
+.nebras-users-body .nebras-field select,
+.nebras-users-body .nebras-field textarea,
+.nebras-editor-body .nebras-field input,
+.nebras-editor-body .nebras-field select,
+.nebras-editor-body .nebras-field textarea,
+.nebras-erp-body .nebras-field input,
+.nebras-erp-body .nebras-field select,
+.settings-form-grid .nebras-field input,
+.settings-form-grid .nebras-field select,
+.settings-form-grid .nebras-field textarea {
+    color: #0d2233 !important;
+    background: #fff !important;
+    -webkit-text-fill-color: #0d2233 !important;
+}
+
+#hr-platform .nebras-field input::placeholder,
+#hr-platform textarea::placeholder,
+.nebras-users-body input::placeholder,
+.nebras-editor-body input::placeholder {
+    color: #5a6b7a !important;
+    -webkit-text-fill-color: #5a6b7a !important;
+    opacity: 1;
+}
+
+#hr-platform .nebras-users-btn:not(.nebras-users-btn--primary),
+#legal-platform .nebras-users-btn:not(.nebras-users-btn--primary),
+.nebras-users-body .nebras-users-btn:not(.nebras-users-btn--primary),
+.nebras-editor-body .nebras-users-btn:not(.nebras-users-btn--primary) {
+    color: #0a4d8c !important;
+    background: #fff !important;
+    border: 1px solid #c5d9ed !important;
+}
+
+#hr-platform .nebras-users-btn--primary,
+#legal-platform .nebras-users-btn--primary,
+.nebras-users-body .nebras-users-btn--primary,
+.nebras-editor-body .nebras-users-btn--primary {
+    color: #fff !important;
+    background: linear-gradient(135deg, #0a4d8c 0%, #062e44 100%) !important;
+    border-color: transparent !important;
+}
+
+#hr-platform .erp-tag:not(.erp-tag--action),
+#hr-platform .hr-leave-table td,
+#hr-platform .hr-leave-table th,
+.nebras-users-table td,
+.nebras-users-table th {
+    color: #0d2233;
+}
+
+#hr-platform .erp-empty,
+.nebras-users-body .erp-empty {
+    color: #4a5a6a !important;
+}

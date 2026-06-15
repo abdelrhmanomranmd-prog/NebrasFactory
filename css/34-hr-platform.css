@@ -1414,7 +1414,14 @@ body.hr-platform-open {
     border: 1px solid #c5d8e8;
 }
 .hr-companies-hero i { font-size: 1.8rem; color: #2980b9; }
-.hr-companies-guide { margin-top: 16px; font-size: 0.86rem; color: #444; }
+.hr-companies-hero--primary {
+    background: linear-gradient(135deg, #e8f4fc, #d4ebf7);
+    border-color: #2980b9;
+    margin-bottom: 12px;
+}
+.hr-companies-hero--primary strong { color: #0d2840; }
+.hr-companies-hero--primary p { color: #2c5282; }
+.hr-companies-guide { margin-top: 16px; font-size: 0.86rem; color: #333; }
 .hr-companies-guide summary { cursor: pointer; font-weight: 600; color: #1a5276; }
 .hr-companies-guide ol { margin: 8px 0 0; padding-right: 22px; line-height: 1.7; }
 

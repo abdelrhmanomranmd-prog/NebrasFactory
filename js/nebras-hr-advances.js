@@ -181,7 +181,7 @@
             ensureAdvanceSchedule(a);
             const st = a.status === 'closed' ? '<span class="erp-tag erp-tag--ok">مغلقة</span>' : '<span class="erp-tag erp-tag--accent">نشطة</span>';
             const postponeBtn = a.status !== 'closed'
-                ? '<button type="button" class="erp-tag erp-tag--action" onclick="postponeHrAdvanceMonthFor(\'' + esc(a.id) + '\')" title="تأجيل خصم شهر — الموظف يقبض راتبه كاملاً"><i class="fas fa-calendar-xmark"></i> تأجيل خصم</button>'
+                ? '<button type="button" class="erp-tag erp-tag--action" onclick="postponeHrAdvanceMonthFor(\'' + esc(a.id) + '\')" title="عدم خصم السلفة من راتب هذا الشهر — راتب كامل"><i class="fas fa-ban"></i> عدم خصم الشهر</button>'
                 : '';
             return '<tr><td>' + esc(a.employeeName) + '</td>' +
                 '<td><strong>' + hrNum(a.principal).toLocaleString('ar-SA') + '</strong></td>' +
@@ -195,9 +195,10 @@
                 ' <button type="button" class="erp-tag" onclick="deleteHrAdvance(\'' + esc(a.id) + '\')"><i class="fas fa-trash"></i></button></td></tr>';
         }).join('');
         return '<div class="hr-panel is-active">' +
-            '<p class="hr-platform-note"><i class="fas fa-hand-holding-dollar"></i> <strong>سلف الموظفين بأقساط</strong> — حدد عدد أشهر الخصم · <strong>تأجيل خصم شهر</strong> (الموظف يقبض راتبه كاملاً والقسط يُؤجَّل لشهر لاحق) · يُطبَّق تلقائياً على مسير الرواتب.</p>' +
+            '<p class="hr-platform-note"><i class="fas fa-hand-holding-dollar"></i> <strong>سلف الموظفين بأقساط</strong> — HR يختار: <strong>خصم من الراتب</strong> أو <strong>عدم خصم الشهر</strong> (ظروف خاصة — الموظف يقبض راتبه كاملاً والقسط يُؤجَّل) · يُطبَّق تلقائياً على مسير الرواتب.</p>' +
             '<div class="hr-toolbar">' +
-                '<label class="nebras-field"><span>شهر التأجيل الافتراضي</span><input type="month" id="hadv-postpone-month" value="' + monthNow + '"></label>' +
+                '<label class="nebras-field"><span>شهر «عدم الخصم»</span><input type="month" id="hadv-postpone-month" value="' + monthNow + '"></label>' +
+                '<span class="hr-attach-hint">اختياري HR: اختاري الشهر ثم اضغطي «عدم خصم الشهر» بجانب السلفة</span>' +
             '</div>' +
             '<div class="hr-editor-overlay"><h4><i class="fas fa-plus"></i> سلفة جديدة بأقساط</h4><div class="erp-form-grid">' +
                 '<label class="nebras-field"><span>الموظف *</span><select id="hadv-employee">' + empOpts + '</select></label>' +
@@ -295,7 +296,7 @@
         saveHrAdvancesData();
         if (typeof hrAudit === 'function') hrAudit('HR تأجيل سلفة', adv.employeeName + ' — ' + month + ' (راتب كامل)');
         if (typeof renderHrPlatformPanelSafe === 'function') renderHrPlatformPanelSafe();
-        alert('تم تأجيل خصم السلفة لشهر ' + month + '.\nالموظف يقبض راتبه كاملاً — والقسط يُخصم في شهر لاحق.');
+        alert('تم تأجيل خصم السلفة لشهر ' + month + '.\nالموظف يقبض راتبه كاملاً هذا الشهر — والقسط يُخصم في شهر لاحق.');
     }
 
     function skipHrAdvanceMonth(advanceId, month) {

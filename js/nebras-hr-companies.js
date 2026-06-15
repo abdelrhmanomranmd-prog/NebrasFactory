@@ -60,14 +60,14 @@
             type: 'primary',
             nameAr: 'مصنع نبراس للبلاستيك WPC',
             nameEn: 'Nebras Plastic Factory WPC',
-            crNumber: '',
-            taxNumber: '',
+            crNumber: '1128185177',
+            taxNumber: '312765384700003',
             unifiedNumber: '',
-            address: 'القصيم — المملكة العربية السعودية',
+            address: 'القصيم — صناعية عنيزة — إمتداد طريق الزلفي',
             city: 'القصيم',
             region: 'القصيم',
-            phone: '',
-            email: '',
+            phone: '920033382',
+            email: 'nebrasfactory@hotmail.com',
             website: 'https://www.nebrasplasticcompany.com',
             managerName: '',
             managerPhone: '',
@@ -410,10 +410,16 @@
         }).join('');
 
         return '<div class="hr-panel is-active">' +
+            '<div class="hr-companies-hero hr-companies-hero--primary">' +
+                '<i class="fas fa-industry"></i>' +
+                '<div><strong>ملف الشركة الأم — مصنع نبراس</strong>' +
+                '<p>كل وثائق وبيانات مصنع نبراس (س.ت · ضريبي · شعار · عقود · مدد · GOSI) — منفصلة عن الشركات الشقيقة.</p>' +
+                '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="openHrCompanyEditor(\'comp-nebras\')"><i class="fas fa-folder-open"></i> فتح ملف نبراس الرسمي</button></div>' +
+            '</div>' +
             '<div class="hr-companies-hero">' +
                 '<i class="fas fa-building-circle-check"></i>' +
                 '<div><strong>سجل الشركات — نبراس + الشركاء</strong>' +
-                '<p>سجّلي كل شركة باسمها التجاري ورقمها الضريبي والسجل التجاري. كل شركة لها موظفون وسيارات ولوحة مستقلة داخل نفس برنامج HR.</p></div>' +
+                '<p>سجّلي كل شركة شريقة باسمها التجاري ورقمها الضريبي والسجل التجاري. كل شركة لها موظفون وسيارات ومسير رواتب ولوحة مستقلة.</p></div>' +
             '</div>' +
             '<div class="hr-toolbar">' +
                 '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="openHrCompanyEditor(null)"><i class="fas fa-handshake"></i> شركة شريكة جديدة</button>' +
