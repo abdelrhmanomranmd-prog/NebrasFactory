@@ -63,7 +63,8 @@
             legal: 'الشؤون القانونية',
             customerPortal: 'بوابة العملاء — حسابات العملاء',
             createCustomerUser: 'إنشاء حساب عميل (مندوب)',
-            orderJourney: 'مسار نبراس — متابعة الطلب'
+            orderJourney: 'مسار نبراس — متابعة الطلب',
+            storeCatalog: 'المتجر الإلكتروني — رفع المنتجات'
         };
         /** أيقونة + وصف لكل صلاحية — تُستخدم في واجهة إدارة المستخدمين الاحترافية */
         const NEBRAS_PERMISSION_META = {
@@ -88,7 +89,8 @@
             legal: { icon: 'fas fa-scale-balanced', descAr: 'منصة Legal — عقود وقضايا وامتثال وPDPL لنبراس والشركات الشريكة' },
             customerPortal: { icon: 'fas fa-user-circle', descAr: 'إنشاء حسابات بوابة العميل — لوحة خاصة لكل عميل' },
             createCustomerUser: { icon: 'fas fa-user-plus', descAr: 'مندوب المبيعات — إنشاء حساب عميل (اسم مستخدم وكلمة سر)' },
-            orderJourney: { icon: 'fas fa-route', descAr: 'مسار الطلب — إنتاج · ورشة · مستودع · تأكيد مالي · جاهز للاستلام' }
+            orderJourney: { icon: 'fas fa-route', descAr: 'مسار الطلب — إنتاج · ورشة · مستودع · تأكيد مالي · جاهز للاستلام' },
+            storeCatalog: { icon: 'fas fa-store', descAr: 'رفع وتحديث منتجات المتجر — مقاس · نوع · سعر · صورة — ديناميكي' }
         };
         const SHOP_CATALOG_PRODUCT_IDS = ['prod-wpc-raw', 'prod-wpc', 'prod-aluminum', 'prod-other'];
 
@@ -96,6 +98,7 @@
             if (!currentAdmin) return false;
             if (isMainGovernanceAdmin(currentAdmin)) return true;
             const key = permissionKey || 'content';
+            if (key === 'content' && canManage('storeCatalog')) return true;
             if (Array.isArray(currentAdmin.permissions) && currentAdmin.permissions.length) {
                 return currentAdmin.permissions.indexOf(key) >= 0;
             }
@@ -133,7 +136,7 @@
 
         async function uploadNebrasMediaFile(file) {
             if (!file) return null;
-            if (currentAdmin && !canUploadNebrasMedia('content')) {
+            if (currentAdmin && !canUploadNebrasMedia('content') && !canUploadNebrasMedia('storeCatalog')) {
                 alert('لا تملكين صلاحية رفع الصور أو الملفات. الإدارة الرئيسية (NEBRASFACTORY) تملك الصلاحية الكاملة.');
                 return null;
             }
@@ -345,6 +348,12 @@
                 descAr: 'أبواب WPC — مخزون · إنتاج · مستودع · عروض · طلبات المصنع.',
                 permissions: ['production', 'inventory', 'warehouse', 'quotes', 'orders'],
                 departmentScope: NEBRAS_WPC_DEPT_SCOPE
+            },
+            store_manager: {
+                labelAr: 'مدير المتجر الإلكتروني', labelEn: 'E-Store Manager',
+                icon: 'fas fa-store', accent: '#00a8ff',
+                descAr: 'صلاحية محددة — رفع وتحديث منتجات المتجر (مقاس · نوع · سعر · صورة) فقط. تحددها الإدارة الرئيسية.',
+                permissions: ['storeCatalog']
             }
         };
         const rolePermissions = Object.keys(NEBRAS_ROLE_DEFINITIONS).reduce(function(acc, key) {
@@ -2234,7 +2243,7 @@
         const DEFAULT_DASHBOARD_TILES = [
             { id: 'dash-company-profile', zone: 'quick', dashGroup: 'command', sortOrder: 0, iconClass: 'fas fa-book-open', titleAr: 'البروفايل التعريفي لنبراس', titleEn: 'Nebras Company Profile', textAr: 'عرض البروفايل الكامل داخل المنصة — 24 صفحة مع تنزيل PDF.', textEn: 'Full profile viewer with PDF download — 24 pages.', cssClass: 'dashboard-tile-card--profile-2026', backgroundImage: 'images/profile-2026/hero-cover.jpg', handler: 'openCompanyProfileHub', permission: 'content', visible: true },
             { id: 'dash-profile-pdf', zone: 'quick', dashGroup: 'command', sortOrder: 0.5, iconClass: 'fas fa-file-pdf', titleAr: 'تنزيل بروفايل PDF', titleEn: 'Download Profile PDF', textAr: 'تنزيل ملف PDF الرسمي — 24 صفحة A4.', textEn: 'Download official 24-page A4 PDF.', cssClass: 'dashboard-tile-card--profile-2026', backgroundImage: 'images/hero-slide-06-color-catalog.png', handler: 'downloadNebrasProfilePdf', permission: 'content', visible: false },
-            { id: 'dash-callback-leads', zone: 'quick', dashGroup: 'command', sortOrder: 55, iconClass: 'fas fa-phone-volume', titleAr: 'نبراس يتصل بك', titleEn: 'Callback Leads', textAr: 'طلبات اتصال الزوار — تظهر في الإدارة الرئيسية والفروع.', textEn: 'Visitor callback requests by branch.', cssClass: 'dashboard-tile-card--callback', backgroundImage: 'images/profile-2026/hero-cover.jpg', handler: 'openCallbackLeadsAdmin', permission: 'sales', visible: true },
+            { id: 'dash-callback-leads', zone: 'quick', dashGroup: 'command', sortOrder: 55, iconClass: 'fas fa-phone-volume', titleAr: 'نبراس يتصل بك', titleEn: 'Callback Leads', textAr: 'طلبات اتصال الزوار — تظهر في الإدارة الرئيسية والفروع.', textEn: 'Visitor callback requests by branch.', cssClass: 'dashboard-tile-card--callback', backgroundImage: 'images/profile-2026/hero-cover.jpg', handler: 'openCallbackLeadsAdmin', permission: 'audit', visible: true },
             { id: 'dash-product-master', zone: 'quick', dashGroup: 'command', sortOrder: 0.9, iconClass: 'fas fa-database', titleAr: 'مركز المنتجات والأسعار', titleEn: 'Product Master', textAr: 'أسماء · أنواع · مقاسات · أسعار — مصدر النظام الديناميكي.', textEn: 'Names, types, sizes, prices — single source of truth.', handler: 'openProductMasterHub', permission: 'productMaster', superadminOnly: true, visible: true },
             { id: 'dash-aluminum-dept', zone: 'quick', dashGroup: 'command', sortOrder: 1.1, iconClass: 'fas fa-industry', titleAr: 'قسم الألومنيوم', titleEn: 'Aluminum Dept.', textAr: 'مخزون · إنتاج · عروض · طلبات ALU.', textEn: 'Aluminum ops only.', handler: 'openAluminumDepartment', permission: 'aluminum', visible: true },
             { id: 'dash-wpc-dept', zone: 'quick', dashGroup: 'command', sortOrder: 1.08, iconClass: 'fas fa-door-closed', titleAr: 'إنتاج أبواب WPC', titleEn: 'WPC Production', textAr: 'مصنع الأبواب — مخزون · إنتاج · مستودع · عروض WPC.', textEn: 'WPC factory ops.', handler: 'openWpcProductionDepartment', permission: 'production', visible: true },
@@ -2243,11 +2252,12 @@
             { id: 'dash-legal-platform', zone: 'quick', dashGroup: 'command', sortOrder: 1.06, iconClass: 'fas fa-scale-balanced', titleAr: 'Legal — الشؤون القانونية', titleEn: 'Nebras Legal', textAr: 'عقود · قضايا · امتثال · PDPL · اتفاقيات شراكة — نبراس والشركات الشريكة.', textEn: 'Contracts, cases, compliance, PDPL — group & partners.', handler: 'openLegalPlatform', permission: 'legal', visible: true },
             { id: 'dash-accounting-platform', zone: 'quick', dashGroup: 'command', sortOrder: 1.065, iconClass: 'fas fa-calculator', titleAr: 'Accounting — قسم الحسابات', titleEn: 'Nebras Accounting', textAr: 'تحويلات · مبيعات · مشتريات · ربحية · تقارير PDF — المقر والفروع.', textEn: 'Transfers, sales, purchases, PDF reports.', handler: 'openAccountingPlatform', permission: 'accounting', visible: true },
             { id: 'dash-platform-integration', zone: 'quick', dashGroup: 'command', sortOrder: 0.9, iconClass: 'fas fa-network-wired', titleAr: 'تكامل المنصة', titleEn: 'Platform Integration', textAr: 'ترابط الأقسام · الفروع · السحابة · حماية البيانات.', textEn: 'Departments, branches, cloud safety.', handler: 'openPlatformIntegrationHub', permission: 'audit', visible: true },
-            { id: 'dash-admin-ai', zone: 'quick', dashGroup: 'command', sortOrder: 0.95, iconClass: 'fas fa-robot', titleAr: 'مساعد Claude', titleEn: 'Claude AI', textAr: 'ذكاء اصطناعي للإدارة الرئيسية — إدخال بيانات وتصنيف المتجر.', textEn: 'Main admin AI assistant.', handler: 'openNebrasAdminAi', permission: 'users', superadminOnly: true, visible: true },
-            { id: 'dash-data-warehouse', zone: 'quick', dashGroup: 'command', sortOrder: 0.96, iconClass: 'fas fa-database', titleAr: 'مستودع البيانات', titleEn: 'Data Warehouse', textAr: 'استخراج Excel · PDF · JSON — كل التخزين الديناميكي.', textEn: 'Export all dynamic storage.', handler: 'openNebrasDataWarehouse', permission: 'audit', visible: true },
+            { id: 'dash-admin-ai', zone: 'quick', dashGroup: 'command', sortOrder: 0.95, iconClass: 'fas fa-robot', titleAr: 'مساعد Claude السحابي', titleEn: 'Claude AI Cloud', textAr: 'ذكاء اصطناعي متقدم للإدارة الرئيسية — متجر · مستخدمون · سحابة · حوكمة.', textEn: 'HQ cloud AI assistant.', handler: 'openNebrasAdminAi', permission: 'users', superadminOnly: true, visible: true },
+            { id: 'dash-data-warehouse', zone: 'quick', dashGroup: 'command', sortOrder: 0.96, iconClass: 'fas fa-database', titleAr: 'مستودع البيانات', titleEn: 'Data Warehouse', textAr: 'استخراج Excel · PDF — كل التخزين الديناميكي.', textEn: 'Export all dynamic storage.', handler: 'openNebrasDataWarehouse', permission: 'audit', visible: true },
             { id: 'dash-empire-bridges', zone: 'quick', dashGroup: 'command', sortOrder: 0.97, iconClass: 'fas fa-link', titleAr: 'جسور الإمبراطورية', titleEn: 'Empire Bridges', textAr: 'Odoo-like — متجر · HR · CRM · مسار نبراس · محاسبة.', textEn: 'Department bridges.', handler: 'openNebrasEmpireBridges', permission: 'erp', visible: true },
             { id: 'dash-empire-hub', zone: 'quick', dashGroup: 'command', sortOrder: 0.98, iconClass: 'fas fa-crown', titleAr: 'إمبراطورية نبراس — مركز القيادة', titleEn: 'Nebras Empire HQ', textAr: 'الواجهة الخارجية · ERP · HR · Legal · فروع · شركاء — كل المنصة في مكان واحد.', textEn: 'Full empire command — external + internal platforms.', handler: 'openNebrasEmpireHub', permission: 'audit', visible: true },
             { id: 'dash-content', zone: 'quick', dashGroup: 'command', sortOrder: 1, iconClass: 'fas fa-pen-to-square', titleAr: 'إدارة محتوى الموقع', titleEn: 'Site Content', textAr: 'منتجات، بوابة الزائر، شركاء، شهادات — ديناميكي بالكامل.', textEn: 'Products, gateway icons, partners, certs — fully dynamic.', handler: 'openSiteContentManager', permission: 'content', visible: true },
+            { id: 'dash-store-catalog', zone: 'quick', dashGroup: 'command', sortOrder: 1.02, iconClass: 'fas fa-store', titleAr: 'المتجر الإلكتروني', titleEn: 'E-Store', textAr: 'رفع المنتجات — مقاس · نوع · سعر · صورة — تخزين ديناميكي.', textEn: 'Upload store products with variants.', handler: 'openStoreCatalogManager', permission: 'storeCatalog', visible: true },
             { id: 'dash-about-pages', zone: 'quick', dashGroup: 'command', sortOrder: 2, iconClass: 'fas fa-building', titleAr: 'من نحن ورؤيتنا', titleEn: 'About & Vision', textAr: 'نصوص المصنع ووثائق الصفحات الداخلية.', textEn: 'Factory pages and documents.', handler: 'openAboutContentAdmin', permission: 'content', visible: true },
             { id: 'dash-certs', zone: 'quick', dashGroup: 'command', sortOrder: 3, iconClass: 'fas fa-award', titleAr: 'اعتمادات وشهادات', titleEn: 'Certifications', textAr: 'شهادات المعرض — صور وPDF.', textEn: 'Showroom certificates.', cssClass: 'dashboard-tile-card--certs', handler: 'openCertificationsHub', permission: 'content', visible: true },
             { id: 'dash-showroom', zone: 'quick', dashGroup: 'command', sortOrder: 4, iconClass: 'fas fa-images', titleAr: 'معرض نبراس', titleEn: 'Nebras Showroom', textAr: '5 أقسام: أبواب نبراس · خزائن نبراس · WPC · CNC · مشاريع NHC.', textEn: '5 galleries: doors, cabinets, WPC, CNC, NHC projects.', handler: 'openShowroomHub', permission: 'content', visible: true },
@@ -2374,6 +2384,7 @@
             openBranchesManagement: openBranchesManagement,
             openAuditLog: openAuditLog,
             openSiteContentManager: openSiteContentManager,
+            openStoreCatalogManager: function() { openStoreCatalogManager(); },
             openAboutContentAdmin: function() {
                 openSiteContentManager();
                 switchScmTab('about');
@@ -2415,7 +2426,9 @@
             },
             openNebrasEmpireHub: function() {
                 if (typeof window.openNebrasEmpireHub === 'function') return window.openNebrasEmpireHub();
+                alert('مركز إمبراطورية نبراس — أعيدي تحميل الصفحة (Ctrl+Shift+R).');
             },
+            openCloudGovernance: function() { openCloudGovernance(); },
             openPlatformIntegrationHub: function() {
                 if (typeof window.openPlatformIntegrationHub === 'function') return window.openPlatformIntegrationHub();
             },
@@ -3065,11 +3078,21 @@
             if (!admin) return false;
             if (isMainGovernanceAdmin(admin)) return true;
             const gate = {
-                openUserManagement: function() { return canManage('users', admin); },
-                openProductMasterHub: function() { return false; },
-                openNebrasEmpireHub: function() { return admin.role === 'manager' || admin.role === 'superadmin'; },
-                openCloudGovernance: function() { return false; },
-                openSystemSettings: function() { return false; },
+                openUserManagement: function() { return isMainGovernanceAdmin(admin) || canManageBranchTeam(admin); },
+                openProductMasterHub: function() { return isMainGovernanceAdmin(admin); },
+                openNebrasEmpireHub: function() {
+                    if (typeof canViewEmpireHub === 'function' && canViewEmpireHub(admin)) return true;
+                    return canManage('audit', admin) || canManage('erp', admin);
+                },
+                openNebrasDataWarehouse: function() {
+                    return isMainGovernanceAdmin(admin) || canManage('audit', admin) || canManage('erp', admin) || canManage('accounting', admin);
+                },
+                openNebrasEmpireBridges: function() {
+                    return isMainGovernanceAdmin(admin) || canManage('erp', admin) || canManage('audit', admin);
+                },
+                openNebrasAdminAi: function() { return isMainGovernanceAdmin(admin); },
+                openCloudGovernance: function() { return isMainGovernanceAdmin(admin); },
+                openSystemSettings: function() { return isMainGovernanceAdmin(admin); },
                 openWpcProductionDepartment: function() { return canManage('production', admin); },
                 openAluminumDepartment: function() { return canManage('aluminum', admin); },
                 openHrPlatform: function() {
@@ -3090,9 +3113,11 @@
                 openErpOrders: function() { return canManage('orders', admin); },
                 openBranchesManagement: function() { return canManage('branches', admin); },
                 openSalesManagement: function() { return canManage('sales', admin); },
-                openSalesPriceList: function() { return canManage('sales', admin); },
-                openRepQuoteBuilder: function() { return canManage('quotes', admin); },
-                openRepMyQuotes: function() { return canManage('quotes', admin); },
+                openSalesPriceList: function() { return canManage('sales', admin) || canManage('aluminum', admin); },
+                openRepQuoteBuilder: function() { return canManage('quotes', admin) || canManage('aluminum', admin); },
+                openRepMyQuotes: function() { return canManage('quotes', admin) || canManage('aluminum', admin); },
+                openAluminumQuoteBuilder: function() { return canManage('aluminum', admin) || canManage('quotes', admin); },
+                openWpcQuoteBuilder: function() { return canManage('production', admin) || canManage('quotes', admin); },
                 openBranchTeamManagement: function() { return canManageBranchTeam(admin); },
                 openBranchCommandCenter: function() { return canAccessBranchCommandCenter(admin); },
                 openExecutiveReports: function() {
@@ -3107,6 +3132,9 @@
                 openCpUserEditorForRep: function() {
                     return typeof window.canCreateCustomerPortalUser === 'function' && window.canCreateCustomerPortalUser(admin);
                 },
+                openCpUserEditor: function() {
+                    return typeof canManageCustomerPortalUsers === 'function' && canManageCustomerPortalUsers(admin);
+                },
                 openOrderJourneyOps: function() {
                     return typeof window.canOrderJourney === 'function' && window.canOrderJourney(admin);
                 },
@@ -3117,13 +3145,25 @@
                     return admin && admin.role === 'sales_rep';
                 },
                 openSiteContentManager: function() { return canManage('content', admin); },
+                openStoreCatalogManager: function() { return canManage('storeCatalog', admin) || canManage('content', admin); },
+                openAboutContentAdmin: function() { return canManage('content', admin); },
                 openAdminAnalytics: function() { return canManage('audit', admin); },
                 openCustomerServiceManagement: function() { return canManage('customerService', admin); },
                 openComplaintsManagement: function() { return canManage('complaints', admin); },
-                openAuditLog: function() { return canManage('audit', admin); }
+                openAuditLog: function() { return canManage('audit', admin); },
+                openCertificationsHub: function() { return canManage('content', admin); },
+                openShowroomHub: function() { return canManage('content', admin); },
+                openCompanyProfileHub: function() { return canManage('content', admin); },
+                downloadNebrasProfilePdf: function() { return canManage('content', admin); },
+                openPartnersAdmin: function() { return canManage('content', admin); },
+                openShowroomAdmin: function() { return canManage('content', admin); },
+                openNebrasMediaHubQuick: function() { return canManage('content', admin); },
+                scrollErpHub: function() { return canManage('erp', admin); },
+                syncPlatformFromProductMaster: function() { return isMainGovernanceAdmin(admin); },
+                openCallbackLeadsAdmin: function() { return canManage('sales', admin) || canManage('audit', admin); }
             };
             if (gate[key]) return gate[key]();
-            return typeof DASHBOARD_HANDLER_MAP[key] === 'function';
+            return false;
         }
 
         function runDashboardHandler(handlerKey) {
@@ -3655,7 +3695,10 @@
         }
 
         function toggleProductStock(productId) {
-            if (!requireFullSiteContent()) return;
+            if (!canManageProductCatalog(currentAdmin, productId)) {
+                alert('تغيير توفر المنتج — صلاحية المتجر أو المحتوى مطلوبة.');
+                return;
+            }
             const product = siteProducts.find(function(p) { return p.id === productId; });
             if (!product) return;
             product.inStock = product.inStock === false;
@@ -5835,6 +5878,7 @@
             const u = user || currentAdmin;
             if (!u) return false;
             if (u.isPrimary === true) return true;
+            if (u.role === 'superadmin') return true;
             if (PRIMARY_GOVERNANCE_ADMIN_IDS.indexOf(u.id) >= 0) return true;
             return PRIMARY_GOVERNANCE_USERNAMES.indexOf(String(u.username || '').toUpperCase()) >= 0;
         }
@@ -10621,6 +10665,9 @@
             if (typeof isHrDepartmentAdmin === 'function' && isHrDepartmentAdmin(currentAdmin)) {
                 visible = visible.filter(function(t) { return t.id === 'dash-hr-platform'; });
             }
+            if (isStoreCatalogOnlyAdmin(currentAdmin)) {
+                visible = visible.filter(function(t) { return t.id === 'dash-store-catalog'; });
+            }
 
             function tileTitle(tile) {
                 const t = getLocalizedCatalogField(tile, 'title', lang);
@@ -10876,7 +10923,11 @@
         }
 
         function switchScmTab(tab) {
-            if (!requirePermission('content', 'إدارة المحتوى متاحة لمن لديه صلاحية المحتوى.')) return;
+            if (isStoreCatalogOnlyAdmin()) {
+                if (tab !== 'products') return;
+            } else if (!requirePermission('content', 'إدارة المحتوى متاحة لمن لديه صلاحية المحتوى.')) {
+                return;
+            }
             document.querySelectorAll('.scm-tabs button').forEach(function(btn) {
                 btn.classList.toggle('active', btn.getAttribute('data-scm-tab') === tab);
             });
@@ -10886,7 +10937,14 @@
         }
 
         function openSiteContentManager() {
-            if (!requirePermission('content', 'إدارة محتوى الموقع متاحة لمن لديه صلاحية المحتوى (مدير / Super Admin).')) return;
+            if (!canManage('content') && !canManageStoreCatalog()) {
+                alert('إدارة محتوى الموقع — صلاحية المحتوى أو المتجر مطلوبة.');
+                return;
+            }
+            if (!canManage('content')) {
+                openStoreCatalogManager();
+                return;
+            }
             switchScmTab('products');
             displaySiteProductsAdmin();
             displayVisitorIconsAdmin();
@@ -10897,6 +10955,7 @@
             displayCertificationsAdmin();
             displayShowroomAdmin();
             renderGovernanceStatusPanel();
+            applyScmAccessMode();
             revealPlatformLayer('site-content-management');
         }
 
@@ -11026,6 +11085,63 @@
                 album: album,
                 target: (target || '').trim()
             };
+        }
+
+        function canManageStoreCatalog(admin) {
+            admin = admin || currentAdmin;
+            if (!admin) return false;
+            if (isMainGovernanceAdmin(admin)) return true;
+            return canManage('storeCatalog', admin) || canManage('content', admin);
+        }
+
+        function isStoreCatalogOnlyAdmin(admin) {
+            admin = admin || currentAdmin;
+            if (!admin || isMainGovernanceAdmin(admin)) return false;
+            return canManage('storeCatalog', admin) && !canManage('content', admin);
+        }
+
+        function applyScmAccessMode() {
+            const storeOnly = isStoreCatalogOnlyAdmin();
+            const scm = document.getElementById('site-content-management');
+            if (!scm) return;
+            scm.classList.toggle('scm-mode-store-only', storeOnly);
+            document.querySelectorAll('.scm-tabs button').forEach(function(btn) {
+                const tab = btn.getAttribute('data-scm-tab');
+                btn.style.display = storeOnly && tab !== 'products' ? 'none' : '';
+            });
+            const toolbar = scm.querySelector('.nebras-scm-toolbar');
+            if (toolbar) toolbar.style.display = storeOnly ? 'none' : '';
+            const gov = document.getElementById('scm-governance-status');
+            if (gov) gov.style.display = storeOnly ? 'none' : '';
+            const title = document.getElementById('scm-main-title');
+            const hint = document.getElementById('scm-main-hint');
+            if (storeOnly) {
+                if (title) title.textContent = 'المتجر الإلكتروني — إدارة المنتجات';
+                if (hint) hint.innerHTML = 'صلاحية <strong>المتجر</strong> فقط: رفع وتحديث الأصناف (مقاس · نوع · سعر · صورة) — يُحفظ ديناميكياً ويُزامَن مع السحابة.';
+            }
+            const addBtn = scm.querySelector('#scm-panel-products > button.primary');
+            if (addBtn) addBtn.style.display = storeOnly ? 'none' : '';
+        }
+
+        function openStoreCatalogManager() {
+            if (!canManageStoreCatalog()) {
+                alert('المتجر الإلكتروني — صلاحية storeCatalog أو المحتوى مطلوبة.');
+                return;
+            }
+            switchScmTab('products');
+            displaySiteProductsAdmin();
+            if (!isStoreCatalogOnlyAdmin()) {
+                displayVisitorIconsAdmin();
+                displayDashboardTilesAdmin();
+                displayCustomSectionsAdmin();
+                displayAboutPagesAdmin();
+                displayPartnersAdmin();
+                displayCertificationsAdmin();
+                displayShowroomAdmin();
+                renderGovernanceStatusPanel();
+            }
+            applyScmAccessMode();
+            revealPlatformLayer('site-content-management');
         }
 
         function canManageFullSiteContent() {
@@ -11253,7 +11369,16 @@
                     ic.productIds.forEach(function(pid) { iconByProduct[pid] = label; });
                 }
             });
-            list.innerHTML = siteProducts.map(function(p) {
+            let productsToShow = siteProducts;
+            if (isStoreCatalogOnlyAdmin()) {
+                productsToShow = siteProducts.filter(function(p) {
+                    return p && SHOP_CATALOG_PRODUCT_IDS.indexOf(p.id) >= 0;
+                });
+            }
+            list.innerHTML = productsToShow.map(function(p) {
+                const storeOnly = isStoreCatalogOnlyAdmin();
+                const canEditProduct = !storeOnly && isMainGovernanceAdmin();
+                const canVariants = canManageProductCatalog(currentAdmin, p.id);
                 const variantCount = (p.variants || []).length;
                 const variantPreview = (p.variants || []).slice(0, 4).map(function(v, i) {
                     const ex = Number(v.price) || 0;
@@ -11261,24 +11386,24 @@
                     return '#' + i + ' ' + [v.typeAr, v.sizeAr, v.colorAr].filter(Boolean).join(' · ') + ' — ' + pr;
                 }).join(' | ');
                 const modeLabel = escapeHtmlAttr(getCatalogProductModeLabel(p));
-                const variantsBtn = p.action === 'complaint'
+                const variantsBtn = (p.action === 'complaint' || !canVariants)
                     ? ''
                     : '<button type="button" onclick="manageProductVariants(\'' + p.id + '\')">أصناف (صورة · سعر قبل الضريبة)</button>';
                 const iconNote = iconByProduct[p.id] ? (' · أيقونة المتجر: ' + iconByProduct[p.id]) : '';
                 const hiddenBadge = p.visible === false ? ' <span class="scm-product-hidden-badge">مخفي</span>' : '';
-                const visBtn = p.visible === false
+                const visBtn = storeOnly ? '' : (p.visible === false
                     ? '<button type="button" onclick="toggleSiteProductVisibility(\'' + p.id + '\')">إظهار</button>'
-                    : '<button type="button" onclick="toggleSiteProductVisibility(\'' + p.id + '\')">إخفاء</button>';
+                    : '<button type="button" onclick="toggleSiteProductVisibility(\'' + p.id + '\')">إخفاء</button>');
                 const stockBadge = p.inStock === false
                     ? ' <span class="scm-product-stock-badge scm-product-stock-badge--out">غير متاح</span>'
                     : ' <span class="scm-product-stock-badge scm-product-stock-badge--in">متاح</span>';
-                const stockBtn = '<button type="button" onclick="toggleProductStock(\'' + p.id + '\')">' + (p.inStock === false ? 'تفعيل التوفر' : 'تعطيل التوفر') + '</button>';
+                const stockBtn = canVariants ? '<button type="button" onclick="toggleProductStock(\'' + p.id + '\')">' + (p.inStock === false ? 'تفعيل التوفر' : 'تعطيل التوفر') + '</button>' : '';
+                const editBtn = canEditProduct ? '<button type="button" onclick="editSiteProduct(\'' + p.id + '\')">تعديل</button>' : '';
+                const delBtn = canEditProduct ? '<button type="button" onclick="deleteSiteProduct(\'' + p.id + '\')">حذف</button>' : '';
                 return '<li' + (p.visible === false ? ' class="scm-product-row--hidden"' : '') + '><strong>' + escapeHtmlAttr(p.titleAr || p.id) + '</strong>' + hiddenBadge + stockBadge + escapeHtmlAttr(iconNote) + ' — ' + escapeHtmlAttr(p.iconClass || '') +
                     ' <span style="opacity:0.85">[' + modeLabel + ']</span>' +
                     '<small>خلفية: ' + escapeHtmlAttr(p.backgroundImage || 'افتراضي') + ' | ألبوم: ' + ((p.album || []).length) + ' | أصناف: ' + variantCount + (variantPreview ? ' — ' + escapeHtmlAttr(variantPreview) : '') + '</small>' +
-                    '<div class="scm-row-actions"><button type="button" onclick="editSiteProduct(\'' + p.id + '\')">تعديل</button>' +
-                    variantsBtn + stockBtn + visBtn +
-                    '<button type="button" onclick="deleteSiteProduct(\'' + p.id + '\')">حذف</button></div></li>';
+                    '<div class="scm-row-actions">' + editBtn + variantsBtn + stockBtn + visBtn + delBtn + '</div></li>';
             }).join('');
         }
 
@@ -11819,6 +11944,8 @@
             admin = admin || currentAdmin;
             if (!admin || !productId) return false;
             if (isMainGovernanceAdmin(admin)) return true;
+            if (canManage('content', admin)) return true;
+            if (canManage('storeCatalog', admin) && SHOP_CATALOG_PRODUCT_IDS.indexOf(productId) >= 0) return true;
             if (productId === NEBRAS_ALUMINUM_PRODUCT_ID && (canManage('aluminum', admin) || admin.role === 'aluminum_manager')) return true;
             return false;
         }
@@ -12480,7 +12607,7 @@
 
         function canOpenPlatformModule(mod) {
             if (!mod || !currentAdmin) return false;
-            if (mod.superadminOnly && currentAdmin.role !== 'superadmin') return false;
+            if (mod.superadminOnly && !isMainGovernanceAdmin()) return false;
             if (mod.permission && !canManage(mod.permission)) return false;
             if (mod.status === 'planned') return false;
             return true;
@@ -12500,7 +12627,7 @@
             }
             const fn = DASHBOARD_HANDLER_MAP[mod.handler];
             if (typeof fn === 'function') {
-                fn();
+                runDashboardHandler(mod.handler);
                 return;
             }
             if (mod.handler === 'openSystemSettings') openSystemSettings();
@@ -14518,12 +14645,12 @@
             document.body.classList.toggle('customer-portal-open', !!(cpApp && cpApp.classList.contains('show')));
             const lightbox = document.getElementById('nebras-media-lightbox');
             document.body.classList.toggle('nebras-lightbox-open', !!(lightbox && !lightbox.hidden));
+            const workspaceActive = document.body.classList.contains('nebras-workspace-active');
             const hasOpenLayer = !!document.querySelector(
                 '.admin-section.show, .admin-overlay.show, .cart-drawer-overlay.show, .product-shop-overlay.show, ' +
                 '.quote-print-overlay.show, .customer-portal-overlay.show, .customer-portal-app.show, ' +
                 '.sales-quote-detail-overlay.show, .nebras-callback-overlay.is-open, .nebras-media-lightbox:not([hidden])'
-            );
-            const workspaceActive = document.body.classList.contains('nebras-workspace-active');
+            ) || workspaceActive;
             if (!introOpen && !workspaceActive && !hasOpenLayer) {
                 document.body.style.overflow = '';
                 document.documentElement.style.overflow = '';
@@ -14567,6 +14694,7 @@
         }
 
         function revealPlatformLayer(id) {
+            if (typeof closeNebrasWorkspace === 'function') closeNebrasWorkspace();
             const el = typeof id === 'string' ? document.getElementById(id) : id;
             if (!el) return;
             el.classList.add('show');
@@ -14852,6 +14980,7 @@
                     if (typeof window.renderHrPlatformPanelSafe === 'function') window.renderHrPlatformPanelSafe();
                 }
                 addAuditLog('تسجيل دخول', 'دخول ناجح — ' + user.username + ' (' + getRoleLabel(user.role) + ')');
+                if (typeof startNebrasCloudAutoSync === 'function') startNebrasCloudAutoSync();
             } else {
                 if (typeof setAdminLoginStatus === 'function') setAdminLoginStatus(ui.adminLoginFail || 'بيانات الدخول غير صحيحة. حاول مرة أخرى.', 'error');
                 addAuditLog('محاولة دخول فاشلة', 'اسم مستخدم: ' + username);
@@ -15017,6 +15146,9 @@
                 { roles: ['superadmin', 'manager'], icon: 'fas fa-chart-bar', label: 'تقارير تنفيذية', handler: 'openExecutiveReports', perm: 'audit' },
                 { roles: ['sales_manager', 'accountant', 'branch_manager'], icon: 'fas fa-chart-bar', label: 'تقرير الفرع', handler: 'openExecutiveReports', perm: 'audit' },
                 { roles: ['superadmin'], icon: 'fas fa-database', label: 'مركز المنتجات', handler: 'openProductMasterHub', perm: null },
+                { roles: ['aluminum_manager'], icon: 'fas fa-file-signature', label: 'عرض ALU', handler: 'openAluminumQuoteBuilder', perm: 'aluminum' },
+                { roles: ['aluminum_manager'], icon: 'fas fa-tags', label: 'قائمة الأسعار', handler: 'openSalesPriceList', perm: 'aluminum' },
+                { roles: ['store_manager'], icon: 'fas fa-store', label: 'المتجر الإلكتروني', handler: 'openStoreCatalogManager', perm: 'storeCatalog' },
                 { roles: ['aluminum_manager', 'sales_manager', 'branch_manager'], icon: 'fas fa-industry', label: 'قسم الألومنيوم', handler: 'openAluminumDepartment', perm: 'aluminum' },
                 { roles: ['wpc_manager', 'production_manager'], icon: 'fas fa-door-closed', label: 'إنتاج WPC', handler: 'openWpcProductionDepartment', perm: 'production' },
                 { roles: ['branch_manager', 'sales_manager'], icon: 'fas fa-store', label: 'لوحة الفرع', handler: 'openBranchCommandCenter', perm: null },
@@ -15885,6 +16017,8 @@
             })(),
             hrScopeBranchId: user && user.hrScopeBranchId ? String(user.hrScopeBranchId).trim() : '',
             hrScopeDepartmentKey: user && user.hrScopeDepartmentKey ? String(user.hrScopeDepartmentKey).trim() : '',
+            legalScopeCompanyId: user && user.legalScopeCompanyId ? String(user.legalScopeCompanyId).trim() : '',
+            hrScopeCompanyId: user && user.hrScopeCompanyId ? String(user.hrScopeCompanyId).trim() : '',
             isPrimary: !!isPrimary,
             isActive: user && user.isActive === false ? false : true,
             lastLoginAt: user && user.lastLoginAt ? user.lastLoginAt : '',
@@ -16094,6 +16228,8 @@
             assignedBranchCity: source.assignedBranchCity || '',
             hrScopeBranchId: source.hrScopeBranchId || '',
             hrScopeDepartmentKey: source.hrScopeDepartmentKey || '',
+            legalScopeCompanyId: source.legalScopeCompanyId || '',
+            hrScopeCompanyId: source.hrScopeCompanyId || '',
             permissions: (rolePermissions[source.role] || []).slice()
         };
         renderUserEditorForm();
@@ -16295,6 +16431,7 @@
             if (overlay) overlay.classList.remove('show');
             iconOverlayPrimary = { type: 'none', value: '' };
             iconOverlayShopProductId = null;
+            syncPlatformInteractionLayers();
         }
 
         // Admin functions
@@ -16309,7 +16446,7 @@
             }
             const settingsBtn = document.getElementById('open-system-settings-btn');
             if (settingsBtn) {
-                settingsBtn.style.display = currentAdmin && currentAdmin.role === 'superadmin' ? 'inline-block' : 'none';
+                settingsBtn.style.display = isMainGovernanceAdmin() ? 'inline-block' : 'none';
             }
             revealPlatformLayer('user-management');
             displayUsers();
@@ -22643,6 +22780,8 @@
                 assignedBranchId: user ? (user.assignedBranchId || resolveBranchIdByCity(user.assignedBranchCity)) : null,
                 hrScopeBranchId: user ? (user.hrScopeBranchId || '') : '',
                 hrScopeDepartmentKey: user ? (user.hrScopeDepartmentKey || '') : '',
+                legalScopeCompanyId: user ? (user.legalScopeCompanyId || '') : '',
+                hrScopeCompanyId: user ? (user.hrScopeCompanyId || '') : '',
                 permissions: user ? getUserEffectivePermissions(user) : (rolePermissions[defaultRole] || []).slice()
             };
             renderUserEditorForm();
@@ -22705,7 +22844,29 @@
                         return '<div class="nebras-editor-grid nebras-editor-grid--hr-scope">' +
                             '<label class="nebras-field"><span>فرع HR</span><select id="ue-hr-branch" onchange="onUserEditorHrBranchChange(this.value)">' + branchOpts + '</select></label>' +
                             '<label class="nebras-field"><span>قسم HR (خصوصية)</span><select id="ue-hr-dept" onchange="onUserEditorHrDeptChange(this.value)">' + deptOpts + '</select></label>' +
-                            '<p class="nebras-editor-hint nebras-field--wide"><i class="fas fa-sitemap"></i> <strong>مستخدمو HR (مثل Jisr/Odoo):</strong> يمكن إنشاء أكثر من مستخدم HR — كل عملية تُسجَّل باسم المستخدم في «سجل العمليات». اختاري <em>الموارد البشرية</em> لإدارة كاملة للمصنع، أو قسماً محدداً (إنتاج WPC · مستودع…) لمدير قسم فقط.</p>' +
+                            (function() {
+                                const companies = typeof getActiveHrCompanies === 'function' ? getActiveHrCompanies() : [];
+                                if (companies.length < 2) return '';
+                                const coOpts = ['<option value="">— كل الشركات —</option>'].concat(
+                                    companies.map(function(c) {
+                                        return '<option value="' + escapeHtmlAttr(c.id) + '"' + (String(st.hrScopeCompanyId) === String(c.id) ? ' selected' : '') + '>' + escapeHtmlAttr(c.nameAr || c.id) + '</option>';
+                                    })
+                                ).join('');
+                                return '<label class="nebras-field"><span>شركة HR (شريكة)</span><select id="ue-hr-company" onchange="onUserEditorHrCompanyChange(this.value)">' + coOpts + '</select></label>';
+                            })() +
+                            '<p class="nebras-editor-hint nebras-field--wide"><i class="fas fa-sitemap"></i> <strong>مستخدمو HR (مثل Jisr/Odoo):</strong> يمكن إنشاء أكثر من مستخدم HR — كل عملية تُسجَّل باسم المستخدم في «سجل العمليات». اختاري <em>الموارد البشرية</em> لإدارة كاملة للمصنع، أو قسماً محدداً (إنتاج WPC · مستودع…) لمدير قسم فقط، أو شركة شريكة لموظفيها فقط.</p>' +
+                        '</div>';
+                    })() : '') +
+                    (st.role === 'legal' && !st.isPrimary ? (function() {
+                        const companies = typeof getActiveHrCompanies === 'function' ? getActiveHrCompanies() : [];
+                        const coOpts = ['<option value="">— كل الشركات (مجموعة نبراس) —</option>'].concat(
+                            companies.map(function(c) {
+                                return '<option value="' + escapeHtmlAttr(c.id) + '"' + (String(st.legalScopeCompanyId) === String(c.id) ? ' selected' : '') + '>' + escapeHtmlAttr(c.nameAr || c.id) + '</option>';
+                            })
+                        ).join('');
+                        return '<div class="nebras-editor-grid nebras-editor-grid--legal-scope">' +
+                            '<label class="nebras-field nebras-field--wide"><span>شركة Legal (نطاق القانوني)</span><select id="ue-legal-company" onchange="onUserEditorLegalCompanyChange(this.value)">' + coOpts + '</select></label>' +
+                            '<p class="nebras-editor-hint nebras-field--wide"><i class="fas fa-scale-balanced"></i> حدّدي شركة شريكة واحدة لمستخدم Legal — أو اتركي «كل الشركات» للإدارة القانونية الكاملة للمجموعة.</p>' +
                         '</div>';
                     })() : '') +
                     (st.isPrimary
@@ -22749,6 +22910,16 @@
         function onUserEditorHrDeptChange(deptKey) {
             if (!nebrasUserEditorState) return;
             nebrasUserEditorState.hrScopeDepartmentKey = String(deptKey || '').trim();
+        }
+
+        function onUserEditorHrCompanyChange(companyId) {
+            if (!nebrasUserEditorState) return;
+            nebrasUserEditorState.hrScopeCompanyId = String(companyId || '').trim();
+        }
+
+        function onUserEditorLegalCompanyChange(companyId) {
+            if (!nebrasUserEditorState) return;
+            nebrasUserEditorState.legalScopeCompanyId = String(companyId || '').trim();
         }
 
         function toggleUserEditorPerm(key, on) {
@@ -22810,6 +22981,8 @@
                     assignedBranchId: st.isPrimary ? null : (st.assignedBranchId || resolveBranchIdByCity(st.assignedBranchCity)),
                     hrScopeBranchId: st.isPrimary || st.role !== 'hr' ? '' : (st.hrScopeBranchId || ''),
                     hrScopeDepartmentKey: st.isPrimary || st.role !== 'hr' ? '' : (st.hrScopeDepartmentKey || ''),
+                    hrScopeCompanyId: st.isPrimary || st.role !== 'hr' ? '' : (st.hrScopeCompanyId || ''),
+                    legalScopeCompanyId: st.isPrimary || st.role !== 'legal' ? '' : (st.legalScopeCompanyId || ''),
                     isPrimary: !!st.isPrimary,
                     isActive: existing.isActive !== false,
                     updatedAt: new Date().toISOString()
@@ -22824,6 +22997,8 @@
                     assignedBranchId: st.assignedBranchId || resolveBranchIdByCity(st.assignedBranchCity),
                     hrScopeBranchId: st.role === 'hr' ? (st.hrScopeBranchId || '') : '',
                     hrScopeDepartmentKey: st.role === 'hr' ? (st.hrScopeDepartmentKey || '') : '',
+                    hrScopeCompanyId: st.role === 'hr' ? (st.hrScopeCompanyId || '') : '',
+                    legalScopeCompanyId: st.role === 'legal' ? (st.legalScopeCompanyId || '') : '',
                     isPrimary: false, isActive: true,
                     createdAt: nowIso, updatedAt: nowIso,
                     createdBy: currentAdmin ? currentAdmin.username : ''
@@ -23748,6 +23923,16 @@
             }, set: function(v) {
                 if (typeof setLegalActivityFromCloud === 'function') setLegalActivityFromCloud(v);
             }},
+            { key: 'legal_rentals', get: function() {
+                return typeof getLegalRentals === 'function' ? getLegalRentals() : [];
+            }, set: function(v) {
+                if (typeof setLegalRentalsFromCloud === 'function') setLegalRentalsFromCloud(v);
+            }},
+            { key: 'legal_notif_settings', get: function() {
+                return typeof getLegalNotifSettings === 'function' ? getLegalNotifSettings() : {};
+            }, set: function(v) {
+                if (typeof setLegalNotifSettingsFromCloud === 'function') setLegalNotifSettingsFromCloud(v);
+            }},
             { key: 'crm_customers', get: function() {
                 return typeof getCrmCustomers === 'function' ? getCrmCustomers() : [];
             }, set: function(v) {
@@ -23792,6 +23977,11 @@
                 return typeof getHrDeductions === 'function' ? getHrDeductions() : [];
             }, set: function(v) {
                 if (typeof setHrDeductionsFromCloud === 'function') setHrDeductionsFromCloud(v);
+            }},
+            { key: 'hr_advances', get: function() {
+                return typeof getHrAdvances === 'function' ? getHrAdvances() : [];
+            }, set: function(v) {
+                if (typeof setHrAdvancesFromCloud === 'function') setHrAdvancesFromCloud(v);
             }},
             { key: 'hr_notifications', get: function() {
                 return typeof getHrNotifications === 'function' ? getHrNotifications() : [];
@@ -24048,13 +24238,8 @@
                     if (typeof secureCloudPush === 'function' && typeof getNebrasSecureToken === 'function' && getNebrasSecureToken()) {
                         okSensitive = await secureCloudPush(sensitiveRows);
                     } else {
-                        const { error } = await supabaseClient
-                            .from('nebras_data_store')
-                            .upsert(sensitiveRows, { onConflict: 'store_key' });
-                        if (error) {
-                            console.warn('Nebras sensitive cloud save failed:', error.message || error);
-                            okSensitive = false;
-                        }
+                        console.warn('Nebras sensitive cloud save blocked — secure session required.');
+                        okSensitive = false;
                     }
                 }
                 if (!okPublic || !okSensitive) return false;
@@ -27023,6 +27208,13 @@
         window.openPlatformModule = openPlatformModule;
         window.openErpModule = openErpModule;
         window.openUserEditor = openUserEditor;
+        window.onUserEditorRoleChange = onUserEditorRoleChange;
+        window.onUserEditorHrBranchChange = onUserEditorHrBranchChange;
+        window.onUserEditorHrDeptChange = onUserEditorHrDeptChange;
+        window.onUserEditorHrCompanyChange = onUserEditorHrCompanyChange;
+        window.onUserEditorLegalCompanyChange = onUserEditorLegalCompanyChange;
+        window.saveUserFromEditor = saveUserFromEditor;
+        window.cancelUserEditor = cancelUserEditor;
         window.addNewUser = addNewUser;
         window.editUser = editUser;
         window.deleteUser = deleteUser;
@@ -27138,7 +27330,11 @@
         window.dialNumber = dialNumber;
         window.smartRouteToSales = smartRouteToSales;
         window.openNebrasWorkspace = openNebrasWorkspace;
+        window.openStoreCatalogManager = openStoreCatalogManager;
+        window.canManageStoreCatalog = canManageStoreCatalog;
+        window.isStoreCatalogOnlyAdmin = isStoreCatalogOnlyAdmin;
         window.closeNebrasWorkspace = closeNebrasWorkspace;
+        window.canRunDashboardHandler = canRunDashboardHandler;
         window.toggleMenu = toggleMenu;
         window.siteLogoImgFallback = siteLogoImgFallback;
         window.dismissBrandIntro = dismissBrandIntro;

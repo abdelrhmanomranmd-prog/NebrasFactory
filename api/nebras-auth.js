@@ -22,6 +22,7 @@ async function handleLogin(body) {
         sub: user.id,
         username: user.username,
         role: user.role,
+        isPrimary: !!user.isPrimary,
         exp: exp
     });
     return {

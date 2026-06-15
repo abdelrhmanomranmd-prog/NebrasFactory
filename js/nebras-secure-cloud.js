@@ -23,9 +23,9 @@
         'hr_employees', 'hr_vehicles', 'hr_leave', 'hr_vehicle_tracking', 'hr_attendance',
         'hr_documents', 'hr_payroll', 'hr_notifications', 'hr_notif_settings', 'hr_email_queue',
         'hr_shift_roster', 'hr_dept_activity', 'hr_companies', 'hr_gps_positions', 'hr_gps_settings',
-        'hr_gps_consents', 'hr_travel', 'hr_deductions',
+        'hr_gps_consents', 'hr_travel', 'hr_deductions', 'hr_advances',
         'legal_contracts', 'legal_cases', 'legal_compliance', 'legal_policies',
-        'legal_correspondence', 'legal_activity',
+        'legal_correspondence', 'legal_activity', 'legal_rentals', 'legal_notif_settings',
         'crm_customers', 'crm_opportunities', 'crm_activities', 'crm_audit',
         'nebras_cloud_snapshots', 'nebras_platform_integrity'
     ];

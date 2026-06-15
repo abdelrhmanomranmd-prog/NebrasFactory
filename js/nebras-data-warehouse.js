@@ -88,37 +88,6 @@
         if (typeof global.addAuditLog === 'function') global.addAuditLog('تصدير مستودع', 'مستخدمون CSV — ' + users.length);
     }
 
-    function exportStorageAuditJson() {
-        if (!global.isMainGovernanceAdmin || !global.isMainGovernanceAdmin()) {
-            alert('تصدير التخزين الكامل — الإدارة الرئيسية فقط.');
-            return;
-        }
-        const specs = typeof global.NEBRAS_CLOUD_STORE_SPECS !== 'undefined' ? global.NEBRAS_CLOUD_STORE_SPECS : [];
-        const audit = { exportedAt: new Date().toISOString(), stores: {} };
-        if (specs.length) {
-            specs.forEach(function(s) {
-                try {
-                    const payload = s.get();
-                    audit.stores[s.key] = {
-                        size: Array.isArray(payload) ? payload.length : (payload && typeof payload === 'object' ? Object.keys(payload).length : 1)
-                    };
-                } catch (e) {
-                    audit.stores[s.key] = { error: true };
-                }
-            });
-        }
-        if (typeof global.getCloudSnapshotsForCloud === 'function') {
-            audit.snapshots = global.getCloudSnapshotsForCloud();
-        }
-        const blob = new Blob([JSON.stringify(audit, null, 2)], { type: 'application/json' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'nebras-storage-audit-' + Date.now() + '.json';
-        a.click();
-        URL.revokeObjectURL(a.href);
-        if (typeof global.addAuditLog === 'function') global.addAuditLog('تصدير مستودع', 'تدقيق JSON — ' + Object.keys(audit.stores).length + ' مخزن');
-    }
-
     function exportEmpireSummaryPdf() {
         const win = window.open('', '_blank');
         if (!win) { alert('اسمحي بفتح نافذة للتقرير.'); return; }
@@ -172,15 +141,18 @@
             '<button type="button" class="dw-export-card" onclick="exportCrmCustomersCsv()"><i class="fas fa-handshake"></i><strong>عملاء CRM</strong><small>Excel CSV</small></button>' +
             '<button type="button" class="dw-export-card" onclick="typeof exportStoreCatalogCsv===\'function\'&&exportStoreCatalogCsv()"><i class="fas fa-store"></i><strong>كتالوج المتجر</strong><small>Excel CSV</small></button>' +
             '<button type="button" class="dw-export-card" onclick="exportAdminUsersCsv()"><i class="fas fa-users-cog"></i><strong>المستخدمون</strong><small>Excel CSV</small></button>' +
-            '<button type="button" class="dw-export-card" onclick="exportStorageAuditJson()"><i class="fas fa-code"></i><strong>تدقيق التخزين</strong><small>JSON</small></button>' +
+            '<button type="button" class="dw-export-card" onclick="typeof exportStorageAuditExcel===\'function\'&&exportStorageAuditExcel()"><i class="fas fa-table"></i><strong>تدقيق التخزين</strong><small>Excel</small></button>' +
             '<button type="button" class="dw-export-card" onclick="exportEmpireSummaryPdf()"><i class="fas fa-file-pdf"></i><strong>تقرير الإمبراطورية</strong><small>PDF</small></button>' +
             '</div>' +
             (global.isMainGovernanceAdmin && global.isMainGovernanceAdmin()
-                ? '<section class="dw-governance-section"><h3><i class="fas fa-shield-halved"></i> حوكمة الموقع — الإدارة الرئيسية فقط</h3>' +
-                '<p class="scm-hint">استيراد/تصدير JSON لكل مخازن المنصة — منتجات · أيقونات · إعدادات · ERP · HR · CRM</p>' +
-                '<div class="workspace-actions-row">' +
-                '<button type="button" class="workspace-action-btn workspace-action-btn--primary" onclick="typeof exportNebrasGovernanceBundle===\'function\'&&exportNebrasGovernanceBundle()"><i class="fas fa-file-export"></i> تصدير حزمة الموقع JSON</button>' +
-                '<button type="button" class="workspace-action-btn" onclick="typeof openNebrasGovernanceImportPicker===\'function\'&&openNebrasGovernanceImportPicker()"><i class="fas fa-file-import"></i> استيراد حزمة الموقع JSON</button>' +
+                ? '<section class="dw-governance-section"><h3><i class="fas fa-database"></i> قاعدة بيانات الموقع — الإدارة الرئيسية فقط</h3>' +
+                '<p class="scm-hint">استيراد/تصدير كقاعدة بيانات — Excel · PDF · Word (ليس كود)</p>' +
+                '<div class="dw-export-grid">' +
+                '<button type="button" class="dw-export-card" onclick="typeof exportNebrasSiteDatabaseExcel===\'function\'&&exportNebrasSiteDatabaseExcel()"><i class="fas fa-file-excel"></i><strong>تصدير Excel</strong><small>كل الجداول</small></button>' +
+                '<button type="button" class="dw-export-card" onclick="typeof exportNebrasSiteDatabasePdf===\'function\'&&exportNebrasSiteDatabasePdf()"><i class="fas fa-file-pdf"></i><strong>تصدير PDF</strong><small>تقرير كامل</small></button>' +
+                '<button type="button" class="dw-export-card" onclick="typeof exportNebrasSiteDatabaseWord===\'function\'&&exportNebrasSiteDatabaseWord()"><i class="fas fa-file-word"></i><strong>تصدير Word</strong><small>مستند .doc</small></button>' +
+                '<button type="button" class="dw-export-card" onclick="typeof exportNebrasSiteImportTemplate===\'function\'&&exportNebrasSiteImportTemplate()"><i class="fas fa-file-download"></i><strong>قالب الاستيراد</strong><small>Excel CSV</small></button>' +
+                '<button type="button" class="dw-export-card" onclick="typeof openNebrasSiteDatabaseImportPicker===\'function\'&&openNebrasSiteDatabaseImportPicker()"><i class="fas fa-file-import"></i><strong>استيراد Excel</strong><small>من الملف</small></button>' +
                 '</div></section>'
                 : '') +
             '<div class="workspace-actions-row" style="margin-top:16px">' +
@@ -194,6 +166,7 @@
             alert('مستودع البيانات — الإدارة الرئيسية أو صلاحية التدقيق/ERP.');
             return;
         }
+        if (typeof global.closeNebrasWorkspace === 'function') global.closeNebrasWorkspace();
         if (typeof global.closeAllAdminSections === 'function') global.closeAllAdminSections();
         const el = document.getElementById('data-warehouse-hub');
         if (el) { el.classList.add('show'); el.setAttribute('aria-hidden', 'false'); }
@@ -214,7 +187,6 @@
     global.exportErpInventoryCsv = exportErpInventoryCsv;
     global.exportCrmCustomersCsv = exportCrmCustomersCsv;
     global.exportAdminUsersCsv = exportAdminUsersCsv;
-    global.exportStorageAuditJson = exportStorageAuditJson;
     global.exportEmpireSummaryPdf = exportEmpireSummaryPdf;
 
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -24,6 +24,50 @@
     overflow-y: auto;
 }
 
+.admin-ai-modes {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 12px 0;
+}
+
+.admin-ai-mode {
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(13, 40, 64, 0.15);
+    background: #fff;
+    font-family: 'Cairo', sans-serif;
+    font-size: 0.85rem;
+    cursor: pointer;
+}
+
+.admin-ai-mode.active {
+    background: #155e94;
+    color: #fff;
+    border-color: #155e94;
+}
+
+.admin-ai-quick {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.admin-ai-chip {
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: 1px dashed rgba(0, 168, 255, 0.4);
+    background: rgba(0, 168, 255, 0.06);
+    font-size: 0.8rem;
+    cursor: pointer;
+    font-family: 'Cairo', sans-serif;
+}
+
+.scm-mode-store-only .scm-tabs button:not([data-scm-tab="products"]) {
+    display: none !important;
+}
+
 #admin-ai-assistant .scm-hint {
     margin-bottom: 8px;
 }

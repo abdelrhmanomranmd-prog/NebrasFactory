@@ -8,6 +8,8 @@ async function handlePull(req, sess) {
     const q = String(req.query.keys || '').trim();
     let keys = q ? q.split(',').map(function(k) { return k.trim(); }).filter(Boolean) : sec.SENSITIVE_STORE_KEYS.slice();
     keys = keys.filter(function(k) { return sec.isSensitiveKey(k); });
+    keys = sec.keysAllowedForSession(sess, keys);
+    if (!keys.length) return { code: 403, data: { ok: false, error: 'forbidden_keys' } };
     const { url, key } = sec.supabaseServiceConfig();
     if (!url || !key) return { code: 503, data: { ok: false, error: 'service_unavailable' } };
     const rows = [];
@@ -26,12 +28,14 @@ async function handlePush(body, sess) {
     const safe = rows.filter(function(r) {
         return r && r.store_key && sec.isSensitiveKey(r.store_key) && r.payload !== undefined;
     });
-    if (!safe.length) return { code: 400, data: { ok: false, error: 'no_sensitive_rows' } };
+    const allowed = sec.keysAllowedForSession(sess, safe.map(function(r) { return r.store_key; }));
+    const filtered = safe.filter(function(r) { return allowed.indexOf(r.store_key) >= 0; });
+    if (!filtered.length) return { code: 403, data: { ok: false, error: 'forbidden_keys' } };
     const { url, key } = sec.supabaseServiceConfig();
     if (!url || !key) return { code: 503, data: { ok: false, error: 'service_unavailable' } };
-    const ok = await sec.upsertStoreRows(url, key, safe);
+    const ok = await sec.upsertStoreRows(url, key, filtered);
     return ok
-        ? { code: 200, data: { ok: true, count: safe.length, by: sess.username } }
+        ? { code: 200, data: { ok: true, count: filtered.length, by: sess.username } }
         : { code: 500, data: { ok: false, error: 'upsert_failed' } };
 }
 

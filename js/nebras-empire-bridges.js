@@ -110,6 +110,11 @@
     function openNebrasEmpireBridges() {
         const admin = global.getNebrasCurrentAdmin && global.getNebrasCurrentAdmin();
         if (!admin) { alert('سجّلي الدخول أولاً.'); return; }
+        if (typeof global.canRunDashboardHandler === 'function' && !global.canRunDashboardHandler('openNebrasEmpireBridges', admin)) {
+            alert('جسور الإمبراطورية — صلاحية ERP أو التدقيق مطلوبة.');
+            return;
+        }
+        if (typeof global.closeNebrasWorkspace === 'function') global.closeNebrasWorkspace();
         if (typeof global.closeAllAdminSections === 'function') global.closeAllAdminSections();
         const el = document.getElementById('empire-bridges-hub');
         if (el) { el.classList.add('show'); el.setAttribute('aria-hidden', 'false'); }

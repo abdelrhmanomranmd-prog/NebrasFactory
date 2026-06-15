@@ -19,9 +19,9 @@ const SENSITIVE_STORE_KEYS = [
     'hr_employees', 'hr_vehicles', 'hr_leave', 'hr_vehicle_tracking', 'hr_attendance',
     'hr_documents', 'hr_payroll', 'hr_notifications', 'hr_notif_settings', 'hr_email_queue',
     'hr_shift_roster', 'hr_dept_activity', 'hr_companies', 'hr_gps_positions', 'hr_gps_settings',
-    'hr_gps_consents', 'hr_travel', 'hr_deductions',
+    'hr_gps_consents', 'hr_travel', 'hr_deductions', 'hr_advances',
     'legal_contracts', 'legal_cases', 'legal_compliance', 'legal_policies',
-    'legal_correspondence', 'legal_activity',
+    'legal_correspondence', 'legal_activity', 'legal_rentals', 'legal_notif_settings',
     'crm_customers', 'crm_opportunities', 'crm_activities', 'crm_audit',
     'nebras_cloud_snapshots', 'nebras_platform_integrity'
 ];
@@ -155,6 +155,53 @@ function jsonRes(res, code, obj) {
     res.end(JSON.stringify(obj));
 }
 
+function isHqSession(sess) {
+    if (!sess) return false;
+    if (sess.isPrimary) return true;
+    if (sess.role === 'superadmin') return true;
+    return String(sess.username || '').toUpperCase() === 'NEBRASFACTORY';
+}
+
+const HQ_ONLY_STORE_KEYS = [
+    'admin_users', 'admin_recovery_otp', 'analytics_governance', 'nebras_platform_integrity'
+];
+
+function keysAllowedForSession(sess, keys) {
+    if (!sess || !Array.isArray(keys)) return [];
+    if (isHqSession(sess)) return keys.slice();
+    const role = String(sess.role || '');
+    return keys.filter(function(k) {
+        if (HQ_ONLY_STORE_KEYS.indexOf(k) >= 0) return false;
+        if (role === 'sales_rep') {
+            return ['sales_quotes_inbox', 'quote_registry', 'customer_order_journeys'].indexOf(k) >= 0;
+        }
+        if (role === 'hr' || role === 'hr_manager' || role === 'hr_admin') {
+            return k.indexOf('hr_') === 0 || k === 'audit_logs';
+        }
+        if (role === 'legal' || role === 'legal_manager') {
+            return k.indexOf('legal_') === 0 || k === 'audit_logs';
+        }
+        if (role === 'aluminum_manager' || role === 'wpc_manager' || role === 'production_manager') {
+            return k.indexOf('erp_') === 0 || k.indexOf('sales_') === 0 || k.indexOf('quote_') === 0 || k === 'audit_logs';
+        }
+        if (role === 'accountant' || role === 'accounting_manager') {
+            return k.indexOf('erp_') === 0 || k.indexOf('sales_') === 0 || k === 'audit_logs' || k.indexOf('procurement') >= 0;
+        }
+        if (role === 'sales_manager' || role === 'branch_manager') {
+            return k.indexOf('sales_') === 0 || k.indexOf('quote_') === 0 || k.indexOf('erp_') === 0 ||
+                k.indexOf('customer_') === 0 || k === 'callback_leads' || k === 'audit_logs';
+        }
+        if (role === 'manager') return true;
+        if (role === 'inventory_manager') {
+            return k.indexOf('erp_') === 0 || k === 'audit_logs';
+        }
+        if (role === 'store_manager') {
+            return k === 'site_products' || k === 'audit_logs';
+        }
+        return false;
+    });
+}
+
 module.exports = {
     PUBLIC_STORE_KEYS,
     SENSITIVE_STORE_KEYS,
@@ -173,5 +220,8 @@ module.exports = {
     getBearerToken,
     jsonRes,
     isSensitiveKey: function(k) { return SENSITIVE_STORE_KEYS.indexOf(k) >= 0; },
-    isPublicKey: function(k) { return PUBLIC_STORE_KEYS.indexOf(k) >= 0; }
+    isPublicKey: function(k) { return PUBLIC_STORE_KEYS.indexOf(k) >= 0; },
+    isHqSession: isHqSession,
+    keysAllowedForSession: keysAllowedForSession,
+    HQ_ONLY_STORE_KEYS: HQ_ONLY_STORE_KEYS
 };

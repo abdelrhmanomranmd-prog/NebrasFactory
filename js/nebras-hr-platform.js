@@ -910,6 +910,7 @@
         else if (hrActiveTab === 'activity') { try { panelHtml = renderHrActivityPanel(); } catch (e) { panelHtml = '<div class="hr-panel is-active"><p class="erp-empty">سجل العمليات — ' + esc(e.message) + '</p></div>'; } }
         else if (hrActiveTab === 'travel' && typeof renderHrTravelPanel === 'function') { try { panelHtml = renderHrTravelPanel(); } catch (e) { panelHtml = '<div class="hr-panel is-active"><p class="erp-empty">تذاكر السفر — ' + esc(e.message) + '</p></div>'; } }
         else if (hrActiveTab === 'deductions' && typeof renderHrDeductionsPanel === 'function') { try { panelHtml = renderHrDeductionsPanel(); } catch (e) { panelHtml = '<div class="hr-panel is-active"><p class="erp-empty">الخصومات — ' + esc(e.message) + '</p></div>'; } }
+        else if (hrActiveTab === 'advances' && typeof renderHrAdvancesPanel === 'function') { try { panelHtml = renderHrAdvancesPanel(); } catch (e) { panelHtml = '<div class="hr-panel is-active"><p class="erp-empty">سلف بأقساط — ' + esc(e.message) + '</p></div>'; } }
         else if (hrActiveTab === 'fleet-hub' && typeof renderHrFleetHubPanel === 'function') { try { panelHtml = renderHrFleetHubPanel(); } catch (e) { panelHtml = '<div class="hr-panel is-active"><p class="erp-empty">مركز الأسطول — ' + esc(e.message) + '</p></div>'; } }
         else if (hrActiveTab === 'saudization' && typeof renderHrSaudizationPanel === 'function') { try { panelHtml = renderHrSaudizationPanel(); } catch (e) { panelHtml = '<div class="hr-panel is-active"><p class="erp-empty">السعودة — ' + esc(e.message) + '</p></div>'; } }
         else if (hrActiveTab === 'reports' && canViewHrExecutiveReports()) { try { panelHtml = renderHrReportsPanel(); } catch (e) { panelHtml = '<div class="hr-panel is-active"><p class="erp-empty">التقارير — ' + esc(e.message) + '</p></div>'; } }
@@ -2359,6 +2360,9 @@
         };
         if (existing >= 0) hrPayrollRuns[existing] = record;
         else hrPayrollRuns.unshift(record);
+        if (typeof applyHrAdvancePayrollDeductions === 'function') {
+            applyHrAdvancePayrollDeductions(month, items);
+        }
         saveHrData();
         hrAudit('HR مسير رواتب', 'مسودة ' + month);
         alert('تم حفظ مسودة مسير رواتب ' + month);
@@ -3341,6 +3345,9 @@
         if (!emp) return false;
         scope = scope || getHrAdminScope();
         if (scope.mode === 'restricted') return false;
+        if (scope.mode === 'company' && scope.companyId) {
+            return typeof resolveRecordCompanyId === 'function' && resolveRecordCompanyId(emp) === String(scope.companyId);
+        }
         if (scope.mode === 'full' || scope.mode === 'company') return true;
         if (isHrGovernorScope(scope)) {
             if (scope.branchId && String(emp.branchId) !== String(scope.branchId)) return false;
@@ -3359,6 +3366,9 @@
         if (!veh) return false;
         scope = scope || getHrAdminScope();
         if (scope.mode === 'restricted') return false;
+        if (scope.mode === 'company' && scope.companyId) {
+            return typeof resolveRecordCompanyId === 'function' && resolveRecordCompanyId(veh) === String(scope.companyId);
+        }
         if (scope.mode === 'full' || scope.mode === 'company') return true;
         if (scope.branchId && String(veh.branchId) !== String(scope.branchId)) return false;
         if (isHrGovernorScope(scope)) return true;
@@ -3382,7 +3392,7 @@
     function applyHrScopeFilter(list, kind) {
         const scope = getHrAdminScope();
         let result = list;
-        if (scope.mode !== 'full' && scope.mode !== 'company') {
+        if (scope.mode !== 'full' && !(scope.mode === 'company' && !scope.companyId)) {
             result = list.filter(function(item) {
                 if (kind === 'employee') return employeeMatchesHrScope(item, scope);
                 if (kind === 'vehicle') return vehicleMatchesHrScope(item, scope);
@@ -4108,6 +4118,18 @@
         let branchId = String(admin.hrScopeBranchId || '').trim();
         if (!branchId && admin.assignedBranchCity) branchId = branchCityToHrBranchId(admin.assignedBranchCity);
         const departmentKey = String(admin.hrScopeDepartmentKey || '').trim();
+        const companyId = String(admin.hrScopeCompanyId || '').trim();
+        if (companyId && strictHr && !departmentKey) {
+            return {
+                mode: 'company',
+                branchId: branchId,
+                departmentKey: departmentKey,
+                companyId: companyId,
+                label: 'موارد بشرية — ' + (typeof resolveHrCompanyLabel === 'function' ? resolveHrCompanyLabel(companyId) : companyId),
+                icon: 'fas fa-building-circle-check',
+                hrGovernor: false
+            };
+        }
         let label = '';
         let icon = 'fas fa-people-roof';
         if (departmentKey && typeof HR_FACTORY_DEPTS !== 'undefined' && HR_FACTORY_DEPTS[departmentKey]) {
@@ -4128,7 +4150,7 @@
         }
         const mode = departmentKey === 'hr' && strictHr
             ? (branchId ? 'branch' : 'company')
-            : (departmentKey ? 'department' : (branchId ? 'branch' : 'company'));
+            : (departmentKey ? 'department' : (branchId ? 'branch' : (strictHr ? 'restricted' : 'company')));
         return { mode: mode, branchId: branchId, departmentKey: departmentKey, label: label, icon: icon, hrGovernor: departmentKey === 'hr' };
     }
 

@@ -41,7 +41,7 @@
             { id: 'branches', icon: 'fas fa-map-marked-alt', label: 'شبكة الفروع', desc: 'المقر + فروع المملكة', handler: 'openBranchesManagement', perm: 'branches', color: '#16a085' },
             { id: 'analytics', icon: 'fas fa-chart-pie', label: 'ذكاء الأعمال BI', desc: 'تحليلات · تقارير تنفيذية', handler: 'openExecutiveReports', perm: 'audit', color: '#8e44ad' },
             { id: 'cloud', icon: 'fas fa-cloud', label: 'السحابة والمزامنة', desc: 'Supabase — كل مخازن الإمبراطورية', handler: 'openCloudGovernance', perm: 'users', color: '#1a6fa8' },
-            { id: 'data-warehouse', icon: 'fas fa-database', label: 'مستودع البيانات', desc: 'Excel · PDF · JSON — كل التخزين الديناميكي', handler: 'openNebrasDataWarehouse', perm: 'audit', color: '#155e94' },
+            { id: 'data-warehouse', icon: 'fas fa-database', label: 'مستودع البيانات', desc: 'Excel · PDF · Word — كل التخزين الديناميكي', handler: 'openNebrasDataWarehouse', perm: 'audit', color: '#155e94' },
             { id: 'empire-bridges', icon: 'fas fa-link', label: 'جسور الإمبراطورية', desc: 'Odoo-like — متجر · CRM · مسار نبراس · HR', handler: 'openNebrasEmpireBridges', perm: 'erp', color: '#16a085' },
             { id: 'audit', icon: 'fas fa-clipboard-check', label: 'سجل العمليات', desc: 'تدقيق كل إجراء إداري', handler: 'openAuditLog', perm: 'audit', color: '#c0392b' }
         ];

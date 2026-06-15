@@ -11,6 +11,9 @@
     const LEGAL_POLICIES_KEY = 'nebrasLegalPolicies';
     const LEGAL_CORR_KEY = 'nebrasLegalCorrespondence';
     const LEGAL_ACTIVITY_KEY = 'nebrasLegalActivity';
+    const LEGAL_RENTALS_KEY = 'nebrasLegalRentals';
+    const LEGAL_NOTIF_SETTINGS_KEY = 'nebrasLegalNotifSettings';
+    const LEGAL_ATTACH_MAX = 450000;
 
     let legalContracts = [];
     let legalCases = [];
@@ -18,6 +21,9 @@
     let legalPolicies = [];
     let legalCorrespondence = [];
     let legalActivity = [];
+    let legalRentals = [];
+    let legalNotifSettings = { remindDays: [30, 60], lastScan: '' };
+    let pendingLegalAttachment = null;
     let legalActiveTab = 'dashboard';
     let legalCompanyFilter = '';
     let legalEditor = { kind: '', id: null };
@@ -87,6 +93,11 @@
         partnership: 'إدارة الشركات الشريكة',
         code_of_conduct: 'سلوكيات الموظفين',
         other: 'أخرى'
+    };
+
+    const LEGAL_LEASE_ROLES = {
+        landlord: 'الشركة مؤجّرة (تؤجّر للغير)',
+        tenant: 'الشركة مستأجرة (مكان للعمل)'
     };
 
     function esc(s) {
@@ -159,11 +170,15 @@
         if (typeof isMainGovernanceAdmin === 'function' && isMainGovernanceAdmin(admin)) return { mode: 'full' };
         if (admin.role === 'manager' && typeof canManage === 'function' && canManage('legal', admin)) return { mode: 'full' };
         if (admin.legalScopeCompanyId) return { mode: 'company', companyId: String(admin.legalScopeCompanyId) };
+        if (isStrictLegalUser(admin)) {
+            return { mode: 'restricted', companyId: '', label: 'نطاق Legal غير معيّن — تواصلي مع الإدارة' };
+        }
         return { mode: 'full' };
     }
 
     function applyLegalCompanyFilter(list) {
         const scope = getLegalAdminScope();
+        if (scope.mode === 'restricted') return [];
         if (scope.mode === 'company' && scope.companyId) {
             return list.filter(function(r) { return resolveLegalCompanyId(r) === scope.companyId; });
         }
@@ -185,9 +200,12 @@
             legalPolicies = JSON.parse(localStorage.getItem(LEGAL_POLICIES_KEY) || '[]');
             legalCorrespondence = JSON.parse(localStorage.getItem(LEGAL_CORR_KEY) || '[]');
             legalActivity = JSON.parse(localStorage.getItem(LEGAL_ACTIVITY_KEY) || '[]');
+            legalRentals = JSON.parse(localStorage.getItem(LEGAL_RENTALS_KEY) || '[]');
+            legalNotifSettings = JSON.parse(localStorage.getItem(LEGAL_NOTIF_SETTINGS_KEY) || '{}');
         } catch (e) {
             legalContracts = []; legalCases = []; legalCompliance = [];
             legalPolicies = []; legalCorrespondence = []; legalActivity = [];
+            legalRentals = []; legalNotifSettings = { remindDays: [30, 60], lastScan: '' };
         }
         if (!Array.isArray(legalContracts)) legalContracts = [];
         if (!Array.isArray(legalCases)) legalCases = [];
@@ -195,6 +213,10 @@
         if (!Array.isArray(legalPolicies)) legalPolicies = [];
         if (!Array.isArray(legalCorrespondence)) legalCorrespondence = [];
         if (!Array.isArray(legalActivity)) legalActivity = [];
+        if (!Array.isArray(legalRentals)) legalRentals = [];
+        if (!legalNotifSettings || typeof legalNotifSettings !== 'object') {
+            legalNotifSettings = { remindDays: [30, 60], lastScan: '' };
+        }
         if (typeof loadHrCompaniesData === 'function') loadHrCompaniesData();
         legalDataReady = true;
     }
@@ -207,6 +229,8 @@
             localStorage.setItem(LEGAL_POLICIES_KEY, JSON.stringify(legalPolicies));
             localStorage.setItem(LEGAL_CORR_KEY, JSON.stringify(legalCorrespondence));
             localStorage.setItem(LEGAL_ACTIVITY_KEY, JSON.stringify(legalActivity));
+            localStorage.setItem(LEGAL_RENTALS_KEY, JSON.stringify(legalRentals));
+            localStorage.setItem(LEGAL_NOTIF_SETTINGS_KEY, JSON.stringify(legalNotifSettings));
         } catch (e) { console.warn('Legal save', e); }
         if (typeof saveSystemData === 'function') saveSystemData();
         else if (typeof schedulePushToNebrasCloud === 'function') schedulePushToNebrasCloud();
@@ -218,6 +242,85 @@
     function setLegalPoliciesFromCloud(v) { legalPolicies = Array.isArray(v) ? v : []; saveLegalData(); }
     function setLegalCorrespondenceFromCloud(v) { legalCorrespondence = Array.isArray(v) ? v : []; saveLegalData(); }
     function setLegalActivityFromCloud(v) { legalActivity = Array.isArray(v) ? v : []; saveLegalData(); }
+    function setLegalRentalsFromCloud(v) { legalRentals = Array.isArray(v) ? v : []; saveLegalData(); }
+    function setLegalNotifSettingsFromCloud(v) {
+        legalNotifSettings = v && typeof v === 'object' ? v : { remindDays: [30, 60], lastScan: '' };
+        try { localStorage.setItem(LEGAL_NOTIF_SETTINGS_KEY, JSON.stringify(legalNotifSettings)); } catch (e) { /* ignore */ }
+    }
+    function getLegalNotifSettings() { loadLegalData(); return legalNotifSettings; }
+
+    function legalReadAttachment(input) {
+        if (!input || !input.files || !input.files[0]) return;
+        const file = input.files[0];
+        if (file.size > LEGAL_ATTACH_MAX) {
+            alert('الملف كبير — الحد الأقصى ~450 كيلوبايت. استخدمي PDF مضغوط أو صورة أصغر.');
+            input.value = '';
+            return;
+        }
+        const hint = document.getElementById('legal-attach-hint');
+        if (hint) hint.textContent = 'جاري المعالجة…';
+        const reader = new FileReader();
+        reader.onload = function(ev) {
+            pendingLegalAttachment = { name: file.name, dataUrl: ev.target.result, mime: file.type, cloudUrl: '' };
+            if (hint) hint.textContent = '✓ محلي: ' + file.name;
+            if (typeof uploadNebrasMediaFile === 'function') {
+                if (hint) hint.textContent = 'جاري الرفع للسحابة…';
+                uploadNebrasMediaFile(file).then(function(url) {
+                    if (url && pendingLegalAttachment && pendingLegalAttachment.name === file.name) {
+                        pendingLegalAttachment.cloudUrl = url;
+                        if (hint) hint.textContent = '✓ سحابة: ' + file.name;
+                    }
+                }).catch(function() {
+                    if (hint) hint.textContent = '✓ محلي (فشل السحابة): ' + file.name;
+                });
+            }
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function applyLegalAttachmentFields(record) {
+        if (!pendingLegalAttachment) return record;
+        record.attachmentName = pendingLegalAttachment.name;
+        record.attachmentDataUrl = pendingLegalAttachment.dataUrl;
+        record.attachmentMime = pendingLegalAttachment.mime;
+        record.attachmentCloudUrl = pendingLegalAttachment.cloudUrl || record.attachmentCloudUrl || '';
+        pendingLegalAttachment = null;
+        return record;
+    }
+
+    function viewLegalAttachment(recordId, kind) {
+        let rec = null;
+        if (kind === 'rental') rec = legalRentals.find(function(x) { return x.id === recordId; });
+        else if (kind === 'case') rec = legalCases.find(function(x) { return x.id === recordId; });
+        else if (kind === 'contract') rec = legalContracts.find(function(x) { return x.id === recordId; });
+        else if (kind === 'compliance') rec = legalCompliance.find(function(x) { return x.id === recordId; });
+        const src = rec && (rec.attachmentCloudUrl || rec.attachmentDataUrl);
+        if (!rec || !src) { alert('لا مرفق لهذا السجل.'); return; }
+        if (rec.attachmentCloudUrl && rec.attachmentCloudUrl.indexOf('http') === 0) {
+            window.open(rec.attachmentCloudUrl, '_blank');
+            return;
+        }
+        const w = window.open('', '_blank');
+        if (!w) return;
+        if (String(rec.attachmentMime || '').indexOf('pdf') >= 0 || String(src).indexOf('application/pdf') >= 0) {
+            w.document.write('<iframe src="' + src + '" style="width:100%;height:100%;border:0"></iframe>');
+        } else {
+            w.document.write('<img src="' + src + '" style="max-width:100%;height:auto">');
+        }
+        w.document.close();
+    }
+
+    function legalAttachmentCell(rec, kind) {
+        if (!rec || (!rec.attachmentName && !rec.attachmentDataUrl && !rec.attachmentCloudUrl)) return '—';
+        return '<button type="button" class="erp-tag erp-tag--action" onclick="viewLegalAttachment(\'' + esc(rec.id) + '\',\'' + kind + '\')"><i class="fas fa-paperclip"></i> ' + esc(rec.attachmentName || 'مرفق') + '</button>';
+    }
+
+    function resolveRentalStatus(endDate) {
+        if (!endDate) return 'active';
+        if (isExpiredLegal(endDate)) return 'expired';
+        if (isExpiringLegal(endDate, 60)) return 'expiring';
+        return 'active';
+    }
 
     function formatLegalDate(d) {
         if (!d) return '—';
@@ -265,7 +368,70 @@
         legalCases.filter(function(c) { return c.status === 'open' || c.status === 'court'; }).forEach(function(c) {
             alerts.push({ level: 'info', cat: 'قضية', ref: c.title, detail: (LEGAL_CASE_STATUS[c.status] || {}).label || c.status, id: c.id, kind: 'case' });
         });
+        legalRentals.forEach(function(r) {
+            if (!r.endDate) return;
+            const role = LEGAL_LEASE_ROLES[r.leaseRole] || r.leaseRole || 'إيجار';
+            const days = daysUntil(r.endDate);
+            const ref = (r.title || r.propertyAddress || 'عقد إيجار') + ' (' + role + ')';
+            if (days != null && days < 0) alerts.push({ level: 'danger', cat: 'إيجار', ref: ref, detail: 'منتهي', id: r.id, kind: 'rental' });
+            else if (days != null && days <= 60) alerts.push({ level: 'warn', cat: 'إيجار', ref: ref, detail: 'ينتهي خلال ' + days + ' يوم', id: r.id, kind: 'rental' });
+        });
         return alerts;
+    }
+
+    function processLegalExpiryReminders() {
+        const today = new Date().toISOString().slice(0, 10);
+        if (legalNotifSettings.lastScan === today) return;
+        const thresholds = legalNotifSettings.remindDays || [30, 60];
+        legalRentals.forEach(function(r) {
+            if (!r.endDate) return;
+            const days = daysUntil(r.endDate);
+            if (days == null) return;
+            thresholds.forEach(function(th) {
+                if (days === th || (days < th && days >= th - 2)) {
+                    const exists = legalActivity.some(function(a) {
+                        return a.kind === 'rental-reminder' && a.refId === r.id && a.threshold === th && a.recordedAt && a.recordedAt.slice(0, 10) === today;
+                    });
+                    if (!exists) {
+                        legalActivity.unshift({
+                            id: 'la-rem-' + Date.now() + '-' + r.id,
+                            action: 'تنبيه إيجار',
+                            detail: (r.title || '') + ' — ينتهي ' + r.endDate + ' (' + days + ' يوم)',
+                            username: 'system',
+                            kind: 'rental-reminder',
+                            refId: r.id,
+                            threshold: th,
+                            recordedAt: new Date().toISOString()
+                        });
+                    }
+                }
+            });
+        });
+        legalNotifSettings.lastScan = today;
+        try { localStorage.setItem(LEGAL_NOTIF_SETTINGS_KEY, JSON.stringify(legalNotifSettings)); } catch (e) { /* ignore */ }
+    }
+
+    function sendLegalRentalReminder(rentalId) {
+        if (!requireLegalAccess()) return;
+        const r = legalRentals.find(function(x) { return x.id === rentalId; });
+        if (!r) return;
+        const role = LEGAL_LEASE_ROLES[r.leaseRole] || r.leaseRole || '';
+        const subject = 'تنبيه Legal — عقد إيجار ' + (r.title || '');
+        const body =
+            'مصنع نبراس — الشؤون القانونية\n\n' +
+            'العقد: ' + (r.title || '') + '\n' +
+            'الدور: ' + role + '\n' +
+            'العقار: ' + (r.propertyAddress || '') + '\n' +
+            'الطرف: ' + (r.partyName || '') + '\n' +
+            'الإيجار الشهري: ' + (r.monthlyRent || '—') + ' ر.س\n' +
+            'تاريخ الانتهاء: ' + (r.endDate || '') + '\n\n' +
+            'يرجى المتابعة مع قسم الشؤون القانونية.';
+        const sendFn = typeof sendNebrasHrNotificationEmail === 'function' ? sendNebrasHrNotificationEmail : null;
+        if (!sendFn) { alert(body); return; }
+        sendFn({ subject: subject, body: body, meta: { rentalId: r.id, type: 'legal-rental-expiry' } }).then(function() {
+            legalAudit('Legal تنبيه إيجار', r.title || r.id);
+            alert('تم إرسال التنبيه.');
+        });
     }
 
     function getLegalTabDefinitions() {
@@ -273,6 +439,7 @@
             { id: 'dashboard', icon: 'fas fa-gauge-high', label: 'لوحة التحكم', group: 'الرئيسية' },
             { id: 'companies', icon: 'fas fa-building-circle-check', label: 'الشركات (قانوني)', group: 'الكيانات' },
             { id: 'contracts', icon: 'fas fa-file-signature', label: 'العقود', group: 'المعاملات' },
+            { id: 'rentals', icon: 'fas fa-building', label: 'عقود الإيجار', group: 'المعاملات' },
             { id: 'partnerships', icon: 'fas fa-handshake', label: 'اتفاقيات الشراكة', group: 'المعاملات' },
             { id: 'cases', icon: 'fas fa-gavel', label: 'قضايا ونزاعات', group: 'التقاضي' },
             { id: 'compliance', icon: 'fas fa-certificate', label: 'امتثال وتراخيص', group: 'الامتثال' },
@@ -328,11 +495,13 @@
         const openCases = cases.filter(function(c) { return c.status === 'open' || c.status === 'court' || c.status === 'mediation'; }).length;
         const expiring = collectLegalAlerts().filter(function(a) { return a.level === 'danger' || a.level === 'warn'; }).length;
         const partnershipAgreements = contracts.filter(function(c) { return c.type === 'partnership'; }).length;
+        const rentalCount = applyLegalCompanyFilter(legalRentals).length;
         const pdplItems = compliance.filter(function(c) { return c.type === 'pdpl'; }).length +
             policies.filter(function(p) { return p.type === 'privacy' || p.type === 'gps_tracking'; }).length;
 
         const quick = [
             { tab: 'contracts', icon: 'fas fa-file-signature', label: 'عقد جديد' },
+            { tab: 'rentals', icon: 'fas fa-building', label: 'عقد إيجار' },
             { tab: 'cases', icon: 'fas fa-gavel', label: 'قضية' },
             { tab: 'compliance', icon: 'fas fa-certificate', label: 'ترخيص' },
             { tab: 'policies', icon: 'fas fa-book', label: 'سياسة' },
@@ -353,7 +522,7 @@
                 '<div class="legal-command-hero-inner">' +
                     '<span class="hr-command-pill legal-pill"><i class="fas fa-scale-balanced"></i> نبراس Legal</span>' +
                     '<h2 class="hr-command-title">منصة الشؤون القانونية والامتثال</h2>' +
-                    '<p class="hr-command-sub">نبراس + الشركات الشريكة — عقود · قضايا · تراخيص · سياسات · PDPL · اتفاقيات شراكة</p>' +
+                    '<p class="hr-command-sub">نبراس + الشركات الشريكة — عقود · إيجار · قضايا · تراخيص · سياسات · PDPL</p>' +
                 '</div></div>' +
             '<div class="hr-command-kpi-ring">' +
                 '<div class="hr-command-kpi"><strong>' + contracts.length + '</strong><span>عقود</span></div>' +
@@ -363,6 +532,7 @@
                 '<div class="hr-command-kpi"><strong>' + policies.length + '</strong><span>سياسات</span></div>' +
                 '<div class="hr-command-kpi' + (expiring ? ' hr-command-kpi--danger' : '') + '"><strong>' + expiring + '</strong><span>تنبيهات</span></div>' +
                 '<div class="hr-command-kpi"><strong>' + partnershipAgreements + '</strong><span>اتفاقيات شراكة</span></div>' +
+                '<div class="hr-command-kpi"><strong>' + rentalCount + '</strong><span>عقود إيجار</span></div>' +
                 '<div class="hr-command-kpi"><strong>' + pdplItems + '</strong><span>PDPL / خصوصية</span></div>' +
             '</div>' +
             '<div class="hr-command-quick-row">' + quick + '</div>' +
@@ -411,11 +581,75 @@
                 '<td>' + esc(resolveLegalCompanyLabel(c.companyId)) + '<br><small>' + esc(c.partyName || '') + '</small></td>' +
                 '<td>' + formatLegalDate(c.startDate) + ' → ' + formatLegalDate(c.endDate) + '</td>' +
                 '<td><span class="erp-tag ' + (st.tag || '') + '">' + st.label + '</span></td>' +
+                '<td>' + legalAttachmentCell(c, 'contract') + '</td>' +
                 '<td><button type="button" class="erp-tag erp-tag--action" onclick="openLegalEditor(\'contract\',\'' + esc(c.id) + '\')"><i class="fas fa-pen"></i></button> ' +
                 '<button type="button" class="erp-tag" onclick="deleteLegalRecord(\'contract\',\'' + esc(c.id) + '\')"><i class="fas fa-trash"></i></button></td></tr>';
         }).join('');
         return renderLegalListPanel('contract', '<i class="fas fa-file-signature"></i> سجل العقود', 'عقد جديد',
-            '<th>العقد</th><th>الشركة / الطرف</th><th>المدة</th><th>الحالة</th><th>إجراء</th>', rows, editor);
+            '<th>العقد</th><th>الشركة / الطرف</th><th>المدة</th><th>الحالة</th><th>مرفق</th><th>إجراء</th>', rows, editor);
+    }
+
+    function renderLegalRentalsPanel() {
+        const list = applyLegalCompanyFilter(legalRentals);
+        const editor = legalEditor.kind === 'rental' ? renderLegalRentalEditor(legalEditor.id) : '';
+        const rows = list.map(function(r) {
+            const st = LEGAL_CONTRACT_STATUS[resolveRentalStatus(r.endDate)] || LEGAL_CONTRACT_STATUS.active;
+            const role = LEGAL_LEASE_ROLES[r.leaseRole] || r.leaseRole || '—';
+            const days = daysUntil(r.endDate);
+            const expiryBadge = days != null && days < 0 ? '<span class="erp-tag erp-tag--danger">منتهي</span>' :
+                (days != null && days <= 60 ? '<span class="erp-tag erp-tag--accent">' + days + ' يوم</span>' : '');
+            return '<tr><td><strong>' + esc(r.title || 'عقد إيجار') + '</strong><br><small>' + esc(role) + '</small></td>' +
+                '<td>' + esc(resolveLegalCompanyLabel(r.companyId)) + '<br><small>' + esc(r.partyName || '') + '</small></td>' +
+                '<td>' + esc(r.propertyAddress || '—') + '</td>' +
+                '<td>' + (r.monthlyRent ? hrNumLegal(r.monthlyRent).toLocaleString('ar-SA') + ' ر.س' : '—') + '</td>' +
+                '<td>' + formatLegalDate(r.startDate) + ' → ' + formatLegalDate(r.endDate) + ' ' + expiryBadge + '</td>' +
+                '<td><span class="erp-tag ' + (st.tag || '') + '">' + st.label + '</span></td>' +
+                '<td>' + legalAttachmentCell(r, 'rental') +
+                (days != null && days <= 60 && days >= 0 ? ' <button type="button" class="erp-tag" onclick="sendLegalRentalReminder(\'' + esc(r.id) + '\')"><i class="fas fa-bell"></i></button>' : '') +
+                '</td>' +
+                '<td><button type="button" class="erp-tag erp-tag--action" onclick="openLegalEditor(\'rental\',\'' + esc(r.id) + '\')"><i class="fas fa-pen"></i></button> ' +
+                '<button type="button" class="erp-tag" onclick="deleteLegalRecord(\'rental\',\'' + esc(r.id) + '\')"><i class="fas fa-trash"></i></button></td></tr>';
+        }).join('');
+        return '<div class="hr-panel is-active">' +
+            '<p class="hr-platform-note"><i class="fas fa-building"></i> <strong>عقود الإيجار</strong> — مؤجّر أو مستأجر · رفع صورة/ملف العقد · تنبيه قبل الانتهاء بـ 60 يوماً.</p>' +
+            '<div class="hr-toolbar"><button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="openLegalEditor(\'rental\',null)"><i class="fas fa-plus"></i> عقد إيجار جديد</button></div>' +
+            editor +
+            '<div class="hr-leave-table-wrap"><table class="hr-leave-table"><thead><tr>' +
+            '<th>العقد</th><th>الشركة / الطرف</th><th>العقار</th><th>الإيجار الشهري</th><th>المدة</th><th>الحالة</th><th>مرفق · تنبيه</th><th>إجراء</th>' +
+            '</tr></thead><tbody>' +
+            (rows || '<tr><td colspan="8" class="erp-empty">لا عقود إيجار — أضيفي عقداً (مؤجّر أو مستأجر)</td></tr>') +
+            '</tbody></table></div></div>';
+    }
+
+    function hrNumLegal(v) {
+        const n = parseFloat(String(v == null ? '' : v).replace(/,/g, ''));
+        return isNaN(n) ? 0 : n;
+    }
+
+    function renderLegalRentalEditor(id) {
+        const r = id ? legalRentals.find(function(x) { return x.id === id; }) : {};
+        const roleOpts = Object.keys(LEGAL_LEASE_ROLES).map(function(k) {
+            return '<option value="' + k + '"' + ((r.leaseRole || 'tenant') === k ? ' selected' : '') + '>' + LEGAL_LEASE_ROLES[k] + '</option>';
+        }).join('');
+        return '<div class="hr-editor-overlay" id="legal-editor">' +
+            '<h4><i class="fas fa-building"></i> ' + (id ? 'تعديل عقد إيجار' : 'عقد إيجار جديد') + '</h4>' +
+            '<div class="erp-form-grid">' +
+                '<label class="nebras-field"><span>الشركة التابعة *</span><select id="lrent-company">' + companySelectLegal(r.companyId || legalCompanyFilter) + '</select></label>' +
+                '<label class="nebras-field"><span>دور الشركة *</span><select id="lrent-role">' + roleOpts + '</select></label>' +
+                '<label class="nebras-field"><span>عنوان العقد *</span><input id="lrent-title" value="' + esc(r.title || '') + '" placeholder="إيجار مستودع الرياض"></label>' +
+                '<label class="nebras-field"><span>الطرف الآخر</span><input id="lrent-party" value="' + esc(r.partyName || '') + '" placeholder="اسم المستأجر أو المؤجّر"></label>' +
+                '<label class="nebras-field nebras-field--wide"><span>عنوان العقار *</span><input id="lrent-address" value="' + esc(r.propertyAddress || '') + '"></label>' +
+                '<label class="nebras-field"><span>الإيجار الشهري (ر.س)</span><input type="number" id="lrent-rent" min="0" step="0.01" value="' + esc(r.monthlyRent || '') + '"></label>' +
+                '<label class="nebras-field"><span>رقم العقد / المرجع</span><input id="lrent-ref" value="' + esc(r.referenceNo || '') + '"></label>' +
+                '<label class="nebras-field"><span>تاريخ البداية</span><input type="date" id="lrent-start" value="' + esc(r.startDate || '') + '"></label>' +
+                '<label class="nebras-field"><span>تاريخ الانتهاء *</span><input type="date" id="lrent-end" value="' + esc(r.endDate || '') + '"></label>' +
+                '<label class="nebras-field nebras-field--wide"><span>ملاحظات</span><textarea id="lrent-notes" rows="2">' + esc(r.notes || '') + '</textarea></label>' +
+                '<label class="nebras-field nebras-field--wide"><span>مرفق العقد (صورة / PDF)</span><input type="file" accept="image/*,application/pdf" onchange="legalReadAttachment(this)"><small id="legal-attach-hint" class="hr-attach-hint">' + (r.attachmentName ? esc(r.attachmentName) : 'اختياري — صورة العقد') + '</small></label>' +
+            '</div>' +
+            '<div class="erp-form-actions">' +
+                '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="saveLegalRental(\'' + esc(id || '') + '\')"><i class="fas fa-save"></i> حفظ</button>' +
+                '<button type="button" class="nebras-users-btn" onclick="cancelLegalEditor()"><i class="fas fa-xmark"></i> إلغاء</button>' +
+            '</div></div>';
     }
 
     function renderLegalPartnershipsPanel() {
@@ -460,6 +694,7 @@
                 '<label class="nebras-field"><span>الحالة</span><select id="lc-status">' + statusOpts + '</select></label>' +
                 '<label class="nebras-field"><span>المحامي / المسؤول</span><input id="lc-lawyer" value="' + esc(c.lawyerName || '') + '"></label>' +
                 '<label class="nebras-field nebras-field--wide"><span>ملاحظات / شروط</span><textarea id="lc-notes" rows="3">' + esc(c.notes || '') + '</textarea></label>' +
+                '<label class="nebras-field nebras-field--wide"><span>مرفق العقد (صورة / PDF)</span><input type="file" accept="image/*,application/pdf" onchange="legalReadAttachment(this)"><small id="legal-attach-hint" class="hr-attach-hint">' + (c.attachmentName ? esc(c.attachmentName) : 'اختياري') + '</small></label>' +
             '</div>' +
             '<div class="erp-form-actions">' +
                 '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="saveLegalContract(\'' + esc(id || '') + '\')"><i class="fas fa-save"></i> حفظ</button>' +
@@ -477,11 +712,12 @@
                 '<td>' + esc(c.opposingParty || '—') + '</td>' +
                 '<td><span class="erp-tag ' + (st.tag || '') + '">' + st.label + '</span></td>' +
                 '<td>' + esc(c.courtName || '—') + '</td>' +
+                '<td>' + legalAttachmentCell(c, 'case') + '</td>' +
                 '<td><button type="button" class="erp-tag erp-tag--action" onclick="openLegalEditor(\'case\',\'' + esc(c.id) + '\')"><i class="fas fa-pen"></i></button> ' +
                 '<button type="button" class="erp-tag" onclick="deleteLegalRecord(\'case\',\'' + esc(c.id) + '\')"><i class="fas fa-trash"></i></button></td></tr>';
         }).join('');
         return renderLegalListPanel('case', '<i class="fas fa-gavel"></i> قضايا ونزاعات', 'قضية جديدة',
-            '<th>القضية</th><th>الشركة</th><th>الطرف المقابل</th><th>الحالة</th><th>المحكمة</th><th>إجراء</th>', rows, editor);
+            '<th>القضية</th><th>الشركة</th><th>الطرف المقابل</th><th>الحالة</th><th>المحكمة</th><th>مرفق</th><th>إجراء</th>', rows, editor);
     }
 
     function renderLegalCaseEditor(id) {
@@ -505,6 +741,7 @@
                 '<label class="nebras-field"><span>المحامي</span><input id="lcase-lawyer" value="' + esc(c.lawyerName || '') + '"></label>' +
                 '<label class="nebras-field"><span>تاريخ الفتح</span><input type="date" id="lcase-opened" value="' + esc(c.openedDate || '') + '"></label>' +
                 '<label class="nebras-field nebras-field--wide"><span>ملخص / ملاحظات</span><textarea id="lcase-notes" rows="3">' + esc(c.notes || '') + '</textarea></label>' +
+                '<label class="nebras-field nebras-field--wide"><span>مرفقات (صورة / PDF)</span><input type="file" accept="image/*,application/pdf" onchange="legalReadAttachment(this)"><small id="legal-attach-hint" class="hr-attach-hint">' + (c.attachmentName ? esc(c.attachmentName) : 'اختياري — أوراق القضية') + '</small></label>' +
             '</div>' +
             '<div class="erp-form-actions">' +
                 '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="saveLegalCase(\'' + esc(id || '') + '\')"><i class="fas fa-save"></i> حفظ</button>' +
@@ -523,11 +760,12 @@
                 '<td>' + esc(resolveLegalCompanyLabel(c.companyId)) + '</td>' +
                 '<td>' + esc(c.authority || '—') + '</td>' +
                 '<td>' + formatLegalDate(c.expiryDate) + ' ' + badge + '</td>' +
+                '<td>' + legalAttachmentCell(c, 'compliance') + '</td>' +
                 '<td><button type="button" class="erp-tag erp-tag--action" onclick="openLegalEditor(\'compliance\',\'' + esc(c.id) + '\')"><i class="fas fa-pen"></i></button> ' +
                 '<button type="button" class="erp-tag" onclick="deleteLegalRecord(\'compliance\',\'' + esc(c.id) + '\')"><i class="fas fa-trash"></i></button></td></tr>';
         }).join('');
         return renderLegalListPanel('compliance', '<i class="fas fa-certificate"></i> امتثال وتراخيص', 'بند امتثال',
-            '<th>البند</th><th>الشركة</th><th>الجهة</th><th>الانتهاء</th><th>إجراء</th>', rows, editor);
+            '<th>البند</th><th>الشركة</th><th>الجهة</th><th>الانتهاء</th><th>مرفق</th><th>إجراء</th>', rows, editor);
     }
 
     function renderLegalComplianceEditor(id) {
@@ -546,6 +784,7 @@
                 '<label class="nebras-field"><span>تاريخ الإصدار</span><input type="date" id="lcomp-issued" value="' + esc(c.issuedDate || '') + '"></label>' +
                 '<label class="nebras-field"><span>تاريخ الانتهاء</span><input type="date" id="lcomp-expiry" value="' + esc(c.expiryDate || '') + '"></label>' +
                 '<label class="nebras-field nebras-field--wide"><span>ملاحظات</span><textarea id="lcomp-notes" rows="2">' + esc(c.notes || '') + '</textarea></label>' +
+                '<label class="nebras-field nebras-field--wide"><span>مرفق الترخيص (صورة / PDF)</span><input type="file" accept="image/*,application/pdf" onchange="legalReadAttachment(this)"><small id="legal-attach-hint" class="hr-attach-hint">' + (c.attachmentName ? esc(c.attachmentName) : 'اختياري') + '</small></label>' +
             '</div>' +
             '<div class="erp-form-actions">' +
                 '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="saveLegalCompliance(\'' + esc(id || '') + '\')"><i class="fas fa-save"></i> حفظ</button>' +
@@ -698,8 +937,18 @@
         };
         if (id) {
             const idx = legalContracts.findIndex(function(x) { return x.id === id; });
-            if (idx >= 0) { record.createdAt = legalContracts[idx].createdAt; legalContracts[idx] = record; }
-        } else { record.createdAt = record.updatedAt; legalContracts.unshift(record); }
+            if (idx >= 0) {
+                record.createdAt = legalContracts[idx].createdAt;
+                record.attachmentName = legalContracts[idx].attachmentName;
+                record.attachmentDataUrl = legalContracts[idx].attachmentDataUrl;
+                record.attachmentMime = legalContracts[idx].attachmentMime;
+                record.attachmentCloudUrl = legalContracts[idx].attachmentCloudUrl;
+                legalContracts[idx] = applyLegalAttachmentFields(record);
+            }
+        } else {
+            record.createdAt = record.updatedAt;
+            legalContracts.unshift(applyLegalAttachmentFields(record));
+        }
         saveLegalData();
         legalEditor = { kind: '', id: null };
         legalAudit('Legal عقد', (id ? 'تعديل ' : 'إضافة ') + title);
@@ -726,8 +975,18 @@
         };
         if (id) {
             const idx = legalCases.findIndex(function(x) { return x.id === id; });
-            if (idx >= 0) { record.createdAt = legalCases[idx].createdAt; legalCases[idx] = record; }
-        } else { record.createdAt = record.updatedAt; legalCases.unshift(record); }
+            if (idx >= 0) {
+                record.createdAt = legalCases[idx].createdAt;
+                record.attachmentName = legalCases[idx].attachmentName;
+                record.attachmentDataUrl = legalCases[idx].attachmentDataUrl;
+                record.attachmentMime = legalCases[idx].attachmentMime;
+                record.attachmentCloudUrl = legalCases[idx].attachmentCloudUrl;
+                legalCases[idx] = applyLegalAttachmentFields(record);
+            }
+        } else {
+            record.createdAt = record.updatedAt;
+            legalCases.unshift(applyLegalAttachmentFields(record));
+        }
         saveLegalData();
         legalEditor = { kind: '', id: null };
         legalAudit('Legal قضية', title);
@@ -752,8 +1011,18 @@
         };
         if (id) {
             const idx = legalCompliance.findIndex(function(x) { return x.id === id; });
-            if (idx >= 0) { record.createdAt = legalCompliance[idx].createdAt; legalCompliance[idx] = record; }
-        } else { record.createdAt = record.updatedAt; legalCompliance.unshift(record); }
+            if (idx >= 0) {
+                record.createdAt = legalCompliance[idx].createdAt;
+                record.attachmentName = legalCompliance[idx].attachmentName;
+                record.attachmentDataUrl = legalCompliance[idx].attachmentDataUrl;
+                record.attachmentMime = legalCompliance[idx].attachmentMime;
+                record.attachmentCloudUrl = legalCompliance[idx].attachmentCloudUrl;
+                legalCompliance[idx] = applyLegalAttachmentFields(record);
+            }
+        } else {
+            record.createdAt = record.updatedAt;
+            legalCompliance.unshift(applyLegalAttachmentFields(record));
+        }
         saveLegalData();
         legalEditor = { kind: '', id: null };
         legalAudit('Legal امتثال', title);
@@ -785,6 +1054,49 @@
         renderLegalPlatformPanelSafe();
     }
 
+    function saveLegalRental(id) {
+        if (!requireLegalAccess()) return;
+        const title = legalField('lrent-title');
+        const address = legalField('lrent-address');
+        const endDate = legalField('lrent-end');
+        if (!title) { alert('عنوان العقد مطلوب.'); return; }
+        if (!address) { alert('عنوان العقار مطلوب.'); return; }
+        if (!endDate) { alert('تاريخ انتهاء العقد مطلوب للتنبيهات.'); return; }
+        const record = {
+            id: id || ('lrent-' + Date.now()),
+            companyId: legalField('lrent-company'),
+            leaseRole: legalField('lrent-role') || 'tenant',
+            title: title,
+            partyName: legalField('lrent-party'),
+            propertyAddress: address,
+            monthlyRent: legalField('lrent-rent'),
+            referenceNo: legalField('lrent-ref'),
+            startDate: legalField('lrent-start'),
+            endDate: endDate,
+            notes: legalField('lrent-notes'),
+            status: resolveRentalStatus(endDate),
+            updatedAt: new Date().toISOString()
+        };
+        if (id) {
+            const idx = legalRentals.findIndex(function(x) { return x.id === id; });
+            if (idx >= 0) {
+                record.createdAt = legalRentals[idx].createdAt;
+                record.attachmentName = legalRentals[idx].attachmentName;
+                record.attachmentDataUrl = legalRentals[idx].attachmentDataUrl;
+                record.attachmentMime = legalRentals[idx].attachmentMime;
+                record.attachmentCloudUrl = legalRentals[idx].attachmentCloudUrl;
+                legalRentals[idx] = applyLegalAttachmentFields(record);
+            }
+        } else {
+            record.createdAt = record.updatedAt;
+            legalRentals.unshift(applyLegalAttachmentFields(record));
+        }
+        saveLegalData();
+        legalEditor = { kind: '', id: null };
+        legalAudit('Legal إيجار', (LEGAL_LEASE_ROLES[record.leaseRole] || '') + ' — ' + title);
+        renderLegalPlatformPanelSafe();
+    }
+
     function saveLegalCorrespondence(id) {
         if (!requireLegalAccess()) return;
         const subject = legalField('lcorr-subject');
@@ -813,6 +1125,7 @@
     function deleteLegalRecord(kind, id) {
         if (!requireLegalAccess() || !confirm('حذف هذا السجل القانوني؟')) return;
         if (kind === 'contract') legalContracts = legalContracts.filter(function(x) { return x.id !== id; });
+        else if (kind === 'rental') legalRentals = legalRentals.filter(function(x) { return x.id !== id; });
         else if (kind === 'case') legalCases = legalCases.filter(function(x) { return x.id !== id; });
         else if (kind === 'compliance') legalCompliance = legalCompliance.filter(function(x) { return x.id !== id; });
         else if (kind === 'policy') legalPolicies = legalPolicies.filter(function(x) { return x.id !== id; });
@@ -882,6 +1195,7 @@
         if (legalActiveTab === 'dashboard') panel = renderLegalDashboard();
         else if (legalActiveTab === 'companies') panel = renderLegalCompaniesPanel();
         else if (legalActiveTab === 'contracts') panel = renderLegalContractsPanel();
+        else if (legalActiveTab === 'rentals') panel = renderLegalRentalsPanel();
         else if (legalActiveTab === 'partnerships') panel = renderLegalPartnershipsPanel();
         else if (legalActiveTab === 'cases') panel = renderLegalCasesPanel();
         else if (legalActiveTab === 'compliance') panel = renderLegalCompliancePanel();
@@ -941,6 +1255,8 @@
 
     function openLegalPlatform() {
         if (!requireLegalAccess()) return;
+        loadLegalData();
+        try { processLegalExpiryReminders(); } catch (e) { console.warn('Legal reminders', e); }
         legalActiveTab = legalActiveTab || 'dashboard';
         if (!showLegalPlatformShell()) return;
         renderLegalPlatformPanelSafe();
@@ -1010,6 +1326,7 @@
     global.saveLegalCase = saveLegalCase;
     global.saveLegalCompliance = saveLegalCompliance;
     global.saveLegalPolicy = saveLegalPolicy;
+    global.saveLegalRental = saveLegalRental;
     global.saveLegalCorrespondence = saveLegalCorrespondence;
     global.deleteLegalRecord = deleteLegalRecord;
     global.canAccessLegalPlatform = canAccessLegal;
@@ -1020,6 +1337,7 @@
     global.getLegalCompliance = function() { loadLegalData(); return legalCompliance; };
     global.getLegalPolicies = function() { loadLegalData(); return legalPolicies; };
     global.getLegalCorrespondence = function() { loadLegalData(); return legalCorrespondence; };
+    global.getLegalRentals = function() { loadLegalData(); return legalRentals; };
     global.getLegalActivity = function() { loadLegalData(); return legalActivity; };
     global.setLegalContractsFromCloud = setLegalContractsFromCloud;
     global.setLegalCasesFromCloud = setLegalCasesFromCloud;
@@ -1027,6 +1345,13 @@
     global.setLegalPoliciesFromCloud = setLegalPoliciesFromCloud;
     global.setLegalCorrespondenceFromCloud = setLegalCorrespondenceFromCloud;
     global.setLegalActivityFromCloud = setLegalActivityFromCloud;
+    global.setLegalRentalsFromCloud = setLegalRentalsFromCloud;
+    global.setLegalNotifSettingsFromCloud = setLegalNotifSettingsFromCloud;
+    global.getLegalNotifSettings = getLegalNotifSettings;
+    global.legalReadAttachment = legalReadAttachment;
+    global.viewLegalAttachment = viewLegalAttachment;
+    global.sendLegalRentalReminder = sendLegalRentalReminder;
+    global.processLegalExpiryReminders = processLegalExpiryReminders;
     global.applyLegalOnlyDashboard = applyLegalOnlyDashboard;
     global.renderLegalPlatformPanelSafe = renderLegalPlatformPanelSafe;
     global.exportLegalPdf = exportLegalPdf;

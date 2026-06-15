@@ -33,7 +33,8 @@ LIVE_MARKERS = {
         'nebras-secure-cloud.js',
         '48-order-journey.css',
         'nebras-order-journey.js',
-        'data-nebras-deploy="hrws70"',
+        'data-nebras-deploy="hrws73"',
+        'nebras-site-database.js',
         'exportNebrasGovernanceBundle', 'openNebrasGovernanceImportPicker',
         'nebras-data-warehouse.js',
         'nebras-empire-bridges.js',
@@ -57,7 +58,8 @@ LIVE_MARKERS = {
         'getProcurementBranchRegistry', 'setProcurementViewScope', 'bindDashboardTileInteractions',
         'syncPlatformInteractionLayers', 'revealPlatformLayer', 'NEBRAS_PLATFORM_LAYER_SEL',
         'dash-order-journey', 'openRepCustomerJourneys', 'updateNebrasErpOrderFromJourney',
-        'dash-data-warehouse', 'openNebrasDataWarehouse', 'dash-empire-bridges', 'openNebrasEmpireBridges',
+        'dash-store-catalog', 'openStoreCatalogManager', 'store_manager', 'storeCatalog',
+        'startNebrasCloudAutoSync',
         'assignedRepId', 'assignedRepUsername', 'getNebrasColorCatalog',
         'saveCartBackup', 'restoreCartBackupIfEmpty', 'renderCartEnterpriseChrome', 'quote-a4-customer-ribbon',
         'dash-platform-integration', 'openPlatformIntegrationHub', 'guardCloudPushRow',
@@ -71,6 +73,11 @@ LIVE_MARKERS = {
     'api/nebras-cloud.js': ['handlePull', 'handlePush', 'requireSession'],
     'js/nebras-data-warehouse.js': [
         'openNebrasDataWarehouse', 'exportSalesQuotesCsv', 'exportCrmCustomersCsv', 'exportEmpireSummaryPdf',
+        'dw-governance-section', 'exportNebrasSiteDatabaseExcel',
+    ],
+    'js/nebras-site-database.js': [
+        'exportNebrasSiteDatabaseExcel', 'exportNebrasSiteDatabasePdf', 'exportNebrasSiteDatabaseWord',
+        'openNebrasSiteDatabaseImportPicker', 'exportStorageAuditExcel',
     ],
     'js/nebras-empire-bridges.js': [
         'runEmpireBridgeOnQuoteSubmit', 'openNebrasEmpireBridges', 'bridgeQuoteToCrm', 'bridgeQuoteToJourney',

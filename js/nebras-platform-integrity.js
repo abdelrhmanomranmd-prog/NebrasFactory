@@ -181,7 +181,7 @@
             { id: 'production', nameAr: 'الإنتاج WPC', icon: 'fa-industry', scope: 'قسم الإنتاج', cloud: true, perm: 'production' },
             { id: 'warehouse', nameAr: 'المستودع', icon: 'fa-warehouse', scope: 'فرع/مستودع', cloud: true, perm: 'warehouse' },
             { id: 'aluminum', nameAr: 'قسم الألومنيوم', icon: 'fa-industry', scope: 'منتجات · مخزون · عملاء ALU', cloud: true, perm: 'aluminum' },
-            { id: 'store', nameAr: 'المتجر والسلة', icon: 'fa-store', scope: 'كتالوج · سلة · عروض 4 صفحات', cloud: true, perm: 'content' },
+            { id: 'store', nameAr: 'المتجر والسلة', icon: 'fa-store', scope: 'كتالوج · سلة · عروض 4 صفحات', cloud: true, perm: 'storeCatalog' },
             { id: 'dataWarehouse', nameAr: 'مستودع البيانات', icon: 'fa-database', scope: 'Excel · PDF · JSON — كل التخزين', cloud: true, perm: 'audit' },
             { id: 'empireBridges', nameAr: 'جسور الإمبراطورية', icon: 'fa-link', scope: 'Odoo-like — متجر ↔ CRM ↔ مسار نبراس', cloud: true, perm: 'erp' }
         ];
@@ -272,5 +272,24 @@
     global.closePlatformIntegrationHub = closePlatformIntegrationHub;
     global.renderPlatformIntegrationPanel = renderPlatformIntegrationPanel;
     global.NEBRAS_CRITICAL_CLOUD_KEYS = CRITICAL_STORE_KEYS;
+
+    let cloudAutoSyncTimer = null;
+    function startNebrasCloudAutoSync() {
+        if (cloudAutoSyncTimer) return;
+        cloudAutoSyncTimer = setInterval(function() {
+            const admin = typeof global.getNebrasCurrentAdmin === 'function' ? global.getNebrasCurrentAdmin() : null;
+            if (!admin) return;
+            const pending = typeof global.hasPendingLocalCloudMutations === 'function' && global.hasPendingLocalCloudMutations();
+            if (!pending) return;
+            if (typeof global.flushPushToNebrasCloud === 'function') {
+                try { global.flushPushToNebrasCloud(); } catch (e) { /* ignore */ }
+            }
+        }, 90000);
+    }
+    function stopNebrasCloudAutoSync() {
+        if (cloudAutoSyncTimer) { clearInterval(cloudAutoSyncTimer); cloudAutoSyncTimer = null; }
+    }
+    global.startNebrasCloudAutoSync = startNebrasCloudAutoSync;
+    global.stopNebrasCloudAutoSync = stopNebrasCloudAutoSync;
 
 })(typeof window !== 'undefined' ? window : globalThis);

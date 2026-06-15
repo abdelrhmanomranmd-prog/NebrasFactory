@@ -84,12 +84,19 @@
             dynamicDed += amt;
             dedLines.push({ type: d.type, label: HR_DEDUCTION_TYPES[d.type] || d.type, amount: amt, note: d.note || '' });
         });
-        const travelCost = hrTravelTickets.filter(function(t) {
+        const travelCost =         hrTravelTickets.filter(function(t) {
             return t.employeeId === employeeId && t.payrollMonth === month && t.status !== 'cancelled' && hrNum(t.cost) > 0;
         }).reduce(function(s, t) { return s + hrNum(t.cost); }, 0);
         if (travelCost > 0) {
             dynamicDed += travelCost;
             dedLines.push({ type: 'ticket', label: 'تذاكر سفر', amount: travelCost, note: '' });
+        }
+        if (typeof global.computeHrAdvanceDeduction === 'function') {
+            const adv = global.computeHrAdvanceDeduction(employeeId, month);
+            if (adv && adv.amount > 0) {
+                dynamicDed += adv.amount;
+                (adv.lines || []).forEach(function(line) { dedLines.push(line); });
+            }
         }
         return { dynamicDed: Math.round(dynamicDed * 100) / 100, dedLines: dedLines, gosiRate: gosiRate };
     }
@@ -328,12 +335,16 @@
     }
 
     function getHcmTabExtensions() {
-        return [
+        const tabs = [
             { id: 'fleet-hub', icon: 'fas fa-truck-fast', label: 'مركز الأسطول', group: 'إدارة الأسطول' },
             { id: 'travel', icon: 'fas fa-plane', label: 'تذاكر السفر', group: 'الرواتب والمزايا' },
             { id: 'deductions', icon: 'fas fa-scale-balanced', label: 'الخصومات', group: 'الرواتب والمزايا' },
             { id: 'saudization', icon: 'fas fa-flag', label: 'السعودة والامتثال', group: 'الامتثال' }
         ];
+        if (typeof global.getHrAdvancesTabExtension === 'function') {
+            tabs.splice(3, 0, global.getHrAdvancesTabExtension());
+        }
+        return tabs;
     }
 
     function setHrTravelFromCloud(v) {
