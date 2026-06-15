@@ -76,12 +76,14 @@
                 body: JSON.stringify({ username: username, password: password })
             });
             const data = await res.json();
-            if (!res.ok || !data.ok || !data.token) return null;
+            if (!res.ok || !data.ok || !data.token) {
+                return { ok: false, error: data.error || 'login_failed', hint: data.hint || '' };
+            }
             setSecureToken(data.token, data.expiresAt);
             return data;
         } catch (e) {
             console.warn('secureApiLogin failed:', e);
-            return null;
+            return { ok: false, error: 'network_error' };
         }
     }
 
@@ -125,7 +127,11 @@
     async function establishSecureSession(username, password) {
         if (!username || !password) return false;
         const r = await secureApiLogin(username, password);
-        return !!(r && r.token);
+        return !!(r && r.ok && r.token);
+    }
+
+    function hasSecureSession() {
+        return !!getSecureToken();
     }
 
     async function pullSensitiveCloudAndApply(applyFn) {
@@ -157,6 +163,7 @@
     global.clearNebrasSecureSession = clearSecureSession;
     global.establishNebrasSecureSession = establishSecureSession;
     global.secureApiLogin = secureApiLogin;
+    global.hasNebrasSecureSession = hasSecureSession;
     global.secureCloudPull = secureCloudPull;
     global.secureCloudPush = secureCloudPush;
     global.pullSensitiveCloudAndApply = pullSensitiveCloudAndApply;

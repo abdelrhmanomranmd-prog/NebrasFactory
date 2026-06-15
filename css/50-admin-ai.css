@@ -23,6 +23,28 @@
     color: rgba(13, 40, 64, 0.72);
 }
 
+.admin-ai-session {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.admin-ai-session--ok {
+    background: #e8f8ef;
+    color: #1a7a42;
+    border: 1px solid #b8e6cc;
+}
+
+.admin-ai-session--warn {
+    background: #fff4e5;
+    color: #9a5b00;
+    border: 1px solid #ffd699;
+}
+
 .admin-ai-chat {
     min-height: 220px;
     max-height: min(48vh, 420px);

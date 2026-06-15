@@ -1,6 +1,9 @@
 {
   "name": "nebras-factory",
   "private": true,
+  "engines": {
+    "node": ">=18"
+  },
   "dependencies": {
     "nodemailer": "^6.10.1"
   }

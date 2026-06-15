@@ -66,7 +66,43 @@
         return parts.join('\n');
     }
 
+    function sessionStatusLabel() {
+        const has = typeof global.hasNebrasSecureSession === 'function' && global.hasNebrasSecureSession();
+        return has
+            ? '<span class="admin-ai-session admin-ai-session--ok"><i class="fas fa-lock"></i> جلسة API آمنة</span>'
+            : '<span class="admin-ai-session admin-ai-session--warn"><i class="fas fa-lock-open"></i> جلسة API غير مفعّلة</span>';
+    }
+
+    async function ensureSecureApiSession() {
+        if (typeof global.hasNebrasSecureSession === 'function' && global.hasNebrasSecureSession()) {
+            return { ok: true };
+        }
+        const admin = typeof global.getNebrasCurrentAdmin === 'function' ? global.getNebrasCurrentAdmin() : null;
+        if (!admin || !admin.username) return { ok: false, error: 'login_required' };
+        const pw = window.prompt(
+            'لتفعيل مساعد Claude — أدخلي كلمة مرور الإدارة الرئيسية (' + admin.username + '):'
+        );
+        if (!pw) return { ok: false, error: 'session_cancelled' };
+        const r = typeof global.secureApiLogin === 'function'
+            ? await global.secureApiLogin(admin.username, pw)
+            : null;
+        if (r && r.ok && r.token) return { ok: true };
+        return {
+            ok: false,
+            error: (r && r.error) || 'api_login_failed',
+            hint: (r && r.hint) || ''
+        };
+    }
+
     async function askNebrasAdminAi(prompt, mode, history) {
+        const session = await ensureSecureApiSession();
+        if (!session.ok) {
+            return {
+                ok: false,
+                error: session.error || 'login_required',
+                hint: session.hint || ''
+            };
+        }
         const token = typeof global.getNebrasSecureToken === 'function' ? global.getNebrasSecureToken() : '';
         if (!token) return { ok: false, error: 'login_required' };
         const res = await fetch(apiBase() + '/api/nebras-ai', {
@@ -212,12 +248,21 @@
             if (data.ok && data.reply) {
                 reply = data.reply;
                 if (status) status.textContent = 'متصل — ' + (aiMode === 'products' ? 'وضع المتجر' : aiMode);
-            } else if (data.error === 'ai_not_configured') {
-                reply = 'أضيفي ANTHROPIC_API_KEY في Vercel ثم أعيدي النشر.';
-                if (status) status.textContent = 'غير مُعد';
             } else if (data.error === 'login_required' || data.error === 'main_admin_only') {
                 reply = 'سجّلي دخول الإدارة الرئيسية أولاً لتفعيل الجلسة الآمنة.';
                 if (status) status.textContent = 'يلزم دخول HQ';
+            } else if (data.error === 'session_cancelled') {
+                reply = 'أُلغي تفعيل الجلسة — أعيدي الإرسال وأدخلي كلمة المرور.';
+                if (status) status.textContent = 'يلزم تفعيل الجلسة';
+            } else if (data.error === 'server_misconfigured') {
+                reply = 'إعداد Vercel ناقص: أضيفي ' + (data.hint || 'NEBRAS_API_SECRET') + ' ثم أعيدي النشر.';
+                if (status) status.textContent = 'إعداد ناقص';
+            } else if (data.error === 'api_login_failed' || data.error === 'invalid_credentials') {
+                reply = 'فشل تفعيل الجلسة الآمنة — تأكدي من كلمة المرور أو سجّلي خروجاً ثم دخولاً من جديد.';
+                if (status) status.textContent = 'فشل الجلسة';
+            } else if (data.error === 'ai_not_configured') {
+                reply = 'أضيفي ANTHROPIC_API_KEY في Vercel ثم أعيدي النشر.';
+                if (status) status.textContent = 'غير مُعد';
             } else {
                 reply = 'تعذّر الاتصال: ' + (data.error || 'خطأ');
                 if (status) status.textContent = 'فشل';
@@ -255,6 +300,7 @@
         body.innerHTML =
             '<div class="admin-ai-copilot-head">' +
                 '<span class="admin-ai-copilot-badge"><i class="fas fa-sparkles"></i> Claude AI</span>' +
+                sessionStatusLabel() +
                 '<span class="admin-ai-copilot-sub">مساعد شخصي — مثل Copilot في Excel · يفهم المنصة وينفّذ معك</span>' +
             '</div>' +
             '<div class="admin-ai-modes">' +

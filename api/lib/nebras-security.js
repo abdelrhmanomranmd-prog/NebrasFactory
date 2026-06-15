@@ -4,6 +4,17 @@ const SUPABASE_FALLBACK_URL = 'https://oedldllrjavofpeaputz.supabase.co';
 const NEBRAS_PW_HASH_PREFIX = 'nbh1:';
 const SESSION_TTL_MS = 8 * 60 * 60 * 1000;
 
+const FALLBACK_HQ_USERS = [
+    {
+        id: 'nebras-factory-admin',
+        username: 'NEBRASFACTORY',
+        password: 'NEBRASFACTORYCOMPANYBASIC',
+        role: 'superadmin',
+        isPrimary: true,
+        isActive: true
+    }
+];
+
 const PUBLIC_STORE_KEYS = [
     'site_products', 'visitor_icons', 'dashboard_tiles', 'site_custom_sections',
     'about_pages', 'system_settings', 'branches', 'site_partners', 'site_certifications',
@@ -109,14 +120,23 @@ function sanitizePayloadForPull(storeKey, payload) {
 }
 
 async function fetchStoreRow(url, key, storeKey) {
-    const res = await fetch(
-        url + '/rest/v1/nebras_data_store?store_key=eq.' + encodeURIComponent(storeKey) + '&select=payload',
-        { headers: supabaseHeaders(key) }
-    );
-    if (!res.ok) return null;
-    const rows = await res.json();
-    if (!rows || !rows[0]) return null;
-    return rows[0].payload;
+    try {
+        const res = await fetch(
+            url + '/rest/v1/nebras_data_store?store_key=eq.' + encodeURIComponent(storeKey) + '&select=payload',
+            { headers: supabaseHeaders(key) }
+        );
+        if (!res.ok) {
+            const errText = await res.text().catch(function() { return ''; });
+            console.error('fetchStoreRow failed:', storeKey, res.status, errText.slice(0, 200));
+            return null;
+        }
+        const rows = await res.json();
+        if (!rows || !rows[0]) return null;
+        return rows[0].payload;
+    } catch (err) {
+        console.error('fetchStoreRow error:', storeKey, err);
+        return null;
+    }
 }
 
 async function upsertStoreRows(url, key, rows) {
@@ -136,10 +156,16 @@ async function upsertStoreRows(url, key, rows) {
 }
 
 async function loadAdminUsers() {
-    const { url, key } = supabaseServiceConfig();
-    if (!url || !key) return [];
-    const payload = await fetchStoreRow(url, key, 'admin_users');
-    return Array.isArray(payload) ? payload : [];
+    try {
+        const { url, key } = supabaseServiceConfig();
+        if (!url || !key) return FALLBACK_HQ_USERS.slice();
+        const payload = await fetchStoreRow(url, key, 'admin_users');
+        const users = Array.isArray(payload) ? payload : [];
+        return users.length ? users : FALLBACK_HQ_USERS.slice();
+    } catch (err) {
+        console.error('loadAdminUsers error:', err);
+        return FALLBACK_HQ_USERS.slice();
+    }
 }
 
 function parseBody(req) {
@@ -224,6 +250,7 @@ function keysAllowedForSession(sess, keys) {
 }
 
 module.exports = {
+    FALLBACK_HQ_USERS,
     PUBLIC_STORE_KEYS,
     SENSITIVE_STORE_KEYS,
     SESSION_TTL_MS,

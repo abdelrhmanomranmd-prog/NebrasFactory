@@ -18,13 +18,22 @@ async function handleLogin(body) {
         return { code: 401, data: { ok: false, error: 'invalid_credentials' } };
     }
     const exp = Date.now() + sec.SESSION_TTL_MS;
-    const session = sec.signSession({
-        sub: user.id,
-        username: user.username,
-        role: user.role,
-        isPrimary: !!user.isPrimary,
-        exp: exp
-    });
+    let session;
+    try {
+        session = sec.signSession({
+            sub: user.id,
+            username: user.username,
+            role: user.role,
+            isPrimary: !!user.isPrimary,
+            exp: exp
+        });
+    } catch (signErr) {
+        console.error('signSession failed:', signErr);
+        return {
+            code: 503,
+            data: { ok: false, error: 'server_misconfigured', hint: 'NEBRAS_API_SECRET' }
+        };
+    }
     return {
         code: 200,
         data: {
@@ -65,6 +74,10 @@ module.exports = async function handler(req, res) {
         return sec.jsonRes(res, 405, { ok: false, error: 'method_not_allowed' });
     } catch (err) {
         console.error('nebras-auth error:', err);
+        const msg = String(err && err.message || '');
+        if (msg.indexOf('NEBRAS_API_SECRET') >= 0) {
+            return sec.jsonRes(res, 503, { ok: false, error: 'server_misconfigured', hint: 'NEBRAS_API_SECRET' });
+        }
         return sec.jsonRes(res, 500, { ok: false, error: 'server_error' });
     }
 };
