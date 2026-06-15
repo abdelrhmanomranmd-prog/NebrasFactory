@@ -17,10 +17,41 @@ const MODE_PROMPTS = {
     cloud: 'ركّز على Supabase والمزامنة. للرفع: [ACTION:push_cloud] · للحوكمة: [ACTION:open_cloud].'
 };
 
-async function callClaude(messages, systemPrompt) {
-    const key = String(process.env.ANTHROPIC_API_KEY || process.env.CLAUDE_API_KEY || '').trim();
-    if (!key) return { error: 'ai_not_configured' };
-    const model = process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-20250514';
+const DEFAULT_MODELS = [
+    'claude-sonnet-4-6',
+    'claude-sonnet-4-5',
+    'claude-haiku-4-5'
+];
+
+function parseUpstreamError(status, errText) {
+    let detail = '';
+    try {
+        const parsed = JSON.parse(errText);
+        detail = String(
+            (parsed.error && parsed.error.message) ||
+            parsed.message ||
+            ''
+        ).trim();
+    } catch (e) {
+        detail = String(errText || '').trim().slice(0, 200);
+    }
+    const lower = detail.toLowerCase();
+    if (status === 401 || lower.indexOf('authentication') >= 0 || lower.indexOf('invalid x-api-key') >= 0) {
+        return { error: 'ai_invalid_key', detail: detail };
+    }
+    if (status === 402 || status === 403 || lower.indexOf('credit') >= 0 || lower.indexOf('billing') >= 0) {
+        return { error: 'ai_billing_required', detail: detail };
+    }
+    if (status === 404 || lower.indexOf('model') >= 0 && lower.indexOf('not found') >= 0) {
+        return { error: 'ai_model_not_found', detail: detail };
+    }
+    if (status === 429 || lower.indexOf('rate') >= 0) {
+        return { error: 'ai_rate_limited', detail: detail };
+    }
+    return { error: 'ai_upstream_failed', detail: detail };
+}
+
+async function callClaudeOnce(model, messages, systemPrompt, key) {
     const res = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: {
@@ -37,12 +68,33 @@ async function callClaude(messages, systemPrompt) {
     });
     if (!res.ok) {
         const errText = await res.text();
-        console.error('Claude API error:', res.status, errText.slice(0, 400));
-        return { error: 'ai_upstream_failed' };
+        console.error('Claude API error:', model, res.status, errText.slice(0, 400));
+        return parseUpstreamError(res.status, errText);
     }
     const data = await res.json();
     const text = data.content && data.content[0] && data.content[0].text ? data.content[0].text : '';
-    return { text: text };
+    return { text: text, model: model };
+}
+
+async function callClaude(messages, systemPrompt) {
+    const key = String(process.env.ANTHROPIC_API_KEY || process.env.CLAUDE_API_KEY || '').trim();
+    if (!key) return { error: 'ai_not_configured' };
+    const envModel = String(process.env.ANTHROPIC_MODEL || '').trim();
+    const models = [];
+    if (envModel) models.push(envModel);
+    DEFAULT_MODELS.forEach(function(m) {
+        if (models.indexOf(m) < 0) models.push(m);
+    });
+    let lastError = { error: 'ai_upstream_failed' };
+    for (let i = 0; i < models.length; i++) {
+        const result = await callClaudeOnce(models[i], messages, systemPrompt, key);
+        if (result.text) return result;
+        lastError = result;
+        if (result.error === 'ai_invalid_key' || result.error === 'ai_billing_required' || result.error === 'ai_rate_limited') {
+            return result;
+        }
+    }
+    return lastError;
 }
 
 function sanitizeHistory(history) {
@@ -97,9 +149,20 @@ module.exports = async function handler(req, res) {
 
         const result = await callClaude(messages, systemPrompt);
         if (result.error) {
-            return sec.jsonRes(res, result.error === 'ai_not_configured' ? 503 : 502, { ok: false, error: result.error });
+            const code = result.error === 'ai_not_configured' ? 503 : 502;
+            return sec.jsonRes(res, code, {
+                ok: false,
+                error: result.error,
+                detail: result.detail || ''
+            });
         }
-        return sec.jsonRes(res, 200, { ok: true, reply: result.text, mode: mode, by: sess.username });
+        return sec.jsonRes(res, 200, {
+            ok: true,
+            reply: result.text,
+            mode: mode,
+            model: result.model || '',
+            by: sess.username
+        });
     } catch (err) {
         console.error('nebras-ai error:', err);
         return sec.jsonRes(res, 500, { ok: false, error: 'server_error' });

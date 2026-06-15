@@ -263,6 +263,21 @@
             } else if (data.error === 'ai_not_configured') {
                 reply = 'أضيفي ANTHROPIC_API_KEY في Vercel ثم أعيدي النشر.';
                 if (status) status.textContent = 'غير مُعد';
+            } else if (data.error === 'ai_invalid_key') {
+                reply = 'مفتاح Anthropic غير صالح — راجعي ANTHROPIC_API_KEY في Vercel (يبدأ بـ sk-ant-).';
+                if (status) status.textContent = 'مفتاح خاطئ';
+            } else if (data.error === 'ai_billing_required') {
+                reply = 'حساب Anthropic يحتاج رصيداً أو تفعيل الفوترة — راجعي console.anthropic.com.';
+                if (status) status.textContent = 'رصيد مطلوب';
+            } else if (data.error === 'ai_model_not_found') {
+                reply = 'الموديل غير متاح — حدّثي ANTHROPIC_MODEL إلى claude-sonnet-4-6 في Vercel.';
+                if (status) status.textContent = 'موديل قديم';
+            } else if (data.error === 'ai_rate_limited') {
+                reply = 'تم تجاوز حد الطلبات — انتظري دقيقة ثم أعيدي المحاولة.';
+                if (status) status.textContent = 'انتظري قليلاً';
+            } else if (data.error === 'ai_upstream_failed') {
+                reply = 'تعذّر الاتصال بـ Claude — تأكدي من المفتاح والموديل في Vercel ثم أعيدي النشر.';
+                if (status) status.textContent = 'فشل Claude';
             } else {
                 reply = 'تعذّر الاتصال: ' + (data.error || 'خطأ');
                 if (status) status.textContent = 'فشل';
