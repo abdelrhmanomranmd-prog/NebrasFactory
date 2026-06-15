@@ -291,3 +291,33 @@
         justify-content: flex-end;
     }
 }
+
+.nebras-scm-store-hub {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 14px;
+    padding: 12px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(0, 168, 255, 0.06), rgba(13, 40, 64, 0.04));
+    border: 1px solid rgba(13, 40, 64, 0.1);
+}
+
+.scm-store-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(0, 168, 255, 0.35);
+    background: #fff;
+    font-family: 'Cairo', sans-serif;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+}
+
+.scm-store-chip:hover {
+    background: rgba(0, 168, 255, 0.1);
+    border-color: #00a8ff;
+}

@@ -1165,6 +1165,46 @@
     .door-color-catalog--catalog.door-color-catalog--nebras-rolls {
         grid-template-columns: repeat(3, minmax(0, 1fr));
     }
+
+    .wpc-door-stage--studio-live {
+        min-height: auto;
+        max-height: min(44vh, 360px);
+    }
+
+    .wpc-door-stage--keybab {
+        min-height: auto !important;
+    }
+
+    .wpc-door-stage--studio-live .wpc-door-turntable {
+        min-height: min(38vh, 300px);
+        max-height: min(42vh, 320px);
+        touch-action: pan-y;
+    }
+
+    .wpc-door-stage--studio-live .wpc-door-canvas {
+        height: min(36vh, 300px);
+        width: min(84vw, 280px);
+    }
+
+    .door-studio-preview {
+        position: sticky;
+        top: 0;
+        z-index: 3;
+        background: rgba(255, 255, 255, 0.94);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        box-shadow: 0 4px 16px rgba(13, 40, 64, 0.08);
+    }
+
+    .door-studio-panel-scroll {
+        overflow-y: visible;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #workspace-main.workspace-main {
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+    }
 }
 
 .door-color-swatch--catalog.door-color-swatch--nebras-roll .door-color-roll-tile {
@@ -2833,12 +2873,26 @@
 
 @media (max-width: 768px) {
     .wpc-door-stage--keybab .wpc-door-canvas {
-        width: min(300px, 86vw);
-        height: min(36vh, 380px);
+        width: min(280px, 84vw);
+        height: min(300px, 38vh);
+    }
+
+    .wpc-door-stage--studio-live {
+        min-height: auto;
+        max-height: min(44vh, 360px);
+    }
+
+    .wpc-door-stage--studio-live .wpc-door-turntable {
+        min-height: min(38vh, 300px);
+        touch-action: pan-y;
+    }
+
+    .wpc-door-stage--studio-live .wpc-door-canvas {
+        height: min(36vh, 300px);
     }
 
     .wpc-door-stage--studio-live .wpc-door-svg-overlay svg {
-        max-height: min(36vh, 380px);
+        max-height: min(36vh, 300px);
     }
 }
 

@@ -1468,19 +1468,41 @@
             applyRot();
             function onDown(e) {
                 if (e.button !== undefined && e.button !== 0) return;
-                dragging = true;
-                autoSpin = false;
-                lastX = e.clientX;
-                stopSpinLoop();
-                if (tt.setPointerCapture) tt.setPointerCapture(e.pointerId);
-            }
-            function onUp() {
                 dragging = false;
+                tt._nebrasDragPending = true;
+                tt._nebrasDragStartX = e.clientX;
+                tt._nebrasDragStartY = e.clientY;
+                lastX = e.clientX;
+                autoSpin = false;
+                stopSpinLoop();
+            }
+            function onUp(e) {
+                dragging = false;
+                tt._nebrasDragPending = false;
                 autoSpin = !reduceMotion && !isMobileView;
+                if (tt.releasePointerCapture && e && e.pointerId !== undefined) {
+                    try { tt.releasePointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+                }
                 if (autoSpin && visible) startSpinLoop();
                 else stopSpinLoop();
             }
             function onMove(e) {
+                if (!tt._nebrasDragPending && !dragging) return;
+                const dx = Math.abs(e.clientX - (tt._nebrasDragStartX || e.clientX));
+                const dy = Math.abs(e.clientY - (tt._nebrasDragStartY || e.clientY));
+                if (!dragging && tt._nebrasDragPending) {
+                    if (isMobileView && dy > dx && dy > 8) {
+                        tt._nebrasDragPending = false;
+                        return;
+                    }
+                    if (dx > 10 && dx >= dy) {
+                        dragging = true;
+                        tt._nebrasDragPending = false;
+                        if (tt.setPointerCapture) tt.setPointerCapture(e.pointerId);
+                    } else {
+                        return;
+                    }
+                }
                 if (!dragging) return;
                 rotY += (e.clientX - lastX) * 0.55;
                 lastX = e.clientX;
@@ -4250,10 +4272,10 @@
                 (m.active ? '<span class="cart-pay-method-badge">' + escapeHtmlAttr(ui.payActive || 'متاح') + '</span>' : '') +
             '</button>';
         }).join('');
-        const trust = '<div class="cart-enterprise-trust">' +
+            const trust = '<div class="cart-enterprise-trust">' +
             '<span><i class="fas fa-shield-halved"></i> ' + escapeHtmlAttr(ui.cartTrustSecure || 'دفع آمن') + '</span>' +
             '<span><i class="fas fa-file-invoice"></i> ' + escapeHtmlAttr(ui.cartTrustVat || 'ضريبة 15% — فاتورة رسمية') + '</span>' +
-            '<span><i class="fas fa-truck"></i> ' + escapeHtmlAttr(ui.cartTrustDelivery || 'تسليم لكل فروع المملكة') + '</span>' +
+            '<span><i class="fas fa-receipt"></i> ' + escapeHtmlAttr(ui.cartTrustReceipt || 'إيصال حوالة للعميل بعد التحويل') + '</span>' +
             '<span><i class="fas fa-headset"></i> ' + escapeHtmlAttr(ui.cartTrustSupport || 'متابعة مبيعات وخدمة عملاء') + '</span></div>';
         const bankBlock = method === 'bank_transfer' ? buildCartBankPaymentHtmlCore(lang) : '';
         return '<section class="cart-enterprise-pay" aria-labelledby="cart-enterprise-pay-title">' +
@@ -5043,6 +5065,7 @@
                 statusEl.textContent = ui.cartTransferDeclaredOk || 'تم تسجيل تأكيد التحويل — أرفقي صورة الإيصال إن وُجد.';
             }
             renderCartCheckoutSteps();
+            renderCartReceiptDownloadBtn();
         }
 
         function refreshCheckoutReceiptUi() {
@@ -5070,6 +5093,7 @@
                     statusEl.hidden = !p.transferDeclared;
                 }
             }
+            renderCartReceiptDownloadBtn();
         }
 
         function clearCartTransferReceipt() {
@@ -5110,8 +5134,76 @@
                     statusEl.textContent = ui.cartReceiptAttachedOk || '✓ تم رفع صورة الحوالة — ستُرسل مع الطلب للمبيعات.';
                 }
                 setCartCheckoutStatus(ui.cartReceiptAttachedOk || 'تم رفع إيصال الحوالة بنجاح.', false);
+                renderCartReceiptDownloadBtn();
             };
             reader.readAsDataURL(file);
+        }
+
+        function downloadCustomerBankTransferReceipt() {
+            const lang = currentLang || 'ar';
+            const ui = siteText[lang] || siteText.ar;
+            const profile = getCheckoutProfile();
+            const payment = readCartPaymentFromForm();
+            if (!payment.bankIban) {
+                alert(ui.cartReceiptSelectBank || 'اختر حساب البنك أولاً من طرق الدفع.');
+                return;
+            }
+            if (!profile.transferDeclared) {
+                alert(ui.cartReceiptDeclareFirst || 'أكّد أنك أتممت الحوالة أولاً.');
+                return;
+            }
+            const totals = calcCartTotals();
+            const quoteNo = (currentQuoteIssue && currentQuoteIssue.quoteNo) ? currentQuoteIssue.quoteNo : ('RCPT-' + Date.now());
+            const now = new Date();
+            const bankName = payment.bankNameAr || payment.bankNameEn || '';
+            const linesHtml = nebrasCart.map(function(line, i) {
+                return '<tr><td>' + (i + 1) + '</td><td>' + escapeHtmlAttr(line.titleAr || line.title || '') + '</td>' +
+                    '<td>' + escapeHtmlAttr(String(line.qty || 1)) + '</td>' +
+                    '<td>' + escapeHtmlAttr(String(line.lineTotalIncVat || line.price || '')) + '</td></tr>';
+            }).join('');
+            const receiptHtml = '<html dir="rtl"><head><meta charset="utf-8"><title>إيصال حوالة — ' + escapeHtmlAttr(quoteNo) + '</title>' +
+                '<style>body{font-family:Cairo,Tahoma,sans-serif;padding:28px;color:#0d2840;max-width:720px;margin:0 auto}' +
+                'h1{font-size:1.25rem;border-bottom:3px solid #00a8ff;padding-bottom:8px}' +
+                '.meta{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}' +
+                '.box{border:1px solid #ccc;border-radius:10px;padding:12px;background:#f8fafc}' +
+                'table{width:100%;border-collapse:collapse;margin-top:16px;font-size:0.9rem}' +
+                'th,td{border:1px solid #ddd;padding:8px;text-align:right}th{background:#e8f4fc}' +
+                '.stamp{margin-top:24px;padding:16px;border:2px dashed #27ae60;border-radius:12px;text-align:center;color:#1e8449}' +
+                '.foot{margin-top:20px;font-size:0.8rem;color:#666}</style></head><body>' +
+                '<h1>إيصال حوالة بنكية — مصنع نبراس للبلاستيك</h1>' +
+                '<p><strong>رقم المرجع:</strong> ' + escapeHtmlAttr(quoteNo) + '<br>' +
+                '<strong>التاريخ:</strong> ' + now.toLocaleString('ar-SA') + '</p>' +
+                '<div class="meta">' +
+                '<div class="box"><strong>العميل</strong><br>' + escapeHtmlAttr(profile.customerName || '—') + '<br>' + escapeHtmlAttr(profile.phone || '') + '</div>' +
+                '<div class="box"><strong>البنك المحوّل إليه</strong><br>' + escapeHtmlAttr(bankName) + '<br><code dir="ltr">' + escapeHtmlAttr(payment.bankIban) + '</code></div>' +
+                '</div>' +
+                '<div class="box"><strong>المبلغ المستحق (شامل الضريبة)</strong><br><span style="font-size:1.4rem">' +
+                totals.totalInc.toFixed(2) + ' ر.س</span></div>' +
+                (linesHtml ? '<table><thead><tr><th>#</th><th>المنتج</th><th>الكمية</th><th>المبلغ</th></tr></thead><tbody>' + linesHtml + '</tbody></table>' : '') +
+                '<div class="stamp"><i>✓</i> تم تأكيد الحوالة البنكية<br><small>احتفظ بهذا الإيصال — يُرسل للمبيعات مع طلبك</small></div>' +
+                (profile.receiptDataUrl ? '<p style="margin-top:16px"><img src="' + profile.receiptDataUrl + '" style="max-width:100%;border:1px solid #ddd;border-radius:8px" alt="صورة الحوالة"></p>' : '') +
+                '<p class="foot">مصنع نبراس للبلاستيك WPC — المملكة العربية السعودية · ضريبة 15%</p>' +
+                '</body></html>';
+            const w = window.open('', '_blank');
+            if (!w) { alert('فعّل النوافذ المنبثقة لتنزيل الإيصال.'); return; }
+            w.document.write(receiptHtml);
+            w.document.close();
+            setTimeout(function() { w.print(); }, 400);
+        }
+
+        function renderCartReceiptDownloadBtn() {
+            const mount = document.getElementById('cart-receipt-download-mount');
+            if (!mount) return;
+            const profile = getCheckoutProfile();
+            const payment = readCartPaymentFromForm();
+            const ui = siteText[currentLang || 'ar'] || siteText.ar;
+            if (!profile.transferDeclared || !payment.bankIban) {
+                mount.innerHTML = '';
+                return;
+            }
+            mount.innerHTML = '<button type="button" class="cart-receipt-download-btn" onclick="downloadCustomerBankTransferReceipt()">' +
+                '<i class="fas fa-file-invoice"></i> ' + escapeHtmlAttr(ui.cartDownloadReceipt || 'تنزيل إيصال الحوالة (PDF)') +
+                '</button>';
         }
 
         function readCartPaymentFromForm() {
@@ -5803,6 +5895,7 @@
             fillCheckoutFormFromProfile();
             renderCheckoutBankQuickList();
             refreshCheckoutReceiptUi();
+            renderCartReceiptDownloadBtn();
             updateCartSessionHint();
             renderCartCheckoutSteps();
             setCartCheckoutStatus('', false);
@@ -27093,6 +27186,7 @@
 
         window.onCartReceiptSelected = onCartReceiptSelected;
         window.onTransferDeclaredChanged = onTransferDeclaredChanged;
+        window.downloadCustomerBankTransferReceipt = downloadCustomerBankTransferReceipt;
         window.closeSalesQuoteDetail = closeSalesQuoteDetail;
         window.viewSalesQuoteReceipt = viewSalesQuoteReceipt;
         window.viewSalesQuoteDoorDesign = viewSalesQuoteDoorDesign;

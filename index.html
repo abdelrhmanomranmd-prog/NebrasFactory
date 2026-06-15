@@ -73,7 +73,7 @@
     <link rel="stylesheet" href="css/09-nebras-workspace.css">
     <link rel="stylesheet" href="css/10-brand-intro.css?v=hrws77">
     <link rel="stylesheet" href="css/11-media-lightbox.css">
-    <link rel="stylesheet" href="css/12-door-designer.css">
+    <link rel="stylesheet" href="css/12-door-designer.css?v=hrws79">
     <link rel="stylesheet" href="css/13-header-campaign.css">
     <link rel="stylesheet" href="css/17-header-door-showcase.css">
     <link rel="stylesheet" href="css/18-nebras-mini-showcase.css">
@@ -87,7 +87,7 @@
     <link rel="stylesheet" href="css/24-wpc-strengths-light.css">
     <link rel="stylesheet" href="css/27-governance-users.css">
     <link rel="stylesheet" href="css/28-erp-dashboard-shell.css">
-    <link rel="stylesheet" href="css/29-scm-professional.css">
+    <link rel="stylesheet" href="css/29-scm-professional.css?v=hrws79">
     <link rel="stylesheet" href="css/30-platform-settings-audit.css">
     <link rel="stylesheet" href="css/31-cloud-security.css">
     <link rel="stylesheet" href="css/32-executive-reports.css">
@@ -108,11 +108,11 @@
     <link rel="stylesheet" href="css/49-platform-integrity.css?v=hrws77">
     <link rel="stylesheet" href="css/48-order-journey.css?v=hrws77">
     <link rel="stylesheet" href="css/47-platform-interaction-global.css?v=hrws77">
-    <link rel="stylesheet" href="css/50-admin-ai.css?v=hrws77">
+    <link rel="stylesheet" href="css/50-admin-ai.css?v=hrws79">
     <link rel="stylesheet" href="css/51-data-warehouse.css?v=hrws77">
-    <link rel="stylesheet" href="css/52-cart-enterprise.css?v=hrws77">
+    <link rel="stylesheet" href="css/52-cart-enterprise.css?v=hrws79">
 </head>
-<body id="nebras-platform" class="platform-storefront" data-platform-layer="storefront" data-nebras-deploy="hrws78">
+<body id="nebras-platform" class="platform-storefront" data-platform-layer="storefront" data-nebras-deploy="hrws79">
 
     <audio id="nebras-brand-intro-audio" class="nebras-brand-intro-audio" src="audio/nebras-welcome.mp3" preload="metadata" playsinline webkit-playsinline="true" hidden></audio>
 
@@ -600,6 +600,7 @@
                     <input type="file" id="cart-transfer-receipt" accept="image/*,.jpg,.jpeg,.png,.webp,.gif,.avif" onchange="onCartReceiptSelected(event)">
                     <div class="cart-receipt-preview" id="cart-receipt-preview" hidden></div>
                     <p class="cart-receipt-status" id="cart-receipt-status" role="status" hidden></p>
+                    <div id="cart-receipt-download-mount" class="cart-receipt-download-mount"></div>
                 </div>
                 <p class="cart-checkout-status" id="cart-checkout-status" role="status"></p>
             </div>
@@ -1648,7 +1649,7 @@
     <div class="admin-section" id="admin-ai-assistant">
         <div class="admin-modal site-content-modal nebras-erp-modal">
             <div class="nebras-erp-head">
-                <div class="nebras-erp-head-title"><i class="fas fa-robot"></i><div><h2>مساعد Claude السحابي — الإدارة الرئيسية</h2><p>ذكاء اصطناعي متقدم — متجر · مستخدمون · فروع · أقسام · سحابة · حوكمة كاملة</p></div></div>
+                <div class="nebras-erp-head-title"><i class="fas fa-robot"></i><div><h2>Claude AI — مساعدك الشخصي في الإدارة</h2><p>محادثة ذكية مثل Copilot — متجر · محتوى · مستخدمون · سحابة · تنفيذ مباشر</p></div></div>
                 <button type="button" class="nebras-users-close" onclick="closeNebrasAdminAi()" aria-label="إغلاق"><i class="fas fa-xmark"></i></button>
             </div>
             <p class="scm-hint" id="admin-ai-status"></p>
@@ -1705,9 +1706,17 @@
                 <button type="button" class="nebras-scm-close" onclick="closeAdminSection('site-content-management')" aria-label="إغلاق"><i class="fas fa-xmark"></i></button>
             </div>
             <div class="nebras-scm-toolbar admin-only-ui">
-                <button type="button" class="primary" onclick="openNebrasMediaHubQuick()"><i class="fas fa-cloud-upload-alt"></i> رفع وسائط</button>
-                <button type="button" class="secondary" onclick="openDoorDesignerAdmin()"><i class="fas fa-pencil-ruler"></i> مصمّم الأبواب 3D</button>
+                <button type="button" class="primary" onclick="openNebrasMediaHubQuick()"><i class="fas fa-cloud-upload-alt"></i> رفع صور / PDF</button>
+                <button type="button" class="secondary" onclick="switchScmTab('visitor');setTimeout(function(){if(typeof addVisitorIcon==='function'){}},200)"><i class="fas fa-th-large"></i> أيقونات المتجر</button>
+                <button type="button" class="secondary" onclick="switchScmTab('products')"><i class="fas fa-boxes"></i> المنتجات (4 أقسام)</button>
+                <button type="button" class="secondary" onclick="openDoorDesignerAdmin()"><i class="fas fa-pencil-ruler"></i> مصمّم الأبواب</button>
                 <button type="button" class="secondary" onclick="saveContentData()"><i class="fas fa-sync"></i> حفظ ومزامنة</button>
+            </div>
+            <div class="nebras-scm-store-hub admin-only-ui" id="scm-store-hub-strip">
+                <button type="button" class="scm-store-chip" onclick="switchScmTab('products')"><i class="fas fa-door-closed"></i> WPC عضم</button>
+                <button type="button" class="scm-store-chip" onclick="switchScmTab('products')"><i class="fas fa-door-open"></i> WPC جاهز</button>
+                <button type="button" class="scm-store-chip" onclick="switchScmTab('products')"><i class="fas fa-industry"></i> ألومنيوم</button>
+                <button type="button" class="scm-store-chip" onclick="switchScmTab('products')"><i class="fas fa-cubes"></i> منتجات أخرى</button>
             </div>
             <div id="scm-governance-status" class="scm-governance-status" aria-live="polite"></div>
             <div class="scm-tabs" role="tablist">
@@ -1946,9 +1955,9 @@
     <script src="js/nebras-callback-concierge.js" defer></script>
     <script src="js/nebras-secure-cloud.js?v=hrws77" defer></script>
     <script src="js/nebras-storage-guard.js?v=hrws77" defer></script>
-    <script src="js/nebras-platform.js?v=hrws78" defer></script>
+    <script src="js/nebras-platform.js?v=hrws79" defer></script>
     <script src="js/nebras-platform-integrity.js?v=hrws77" defer></script>
-    <script src="js/nebras-admin-ai.js?v=hrws77" defer></script>
+    <script src="js/nebras-admin-ai.js?v=hrws79" defer></script>
     <script src="js/nebras-site-database.js?v=hrws77" defer></script>
     <script src="js/nebras-data-warehouse.js?v=hrws77" defer></script>
     <script src="js/nebras-empire-bridges.js?v=hrws77" defer></script>

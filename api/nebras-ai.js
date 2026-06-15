@@ -10,10 +10,11 @@ function requireMainAdminSession(req) {
 }
 
 const MODE_PROMPTS = {
-    governance: 'ركّز على الحوكمة: الإدارة الرئيسية · الفروع · الأقسام · الصلاحيات · RBAC · الفصل بين HQ والفروع.',
-    products: 'ركّز على المتجر الإلكتروني: أصناف · مقاسات · ألوان · أسعار · SKU · صور. عند اقتراح أصناف أخرج JSON قابلاً للتطبيق: {"product_id":"...","variants":[{"type_ar":"","size_ar":"","color_ar":"","price_ex_vat":0,"sku":"","image":""}]}',
-    users: 'ركّز على المستخدمين: أدوار · صلاحيات · store_manager · مندوبين · عملاء البوابة — كلها تحت إدارة HQ.',
-    cloud: 'ركّز على السحابة Supabase: مزامنة · نسخ احتياطية · حماية البيانات · site_products · admin_users.'
+    governance: 'ركّز على الحوكمة: الإدارة الرئيسية · الفروع · الأقسام · الصلاحيات · RBAC. عند اقتراح فتح لوحة أضف [ACTION:open_users] أو [ACTION:open_cloud].',
+    products: 'ركّز على المتجر: أصناف · مقاسات · ألوان · أسعار · SKU. عند اقتراح أصناف أخرج JSON: {"product_id":"...","variants":[...]}. لفتح المتجر: [ACTION:open_store].',
+    content: 'ركّز على إدارة محتوى الموقع: أيقونات الزوار الأربع · المعرض · الصور · PDF. لفتح المحتوى: [ACTION:open_content] · للوسائط: [ACTION:open_media].',
+    users: 'ركّز على المستخدمين والصلاحيات. لفتح إدارة المستخدمين: [ACTION:open_users].',
+    cloud: 'ركّز على Supabase والمزامنة. للرفع: [ACTION:push_cloud] · للحوكمة: [ACTION:open_cloud].'
 };
 
 async function callClaude(messages, systemPrompt) {
@@ -29,7 +30,7 @@ async function callClaude(messages, systemPrompt) {
         },
         body: JSON.stringify({
             model: model,
-            max_tokens: 2400,
+            max_tokens: 3200,
             system: systemPrompt,
             messages: messages
         })
@@ -42,6 +43,18 @@ async function callClaude(messages, systemPrompt) {
     const data = await res.json();
     const text = data.content && data.content[0] && data.content[0].text ? data.content[0].text : '';
     return { text: text };
+}
+
+function sanitizeHistory(history) {
+    if (!Array.isArray(history)) return [];
+    return history.slice(-12).filter(function(m) {
+        return m && (m.role === 'user' || m.role === 'assistant') && String(m.content || '').trim();
+    }).map(function(m) {
+        return {
+            role: m.role,
+            content: String(m.content).trim().slice(0, 3000)
+        };
+    });
 }
 
 module.exports = async function handler(req, res) {
@@ -63,20 +76,26 @@ module.exports = async function handler(req, res) {
         const prompt = String(body.prompt || '').trim();
         const context = String(body.context || '').trim().slice(0, 4000);
         const mode = String(body.mode || 'governance').toLowerCase();
+        const history = sanitizeHistory(body.history);
         if (!prompt) return sec.jsonRes(res, 400, { ok: false, error: 'prompt_required' });
 
         const modeHint = MODE_PROMPTS[mode] || MODE_PROMPTS.governance;
         const systemPrompt =
-            'أنت مساعد Claude السحابي لمنصة نبراس (Nebras Plastic Factory) — للإدارة الرئيسية فقط. ' +
-            'كل الفروع والأقسام والمستخدمين والعملاء تحت حوكمة الإدارة الرئيسية (HQ). ' +
-            'ساعد في: إدارة المتجر · المنتجات · المستخدمين والصلاحيات · الفروع · الأقسام · ERP · HR · CRM · السحابة. ' +
+            'أنت Claude — المساعد الشخصي للإدارة الرئيسية في منصة نبراس (مصنع نبراس للبلاستيك WPC). ' +
+            'تتصرّف مثل Microsoft Copilot داخل Excel: محادثة طبيعية، خطوات عملية، واقتراحات قابلة للتنفيذ. ' +
+            'كل الفروع والمستخدمين والعملاء تحت حوكمة HQ. ' +
+            'ساعد في: المتجر · المحتوى · السلة · البنوك · المستخدمين · HR · CRM · السحابة · مصمّم الأبواب. ' +
             modeHint + ' ' +
-            'أجب بالعربية باختصار وعملي. لا تخترع أسعاراً حقيقية — اقترح هيكل البيانات فقط.';
+            'أجب بالعربية. كن مختصراً وعملياً. عند اقتراح فتح قسم في المنصة أضف وسماً: [ACTION:اسم] حيث الاسم أحد: open_content, open_store, open_users, open_cloud, open_hr, open_media, push_cloud, open_settings, export_store. ' +
+            'لا تخترع أسعاراً حقيقية.';
 
+        const messages = history.slice();
         const userContent = context
-            ? ('سياق المنصة الحالي:\n' + context + '\n\nطلب الإدارة الرئيسية:\n' + prompt)
+            ? ('سياق المنصة:\n' + context + '\n\nطلب الإدارة:\n' + prompt)
             : prompt;
-        const result = await callClaude([{ role: 'user', content: userContent }], systemPrompt);
+        messages.push({ role: 'user', content: userContent });
+
+        const result = await callClaude(messages, systemPrompt);
         if (result.error) {
             return sec.jsonRes(res, result.error === 'ai_not_configured' ? 503 : 502, { ok: false, error: result.error });
         }

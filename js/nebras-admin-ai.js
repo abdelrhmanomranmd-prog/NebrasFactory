@@ -1,19 +1,43 @@
 /**
- * نبراس — مساعد Claude السحابي للإدارة الرئيسية
- * إدارة الموقع · المتجر · المستخدمون · الحوكمة · مزامنة السحابة
+ * نبراس — مساعد Claude الشخصي للإدارة الرئيسية (Copilot-style)
+ * محادثة متصلة · تنفيذ إجراءات · إدارة كاملة عبر الحوار
  */
 (function(global) {
     'use strict';
 
+    const CHAT_KEY = 'nebrasAdminAiChat';
     let aiMode = 'governance';
+    let aiChatHistory = [];
+    let aiSending = false;
 
     function isMainAdmin() {
-        return typeof global.isMainGovernanceAdmin === 'function' && global.isMainGovernanceAdmin(global.getNebrasCurrentAdmin && global.getNebrasCurrentAdmin());
+        const admin = typeof global.getNebrasCurrentAdmin === 'function' ? global.getNebrasCurrentAdmin() : null;
+        return typeof global.isMainGovernanceAdmin === 'function' && global.isMainGovernanceAdmin(admin);
     }
 
     function apiBase() {
         if (typeof global.NEBRAS_API_BASE === 'string' && global.NEBRAS_API_BASE) return global.NEBRAS_API_BASE;
         return '';
+    }
+
+    function loadAiChat() {
+        try {
+            const raw = sessionStorage.getItem(CHAT_KEY);
+            aiChatHistory = raw ? JSON.parse(raw) : [];
+            if (!Array.isArray(aiChatHistory)) aiChatHistory = [];
+        } catch (e) { aiChatHistory = []; }
+    }
+
+    function saveAiChat() {
+        try {
+            const trimmed = aiChatHistory.slice(-40);
+            sessionStorage.setItem(CHAT_KEY, JSON.stringify(trimmed));
+        } catch (e) { /* ignore */ }
+    }
+
+    function escHtml(s) {
+        return String(s == null ? '' : s)
+            .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
     }
 
     function buildAiContext() {
@@ -24,22 +48,25 @@
             parts.push('منتجات نشطة: ' + products.length + ' · أصناف: ' + variants);
             parts.push('مستخدمون إداريون: ' + (global.adminUsers || []).length);
             parts.push('فروع: ' + (global.branchesData || []).length);
+            parts.push('حسابات بنكية: ' + ((global.systemSettings && global.systemSettings.bankAccounts) || []).length);
             parts.push('عروض/طلبات: ' + (typeof global.loadSalesQuotesInbox === 'function' ? global.loadSalesQuotesInbox().length : 0));
             if (typeof global.getNebrasCloudStoreCount === 'function') {
                 parts.push('مخازن سحابة: ' + global.getNebrasCloudStoreCount());
             }
             if (typeof global.hasPendingLocalCloudMutations === 'function' && global.hasPendingLocalCloudMutations()) {
-                parts.push('حالة المزامنة: معلّقة — يُنصح بالرفع للسحابة');
+                parts.push('مزامنة: معلّقة — يُنصح بالرفع');
             } else {
-                parts.push('حالة المزامنة: متزامن');
+                parts.push('مزامنة: متزامنة');
             }
-            const portal = typeof global.getCustomerPortalUsers === 'function' ? global.getCustomerPortalUsers().length : 0;
-            parts.push('عملاء البوابة: ' + portal);
+            const icons = (global.visitorIcons || []).length;
+            parts.push('أيقونات زوار: ' + icons);
+            const deploy = document.body && document.body.getAttribute('data-nebras-deploy');
+            if (deploy) parts.push('إصدار المنصة: ' + deploy);
         } catch (e) { /* ignore */ }
         return parts.join('\n');
     }
 
-    async function askNebrasAdminAi(prompt, mode) {
+    async function askNebrasAdminAi(prompt, mode, history) {
         const token = typeof global.getNebrasSecureToken === 'function' ? global.getNebrasSecureToken() : '';
         if (!token) return { ok: false, error: 'login_required' };
         const res = await fetch(apiBase() + '/api/nebras-ai', {
@@ -48,7 +75,12 @@
                 'Content-Type': 'application/json',
                 Authorization: 'Bearer ' + token
             },
-            body: JSON.stringify({ prompt: prompt, context: buildAiContext(), mode: mode || aiMode })
+            body: JSON.stringify({
+                prompt: prompt,
+                context: buildAiContext(),
+                mode: mode || aiMode,
+                history: history || []
+            })
         });
         return res.json();
     }
@@ -82,51 +114,184 @@
             product.action = 'shop';
             if (typeof global.saveContentData === 'function') global.saveContentData({ urgentCloud: true });
             if (typeof global.addAuditLog === 'function') global.addAuditLog('مساعد Claude', 'تطبيق أصناف — ' + product.titleAr);
-            alert('تم تطبيق الأصناف — ' + data.variants.length + ' صنف. تم الحفظ والمزامنة.');
+            alert('تم تطبيق الأصناف — ' + data.variants.length + ' صنف.');
             return true;
         } catch (e) {
             return false;
         }
     }
 
+    function runAiAction(actionId) {
+        const map = {
+            open_content: function() { if (typeof global.openSiteContentManager === 'function') global.openSiteContentManager(); },
+            open_store: function() { if (typeof global.openStoreCatalogManager === 'function') global.openStoreCatalogManager(); },
+            open_users: function() { if (typeof global.openNebrasUserManagement === 'function') global.openNebrasUserManagement(); },
+            open_cloud: function() { if (typeof global.openCloudGovernance === 'function') global.openCloudGovernance(); },
+            open_hr: function() { if (typeof global.openHrPlatform === 'function') global.openHrPlatform(); },
+            open_warehouse: function() { if (typeof global.openNebrasDataWarehouse === 'function') global.openNebrasDataWarehouse(); },
+            push_cloud: function() { if (typeof global.syncPushToNebrasCloudNow === 'function') global.syncPushToNebrasCloudNow(); },
+            open_media: function() { if (typeof global.openNebrasMediaHubQuick === 'function') global.openNebrasMediaHubQuick(); },
+            open_settings: function() { if (typeof global.openSystemSettings === 'function') global.openSystemSettings(); },
+            export_store: function() { if (typeof global.exportStoreCatalogCsv === 'function') global.exportStoreCatalogCsv(); }
+        };
+        if (map[actionId]) map[actionId]();
+    }
+
+    function parseAiActions(text) {
+        const actions = [];
+        const re = /\[ACTION:([a-z_]+)\]/gi;
+        let m;
+        while ((m = re.exec(text)) !== null) {
+            if (actions.indexOf(m[1]) < 0) actions.push(m[1]);
+        }
+        return actions;
+    }
+
+    function stripActionTags(text) {
+        return String(text || '').replace(/\[ACTION:[a-z_]+\]/gi, '').trim();
+    }
+
+    function renderAiChatMessages() {
+        const el = document.getElementById('admin-ai-chat');
+        if (!el) return;
+        if (!aiChatHistory.length) {
+            el.innerHTML = '<div class="admin-ai-welcome">' +
+                '<i class="fas fa-sparkles"></i>' +
+                '<strong>مرحباً — أنا مساعدك الشخصي في الإدارة الرئيسية</strong>' +
+                '<p>اسألني عن أي شيء: منتجات · مستخدمون · سحابة · سلة · بنوك · HR · محتوى الموقع. يمكنني اقتراح خطوات وتنفيذ إجراءات.</p>' +
+                '</div>';
+            return;
+        }
+        el.innerHTML = aiChatHistory.map(function(msg) {
+            const cls = msg.role === 'user' ? 'admin-ai-bubble--user' : 'admin-ai-bubble--assistant';
+            const body = msg.role === 'assistant' ? escHtml(stripActionTags(msg.content)) : escHtml(msg.content);
+            const actions = msg.role === 'assistant' ? parseAiActions(msg.content) : [];
+            const actionBtns = actions.map(function(a) {
+                const labels = {
+                    open_content: 'فتح إدارة المحتوى',
+                    open_store: 'فتح المتجر',
+                    open_users: 'المستخدمون',
+                    open_cloud: 'السحابة',
+                    open_hr: 'HR',
+                    open_media: 'رفع وسائط',
+                    push_cloud: 'رفع للسحابة',
+                    open_settings: 'الإعدادات',
+                    export_store: 'تصدير المتجر'
+                };
+                return '<button type="button" class="admin-ai-action-btn" onclick="runNebrasAiAction(\'' + a + '\')"><i class="fas fa-bolt"></i> ' + escHtml(labels[a] || a) + '</button>';
+            }).join('');
+            return '<div class="admin-ai-bubble ' + cls + '">' +
+                '<div class="admin-ai-bubble-text">' + body.replace(/\n/g, '<br>') + '</div>' +
+                (actionBtns ? '<div class="admin-ai-action-row">' + actionBtns + '</div>' : '') +
+                '</div>';
+        }).join('');
+        el.scrollTop = el.scrollHeight;
+    }
+
+    async function sendAdminAiMessage() {
+        if (aiSending) return;
+        const promptEl = document.getElementById('admin-ai-prompt');
+        const status = document.getElementById('admin-ai-status');
+        const btn = document.getElementById('admin-ai-send-btn');
+        const p = promptEl ? promptEl.value.trim() : '';
+        if (!p) return;
+        loadAiChat();
+        aiChatHistory.push({ role: 'user', content: p, at: Date.now() });
+        if (promptEl) promptEl.value = '';
+        renderAiChatMessages();
+        saveAiChat();
+        aiSending = true;
+        if (btn) btn.disabled = true;
+        if (status) status.textContent = 'Claude يفكّر…';
+        const historyForApi = aiChatHistory.slice(0, -1).slice(-12).map(function(m) {
+            return { role: m.role, content: m.content };
+        });
+        try {
+            const data = await askNebrasAdminAi(p, aiMode, historyForApi);
+            let reply = '';
+            if (data.ok && data.reply) {
+                reply = data.reply;
+                if (status) status.textContent = 'متصل — ' + (aiMode === 'products' ? 'وضع المتجر' : aiMode);
+            } else if (data.error === 'ai_not_configured') {
+                reply = 'أضيفي ANTHROPIC_API_KEY في Vercel ثم أعيدي النشر.';
+                if (status) status.textContent = 'غير مُعد';
+            } else if (data.error === 'login_required' || data.error === 'main_admin_only') {
+                reply = 'سجّلي دخول الإدارة الرئيسية أولاً لتفعيل الجلسة الآمنة.';
+                if (status) status.textContent = 'يلزم دخول HQ';
+            } else {
+                reply = 'تعذّر الاتصال: ' + (data.error || 'خطأ');
+                if (status) status.textContent = 'فشل';
+            }
+            aiChatHistory.push({ role: 'assistant', content: reply, at: Date.now() });
+            saveAiChat();
+            renderAiChatMessages();
+            if (tryApplyProductSuggestion(reply)) renderAiChatMessages();
+        } catch (e) {
+            aiChatHistory.push({ role: 'assistant', content: 'خطأ شبكة: ' + e.message, at: Date.now() });
+            saveAiChat();
+            renderAiChatMessages();
+            if (status) status.textContent = 'فشل';
+        }
+        aiSending = false;
+        if (btn) btn.disabled = false;
+    }
+
+    function clearAdminAiChat() {
+        if (!confirm('مسح محادثة المساعد؟')) return;
+        aiChatHistory = [];
+        saveAiChat();
+        renderAiChatMessages();
+    }
+
     function renderAdminAiPanel() {
         const body = document.getElementById('admin-ai-body');
         const status = document.getElementById('admin-ai-status');
         if (!body) return;
+        loadAiChat();
         if (!isMainAdmin()) {
-            body.innerHTML = '<p class="erp-empty">مساعد Claude السحابي — الإدارة الرئيسية فقط (NEBRASFACTORY).</p>';
+            body.innerHTML = '<p class="erp-empty">مساعد Claude — الإدارة الرئيسية فقط (NEBRASFACTORY).</p>';
             return;
         }
         body.innerHTML =
-            '<p class="scm-hint"><i class="fas fa-robot"></i> مساعد Claude السحابي — إدارة كاملة للموقع تحت الإدارة الرئيسية</p>' +
+            '<div class="admin-ai-copilot-head">' +
+                '<span class="admin-ai-copilot-badge"><i class="fas fa-sparkles"></i> Claude AI</span>' +
+                '<span class="admin-ai-copilot-sub">مساعد شخصي — مثل Copilot في Excel · يفهم المنصة وينفّذ معك</span>' +
+            '</div>' +
             '<div class="admin-ai-modes">' +
             '<button type="button" class="admin-ai-mode' + (aiMode === 'governance' ? ' active' : '') + '" data-mode="governance"><i class="fas fa-crown"></i> حوكمة</button>' +
             '<button type="button" class="admin-ai-mode' + (aiMode === 'products' ? ' active' : '') + '" data-mode="products"><i class="fas fa-store"></i> المتجر</button>' +
+            '<button type="button" class="admin-ai-mode' + (aiMode === 'content' ? ' active' : '') + '" data-mode="content"><i class="fas fa-pen-to-square"></i> المحتوى</button>' +
             '<button type="button" class="admin-ai-mode' + (aiMode === 'users' ? ' active' : '') + '" data-mode="users"><i class="fas fa-users-cog"></i> المستخدمون</button>' +
             '<button type="button" class="admin-ai-mode' + (aiMode === 'cloud' ? ' active' : '') + '" data-mode="cloud"><i class="fas fa-cloud"></i> السحابة</button>' +
             '</div>' +
             '<div class="admin-ai-quick">' +
-            '<button type="button" class="admin-ai-chip" data-q="اقترح هيكل أصناف ألومنيوم (بروفيل · صفائح · زاوية) مع مقاسات وSKU — بصيغة JSON للتطبيق">أصناف ALU</button>' +
-            '<button type="button" class="admin-ai-chip" data-q="راجع صلاحيات الأدوار في المنصة واقترح توزيعاً للفروع والأقسام تحت الإدارة الرئيسية">الصلاحيات</button>' +
-            '<button type="button" class="admin-ai-chip" data-q="ما خطوات مزامنة السحابة وضمان عدم فقدان البيانات؟">المزامنة</button>' +
-            '<button type="button" class="admin-ai-chip" data-q="كيف أنشئ مستخدم متجر فقط (store_manager) لرفع المنتجات؟">مستخدم متجر</button>' +
+            '<button type="button" class="admin-ai-chip" data-q="ساعدني أضيف منتج WPC جديد بأصناف ومقاسات — اقترح JSON للتطبيق">منتج WPC</button>' +
+            '<button type="button" class="admin-ai-chip" data-q="كيف أضيف بنكاً جديداً لطرق الدفع في السلة؟">بنوك السلة</button>' +
+            '<button type="button" class="admin-ai-chip" data-q="راجع صلاحيات الأدوار واقترح توزيعاً للفروع">الصلاحيات</button>' +
+            '<button type="button" class="admin-ai-chip" data-q="ما خطوات ضمان عدم فقدان البيانات في السحابة؟">حماية البيانات</button>' +
             '</div>' +
-            '<textarea id="admin-ai-prompt" class="admin-ai-prompt" rows="4" placeholder="اسألي عن أي شيء — منتجات · مستخدمون · فروع · أقسام · سحابة · حوكمة..."></textarea>' +
-            '<div class="workspace-actions-row">' +
-            '<button type="button" class="workspace-action-btn workspace-action-btn--primary" id="admin-ai-send-btn"><i class="fas fa-paper-plane"></i> اسألي Claude</button>' +
-            '<button type="button" class="workspace-action-btn" id="admin-ai-apply-btn"><i class="fas fa-magic"></i> تطبيق JSON أصناف</button>' +
-            '<button type="button" class="workspace-action-btn" onclick="typeof syncPushToNebrasCloudNow===\'function\'&&syncPushToNebrasCloudNow()"><i class="fas fa-cloud-upload-alt"></i> رفع للسحابة</button>' +
-            '<button type="button" class="workspace-action-btn" onclick="typeof openNebrasDataWarehouse===\'function\'&&openNebrasDataWarehouse()"><i class="fas fa-database"></i> مستودع البيانات</button>' +
-            '<button type="button" class="workspace-action-btn" onclick="typeof exportStoreCatalogCsv===\'function\'&&exportStoreCatalogCsv()"><i class="fas fa-file-csv"></i> تصدير المتجر</button>' +
+            '<div id="admin-ai-chat" class="admin-ai-chat" aria-live="polite"></div>' +
+            '<div class="admin-ai-compose">' +
+                '<textarea id="admin-ai-prompt" class="admin-ai-prompt" rows="2" placeholder="اكتبي سؤالك أو طلبك — مثل: أضف أصناف ألومنيوم · أنشئ مستخدم متجر · حسّن السلة…"></textarea>' +
+                '<div class="admin-ai-compose-actions">' +
+                    '<button type="button" class="workspace-action-btn workspace-action-btn--primary" id="admin-ai-send-btn"><i class="fas fa-paper-plane"></i> إرسال</button>' +
+                    '<button type="button" class="workspace-action-btn" id="admin-ai-apply-btn" title="تطبيق JSON أصناف"><i class="fas fa-magic"></i></button>' +
+                    '<button type="button" class="workspace-action-btn" onclick="clearAdminAiChat()" title="مسح المحادثة"><i class="fas fa-eraser"></i></button>' +
+                '</div>' +
             '</div>' +
-            '<pre id="admin-ai-reply" class="admin-ai-reply" aria-live="polite"></pre>';
+            '<div class="admin-ai-shortcuts">' +
+            '<button type="button" class="admin-ai-chip" onclick="runNebrasAiAction(\'open_content\')"><i class="fas fa-pen-to-square"></i> المحتوى</button>' +
+            '<button type="button" class="admin-ai-chip" onclick="runNebrasAiAction(\'open_media\')"><i class="fas fa-cloud-upload-alt"></i> رفع وسائط</button>' +
+            '<button type="button" class="admin-ai-chip" onclick="runNebrasAiAction(\'push_cloud\')"><i class="fas fa-cloud-upload-alt"></i> رفع سحابة</button>' +
+            '<button type="button" class="admin-ai-chip" onclick="runNebrasAiAction(\'open_warehouse\')"><i class="fas fa-database"></i> مستودع البيانات</button>' +
+            '</div>';
         body.querySelectorAll('.admin-ai-mode').forEach(function(btn) {
             btn.onclick = function() {
                 aiMode = btn.getAttribute('data-mode') || 'governance';
                 renderAdminAiPanel();
             };
         });
-        body.querySelectorAll('.admin-ai-chip').forEach(function(chip) {
+        body.querySelectorAll('.admin-ai-chip[data-q]').forEach(function(chip) {
             chip.onclick = function() {
                 const el = document.getElementById('admin-ai-prompt');
                 if (el) el.value = chip.getAttribute('data-q') || '';
@@ -135,48 +300,30 @@
         const btn = document.getElementById('admin-ai-send-btn');
         const applyBtn = document.getElementById('admin-ai-apply-btn');
         const promptEl = document.getElementById('admin-ai-prompt');
-        const replyEl = document.getElementById('admin-ai-reply');
-        if (btn && promptEl && replyEl) {
-            btn.onclick = async function() {
-                const p = promptEl.value.trim();
-                if (!p) return;
-                if (status) status.textContent = 'جاري التفكير...';
-                replyEl.textContent = '';
-                btn.disabled = true;
-                try {
-                    const data = await askNebrasAdminAi(p, aiMode);
-                    if (data.ok && data.reply) {
-                        replyEl.textContent = data.reply;
-                        if (status) status.textContent = 'تم — ' + (aiMode === 'products' ? 'وضع المتجر' : aiMode);
-                    } else if (data.error === 'ai_not_configured') {
-                        replyEl.textContent = 'أضيفي ANTHROPIC_API_KEY في Vercel ثم أعيدي النشر.';
-                        if (status) status.textContent = 'غير مُعد';
-                    } else if (data.error === 'login_required' || data.error === 'main_admin_only') {
-                        replyEl.textContent = 'سجّلي دخول الإدارة الرئيسية أولاً لتفعيل الجلسة الآمنة.';
-                        if (status) status.textContent = 'يلزم دخول HQ';
-                    } else {
-                        replyEl.textContent = 'تعذّر الاتصال بـ Claude: ' + (data.error || 'خطأ');
-                        if (status) status.textContent = 'فشل';
-                    }
-                } catch (e) {
-                    replyEl.textContent = 'خطأ شبكة: ' + e.message;
-                    if (status) status.textContent = 'فشل';
+        if (btn) btn.onclick = sendAdminAiMessage;
+        if (promptEl) {
+            promptEl.onkeydown = function(ev) {
+                if (ev.key === 'Enter' && !ev.shiftKey) {
+                    ev.preventDefault();
+                    sendAdminAiMessage();
                 }
-                btn.disabled = false;
             };
         }
-        if (applyBtn && replyEl) {
+        if (applyBtn) {
             applyBtn.onclick = function() {
-                if (!tryApplyProductSuggestion(replyEl.textContent)) {
-                    alert('لم يُعثر على JSON أصناف قابل للتطبيق — اطلبي من Claude إخراج JSON بصيغة: {"product_id":"prod-aluminum","variants":[...]}');
+                const last = aiChatHistory.filter(function(m) { return m.role === 'assistant'; }).pop();
+                if (!last || !tryApplyProductSuggestion(last.content)) {
+                    alert('لم يُعثر على JSON أصناف — اطلبي من Claude إخراج: {"product_id":"...","variants":[...]}');
                 }
             };
         }
+        renderAiChatMessages();
+        if (status && !status.textContent) status.textContent = 'جاهز — محادثة متصلة';
     }
 
     function openNebrasAdminAi() {
         if (!isMainAdmin()) {
-            alert('مساعد Claude السحابي — الإدارة الرئيسية فقط.');
+            alert('مساعد Claude — الإدارة الرئيسية فقط.');
             return;
         }
         if (typeof global.closeNebrasWorkspace === 'function') global.closeNebrasWorkspace();
@@ -203,5 +350,7 @@
     global.closeNebrasAdminAi = closeNebrasAdminAi;
     global.renderAdminAiPanel = renderAdminAiPanel;
     global.askNebrasAdminAi = askNebrasAdminAi;
+    global.runNebrasAiAction = runAiAction;
+    global.clearAdminAiChat = clearAdminAiChat;
 
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -1,3 +1,117 @@
+.admin-ai-copilot-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.admin-ai-copilot-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: linear-gradient(135deg, #155e94, #2980b9);
+    color: #fff;
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.admin-ai-copilot-sub {
+    font-size: 0.82rem;
+    color: rgba(13, 40, 64, 0.72);
+}
+
+.admin-ai-chat {
+    min-height: 220px;
+    max-height: min(48vh, 420px);
+    overflow-y: auto;
+    padding: 12px;
+    margin: 10px 0;
+    border: 1px solid rgba(13, 40, 64, 0.1);
+    border-radius: 14px;
+    background: linear-gradient(180deg, #f8fafc 0%, #fff 100%);
+}
+
+.admin-ai-welcome {
+    text-align: center;
+    padding: 24px 16px;
+    color: rgba(13, 40, 64, 0.8);
+}
+
+.admin-ai-welcome i {
+    font-size: 2rem;
+    color: #2980b9;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.admin-ai-bubble {
+    max-width: 92%;
+    margin-bottom: 12px;
+    padding: 10px 14px;
+    border-radius: 14px;
+    font-size: 0.9rem;
+    line-height: 1.65;
+}
+
+.admin-ai-bubble--user {
+    margin-inline-start: auto;
+    background: #155e94;
+    color: #fff;
+    border-end-end-radius: 4px;
+}
+
+.admin-ai-bubble--assistant {
+    margin-inline-end: auto;
+    background: #fff;
+    border: 1px solid rgba(13, 40, 64, 0.12);
+    border-end-start-radius: 4px;
+}
+
+.admin-ai-action-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+.admin-ai-action-btn {
+    padding: 5px 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 168, 255, 0.35);
+    background: rgba(0, 168, 255, 0.08);
+    font-size: 0.78rem;
+    cursor: pointer;
+    font-family: 'Cairo', sans-serif;
+}
+
+.admin-ai-compose {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+}
+
+.admin-ai-compose .admin-ai-prompt {
+    flex: 1;
+    margin: 0;
+    min-height: 52px;
+}
+
+.admin-ai-compose-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.admin-ai-shortcuts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+}
+
 .admin-ai-prompt {
     width: 100%;
     margin: 12px 0;
@@ -70,4 +184,8 @@
 
 #admin-ai-assistant .scm-hint {
     margin-bottom: 8px;
+}
+
+#admin-ai-assistant .admin-modal {
+    max-width: min(920px, 96vw);
 }
