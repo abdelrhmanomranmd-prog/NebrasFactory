@@ -5,6 +5,15 @@ function requireSession(req) {
 }
 
 const MAX_CLOUD_PAYLOAD_BYTES = 6 * 1024 * 1024;
+const PUSH_BATCH_SIZE = 8;
+
+function chunkRows(rows, size) {
+    const out = [];
+    for (let i = 0; i < rows.length; i += size) {
+        out.push(rows.slice(i, i + size));
+    }
+    return out;
+}
 
 async function handlePull(req, sess) {
     const q = String(req.query.keys || '').trim();
@@ -43,10 +52,26 @@ async function handlePush(body, sess) {
     if (!filtered.length) return { code: 403, data: { ok: false, error: 'forbidden_keys' } };
     const { url, key } = sec.supabaseServiceConfig();
     if (!url || !key) return { code: 503, data: { ok: false, error: 'service_unavailable' } };
-    const ok = await sec.upsertStoreRows(url, key, filtered);
-    return ok
-        ? { code: 200, data: { ok: true, count: filtered.length, by: sess.username } }
-        : { code: 500, data: { ok: false, error: 'upsert_failed' } };
+    let total = 0;
+    const batches = chunkRows(filtered, PUSH_BATCH_SIZE);
+    for (let i = 0; i < batches.length; i++) {
+        const result = await sec.upsertStoreRows(url, key, batches[i]);
+        if (!result || !result.ok) {
+            return {
+                code: 500,
+                data: {
+                    ok: false,
+                    error: 'upsert_failed',
+                    batch: i + 1,
+                    batches: batches.length,
+                    status: result && result.status,
+                    detail: (result && (result.detail || result.error)) || ''
+                }
+            };
+        }
+        total += result.count || batches[i].length;
+    }
+    return { code: 200, data: { ok: true, count: total, by: sess.username } };
 }
 
 module.exports = async function handler(req, res) {

@@ -106,21 +106,36 @@
 
     async function secureCloudPush(rows) {
         const token = getSecureToken();
-        if (!token || !rows || !rows.length) return false;
+        if (!token || !rows || !rows.length) return { ok: false, error: 'no_token_or_rows' };
+        const batchSize = 8;
+        let pushed = 0;
         try {
-            const res = await fetch(apiBase() + '/api/nebras-cloud?action=push', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: 'Bearer ' + token
-                },
-                body: JSON.stringify({ rows: rows })
-            });
-            const data = await res.json();
-            return !!(res.ok && data.ok);
+            for (let i = 0; i < rows.length; i += batchSize) {
+                const chunk = rows.slice(i, i + batchSize);
+                const res = await fetch(apiBase() + '/api/nebras-cloud?action=push', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: 'Bearer ' + token
+                    },
+                    body: JSON.stringify({ rows: chunk })
+                });
+                const data = await res.json().catch(function() { return {}; });
+                if (!res.ok || !data.ok) {
+                    console.warn('secureCloudPush batch failed:', data);
+                    return {
+                        ok: false,
+                        error: data.error || 'push_failed',
+                        detail: data.detail || '',
+                        pushed: pushed
+                    };
+                }
+                pushed += Number(data.count || chunk.length);
+            }
+            return { ok: true, count: pushed };
         } catch (e) {
             console.warn('secureCloudPush failed:', e);
-            return false;
+            return { ok: false, error: 'network_error', pushed: pushed };
         }
     }
 

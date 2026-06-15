@@ -140,19 +140,35 @@ async function fetchStoreRow(url, key, storeKey) {
 }
 
 async function upsertStoreRows(url, key, rows) {
-    const body = rows.map(function(r) {
-        return {
-            store_key: r.store_key,
-            payload: r.payload,
-            updated_at: new Date().toISOString()
-        };
-    });
-    const res = await fetch(url + '/rest/v1/nebras_data_store', {
-        method: 'POST',
-        headers: Object.assign({}, supabaseHeaders(key), { Prefer: 'resolution=merge-duplicates,return=minimal' }),
-        body: JSON.stringify(body)
-    });
-    return res.ok;
+    if (!url || !key || !rows || !rows.length) return { ok: false, error: 'rows_required' };
+    try {
+        const body = rows.map(function(r) {
+            return {
+                store_key: r.store_key,
+                payload: r.payload,
+                updated_at: new Date().toISOString()
+            };
+        });
+        const res = await fetch(
+            url + '/rest/v1/nebras_data_store?on_conflict=store_key',
+            {
+                method: 'POST',
+                headers: Object.assign({}, supabaseHeaders(key), {
+                    Prefer: 'resolution=merge-duplicates,return=minimal'
+                }),
+                body: JSON.stringify(body)
+            }
+        );
+        if (!res.ok) {
+            const errText = await res.text().catch(function() { return ''; });
+            console.error('upsertStoreRows failed:', res.status, errText.slice(0, 500));
+            return { ok: false, status: res.status, detail: errText.slice(0, 300) };
+        }
+        return { ok: true, count: rows.length };
+    } catch (err) {
+        console.error('upsertStoreRows error:', err);
+        return { ok: false, error: String(err && err.message || err) };
+    }
 }
 
 async function loadAdminUsers() {

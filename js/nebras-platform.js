@@ -21747,11 +21747,26 @@
                 alert('Supabase غير متصل — تحققي من الإعدادات.');
                 return;
             }
+            if (typeof getNebrasSecureToken === 'function' && !getNebrasSecureToken()) {
+                const admin = getNebrasCurrentAdmin && getNebrasCurrentAdmin();
+                const un = admin && admin.username ? admin.username : 'NEBRASFACTORY';
+                const pw = window.prompt('لرفع البيانات الحساسة — أدخلي كلمة مرور الإدارة (' + un + '):');
+                if (!pw) return;
+                if (typeof establishNebrasSecureSession === 'function') {
+                    const sessOk = await establishNebrasSecureSession(un, pw);
+                    if (!sessOk) {
+                        alert('فشل تفعيل الجلسة الآمنة — تأكدي من كلمة المرور.');
+                        return;
+                    }
+                }
+            }
             const ok = await pushToNebrasCloud();
             renderCloudGovernancePanel();
             if (currentAdmin) renderDashboardCommandShell(currentAdmin);
             addAuditLog('مزامنة سحابة', ok ? ('رفع يدوي — ' + NEBRAS_CLOUD_STORE_SPECS.length + ' مخزن') : 'رفع يدوي فشل');
-            alert(ok ? 'تم رفع البيانات إلى Supabase.' : 'فشل رفع البيانات — راجعي وحدة التحكم أو صلاحيات Supabase.');
+            alert(ok
+                ? 'تم رفع البيانات إلى Supabase.'
+                : 'فشل رفع البيانات — تأكدي من SUPABASE_SERVICE_ROLE_KEY في Vercel وتشغيل سكربت 014 في Supabase.');
         }
 
         async function syncLoadFromNebrasCloudNow() {
@@ -24347,7 +24362,11 @@
                 }
                 if (sensitiveRows.length) {
                     if (typeof secureCloudPush === 'function' && typeof getNebrasSecureToken === 'function' && getNebrasSecureToken()) {
-                        okSensitive = await secureCloudPush(sensitiveRows);
+                        const sensResult = await secureCloudPush(sensitiveRows);
+                        okSensitive = !!(sensResult && sensResult.ok);
+                        if (!okSensitive) {
+                            console.warn('Nebras sensitive cloud save failed:', sensResult);
+                        }
                     } else {
                         console.warn('Nebras sensitive cloud save blocked — secure session required.');
                         okSensitive = false;
