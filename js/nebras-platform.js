@@ -21766,7 +21766,7 @@
             addAuditLog('مزامنة سحابة', ok ? ('رفع يدوي — ' + NEBRAS_CLOUD_STORE_SPECS.length + ' مخزن') : 'رفع يدوي فشل');
             alert(ok
                 ? 'تم رفع البيانات إلى Supabase.'
-                : 'فشل رفع البيانات — تأكدي من SUPABASE_SERVICE_ROLE_KEY في Vercel وتشغيل سكربت 014 في Supabase.');
+                : 'فشل رفع البيانات — راجعي SUPABASE_SERVICE_ROLE_KEY في Vercel (يجب أن يبدأ بـ eyJ بدون أحرف عربية).');
         }
 
         async function syncLoadFromNebrasCloudNow() {

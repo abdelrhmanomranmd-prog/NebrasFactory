@@ -53,7 +53,11 @@ function supabaseServiceConfig() {
         process.env.SUPABASE_SECRET_KEY ||
         process.env.SUPABASE_SERVICE_KEY ||
         '';
-    return { url, key: String(key).trim() };
+    const keyStr = String(key).trim();
+    if (keyStr && !/^[\x20-\x7E]+$/.test(keyStr)) {
+        return { url, key: '', invalidKey: 'non_ascii_service_key' };
+    }
+    return { url, key: keyStr };
 }
 
 function supabaseHeaders(key) {

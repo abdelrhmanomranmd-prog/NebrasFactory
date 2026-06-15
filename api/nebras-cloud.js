@@ -21,8 +21,17 @@ async function handlePull(req, sess) {
     keys = keys.filter(function(k) { return sec.isSensitiveKey(k); });
     keys = sec.keysAllowedForSession(sess, keys);
     if (!keys.length) return { code: 403, data: { ok: false, error: 'forbidden_keys' } };
-    const { url, key } = sec.supabaseServiceConfig();
-    if (!url || !key) return { code: 503, data: { ok: false, error: 'service_unavailable' } };
+    const { url, key, invalidKey } = sec.supabaseServiceConfig();
+    if (!url || !key) {
+        return {
+            code: 503,
+            data: {
+                ok: false,
+                error: invalidKey === 'non_ascii_service_key' ? 'invalid_service_key_encoding' : 'service_unavailable',
+                hint: 'SUPABASE_SERVICE_ROLE_KEY'
+            }
+        };
+    }
     const rows = [];
     for (let i = 0; i < keys.length; i++) {
         const payload = await sec.fetchStoreRow(url, key, keys[i]);
@@ -50,8 +59,17 @@ async function handlePush(body, sess) {
         return { code: 413, data: { ok: false, error: 'payload_too_large', keys: oversized.map(function(r) { return r.store_key; }) } };
     }
     if (!filtered.length) return { code: 403, data: { ok: false, error: 'forbidden_keys' } };
-    const { url, key } = sec.supabaseServiceConfig();
-    if (!url || !key) return { code: 503, data: { ok: false, error: 'service_unavailable' } };
+    const { url, key, invalidKey } = sec.supabaseServiceConfig();
+    if (!url || !key) {
+        return {
+            code: 503,
+            data: {
+                ok: false,
+                error: invalidKey === 'non_ascii_service_key' ? 'invalid_service_key_encoding' : 'service_unavailable',
+                hint: 'SUPABASE_SERVICE_ROLE_KEY'
+            }
+        };
+    }
     let total = 0;
     const batches = chunkRows(filtered, PUSH_BATCH_SIZE);
     for (let i = 0; i < batches.length; i++) {
