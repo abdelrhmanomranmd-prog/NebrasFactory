@@ -116,9 +116,12 @@
     function filterCpUsersForManager(list) {
         const admin = resolveCpAdminUser();
         if (admin && admin.role === 'sales_rep') {
+            const repId = String(admin.id || '');
+            const repUser = String(admin.username || '').toLowerCase();
             return (list || []).filter(function(u) {
-                if (String(u.assignedRepId || '') === String(admin.id || '')) return true;
-                if (!u.assignedRepId && u.createdBy === admin.username) return true;
+                if (String(u.assignedRepId || '') === repId) return true;
+                if (String(u.assignedRepUsername || '').toLowerCase() === repUser) return true;
+                if (!u.assignedRepId && !u.assignedRepUsername && String(u.createdBy || '').toLowerCase() === repUser) return true;
                 return false;
             });
         }
@@ -129,11 +132,18 @@
         });
     }
 
-    function getCpBranchSalesReps() {
-        if (typeof global.getBranchSalesRepsForCp === 'function') {
-            return global.getBranchSalesRepsForCp(resolveCpAdminUser()) || [];
-        }
-        return [];
+    function getBranchSalesRepsForCp() {
+        let users = [];
+        try {
+            if (typeof global.adminUsers !== 'undefined' && Array.isArray(global.adminUsers)) users = global.adminUsers;
+        } catch (e) { /* ignore */ }
+        const bid = cpManagerBranchId();
+        return users.filter(function(u) {
+            if (!u || u.role !== 'sales_rep' || u.isActive === false) return false;
+            if (!bid) return true;
+            const ub = u.assignedBranchId != null ? String(u.assignedBranchId) : (u.branchId != null ? String(u.branchId) : '');
+            return !ub || ub === bid;
+        });
     }
 
     function entryBelongsToPortalCustomer(entry, portalUser) {
@@ -425,14 +435,13 @@
         list.innerHTML = users.map(function(u, idx) {
             const globalIdx = customerPortalUsers.indexOf(u);
             const loyalty = computeCustomerLoyaltyScore(u);
-            const repLabel = u.assignedRepUsername ? ('<span class="nebras-user-branch"><i class="fas fa-user-tie"></i> مندوب: ' + esc(u.assignedRepUsername) + '</span>') : '';
             return '<article class="nebras-user-card cp-gov-card">' +
                 '<header class="nebras-user-card-head">' +
                     '<span class="nebras-user-avatar"><i class="fas fa-user-circle"></i></span>' +
                     '<div><strong>' + esc(u.displayName || u.username) + '</strong><small>' + esc(u.username) + '</small></div>' +
                 '</header>' +
-                repLabel +
                 '<span class="nebras-user-branch"><i class="fas fa-chart-line"></i> ' + loyalty.data.totalQuotes + ' عروض · ' + loyalty.data.totalOrders + ' طلبات · ' + esc(loyalty.tier) + '</span>' +
+                (u.assignedRepUsername ? '<span class="nebras-user-branch"><i class="fas fa-user-tie"></i> مندوب: ' + esc(u.assignedRepUsername) + '</span>' : '') +
                 '<footer class="nebras-user-card-foot">' +
                     '<button class="nebras-user-act" onclick="openCpUserEditor(' + globalIdx + ')"><i class="fas fa-pen"></i> تعديل</button>' +
                     '<button class="nebras-user-act nebras-user-act--danger" onclick="deleteCpUser(' + globalIdx + ')"><i class="fas fa-trash"></i> حذف</button>' +
@@ -486,19 +495,16 @@
             });
         }
         let repSelect = '';
-        const admin = resolveCpAdminUser();
-        const reps = getCpBranchSalesReps();
-        if (canManageCustomerPortalUsers(admin) && reps.length) {
-            repSelect = '<label class="nebras-field"><span>مندوب المبيعات المسؤول</span><select id="cp-e-rep">' +
-                '<option value="">— اختر المندوب —</option>' +
+        const isRep = admin && admin.role === 'sales_rep';
+        if (!isRep && canManageCustomerPortalUsers()) {
+            const reps = getBranchSalesRepsForCp();
+            repSelect = '<label class="nebras-field"><span>المندوب المسؤول</span><select id="cp-e-rep">' +
+                '<option value="">— اختر مندوب المبيعات —</option>' +
                 reps.map(function(r) {
                     const sel = (user && String(user.assignedRepId) === String(r.id)) ||
-                        (!user && pre.assignedRepId && String(pre.assignedRepId) === String(r.id)) ? ' selected' : '';
-                    return '<option value="' + escAttr(r.id) + '" data-username="' + escAttr(r.username) + '"' + sel + '>' +
-                        esc(r.username) + (r.assignedBranchCity ? ' — ' + esc(r.assignedBranchCity) : '') + '</option>';
+                        (user && String(user.assignedRepUsername || '').toLowerCase() === String(r.username || '').toLowerCase()) ? ' selected' : '';
+                    return '<option value="' + escAttr(r.id) + '"' + (sel ? ' selected' : '') + '>' + esc(r.displayName || r.username) + '</option>';
                 }).join('') + '</select></label>';
-        } else if (admin && admin.role === 'sales_rep') {
-            repSelect = '<p class="scm-hint"><i class="fas fa-user-tie"></i> هذا العميل سيُربط بك تلقائياً: ' + esc(admin.username) + '</p>';
         }
         host.innerHTML =
             '<div class="nebras-editor-card">' +
@@ -547,27 +553,15 @@
         const phone = String((document.getElementById('cp-e-phone') || {}).value || '').trim();
         const email = String((document.getElementById('cp-e-email') || {}).value || '').trim();
         const crmCustomerId = String((document.getElementById('cp-e-crm') || {}).value || '').trim();
-        const admin = resolveCpAdminUser();
         const repEl = document.getElementById('cp-e-rep');
-        let assignedRepId = null;
-        let assignedRepUsername = '';
-        if (admin && admin.role === 'sales_rep') {
-            assignedRepId = admin.id;
-            assignedRepUsername = admin.username;
-        } else if (repEl && repEl.value) {
-            assignedRepId = repEl.value;
-            const opt = repEl.options[repEl.selectedIndex];
-            assignedRepUsername = opt ? (opt.getAttribute('data-username') || opt.textContent || '') : '';
-        } else if (cpEditorState.isEdit && customerPortalUsers[cpEditorState.index]) {
-            assignedRepId = customerPortalUsers[cpEditorState.index].assignedRepId || null;
-            assignedRepUsername = customerPortalUsers[cpEditorState.index].assignedRepUsername || '';
-        }
+        const repId = repEl ? String(repEl.value || '').trim() : '';
         if (!displayName || !username) { alert('الاسم واسم المستخدم مطلوبان.'); return; }
         if (!cpEditorState.isEdit && !password) { alert('كلمة المرور مطلوبة للحساب الجديد.'); return; }
         const dup = customerPortalUsers.some(function(u, i) {
             return String(u.username).toLowerCase() === username.toLowerCase() && i !== cpEditorState.index;
         });
         if (dup) { alert('اسم المستخدم مستخدم مسبقاً.'); return; }
+        const admin = resolveCpAdminUser();
         const payload = {
             id: cpEditorState.id,
             username: username,
@@ -575,14 +569,25 @@
             phone: phone,
             email: email,
             crmCustomerId: crmCustomerId || null,
-            assignedRepId: assignedRepId,
-            assignedRepUsername: assignedRepUsername,
             branchId: cpEditorState.branchId,
             branchCity: cpEditorState.branchCity,
             isActive: true,
             createdBy: admin ? admin.username : 'system',
             updatedAt: new Date().toISOString()
         };
+        if (admin && admin.role === 'sales_rep') {
+            payload.assignedRepId = admin.id;
+            payload.assignedRepUsername = admin.username;
+        } else if (repId) {
+            let repUser = null;
+            try {
+                repUser = (global.adminUsers || []).find(function(r) { return r && String(r.id) === repId; });
+            } catch (e) { /* ignore */ }
+            if (repUser) {
+                payload.assignedRepId = repUser.id;
+                payload.assignedRepUsername = repUser.username;
+            }
+        }
         if (password) payload.password = hashPw(password);
         else if (cpEditorState.isEdit) payload.password = customerPortalUsers[cpEditorState.index].password;
         if (cpEditorState.isEdit) {

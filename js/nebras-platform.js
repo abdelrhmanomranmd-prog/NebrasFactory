@@ -671,46 +671,6 @@
             }).filter(function(s) { return s.value; });
         }
 
-        function productUsesNebrasColorCatalog(productId) {
-            return NEBRAS_WPC_PRODUCT_IDS.indexOf(productId) >= 0;
-        }
-
-        function pickNebrasCatalogColorAr(currentValue) {
-            const catalog = getNebrasColorCatalog();
-            if (!catalog.length) {
-                const free = prompt('اللون (عربي):', currentValue || '');
-                return free === null ? null : String(free).trim();
-            }
-            const lines = catalog.map(function(c, i) {
-                return (i + 1) + '. ' + (c.code || 'N-' + (i + 1)) + ' — ' + (c.labelAr || c.labelEn || '');
-            }).join('\n');
-            const pick = prompt(
-                'اختر لوناً من كتالوج نبراس (20 رولّة WPC فقط):\n' + lines +
-                '\n\nرقم اللون (1-' + catalog.length + ') أو اكتب اسماً مخصصاً:',
-                currentValue || '1'
-            );
-            if (pick === null) return null;
-            const num = parseInt(String(pick).trim(), 10);
-            if (!isNaN(num) && num >= 1 && num <= catalog.length) {
-                const c = catalog[num - 1];
-                return String(c.labelAr || c.labelEn || c.code || '').trim();
-            }
-            return String(pick).trim();
-        }
-
-        function getBranchSalesRepsForCp(admin) {
-            admin = admin || currentAdmin;
-            if (!admin) return [];
-            const bid = getAdminAssignedBranchId(admin);
-            return (adminUsers || []).filter(function(u) {
-                if (!u || u.isActive === false || u.role !== 'sales_rep') return false;
-                if (isMainGovernanceAdmin(admin)) return true;
-                if (bid == null) return userBelongsToBranchTeam(u, admin);
-                return userBelongsToBranchTeam(u, admin) ||
-                    String(u.assignedBranchId || '') === String(bid);
-            });
-        }
-
         function storeCatalogColorMatches(itemColor, filterColor) {
             const ic = String(itemColor || '').trim();
             const fc = String(filterColor || '').trim();
@@ -17074,6 +17034,7 @@
                 { icon: 'fas fa-chart-pie', title: 'ولاء العملاء', desc: 'تحليل ولاء عملاء الفرع', handler: 'openCustomerLoyaltyAnalytics', show: typeof canManageCustomerPortalUsers === 'function' && canManageCustomerPortalUsers() },
                 { icon: 'fas fa-exclamation-triangle', title: 'الشكاوى', desc: 'متابعة شكاوى فرعك', handler: 'openComplaintsManagement', show: canManage('complaints') },
                 { icon: 'fas fa-chart-bar', title: 'تقرير الفرع', desc: 'تقارير تنفيذية لفرعك', handler: 'openExecutiveReports', show: typeof canViewExecutiveReports === 'function' && canViewExecutiveReports() },
+                { icon: 'fas fa-industry', title: 'الإنتاج اليومي', desc: 'متابعة إنتاج المصنع — يحدده مدير الإنتاج', handler: 'openErpProduction', show: canManage('audit') || canManage('production') },
                 { icon: 'fas fa-user-circle', title: 'مستخدمي العملاء', desc: 'حسابات بوابة العميل لفرعك', handler: 'openCustomerPortalGovernance', show: typeof canManageCustomerPortalUsers === 'function' && canManageCustomerPortalUsers() }
             ];
             actions.innerHTML = cards.filter(function(c) { return c.show; }).map(function(c) {
@@ -24438,10 +24399,7 @@
             if (cmd === 'add') {
                 const typeAr = prompt('الشكل أو النوع (عربي) — مثال: بروفيل، صفائح، زاوية:', 'بروفيل');
                 const sizeAr = prompt('المقاس (عربي) — مثال: 6م، 122×244 سم:', '6 م');
-                const colorAr = productUsesNebrasColorCatalog(productId)
-                    ? pickNebrasCatalogColorAr('فضي')
-                    : prompt('اللون (عربي):', 'فضي');
-                if (colorAr === null) return;
+                const colorAr = prompt('اللون (عربي):', 'فضي');
                 const price = parseFloat(prompt('السعر قبل الضريبة (ر.س) — 0 = عند الطلب:\n(تُضاف 15% ضريبة في السلة وعرض السعر)', '0') || '0');
                 const defaultImg = product.id === 'prod-aluminum' ? 'images/aluminum-background.webp' : (product.id === 'prod-other' ? 'images/background-other-products.jpeg' : 'images/wpc-background.avif');
                 const image = await pickMediaPath({ label: 'صورة الصنف (للزائر في المتجر)', defaultValue: (product.album || [])[0] || defaultImg });
@@ -24472,10 +24430,7 @@
                 if (typeAr !== null) { v.typeAr = typeAr.trim(); v.typeEn = v.typeAr; }
                 const sizeAr = prompt('المقاس:', v.sizeAr || '');
                 if (sizeAr !== null) { v.sizeAr = sizeAr.trim(); v.sizeEn = v.sizeAr; }
-                const colorAr = productUsesNebrasColorCatalog(productId)
-                    ? pickNebrasCatalogColorAr(v.colorAr || '')
-                    : prompt('اللون:', v.colorAr || '');
-                if (colorAr === null) return;
+                const colorAr = prompt('اللون:', v.colorAr || '');
                 if (colorAr !== null) { v.colorAr = colorAr.trim(); v.colorEn = v.colorAr; }
                 const price = parseFloat(prompt('السعر قبل الضريبة (ر.س):', String(v.price || 0)) || '0');
                 if (!isNaN(price)) v.price = price;
@@ -27041,6 +26996,7 @@
         window.NEBRAS_ERP_PUBLIC = NEBRAS_ERP;
         window.getNebrasBranchesForEmpire = function() { return branchesData || []; };
         window.getNebrasCloudStoreCount = function() { return NEBRAS_CLOUD_STORE_SPECS.length; };
+        window.getNebrasColorCatalog = getNebrasColorCatalog;
         window.openSiteContentManager = openSiteContentManager;
         window.openIconManagement = openIconManagement;
         window.openSystemSettings = openSystemSettings;
@@ -27217,9 +27173,6 @@
         window.exportAluminumCatalogCsv = exportAluminumCatalogCsv;
         window.exportAluminumCatalogPdf = exportAluminumCatalogPdf;
         window.exportStoreCatalogCsv = exportStoreCatalogCsv;
-        window.getNebrasColorCatalog = getNebrasColorCatalog;
-        window.getBranchSalesRepsForCp = getBranchSalesRepsForCp;
-        window.pickNebrasCatalogColorAr = pickNebrasCatalogColorAr;
         window.exportNebrasGovernanceBundle = exportNebrasGovernanceBundle;
         window.importNebrasGovernanceBundleFromFile = importNebrasGovernanceBundleFromFile;
         window.openNebrasGovernanceImportPicker = openNebrasGovernanceImportPicker;
