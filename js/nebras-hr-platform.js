@@ -2325,11 +2325,14 @@
                 '<td><button type="button" class="erp-tag erp-tag--action" onclick="exportHrPayslipPdf(\'' + esc(it.employeeId) + '\')"><i class="fas fa-file-pdf"></i> قسيمة</button></td></tr>';
         }).join('');
         return '<div class="hr-panel is-active">' +
-            '<p class="hr-platform-note"><i class="fas fa-money-check-dollar"></i> <strong>مسير رواتب HCM</strong> — أساسي + بدلات − GOSI 9% − خصومات ديناميكية وتذاكر سفر' +
-            (canApprove ? ' · الإدارة الرئيسية تعتمد وتصدّر PDF' : '') + '.</p>' +
+            '<p class="hr-platform-note"><i class="fas fa-money-check-dollar"></i> <strong>مسير رواتب HCM</strong> — أساسي + بدلات − GOSI 9% − خصومات ديناميكية وتذاكر سفر وسلف' +
+            (canApprove ? ' · الإدارة الرئيسية تعتمد وتصدّر PDF/Excel/مدد' : ' · تصدير Excel ومدد متاح لـ HR') + '.</p>' +
             '<div class="hr-toolbar">' +
                 '<label class="nebras-field"><span>الشهر</span><input type="month" id="hp-month" value="' + esc(month) + '" onchange="setHrPayrollMonth(this.value)"></label>' +
                 '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="saveHrPayrollDraft()"><i class="fas fa-save"></i> حفظ مسودة</button>' +
+                '<button type="button" class="nebras-users-btn" onclick="exportHrPayrollExcel()"><i class="fas fa-file-excel"></i> Excel مسير الرواتب</button>' +
+                '<button type="button" class="nebras-users-btn" onclick="exportHrPayrollMudad()"><i class="fas fa-building-columns"></i> ملف مدد (WPS)</button>' +
+                '<a href="https://mudad.sa" target="_blank" rel="noopener" class="nebras-users-btn" style="text-decoration:none"><i class="fas fa-external-link-alt"></i> فتح منصة مدد</a>' +
                 (canApprove ? '<button type="button" class="nebras-users-btn" onclick="exportHrPayrollPdf()"><i class="fas fa-file-pdf"></i> PDF مسير الرواتب</button>' : '') +
                 '<button type="button" class="nebras-users-btn" onclick="exportAllHrPayslipsPdf()"><i class="fas fa-files"></i> قسائم فردية (الكل)</button>' +
             '</div>' +
@@ -2387,6 +2390,109 @@
         w.document.close();
         w.print();
         hrAudit('HR مسير رواتب', 'PDF ' + month);
+    }
+
+    function hrPayrollDownloadBlob(blob, filename) {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = filename;
+        a.click();
+        setTimeout(function() { URL.revokeObjectURL(a.href); }, 4000);
+    }
+
+    function getHrPayrollCompanyMeta() {
+        const companyId = typeof getHrCompanyFilter === 'function' ? getHrCompanyFilter() : '';
+        const company = companyId && typeof getHrCompanyById === 'function'
+            ? getHrCompanyById(companyId)
+            : (typeof getHrCompanyById === 'function' ? getHrCompanyById('comp-nebras') : null);
+        return company || {
+            nameAr: 'مصنع نبراس للبلاستيك',
+            crNumber: '',
+            mudadEstablishmentId: '',
+            gosiSubscriptionNo: '',
+            payrollBankCode: ''
+        };
+    }
+
+    function exportHrPayrollExcel() {
+        if (!requireHrOps()) return;
+        const month = getHrPayrollMonth();
+        const items = buildPayrollItemsForMonth(month, hrBranchFilter);
+        if (!items.length) { alert('لا موظفين في مسير هذا الشهر.'); return; }
+        const company = getHrPayrollCompanyMeta();
+        const headers = ['رقم الموظف', 'الاسم', 'الهوية/الإقامة', 'IBAN', 'القسم', 'الأساسي', 'بدل سكن', 'بدل نقل', 'إجمالي مستحقات', 'GOSI 9%', 'خصومات أخرى', 'إجمالي خصومات', 'الصافي', 'الشهر'];
+        const rows = items.map(function(it) {
+            const emp = getEmployeeById(it.employeeId) || {};
+            return [
+                it.employeeNo, it.employeeName, emp.nationalId || '', emp.iban || '',
+                it.department, it.base, it.housing, it.transport, it.gross,
+                it.gosiDed, it.dynamicDed, it.deductions, it.net, month
+            ];
+        });
+        const totalNet = items.reduce(function(s, i) { return s + i.net; }, 0);
+        rows.push(['', '', '', '', 'الإجمالي', '', '', '', '', '', '', '', totalNet.toFixed(2), month]);
+        let tableHtml = '<table border="1"><thead><tr>' +
+            headers.map(function(h) { return '<th>' + esc(h) + '</th>'; }).join('') + '</tr></thead><tbody>';
+        rows.forEach(function(row) {
+            tableHtml += '<tr>' + row.map(function(c) { return '<td>' + esc(String(c == null ? '' : c)) + '</td>'; }).join('') + '</tr>';
+        });
+        tableHtml += '</tbody></table>';
+        const html = '<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?>' +
+            '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">' +
+            '<head><meta charset="UTF-8"></head><body dir="rtl">' +
+            '<h2>مسير رواتب — ' + esc(company.nameAr) + ' — ' + esc(month) + '</h2>' +
+            '<p>تاريخ التصدير: ' + new Date().toLocaleString('ar-SA') + '</p>' +
+            tableHtml + '</body></html>';
+        const blob = new Blob(['\ufeff' + html], { type: 'application/vnd.ms-excel;charset=utf-8' });
+        hrPayrollDownloadBlob(blob, 'nebras-payroll-' + month + '.xls');
+        hrAudit('HR مسير رواتب', 'Excel ' + month);
+        alert('تم تنزيل مسير الرواتب Excel لشهر ' + month);
+    }
+
+    function exportHrPayrollMudad() {
+        if (!requireHrOps()) return;
+        const month = getHrPayrollMonth();
+        const items = buildPayrollItemsForMonth(month, hrBranchFilter);
+        if (!items.length) { alert('لا موظفين في مسير هذا الشهر.'); return; }
+        const company = getHrPayrollCompanyMeta();
+        if (!company.mudadEstablishmentId && !confirm('لم يُدخل رقم منشأة مدد في بيانات الشركة — هل تريد المتابعة؟')) return;
+        const payDate = month + '-28';
+        const totalNet = Math.round(items.reduce(function(s, i) { return s + i.net; }, 0) * 100) / 100;
+        const header = [
+            'HDR',
+            company.mudadEstablishmentId || company.crNumber || '',
+            company.payrollBankCode || '',
+            payDate,
+            month.replace('-', ''),
+            String(items.length),
+            totalNet.toFixed(2),
+            company.gosiSubscriptionNo || ''
+        ].join('\t');
+        const lines = [header];
+        items.forEach(function(it, idx) {
+            const emp = getEmployeeById(it.employeeId) || {};
+            const otherAllow = hrNum(it.transport);
+            lines.push([
+                'EMP',
+                String(idx + 1),
+                emp.nationalId || '',
+                it.employeeName || '',
+                emp.iban || '',
+                company.payrollBankCode || '',
+                hrNum(it.base).toFixed(2),
+                hrNum(it.housing).toFixed(2),
+                otherAllow.toFixed(2),
+                hrNum(it.deductions).toFixed(2),
+                hrNum(it.net).toFixed(2),
+                (it.employeeNo || '') + '-' + month,
+                payDate
+            ].join('\t'));
+        });
+        const csvBody = lines.join('\n');
+        const blob = new Blob(['\ufeff' + csvBody], { type: 'text/tab-separated-values;charset=utf-8' });
+        hrPayrollDownloadBlob(blob, 'nebras-mudad-wps-' + month + '.txt');
+        hrAudit('HR مسير رواتب', 'مدد WPS ' + month);
+        alert('تم تنزيل ملف مدد/WPS لشهر ' + month + '.\n\nالخطوات:\n1) افتحي منصة مدد (الزر أعلاه)\n2) ارفعي الملف .txt\n3) تأكدي من تطابق إجمالي الصافي: ' + totalNet.toFixed(2) + ' ر.س');
     }
 
     function renderHrAlertsPanel() {
@@ -4379,6 +4485,8 @@
     global.setHrPayrollMonth = setHrPayrollMonth;
     global.saveHrPayrollDraft = saveHrPayrollDraft;
     global.exportHrPayrollPdf = exportHrPayrollPdf;
+    global.exportHrPayrollExcel = exportHrPayrollExcel;
+    global.exportHrPayrollMudad = exportHrPayrollMudad;
     global.getHrNotifications = function() { loadHrData(); return hrNotifications; };
     global.getHrNotifSettings = function() { loadHrData(); return hrNotifSettings; };
     global.setHrNotificationsFromCloud = setHrNotificationsFromCloud;

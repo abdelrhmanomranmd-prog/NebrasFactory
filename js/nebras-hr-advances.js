@@ -1,6 +1,6 @@
 /**
  * نبراس HR — سلف الموظفين بأقساط (Jisr/Odoo style)
- * خصم على N شهر · تخطي شهر · رصيد متبقي · ربط بمسير الرواتب
+ * خصم على N شهر · تأجيل شهر (راتب كامل) · رصيد متبقي · ربط بمسير الرواتب
  */
 (function(global) {
     'use strict';
@@ -68,6 +68,32 @@
         return adv;
     }
 
+    function isAdvanceMonthDeferred(adv, month) {
+        if (!adv) return false;
+        if ((adv.skippedMonths || []).indexOf(month) >= 0) return true;
+        const slot = (adv.schedule || []).find(function(s) { return s.month === month; });
+        return !!(slot && (slot.status === 'skipped' || slot.status === 'postponed'));
+    }
+
+    function extendAdvanceScheduleForPostpone(adv, slot) {
+        if (!adv || !slot) return;
+        let lastMonth = adv.startMonth || slot.month;
+        (adv.schedule || []).forEach(function(s) {
+            if (s.month > lastMonth) lastMonth = s.month;
+        });
+        let newMonth = addMonths(lastMonth, 1);
+        while ((adv.schedule || []).find(function(s) { return s.month === newMonth; })) {
+            newMonth = addMonths(newMonth, 1);
+        }
+        adv.schedule.push({
+            month: newMonth,
+            amount: slot.amount,
+            status: 'pending',
+            postponedFrom: slot.month
+        });
+        adv.installmentCount = Math.max(adv.installmentCount || 0, adv.schedule.length);
+    }
+
     function computeHrAdvanceDeduction(employeeId, month) {
         loadHrAdvancesData();
         let total = 0;
@@ -77,11 +103,10 @@
             if (!adv || adv.status === 'closed' || adv.employeeId !== employeeId) return;
             if (teamIds.indexOf(employeeId) < 0 && typeof applyHrScopeFilter === 'function') return;
             ensureAdvanceSchedule(adv);
-            const skipped = (adv.skippedMonths || []).indexOf(month) >= 0;
-            if (skipped) return;
+            if (isAdvanceMonthDeferred(adv, month)) return;
             const slot = (adv.schedule || []).find(function(s) { return s.month === month; });
             if (slot) {
-                if (slot.status === 'skipped' || slot.status === 'deducted') return;
+                if (slot.status === 'skipped' || slot.status === 'postponed' || slot.status === 'deducted') return;
                 const amt = Math.min(hrNum(slot.amount), hrNum(adv.remaining));
                 if (amt > 0) {
                     total += amt;
@@ -133,6 +158,14 @@
         saveHrAdvancesData();
     }
 
+    function formatSkippedMonths(adv) {
+        const months = (adv.skippedMonths || []).slice();
+        if (!months.length) return '—';
+        return months.map(function(m) {
+            return '<span class="erp-tag erp-tag--accent" title="راتب كامل — خصم مؤجّل">' + esc(m) + '</span>';
+        }).join(' ');
+    }
+
     function renderHrAdvancesPanel() {
         loadHrAdvancesData();
         const teamIds = getScopedEmployeeIds();
@@ -147,21 +180,25 @@
         const rows = list.map(function(a) {
             ensureAdvanceSchedule(a);
             const st = a.status === 'closed' ? '<span class="erp-tag erp-tag--ok">مغلقة</span>' : '<span class="erp-tag erp-tag--accent">نشطة</span>';
-            const skipBtn = a.status !== 'closed'
-                ? '<button type="button" class="erp-tag" onclick="skipHrAdvanceMonthPrompt(\'' + esc(a.id) + '\')"><i class="fas fa-forward"></i> تخطي شهر</button>'
+            const postponeBtn = a.status !== 'closed'
+                ? '<button type="button" class="erp-tag erp-tag--action" onclick="postponeHrAdvanceMonthFor(\'' + esc(a.id) + '\')" title="تأجيل خصم شهر — الموظف يقبض راتبه كاملاً"><i class="fas fa-calendar-xmark"></i> تأجيل خصم</button>'
                 : '';
             return '<tr><td>' + esc(a.employeeName) + '</td>' +
                 '<td><strong>' + hrNum(a.principal).toLocaleString('ar-SA') + '</strong></td>' +
                 '<td>' + hrNum(a.remaining).toLocaleString('ar-SA') + '</td>' +
                 '<td>' + esc(a.installmentCount || '—') + ' قسط × ' + hrNum(a.installmentAmount).toLocaleString('ar-SA') + '</td>' +
                 '<td>' + esc(a.startMonth || '') + '</td>' +
+                '<td>' + formatSkippedMonths(a) + '</td>' +
                 '<td>' + st + '</td>' +
-                '<td>' + skipBtn +
+                '<td>' + postponeBtn +
                 ' <button type="button" class="erp-tag" onclick="toggleHrAdvanceClosed(\'' + esc(a.id) + '\')">' + (a.status === 'closed' ? 'إعادة فتح' : 'إغلاق') + '</button>' +
                 ' <button type="button" class="erp-tag" onclick="deleteHrAdvance(\'' + esc(a.id) + '\')"><i class="fas fa-trash"></i></button></td></tr>';
         }).join('');
         return '<div class="hr-panel is-active">' +
-            '<p class="hr-platform-note"><i class="fas fa-hand-holding-dollar"></i> <strong>سلف الموظفين بأقساط</strong> — حدد عدد أشهر الخصم · تخطّي شهر بدون خصم · يُطبَّق تلقائياً على مسير الرواتب.</p>' +
+            '<p class="hr-platform-note"><i class="fas fa-hand-holding-dollar"></i> <strong>سلف الموظفين بأقساط</strong> — حدد عدد أشهر الخصم · <strong>تأجيل خصم شهر</strong> (الموظف يقبض راتبه كاملاً والقسط يُؤجَّل لشهر لاحق) · يُطبَّق تلقائياً على مسير الرواتب.</p>' +
+            '<div class="hr-toolbar">' +
+                '<label class="nebras-field"><span>شهر التأجيل الافتراضي</span><input type="month" id="hadv-postpone-month" value="' + monthNow + '"></label>' +
+            '</div>' +
             '<div class="hr-editor-overlay"><h4><i class="fas fa-plus"></i> سلفة جديدة بأقساط</h4><div class="erp-form-grid">' +
                 '<label class="nebras-field"><span>الموظف *</span><select id="hadv-employee">' + empOpts + '</select></label>' +
                 '<label class="nebras-field"><span>مبلغ السلفة (ر.س) *</span><input type="number" id="hadv-principal" min="1" step="0.01"></label>' +
@@ -171,8 +208,8 @@
                 '<label class="nebras-field nebras-field--wide"><span>ملاحظة</span><input id="hadv-note"></label>' +
             '</div><div class="erp-form-actions"><button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="saveHrAdvance()"><i class="fas fa-save"></i> تسجيل السلفة</button></div></div>' +
             '<div class="hr-leave-table-wrap"><table class="hr-leave-table"><thead><tr>' +
-            '<th>الموظف</th><th>السلفة</th><th>المتبقي</th><th>الأقساط</th><th>البداية</th><th>الحالة</th><th>إجراء</th></tr></thead><tbody>' +
-            (rows || '<tr><td colspan="7" class="erp-empty">لا سلف مسجّلة — استخدمي النموذج أعلاه</td></tr>') +
+            '<th>الموظف</th><th>السلفة</th><th>المتبقي</th><th>الأقساط</th><th>البداية</th><th>أشهر مؤجّلة</th><th>الحالة</th><th>إجراء</th></tr></thead><tbody>' +
+            (rows || '<tr><td colspan="8" class="erp-empty">لا سلف مسجّلة — استخدمي النموذج أعلاه</td></tr>') +
             '</tbody></table></div></div>';
     }
 
@@ -214,27 +251,55 @@
         if (typeof renderHrPlatformPanelSafe === 'function') renderHrPlatformPanelSafe();
     }
 
+    function postponeHrAdvanceMonthFor(advanceId) {
+        const monthEl = document.getElementById('hadv-postpone-month');
+        const month = monthEl ? monthEl.value : new Date().toISOString().slice(0, 7);
+        if (!month) { alert('اختر شهر التأجيل.'); return; }
+        postponeHrAdvanceMonth(advanceId, month);
+    }
+
     function skipHrAdvanceMonthPrompt(advanceId) {
-        const month = prompt('تخطي خصم السلفة لأي شهر؟ (YYYY-MM)', new Date().toISOString().slice(0, 7));
-        if (!month) return;
-        skipHrAdvanceMonth(advanceId, month.trim());
+        postponeHrAdvanceMonthFor(advanceId);
+    }
+
+    function postponeHrAdvanceMonth(advanceId, month) {
+        if (typeof requireHrOps === 'function' && !requireHrOps()) return;
+        if (!month || !/^\d{4}-\d{2}$/.test(month)) { alert('صيغة الشهر: YYYY-MM'); return; }
+        loadHrAdvancesData();
+        const adv = hrAdvances.find(function(a) { return a.id === advanceId; });
+        if (!adv || adv.status === 'closed') return;
+        ensureAdvanceSchedule(adv);
+        if (isAdvanceMonthDeferred(adv, month)) {
+            alert('تم تأجيل خصم هذا الشهر مسبقاً.');
+            return;
+        }
+        if (!adv.skippedMonths) adv.skippedMonths = [];
+        adv.skippedMonths.push(month);
+        let slot = (adv.schedule || []).find(function(s) { return s.month === month; });
+        if (!slot) {
+            slot = {
+                month: month,
+                amount: hrNum(adv.installmentAmount),
+                status: 'pending'
+            };
+            adv.schedule.push(slot);
+            adv.schedule.sort(function(a, b) { return String(a.month).localeCompare(String(b.month)); });
+        }
+        if (slot.status === 'deducted') {
+            alert('تم خصم قسط هذا الشهر بالفعل في مسير الرواتب.');
+            adv.skippedMonths.pop();
+            return;
+        }
+        slot.status = 'postponed';
+        extendAdvanceScheduleForPostpone(adv, slot);
+        saveHrAdvancesData();
+        if (typeof hrAudit === 'function') hrAudit('HR تأجيل سلفة', adv.employeeName + ' — ' + month + ' (راتب كامل)');
+        if (typeof renderHrPlatformPanelSafe === 'function') renderHrPlatformPanelSafe();
+        alert('تم تأجيل خصم السلفة لشهر ' + month + '.\nالموظف يقبض راتبه كاملاً — والقسط يُخصم في شهر لاحق.');
     }
 
     function skipHrAdvanceMonth(advanceId, month) {
-        if (typeof requireHrOps === 'function' && !requireHrOps()) return;
-        loadHrAdvancesData();
-        const adv = hrAdvances.find(function(a) { return a.id === advanceId; });
-        if (!adv) return;
-        ensureAdvanceSchedule(adv);
-        if (!adv.skippedMonths) adv.skippedMonths = [];
-        if (adv.skippedMonths.indexOf(month) < 0) adv.skippedMonths.push(month);
-        (adv.schedule || []).forEach(function(s) {
-            if (s.month === month) s.status = 'skipped';
-        });
-        saveHrAdvancesData();
-        if (typeof hrAudit === 'function') hrAudit('HR تخطي سلفة', adv.employeeName + ' — ' + month);
-        if (typeof renderHrPlatformPanelSafe === 'function') renderHrPlatformPanelSafe();
-        alert('تم تخطي خصم السلفة لشهر ' + month);
+        postponeHrAdvanceMonth(advanceId, month);
     }
 
     function toggleHrAdvanceClosed(id) {
@@ -270,6 +335,8 @@
     global.applyHrAdvancePayrollDeductions = applyHrAdvancePayrollDeductions;
     global.renderHrAdvancesPanel = renderHrAdvancesPanel;
     global.saveHrAdvance = saveHrAdvance;
+    global.postponeHrAdvanceMonth = postponeHrAdvanceMonth;
+    global.postponeHrAdvanceMonthFor = postponeHrAdvanceMonthFor;
     global.skipHrAdvanceMonth = skipHrAdvanceMonth;
     global.skipHrAdvanceMonthPrompt = skipHrAdvanceMonthPrompt;
     global.toggleHrAdvanceClosed = toggleHrAdvanceClosed;

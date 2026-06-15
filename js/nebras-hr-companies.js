@@ -23,6 +23,14 @@
     let hrPartnerCompanies = [];
     let hrCompanyFilter = '';
     let hrCompanyEditorId = null;
+    let pendingHrCompanyMedia = null;
+    const HR_COMPANY_ATTACH_MAX = 5242880;
+
+    function canUploadHrCompanyMedia() {
+        if (!canManageHrCompanies()) return false;
+        if (typeof canUploadNebrasMedia === 'function') return canUploadNebrasMedia('hr');
+        return true;
+    }
 
     function esc(s) {
         return String(s == null ? '' : s)
@@ -67,6 +75,13 @@
             notes: 'الشركة الأم — تُدار من منصة نبراس الداخلية',
             status: 'active',
             isPrimary: true,
+            logoUrl: '',
+            crDocumentUrl: '',
+            taxDocumentUrl: '',
+            documents: [],
+            mudadEstablishmentId: '',
+            gosiSubscriptionNo: '',
+            payrollBankCode: '',
             createdAt: now,
             updatedAt: now
         }];
@@ -249,6 +264,128 @@
         return '<span class="hr-company-badge ' + cls + '"><i class="fas fa-building"></i> ' + esc(c.nameAr) + '</span>';
     }
 
+    function hrCompanyMediaPreview(url, label) {
+        if (!url) return '<span class="hr-attach-hint">لم يُرفع بعد</span>';
+        const isPdf = /\.pdf(\?|$)/i.test(url);
+        if (isPdf) {
+            return '<a href="' + esc(url) + '" target="_blank" rel="noopener" class="erp-tag erp-tag--ok"><i class="fas fa-file-pdf"></i> ' + esc(label || 'PDF') + '</a>';
+        }
+        return '<a href="' + esc(url) + '" target="_blank" rel="noopener"><img src="' + esc(url) + '" alt="" class="hr-company-logo-preview"></a>';
+    }
+
+    async function hrPickCompanyMedia(field, label) {
+        if (!canUploadHrCompanyMedia()) {
+            alert('صلاحية رفع الصور وPDF — لمدير HR أو الإدارة الرئيسية.');
+            return;
+        }
+        if (typeof openNebrasMediaHub === 'function') {
+            const url = await openNebrasMediaHub({
+                label: label || 'رفع وسائط الشركة',
+                accept: 'image/jpeg,image/png,image/webp,image/gif,image/avif,application/pdf',
+                permission: 'hr',
+                permissionMessage: 'صلاحية HR مطلوبة لرفع وثائق الشركة.'
+            });
+            if (url) hrApplyCompanyMediaField(field, url, label);
+            return;
+        }
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = 'image/*,application/pdf';
+        input.onchange = function() {
+            if (input.files && input.files[0]) hrReadCompanyAttachment(input, field);
+        };
+        input.click();
+    }
+
+    function hrApplyCompanyMediaField(field, url, name) {
+        const hintMap = {
+            logo: 'hc-logo-hint',
+            cr: 'hc-cr-doc-hint',
+            tax: 'hc-tax-doc-hint'
+        };
+        pendingHrCompanyMedia = pendingHrCompanyMedia || {};
+        pendingHrCompanyMedia[field] = { url: url, name: name || field };
+        const hint = document.getElementById(hintMap[field]);
+        if (hint) hint.innerHTML = '✓ سحابة: ' + esc(name || url.split('/').pop());
+        const preview = document.getElementById('hc-logo-preview');
+        if (field === 'logo' && preview && url.indexOf('pdf') < 0) {
+            preview.innerHTML = '<img src="' + esc(url) + '" alt="">';
+        }
+    }
+
+    function hrReadCompanyAttachment(input, field) {
+        if (!input || !input.files || !input.files[0]) return;
+        if (!canUploadHrCompanyMedia()) {
+            alert('صلاحية رفع الصور وPDF — لمدير HR أو الإدارة الرئيسية.');
+            input.value = '';
+            return;
+        }
+        const file = input.files[0];
+        if (file.size > HR_COMPANY_ATTACH_MAX) {
+            alert('الملف كبير — الحد الأقصى 5 ميجابايت.');
+            input.value = '';
+            return;
+        }
+        const hintMap = { logo: 'hc-logo-hint', cr: 'hc-cr-doc-hint', tax: 'hc-tax-doc-hint' };
+        const hint = document.getElementById(hintMap[field] || 'hc-doc-hint');
+        if (hint) hint.textContent = 'جاري الرفع…';
+        if (typeof uploadNebrasMediaFile === 'function') {
+            uploadNebrasMediaFile(file).then(function(url) {
+                if (url) {
+                    hrApplyCompanyMediaField(field, url, file.name);
+                } else if (hint) hint.textContent = 'فشل الرفع — جرّبي مركز الوسائط.';
+            });
+        } else if (hint) hint.textContent = 'رفع السحابة غير متاح.';
+        input.value = '';
+    }
+
+    async function hrAddCompanyDocument() {
+        if (!canUploadHrCompanyMedia()) return;
+        const labelAr = prompt('اسم الوثيقة (عربي):', 'عقد تأسيس / ترخيص');
+        if (labelAr === null || !String(labelAr).trim()) return;
+        let url = '';
+        if (typeof openNebrasMediaHub === 'function') {
+            url = await openNebrasMediaHub({
+                label: 'وثيقة شركة — ' + labelAr.trim(),
+                accept: 'image/jpeg,image/png,image/webp,application/pdf',
+                permission: 'hr'
+            });
+        }
+        if (!url) return;
+        pendingHrCompanyMedia = pendingHrCompanyMedia || {};
+        if (!pendingHrCompanyMedia.documents) pendingHrCompanyMedia.documents = [];
+        pendingHrCompanyMedia.documents.push({ labelAr: labelAr.trim(), url: url, at: new Date().toISOString().slice(0, 10) });
+        const listEl = document.getElementById('hc-docs-list');
+        const c = hrCompanyEditorId ? getHrCompanyById(hrCompanyEditorId) : {};
+        if (listEl) listEl.innerHTML = renderHrCompanyDocumentsList(c);
+    }
+
+    function renderHrCompanyDocumentsList(c) {
+        const docs = (c && Array.isArray(c.documents) ? c.documents.slice() : []);
+        if (pendingHrCompanyMedia && pendingHrCompanyMedia.documents) {
+            pendingHrCompanyMedia.documents.forEach(function(d) { docs.push(d); });
+        }
+        if (!docs.length) return '<li class="nebras-media-empty">لا وثائق إضافية</li>';
+        return docs.map(function(d, idx) {
+            return '<li class="nebras-media-item"><span class="nebras-media-item-label">' + esc(d.labelAr || 'وثيقة') + '</span>' +
+                '<a href="' + esc(d.url) + '" target="_blank" rel="noopener" class="erp-tag erp-tag--ok"><i class="fas fa-paperclip"></i> فتح</a></li>';
+        }).join('');
+    }
+
+    function applyHrCompanyMediaToRecord(record, existing) {
+        const base = existing || {};
+        record.logoUrl = (pendingHrCompanyMedia && pendingHrCompanyMedia.logo)
+            ? pendingHrCompanyMedia.logo.url : (base.logoUrl || '');
+        record.crDocumentUrl = (pendingHrCompanyMedia && pendingHrCompanyMedia.cr)
+            ? pendingHrCompanyMedia.cr.url : (base.crDocumentUrl || '');
+        record.taxDocumentUrl = (pendingHrCompanyMedia && pendingHrCompanyMedia.tax)
+            ? pendingHrCompanyMedia.tax.url : (base.taxDocumentUrl || '');
+        const extra = (pendingHrCompanyMedia && pendingHrCompanyMedia.documents) ? pendingHrCompanyMedia.documents.slice() : [];
+        record.documents = (base.documents || []).concat(extra);
+        pendingHrCompanyMedia = null;
+        return record;
+    }
+
     function renderHrCompaniesPanel() {
         if (!canManageHrCompanies()) {
             return '<div class="hr-panel is-active"><p class="erp-empty">سجل الشركات — لمدير HR أو الإدارة الرئيسية فقط.</p></div>';
@@ -325,6 +462,37 @@
                 '<label class="nebras-field"><span>الحالة</span><select id="hc-status"' + (c.isPrimary ? ' disabled' : '') + '>' + statusOpts + '</select></label>' +
                 '<label class="nebras-field nebras-field--wide"><span>نشاط الشركة</span><input id="hc-activity" value="' + esc(c.activityDescription || '') + '" placeholder="بلاستيك · مواد خام · تجارة…"></label>' +
                 '<label class="nebras-field nebras-field--wide"><span>ملاحظات داخلية</span><input id="hc-notes" value="' + esc(c.notes || '') + '"></label>' +
+                '<label class="nebras-field"><span>رقم منشأة مدد (WPS)</span><input id="hc-mudad-id" value="' + esc(c.mudadEstablishmentId || '') + '" placeholder="لربط مسير الرواتب"></label>' +
+                '<label class="nebras-field"><span>رقم اشتراك التأمينات (GOSI)</span><input id="hc-gosi-no" value="' + esc(c.gosiSubscriptionNo || '') + '"></label>' +
+                '<label class="nebras-field"><span>رمز بنك الرواتب</span><input id="hc-bank-code" value="' + esc(c.payrollBankCode || '') + '" placeholder="مثال: 10 — الراجحي"></label>' +
+            '</div>' +
+            '<div class="hr-company-media-block">' +
+                '<h5><i class="fas fa-cloud-upload-alt"></i> شعار ووثائق الشركة (صور / PDF)</h5>' +
+                '<p class="hr-attach-hint">يُرفع إلى السحابة — صلاحية HR والإدارة الرئيسية.</p>' +
+                '<div class="erp-form-grid">' +
+                    '<label class="nebras-field"><span>شعار الشركة</span>' +
+                        '<div id="hc-logo-preview" class="hr-company-logo-box">' + hrCompanyMediaPreview(c.logoUrl, 'شعار') + '</div>' +
+                        '<small id="hc-logo-hint" class="hr-attach-hint">' + (c.logoUrl ? '✓ مرفوع' : 'صورة PNG/JPG') + '</small>' +
+                        '<button type="button" class="nebras-users-btn" onclick="hrPickCompanyMedia(\'logo\',\'شعار الشركة\')"><i class="fas fa-image"></i> رفع شعار</button>' +
+                        '<input type="file" accept="image/*" onchange="hrReadCompanyAttachment(this,\'logo\')" style="margin-top:6px">' +
+                    '</label>' +
+                    '<label class="nebras-field"><span>مرفق السجل التجاري</span>' +
+                        '<small id="hc-cr-doc-hint" class="hr-attach-hint">' + (c.crDocumentUrl ? '✓ مرفوع' : 'PDF أو صورة') + '</small>' +
+                        (c.crDocumentUrl ? hrCompanyMediaPreview(c.crDocumentUrl, 'س.ت') + ' ' : '') +
+                        '<button type="button" class="nebras-users-btn" onclick="hrPickCompanyMedia(\'cr\',\'السجل التجاري\')"><i class="fas fa-file-pdf"></i> رفع س.ت</button>' +
+                        '<input type="file" accept="image/*,application/pdf" onchange="hrReadCompanyAttachment(this,\'cr\')" style="margin-top:6px">' +
+                    '</label>' +
+                    '<label class="nebras-field"><span>مرفق الرقم الضريبي</span>' +
+                        '<small id="hc-tax-doc-hint" class="hr-attach-hint">' + (c.taxDocumentUrl ? '✓ مرفوع' : 'PDF أو صورة') + '</small>' +
+                        (c.taxDocumentUrl ? hrCompanyMediaPreview(c.taxDocumentUrl, 'VAT') + ' ' : '') +
+                        '<button type="button" class="nebras-users-btn" onclick="hrPickCompanyMedia(\'tax\',\'الرقم الضريبي\')"><i class="fas fa-file-pdf"></i> رفع ضريبي</button>' +
+                        '<input type="file" accept="image/*,application/pdf" onchange="hrReadCompanyAttachment(this,\'tax\')" style="margin-top:6px">' +
+                    '</label>' +
+                    '<label class="nebras-field nebras-field--wide"><span>وثائق إضافية</span>' +
+                        '<ul class="nebras-media-item-list" id="hc-docs-list">' + renderHrCompanyDocumentsList(c) + '</ul>' +
+                        '<button type="button" class="nebras-users-btn" onclick="hrAddCompanyDocument()"><i class="fas fa-plus"></i> إضافة وثيقة</button>' +
+                    '</label>' +
+                '</div>' +
             '</div>' +
             '<div class="erp-form-actions">' +
                 '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="saveHrCompany(\'' + esc(id || '') + '\')"><i class="fas fa-save"></i> حفظ ورفع للسحابة</button>' +
@@ -334,6 +502,7 @@
 
     function openHrCompanyEditor(id) {
         if (!canManageHrCompanies()) return;
+        pendingHrCompanyMedia = null;
         hrCompanyEditorId = id;
         if (typeof switchHrTab === 'function') switchHrTab('companies');
         else if (typeof renderHrPlatformPanelSafe === 'function') renderHrPlatformPanelSafe();
@@ -341,6 +510,7 @@
 
     function cancelHrCompanyEditor() {
         hrCompanyEditorId = null;
+        pendingHrCompanyMedia = null;
         if (typeof renderHrPlatformPanelSafe === 'function') renderHrPlatformPanelSafe();
     }
 
@@ -371,10 +541,14 @@
             managerPhone: hrField('hc-manager-phone'),
             activityDescription: hrField('hc-activity'),
             notes: hrField('hc-notes'),
+            mudadEstablishmentId: hrField('hc-mudad-id'),
+            gosiSubscriptionNo: hrField('hc-gosi-no'),
+            payrollBankCode: hrField('hc-bank-code'),
             status: existing && existing.isPrimary ? 'active' : (hrField('hc-status') || 'active'),
             isPrimary: !!(existing && existing.isPrimary),
             updatedAt: now
         };
+        applyHrCompanyMediaToRecord(record, existing);
 
         if (id) {
             const idx = hrPartnerCompanies.findIndex(function(c) { return c.id === id; });
@@ -453,5 +627,8 @@
     global.renderHrCompanyFieldInVehicleForm = renderHrCompanyFieldInVehicleForm;
     global.canManageHrCompanies = canManageHrCompanies;
     global.countHrCompanyStats = countHrCompanyStats;
+    global.hrPickCompanyMedia = hrPickCompanyMedia;
+    global.hrReadCompanyAttachment = hrReadCompanyAttachment;
+    global.hrAddCompanyDocument = hrAddCompanyDocument;
 
 })(typeof window !== 'undefined' ? window : globalThis);

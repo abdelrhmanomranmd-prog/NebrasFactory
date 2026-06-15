@@ -98,6 +98,8 @@
             if (!currentAdmin) return false;
             if (isMainGovernanceAdmin(currentAdmin)) return true;
             const key = permissionKey || 'content';
+            if (key === 'hr' && canManage('hr')) return true;
+            if (key === 'legal' && canManage('legal')) return true;
             if (key === 'content' && canManage('storeCatalog')) return true;
             if (Array.isArray(currentAdmin.permissions) && currentAdmin.permissions.length) {
                 return currentAdmin.permissions.indexOf(key) >= 0;
@@ -136,8 +138,9 @@
 
         async function uploadNebrasMediaFile(file) {
             if (!file) return null;
-            if (currentAdmin && !canUploadNebrasMedia('content') && !canUploadNebrasMedia('storeCatalog')) {
-                alert('لا تملكين صلاحية رفع الصور أو الملفات. الإدارة الرئيسية (NEBRASFACTORY) تملك الصلاحية الكاملة.');
+            if (currentAdmin && !canUploadNebrasMedia('content') && !canUploadNebrasMedia('storeCatalog') &&
+                !canUploadNebrasMedia('hr') && !canUploadNebrasMedia('legal')) {
+                alert('لا تملكين صلاحية رفع الصور أو الملفات. الإدارة الرئيسية (NEBRASFACTORY) أو HR/Legal المصرّح لهم.');
                 return null;
             }
             if (!supabaseClient) {

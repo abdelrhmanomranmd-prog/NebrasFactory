@@ -1394,6 +1394,16 @@ body.hr-platform-open {
     color: #1a6fa8;
 }
 .hr-company-badge--partner { background: #f3e8ff; color: #7d3c98; }
+.hr-company-media-block {
+    margin: 16px 0;
+    padding: 14px;
+    border: 1px solid rgba(13, 40, 64, 0.12);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.55);
+}
+.hr-company-media-block h5 { margin: 0 0 8px; color: #1a5276; font-size: 0.95rem; }
+.hr-company-logo-box { min-height: 48px; margin-bottom: 6px; }
+.hr-company-logo-preview { max-height: 64px; max-width: 120px; border-radius: 8px; object-fit: contain; }
 .hr-companies-hero {
     display: flex;
     gap: 14px;
