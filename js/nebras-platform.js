@@ -24488,7 +24488,7 @@
                             console.warn('Nebras sensitive cloud save failed:', sensResult);
                         }
                     } else {
-                        if (currentAdmin && global.__NEBRAS_LAUNCH_DEBUG__) {
+                        if (currentAdmin && window.__NEBRAS_LAUNCH_DEBUG__) {
                             console.warn('Nebras sensitive cloud save blocked — secure session required.');
                         }
                         okSensitive = !currentAdmin;
