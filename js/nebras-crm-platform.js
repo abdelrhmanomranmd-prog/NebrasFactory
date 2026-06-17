@@ -213,16 +213,28 @@
         const nav = document.getElementById('crm-ws-nav');
         if (!nav) return;
         const tabs = [
-            { id: 'dashboard', icon: 'fas fa-gauge-high', label: 'لوحة CRM' },
-            { id: 'customers', icon: 'fas fa-address-book', label: 'قاعدة العملاء' },
-            { id: 'pipeline', icon: 'fas fa-columns', label: 'Pipeline' },
-            { id: 'activities', icon: 'fas fa-list-check', label: 'الأنشطة' },
-            { id: 'import', icon: 'fas fa-file-import', label: 'استيراد' }
+            { id: 'dashboard', icon: 'fas fa-gauge-high', label: 'لوحة CRM', group: 'الرئيسية' },
+            { id: 'customers', icon: 'fas fa-address-book', label: 'قاعدة العملاء', group: 'المبيعات' },
+            { id: 'pipeline', icon: 'fas fa-columns', label: 'Pipeline', group: 'المبيعات' },
+            { id: 'activities', icon: 'fas fa-list-check', label: 'الأنشطة', group: 'المبيعات' },
+            { id: 'import', icon: 'fas fa-file-import', label: 'استيراد Leads', group: 'المبيعات' },
+            { id: 'service', icon: 'fas fa-headset', label: 'خدمة العملاء', group: 'التكامل' },
+            { id: 'audit', icon: 'fas fa-clock-rotate-left', label: 'سجل العمليات', group: 'الحوكمة' }
         ];
-        nav.innerHTML = tabs.map(function(t) {
-            const active = crmActiveTab === t.id ? ' is-active' : '';
-            return '<button type="button" class="hr-ws-nav-btn' + active + '" onclick="switchCrmTab(\'' + t.id + '\')">' +
-                '<i class="' + t.icon + '"></i><span>' + t.label + '</span></button>';
+        const groups = [];
+        const map = {};
+        tabs.forEach(function(t) {
+            const g = t.group || 'النظام';
+            if (!map[g]) { map[g] = []; groups.push(g); }
+            map[g].push(t);
+        });
+        nav.innerHTML = groups.map(function(g) {
+            return '<div class="hr-ws-nav-group"><span class="hr-ws-nav-group-label">' + esc(g) + '</span>' +
+                map[g].map(function(t) {
+                    const active = crmActiveTab === t.id ? ' is-active' : '';
+                    return '<button type="button" class="hr-ws-nav-item' + active + '" onclick="switchCrmTab(\'' + t.id + '\')">' +
+                        '<i class="' + t.icon + '"></i> ' + esc(t.label) + '</button>';
+                }).join('') + '</div>';
         }).join('');
     }
 
@@ -240,20 +252,29 @@
     function renderCrmDashboard() {
         const k = getCrmKpis();
         const recent = filterCrmByBranch(crmOpportunities).slice(0, 8);
-        return '<div class="crm-command-hero">' +
+        const scope = crmScopeBranchId() ? 'فرع محدد' : 'المجموعة — كل الفروع';
+        return '<div class="crm-command-hero dept-command-hero">' +
+            '<div class="dept-command-hero-glow hr-command-hero-glow"></div>' +
             '<div class="crm-command-hero-inner">' +
             '<span class="hr-command-pill crm-pill"><i class="fas fa-handshake"></i> نبراس CRM</span>' +
-            '<h2 class="hr-command-title">علاقات العملاء والمبيعات</h2>' +
-            '<p class="hr-command-sub">قاعدة عملاء موحّدة · Pipeline · فرص · ربط عروض الأسعار وLeads</p>' +
-            '<button type="button" class="erp-btn erp-btn--primary" style="margin-top:12px" onclick="exportCrmPdf()"><i class="fas fa-file-pdf"></i> تقرير PDF للقسم</button>' +
+            '<h2 class="dept-command-title hr-command-title">علاقات العملاء والمبيعات</h2>' +
+            '<p class="dept-command-sub hr-command-sub">قاعدة عملاء موحّدة · Pipeline · فرص · Leads · خدمة العملاء — ' + esc(scope) + '</p>' +
             '</div></div>' +
-            '<div class="crm-dash-grid">' +
-            '<article class="crm-dash-card"><h3><i class="fas fa-users"></i> العملاء</h3><strong>' + k.customers + '</strong></article>' +
-            '<article class="crm-dash-card"><h3><i class="fas fa-bullseye"></i> فرص مفتوحة</h3><strong>' + k.openOpps + '</strong></article>' +
-            '<article class="crm-dash-card"><h3><i class="fas fa-coins"></i> Pipeline</h3><strong>' + formatCrmMoney(k.pipelineValue) + '</strong></article>' +
-            '<article class="crm-dash-card crm-dash-card--ok"><h3><i class="fas fa-trophy"></i> فوز</h3><strong>' + formatCrmMoney(k.wonValue) + '</strong></article>' +
+            '<div class="dept-kpi-ring hr-command-kpi-ring">' +
+            '<div class="dept-kpi hr-command-kpi"><strong>' + k.customers + '</strong><span>عملاء</span></div>' +
+            '<div class="dept-kpi hr-command-kpi"><strong>' + k.openOpps + '</strong><span>فرص مفتوحة</span></div>' +
+            '<div class="dept-kpi hr-command-kpi"><strong>' + formatCrmMoney(k.pipelineValue) + '</strong><span>Pipeline</span></div>' +
+            '<div class="dept-kpi hr-command-kpi hr-command-kpi--ok"><strong>' + formatCrmMoney(k.wonValue) + '</strong><span>فوز</span></div>' +
+            '<div class="dept-kpi hr-command-kpi"><strong>' + k.activities + '</strong><span>أنشطة</span></div>' +
             '</div>' +
-            '<div class="crm-recent-block"><h3>آخر الفرص</h3>' +
+            '<div class="dept-quick-row hr-command-quick-row">' +
+            '<button type="button" class="hr-command-quick-btn" onclick="openCrmCustomerEditor()"><i class="fas fa-user-plus"></i> عميل جديد</button>' +
+            '<button type="button" class="hr-command-quick-btn" onclick="openCrmOpportunityEditor()"><i class="fas fa-bullseye"></i> فرصة جديدة</button>' +
+            '<button type="button" class="hr-command-quick-btn" onclick="switchCrmTab(\'import\')"><i class="fas fa-file-import"></i> استيراد</button>' +
+            '<button type="button" class="hr-command-quick-btn" onclick="exportCrmPdf()"><i class="fas fa-file-pdf"></i> تقرير PDF</button>' +
+            (typeof openSalesManagement === 'function' ? '<button type="button" class="hr-command-quick-btn" onclick="openSalesManagement()"><i class="fas fa-file-invoice"></i> عروض الأسعار</button>' : '') +
+            '</div>' +
+            '<div class="crm-recent-block"><h3 class="hr-tracking-section-title"><i class="fas fa-chart-line"></i> آخر الفرص</h3>' +
             (recent.length ? '<div class="erp-table-wrap"><table class="erp-table"><thead><tr><th>الفرصة</th><th>العميل</th><th>المرحلة</th><th>القيمة</th></tr></thead><tbody>' +
                 recent.map(function(o) {
                     const st = CRM_STAGES[o.stage] || CRM_STAGES.lead;
@@ -394,6 +415,35 @@
         return toolbar + '<div class="crm-activity-list">' + rows + '</div>';
     }
 
+    function renderCrmServicePanel() {
+        let csCount = 0;
+        try {
+            const cs = JSON.parse(localStorage.getItem('nebrasCustomerService') || '[]');
+            csCount = Array.isArray(cs) ? cs.length : 0;
+        } catch (e) { csCount = 0; }
+        return '<div class="hr-panel-note hr-platform-note"><i class="fas fa-headset"></i> <strong>تكامل خدمة العملاء</strong> — ربط الاستفسارات والشكاوى بقاعدة CRM.</div>' +
+            '<div class="dept-kpi-ring hr-command-kpi-ring">' +
+            '<div class="dept-kpi"><strong>' + csCount + '</strong><span>استفسارات</span></div>' +
+            '<div class="dept-kpi"><strong>' + filterCrmByBranch(crmCustomers).length + '</strong><span>عملاء CRM</span></div>' +
+            '</div>' +
+            '<div class="dept-quick-row hr-command-quick-row">' +
+            (typeof openCustomerServiceManagement === 'function' ? '<button type="button" class="hr-command-quick-btn" onclick="openCustomerServiceManagement()"><i class="fas fa-headset"></i> خدمة العملاء</button>' : '') +
+            (typeof openComplaintsManagement === 'function' ? '<button type="button" class="hr-command-quick-btn" onclick="openComplaintsManagement()"><i class="fas fa-comment-dots"></i> الشكاوى</button>' : '') +
+            (typeof openCallbackConciergePanel === 'function' ? '<button type="button" class="hr-command-quick-btn" onclick="openCallbackConciergePanel()"><i class="fas fa-phone"></i> Leads — نبراس يتصل بك</button>' : '') +
+            '<button type="button" class="hr-command-quick-btn" onclick="importCrmFromCustomerService()"><i class="fas fa-file-import"></i> استيراد من CS</button>' +
+            '</div>';
+    }
+
+    function renderCrmAuditPanel() {
+        const rows = crmAudit.slice(0, 100).map(function(a) {
+            return '<tr><td>' + formatCrmDate(a.recordedAt) + '</td><td>' + esc(a.username) + '</td>' +
+                '<td>' + esc(a.action) + '</td><td>' + esc(a.detail) + '</td></tr>';
+        }).join('');
+        return '<h4 class="hr-tracking-section-title"><i class="fas fa-clock-rotate-left"></i> سجل عمليات CRM</h4>' +
+            '<div class="hr-leave-table-wrap"><table class="hr-leave-table"><thead><tr><th>الوقت</th><th>المستخدم</th><th>العملية</th><th>التفاصيل</th></tr></thead><tbody>' +
+            (rows || '<tr><td colspan="4" class="erp-empty">لا عمليات بعد</td></tr>') + '</tbody></table></div>';
+    }
+
     function renderCrmImportPanel() {
         let csCount = 0;
         let leadCount = 0;
@@ -437,6 +487,8 @@
         else if (crmActiveTab === 'pipeline') panel = renderCrmPipelinePanel();
         else if (crmActiveTab === 'activities') panel = renderCrmActivitiesPanel();
         else if (crmActiveTab === 'import') panel = renderCrmImportPanel();
+        else if (crmActiveTab === 'service') panel = renderCrmServicePanel();
+        else if (crmActiveTab === 'audit') panel = renderCrmAuditPanel();
         content.innerHTML = '<div class="hr-panel is-active crm-panel">' + panel + '</div>';
         bindCrmPipelineDrag();
     }

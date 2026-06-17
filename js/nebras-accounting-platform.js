@@ -14,7 +14,9 @@
         { id: 'sales', icon: 'fas fa-chart-line', label: 'سجل المبيعات', group: 'العمليات' },
         { id: 'purchases', icon: 'fas fa-truck-ramp-box', label: 'المشتريات', group: 'العمليات' },
         { id: 'profit', icon: 'fas fa-coins', label: 'الربحية', group: 'التقارير' },
-        { id: 'reports', icon: 'fas fa-file-pdf', label: 'تصدير PDF', group: 'التقارير' }
+        { id: 'vat', icon: 'fas fa-receipt', label: 'الزكاة والضريبة', group: 'الامتثال' },
+        { id: 'reports', icon: 'fas fa-file-pdf', label: 'تصدير PDF', group: 'التقارير' },
+        { id: 'activity', icon: 'fas fa-clock-rotate-left', label: 'سجل العمليات', group: 'الحوكمة' }
     ];
 
     function esc(s) {
@@ -98,22 +100,30 @@
 
     function renderAccDashboard() {
         const s = getAccountingSnapshot();
-        return '<div class="acc-command-hero">' +
+        return '<div class="acc-command-hero dept-command-hero">' +
+            '<div class="dept-command-hero-glow hr-command-hero-glow"></div>' +
             '<div class="acc-command-hero-inner">' +
             '<span class="hr-command-pill acc-pill"><i class="fas fa-calculator"></i> نبراس Accounting</span>' +
-            '<h2 class="hr-command-title">قسم الحسابات — مصنع نبراس WPC</h2>' +
-            '<p class="hr-command-sub">تحويلات بنكية · مبيعات · مشتريات · تقارير PDF — ' + esc(s.scope) + '</p>' +
+            '<h2 class="dept-command-title hr-command-title">قسم الحسابات — مصنع نبراس</h2>' +
+            '<p class="dept-command-sub hr-command-sub">تحويلات بنكية · مبيعات · مشتريات · زكاة وضريبة · تقارير PDF — ' + esc(s.scope) + '</p>' +
             '</div></div>' +
+            '<div class="dept-kpi-ring hr-command-kpi-ring">' +
+            '<div class="dept-kpi hr-command-kpi"><strong>' + formatMoney(s.salesTotal) + '</strong><span>مبيعات</span></div>' +
+            '<div class="dept-kpi hr-command-kpi"><strong>' + formatMoney(s.transfersTotal) + '</strong><span>تحويلات</span></div>' +
+            '<div class="dept-kpi hr-command-kpi"><strong>' + formatMoney(s.purchasesTotal) + '</strong><span>مشتريات</span></div>' +
+            '<div class="dept-kpi hr-command-kpi' + (s.profit >= 0 ? ' hr-command-kpi--ok' : ' hr-command-kpi--danger') + '"><strong>' + formatMoney(s.profit) + '</strong><span>هامش الربح</span></div>' +
+            '</div>' +
             '<div class="acc-dash-grid">' +
             '<article class="acc-dash-card"><h3><i class="fas fa-chart-line"></i> المبيعات</h3><strong>' + formatMoney(s.salesTotal) + '</strong><small>' + s.sales.length + ' عملية</small></article>' +
             '<article class="acc-dash-card"><h3><i class="fas fa-building-columns"></i> التحويلات</h3><strong>' + formatMoney(s.transfersTotal) + '</strong><small>' + s.transfers.length + ' تحويل</small></article>' +
             '<article class="acc-dash-card"><h3><i class="fas fa-truck-ramp-box"></i> المشتريات</h3><strong>' + formatMoney(s.purchasesTotal) + '</strong><small>' + s.purchases.length + ' أمر</small></article>' +
             '<article class="acc-dash-card acc-dash-card--' + (s.profit >= 0 ? 'ok' : 'danger') + '"><h3><i class="fas fa-coins"></i> الربحية</h3><strong>' + formatMoney(s.profit) + '</strong><small>مبيعات − مشتريات</small></article>' +
             '</div>' +
-            '<div class="acc-quick-row">' +
+            '<div class="acc-quick-row dept-quick-row hr-command-quick-row">' +
             '<button type="button" class="hr-command-quick-btn" onclick="switchAccountingTab(\'transfers\')"><i class="fas fa-plus"></i> تسجيل تحويل</button>' +
             '<button type="button" class="hr-command-quick-btn" onclick="switchAccountingTab(\'reports\')"><i class="fas fa-file-pdf"></i> تقرير PDF شامل</button>' +
-            '<button type="button" class="hr-command-quick-btn" onclick="switchAccountingTab(\'purchases\')"><i class="fas fa-truck-ramp-box"></i> المشتريات</button>' +
+            '<button type="button" class="hr-command-quick-btn" onclick="switchAccountingTab(\'vat\')"><i class="fas fa-receipt"></i> الزكاة والضريبة</button>' +
+            (typeof openErpProcurement === 'function' ? '<button type="button" class="hr-command-quick-btn" onclick="openErpProcurement()"><i class="fas fa-truck-ramp-box"></i> المشتريات SCM</button>' : '') +
             '</div>';
     }
 
@@ -186,6 +196,43 @@
             '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="exportAccountingPdf(\'profit\')"><i class="fas fa-file-pdf"></i> PDF تحليل الربحية</button>';
     }
 
+    function renderAccVatPanel() {
+        const settings = typeof systemSettings !== 'undefined' ? systemSettings : {};
+        const taxNo = settings.taxNumber || settings.vatNumber || '';
+        const s = getAccountingSnapshot();
+        const vatEst = Math.round(s.salesTotal * 0.15 * 100) / 100;
+        return '<div class="hr-platform-note"><i class="fas fa-receipt"></i> <strong>الزكاة والضريبة (VAT 15%)</strong> — تقدير من المبيعات المسجّلة · للإقرار الرسمي استخدمي بوابة ZATCA.</div>' +
+            '<div class="erp-form-grid">' +
+            '<label class="nebras-field"><span>الرقم الضريبي (من الإعدادات)</span><input value="' + esc(taxNo) + '" readonly></label>' +
+            '<label class="nebras-field"><span>إجمالي مبيعات الفترة</span><input value="' + esc(formatMoney(s.salesTotal)) + '" readonly></label>' +
+            '<label class="nebras-field"><span>ضريبة مخرجات تقديرية 15%</span><input value="' + esc(formatMoney(vatEst)) + '" readonly></label>' +
+            '</div>' +
+            '<div class="dept-quick-row hr-command-quick-row">' +
+            '<a href="https://zatca.gov.sa" target="_blank" rel="noopener" class="hr-command-quick-btn" style="text-decoration:none"><i class="fas fa-external-link-alt"></i> بوابة ZATCA</a>' +
+            '<button type="button" class="hr-command-quick-btn" onclick="typeof openSystemSettings===\'function\'&&openSystemSettings()"><i class="fas fa-cog"></i> إعدادات الشركة</button>' +
+            '<button type="button" class="hr-command-quick-btn" onclick="exportAccountingPdf(\'sales\')"><i class="fas fa-file-pdf"></i> PDF مبيعات للإقرار</button>' +
+            '</div>';
+    }
+
+    function renderAccActivityPanel() {
+        let logs = [];
+        try {
+            logs = JSON.parse(localStorage.getItem('nebrasAuditLogs') || '[]');
+            if (!Array.isArray(logs)) logs = [];
+        } catch (e) { logs = []; }
+        const filtered = logs.filter(function(l) {
+            const t = (l.action || '') + ' ' + (l.detail || '');
+            return /حساب|تحويل|مبيع|مشتري|Accounting|PDF|ضريب/i.test(t);
+        }).slice(0, 80);
+        const rows = filtered.map(function(l) {
+            return '<tr><td>' + formatDate(l.timestamp || l.date) + '</td><td>' + esc(l.user || l.username || '—') + '</td>' +
+                '<td>' + esc(l.action) + '</td><td>' + esc(l.detail) + '</td></tr>';
+        }).join('');
+        return '<h4 class="hr-tracking-section-title"><i class="fas fa-clock-rotate-left"></i> سجل عمليات الحسابات</h4>' +
+            '<div class="hr-leave-table-wrap"><table class="hr-leave-table"><thead><tr><th>الوقت</th><th>المستخدم</th><th>العملية</th><th>التفاصيل</th></tr></thead><tbody>' +
+            (rows || '<tr><td colspan="4" class="erp-empty">لا عمليات محاسبية مسجّلة بعد</td></tr>') + '</tbody></table></div>';
+    }
+
     function renderAccReportsPanel() {
         return '<div class="acc-reports-grid">' +
             '<article class="acc-report-card"><i class="fas fa-building-columns"></i><h4>تقرير التحويلات</h4><p>كل التحويلات البنكية في نطاقك</p>' +
@@ -219,6 +266,8 @@
         else if (accActiveTab === 'purchases') panel = renderAccPurchasesPanel();
         else if (accActiveTab === 'profit') panel = renderAccProfitPanel();
         else if (accActiveTab === 'reports') panel = renderAccReportsPanel();
+        else if (accActiveTab === 'vat') panel = renderAccVatPanel();
+        else if (accActiveTab === 'activity') panel = renderAccActivityPanel();
         content.innerHTML = '<div class="hr-panel is-active acc-panel">' + panel + '</div>';
     }
 

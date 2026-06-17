@@ -1,0 +1,168 @@
+/* نبراس hrws87 — لوحات الأقسام الموحّدة (HR · Legal · CRM · Accounting · ERP) */
+
+.dept-command-hero,
+.crm-command-hero,
+.acc-command-hero,
+.erp-command-hero {
+    position: relative;
+    overflow: hidden;
+    border-radius: 16px;
+    margin-bottom: 1.1rem;
+    background: linear-gradient(135deg, #0d3d56 0%, #1a5276 42%, #2471a3 100%);
+    color: #fff;
+    padding: 1.35rem 1.5rem;
+}
+
+.dept-command-hero-glow,
+.hr-command-hero-glow,
+.erp-command-hero-glow {
+    position: absolute;
+    inset: -40% -20% auto auto;
+    width: 55%;
+    height: 140%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.12) 0%, transparent 68%);
+    pointer-events: none;
+}
+
+.dept-command-hero-inner,
+.crm-command-hero-inner,
+.acc-command-hero-inner,
+.erp-command-hero-inner {
+    position: relative;
+    z-index: 1;
+}
+
+.dept-command-title,
+.hr-command-title {
+    margin: 0.35rem 0 0.25rem;
+    font-size: 1.35rem;
+    font-weight: 800;
+}
+
+.dept-command-sub,
+.hr-command-sub {
+    margin: 0;
+    opacity: 0.92;
+    font-size: 0.9rem;
+    line-height: 1.55;
+}
+
+.dept-kpi-ring,
+.hr-command-kpi-ring {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+    gap: 0.7rem;
+    margin: 0 0 1rem;
+}
+
+.dept-kpi,
+.hr-command-kpi {
+    text-align: center;
+    padding: 0.8rem 0.45rem;
+    border-radius: 12px;
+    background: #fff;
+    border: 1px solid rgba(26, 82, 118, 0.12);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.dept-kpi strong,
+.hr-command-kpi strong {
+    display: block;
+    font-size: 1.28rem;
+    color: #1a5276;
+}
+
+.dept-kpi span,
+.hr-command-kpi span {
+    font-size: 0.76rem;
+    color: #546e7a;
+}
+
+.dept-kpi--ok strong,
+.hr-command-kpi--ok strong { color: #2e7d32; }
+.dept-kpi--warn strong,
+.hr-command-kpi--warn strong { color: #e65100; }
+.dept-kpi--danger strong,
+.hr-command-kpi--danger strong { color: #c62828; }
+
+.dept-quick-row,
+.hr-command-quick-row,
+.acc-quick-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+    margin: 0.85rem 0 1.1rem;
+}
+
+.dept-module-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+}
+
+.dept-module-card {
+    border: 1px solid rgba(26, 82, 118, 0.14);
+    border-radius: 14px;
+    padding: 1rem;
+    background: linear-gradient(160deg, #fff 0%, #f8fbfd 100%);
+    cursor: pointer;
+    transition: box-shadow 0.15s, transform 0.15s;
+    text-align: right;
+}
+
+.dept-module-card:hover {
+    box-shadow: 0 6px 18px rgba(26, 82, 118, 0.12);
+    transform: translateY(-2px);
+}
+
+.dept-module-card i {
+    font-size: 1.35rem;
+    color: #1a5276;
+    margin-bottom: 0.35rem;
+}
+
+.dept-module-card strong {
+    display: block;
+    color: #1a5276;
+    margin-bottom: 0.2rem;
+}
+
+.dept-module-card small {
+    color: #607d8b;
+    font-size: 0.78rem;
+    line-height: 1.4;
+}
+
+.dept-scope-banner {
+    margin-bottom: 0.85rem;
+    padding: 0.65rem 0.9rem;
+    border-radius: 10px;
+    background: #e8f4fd;
+    color: #1a5276;
+    font-size: 0.88rem;
+}
+
+.crm-workspace-section .hr-command-hero,
+.acc-workspace-section .acc-command-hero,
+.erp-workspace-section .erp-command-hero {
+    background: inherit;
+}
+
+.crm-pill { background: rgba(39, 174, 96, 0.25); }
+.acc-pill { background: rgba(241, 196, 15, 0.28); }
+.erp-pill { background: rgba(52, 152, 219, 0.28); }
+.legal-pill { background: rgba(155, 89, 182, 0.28); }
+
+.acc-dash-grid,
+.crm-dash-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 0.85rem;
+}
+
+@media (max-width: 768px) {
+    .dept-command-title, .hr-command-title { font-size: 1.12rem; }
+    .dept-module-grid { grid-template-columns: 1fr 1fr; }
+}

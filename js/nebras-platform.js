@@ -2296,6 +2296,7 @@
             { id: 'dash-erp', zone: 'grid', dashGroup: 'erp', sortOrder: 1, iconClass: 'fas fa-cubes', titleAr: 'لوحة ERP', titleEn: 'ERP Console', textAr: 'نظام تخطيط موارد المصنع.', textEn: 'Factory ERP hub.', handler: 'scrollErpHub', permission: 'erp', visible: true },
             { id: 'dash-order-journey', zone: 'grid', dashGroup: 'erp', sortOrder: 2.5, iconClass: 'fas fa-route', titleAr: 'مسار نبراس', titleEn: 'Order Journey', textAr: '7 محطات — إنتاج · مستودع · QR استلام.', textEn: '7-stage order journey with pickup QR.', cssClass: 'card-order-journey', handler: 'openOrderJourneyOps', permission: 'orderJourney', visible: true },
             { id: 'dash-inventory', zone: 'grid', dashGroup: 'erp', sortOrder: 2, iconClass: 'fas fa-warehouse', titleAr: 'مخزون ERP', titleEn: 'Inventory WMS', textAr: 'SKU ومستودعات وتنبيهات.', textEn: 'SKU and warehouses.', cssClass: 'card-inventory-management', backgroundImage: 'pvc-background', handler: 'openErpInventory', permission: 'inventory', visible: true },
+            { id: 'dash-erp-command', zone: 'quick', dashGroup: 'command', sortOrder: 1.04, iconClass: 'fas fa-cubes', titleAr: 'مركز عمليات ERP', titleEn: 'ERP Command Center', textAr: 'مخزون · طلبات · إنتاج · مشتريات · مبيعات — لوحة قيادة شاملة.', textEn: 'Inventory, orders, production, SCM.', handler: 'openErpCommandCenter', permission: 'erp', visible: true },
             { id: 'dash-sales-report', zone: 'grid', dashGroup: 'erp', sortOrder: 3, iconClass: 'fas fa-file-invoice-dollar', titleAr: 'تقارير المبيعات', titleEn: 'Sales Reports', textAr: 'تحليل أداء المبيعات.', textEn: 'Sales performance.', cssClass: 'card-sales-reports', backgroundImage: 'background', handler: 'openSalesManagement', permission: 'sales', visible: true },
             { id: 'dash-customers', zone: 'grid', dashGroup: 'erp', sortOrder: 4, iconClass: 'fas fa-handshake', titleAr: 'نبراس CRM', titleEn: 'Nebras CRM', textAr: 'عملاء · Pipeline · فرص مبيعات.', textEn: 'Customers & sales pipeline.', cssClass: 'card-customer-management', backgroundImage: 'customer-complaints-background', handler: 'openCrmPlatform', permission: 'customerService', visible: true },
             { id: 'dash-analytics', zone: 'grid', dashGroup: 'erp', sortOrder: 5, iconClass: 'fas fa-chart-pie', titleAr: 'التحليلات', titleEn: 'Analytics', textAr: 'منتجات · ألوان · شكاوى · زوار.', textEn: 'Live BI insights.', cssClass: 'card-analytics', backgroundImage: 'background-other-products', handler: 'openAdminAnalytics', permission: 'audit', visible: true },
@@ -2416,6 +2417,12 @@
             },
             openSystemSettings: function() { openSystemSettings(); },
             openErpInventory: function() { openErpInventory(); },
+            openErpCommandCenter: function() {
+                if (typeof window.openErpCommandCenter === 'function') {
+                    try { return window.openErpCommandCenter(); } catch (e) { console.error('openErpCommandCenter', e); }
+                }
+                alert('مركز ERP — أعيدي تحميل الصفحة (Ctrl+Shift+R).');
+            },
             openErpProduction: function() { openErpProduction(); },
             openErpAccounting: function() { openErpAccounting(); },
             openSalesPriceList: function() { openSalesPriceList(); },
@@ -27445,6 +27452,7 @@
         window.setQuoteRegistryFromCloud = setQuoteRegistryFromCloud;
 
         window.downloadRepQuoteA4Pdf = downloadRepQuoteA4Pdf;
+        window.getErpKpis = getErpKpis;
         window.openErpInventory = openErpInventory;
         window.openErpProduction = openErpProduction;
         window.addErpProductionEntry = addErpProductionEntry;
