@@ -92,9 +92,9 @@
     <link rel="stylesheet" href="css/31-cloud-security.css">
     <link rel="stylesheet" href="css/32-executive-reports.css">
     <link rel="stylesheet" href="css/33-product-governance.css">
-    <link rel="stylesheet" href="css/53-platform-text-readability.css?v=hrws85">
-    <link rel="stylesheet" href="css/34-hr-platform.css?v=hrws85">
-    <link rel="stylesheet" href="css/54-hr-legal-enterprise.css?v=hrws85">
+    <link rel="stylesheet" href="css/53-platform-text-readability.css?v=hrws86">
+    <link rel="stylesheet" href="css/34-hr-platform.css?v=hrws86">
+    <link rel="stylesheet" href="css/54-hr-legal-enterprise.css?v=hrws86">
     <link rel="stylesheet" href="css/38-empire-hub.css?v=hrws77">
     <link rel="stylesheet" href="css/35-store-enterprise.css">
     <link rel="stylesheet" href="css/36-executive-bi.css">
@@ -114,7 +114,7 @@
     <link rel="stylesheet" href="css/51-data-warehouse.css?v=hrws77">
     <link rel="stylesheet" href="css/52-cart-enterprise.css?v=hrws79">
 </head>
-<body id="nebras-platform" class="platform-storefront" data-platform-layer="storefront" data-nebras-deploy="hrws85">
+<body id="nebras-platform" class="platform-storefront" data-platform-layer="storefront" data-nebras-deploy="hrws86">
 
     <audio id="nebras-brand-intro-audio" class="nebras-brand-intro-audio" src="audio/nebras-welcome.mp3" preload="metadata" playsinline webkit-playsinline="true" hidden></audio>
 
@@ -1683,14 +1683,18 @@
     <div class="admin-section" id="cloud-governance">
         <div class="admin-modal site-content-modal nebras-erp-modal nebras-cloud-modal">
             <div class="nebras-erp-head">
-                <div class="nebras-erp-head-title"><i class="fas fa-cloud"></i><div><h2>الحوكمة السحابية</h2><p>Supabase · مزامنة · نسخ احتياطية · 63+ مخزن</p></div></div>
+                <div class="nebras-erp-head-title"><i class="fas fa-cloud"></i><div><h2>الحوكمة السحابية</h2><p>Supabase · رفع تلقائي · نسخ احتياطية · استعادة</p></div></div>
                 <button type="button" class="nebras-users-close" onclick="closeAdminSection('cloud-governance')" aria-label="إغلاق"><i class="fas fa-xmark"></i></button>
             </div>
             <div class="nebras-erp-stats" id="cloud-governance-summary"></div>
             <div class="scm-panel-toolbar cloud-governance-toolbar">
                 <button type="button" class="primary" onclick="syncPushToNebrasCloudNow()"><i class="fas fa-cloud-upload-alt"></i> رفع للسحابة الآن</button>
                 <button type="button" class="secondary" onclick="syncLoadFromNebrasCloudNow()"><i class="fas fa-cloud-download-alt"></i> تحميل من السحابة</button>
+                <button type="button" class="secondary" onclick="exportNebrasGovernanceBundle()"><i class="fas fa-download"></i> نسخة احتياطية كاملة (JSON)</button>
+                <button type="button" class="secondary" onclick="openNebrasGovernanceImportPicker()"><i class="fas fa-upload"></i> استعادة من JSON</button>
+                <button type="button" class="secondary" onclick="openPlatformIntegrationHub()"><i class="fas fa-shield-halved"></i> نسخ تلقائية محمية</button>
             </div>
+            <p class="cloud-governance-note"><i class="fas fa-info-circle"></i> كل حفظ إداري يُرفع تلقائياً للسحابة خلال 20 ثانية. النسخ الاحتياطية تحمي من فقدان البيانات — للاستعادة الجزئية: «نسخ تلقائية محمية» · للاستعادة الكاملة: JSON.</p>
             <div class="nebras-erp-list" id="cloud-governance-stores"></div>
         </div>
     </div>
@@ -1957,24 +1961,25 @@
     <script src="js/nebras-callback-concierge.js" defer></script>
     <script src="js/nebras-secure-cloud.js?v=hrws82" defer></script>
     <script src="js/nebras-storage-guard.js?v=hrws77" defer></script>
-    <script src="js/nebras-platform.js?v=hrws85" defer></script>
-    <script src="js/nebras-platform-integrity.js?v=hrws85" defer></script>
-    <script src="js/nebras-admin-ai.js?v=hrws85" defer></script>
+    <script src="js/nebras-platform.js?v=hrws86" defer></script>
+    <script src="js/nebras-platform-integrity.js?v=hrws86" defer></script>
+    <script src="js/nebras-admin-ai.js?v=hrws86" defer></script>
     <script src="js/nebras-site-database.js?v=hrws77" defer></script>
     <script src="js/nebras-data-warehouse.js?v=hrws77" defer></script>
     <script src="js/nebras-empire-bridges.js?v=hrws77" defer></script>
     <script src="js/nebras-hr-hcm-suite.js?v=hrws77" defer></script>
-    <script src="js/nebras-hr-advances.js?v=hrws85" defer></script>
-    <script src="js/nebras-hr-violations.js?v=hrws85" defer></script>
+    <script src="js/nebras-hr-advances.js?v=hrws86" defer></script>
+    <script src="js/nebras-hr-violations.js?v=hrws86" defer></script>
     <script src="js/nebras-hr-gps-tracker.js?v=hrws77" defer></script>
-    <script src="js/nebras-hr-companies.js?v=hrws85" defer></script>
-    <script src="js/nebras-legal-platform.js?v=hrws85" defer></script>
+    <script src="js/nebras-hr-companies.js?v=hrws86" defer></script>
+    <script src="js/nebras-legal-platform.js?v=hrws86" defer></script>
+    <script src="js/nebras-legal-dispatch.js?v=hrws86" defer></script>
     <script src="js/nebras-crm-platform.js?v=hrws77" defer></script>
     <script src="js/nebras-customer-portal.js?v=hrws77" defer></script>
     <script src="js/nebras-order-journey.js?v=hrws77" defer></script>
     <script src="js/nebras-accounting-platform.js?v=hrws77" defer></script>
     <script src="js/nebras-empire-hub.js?v=hrws77" defer></script>
-    <script src="js/nebras-hr-platform.js?v=hrws85" defer></script>
+    <script src="js/nebras-hr-platform.js?v=hrws86" defer></script>
     <script src="js/nebras-hr-boot.js?v=hrws77" defer></script>
     <script src="js/nebras-media-admin.js" defer></script>
 

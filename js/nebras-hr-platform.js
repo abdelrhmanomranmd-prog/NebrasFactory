@@ -1040,6 +1040,7 @@
                 '</div>' +
                 '<div class="hr-emp-actions">' +
                     '<button type="button" class="erp-tag erp-tag--action" onclick="openHrEmployeeEditor(\'' + esc(e.id) + '\')"><i class="fas fa-pen"></i> تعديل</button>' +
+                    '<button type="button" class="erp-tag" onclick="requestHrNafathVerification(\'' + esc(e.id) + '\')" title="طلب تحقق نفاذ"><i class="fas fa-fingerprint"></i> نفاذ</button>' +
                     '<button type="button" class="erp-tag" onclick="deleteHrEmployee(\'' + esc(e.id) + '\')"><i class="fas fa-trash"></i></button>' +
                 '</div>' +
             '</article>';
@@ -4497,6 +4498,7 @@
     global.requireHrRecordInScope = requireHrRecordInScope;
     global.renderHrSalesFleetPanel = renderHrSalesFleetPanel;
     global.switchHrTab = switchHrTab;
+    global.requestHrNafathVerification = requestHrNafathVerification;
     global.isEmployeeGosiDeductEnabled = isEmployeeGosiDeductEnabled;
     global.setHrBranchFilter = setHrBranchFilter;
     global.setHrSearch = setHrSearch;
@@ -4562,6 +4564,23 @@
     global.sendAllHrExpiryReminders = sendAllHrExpiryReminders;
     global.getHrEmailQueue = function() { loadHrData(); return hrEmailQueue; };
     global.setHrEmailQueueFromCloud = setHrEmailQueueFromCloud;
+    function requestHrNafathVerification(employeeId) {
+        if (!requireHrAccess()) return;
+        const emp = getEmployeeById(employeeId);
+        if (!emp) { alert('الموظف غير موجود.'); return; }
+        if (!emp.nationalId && !emp.iqamaNo) {
+            alert('أدخلي رقم الهوية أو الإقامة في ملف الموظف أولاً.');
+            openHrEmployeeEditor(employeeId);
+            return;
+        }
+        emp.nafathStatus = 'pending';
+        emp.nafathRequestedAt = new Date().toISOString();
+        saveHrData();
+        hrAudit('HR نفاذ', 'طلب تحقق — ' + emp.nameAr);
+        window.open('https://www.iam.gov.sa/nafath', '_blank', 'noopener');
+        alert('تم فتح بوابة نفاذ الرسمية.\n\nبعد اكتمال التحقق:\n1. افتحي تعديل الموظف\n2. فعّلي «تم التحقق عبر نفاذ»\n3. احفظي — تُرفع للسحابة تلقائياً');
+    }
+
     global.sendNebrasHrNotificationEmail = sendNebrasHrNotificationEmail;
     global.hrBiometricCheckInPrompt = hrBiometricCheckInPrompt;
     global.hrRegisterEmployeeBiometric = hrRegisterEmployeeBiometric;

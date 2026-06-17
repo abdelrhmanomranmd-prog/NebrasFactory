@@ -10,14 +10,15 @@
     const CRITICAL_STORE_KEYS = [
         'admin_users', 'branches', 'site_products', 'visitor_icons', 'dashboard_tiles',
         'sales_quotes_inbox', 'customer_order_journeys', 'customer_portal_users', 'hr_employees',
-        'crm_customers', 'crm_opportunities', 'erp_orders', 'legal_contracts', 'erp_inventory',
-        'erp_production', 'sales_data', 'sales_price_list', 'analytics_governance',
-        'system_settings', 'about_pages', 'showroom_gallery'
+        'hr_advances', 'hr_vehicle_violations', 'crm_customers', 'crm_opportunities', 'erp_orders',
+        'legal_contracts', 'legal_rentals', 'erp_inventory', 'erp_production', 'sales_data',
+        'sales_price_list', 'analytics_governance', 'system_settings', 'about_pages', 'showroom_gallery'
     ];
     const LOCAL_MUTATION_KEY = 'nebrasLocalCloudMutationAt';
     const MUTATION_GRACE_MS = 180000;
     let localCloudMutations = {};
-    const MAX_SNAPSHOTS_PER_KEY = 6;
+    const MAX_SNAPSHOTS_PER_KEY = 10;
+    const MAX_SNAPSHOT_PAYLOAD_CHARS = 150000;
 
     let cloudSnapshots = { byKey: {}, updatedAt: null };
     let platformIntegrity = { modules: {}, lastAuditAt: null };
@@ -137,11 +138,20 @@
         const bytes = typeof global.nebrasJsonBytes === 'function' ? global.nebrasJsonBytes(payload) : 0;
         if (size > 0) {
             if (!cloudSnapshots.byKey[storeKey]) cloudSnapshots.byKey[storeKey] = [];
-            cloudSnapshots.byKey[storeKey].unshift({
+            const snap = {
                 at: new Date().toISOString(),
                 recordCount: size,
                 bytes: bytes
-            });
+            };
+            try {
+                const cloned = clonePayload(payload);
+                const json = JSON.stringify(cloned);
+                if (json.length <= MAX_SNAPSHOT_PAYLOAD_CHARS) {
+                    snap.payload = cloned;
+                    snap.restorable = true;
+                }
+            } catch (e) { /* metadata only */ }
+            cloudSnapshots.byKey[storeKey].unshift(snap);
             cloudSnapshots.byKey[storeKey] = cloudSnapshots.byKey[storeKey].slice(0, MAX_SNAPSHOTS_PER_KEY);
             saveSnapshotsLocal();
             return payload;
@@ -200,6 +210,59 @@
         });
     }
 
+    function restoreCloudSnapshot(storeKey, snapIndex) {
+        loadIntegrityData();
+        const hist = cloudSnapshots.byKey[storeKey] || [];
+        const snap = hist[snapIndex];
+        if (!snap || !snap.payload) {
+            alert('هذه النسخة لا تحتوي بيانات قابلة للاستعادة.\nاستخدمي «نسخة احتياطية كاملة JSON» من الحوكمة السحابية.');
+            return false;
+        }
+        if (!confirm('استعادة «' + storeKey + '» من نسخة ' + (snap.at || '').slice(0, 16) + '؟\nسيتم استبدال البيانات الحالية لهذا المخزن.')) return false;
+        const specs = typeof global.NEBRAS_CLOUD_STORE_SPECS !== 'undefined' ? global.NEBRAS_CLOUD_STORE_SPECS : [];
+        const spec = specs.find(function(s) { return s.key === storeKey; });
+        if (!spec || typeof spec.set !== 'function') {
+            alert('لم يُعثر على مخزن ' + storeKey);
+            return false;
+        }
+        try {
+            spec.set(clonePayload(snap.payload));
+            if (typeof global.markLocalCloudMutation === 'function') global.markLocalCloudMutation(storeKey);
+            if (typeof global.saveSystemData === 'function') global.saveSystemData();
+            if (typeof global.addAuditLog === 'function') {
+                global.addAuditLog('استعادة نسخة احتياطية', storeKey + ' — ' + snap.at);
+            }
+            if (typeof global.showNebrasAdminToast === 'function') {
+                global.showNebrasAdminToast('تمت استعادة ' + storeKey + ' بنجاح', 'ok');
+            } else {
+                alert('تمت الاستعادة بنجاح — ' + storeKey);
+            }
+            renderPlatformIntegrationPanel();
+            return true;
+        } catch (e) {
+            alert('فشل الاستعادة: ' + (e && e.message ? e.message : e));
+            return false;
+        }
+    }
+
+    function buildSnapshotRestoreSectionHtml() {
+        loadIntegrityData();
+        const rows = CRITICAL_STORE_KEYS.map(function(k) {
+            const hist = cloudSnapshots.byKey[k] || [];
+            const restorable = hist.filter(function(s) { return s.payload && s.restorable !== false; });
+            if (!restorable.length) {
+                return '<li><strong>' + esc(k) + '</strong> — <span class="erp-tag">بانتظار أول حفظ</span></li>';
+            }
+            const btns = restorable.slice(0, 3).map(function(s, idx) {
+                const realIdx = hist.indexOf(s);
+                return '<button type="button" class="erp-tag erp-tag--action" onclick="restoreCloudSnapshot(\'' + esc(k) + '\',' + realIdx + ')" title="' + esc(s.at) + '">' +
+                    '<i class="fas fa-rotate-left"></i> ' + esc((s.at || '').slice(0, 10)) + ' (' + (s.recordCount || 0) + ')</button>';
+            }).join(' ');
+            return '<li><strong>' + esc(k) + '</strong> — ' + restorable.length + ' نسخة قابلة للاستعادة<br>' + btns + '</li>';
+        }).join('');
+        return rows;
+    }
+
     function renderPlatformIntegrationPanel() {
         loadIntegrityData();
         const summary = document.getElementById('platform-integration-summary');
@@ -233,11 +296,13 @@
             '<button type="button" class="workspace-action-btn" onclick="typeof openNebrasEmpireHub===\'function\'&&openNebrasEmpireHub()"><i class="fas fa-crown"></i> مركز الإمبراطورية</button>' +
             '</div>' +
             '<section class="pi-snapshot-section"><h3><i class="fas fa-database"></i> حماية التخزين السحابي</h3>' +
-            '<ul class="pi-snapshot-list">' + CRITICAL_STORE_KEYS.map(function(k) {
-                const n = (cloudSnapshots.byKey[k] || []).length;
-                return '<li><strong>' + esc(k) + '</strong> — ' + n + ' نسخة احتياطية' +
-                    (n ? ' <span class="erp-tag erp-tag--ok">محمي</span>' : ' <span class="erp-tag">بانتظار أول حفظ</span>') + '</li>';
-            }).join('') + '</ul></section>';
+            '<p class="scm-hint"><i class="fas fa-shield-halved"></i> تُحفظ نسخة احتياطية تلقائياً عند كل رفع — حتى 10 نسخ لكل مخزن حرج. للاستعادة الكاملة استخدمي JSON من الحوكمة السحابية.</p>' +
+            '<div class="workspace-actions-row pi-quick-actions" style="margin-bottom:0.75rem">' +
+            '<button type="button" class="workspace-action-btn workspace-action-btn--primary" onclick="typeof exportNebrasGovernanceBundle===\'function\'&&exportNebrasGovernanceBundle()"><i class="fas fa-download"></i> نسخة احتياطية كاملة</button>' +
+            '<button type="button" class="workspace-action-btn" onclick="typeof openNebrasGovernanceImportPicker===\'function\'&&openNebrasGovernanceImportPicker()"><i class="fas fa-upload"></i> استعادة من JSON</button>' +
+            '<button type="button" class="workspace-action-btn" onclick="typeof openCloudGovernance===\'function\'&&openCloudGovernance()"><i class="fas fa-cloud"></i> الحوكمة السحابية</button>' +
+            '</div>' +
+            '<ul class="pi-snapshot-list">' + buildSnapshotRestoreSectionHtml() + '</ul></section>';
         saveIntegrityLocal();
     }
 
@@ -276,6 +341,7 @@
     global.openPlatformIntegrationHub = openPlatformIntegrationHub;
     global.closePlatformIntegrationHub = closePlatformIntegrationHub;
     global.renderPlatformIntegrationPanel = renderPlatformIntegrationPanel;
+    global.restoreCloudSnapshot = restoreCloudSnapshot;
     global.NEBRAS_CRITICAL_CLOUD_KEYS = CRITICAL_STORE_KEYS;
 
     let cloudAutoSyncTimer = null;

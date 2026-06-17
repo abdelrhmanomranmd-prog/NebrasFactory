@@ -583,11 +583,12 @@
                 '<td>' + formatLegalDate(c.startDate) + ' → ' + formatLegalDate(c.endDate) + '</td>' +
                 '<td><span class="erp-tag ' + (st.tag || '') + '">' + st.label + '</span></td>' +
                 '<td>' + legalAttachmentCell(c, 'contract') + '</td>' +
+                '<td>' + (typeof renderLegalContractDispatchCell === 'function' ? renderLegalContractDispatchCell(c, 'contract') : '—') + '</td>' +
                 '<td><button type="button" class="erp-tag erp-tag--action" onclick="openLegalEditor(\'contract\',\'' + esc(c.id) + '\')"><i class="fas fa-pen"></i></button> ' +
                 '<button type="button" class="erp-tag" onclick="deleteLegalRecord(\'contract\',\'' + esc(c.id) + '\')"><i class="fas fa-trash"></i></button></td></tr>';
         }).join('');
         return renderLegalListPanel('contract', '<i class="fas fa-file-signature"></i> سجل العقود', 'عقد جديد',
-            '<th>العقد</th><th>الشركة / الطرف</th><th>المدة</th><th>الحالة</th><th>مرفق</th><th>إجراء</th>', rows, editor);
+            '<th>العقد</th><th>الشركة / الطرف</th><th>المدة</th><th>الحالة</th><th>مرفق</th><th>إرسال</th><th>إجراء</th>', rows, editor);
     }
 
     function renderLegalRentalsPanel() {
@@ -608,6 +609,7 @@
                 '<td>' + legalAttachmentCell(r, 'rental') +
                 (days != null && days <= 60 && days >= 0 ? ' <button type="button" class="erp-tag" onclick="sendLegalRentalReminder(\'' + esc(r.id) + '\')"><i class="fas fa-bell"></i></button>' : '') +
                 '</td>' +
+                '<td>' + (typeof renderLegalContractDispatchCell === 'function' ? renderLegalContractDispatchCell(r, 'rental') : '—') + '</td>' +
                 '<td><button type="button" class="erp-tag erp-tag--action" onclick="openLegalEditor(\'rental\',\'' + esc(r.id) + '\')"><i class="fas fa-pen"></i></button> ' +
                 '<button type="button" class="erp-tag" onclick="deleteLegalRecord(\'rental\',\'' + esc(r.id) + '\')"><i class="fas fa-trash"></i></button></td></tr>';
         }).join('');
@@ -616,9 +618,9 @@
             '<div class="hr-toolbar"><button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="openLegalEditor(\'rental\',null)"><i class="fas fa-plus"></i> عقد إيجار جديد</button></div>' +
             editor +
             '<div class="hr-leave-table-wrap"><table class="hr-leave-table"><thead><tr>' +
-            '<th>العقد</th><th>الشركة / الطرف</th><th>العقار</th><th>الإيجار الشهري</th><th>المدة</th><th>الحالة</th><th>مرفق · تنبيه</th><th>إجراء</th>' +
+            '<th>العقد</th><th>الشركة / الطرف</th><th>العقار</th><th>الإيجار الشهري</th><th>المدة</th><th>الحالة</th><th>مرفق · تنبيه</th><th>إرسال</th><th>إجراء</th>' +
             '</tr></thead><tbody>' +
-            (rows || '<tr><td colspan="8" class="erp-empty">لا عقود إيجار — أضيفي عقداً (مؤجّر أو مستأجر)</td></tr>') +
+            (rows || '<tr><td colspan="9" class="erp-empty">لا عقود إيجار — أضيفي عقداً (مؤجّر أو مستأجر)</td></tr>') +
             '</tbody></table></div></div>';
     }
 
@@ -639,6 +641,8 @@
                 '<label class="nebras-field"><span>دور الشركة *</span><select id="lrent-role">' + roleOpts + '</select></label>' +
                 '<label class="nebras-field"><span>عنوان العقد *</span><input id="lrent-title" value="' + esc(r.title || '') + '" placeholder="إيجار مستودع الرياض"></label>' +
                 '<label class="nebras-field"><span>الطرف الآخر</span><input id="lrent-party" value="' + esc(r.partyName || '') + '" placeholder="اسم المستأجر أو المؤجّر"></label>' +
+                '<label class="nebras-field"><span>جوال الطرف</span><input id="lrent-party-phone" value="' + esc(r.partyPhone || '') + '" placeholder="05xxxxxxxx"></label>' +
+                '<label class="nebras-field"><span>بريد الطرف</span><input id="lrent-party-email" type="email" value="' + esc(r.partyEmail || '') + '"></label>' +
                 '<label class="nebras-field nebras-field--wide"><span>عنوان العقار *</span><input id="lrent-address" value="' + esc(r.propertyAddress || '') + '"></label>' +
                 '<label class="nebras-field"><span>الإيجار الشهري (ر.س)</span><input type="number" id="lrent-rent" min="0" step="0.01" value="' + esc(r.monthlyRent || '') + '"></label>' +
                 '<label class="nebras-field"><span>رقم العقد / المرجع</span><input id="lrent-ref" value="' + esc(r.referenceNo || '') + '"></label>' +
@@ -688,14 +692,21 @@
                     '<label class="nebras-field"><span>نوع العقد</span><select id="lc-type">' + typeOpts + '</select></label>') +
                 '<label class="nebras-field"><span>عنوان العقد *</span><input id="lc-title" value="' + esc(c.title || '') + '"></label>' +
                 '<label class="nebras-field"><span>الطرف الآخر</span><input id="lc-party" value="' + esc(c.partyName || '') + '"></label>' +
+                '<label class="nebras-field"><span>جوال الطرف (واتساب)</span><input id="lc-party-phone" value="' + esc(c.partyPhone || '') + '" placeholder="05xxxxxxxx"></label>' +
+                '<label class="nebras-field"><span>بريد الطرف</span><input id="lc-party-email" type="email" value="' + esc(c.partyEmail || '') + '"></label>' +
                 '<label class="nebras-field"><span>رقم العقد / المرجع</span><input id="lc-ref" value="' + esc(c.referenceNo || '') + '"></label>' +
                 '<label class="nebras-field"><span>تاريخ البداية</span><input type="date" id="lc-start" value="' + esc(c.startDate || '') + '"></label>' +
                 '<label class="nebras-field"><span>تاريخ الانتهاء</span><input type="date" id="lc-end" value="' + esc(c.endDate || '') + '"></label>' +
                 '<label class="nebras-field"><span>القيمة (ريال)</span><input type="number" id="lc-value" value="' + esc(c.valueAmount || '') + '"></label>' +
                 '<label class="nebras-field"><span>الحالة</span><select id="lc-status">' + statusOpts + '</select></label>' +
                 '<label class="nebras-field"><span>المحامي / المسؤول</span><input id="lc-lawyer" value="' + esc(c.lawyerName || '') + '"></label>' +
+                '<label class="nebras-field nebras-field--wide hr-nafath-row">' +
+                    '<label class="nebras-field--inline"><input type="checkbox" id="lc-nafath-required"' + (c.nafathRequired ? ' checked' : '') + '> يتطلب تحقق نفاذ (NAFAZ)</label>' +
+                    '<label class="nebras-field--inline"><input type="checkbox" id="lc-nafath-verified"' + (c.nafathVerified ? ' checked' : '') + '> تم التحقق عبر نفاذ</label>' +
+                    '<label class="nebras-field"><span>تاريخ نفاذ</span><input type="date" id="lc-nafath-date" value="' + esc(c.nafathVerifiedAt || '') + '"></label>' +
+                '</label>' +
                 '<label class="nebras-field nebras-field--wide"><span>ملاحظات / شروط</span><textarea id="lc-notes" rows="3">' + esc(c.notes || '') + '</textarea></label>' +
-                '<label class="nebras-field nebras-field--wide"><span>مرفق العقد (صورة / PDF)</span><input type="file" accept="image/*,application/pdf" onchange="legalReadAttachment(this)"><small id="legal-attach-hint" class="hr-attach-hint">' + (c.attachmentName ? esc(c.attachmentName) : 'اختياري') + '</small></label>' +
+                '<label class="nebras-field nebras-field--wide"><span>مرفق العقد (PDF / صورة / Word)</span><input type="file" accept="image/*,application/pdf,.doc,.docx" onchange="legalReadAttachment(this)"><small id="legal-attach-hint" class="hr-attach-hint">' + (c.attachmentName ? esc(c.attachmentName) : 'يُرفع تلقائياً للسحابة — لا يضيع') + '</small></label>' +
             '</div>' +
             '<div class="erp-form-actions">' +
                 '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="saveLegalContract(\'' + esc(id || '') + '\')"><i class="fas fa-save"></i> حفظ</button>' +
@@ -927,12 +938,17 @@
             type: legalField('lc-type') || 'commercial',
             title: title,
             partyName: legalField('lc-party'),
+            partyPhone: legalField('lc-party-phone'),
+            partyEmail: legalField('lc-party-email'),
             referenceNo: legalField('lc-ref'),
             startDate: legalField('lc-start'),
             endDate: legalField('lc-end'),
             valueAmount: legalField('lc-value'),
             status: legalField('lc-status') || 'draft',
             lawyerName: legalField('lc-lawyer'),
+            nafathRequired: !!(document.getElementById('lc-nafath-required') && document.getElementById('lc-nafath-required').checked),
+            nafathVerified: !!(document.getElementById('lc-nafath-verified') && document.getElementById('lc-nafath-verified').checked),
+            nafathVerifiedAt: legalField('lc-nafath-date'),
             notes: legalField('lc-notes'),
             updatedAt: new Date().toISOString()
         };
@@ -944,6 +960,9 @@
                 record.attachmentDataUrl = legalContracts[idx].attachmentDataUrl;
                 record.attachmentMime = legalContracts[idx].attachmentMime;
                 record.attachmentCloudUrl = legalContracts[idx].attachmentCloudUrl;
+                record.sendHistory = legalContracts[idx].sendHistory || [];
+                record.lastSentAt = legalContracts[idx].lastSentAt || '';
+                record.lastSentVia = legalContracts[idx].lastSentVia || '';
                 legalContracts[idx] = applyLegalAttachmentFields(record);
             }
         } else {
@@ -1069,6 +1088,8 @@
             leaseRole: legalField('lrent-role') || 'tenant',
             title: title,
             partyName: legalField('lrent-party'),
+            partyPhone: legalField('lrent-party-phone'),
+            partyEmail: legalField('lrent-party-email'),
             propertyAddress: address,
             monthlyRent: legalField('lrent-rent'),
             referenceNo: legalField('lrent-ref'),
@@ -1086,6 +1107,9 @@
                 record.attachmentDataUrl = legalRentals[idx].attachmentDataUrl;
                 record.attachmentMime = legalRentals[idx].attachmentMime;
                 record.attachmentCloudUrl = legalRentals[idx].attachmentCloudUrl;
+                record.sendHistory = legalRentals[idx].sendHistory || [];
+                record.lastSentAt = legalRentals[idx].lastSentAt || '';
+                record.lastSentVia = legalRentals[idx].lastSentVia || '';
                 legalRentals[idx] = applyLegalAttachmentFields(record);
             }
         } else {

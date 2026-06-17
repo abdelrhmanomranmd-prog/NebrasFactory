@@ -138,6 +138,43 @@
     margin-bottom: 1rem;
 }
 
+.legal-dispatch-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.legal-dispatch-actions small {
+    display: block;
+    width: 100%;
+    color: #546e7a;
+    margin-bottom: 0.15rem;
+}
+
+.pi-snapshot-list li {
+    margin-bottom: 0.65rem;
+    line-height: 1.5;
+}
+
+.pi-snapshot-list .erp-tag {
+    margin: 0.15rem 0.2rem 0.15rem 0;
+}
+
+.cloud-governance-toolbar {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.cloud-governance-note {
+    margin: 0.75rem 0;
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    background: #e8f4fd;
+    color: #1a5276;
+    font-size: 0.88rem;
+}
+
 @media (max-width: 768px) {
     .hr-form-section,
     .hr-form-section-card {
