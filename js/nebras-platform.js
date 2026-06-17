@@ -3068,29 +3068,22 @@
                 }
             });
             dashboardTiles.sort(function(a, b) { return (a.sortOrder || 0) - (b.sortOrder || 0); });
-            const DASHBOARD_TILES_MERGE_REV = 'hrws88';
-            const tileMergeFields = ['iconClass', 'handler', 'zone', 'dashGroup', 'permission', 'superadminOnly', 'branchCommandOnly', 'cssClass', 'backgroundImage', 'sortOrder'];
-            const forceTileRepair = localStorage.getItem('nebrasDashboardTilesMergeRev') !== DASHBOARD_TILES_MERGE_REV;
             dashboardTiles.forEach(function(t) {
                 if (!t.inner) t.inner = { enabled: false, album: [], documents: [] };
                 const def = DEFAULT_DASHBOARD_TILES.find(function(d) { return d.id === t.id; });
-                if (!def) return;
-                tileMergeFields.forEach(function(field) {
-                    if (def[field] !== undefined && def[field] !== null) t[field] = def[field];
-                });
-                if (!t.iconClass && def.iconClass) t.iconClass = def.iconClass;
-                if (!t.handler && def.handler) t.handler = def.handler;
-                if (forceTileRepair || !t.iconClass || !t.handler) {
-                    if (def.titleAr) t.titleAr = def.titleAr;
-                    if (def.titleEn) t.titleEn = def.titleEn;
-                    if (def.textAr) t.textAr = def.textAr;
-                    if (def.textEn) t.textEn = def.textEn;
-                    if (def.visible !== undefined) t.visible = def.visible;
+                if (def) {
+                    if (!t.backgroundImage && def.backgroundImage) t.backgroundImage = def.backgroundImage;
+                    if (!t.cssClass && def.cssClass) t.cssClass = def.cssClass;
+                    if (t.id === 'dash-company-profile' || t.id === 'dash-profile-pdf') {
+                        t.titleAr = def.titleAr;
+                        t.titleEn = def.titleEn;
+                        t.textAr = def.textAr;
+                        t.textEn = def.textEn;
+                        t.visible = def.visible;
+                        t.handler = def.handler;
+                    }
                 }
             });
-            if (forceTileRepair) {
-                localStorage.setItem('nebrasDashboardTilesMergeRev', DASHBOARD_TILES_MERGE_REV);
-            }
 
             if (!Array.isArray(siteCustomSections)) siteCustomSections = [];
             if (!systemSettings.iconDetailOverrides || typeof systemSettings.iconDetailOverrides !== 'object') {
@@ -3198,7 +3191,6 @@
                 openShowroomAdmin: function() { return canManage('content', admin); },
                 openNebrasMediaHubQuick: function() { return canManage('content', admin); },
                 scrollErpHub: function() { return canManage('erp', admin); },
-                openErpCommandCenter: function() { return canManage('erp', admin) || canManage('inventory', admin) || canManage('orders', admin); },
                 syncPlatformFromProductMaster: function() { return isMainGovernanceAdmin(admin); },
                 openCallbackLeadsAdmin: function() { return canManage('sales', admin) || canManage('audit', admin); }
             };
@@ -10760,7 +10752,12 @@
             });
         }
 
-        function renderDashboardTiles() {
+        function renderDashboardTiles(_retryOnce) {
+            try {
+                repairDashboardTilesIntegrity();
+            } catch (repairErr) {
+                console.error('repairDashboardTilesIntegrity', repairErr);
+            }
             const quick = document.getElementById('dashboard-actions-grid');
             const secondary = document.getElementById('dashboard-secondary-grid');
             const lang = currentLang || 'ar';
@@ -10824,6 +10821,10 @@
             }
             bindDashboardTileInteractions();
             renderPartnersMarquees();
+            if (!_retryOnce && quick && !visible.some(function(t) { return t.zone === 'quick'; }) && isMainGovernanceAdmin()) {
+                repairDashboardTilesIntegrity();
+                renderDashboardTiles(true);
+            }
         }
 
 
@@ -15768,6 +15769,73 @@
             }
         }
 
+        const DASHBOARD_NAV_BUTTON_IDS = [
+            'dash-nav-analytics', 'dash-nav-partners', 'dash-nav-ops', 'dash-nav-modules',
+            'dash-nav-erp', 'dash-nav-platform', 'dash-nav-content', 'dash-nav-settings', 'dash-nav-official'
+        ];
+
+        const DASHBOARD_ROLE_HIDDEN_SECTION_IDS = [
+            'dashboard-hub-intro', 'admin-analytics-hub', 'dashboard-partners-block',
+            'platform-hub-panel', 'erp-hub-panel'
+        ];
+
+        function resetDashboardRolePresentation() {
+            const dash = document.getElementById('admin-dashboard');
+            if (dash) {
+                dash.classList.remove('dashboard-hr-only', 'dashboard-legal-only', 'dashboard-role-scoped');
+                dash.querySelectorAll('.dashboard-section--role-hidden').forEach(function(sec) {
+                    sec.classList.remove('dashboard-section--role-hidden');
+                });
+            }
+            DASHBOARD_NAV_BUTTON_IDS.forEach(function(id) {
+                const el = document.getElementById(id);
+                if (el) el.style.display = '';
+            });
+            DASHBOARD_ROLE_HIDDEN_SECTION_IDS.forEach(function(id) {
+                const el = document.getElementById(id);
+                if (el) el.classList.remove('dashboard-section--role-hidden');
+            });
+            ['dashboard-actions-grid', 'dashboard-secondary-grid'].forEach(function(gridId) {
+                const grid = document.getElementById(gridId);
+                if (grid) delete grid.dataset.tileBound;
+            });
+        }
+
+        function repairDashboardTilesIntegrity() {
+            if (!Array.isArray(dashboardTiles)) dashboardTiles = [];
+            DEFAULT_DASHBOARD_TILES.forEach(function(def) {
+                if (!dashboardTiles.some(function(t) { return t.id === def.id; })) {
+                    dashboardTiles.push(Object.assign({}, def));
+                }
+            });
+            dashboardTiles.sort(function(a, b) { return (a.sortOrder || 0) - (b.sortOrder || 0); });
+            dashboardTiles.forEach(function(t) {
+                const def = DEFAULT_DASHBOARD_TILES.find(function(d) { return d.id === t.id; });
+                if (!def) return;
+                if (!t.handler) t.handler = def.handler;
+                if (!t.zone) t.zone = def.zone;
+                if (!t.iconClass) t.iconClass = def.iconClass;
+                if (!t.dashGroup) t.dashGroup = def.dashGroup;
+                if (t.sortOrder == null) t.sortOrder = def.sortOrder;
+            });
+            const builtinVisible = dashboardTiles.filter(function(t) {
+                if (t.visible === false) return false;
+                return DEFAULT_DASHBOARD_TILES.some(function(d) { return d.id === t.id && d.visible !== false; });
+            }).length;
+            if (builtinVisible < 10) {
+                dashboardTiles.forEach(function(t) {
+                    const def = DEFAULT_DASHBOARD_TILES.find(function(d) { return d.id === t.id; });
+                    if (def) {
+                        t.visible = def.visible;
+                        t.handler = def.handler || t.handler;
+                        t.zone = def.zone || t.zone;
+                        t.iconClass = def.iconClass || t.iconClass;
+                    }
+                });
+            }
+            ensureDashboardGovernanceHandlers();
+        }
+
         function applyRoleDashboardScope(user) {
             const dash = document.getElementById('admin-dashboard');
             if (!dash || !user) return;
@@ -15808,33 +15876,13 @@
             }, 30000);
         }
 
-        function resetDashboardRoleGovernance() {
-            const dash = document.getElementById('admin-dashboard');
-            if (dash) {
-                dash.classList.remove('dashboard-hr-only', 'dashboard-legal-only');
-            }
-            [
-                'dash-nav-analytics', 'dash-nav-partners', 'dash-nav-ops', 'dash-nav-modules',
-                'dash-nav-erp', 'dash-nav-platform', 'dash-nav-content', 'dash-nav-settings', 'dash-nav-official'
-            ].forEach(function(id) {
-                const el = document.getElementById(id);
-                if (el) el.style.display = '';
-            });
-            [
-                'dashboard-hub-intro', 'admin-analytics-hub', 'dashboard-partners-block',
-                'platform-hub-panel', 'erp-hub-panel'
-            ].forEach(function(id) {
-                const el = document.getElementById(id);
-                if (el) el.classList.remove('dashboard-section--role-hidden');
-            });
-        }
-
         function showAdminDashboard(user) {
             if (!user) return;
+            resetDashboardRolePresentation();
             if (typeof loadAdminPresenceLocal === 'function') loadAdminPresenceLocal();
             const dash = document.getElementById('admin-dashboard');
             if (dash) revealPlatformLayer('admin-dashboard');
-            resetDashboardRoleGovernance();
+            repairDashboardTilesIntegrity();
             ensureDashboardGovernanceHandlers();
             updateAdminRoleLabel(user);
             applyOccasionTheme();
@@ -15845,7 +15893,6 @@
             bindNebrasHrPlatformGlobals();
             if (typeof isStrictHrUser === 'function' && isStrictHrUser(user)) {
                 startDashboardClock();
-                renderDashboardTiles();
                 applyStaticUiTranslations(siteText[currentLang || 'ar'] || siteText.ar);
                 if (typeof openHrWhenReady === 'function') openHrWhenReady(0);
                 else if (typeof openHrPlatform === 'function') setTimeout(function() { openHrPlatform(); }, 0);
@@ -15881,6 +15928,7 @@
         }
 
         function logoutAdmin() {
+            resetDashboardRolePresentation();
             if (typeof clearNebrasSecureSession === 'function') clearNebrasSecureSession();
             if (currentAdmin) {
                 if (typeof clearAdminPresence === 'function') clearAdminPresence(currentAdmin);
@@ -15893,7 +15941,6 @@
                 dashboardClockTimer = null;
             }
             currentAdmin = null;
-            resetDashboardRoleGovernance();
             document.getElementById('admin-dashboard').classList.remove('show');
             syncAdminSessionClass();
             setLanguage(currentLang || 'ar');
@@ -24293,6 +24340,7 @@
             ensureQuoteA4Settings();
             ensureDefaultSocialSettings();
             ensureDashboardGovernanceHandlers();
+            repairDashboardTilesIntegrity();
             ensureAnalyticsGovernance();
             if (typeof syncSalesPriceListFromProductMaster === 'function') {
                 syncSalesPriceListFromProductMaster();
@@ -27359,9 +27407,6 @@
         window.purgeStaleCatalogReferences = purgeStaleCatalogReferences;
         window.loginAdmin = loginAdmin;
         window.logoutAdmin = logoutAdmin;
-        window.resetDashboardRoleGovernance = resetDashboardRoleGovernance;
-        window.renderDashboardTiles = renderDashboardTiles;
-        window.ensureBuiltinSiteCatalog = ensureBuiltinSiteCatalog;
         window.openAdminPanel = openAdminPanel;
         window.closeAdminOverlay = closeAdminOverlay;
         window.closeAdminSection = closeAdminSection;
@@ -27610,5 +27655,9 @@
         window.openHrWhenReady = openHrWhenReady;
         window.bindNebrasHrPlatformGlobals = bindNebrasHrPlatformGlobals;
         window.renderPlatformHRPage = renderPlatformHRPage;
+        window.resetDashboardRolePresentation = resetDashboardRolePresentation;
+        window.resetDashboardRoleGovernance = resetDashboardRolePresentation;
+        window.repairDashboardTilesIntegrity = repairDashboardTilesIntegrity;
+        window.renderDashboardTiles = renderDashboardTiles;
         bindNebrasHrPlatformGlobals();
 

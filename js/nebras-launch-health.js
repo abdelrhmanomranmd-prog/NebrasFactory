@@ -16,26 +16,20 @@
         const dash = document.getElementById('admin-dashboard');
         if (!dash || !dash.classList.contains('show') || !isHqAdmin()) return issues;
 
-        if (dash.classList.contains('dashboard-hr-only')) {
-            issues.push('dashboard-hr-only على الإدارة الرئيسية');
-            if (typeof global.resetDashboardRoleGovernance === 'function') {
-                global.resetDashboardRoleGovernance();
-                if (typeof global.renderDashboardTiles === 'function') global.renderDashboardTiles();
+        if (dash.classList.contains('dashboard-hr-only') || dash.classList.contains('dashboard-legal-only')) {
+            issues.push('قيود دور قديمة على الإدارة الرئيسية');
+            if (typeof global.resetDashboardRolePresentation === 'function') {
+                global.resetDashboardRolePresentation();
             }
-        }
-        if (dash.classList.contains('dashboard-legal-only')) {
-            issues.push('dashboard-legal-only على الإدارة الرئيسية');
-            if (typeof global.resetDashboardRoleGovernance === 'function') {
-                global.resetDashboardRoleGovernance();
-                if (typeof global.renderDashboardTiles === 'function') global.renderDashboardTiles();
-            }
+            if (typeof global.repairDashboardTilesIntegrity === 'function') global.repairDashboardTilesIntegrity();
+            if (typeof global.renderDashboardTiles === 'function') global.renderDashboardTiles();
         }
 
         const quick = document.getElementById('dashboard-actions-grid');
         const visible = quick ? quick.querySelectorAll('.dashboard-tile-card').length : 0;
         if (visible < 8) {
             issues.push('أيقونات الداشبورد: ' + visible);
-            if (typeof global.ensureBuiltinSiteCatalog === 'function') global.ensureBuiltinSiteCatalog();
+            if (typeof global.repairDashboardTilesIntegrity === 'function') global.repairDashboardTilesIntegrity();
             if (typeof global.renderDashboardTiles === 'function') global.renderDashboardTiles();
         }
 
