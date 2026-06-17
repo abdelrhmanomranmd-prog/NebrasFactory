@@ -15925,6 +15925,16 @@
             if (typeof window.updateOrderJourneyBadge === 'function') window.updateOrderJourneyBadge();
             renderDashboardOfficialHub();
             renderDashboardChannelsStatus();
+            if (isMainGovernanceAdmin(user)) {
+                try {
+                    document.dispatchEvent(new CustomEvent('nebras-dashboard-ready'));
+                } catch (dashEvtErr) { /* ignore */ }
+                if (typeof window.scheduleNebrasLaunchHealth === 'function') {
+                    window.scheduleNebrasLaunchHealth(500);
+                } else if (typeof window.verifyNebrasLaunchHealth === 'function') {
+                    setTimeout(window.verifyNebrasLaunchHealth, 500);
+                }
+            }
         }
 
         function logoutAdmin() {

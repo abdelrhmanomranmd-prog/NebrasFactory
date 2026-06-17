@@ -49,7 +49,17 @@
 
     global.verifyNebrasLaunchHealth = verifyNebrasLaunchHealth;
 
+    function scheduleLaunchHealth(delayMs) {
+        setTimeout(verifyNebrasLaunchHealth, typeof delayMs === 'number' ? delayMs : 400);
+    }
+
+    global.scheduleNebrasLaunchHealth = scheduleLaunchHealth;
+
     document.addEventListener('DOMContentLoaded', function() {
-        setTimeout(verifyNebrasLaunchHealth, 2500);
+        scheduleLaunchHealth(2500);
+    });
+
+    document.addEventListener('nebras-dashboard-ready', function() {
+        scheduleLaunchHealth(350);
     });
 })(window);
