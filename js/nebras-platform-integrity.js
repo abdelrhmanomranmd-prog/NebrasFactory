@@ -158,7 +158,9 @@
         }
         const hist = cloudSnapshots.byKey[storeKey];
         if (hist && hist.length && (hist[0].recordCount > 0 || (hist[0].payload && payloadSize(hist[0].payload) > 0))) {
-            console.warn('[Nebras Cloud Guard] منع مسح ' + storeKey + ' — رفض رفع بيانات فارغة');
+            if (global.__NEBRAS_LAUNCH_DEBUG__) {
+                console.warn('[Nebras Cloud Guard] منع مسح ' + storeKey + ' — رفض رفع بيانات فارغة');
+            }
             return undefined;
         }
         return payload;
@@ -174,7 +176,9 @@
             return clonePayload(hist[0].payload);
         }
         if (hist && hist.length && hist[0].recordCount > 0) {
-            console.warn('[Nebras Cloud Guard] سحابة فارغة لـ ' + storeKey + ' — الاحتفاظ بالمحلي');
+            if (global.__NEBRAS_LAUNCH_DEBUG__) {
+                console.warn('[Nebras Cloud Guard] سحابة فارغة لـ ' + storeKey + ' — الاحتفاظ بالمحلي');
+            }
             return undefined;
         }
         return payload;

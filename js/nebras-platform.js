@@ -24488,8 +24488,10 @@
                             console.warn('Nebras sensitive cloud save failed:', sensResult);
                         }
                     } else {
-                        console.warn('Nebras sensitive cloud save blocked — secure session required.');
-                        okSensitive = false;
+                        if (currentAdmin && global.__NEBRAS_LAUNCH_DEBUG__) {
+                            console.warn('Nebras sensitive cloud save blocked — secure session required.');
+                        }
+                        okSensitive = !currentAdmin;
                     }
                 }
                 if (!okPublic || !okSensitive) return false;
