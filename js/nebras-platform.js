@@ -3068,22 +3068,29 @@
                 }
             });
             dashboardTiles.sort(function(a, b) { return (a.sortOrder || 0) - (b.sortOrder || 0); });
+            const DASHBOARD_TILES_MERGE_REV = 'hrws88';
+            const tileMergeFields = ['iconClass', 'handler', 'zone', 'dashGroup', 'permission', 'superadminOnly', 'branchCommandOnly', 'cssClass', 'backgroundImage', 'sortOrder'];
+            const forceTileRepair = localStorage.getItem('nebrasDashboardTilesMergeRev') !== DASHBOARD_TILES_MERGE_REV;
             dashboardTiles.forEach(function(t) {
                 if (!t.inner) t.inner = { enabled: false, album: [], documents: [] };
                 const def = DEFAULT_DASHBOARD_TILES.find(function(d) { return d.id === t.id; });
-                if (def) {
-                    if (!t.backgroundImage && def.backgroundImage) t.backgroundImage = def.backgroundImage;
-                    if (!t.cssClass && def.cssClass) t.cssClass = def.cssClass;
-                    if (t.id === 'dash-company-profile' || t.id === 'dash-profile-pdf') {
-                        t.titleAr = def.titleAr;
-                        t.titleEn = def.titleEn;
-                        t.textAr = def.textAr;
-                        t.textEn = def.textEn;
-                        t.visible = def.visible;
-                        t.handler = def.handler;
-                    }
+                if (!def) return;
+                tileMergeFields.forEach(function(field) {
+                    if (def[field] !== undefined && def[field] !== null) t[field] = def[field];
+                });
+                if (!t.iconClass && def.iconClass) t.iconClass = def.iconClass;
+                if (!t.handler && def.handler) t.handler = def.handler;
+                if (forceTileRepair || !t.iconClass || !t.handler) {
+                    if (def.titleAr) t.titleAr = def.titleAr;
+                    if (def.titleEn) t.titleEn = def.titleEn;
+                    if (def.textAr) t.textAr = def.textAr;
+                    if (def.textEn) t.textEn = def.textEn;
+                    if (def.visible !== undefined) t.visible = def.visible;
                 }
             });
+            if (forceTileRepair) {
+                localStorage.setItem('nebrasDashboardTilesMergeRev', DASHBOARD_TILES_MERGE_REV);
+            }
 
             if (!Array.isArray(siteCustomSections)) siteCustomSections = [];
             if (!systemSettings.iconDetailOverrides || typeof systemSettings.iconDetailOverrides !== 'object') {
@@ -3191,6 +3198,7 @@
                 openShowroomAdmin: function() { return canManage('content', admin); },
                 openNebrasMediaHubQuick: function() { return canManage('content', admin); },
                 scrollErpHub: function() { return canManage('erp', admin); },
+                openErpCommandCenter: function() { return canManage('erp', admin) || canManage('inventory', admin) || canManage('orders', admin); },
                 syncPlatformFromProductMaster: function() { return isMainGovernanceAdmin(admin); },
                 openCallbackLeadsAdmin: function() { return canManage('sales', admin) || canManage('audit', admin); }
             };
@@ -15800,11 +15808,33 @@
             }, 30000);
         }
 
+        function resetDashboardRoleGovernance() {
+            const dash = document.getElementById('admin-dashboard');
+            if (dash) {
+                dash.classList.remove('dashboard-hr-only', 'dashboard-legal-only');
+            }
+            [
+                'dash-nav-analytics', 'dash-nav-partners', 'dash-nav-ops', 'dash-nav-modules',
+                'dash-nav-erp', 'dash-nav-platform', 'dash-nav-content', 'dash-nav-settings', 'dash-nav-official'
+            ].forEach(function(id) {
+                const el = document.getElementById(id);
+                if (el) el.style.display = '';
+            });
+            [
+                'dashboard-hub-intro', 'admin-analytics-hub', 'dashboard-partners-block',
+                'platform-hub-panel', 'erp-hub-panel'
+            ].forEach(function(id) {
+                const el = document.getElementById(id);
+                if (el) el.classList.remove('dashboard-section--role-hidden');
+            });
+        }
+
         function showAdminDashboard(user) {
             if (!user) return;
             if (typeof loadAdminPresenceLocal === 'function') loadAdminPresenceLocal();
             const dash = document.getElementById('admin-dashboard');
             if (dash) revealPlatformLayer('admin-dashboard');
+            resetDashboardRoleGovernance();
             ensureDashboardGovernanceHandlers();
             updateAdminRoleLabel(user);
             applyOccasionTheme();
@@ -15815,6 +15845,7 @@
             bindNebrasHrPlatformGlobals();
             if (typeof isStrictHrUser === 'function' && isStrictHrUser(user)) {
                 startDashboardClock();
+                renderDashboardTiles();
                 applyStaticUiTranslations(siteText[currentLang || 'ar'] || siteText.ar);
                 if (typeof openHrWhenReady === 'function') openHrWhenReady(0);
                 else if (typeof openHrPlatform === 'function') setTimeout(function() { openHrPlatform(); }, 0);
@@ -15862,6 +15893,7 @@
                 dashboardClockTimer = null;
             }
             currentAdmin = null;
+            resetDashboardRoleGovernance();
             document.getElementById('admin-dashboard').classList.remove('show');
             syncAdminSessionClass();
             setLanguage(currentLang || 'ar');
@@ -27327,6 +27359,9 @@
         window.purgeStaleCatalogReferences = purgeStaleCatalogReferences;
         window.loginAdmin = loginAdmin;
         window.logoutAdmin = logoutAdmin;
+        window.resetDashboardRoleGovernance = resetDashboardRoleGovernance;
+        window.renderDashboardTiles = renderDashboardTiles;
+        window.ensureBuiltinSiteCatalog = ensureBuiltinSiteCatalog;
         window.openAdminPanel = openAdminPanel;
         window.closeAdminOverlay = closeAdminOverlay;
         window.closeAdminSection = closeAdminSection;
