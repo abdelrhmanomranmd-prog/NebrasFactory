@@ -766,6 +766,14 @@
                     if (!tabDefs.some(function(t) { return t.id === ext.id; })) tabDefs.push(ext);
                 });
             }
+            if (typeof getHrViolationsTabExtension === 'function') {
+                const vExt = getHrViolationsTabExtension();
+                if (!tabDefs.some(function(t) { return t.id === vExt.id; })) {
+                    const trackIdx = tabDefs.findIndex(function(t) { return t.id === 'tracking'; });
+                    if (trackIdx >= 0) tabDefs.splice(trackIdx + 1, 0, vExt);
+                    else tabDefs.push(vExt);
+                }
+            }
             if (canViewHrExecutiveReports()) {
                 tabDefs.push({ id: 'reports', icon: 'fas fa-file-export', label: 'تقارير الإدارة الرئيسية', group: 'الإدارة الرئيسية' });
             }
@@ -774,7 +782,7 @@
                 tabDefs = tabDefs.filter(function(t) {
                     if (t.id === 'companies') return typeof canManageHrCompanies === 'function' && canManageHrCompanies();
                     if (hrGov) return t.id !== 'reports';
-                    if (t.id === 'fleet-hub' || t.id === 'travel' || t.id === 'deductions' || t.id === 'saudization') return true;
+                    if (t.id === 'fleet-hub' || t.id === 'travel' || t.id === 'deductions' || t.id === 'saudization' || t.id === 'violations') return true;
                     return isHrTabAllowedForScope(t.id);
                 });
             }
@@ -912,6 +920,7 @@
         else if (hrActiveTab === 'deductions' && typeof renderHrDeductionsPanel === 'function') { try { panelHtml = renderHrDeductionsPanel(); } catch (e) { panelHtml = '<div class="hr-panel is-active"><p class="erp-empty">الخصومات — ' + esc(e.message) + '</p></div>'; } }
         else if (hrActiveTab === 'advances' && typeof renderHrAdvancesPanel === 'function') { try { panelHtml = renderHrAdvancesPanel(); } catch (e) { panelHtml = '<div class="hr-panel is-active"><p class="erp-empty">سلف بأقساط — ' + esc(e.message) + '</p></div>'; } }
         else if (hrActiveTab === 'fleet-hub' && typeof renderHrFleetHubPanel === 'function') { try { panelHtml = renderHrFleetHubPanel(); } catch (e) { panelHtml = '<div class="hr-panel is-active"><p class="erp-empty">مركز الأسطول — ' + esc(e.message) + '</p></div>'; } }
+        else if (hrActiveTab === 'violations' && typeof renderHrViolationsPanel === 'function') { try { panelHtml = renderHrViolationsPanel(); } catch (e) { panelHtml = '<div class="hr-panel is-active"><p class="erp-empty">مخالفات المرور — ' + esc(e.message) + '</p></div>'; } }
         else if (hrActiveTab === 'saudization' && typeof renderHrSaudizationPanel === 'function') { try { panelHtml = renderHrSaudizationPanel(); } catch (e) { panelHtml = '<div class="hr-panel is-active"><p class="erp-empty">السعودة — ' + esc(e.message) + '</p></div>'; } }
         else if (hrActiveTab === 'reports' && canViewHrExecutiveReports()) { try { panelHtml = renderHrReportsPanel(); } catch (e) { panelHtml = '<div class="hr-panel is-active"><p class="erp-empty">التقارير — ' + esc(e.message) + '</p></div>'; } }
         else if (hrActiveTab === 'reports') {
@@ -1013,6 +1022,10 @@
                 '<div class="hr-emp-meta">' +
                     '<span class="erp-tag ' + (st.tag || '') + '">' + esc(st.label) + '</span>' +
                     '<span class="erp-tag">' + esc(HR_EMP_TYPES[e.employmentType] || e.employmentType) + '</span>' +
+                    (isEmployeeGosiDeductEnabled(e)
+                        ? '<span class="hr-gosi-badge"><i class="fas fa-shield-halved"></i> GOSI</span>'
+                        : '<span class="hr-gosi-badge hr-gosi-badge--exempt"><i class="fas fa-ban"></i> بدون تأمينات</span>') +
+                    (e.nafathVerified ? '<span class="erp-tag erp-tag--ok"><i class="fas fa-fingerprint"></i> نفاذ</span>' : '') +
                     '<span class="erp-tag"><i class="fas fa-store"></i> ' + esc(resolveHrBranchLabel(e.branchId)) + '</span>' +
                     (e.department ? '<span class="erp-tag">' + esc(e.department) + '</span>' : '') +
                     (e.shiftId && typeof HR_SHIFTS !== 'undefined' && HR_SHIFTS[e.shiftId] ? '<span class="erp-tag"><i class="fas fa-clock"></i> ' + esc(HR_SHIFTS[e.shiftId].label) + '</span>' : '') +
@@ -1062,16 +1075,29 @@
             return '<option value="' + k + '"' + (e.employmentType === k ? ' selected' : '') + '>' + HR_EMP_TYPES[k] + '</option>';
         }).join('');
 
+        const gosiDeductVal = e.gosiDeduct === false ? 'no' : 'yes';
+
         return '<div class="hr-editor-overlay" id="hr-emp-editor">' +
             '<h4><i class="fas fa-id-card"></i> ' + (isEdit ? 'تعديل موظف' : 'موظف / عامل جديد') + '</h4>' +
+            '<div class="hr-form-sections">' +
+            '<fieldset class="hr-form-section"><legend><i class="fas fa-fingerprint"></i> الهوية · الإقامة · نفاذ</legend>' +
             '<div class="erp-form-grid">' +
                 (typeof renderHrCompanyFieldInForm === 'function' ? renderHrCompanyFieldInForm(e.companyId) : '') +
                 '<label class="nebras-field"><span>رقم الموظف</span><input id="he-no" value="' + esc(e.employeeNo || '') + '" placeholder="NEB-100"></label>' +
                 '<label class="nebras-field"><span>الاسم (عربي)</span><input id="he-name-ar" value="' + esc(e.nameAr || '') + '"></label>' +
                 '<label class="nebras-field"><span>الاسم (إنجليزي)</span><input id="he-name-en" value="' + esc(e.nameEn || '') + '"></label>' +
-                '<label class="nebras-field"><span>الهوية / الإقامة</span><input id="he-national" value="' + esc(e.nationalId || '') + '"></label>' +
+                '<label class="nebras-field"><span>الهوية الوطنية / الإقامة</span><input id="he-national" value="' + esc(e.nationalId || e.iqamaNo || '') + '"></label>' +
+                '<label class="nebras-field"><span>رقم الحدود</span><input id="he-border" value="' + esc(e.borderNumber || '') + '" placeholder="للعمالة الجديدة"></label>' +
+                '<label class="nebras-field"><span>انتهاء الإقامة</span><input type="date" id="he-iqama-expiry" value="' + esc(e.iqamaExpiry || '') + '"></label>' +
                 '<label class="nebras-field"><span>الجنسية</span><input id="he-nationality" value="' + esc(e.nationality || 'سعودي') + '"></label>' +
                 '<label class="nebras-field"><span>الفرع</span><select id="he-branch">' + branchSelectHtml(e.branchId || 'hq') + '</select></label>' +
+                '<div class="nebras-field nebras-field--wide hr-nafath-row">' +
+                    '<label class="nebras-field--inline"><input type="checkbox" id="he-nafath-verified"' + (e.nafathVerified ? ' checked' : '') + '> تم التحقق عبر نفاذ (NAFAZ)</label>' +
+                    '<label class="nebras-field"><span>تاريخ التحقق</span><input type="date" id="he-nafath-date" value="' + esc(e.nafathVerifiedAt || '') + '"></label>' +
+                '</div>' +
+            '</div></fieldset>' +
+            '<fieldset class="hr-form-section"><legend><i class="fas fa-briefcase"></i> الوظيفة والعقد</legend>' +
+            '<div class="erp-form-grid">' +
                 '<label class="nebras-field"><span>قسم المصنع</span><select id="he-dept-key">' +
                     '<option value="">— اختر —</option>' +
                     Object.keys(typeof HR_FACTORY_DEPTS !== 'undefined' ? HR_FACTORY_DEPTS : {}).map(function(k) {
@@ -1100,19 +1126,31 @@
                 '<label class="nebras-field"><span>الحالة</span><select id="he-status">' + statusOpts + '</select></label>' +
                 '<label class="nebras-field"><span>تاريخ الالتحاق</span><input type="date" id="he-join" value="' + esc(e.joinDate || '') + '"></label>' +
                 '<label class="nebras-field"><span>نهاية العقد</span><input type="date" id="he-contract-end" value="' + esc(e.contractEnd || '') + '"></label>' +
+            '</div></fieldset>' +
+            '<fieldset class="hr-form-section"><legend><i class="fas fa-address-book"></i> التواصل</legend>' +
+            '<div class="erp-form-grid">' +
                 '<label class="nebras-field"><span>جوال أساسي</span><input id="he-phone" value="' + esc(e.phone || '') + '" placeholder="05xxxxxxxx"></label>' +
                 '<label class="nebras-field"><span>جوال إضافي</span><input id="he-phone2" value="' + esc(e.phone2 || '') + '"></label>' +
                 '<label class="nebras-field"><span>البريد</span><input id="he-email" type="email" value="' + esc(e.email || '') + '"></label>' +
                 '<label class="nebras-field"><span>جهة الطوارئ</span><input id="he-emg-name" value="' + esc(e.emergencyName || '') + '"></label>' +
                 '<label class="nebras-field"><span>جوال الطوارئ</span><input id="he-emg-phone" value="' + esc(e.emergencyPhone || '') + '"></label>' +
+            '</div></fieldset>' +
+            '<fieldset class="hr-form-section"><legend><i class="fas fa-money-check-dollar"></i> الراتب · التأمينات · البنك</legend>' +
+            '<div class="erp-form-grid">' +
                 '<label class="nebras-field"><span>الراتب الأساسي</span><input type="number" id="he-salary" value="' + esc(e.salary || '') + '" min="0"></label>' +
                 '<label class="nebras-field"><span>بدل سكن</span><input type="number" id="he-housing" value="' + esc(e.housingAllowance || '') + '" min="0"></label>' +
                 '<label class="nebras-field"><span>بدل نقل</span><input type="number" id="he-transport" value="' + esc(e.transportAllowance || '') + '" min="0"></label>' +
+                '<label class="nebras-field"><span>رقم اشتراك التأمينات (GOSI)</span><input id="he-gosi" value="' + esc(e.gosiNo || '') + '"></label>' +
+                '<label class="nebras-field hr-gosi-toggle"><span>خصم التأمينات 9% في المسير؟</span>' +
+                    '<select id="he-gosi-deduct">' +
+                        '<option value="yes"' + (gosiDeductVal === 'yes' ? ' selected' : '') + '>نعم — خصم شهري</option>' +
+                        '<option value="no"' + (gosiDeductVal === 'no' ? ' selected' : '') + '>لا — معفى من الخصم</option>' +
+                    '</select></label>' +
                 '<label class="nebras-field"><span>البنك</span><input id="he-bank" value="' + esc(e.bankName || '') + '"></label>' +
                 '<label class="nebras-field"><span>IBAN</span><input id="he-iban" value="' + esc(e.iban || '') + '"></label>' +
-                '<label class="nebras-field"><span>التأمينات (GOSI)</span><input id="he-gosi" value="' + esc(e.gosiNo || '') + '"></label>' +
                 '<label class="nebras-field"><span>سيارة مُسنَدة</span><select id="he-vehicle">' + vehOpts + '</select></label>' +
                 '<label class="nebras-field nebras-field--wide"><span>ملاحظات</span><input id="he-notes" value="' + esc(e.notes || '') + '"></label>' +
+            '</div></fieldset>' +
             '</div>' +
             '<div class="erp-form-actions">' +
                 '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="saveHrEmployee(\'' + esc(id || '') + '\')"><i class="fas fa-save"></i> حفظ</button>' +
@@ -1156,6 +1194,11 @@
             nameAr: nameAr,
             nameEn: hrField('he-name-en'),
             nationalId: hrField('he-national'),
+            iqamaNo: hrField('he-national'),
+            iqamaExpiry: hrField('he-iqama-expiry'),
+            borderNumber: hrField('he-border'),
+            nafathVerified: !!(document.getElementById('he-nafath-verified') && document.getElementById('he-nafath-verified').checked),
+            nafathVerifiedAt: hrField('he-nafath-date'),
             nationality: hrField('he-nationality'),
             companyId: (document.getElementById('he-company') ? hrField('he-company') : '') || (typeof getHrCompanyIdForNewRecord === 'function' ? getHrCompanyIdForNewRecord() : 'comp-nebras'),
             branchId: hrField('he-branch') || getHrAdminScope().branchId || 'hq',
@@ -1181,6 +1224,7 @@
             bankName: hrField('he-bank'),
             iban: hrField('he-iban'),
             gosiNo: hrField('he-gosi'),
+            gosiDeduct: hrField('he-gosi-deduct') !== 'no',
             vehicleId: hrField('he-vehicle') || null,
             notes: hrField('he-notes'),
             updatedAt: now
@@ -2093,6 +2137,12 @@
         return hrPayrollMonth;
     }
 
+    function isEmployeeGosiDeductEnabled(emp) {
+        if (!emp) return false;
+        if (emp.gosiDeduct === false) return false;
+        return true;
+    }
+
     function buildPayrollItemsForMonth(month, branchId) {
         if (typeof loadHcmSuiteData === 'function') loadHcmSuiteData();
         let emps = applyHrScopeFilter(hrEmployees.filter(function(e) { return e.status === 'active' || e.status === 'on_leave'; }), 'employee');
@@ -2102,7 +2152,8 @@
             const housing = hrNum(e.housingAllowance);
             const transport = hrNum(e.transportAllowance);
             const gross = base + housing + transport;
-            const gosiDed = Math.round(base * 0.09 * 100) / 100;
+            const gosiEnabled = isEmployeeGosiDeductEnabled(e);
+            const gosiDed = gosiEnabled ? Math.round(base * 0.09 * 100) / 100 : 0;
             const extras = (typeof computeHrPayrollExtras === 'function') ? computeHrPayrollExtras(e.id, month) : { dynamicDed: 0, dedLines: [] };
             const dynamicDed = hrNum(extras.dynamicDed);
             const totalDed = Math.round((gosiDed + dynamicDed) * 100) / 100;
@@ -2111,7 +2162,7 @@
                 employeeId: e.id, employeeNo: e.employeeNo, employeeName: e.nameAr,
                 branchId: e.branchId, department: e.department || '', jobTitle: e.jobTitle || '',
                 base: base, housing: housing, transport: transport, gross: gross,
-                gosiDed: gosiDed, dynamicDed: dynamicDed, deductions: totalDed, dedLines: extras.dedLines || [], net: net
+                gosiEnabled: gosiEnabled, gosiDed: gosiDed, dynamicDed: dynamicDed, deductions: totalDed, dedLines: extras.dedLines || [], net: net
             };
         });
     }
@@ -2315,8 +2366,9 @@
         const canApprove = canViewHrExecutiveReports();
         const rows = items.map(function(it) {
             const dedDetail = (it.dedLines && it.dedLines.length)
-                ? '<small title="' + esc(it.dedLines.map(function(d) { return d.label + ': ' + d.amount; }).join(' · ')) + '">GOSI ' + it.gosiDed + (it.dynamicDed ? ' + خصومات ' + it.dynamicDed : '') + '</small>'
-                : '';
+                ? '<small title="' + esc(it.dedLines.map(function(d) { return d.label + ': ' + d.amount; }).join(' · ')) + '">' +
+                    (it.gosiEnabled ? 'GOSI ' + it.gosiDed : 'بدون GOSI') + (it.dynamicDed ? ' + خصومات ' + it.dynamicDed : '') + '</small>'
+                : (it.gosiEnabled ? '' : '<small>معفى تأمينات</small>');
             return '<tr><td>' + esc(it.employeeNo) + '</td><td>' + esc(it.employeeName) + '</td><td>' + esc(it.department) + '</td>' +
                 '<td>' + (typeof formatSar === 'function' ? formatSar(it.base) : it.base) + '</td>' +
                 '<td>' + (typeof formatSar === 'function' ? formatSar(it.housing + it.transport) : (it.housing + it.transport)) + '</td>' +
@@ -2325,7 +2377,7 @@
                 '<td><button type="button" class="erp-tag erp-tag--action" onclick="exportHrPayslipPdf(\'' + esc(it.employeeId) + '\')"><i class="fas fa-file-pdf"></i> قسيمة</button></td></tr>';
         }).join('');
         return '<div class="hr-panel is-active">' +
-            '<p class="hr-platform-note"><i class="fas fa-money-check-dollar"></i> <strong>مسير رواتب HCM</strong> — أساسي + بدلات − GOSI 9% − خصومات ديناميكية وتذاكر سفر وسلف' +
+            '<p class="hr-platform-note"><i class="fas fa-money-check-dollar"></i> <strong>مسير رواتب HCM</strong> — أساسي + بدلات − GOSI 9% (اختياري لكل موظف) − خصومات ديناميكية وتذاكر سفر وسلف' +
             (canApprove ? ' · الإدارة الرئيسية تعتمد وتصدّر PDF/Excel/مدد' : ' · تصدير Excel ومدد متاح لـ HR') + '.</p>' +
             '<div class="hr-toolbar">' +
                 '<label class="nebras-field"><span>الشهر</span><input type="month" id="hp-month" value="' + esc(month) + '" onchange="setHrPayrollMonth(this.value)"></label>' +
@@ -2420,13 +2472,13 @@
         const items = buildPayrollItemsForMonth(month, hrBranchFilter);
         if (!items.length) { alert('لا موظفين في مسير هذا الشهر.'); return; }
         const company = getHrPayrollCompanyMeta();
-        const headers = ['رقم الموظف', 'الاسم', 'الهوية/الإقامة', 'IBAN', 'القسم', 'الأساسي', 'بدل سكن', 'بدل نقل', 'إجمالي مستحقات', 'GOSI 9%', 'خصومات أخرى', 'إجمالي خصومات', 'الصافي', 'الشهر'];
+        const headers = ['رقم الموظف', 'الاسم', 'الهوية/الإقامة', 'IBAN', 'القسم', 'الأساسي', 'بدل سكن', 'بدل نقل', 'إجمالي مستحقات', 'GOSI 9%', 'معفى تأمينات', 'خصومات أخرى', 'إجمالي خصومات', 'الصافي', 'الشهر'];
         const rows = items.map(function(it) {
             const emp = getEmployeeById(it.employeeId) || {};
             return [
                 it.employeeNo, it.employeeName, emp.nationalId || '', emp.iban || '',
                 it.department, it.base, it.housing, it.transport, it.gross,
-                it.gosiDed, it.dynamicDed, it.deductions, it.net, month
+                it.gosiDed, it.gosiEnabled ? 'لا' : 'نعم', it.dynamicDed, it.deductions, it.net, month
             ];
         });
         const totalNet = items.reduce(function(s, i) { return s + i.net; }, 0);
@@ -3507,6 +3559,11 @@
                 if (kind === 'attendance' || kind === 'document' || kind === 'leave') {
                     return employeeMatchesHrScope(getEmployeeById(item.employeeId), scope);
                 }
+                if (kind === 'violation') {
+                    const emp = item.driverEmployeeId ? getEmployeeById(item.driverEmployeeId) : null;
+                    if (emp) return employeeMatchesHrScope(emp, scope);
+                    return vehicleMatchesHrScope({ branchId: item.branchId, companyId: item.companyId }, scope);
+                }
                 return true;
             });
         }
@@ -3519,11 +3576,12 @@
                     const emp = getEmployeeById(item.employeeId);
                     return emp && typeof resolveRecordCompanyId === 'function' && resolveRecordCompanyId(emp) === String(cf);
                 });
-            } else if (kind === 'tracking') {
+            } else if (kind === 'tracking' || kind === 'violation') {
                 result = result.filter(function(t) {
+                    if (kind === 'violation' && t.companyId && String(t.companyId) === String(cf)) return true;
                     const veh = t.vehicleId ? getVehicleById(t.vehicleId) : null;
                     if (veh && typeof resolveRecordCompanyId === 'function' && resolveRecordCompanyId(veh) === String(cf)) return true;
-                    const emp = t.driverEmployeeId ? getEmployeeById(t.driverEmployeeId) : null;
+                    const emp = (t.driverEmployeeId || t.employeeId) ? getEmployeeById(t.driverEmployeeId || t.employeeId) : null;
                     return emp && typeof resolveRecordCompanyId === 'function' && resolveRecordCompanyId(emp) === String(cf);
                 });
             }
@@ -3544,7 +3602,7 @@
             const prodDepts = ['production_wpc', 'production_alu', 'workshop', 'quality'];
             if (tabId === 'factory' && prodDepts.indexOf(scope.departmentKey) < 0) return false;
             const fleetDepts = ['installation', 'warehouse', 'sales', 'admin', 'maintenance', 'hr'];
-            if ((tabId === 'vehicles' || tabId === 'tracking' || tabId === 'fleet-reps') && fleetDepts.indexOf(scope.departmentKey) < 0) return false;
+            if ((tabId === 'vehicles' || tabId === 'tracking' || tabId === 'fleet-reps' || tabId === 'violations') && fleetDepts.indexOf(scope.departmentKey) < 0) return false;
         }
         if (tabId === 'fleet-reps' && typeof isHrFleetRepsTabAllowed === 'function') return isHrFleetRepsTabAllowed();
         return true;
@@ -3607,6 +3665,7 @@
             { id: 'leave', icon: 'fas fa-calendar-days', label: 'إجازات' },
             { id: 'saudization', icon: 'fas fa-flag', label: 'سعودة' },
             { id: 'fleet-hub', icon: 'fas fa-truck-fast', label: 'مركز الأسطول' },
+            { id: 'violations', icon: 'fas fa-traffic-light', label: 'مخالفات' },
             { id: 'travel', icon: 'fas fa-plane', label: 'تذاكر سفر' },
             { id: 'deductions', icon: 'fas fa-scale-balanced', label: 'خصومات' }
         );
@@ -4438,6 +4497,7 @@
     global.requireHrRecordInScope = requireHrRecordInScope;
     global.renderHrSalesFleetPanel = renderHrSalesFleetPanel;
     global.switchHrTab = switchHrTab;
+    global.isEmployeeGosiDeductEnabled = isEmployeeGosiDeductEnabled;
     global.setHrBranchFilter = setHrBranchFilter;
     global.setHrSearch = setHrSearch;
     global.openHrEmployeeEditor = openHrEmployeeEditor;

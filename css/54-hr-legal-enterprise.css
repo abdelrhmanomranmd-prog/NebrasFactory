@@ -1,0 +1,147 @@
+/* نبراس hrws85 — واجهة HR/Legal enterprise — نماذج ديناميكية ولوحات أقسام */
+
+.hr-form-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+}
+
+.hr-form-section,
+.hr-form-section-card {
+    border: 1px solid rgba(26, 82, 118, 0.14);
+    border-radius: 14px;
+    padding: 1rem 1.15rem 1.1rem;
+    background: linear-gradient(145deg, #fff 0%, #f8fbfd 100%);
+    box-shadow: 0 2px 12px rgba(15, 45, 70, 0.05);
+}
+
+.hr-form-section legend,
+.hr-form-section-card > h4 {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #1a5276;
+    padding: 0 0.35rem;
+    margin-bottom: 0.65rem;
+}
+
+.hr-form-section-card > h4 {
+    margin: 0 0 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+
+.hr-gosi-toggle {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.hr-gosi-toggle select {
+    font-weight: 600;
+}
+
+.hr-gosi-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.72rem;
+    padding: 0.15rem 0.45rem;
+    border-radius: 6px;
+    background: #e8f5e9;
+    color: #1b5e20;
+}
+
+.hr-gosi-badge--exempt {
+    background: #fff3e0;
+    color: #e65100;
+}
+
+.hr-nafath-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.65rem;
+}
+
+.hr-nafath-row label.nebras-field--inline {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-weight: 600;
+    color: #1a5276;
+}
+
+.plate-badge {
+    display: inline-block;
+    font-family: ui-monospace, monospace;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    padding: 0.2rem 0.55rem;
+    border-radius: 6px;
+    background: #1a5276;
+    color: #fff;
+    font-size: 0.82rem;
+}
+
+.hr-violations-panel .hr-report-card--warn strong { color: #e65100; }
+.hr-violations-panel .hr-report-card--danger strong { color: #c62828; }
+
+.hr-command-hero {
+    position: relative;
+    overflow: hidden;
+}
+
+.hr-command-hero-inner {
+    position: relative;
+    z-index: 1;
+}
+
+.hr-command-kpi-ring {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 0.75rem;
+    margin: 1rem 0 1.25rem;
+}
+
+.hr-command-kpi {
+    text-align: center;
+    padding: 0.85rem 0.5rem;
+    border-radius: 12px;
+    background: #fff;
+    border: 1px solid rgba(26, 82, 118, 0.12);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.hr-command-kpi strong {
+    display: block;
+    font-size: 1.35rem;
+    color: #1a5276;
+    line-height: 1.2;
+}
+
+.hr-command-kpi span {
+    font-size: 0.78rem;
+    color: #546e7a;
+}
+
+.hr-command-kpi--ok strong { color: #2e7d32; }
+.hr-command-kpi--warn strong { color: #e65100; }
+
+.hr-editor-overlay .erp-form-grid {
+    gap: 0.85rem 1rem;
+}
+
+.legal-platform-shell .hr-command-hero,
+#legal-platform-root .hr-command-hero {
+    border-radius: 16px;
+    margin-bottom: 1rem;
+}
+
+@media (max-width: 768px) {
+    .hr-form-section,
+    .hr-form-section-card {
+        padding: 0.85rem;
+    }
+    .hr-command-kpi strong { font-size: 1.15rem; }
+}

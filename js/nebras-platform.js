@@ -24107,6 +24107,11 @@
             }, set: function(v) {
                 if (typeof setHrAdvancesFromCloud === 'function') setHrAdvancesFromCloud(v);
             }},
+            { key: 'hr_vehicle_violations', get: function() {
+                return typeof getHrViolations === 'function' ? getHrViolations() : [];
+            }, set: function(v) {
+                if (typeof setHrViolationsFromCloud === 'function') setHrViolationsFromCloud(v);
+            }},
             { key: 'hr_notifications', get: function() {
                 return typeof getHrNotifications === 'function' ? getHrNotifications() : [];
             }, set: function(v) {
@@ -24457,7 +24462,7 @@
             'erp_production', 'erp_procurement', 'crm_customers', 'crm_opportunities', 'legal_contracts',
             'complaints', 'audit_logs', 'analytics_governance',
             'hr_employees', 'hr_vehicles', 'hr_leave', 'hr_vehicle_tracking', 'hr_attendance',
-            'hr_documents', 'hr_payroll', 'hr_companies', 'hr_advances', 'hr_travel', 'hr_deductions',
+            'hr_documents', 'hr_payroll', 'hr_companies', 'hr_advances', 'hr_vehicle_violations', 'hr_travel', 'hr_deductions',
             'legal_contracts', 'legal_rentals', 'legal_cases', 'crm_customers', 'crm_opportunities'
         ];
 
@@ -24502,7 +24507,7 @@
             if (!options.skipCloud) {
                 const isAdmin = !!currentAdmin;
                 const urgent = options.urgentCloud === true || (isAdmin && options.urgentCloud !== false);
-                if (urgent) flushPushToNebrasCloud({ toast: !options.silentCloud });
+                if (urgent) flushPushToNebrasCloud({ silentCloud: !!options.silentCloud });
                 else schedulePushToNebrasCloud();
             }
         }
