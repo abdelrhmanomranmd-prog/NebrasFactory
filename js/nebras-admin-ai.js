@@ -54,9 +54,9 @@
                 parts.push('مخازن سحابة: ' + global.getNebrasCloudStoreCount());
             }
             if (typeof global.hasPendingLocalCloudMutations === 'function' && global.hasPendingLocalCloudMutations()) {
-                parts.push('مزامنة: معلّقة — يُنصح بالرفع');
+                parts.push('مزامنة: جاري الرفع التلقائي…');
             } else {
-                parts.push('مزامنة: متزامنة');
+                parts.push('مزامنة: متزامنة تلقائياً مع السحابة');
             }
             const icons = (global.visitorIcons || []).length;
             parts.push('أيقونات زوار: ' + icons);

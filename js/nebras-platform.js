@@ -24332,7 +24332,26 @@
             }
         }
 
-        async function pushToNebrasCloud() {
+        let nebrasCloudSaveTimer = null;
+        let nebrasCloudPushInFlight = null;
+        let nebrasCloudPushQueued = false;
+        let nebrasCloudShowToastNext = false;
+        let nebrasCloudLastToastAt = 0;
+
+        function maybeCloudSaveToast(ok) {
+            if (!nebrasCloudShowToastNext) return;
+            nebrasCloudShowToastNext = false;
+            if (Date.now() - nebrasCloudLastToastAt < 5000) return;
+            nebrasCloudLastToastAt = Date.now();
+            if (typeof showNebrasAdminToast === 'function') {
+                showNebrasAdminToast(
+                    ok ? '☁️ حُفظ تلقائياً في السحابة' : 'تعذّر الرفع — ستُعاد المحاولة تلقائياً',
+                    ok ? 'ok' : 'error'
+                );
+            }
+        }
+
+        async function pushToNebrasCloudCore() {
             if (!supabaseClient) return false;
             const rows = NEBRAS_CLOUD_STORE_SPECS.map(function(spec) {
                 let payload = spec.get();
@@ -24386,14 +24405,43 @@
             }
         }
 
+        async function pushToNebrasCloud() {
+            if (nebrasCloudPushInFlight) {
+                nebrasCloudPushQueued = true;
+                return nebrasCloudPushInFlight;
+            }
+            nebrasCloudPushInFlight = (async function() {
+                let ok = false;
+                for (let attempt = 0; attempt < 3 && !ok; attempt++) {
+                    if (attempt > 0) {
+                        await new Promise(function(resolve) { setTimeout(resolve, 700 * attempt); });
+                    }
+                    ok = await pushToNebrasCloudCore();
+                }
+                maybeCloudSaveToast(ok);
+                return ok;
+            })();
+            try {
+                return await nebrasCloudPushInFlight;
+            } finally {
+                nebrasCloudPushInFlight = null;
+                if (nebrasCloudPushQueued) {
+                    nebrasCloudPushQueued = false;
+                    setTimeout(function() { pushToNebrasCloud(); }, 120);
+                }
+            }
+        }
+
         function schedulePushToNebrasCloud() {
             if (nebrasCloudSaveTimer) clearTimeout(nebrasCloudSaveTimer);
             nebrasCloudSaveTimer = setTimeout(function() {
                 pushToNebrasCloud();
-            }, 500);
+            }, 300);
         }
 
-        function flushPushToNebrasCloud() {
+        function flushPushToNebrasCloud(options) {
+            options = options || {};
+            if (!options.silentCloud) nebrasCloudShowToastNext = true;
             if (nebrasCloudSaveTimer) {
                 clearTimeout(nebrasCloudSaveTimer);
                 nebrasCloudSaveTimer = null;
@@ -24407,7 +24455,10 @@
             'showroom_gallery', 'sales_quotes_inbox', 'sales_data', 'sales_price_list',
             'customer_portal_users', 'customer_order_journeys', 'erp_inventory', 'erp_orders',
             'erp_production', 'erp_procurement', 'crm_customers', 'crm_opportunities', 'legal_contracts',
-            'complaints', 'audit_logs', 'analytics_governance'
+            'complaints', 'audit_logs', 'analytics_governance',
+            'hr_employees', 'hr_vehicles', 'hr_leave', 'hr_vehicle_tracking', 'hr_attendance',
+            'hr_documents', 'hr_payroll', 'hr_companies', 'hr_advances', 'hr_travel', 'hr_deductions',
+            'legal_contracts', 'legal_rentals', 'legal_cases', 'crm_customers', 'crm_opportunities'
         ];
 
         function saveSystemData(options) {
@@ -24449,7 +24500,9 @@
                 console.warn('Local storage save failed:', storageErr);
             }
             if (!options.skipCloud) {
-                if (options.urgentCloud) flushPushToNebrasCloud();
+                const isAdmin = !!currentAdmin;
+                const urgent = options.urgentCloud === true || (isAdmin && options.urgentCloud !== false);
+                if (urgent) flushPushToNebrasCloud({ toast: !options.silentCloud });
                 else schedulePushToNebrasCloud();
             }
         }

@@ -281,15 +281,24 @@
     let cloudAutoSyncTimer = null;
     function startNebrasCloudAutoSync() {
         if (cloudAutoSyncTimer) return;
+        if (typeof global.flushPushToNebrasCloud === 'function') {
+            try { global.flushPushToNebrasCloud({ silentCloud: true }); } catch (e) { /* ignore */ }
+        }
         cloudAutoSyncTimer = setInterval(function() {
             const admin = typeof global.getNebrasCurrentAdmin === 'function' ? global.getNebrasCurrentAdmin() : null;
             if (!admin) return;
-            const pending = typeof global.hasPendingLocalCloudMutations === 'function' && global.hasPendingLocalCloudMutations();
-            if (!pending) return;
             if (typeof global.flushPushToNebrasCloud === 'function') {
-                try { global.flushPushToNebrasCloud(); } catch (e) { /* ignore */ }
+                try { global.flushPushToNebrasCloud({ silentCloud: true }); } catch (e) { /* ignore */ }
             }
-        }, 90000);
+        }, 20000);
+        if (typeof window !== 'undefined' && !window._nebrasCloudUnloadHook) {
+            window._nebrasCloudUnloadHook = true;
+            window.addEventListener('beforeunload', function() {
+                const admin = typeof global.getNebrasCurrentAdmin === 'function' ? global.getNebrasCurrentAdmin() : null;
+                if (!admin || typeof global.flushPushToNebrasCloud !== 'function') return;
+                try { global.flushPushToNebrasCloud({ silentCloud: true }); } catch (e) { /* ignore */ }
+            });
+        }
     }
     function stopNebrasCloudAutoSync() {
         if (cloudAutoSyncTimer) { clearInterval(cloudAutoSyncTimer); cloudAutoSyncTimer = null; }
