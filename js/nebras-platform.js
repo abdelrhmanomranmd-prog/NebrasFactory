@@ -2734,6 +2734,7 @@
             'nebras-complaints-icon-bg': 'images/nebras-complaints-icon-bg.png',
             'nebras-wpc-raw-icon-bg': 'images/nebras-wpc-raw-icon-bg.png',
             'nebras-other-products-icon-bg': 'images/nebras-other-products-icon-bg.png',
+            'background-other-products': 'images/nebras-other-products-icon-bg.png',
             'background-nebras-branches': 'images/nebras-branches-coverage-bg.png',
             'nebras-bank-accounts-wall': 'images/nebras-bank-accounts-wall.png',
             'nebras-door-designer-icon-bg': 'images/nebras-door-designer-icon-bg.png',
@@ -27669,5 +27670,16 @@
         window.resetDashboardRoleGovernance = resetDashboardRolePresentation;
         window.repairDashboardTilesIntegrity = repairDashboardTilesIntegrity;
         window.renderDashboardTiles = renderDashboardTiles;
+        if (typeof window.verifyNebrasLaunchHealth !== 'function') {
+            window.verifyNebrasLaunchHealth = function() {
+                const issues = [];
+                const dash = document.getElementById('admin-dashboard');
+                if (!dash || !dash.classList.contains('show')) return issues;
+                const quick = document.getElementById('dashboard-actions-grid');
+                const visible = quick ? quick.querySelectorAll('.dashboard-tile-card').length : 0;
+                if (visible < 8) issues.push('أيقونات الداشبورد: ' + visible);
+                return issues;
+            };
+        }
         bindNebrasHrPlatformGlobals();
 
