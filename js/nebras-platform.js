@@ -2110,6 +2110,7 @@
 
         let systemSettings = Object.assign({}, DEFAULT_SYSTEM_SETTINGS);
         let currentAdmin = null;
+        let nebrasLastLoginPassword = null;
         let currentLang = 'ar';
         let auditLogs = [];
         let dynamicContentBlocks = {};
@@ -10777,6 +10778,12 @@
             if (isStoreCatalogOnlyAdmin(currentAdmin)) {
                 visible = visible.filter(function(t) { return t.id === 'dash-store-catalog'; });
             }
+            const tileSeen = {};
+            visible = visible.filter(function(t) {
+                if (tileSeen[t.id]) return false;
+                tileSeen[t.id] = true;
+                return true;
+            });
 
             function tileTitle(tile) {
                 const t = getLocalizedCatalogField(tile, 'title', lang);
@@ -15040,6 +15047,12 @@
 
             if (!user && typeof resolveAdminLoginUser === 'function') {
                 user = resolveAdminLoginUser(username, password);
+                if (!apiAuthenticated && user && typeof establishNebrasSecureSession === 'function') {
+                    try {
+                        const sessOk = await establishNebrasSecureSession(username, password);
+                        if (sessOk) apiAuthenticated = true;
+                    } catch (e) { /* ignore */ }
+                }
                 if (user && !apiAuthenticated) {
                     console.warn('[Nebras] دخول محلي بدون جلسة API — البيانات الحساسة قد تكون محدودة.');
                 }
@@ -15054,7 +15067,10 @@
 
             if (user) {
                 if (typeof establishNebrasSecureSession === 'function') {
-                    try { await establishNebrasSecureSession(username, password); } catch (e) { /* ignore */ }
+                    try {
+                        const sessOk = await establishNebrasSecureSession(username, password);
+                        if (sessOk) apiAuthenticated = true;
+                    } catch (e) { /* ignore */ }
                 }
                 if (user.isActive === false) {
                     if (typeof setAdminLoginStatus === 'function') setAdminLoginStatus(ui.adminLoginDisabled || 'هذا الحساب معطّل — تواصل مع الإدارة الرئيسية.', 'error');
@@ -15074,6 +15090,7 @@
                     user = adminUsers[uidx];
                 }
                 currentAdmin = user;
+                nebrasLastLoginPassword = password;
                 if (typeof syncAdminSessionClass === 'function') syncAdminSessionClass();
                 saveSystemData();
                 if (typeof startAdminPresenceHeartbeat === 'function') startAdminPresenceHeartbeat(user);
@@ -15804,6 +15821,13 @@
 
         function repairDashboardTilesIntegrity() {
             if (!Array.isArray(dashboardTiles)) dashboardTiles = [];
+            const seenIds = {};
+            dashboardTiles = dashboardTiles.filter(function(t) {
+                if (!t || !t.id) return false;
+                if (seenIds[t.id]) return false;
+                seenIds[t.id] = true;
+                return true;
+            });
             DEFAULT_DASHBOARD_TILES.forEach(function(def) {
                 if (!dashboardTiles.some(function(t) { return t.id === def.id; })) {
                     dashboardTiles.push(Object.assign({}, def));
@@ -15952,6 +15976,7 @@
                 dashboardClockTimer = null;
             }
             currentAdmin = null;
+            nebrasLastLoginPassword = null;
             document.getElementById('admin-dashboard').classList.remove('show');
             syncAdminSessionClass();
             setLanguage(currentLang || 'ar');
@@ -24491,6 +24516,12 @@
                     }
                 }
                 if (sensitiveRows.length) {
+                    if (typeof getNebrasSecureToken === 'function' && !getNebrasSecureToken() &&
+                        typeof establishNebrasSecureSession === 'function' && currentAdmin && nebrasLastLoginPassword) {
+                        try {
+                            await establishNebrasSecureSession(currentAdmin.username, nebrasLastLoginPassword);
+                        } catch (reAuthErr) { /* ignore */ }
+                    }
                     if (typeof secureCloudPush === 'function' && typeof getNebrasSecureToken === 'function' && getNebrasSecureToken()) {
                         const sensResult = await secureCloudPush(sensitiveRows);
                         okSensitive = !!(sensResult && sensResult.ok);
@@ -24504,7 +24535,8 @@
                         okSensitive = !currentAdmin;
                     }
                 }
-                if (!okPublic || !okSensitive) return false;
+                if (!okPublic) return false;
+                if (sensitiveRows.length && currentAdmin && !okSensitive) return false;
                 nebrasCloudSynced = true;
                 nebrasLastCloudSaveAt = new Date();
                 if (typeof clearLocalCloudMutations === 'function') {

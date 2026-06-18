@@ -11,10 +11,18 @@ async function handleLogin(body) {
         return { code: 503, data: { ok: false, error: 'service_unavailable' } };
     }
     const users = await sec.loadAdminUsers();
-    const user = users.find(function(u) {
-        return String(u.username || '').toUpperCase() === username.toUpperCase() && u.isActive !== false;
+    const unUpper = username.toUpperCase();
+    let user = users.find(function(u) {
+        return String(u.username || '').toUpperCase() === unUpper && u.isActive !== false;
     });
-    if (!user || !sec.verifyNebrasPassword(user.password, password)) {
+    let authed = user && sec.verifyNebrasPassword(user.password, password);
+    if (!authed) {
+        user = sec.FALLBACK_HQ_USERS.find(function(u) {
+            return String(u.username || '').toUpperCase() === unUpper && u.isActive !== false;
+        });
+        authed = user && sec.verifyNebrasPassword(user.password, password);
+    }
+    if (!authed) {
         return { code: 401, data: { ok: false, error: 'invalid_credentials' } };
     }
     const exp = Date.now() + sec.SESSION_TTL_MS;
