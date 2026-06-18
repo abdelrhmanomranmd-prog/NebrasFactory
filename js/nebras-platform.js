@@ -4506,6 +4506,7 @@
     }
 
     function showNebrasAdminToast(msg, type) {
+        if (!currentAdmin) return;
         let host = document.getElementById('nebras-admin-toast-host');
         if (!host) {
             host = document.createElement('div');
