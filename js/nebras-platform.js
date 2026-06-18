@@ -22778,9 +22778,18 @@
             setElementTextGlobal('workspace-quote-btn', ui.workspaceQuoteBtn || 'عرض سعر');
         }
 
+        function setElementText(id, value, useHtml) {
+            const element = document.getElementById(id);
+            if (!element || value == null) return;
+            if (useHtml) {
+                element.innerHTML = value;
+            } else {
+                element.textContent = value;
+            }
+        }
+
         function setElementTextGlobal(id, value) {
-            const el = document.getElementById(id);
-            if (el && value != null) el.textContent = value;
+            setElementText(id, value, false);
         }
 
         function openProductShopFromWorkspace(productId) {
@@ -27228,16 +27237,6 @@
             window.settlementText = text.hrSettlementNote || text.settlementText || '';
             document.documentElement.lang = text.lang;
             document.documentElement.dir = text.dir;
-
-            function setElementText(id, value, useHtml = false) {
-                const element = document.getElementById(id);
-                if (!element) return;
-                if (useHtml) {
-                    element.innerHTML = value;
-                } else {
-                    element.textContent = value;
-                }
-            }
 
             function setNav(id, html) {
                 const el = document.getElementById(id);
