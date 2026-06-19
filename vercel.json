@@ -25,6 +25,12 @@
   ],
   "redirects": [
     {
+      "source": "/(.*)",
+      "has": [{ "type": "host", "value": "nebrasplasticcompany.com" }],
+      "destination": "https://www.nebrasplasticcompany.com/$1",
+      "permanent": true
+    },
+    {
       "source": "/nebras-wpc-promo-video",
       "destination": "/nebras-wpc-promo-video.html",
       "permanent": true

@@ -15055,13 +15055,6 @@
                 }
             }
 
-            if (!user && supabaseClient && typeof loadFromNebrasCloud === 'function') {
-                try {
-                    await loadFromNebrasCloud();
-                    user = typeof resolveAdminLoginUser === 'function' ? resolveAdminLoginUser(username, password) : null;
-                } catch (e) { /* ignore */ }
-            }
-
             if (user) {
                 if (typeof establishNebrasSecureSession === 'function') {
                     try {
@@ -15969,15 +15962,27 @@
             }
         }
 
-        function logoutAdmin() {
+        async function logoutAdmin() {
             resetDashboardRolePresentation();
-            if (typeof clearNebrasSecureSession === 'function') clearNebrasSecureSession();
-            if (currentAdmin) {
-                if (typeof clearAdminPresence === 'function') clearAdminPresence(currentAdmin);
+            const loggingOut = currentAdmin;
+            if (loggingOut) {
+                if (typeof clearAdminPresence === 'function') clearAdminPresence(loggingOut);
                 if (typeof stopAdminPresenceHeartbeat === 'function') stopAdminPresenceHeartbeat();
-                addAuditLog('تسجيل خروج', 'خروج — ' + currentAdmin.username);
-                saveSystemData();
+                addAuditLog('تسجيل خروج', 'خروج — ' + loggingOut.username);
+                saveSystemData({ skipCloud: true });
+                if (typeof flushPushToNebrasCloud === 'function') {
+                    try {
+                        const pushed = await flushPushToNebrasCloud({ silentCloud: true });
+                        if (!pushed && typeof showNebrasAdminToast === 'function') {
+                            showNebrasAdminToast('تنبيه: لم يُرفَع كل شيء للسحابة — سجّلي دخولاً واضغطي «رفع للسحابة»', 'warn');
+                        }
+                    } catch (logoutPushErr) {
+                        console.warn('logout cloud push:', logoutPushErr);
+                    }
+                }
             }
+            if (typeof clearNebrasSecureSession === 'function') clearNebrasSecureSession();
+            if (typeof stopNebrasCloudAutoSync === 'function') stopNebrasCloudAutoSync();
             if (dashboardClockTimer) {
                 clearInterval(dashboardClockTimer);
                 dashboardClockTimer = null;
@@ -25144,42 +25149,14 @@
         let nebrasLastCloudLoadAt = null;
 
         function syncNebrasCloudInBackground() {
-            function afterCloudLoad(loaded) {
-                if (!loaded) return;
-                finalizePlatformDataAfterLoad();
-                if (document.body.classList.contains('nebras-intro-active')) {
-                    window._nebrasCloudDataReady = true;
-                    return;
-                }
-                if (nebrasSiteWarmedBehindIntro) return;
-                renderAllPublicCatalog();
-                applyOccasionTheme();
-                updateOfficialOrganizationSchema();
-                if (nebrasWorkspaceState.route && nebrasWorkspaceState.route.view === 'door-designer') {
-                    renderNebrasWorkspace();
-                }
-                if (currentAdmin) {
-                    showAdminDashboard(currentAdmin);
-                }
-            }
             const pending = typeof hasPendingLocalCloudMutations === 'function' && hasPendingLocalCloudMutations();
             const sensPending = typeof hasSensitiveCloudPending === 'function' && hasSensitiveCloudPending();
-            const localGov = typeof nebrasHasLocalGovernanceData === 'function' && nebrasHasLocalGovernanceData();
             if (pending || sensPending || currentAdmin) {
                 flushPushToNebrasCloud({ silentCloud: true }).catch(function(err) {
                     console.warn('Background cloud push:', err);
                 });
-                return;
             }
-            if (localGov) {
-                return;
-            }
-            if (typeof isGovernanceBootstrapOnly === 'function' && !isGovernanceBootstrapOnly()) {
-                return;
-            }
-            cloudLoadWithTimeout().then(afterCloudLoad).catch(function(err) {
-                console.warn('Background cloud sync:', err);
-            });
+            /* لا تحميل تلقائي من السحابة — يمسح التعديلات. الاستعادة يدوياً فقط من «تحميل من السحابة». */
         }
 
         let nebrasPlatformBootstrapped = false;
