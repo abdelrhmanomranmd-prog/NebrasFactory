@@ -34,9 +34,13 @@ async function handlePull(req, sess) {
     }
     const rows = [];
     for (let i = 0; i < keys.length; i++) {
-        const payload = await sec.fetchStoreRow(url, key, keys[i]);
-        if (payload !== null && payload !== undefined) {
-            rows.push({ store_key: keys[i], payload: sec.sanitizePayloadForPull(keys[i], payload) });
+        const row = await sec.fetchStoreRow(url, key, keys[i]);
+        if (row && row.payload !== null && row.payload !== undefined) {
+            rows.push({
+                store_key: keys[i],
+                payload: sec.sanitizePayloadForPull(keys[i], row.payload),
+                updated_at: row.updated_at || null
+            });
         }
     }
     return { code: 200, data: { ok: true, rows: rows, by: sess.username } };

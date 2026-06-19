@@ -126,7 +126,7 @@ function sanitizePayloadForPull(storeKey, payload) {
 async function fetchStoreRow(url, key, storeKey) {
     try {
         const res = await fetch(
-            url + '/rest/v1/nebras_data_store?store_key=eq.' + encodeURIComponent(storeKey) + '&select=payload',
+            url + '/rest/v1/nebras_data_store?store_key=eq.' + encodeURIComponent(storeKey) + '&select=payload,updated_at',
             { headers: supabaseHeaders(key) }
         );
         if (!res.ok) {
@@ -136,7 +136,7 @@ async function fetchStoreRow(url, key, storeKey) {
         }
         const rows = await res.json();
         if (!rows || !rows[0]) return null;
-        return rows[0].payload;
+        return { payload: rows[0].payload, updated_at: rows[0].updated_at || null };
     } catch (err) {
         console.error('fetchStoreRow error:', storeKey, err);
         return null;
@@ -179,7 +179,8 @@ async function loadAdminUsers() {
     try {
         const { url, key } = supabaseServiceConfig();
         if (!url || !key) return FALLBACK_HQ_USERS.slice();
-        const payload = await fetchStoreRow(url, key, 'admin_users');
+        const row = await fetchStoreRow(url, key, 'admin_users');
+        const payload = row && row.payload !== undefined ? row.payload : null;
         const users = Array.isArray(payload) ? payload : [];
         return users.length ? users : FALLBACK_HQ_USERS.slice();
     } catch (err) {

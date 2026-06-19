@@ -153,7 +153,7 @@
         const rows = await secureCloudPull(SENSITIVE_STORE_KEYS);
         if (!rows.length || typeof applyFn !== 'function') return false;
         rows.forEach(function(row) {
-            if (row && row.store_key) applyFn(row.store_key, row.payload);
+            if (row && row.store_key) applyFn(row.store_key, row.payload, row.updated_at || null);
         });
         return true;
     }
@@ -165,7 +165,7 @@
                 const idx = adminUsers.findIndex(function(u) { return u.id === user.id; });
                 if (idx >= 0) adminUsers[idx] = Object.assign({}, adminUsers[idx], user);
                 else adminUsers.push(user);
-                if (typeof saveSystemData === 'function') saveSystemData({ skipCloud: true });
+                if (typeof saveSystemData === 'function') saveSystemData({ skipCloud: true, skipMutationMark: true });
             }
         } catch (e) { /* ignore */ }
     }

@@ -9975,7 +9975,7 @@
             try {
                 localStorage.setItem('nebrasPartnersSeedVersion', String(SITE_PARTNERS_SEED_VERSION));
             } catch (e) { /* ignore */ }
-            saveSystemData({ skipCloud: true });
+            saveSystemData({ skipCloud: true, skipMutationMark: true });
         }
 
         const NEBRAS_DOOR_SHOWCASE_URLS = [
@@ -15037,10 +15037,6 @@
                     if (apiLogin && apiLogin.user) {
                         apiAuthenticated = true;
                         if (typeof mergeApiAdminUser === 'function') mergeApiAdminUser(apiLogin.user);
-                        if (typeof pullSensitiveCloudAndApply === 'function') {
-                            await pullSensitiveCloudAndApply(applyNebrasCloudRow);
-                        }
-                        if (typeof loadFromNebrasCloud === 'function') await loadFromNebrasCloud();
                         user = apiLogin.user;
                     }
                 } catch (e) { console.warn('API login', e); }
@@ -15124,6 +15120,24 @@
                     if (typeof window.renderHrPlatformPanelSafe === 'function') window.renderHrPlatformPanelSafe();
                 }
                 addAuditLog('تسجيل دخول', 'دخول ناجح — ' + user.username + ' (' + getRoleLabel(user.role) + ')');
+                try {
+                    const pendingCloud = typeof hasPendingLocalCloudMutations === 'function' && hasPendingLocalCloudMutations();
+                    if (typeof flushPushToNebrasCloud === 'function') {
+                        if (pendingCloud || nebrasCloudSynced) {
+                            await flushPushToNebrasCloud({ silentCloud: true });
+                        } else if (supabaseClient && typeof loadFromNebrasCloud === 'function') {
+                            const loaded = await loadFromNebrasCloud();
+                            if (loaded) {
+                                finalizePlatformDataAfterLoad();
+                                saveSystemData({ skipCloud: true, skipMutationMark: true });
+                                renderAllPublicCatalog();
+                                showAdminDashboard(user);
+                            }
+                        }
+                    }
+                } catch (postLoginCloudErr) {
+                    console.warn('Post-login cloud sync:', postLoginCloudErr);
+                }
                 if (typeof startNebrasCloudAutoSync === 'function') startNebrasCloudAutoSync();
             } else {
                 if (typeof setAdminLoginStatus === 'function') setAdminLoginStatus(ui.adminLoginFail || 'بيانات الدخول غير صحيحة. حاول مرة أخرى.', 'error');
@@ -21676,7 +21690,7 @@
             const newUsername = fieldVal('sec-new-username');
             const newPassword = fieldVal('sec-new-password');
             const confirm = fieldVal('sec-new-password-confirm');
-            if (!oldPassword || oldPassword !== currentAdmin.password) {
+            if (!oldPassword || !verifyNebrasPassword(currentAdmin.password, oldPassword)) {
                 alert('كلمة المرور الحالية غير صحيحة.');
                 return;
             }
@@ -21693,8 +21707,15 @@
                 return;
             }
             currentAdmin.username = newUsername.trim();
-            currentAdmin.password = newPassword.trim();
-            saveSystemData();
+            currentAdmin.password = storeNebrasPasswordValue(newPassword.trim());
+            const directUserIdx = adminUsers.findIndex(function(u) { return u.id === currentAdmin.id; });
+            if (directUserIdx >= 0) adminUsers[directUserIdx] = Object.assign({}, adminUsers[directUserIdx], currentAdmin);
+            saveSystemData({ urgentCloud: true });
+            if (typeof flushPushToNebrasCloud === 'function') {
+                flushPushToNebrasCloud({ showCloudToast: true }).catch(function(e) {
+                    console.warn('Credentials cloud push:', e);
+                });
+            }
             displayUsers();
             addAuditLog('تغيير بيانات الدخول', 'حساب ' + currentAdmin.username + ' — طريقة مباشرة');
             ['sec-old-password', 'sec-new-password', 'sec-new-password-confirm'].forEach(function(id) {
@@ -21803,7 +21824,9 @@
                     return;
                 }
             }
-            currentAdmin.password = newPassword.trim();
+            currentAdmin.password = storeNebrasPasswordValue(newPassword.trim());
+            const secUserIdx = adminUsers.findIndex(function(u) { return u.id === currentAdmin.id; });
+            if (secUserIdx >= 0) adminUsers[secUserIdx].password = currentAdmin.password;
             passwordRecoveryVerified = false;
             accountSecurityRecoveryPending = false;
             window.__nebrasLocalRecoveryCode = null;
@@ -21811,7 +21834,12 @@
             const passEl = document.getElementById('sec-email-new-password');
             if (codeEl) codeEl.value = '';
             if (passEl) passEl.value = '';
-            saveSystemData();
+            saveSystemData({ urgentCloud: true });
+            if (typeof flushPushToNebrasCloud === 'function') {
+                flushPushToNebrasCloud({ showCloudToast: true }).catch(function(e) {
+                    console.warn('Password cloud push:', e);
+                });
+            }
             addAuditLog('استرجاع كلمة المرور', 'Gmail — حساب ' + currentAdmin.username);
             alert('تم تغيير كلمة المرور عبر Gmail بنجاح.');
         }
@@ -24320,7 +24348,9 @@
                 return;
             }
             if (typeof shouldRejectStaleCloudPull === 'function' && shouldRejectStaleCloudPull(storeKey, cloudUpdatedAt, payload)) {
-                console.warn('[Nebras Cloud] تجاهل سحابة قديمة لـ ' + storeKey);
+                if (window.__NEBRAS_LAUNCH_DEBUG__) {
+                    console.warn('[Nebras Cloud] تجاهل سحابة قديمة/أقل لـ ' + storeKey);
+                }
                 return;
             }
             if (typeof guardCloudPullRow === 'function') payload = guardCloudPullRow(storeKey, payload);
@@ -24476,7 +24506,7 @@
         let nebrasCloudLastToastAt = 0;
 
         function maybeCloudSaveToast(ok) {
-            if (!nebrasCloudShowToastNext) return;
+            if (!nebrasCloudShowToastNext || !currentAdmin) return;
             nebrasCloudShowToastNext = false;
             if (Date.now() - nebrasCloudLastToastAt < 5000) return;
             nebrasCloudLastToastAt = Date.now();
@@ -24587,7 +24617,7 @@
 
         function flushPushToNebrasCloud(options) {
             options = options || {};
-            if (!options.silentCloud) nebrasCloudShowToastNext = true;
+            if (options.showCloudToast) nebrasCloudShowToastNext = true;
             if (nebrasCloudSaveTimer) {
                 clearTimeout(nebrasCloudSaveTimer);
                 nebrasCloudSaveTimer = null;
@@ -24609,7 +24639,7 @@
 
         function saveSystemData(options) {
             options = options || {};
-            if (typeof markLocalCloudMutationBatch === 'function') {
+            if (!options.skipMutationMark && typeof markLocalCloudMutationBatch === 'function') {
                 markLocalCloudMutationBatch(NEBRAS_SAVE_STORE_KEYS);
             }
             purgeDeprecatedVisitorIcons();
@@ -24648,7 +24678,7 @@
             if (!options.skipCloud) {
                 const isAdmin = !!currentAdmin;
                 const urgent = options.urgentCloud === true || (isAdmin && options.urgentCloud !== false);
-                if (urgent) flushPushToNebrasCloud({ silentCloud: !!options.silentCloud });
+                if (urgent) flushPushToNebrasCloud({ silentCloud: true });
                 else schedulePushToNebrasCloud();
             }
         }
@@ -25077,14 +25107,8 @@
             }
             const pending = typeof hasPendingLocalCloudMutations === 'function' && hasPendingLocalCloudMutations();
             if (pending || currentAdmin) {
-                flushPushToNebrasCloud().then(function(pushed) {
-                    if (!pushed && pending) return;
-                    return cloudLoadWithTimeout();
-                }).then(function(loaded) {
-                    if (loaded === undefined) return;
-                    afterCloudLoad(loaded);
-                }).catch(function(err) {
-                    console.warn('Background cloud sync:', err);
+                flushPushToNebrasCloud({ silentCloud: true }).catch(function(err) {
+                    console.warn('Background cloud push:', err);
                 });
                 return;
             }
@@ -25190,7 +25214,7 @@
                 ensureBuiltinVisitorIcons();
                 migrateVisitorIconMediaPaths();
                 ensureBuiltinBranches();
-                saveSystemData({ skipCloud: true });
+                saveSystemData({ skipCloud: true, skipMutationMark: true });
                 applySiteLogoImages();
                 fetchDynamicContentBlocks().catch(function(e) { console.warn('content blocks:', e); });
                 fetchDynamicSiteSections().catch(function(e) { console.warn('site sections:', e); });
@@ -27500,7 +27524,19 @@
         window.scrollToDashboardSection = scrollToDashboardSection;
         window.NEBRAS_ERP_PUBLIC = NEBRAS_ERP;
         window.getNebrasBranchesForEmpire = function() { return branchesData || []; };
+        function getNebrasLocalCloudPayloadSize(storeKey) {
+            const spec = NEBRAS_CLOUD_STORE_SPECS.find(function(s) { return s.key === storeKey; });
+            if (!spec || typeof spec.get !== 'function') return 0;
+            try {
+                const payload = spec.get();
+                if (Array.isArray(payload)) return payload.length;
+                if (payload && typeof payload === 'object') return Object.keys(payload).length;
+                return payload ? 1 : 0;
+            } catch (e) { return 0; }
+        }
+
         window.getNebrasCloudStoreCount = function() { return NEBRAS_CLOUD_STORE_SPECS.length; };
+        window.getNebrasLocalCloudPayloadSize = getNebrasLocalCloudPayloadSize;
         window.getNebrasColorCatalog = getNebrasColorCatalog;
         window.openSiteContentManager = openSiteContentManager;
         window.openIconManagement = openIconManagement;

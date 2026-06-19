@@ -15,7 +15,7 @@
         'sales_price_list', 'analytics_governance', 'system_settings', 'about_pages', 'showroom_gallery'
     ];
     const LOCAL_MUTATION_KEY = 'nebrasLocalCloudMutationAt';
-    const MUTATION_GRACE_MS = 180000;
+    const MUTATION_GRACE_MS = 86400000;
     let localCloudMutations = {};
     const MAX_SNAPSHOTS_PER_KEY = 10;
     const MAX_SNAPSHOT_PAYLOAD_CHARS = 150000;
@@ -86,9 +86,29 @@
         });
     }
 
+    function hasLocalCloudMutation(storeKey) {
+        loadIntegrityData();
+        const localAt = Number(localCloudMutations[storeKey] || 0);
+        return localAt > 0 && (Date.now() - localAt) < MUTATION_GRACE_MS;
+    }
+
+    /** لا نقبل سحابة أقل من المحلي — فقط عند وجود تعديل محلي حديث */
+    function shouldRejectRegressiveCloudPull(storeKey, payload) {
+        if (CRITICAL_STORE_KEYS.indexOf(storeKey) < 0) return false;
+        if (!hasLocalCloudMutation(storeKey)) return false;
+        const localSizeFn = global.getNebrasLocalCloudPayloadSize;
+        if (typeof localSizeFn !== 'function') return false;
+        const localSize = Number(localSizeFn(storeKey) || 0);
+        const cloudSize = payloadSize(payload);
+        if (localSize > 0 && cloudSize === 0) return true;
+        if (localSize > cloudSize) return true;
+        return false;
+    }
+
     /** لا نستبدل بيانات محلية أحدث بسحابة قديمة أو فارغة */
     function shouldRejectStaleCloudPull(storeKey, cloudUpdatedAt, payload) {
         loadIntegrityData();
+        if (shouldRejectRegressiveCloudPull(storeKey, payload)) return true;
         const localAt = Number(localCloudMutations[storeKey] || 0);
         if (!localAt) return false;
         const cloudAt = cloudUpdatedAt ? new Date(cloudUpdatedAt).getTime() : 0;
@@ -339,7 +359,9 @@
     global.markLocalCloudMutationBatch = markLocalCloudMutationBatch;
     global.clearLocalCloudMutations = clearLocalCloudMutations;
     global.hasPendingLocalCloudMutations = hasPendingLocalCloudMutations;
+    global.hasLocalCloudMutation = hasLocalCloudMutation;
     global.shouldRejectStaleCloudPull = shouldRejectStaleCloudPull;
+    global.shouldRejectRegressiveCloudPull = shouldRejectRegressiveCloudPull;
     global.getCloudSnapshotsForCloud = getCloudSnapshotsForCloud;
     global.setCloudSnapshotsFromCloud = setCloudSnapshotsFromCloud;
     global.openPlatformIntegrationHub = openPlatformIntegrationHub;
