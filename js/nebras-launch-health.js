@@ -49,6 +49,32 @@
 
     global.verifyNebrasLaunchHealth = verifyNebrasLaunchHealth;
 
+    function verifyNebrasPersistHealth() {
+        const report = { ok: true, issues: [], stamp: null, storageKb: 0 };
+        try {
+            const raw = localStorage.getItem('nebrasLocalSaveStamp');
+            report.stamp = raw ? JSON.parse(raw) : null;
+            if (!report.stamp) {
+                report.ok = false;
+                report.issues.push('لا يوجد ختم حفظ محلي — لم يُحفظ شيء بعد الإصلاح');
+            }
+            if (typeof global.nebrasStorageHealthReport === 'function') {
+                const sh = global.nebrasStorageHealthReport();
+                report.storageKb = Math.round((sh.totalBytes || 0) / 1024);
+                if (sh.warn) report.issues.push('المساحة المحلية ممتلئة تقريباً (' + report.storageKb + ' KB)');
+            }
+            if (typeof global.hasSensitiveCloudPending === 'function' && global.hasSensitiveCloudPending()) {
+                report.issues.push('بيانات حساسة بانتظار الرفع للسحابة');
+            }
+            if (report.issues.length) report.ok = false;
+        } catch (e) {
+            report.ok = false;
+            report.issues.push('تعذّر قراءة التخزين المحلي');
+        }
+        return report;
+    }
+    global.verifyNebrasPersistHealth = verifyNebrasPersistHealth;
+
     function scheduleLaunchHealth(delayMs) {
         setTimeout(verifyNebrasLaunchHealth, typeof delayMs === 'number' ? delayMs : 400);
     }

@@ -15122,7 +15122,10 @@
                 addAuditLog('تسجيل دخول', 'دخول ناجح — ' + user.username + ' (' + getRoleLabel(user.role) + ')');
                 try {
                     if (typeof flushPushToNebrasCloud === 'function') {
-                        await flushPushToNebrasCloud({ silentCloud: true });
+                        const pushed = await flushPushToNebrasCloud({ showCloudToast: true });
+                        if (!pushed && typeof showNebrasAdminToast === 'function') {
+                            showNebrasAdminToast('محفوظ محلياً — اضغطي «رفع للسحابة» من الحوكمة إن لزم', 'warn');
+                        }
                     }
                 } catch (postLoginCloudErr) {
                     console.warn('Post-login cloud sync:', postLoginCloudErr);
@@ -24525,7 +24528,19 @@
             const sensitiveRows = rows.filter(function(r) { return r && r.store_key && sensFn(r.store_key); });
             let okPublic = true;
             let okSensitive = true;
+            const hasToken = typeof getNebrasSecureToken === 'function' && getNebrasSecureToken();
             try {
+                if (hasToken && typeof secureCloudPush === 'function') {
+                    const apiResult = await secureCloudPush(rows);
+                    okPublic = !!(apiResult && apiResult.ok);
+                    okSensitive = okPublic;
+                    if (!okPublic) {
+                        console.warn('Nebras API cloud save failed:', apiResult);
+                        if (typeof markSensitiveCloudPending === 'function') markSensitiveCloudPending();
+                    } else if (typeof clearSensitiveCloudPending === 'function') {
+                        clearSensitiveCloudPending();
+                    }
+                } else {
                 if (publicRows.length) {
                     const { error } = await supabaseClient
                         .from('nebras_data_store')
@@ -24555,17 +24570,32 @@
                         if (typeof markSensitiveCloudPending === 'function') markSensitiveCloudPending();
                     }
                 }
-                if (!okPublic) return false;
-                if (sensitiveRows.length && !okSensitive) return false;
+                }
+                if (!okPublic) {
+                    if (currentAdmin && typeof showNebrasAdminToast === 'function') {
+                        showNebrasAdminToast('تعذّر الرفع للسحابة — سجّلي دخولاً من جديد ثم «رفع للسحابة»', 'error');
+                    }
+                    return false;
+                }
+                if (sensitiveRows.length && !okSensitive) {
+                    if (currentAdmin && typeof showNebrasAdminToast === 'function') {
+                        showNebrasAdminToast('البيانات الحساسة لم تُرفع — اضغطي «رفع للسحابة» بعد الدخول', 'warn');
+                    }
+                    return false;
+                }
                 nebrasCloudSynced = true;
                 nebrasLastCloudSaveAt = new Date();
                 if (typeof clearLocalCloudMutations === 'function') {
-                    const pushedKeys = [];
-                    if (publicRows.length && okPublic) {
-                        publicRows.forEach(function(r) { if (r && r.store_key) pushedKeys.push(r.store_key); });
-                    }
-                    if (sensitiveRows.length && okSensitive) {
-                        sensitiveRows.forEach(function(r) { if (r && r.store_key) pushedKeys.push(r.store_key); });
+                    const pushedKeys = hasToken
+                        ? rows.map(function(r) { return r && r.store_key; }).filter(Boolean)
+                        : [];
+                    if (!pushedKeys.length) {
+                        if (publicRows.length && okPublic) {
+                            publicRows.forEach(function(r) { if (r && r.store_key) pushedKeys.push(r.store_key); });
+                        }
+                        if (sensitiveRows.length && okSensitive) {
+                            sensitiveRows.forEach(function(r) { if (r && r.store_key) pushedKeys.push(r.store_key); });
+                        }
                     }
                     clearLocalCloudMutations(pushedKeys);
                 }
@@ -24621,6 +24651,53 @@
             return pushToNebrasCloud();
         }
 
+        function stampNebrasLocalSaveMeta() {
+            try {
+                const meta = {
+                    at: new Date().toISOString(),
+                    adminUsers: (adminUsers || []).length,
+                    products: (siteProducts || []).length,
+                    hrEmployees: typeof getHrEmployees === 'function' ? (getHrEmployees() || []).length : 0
+                };
+                localStorage.setItem('nebrasLocalSaveStamp', JSON.stringify(meta));
+            } catch (e) { /* ignore */ }
+        }
+
+        function persistLocalGovernanceKeys() {
+            let ok = true;
+            const put = typeof nebrasPersistLocal === 'function' ? nebrasPersistLocal : function(k, v) {
+                try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; }
+            };
+            ok = put('nebrasComplaints', complaints) && ok;
+            ok = put('nebrasBranches', branchesData) && ok;
+            ok = put('nebrasAuditLogs', auditLogs) && ok;
+            ok = put('nebrasSystemSettings', systemSettings) && ok;
+            ok = put('nebrasAdminUsers', adminUsers) && ok;
+            ok = put('nebrasVisitorIcons', visitorIcons) && ok;
+            ok = put('nebrasSiteProducts', siteProducts) && ok;
+            ok = put('nebrasDashboardTiles', dashboardTiles) && ok;
+            ok = put('nebrasCustomSections', siteCustomSections) && ok;
+            ok = put('nebrasErpInventory', erpInventory) && ok;
+            ok = put('nebrasErpOrders', erpOrders) && ok;
+            ok = put('nebrasErpProcurement', erpProcurement) && ok;
+            ok = put('nebrasErpProduction', erpProduction) && ok;
+            ok = put('nebrasErpPurchases', erpPurchases) && ok;
+            ok = put('nebrasProcurementCustomDepts', procurementCustomDepts || []) && ok;
+            ok = put('nebrasErpTransfers', erpTransfers) && ok;
+            ok = put('nebrasErpStockTransfers', erpStockTransfers) && ok;
+            ok = put('nebrasSalesPriceList', salesPriceList) && ok;
+            ok = put('nebrasAboutPages', aboutPages) && ok;
+            ok = put('nebrasSitePartners', sitePartners) && ok;
+            ok = put('nebrasSiteCertifications', siteCertifications) && ok;
+            ok = put('nebrasShowroomGallery', ensureShowroomGallery()) && ok;
+            ok = put('nebrasSalesData', salesData || []) && ok;
+            ok = put('nebrasCustomerService', customerServiceData || []) && ok;
+            ensureVisitorAnalytics();
+            ok = put(VISITOR_ANALYTICS_KEY, visitorAnalytics) && ok;
+            if (ok) stampNebrasLocalSaveMeta();
+            return ok;
+        }
+
         const NEBRAS_SAVE_STORE_KEYS = [
             'admin_users', 'site_products', 'visitor_icons', 'dashboard_tiles', 'site_custom_sections',
             'branches', 'system_settings', 'about_pages', 'site_partners', 'site_certifications',
@@ -24643,37 +24720,17 @@
                 if (typeof markSensitiveCloudPending === 'function') markSensitiveCloudPending();
             }
             purgeDeprecatedVisitorIcons();
+            let localOk = true;
             try {
-            localStorage.setItem('nebrasComplaints', JSON.stringify(complaints));
-            localStorage.setItem('nebrasBranches', JSON.stringify(branchesData));
-            localStorage.setItem('nebrasAuditLogs', JSON.stringify(auditLogs));
-            localStorage.setItem('nebrasSystemSettings', JSON.stringify(systemSettings));
-            localStorage.setItem('nebrasAdminUsers', JSON.stringify(adminUsers));
-            localStorage.setItem('nebrasVisitorIcons', JSON.stringify(visitorIcons));
-            localStorage.setItem('nebrasSiteProducts', JSON.stringify(siteProducts));
-            localStorage.setItem('nebrasDashboardTiles', JSON.stringify(dashboardTiles));
-            localStorage.setItem('nebrasCustomSections', JSON.stringify(siteCustomSections));
-            localStorage.setItem('nebrasErpInventory', JSON.stringify(erpInventory));
-            localStorage.setItem('nebrasErpOrders', JSON.stringify(erpOrders));
-            localStorage.setItem('nebrasErpProcurement', JSON.stringify(erpProcurement));
-            localStorage.setItem('nebrasErpProduction', JSON.stringify(erpProduction));
-            localStorage.setItem('nebrasErpPurchases', JSON.stringify(erpPurchases));
-            localStorage.setItem('nebrasProcurementCustomDepts', JSON.stringify(procurementCustomDepts || []));
-            localStorage.setItem('nebrasErpTransfers', JSON.stringify(erpTransfers));
-            localStorage.setItem('nebrasErpStockTransfers', JSON.stringify(erpStockTransfers));
-            localStorage.setItem('nebrasSalesPriceList', JSON.stringify(salesPriceList));
-            localStorage.setItem('nebrasAboutPages', JSON.stringify(aboutPages));
-            localStorage.setItem('nebrasSitePartners', JSON.stringify(sitePartners));
-            localStorage.setItem('nebrasSiteCertifications', JSON.stringify(siteCertifications));
-            localStorage.setItem('nebrasShowroomGallery', JSON.stringify(ensureShowroomGallery()));
-            localStorage.setItem('nebrasSalesData', JSON.stringify(salesData || []));
-            localStorage.setItem('nebrasCustomerService', JSON.stringify(customerServiceData || []));
-            ensureVisitorAnalytics();
-            localStorage.setItem(VISITOR_ANALYTICS_KEY, JSON.stringify(visitorAnalytics));
+            localOk = persistLocalGovernanceKeys();
             if (typeof persistAnalyticsGovernanceLocal === 'function') persistAnalyticsGovernanceLocal();
             if (typeof saveCallbackLeads === 'function') saveCallbackLeads();
             } catch (storageErr) {
                 console.warn('Local storage save failed:', storageErr);
+                localOk = false;
+            }
+            if (!localOk && currentAdmin && typeof showNebrasAdminToast === 'function') {
+                showNebrasAdminToast('تعذّر الحفظ المحلي — امسحي كاش المتصفح أو استخدمي نافذة عادية (ليس خاصاً)', 'error');
             }
             if (!options.skipCloud) {
                 const isAdmin = !!currentAdmin;
@@ -25146,11 +25203,19 @@
                 nebrasCloudSyncStarted = true;
                 syncNebrasCloudInBackground();
             }
-            if (shouldDeferHeavySiteRender()) {
-                window.addEventListener('nebras-intro-finished', runCloudSync, { once: true });
-                return;
+            const deferMs = (typeof hasPendingLocalCloudMutations === 'function' && hasPendingLocalCloudMutations()) ? 1500 : 9000;
+            function scheduleRun() {
+                if (shouldDeferHeavySiteRender()) {
+                    window.addEventListener('nebras-intro-finished', runCloudSync, { once: true });
+                    return;
+                }
+                runCloudSync();
             }
-            runCloudSync();
+            if (typeof requestIdleCallback === 'function') {
+                requestIdleCallback(function() { setTimeout(scheduleRun, deferMs); }, { timeout: deferMs + 4000 });
+            } else {
+                setTimeout(scheduleRun, deferMs);
+            }
         }
 
         function warmSiteBehindIntro() {

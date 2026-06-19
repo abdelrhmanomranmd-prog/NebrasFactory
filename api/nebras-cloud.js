@@ -49,8 +49,12 @@ async function handlePull(req, sess) {
 async function handlePush(body, sess) {
     const rows = Array.isArray(body.rows) ? body.rows : [];
     if (!rows.length) return { code: 400, data: { ok: false, error: 'rows_required' } };
+    const hq = sec.isHqSession(sess);
     const safe = rows.filter(function(r) {
-        return r && r.store_key && sec.isSensitiveKey(r.store_key) && r.payload !== undefined;
+        if (!r || !r.store_key || r.payload === undefined) return false;
+        if (sec.isSensitiveKey(r.store_key)) return true;
+        if (hq && sec.PUBLIC_STORE_KEYS.indexOf(r.store_key) >= 0) return true;
+        return false;
     });
     const allowed = sec.keysAllowedForSession(sess, safe.map(function(r) { return r.store_key; }));
     const filtered = safe.filter(function(r) { return allowed.indexOf(r.store_key) >= 0; });
