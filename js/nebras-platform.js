@@ -15121,19 +15121,8 @@
                 }
                 addAuditLog('تسجيل دخول', 'دخول ناجح — ' + user.username + ' (' + getRoleLabel(user.role) + ')');
                 try {
-                    const pendingCloud = typeof hasPendingLocalCloudMutations === 'function' && hasPendingLocalCloudMutations();
                     if (typeof flushPushToNebrasCloud === 'function') {
-                        if (pendingCloud || nebrasCloudSynced) {
-                            await flushPushToNebrasCloud({ silentCloud: true });
-                        } else if (supabaseClient && typeof loadFromNebrasCloud === 'function') {
-                            const loaded = await loadFromNebrasCloud();
-                            if (loaded) {
-                                finalizePlatformDataAfterLoad();
-                                saveSystemData({ skipCloud: true, skipMutationMark: true });
-                                renderAllPublicCatalog();
-                                showAdminDashboard(user);
-                            }
-                        }
+                        await flushPushToNebrasCloud({ silentCloud: true });
                     }
                 } catch (postLoginCloudErr) {
                     console.warn('Post-login cloud sync:', postLoginCloudErr);
@@ -24558,20 +24547,27 @@
                         okSensitive = !!(sensResult && sensResult.ok);
                         if (!okSensitive) {
                             console.warn('Nebras sensitive cloud save failed:', sensResult);
+                        } else if (typeof clearSensitiveCloudPending === 'function') {
+                            clearSensitiveCloudPending();
                         }
                     } else {
-                        if (currentAdmin && window.__NEBRAS_LAUNCH_DEBUG__) {
-                            console.warn('Nebras sensitive cloud save blocked — secure session required.');
-                        }
-                        okSensitive = !currentAdmin;
+                        okSensitive = false;
+                        if (typeof markSensitiveCloudPending === 'function') markSensitiveCloudPending();
                     }
                 }
                 if (!okPublic) return false;
-                if (sensitiveRows.length && currentAdmin && !okSensitive) return false;
+                if (sensitiveRows.length && !okSensitive) return false;
                 nebrasCloudSynced = true;
                 nebrasLastCloudSaveAt = new Date();
                 if (typeof clearLocalCloudMutations === 'function') {
-                    clearLocalCloudMutations(rows.map(function(r) { return r.store_key; }));
+                    const pushedKeys = [];
+                    if (publicRows.length && okPublic) {
+                        publicRows.forEach(function(r) { if (r && r.store_key) pushedKeys.push(r.store_key); });
+                    }
+                    if (sensitiveRows.length && okSensitive) {
+                        sensitiveRows.forEach(function(r) { if (r && r.store_key) pushedKeys.push(r.store_key); });
+                    }
+                    clearLocalCloudMutations(pushedKeys);
                 }
                 if (currentAdmin) renderDashboardCommandShell(currentAdmin);
                 return true;
@@ -24639,8 +24635,12 @@
 
         function saveSystemData(options) {
             options = options || {};
-            if (!options.skipMutationMark && typeof markLocalCloudMutationBatch === 'function') {
-                markLocalCloudMutationBatch(NEBRAS_SAVE_STORE_KEYS);
+            if (!options.skipMutationMark) {
+                if (typeof markLocalCloudMutationBatch === 'function') {
+                    markLocalCloudMutationBatch(NEBRAS_SAVE_STORE_KEYS);
+                }
+                if (typeof markGovernanceRevision === 'function') markGovernanceRevision();
+                if (typeof markSensitiveCloudPending === 'function') markSensitiveCloudPending();
             }
             purgeDeprecatedVisitorIcons();
             try {
@@ -25106,10 +25106,18 @@
                 }
             }
             const pending = typeof hasPendingLocalCloudMutations === 'function' && hasPendingLocalCloudMutations();
-            if (pending || currentAdmin) {
+            const sensPending = typeof hasSensitiveCloudPending === 'function' && hasSensitiveCloudPending();
+            const localGov = typeof nebrasHasLocalGovernanceData === 'function' && nebrasHasLocalGovernanceData();
+            if (pending || sensPending || currentAdmin) {
                 flushPushToNebrasCloud({ silentCloud: true }).catch(function(err) {
                     console.warn('Background cloud push:', err);
                 });
+                return;
+            }
+            if (localGov) {
+                return;
+            }
+            if (typeof isGovernanceBootstrapOnly === 'function' && !isGovernanceBootstrapOnly()) {
                 return;
             }
             cloudLoadWithTimeout().then(afterCloudLoad).catch(function(err) {
@@ -25204,6 +25212,8 @@
             nebrasPlatformBootstrapped = true;
             try {
                 loadSystemData();
+                if (typeof ensureGovernanceRevisionFromLocalData === 'function') ensureGovernanceRevisionFromLocalData();
+                if (typeof markGovernanceBootstrapRevision === 'function') markGovernanceBootstrapRevision();
                 finalizePlatformDataAfterLoad();
                 loadNebrasCart();
                 updateSalesQuoteFab();

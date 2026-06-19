@@ -15,11 +15,92 @@
         'sales_price_list', 'analytics_governance', 'system_settings', 'about_pages', 'showroom_gallery'
     ];
     const LOCAL_MUTATION_KEY = 'nebrasLocalCloudMutationAt';
+    const SENSITIVE_PENDING_KEY = 'nebrasSensitiveCloudPending';
+    const GOV_REVISION_KEY = 'nebrasGovernanceRevision';
     const MUTATION_GRACE_MS = 86400000;
-    let localCloudMutations = {};
+    const LOCAL_STORAGE_STORE_MAP = {
+        admin_users: 'nebrasAdminUsers',
+        site_products: 'nebrasSiteProducts',
+        visitor_icons: 'nebrasVisitorIcons',
+        dashboard_tiles: 'nebrasDashboardTiles',
+        branches: 'nebrasBranches',
+        hr_employees: 'nebrasHrEmployees',
+        hr_vehicles: 'nebrasHrVehicles',
+        legal_contracts: 'nebrasLegalContracts',
+        erp_inventory: 'nebrasErpInventory',
+        erp_orders: 'nebrasErpOrders',
+        crm_customers: 'nebrasCrmCustomers',
+        sales_data: 'nebrasSalesData',
+        system_settings: 'nebrasSystemSettings'
+    };
+
+    function markSensitiveCloudPending() {
+        try { localStorage.setItem(SENSITIVE_PENDING_KEY, String(Date.now())); } catch (e) { /* ignore */ }
+    }
+
+    function clearSensitiveCloudPending() {
+        try { localStorage.removeItem(SENSITIVE_PENDING_KEY); } catch (e) { /* ignore */ }
+    }
+
+    function hasSensitiveCloudPending() {
+        try { return !!localStorage.getItem(SENSITIVE_PENDING_KEY); } catch (e) { return false; }
+    }
+
+    function markGovernanceRevision() {
+        try { localStorage.setItem(GOV_REVISION_KEY, String(Date.now())); } catch (e) { /* ignore */ }
+    }
+
+    function ensureGovernanceRevisionFromLocalData() {
+        try {
+            const rev = localStorage.getItem(GOV_REVISION_KEY);
+            if (rev && rev !== 'bootstrap') return;
+            const probeKeys = [
+                'nebrasAdminUsers', 'nebrasSiteProducts', 'nebrasHrEmployees',
+                'nebrasLegalContracts', 'nebrasErpInventory', 'nebrasVisitorIcons'
+            ];
+            const hasData = probeKeys.some(function(k) {
+                const raw = localStorage.getItem(k);
+                if (!raw || raw.length < 12) return false;
+                return raw !== '[]' && raw !== '{}' && raw !== 'null';
+            });
+            if (hasData) markGovernanceRevision();
+        } catch (e) { /* ignore */ }
+    function markGovernanceBootstrapRevision() {
+        try {
+            if (!localStorage.getItem(GOV_REVISION_KEY)) {
+                localStorage.setItem(GOV_REVISION_KEY, 'bootstrap');
+            }
+        } catch (e) { /* ignore */ }
+    }
+
+    function isGovernanceBootstrapOnly() {
+        try { return localStorage.getItem(GOV_REVISION_KEY) === 'bootstrap'; } catch (e) { return false; }
+    }
+
+    function getNebrasPersistedPayloadSize(storeKey) {
+        const lsKey = LOCAL_STORAGE_STORE_MAP[storeKey];
+        if (lsKey) {
+            try {
+                const raw = localStorage.getItem(lsKey);
+                if (raw) return payloadSize(JSON.parse(raw));
+            } catch (e) { /* ignore */ }
+        }
+        const memFn = global.getNebrasLocalCloudPayloadSize;
+        if (typeof memFn === 'function') return Number(memFn(storeKey) || 0);
+        return 0;
+    }
+
+    function nebrasHasLocalGovernanceData() {
+        if (hasPendingLocalCloudMutations() || hasSensitiveCloudPending()) return true;
+        try {
+            return localStorage.getItem(GOV_REVISION_KEY) &&
+                localStorage.getItem(GOV_REVISION_KEY) !== 'bootstrap';
+        } catch (e) { return false; }
+    }
     const MAX_SNAPSHOTS_PER_KEY = 10;
     const MAX_SNAPSHOT_PAYLOAD_CHARS = 150000;
 
+    let localCloudMutations = {};
     let cloudSnapshots = { byKey: {}, updatedAt: null };
     let platformIntegrity = { modules: {}, lastAuditAt: null };
     let integrityReady = false;
@@ -92,13 +173,10 @@
         return localAt > 0 && (Date.now() - localAt) < MUTATION_GRACE_MS;
     }
 
-    /** لا نقبل سحابة أقل من المحلي — فقط عند وجود تعديل محلي حديث */
+    /** لا نقبل سحابة أقل من المحلي — يحمي حتى بعد مسح علامات المزامنة بالخطأ */
     function shouldRejectRegressiveCloudPull(storeKey, payload) {
         if (CRITICAL_STORE_KEYS.indexOf(storeKey) < 0) return false;
-        if (!hasLocalCloudMutation(storeKey)) return false;
-        const localSizeFn = global.getNebrasLocalCloudPayloadSize;
-        if (typeof localSizeFn !== 'function') return false;
-        const localSize = Number(localSizeFn(storeKey) || 0);
+        const localSize = getNebrasPersistedPayloadSize(storeKey);
         const cloudSize = payloadSize(payload);
         if (localSize > 0 && cloudSize === 0) return true;
         if (localSize > cloudSize) return true;
@@ -360,6 +438,14 @@
     global.clearLocalCloudMutations = clearLocalCloudMutations;
     global.hasPendingLocalCloudMutations = hasPendingLocalCloudMutations;
     global.hasLocalCloudMutation = hasLocalCloudMutation;
+    global.hasSensitiveCloudPending = hasSensitiveCloudPending;
+    global.markSensitiveCloudPending = markSensitiveCloudPending;
+    global.clearSensitiveCloudPending = clearSensitiveCloudPending;
+    global.markGovernanceRevision = markGovernanceRevision;
+    global.markGovernanceBootstrapRevision = markGovernanceBootstrapRevision;
+    global.nebrasHasLocalGovernanceData = nebrasHasLocalGovernanceData;
+    global.isGovernanceBootstrapOnly = isGovernanceBootstrapOnly;
+    global.ensureGovernanceRevisionFromLocalData = ensureGovernanceRevisionFromLocalData;
     global.shouldRejectStaleCloudPull = shouldRejectStaleCloudPull;
     global.shouldRejectRegressiveCloudPull = shouldRejectRegressiveCloudPull;
     global.getCloudSnapshotsForCloud = getCloudSnapshotsForCloud;
