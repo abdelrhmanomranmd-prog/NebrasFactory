@@ -27,6 +27,8 @@
         const IMMUTABLE_PRIMARY_ADMIN_USERNAME = 'NEBRASFACTORY';
         const PRIMARY_RECOVERY_EMAIL = 'abdelrhmanomranmd@gmail.com';
         const NEBRAS_LINKTREE_URL = 'https://linktr.ee/abdelrhmanomranmd';
+        /** المرحلة 1 — السحابة مصدر الحقيقة عند دخول الإدارة */
+        const NEBRAS_SERVER_FIRST_MODE = true;
         const NEBRAS_DEFAULT_SOCIAL_LINKS = {
             socialInstagram: 'https://www.instagram.com/nebras.factory',
             socialTiktok: 'https://www.tiktok.com/@nebras.factory1',
@@ -15082,7 +15084,17 @@
                 currentAdmin = user;
                 nebrasLastLoginPassword = password;
                 if (typeof syncAdminSessionClass === 'function') syncAdminSessionClass();
-                saveSystemData();
+                if (apiAuthenticated && NEBRAS_SERVER_FIRST_MODE) {
+                    try {
+                        if (typeof showNebrasAdminToast === 'function') {
+                            showNebrasAdminToast('جاري تحميل البيانات من السحابة...', 'info');
+                        }
+                        await hydrateGovernanceFromServerAfterLogin();
+                    } catch (hydrateErr) {
+                        console.warn('Server-first hydrate:', hydrateErr);
+                    }
+                }
+                saveSystemData({ skipCloud: true, skipMutationMark: true });
                 if (typeof startAdminPresenceHeartbeat === 'function') startAdminPresenceHeartbeat(user);
                 if (typeof setAdminLoginStatus === 'function') setAdminLoginStatus(ui.adminLoginOk || 'تم تسجيل الدخول بنجاح.', 'ok');
                 if (typeof showNebrasAdminToast === 'function') {
@@ -15117,7 +15129,7 @@
                     if (typeof flushPushToNebrasCloud === 'function') {
                         const pushed = await flushPushToNebrasCloud({ showCloudToast: true });
                         if (!pushed && typeof showNebrasAdminToast === 'function') {
-                            showNebrasAdminToast('محفوظ محلياً — اضغطي «رفع للسحابة» من الحوكمة إن لزم', 'warn');
+                            showNebrasAdminToast('تعذّر رفع التعديلات للسحابة — اضغطي «رفع للسحابة» من الحوكمة', 'error');
                         }
                     }
                 } catch (postLoginCloudErr) {
@@ -21940,7 +21952,7 @@
         function exportNebrasGovernanceBundle() {
             if (!requireMainGovernanceAdmin('تصدير بيانات الموقع — الإدارة الرئيسية فقط.')) return;
             const bundle = {
-                version: 'hrws69',
+                version: 'hrws102',
                 codename: 'NebrasGovernanceBundle',
                 exportedAt: new Date().toISOString(),
                 storeCount: NEBRAS_CLOUD_STORE_SPECS.length,
@@ -24446,6 +24458,23 @@
             });
         }
 
+        /** المرحلة 1 — تحميل السحابة بعد دخول الإدارة */
+        async function hydrateGovernanceFromServerAfterLogin() {
+            if (!NEBRAS_SERVER_FIRST_MODE || !supabaseClient) return false;
+            if (typeof getNebrasSecureToken === 'function' && !getNebrasSecureToken()) return false;
+            const ok = await loadFromNebrasCloud();
+            if (!ok) return false;
+            finalizePlatformDataAfterLoad();
+            if (typeof refreshPublicSiteFromGovernance === 'function') refreshPublicSiteFromGovernance();
+            try {
+                persistLocalGovernanceKeys();
+                if (typeof persistAnalyticsGovernanceLocal === 'function') persistAnalyticsGovernanceLocal();
+            } catch (cacheErr) {
+                console.warn('Post-hydrate local cache:', cacheErr);
+            }
+            return true;
+        }
+
         async function loadFromNebrasCloud() {
             if (!supabaseClient) return false;
             let loadedAny = false;
@@ -24509,7 +24538,7 @@
             nebrasCloudLastToastAt = Date.now();
             if (typeof showNebrasAdminToast === 'function') {
                 showNebrasAdminToast(
-                    ok ? '☁️ حُفظ تلقائياً في السحابة' : 'تعذّر الرفع — ستُعاد المحاولة تلقائياً',
+                    ok ? '✓ تم الحفظ في السحابة' : 'فشل الحفظ في السحابة — أعيدي المحاولة أو اضغطي «رفع للسحابة»',
                     ok ? 'ok' : 'error'
                 );
             }
@@ -24738,10 +24767,19 @@
                 showNebrasAdminToast('تعذّر الحفظ المحلي — امسحي كاش المتصفح أو استخدمي نافذة عادية (ليس خاصاً)', 'error');
             }
             if (!options.skipCloud) {
-                const isAdmin = !!currentAdmin;
-                const urgent = options.urgentCloud === true || (isAdmin && options.urgentCloud !== false);
-                if (urgent) flushPushToNebrasCloud({ silentCloud: true });
-                else schedulePushToNebrasCloud();
+                if (currentAdmin && NEBRAS_SERVER_FIRST_MODE) {
+                    const showToast = options.urgentCloud === true || options.showCloudToast === true;
+                    flushPushToNebrasCloud({ showCloudToast: showToast, silentCloud: !showToast }).then(function(ok) {
+                        if (!ok && typeof showNebrasAdminToast === 'function' && options.silentCloudFail !== true) {
+                            showNebrasAdminToast('⚠️ لم يُحفظ في السحابة — تحققي من الاتصال وأعيدي المحاولة', 'error');
+                        }
+                    });
+                } else {
+                    const isAdmin = !!currentAdmin;
+                    const urgent = options.urgentCloud === true || (isAdmin && options.urgentCloud !== false);
+                    if (urgent) flushPushToNebrasCloud({ silentCloud: true });
+                    else schedulePushToNebrasCloud();
+                }
             }
         }
 

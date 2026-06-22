@@ -4,9 +4,9 @@
 -- لا يغيّر بيانات — قراءة فقط
 -- ============================================================
 
--- يجب أن يكون العدد 64
+-- يجب أن يكون العدد 68
 select count(*) as total_keys,
-       case when count(*) >= 64 then 'OK — السحابة متزامنة' else 'ناقص — نفّذي 014' end as status
+       case when count(*) >= 68 then 'OK — السحابة متزامنة' else 'ناقص — نفّذي 023' end as status
 from public.nebras_data_store;
 
 -- المفاتيح الحرجة لـ hrws60 (مسار الطلب + حوكمة + بوابة عملاء)

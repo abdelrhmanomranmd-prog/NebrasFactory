@@ -1,9 +1,10 @@
 -- ============================================================
--- نبراس — سكربت سحابي موحّد (MASTER SYNC) — hrws60
+-- نبراس — سكربت سحابي موحّد (MASTER SYNC) — hrws102
 -- نفّذي في: Supabase → SQL Editor → New query → Run
 -- آمن للتكرار: ON CONFLICT DO NOTHING
--- يشمل: 64 مفتاح — المنصة + HR + Legal + CRM + مسار الطلب + نسخ احتياطية
--- تحقق سريع بعد التنفيذ: supabase/015-hrws58-verify-cloud.sql
+-- يشمل: 68 مفتاح — المنصة + HR + Legal + CRM + ERP + نسخ احتياطية
+-- للمشاريع القائمة: نفّذي أيضاً 023 إن كان العدد < 68
+-- تحقق: supabase/024-verify-schema-complete.sql
 -- ============================================================
 
 begin;
@@ -75,7 +76,11 @@ insert into public.nebras_data_store (store_key, payload) values
   ('crm_opportunities', '[]'::jsonb),
   ('crm_activities', '[]'::jsonb),
   ('crm_audit', '[]'::jsonb),
-  ('admin_recovery_otp', '{}'::jsonb)
+  ('admin_recovery_otp', '{}'::jsonb),
+  ('hr_advances', '[]'::jsonb),
+  ('legal_rentals', '[]'::jsonb),
+  ('legal_notif_settings', '{"remindDays":[30,60],"lastScan":""}'::jsonb),
+  ('hr_vehicle_violations', '[]'::jsonb)
 on conflict (store_key) do nothing;
 
 -- ── بوابة العملاء (011) ──
@@ -103,9 +108,13 @@ on conflict (store_key) do nothing;
 commit;
 
 -- ============================================================
--- تحقق — عدد المفاتيح المتوقعة = 64
+-- تحقق — عدد المفاتيح المتوقعة = 68
 -- ============================================================
-select count(*) as total_keys from public.nebras_data_store;
+select count(*) as total_keys,
+       case when count(*) >= 68 then 'OK — السحابة متزامنة'
+            else 'ناقص — نفّذي 023-nebras-store-keys-complete.sql'
+       end as status
+from public.nebras_data_store;
 
 select
   store_key,
