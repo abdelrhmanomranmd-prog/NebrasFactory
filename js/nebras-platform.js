@@ -19,6 +19,8 @@
         const NEBRAS_IMAGE_EXT_RE = /\.(jpe?g|png|webp|avif|gif|svg|bmp|ico|heic|heif)(\?|#|$)/i;
         const NEBRAS_VIDEO_EXT_RE = /\.(mp4|webm|mov|ogg)(\?|#|$)/i;
         window.NEBRAS_IMAGE_ACCEPT = NEBRAS_IMAGE_ACCEPT;
+        window.uploadNebrasMediaFile = uploadNebrasMediaFile;
+        window.openNebrasMediaFilePicker = openNebrasMediaFilePicker;
         window.NEBRAS_MEDIA_ACCEPT_ALL = NEBRAS_MEDIA_ACCEPT_ALL;
         window.NEBRAS_SHOWROOM_MEDIA_ACCEPT = NEBRAS_SHOWROOM_MEDIA_ACCEPT;
         const PRIMARY_GOVERNANCE_ADMIN_IDS = ['nebras-factory-admin'];

@@ -1,6 +1,6 @@
 /**
  * نبراس — مساعد Claude الشخصي للإدارة الرئيسية (Copilot-style)
- * محادثة متصلة · تنفيذ إجراءات · إدارة كاملة عبر الحوار
+ * محادثة متصلة · تنفيذ إجراءات · إرفاق صور للمحادثة
  */
 (function(global) {
     'use strict';
@@ -9,6 +9,7 @@
     let aiMode = 'governance';
     let aiChatHistory = [];
     let aiSending = false;
+    let aiPendingAttachments = [];
 
     function isMainAdmin() {
         const admin = typeof global.getNebrasCurrentAdmin === 'function' ? global.getNebrasCurrentAdmin() : null;
@@ -30,7 +31,15 @@
 
     function saveAiChat() {
         try {
-            const trimmed = aiChatHistory.slice(-40);
+            const trimmed = aiChatHistory.slice(-40).map(function(m) {
+                const copy = { role: m.role, content: m.content, at: m.at };
+                if (m.images && m.images.length) {
+                    copy.images = m.images.slice(0, 4).map(function(img) {
+                        return { url: img.url, name: img.name || '' };
+                    });
+                }
+                return copy;
+            });
             sessionStorage.setItem(CHAT_KEY, JSON.stringify(trimmed));
         } catch (e) { /* ignore */ }
     }
@@ -94,7 +103,31 @@
         };
     }
 
-    async function askNebrasAdminAi(prompt, mode, history) {
+    async function urlToBase64ForAi(url) {
+        if (!url) return null;
+        if (String(url).indexOf('data:') === 0) {
+            const m = String(url).match(/^data:([^;]+);base64,(.+)$/);
+            return m ? { media_type: m[1], data: m[2] } : null;
+        }
+        try {
+            const res = await fetch(url);
+            const blob = await res.blob();
+            return await new Promise(function(resolve) {
+                const reader = new FileReader();
+                reader.onload = function() {
+                    const d = reader.result;
+                    const m = String(d).match(/^data:([^;]+);base64,(.+)$/);
+                    resolve(m ? { media_type: m[1], data: m[2] } : null);
+                };
+                reader.onerror = function() { resolve(null); };
+                reader.readAsDataURL(blob);
+            });
+        } catch (e) {
+            return null;
+        }
+    }
+
+    async function askNebrasAdminAi(prompt, mode, history, images) {
         const session = await ensureSecureApiSession();
         if (!session.ok) {
             return {
@@ -115,7 +148,8 @@
                 prompt: prompt,
                 context: buildAiContext(),
                 mode: mode || aiMode,
-                history: history || []
+                history: history || [],
+                images: images || []
             })
         });
         return res.json();
@@ -187,6 +221,17 @@
         return String(text || '').replace(/\[ACTION:[a-z_]+\]/gi, '').trim();
     }
 
+    function renderMessageImages(images) {
+        if (!images || !images.length) return '';
+        return '<div class="admin-ai-msg-images">' + images.map(function(img) {
+            const url = img && img.url ? img.url : '';
+            if (!url) return '';
+            return '<a href="' + escHtml(url) + '" target="_blank" rel="noopener" class="admin-ai-msg-image">' +
+                '<img src="' + escHtml(url) + '" alt="' + escHtml(img.name || 'مرفق') + '">' +
+                '</a>';
+        }).join('') + '</div>';
+    }
+
     function renderAiChatMessages() {
         const el = document.getElementById('admin-ai-chat');
         if (!el) return;
@@ -194,7 +239,8 @@
             el.innerHTML = '<div class="admin-ai-welcome">' +
                 '<i class="fas fa-sparkles"></i>' +
                 '<strong>مرحباً — أنا مساعدك الشخصي في الإدارة الرئيسية</strong>' +
-                '<p>اسألني عن أي شيء: منتجات · مستخدمون · سحابة · سلة · بنوك · HR · محتوى الموقع. يمكنني اقتراح خطوات وتنفيذ إجراءات.</p>' +
+                '<p>اسألني عن أي شيء: منتجات · مستخدمون · سحابة · سلة · بنوك · HR · محتوى الموقع.</p>' +
+                '<p><i class="fas fa-paperclip"></i> ارفقي صوراً مباشرة في المحادثة — زر المشبك بجانب الإرسال.</p>' +
                 '</div>';
             return;
         }
@@ -217,11 +263,72 @@
                 return '<button type="button" class="admin-ai-action-btn" onclick="runNebrasAiAction(\'' + a + '\')"><i class="fas fa-bolt"></i> ' + escHtml(labels[a] || a) + '</button>';
             }).join('');
             return '<div class="admin-ai-bubble ' + cls + '">' +
+                renderMessageImages(msg.images) +
                 '<div class="admin-ai-bubble-text">' + body.replace(/\n/g, '<br>') + '</div>' +
                 (actionBtns ? '<div class="admin-ai-action-row">' + actionBtns + '</div>' : '') +
                 '</div>';
         }).join('');
         el.scrollTop = el.scrollHeight;
+    }
+
+    function renderAiComposeAttachments() {
+        const strip = document.getElementById('admin-ai-attachments');
+        if (!strip) return;
+        if (!aiPendingAttachments.length) {
+            strip.hidden = true;
+            strip.innerHTML = '';
+            return;
+        }
+        strip.hidden = false;
+        strip.innerHTML = aiPendingAttachments.map(function(att, i) {
+            return '<div class="admin-ai-attach-chip">' +
+                '<img src="' + escHtml(att.url) + '" alt="">' +
+                '<span>' + escHtml(att.name || 'صورة') + '</span>' +
+                '<button type="button" onclick="removeAdminAiAttachment(' + i + ')" aria-label="حذف"><i class="fas fa-xmark"></i></button>' +
+                '</div>';
+        }).join('');
+    }
+
+    function removeAdminAiAttachment(index) {
+        aiPendingAttachments.splice(index, 1);
+        renderAiComposeAttachments();
+    }
+
+    async function handleAdminAiFilePick(files) {
+        if (!files || !files.length) return;
+        const status = document.getElementById('admin-ai-status');
+        if (status) status.textContent = 'جاري رفع الصور…';
+        const uploadFn = typeof global.uploadNebrasMediaFile === 'function' ? global.uploadNebrasMediaFile : null;
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            if (!file || !file.type || file.type.indexOf('image/') !== 0) continue;
+            if (aiPendingAttachments.length >= 4) {
+                alert('الحد الأقصى 4 صور في الرسالة الواحدة.');
+                break;
+            }
+            let url = null;
+            if (uploadFn) {
+                url = await uploadFn(file);
+            }
+            if (!url) {
+                const reader = new FileReader();
+                url = await new Promise(function(resolve) {
+                    reader.onload = function() { resolve(reader.result || null); };
+                    reader.onerror = function() { resolve(null); };
+                    reader.readAsDataURL(file);
+                });
+            }
+            if (url) {
+                aiPendingAttachments.push({ url: url, name: file.name || 'صورة' });
+            }
+        }
+        renderAiComposeAttachments();
+        if (status) status.textContent = aiPendingAttachments.length ? 'صور جاهزة للإرسال' : 'جاهز';
+    }
+
+    function triggerAdminAiFilePick() {
+        const input = document.getElementById('admin-ai-file-input');
+        if (input) input.click();
     }
 
     async function sendAdminAiMessage() {
@@ -230,10 +337,23 @@
         const status = document.getElementById('admin-ai-status');
         const btn = document.getElementById('admin-ai-send-btn');
         const p = promptEl ? promptEl.value.trim() : '';
-        if (!p) return;
+        const attachments = aiPendingAttachments.slice();
+        if (!p && !attachments.length) return;
         loadAiChat();
-        aiChatHistory.push({ role: 'user', content: p, at: Date.now() });
+        const imagesForApi = [];
+        for (let i = 0; i < attachments.length; i++) {
+            const b64 = await urlToBase64ForAi(attachments[i].url);
+            if (b64) imagesForApi.push(b64);
+        }
+        aiChatHistory.push({
+            role: 'user',
+            content: p || 'حلّلي الصورة المرفقة واقترحي الخطوة التالية في المنصة.',
+            images: attachments.map(function(a) { return { url: a.url, name: a.name }; }),
+            at: Date.now()
+        });
         if (promptEl) promptEl.value = '';
+        aiPendingAttachments = [];
+        renderAiComposeAttachments();
         renderAiChatMessages();
         saveAiChat();
         aiSending = true;
@@ -243,7 +363,7 @@
             return { role: m.role, content: m.content };
         });
         try {
-            const data = await askNebrasAdminAi(p, aiMode, historyForApi);
+            const data = await askNebrasAdminAi(p || 'حلّلي الصورة المرفقة.', aiMode, historyForApi, imagesForApi);
             let reply = '';
             if (data.ok && data.reply) {
                 reply = data.reply;
@@ -299,7 +419,9 @@
     function clearAdminAiChat() {
         if (!confirm('مسح محادثة المساعد؟')) return;
         aiChatHistory = [];
+        aiPendingAttachments = [];
         saveAiChat();
+        renderAiComposeAttachments();
         renderAiChatMessages();
     }
 
@@ -312,11 +434,12 @@
             body.innerHTML = '<p class="erp-empty">مساعد Claude — الإدارة الرئيسية فقط (NEBRASFACTORY).</p>';
             return;
         }
+        const imageAccept = global.NEBRAS_IMAGE_ACCEPT || 'image/jpeg,image/png,image/webp,image/gif';
         body.innerHTML =
             '<div class="admin-ai-copilot-head">' +
                 '<span class="admin-ai-copilot-badge"><i class="fas fa-sparkles"></i> Claude AI</span>' +
                 sessionStatusLabel() +
-                '<span class="admin-ai-copilot-sub">مساعد شخصي — مثل Copilot في Excel · يفهم المنصة وينفّذ معك</span>' +
+                '<span class="admin-ai-copilot-sub">مساعد شخصي — محادثة · صور · تنفيذ مباشر</span>' +
             '</div>' +
             '<div class="admin-ai-modes">' +
             '<button type="button" class="admin-ai-mode' + (aiMode === 'governance' ? ' active' : '') + '" data-mode="governance"><i class="fas fa-crown"></i> حوكمة</button>' +
@@ -332,8 +455,11 @@
             '<button type="button" class="admin-ai-chip" data-q="ما خطوات ضمان عدم فقدان البيانات في السحابة؟">حماية البيانات</button>' +
             '</div>' +
             '<div id="admin-ai-chat" class="admin-ai-chat" aria-live="polite"></div>' +
+            '<div id="admin-ai-attachments" class="admin-ai-attachments" hidden></div>' +
+            '<input type="file" id="admin-ai-file-input" accept="' + escHtml(imageAccept) + '" multiple hidden>' +
             '<div class="admin-ai-compose">' +
-                '<textarea id="admin-ai-prompt" class="admin-ai-prompt" rows="2" placeholder="اكتبي سؤالك أو طلبك — مثل: أضف أصناف ألومنيوم · أنشئ مستخدم متجر · حسّن السلة…"></textarea>' +
+                '<button type="button" class="workspace-action-btn admin-ai-attach-btn" id="admin-ai-attach-btn" title="إرفاق صورة"><i class="fas fa-paperclip"></i></button>' +
+                '<textarea id="admin-ai-prompt" class="admin-ai-prompt" rows="2" placeholder="اكتبي سؤالك أو ارفقي صورة للمنتج / الشاشة / العقد…"></textarea>' +
                 '<div class="admin-ai-compose-actions">' +
                     '<button type="button" class="workspace-action-btn workspace-action-btn--primary" id="admin-ai-send-btn"><i class="fas fa-paper-plane"></i> إرسال</button>' +
                     '<button type="button" class="workspace-action-btn" id="admin-ai-apply-btn" title="تطبيق JSON أصناف"><i class="fas fa-magic"></i></button>' +
@@ -361,12 +487,36 @@
         const btn = document.getElementById('admin-ai-send-btn');
         const applyBtn = document.getElementById('admin-ai-apply-btn');
         const promptEl = document.getElementById('admin-ai-prompt');
+        const attachBtn = document.getElementById('admin-ai-attach-btn');
+        const fileInput = document.getElementById('admin-ai-file-input');
         if (btn) btn.onclick = sendAdminAiMessage;
+        if (attachBtn) attachBtn.onclick = triggerAdminAiFilePick;
+        if (fileInput) {
+            fileInput.onchange = function() {
+                handleAdminAiFilePick(fileInput.files);
+                fileInput.value = '';
+            };
+        }
         if (promptEl) {
             promptEl.onkeydown = function(ev) {
                 if (ev.key === 'Enter' && !ev.shiftKey) {
                     ev.preventDefault();
                     sendAdminAiMessage();
+                }
+            };
+            promptEl.onpaste = function(ev) {
+                const items = ev.clipboardData && ev.clipboardData.items;
+                if (!items) return;
+                const imageFiles = [];
+                for (let i = 0; i < items.length; i++) {
+                    if (items[i].type && items[i].type.indexOf('image/') === 0) {
+                        const f = items[i].getAsFile();
+                        if (f) imageFiles.push(f);
+                    }
+                }
+                if (imageFiles.length) {
+                    ev.preventDefault();
+                    handleAdminAiFilePick(imageFiles);
                 }
             };
         }
@@ -378,6 +528,7 @@
                 }
             };
         }
+        renderAiComposeAttachments();
         renderAiChatMessages();
         if (status && !status.textContent) status.textContent = 'جاهز — محادثة متصلة';
     }
@@ -387,15 +538,13 @@
             alert('مساعد Claude — الإدارة الرئيسية فقط.');
             return;
         }
-        if (typeof global.closeNebrasWorkspace === 'function') global.closeNebrasWorkspace();
-        if (typeof global.closeAllAdminSections === 'function') global.closeAllAdminSections();
+        renderAdminAiPanel();
         const el = document.getElementById('admin-ai-assistant');
         if (el) {
             el.classList.add('show');
             el.setAttribute('aria-hidden', 'false');
         }
         if (typeof global.revealPlatformLayer === 'function') global.revealPlatformLayer('admin-ai-assistant');
-        renderAdminAiPanel();
     }
 
     function closeNebrasAdminAi() {
@@ -413,5 +562,7 @@
     global.askNebrasAdminAi = askNebrasAdminAi;
     global.runNebrasAiAction = runAiAction;
     global.clearAdminAiChat = clearAdminAiChat;
+    global.removeAdminAiAttachment = removeAdminAiAttachment;
+    global.triggerAdminAiFilePick = triggerAdminAiFilePick;
 
 })(typeof window !== 'undefined' ? window : globalThis);

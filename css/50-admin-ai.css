@@ -115,6 +115,76 @@
     align-items: flex-end;
 }
 
+.admin-ai-attach-btn {
+    flex: 0 0 auto;
+    min-width: 44px;
+    min-height: 44px;
+    font-size: 1.1rem;
+}
+
+.admin-ai-attachments {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 8px 0 4px;
+    padding: 8px;
+    border-radius: 12px;
+    background: rgba(0, 168, 255, 0.06);
+    border: 1px dashed rgba(0, 168, 255, 0.25);
+}
+
+.admin-ai-attach-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 4px 8px 4px 4px;
+    border-radius: 10px;
+    background: #fff;
+    border: 1px solid rgba(13, 40, 64, 0.12);
+    font-size: 0.75rem;
+}
+
+.admin-ai-attach-chip img {
+    width: 40px;
+    height: 40px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.admin-ai-attach-chip button {
+    border: none;
+    background: transparent;
+    color: #c0392b;
+    cursor: pointer;
+    padding: 2px 4px;
+}
+
+.admin-ai-msg-images {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.admin-ai-msg-image {
+    display: block;
+    border-radius: 10px;
+    overflow: hidden;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    max-width: 140px;
+}
+
+.admin-ai-bubble--assistant .admin-ai-msg-image {
+    border-color: rgba(13, 40, 64, 0.12);
+}
+
+.admin-ai-msg-image img {
+    display: block;
+    width: 100%;
+    max-height: 120px;
+    object-fit: cover;
+}
+
 .admin-ai-compose .admin-ai-prompt {
     flex: 1;
     margin: 0;

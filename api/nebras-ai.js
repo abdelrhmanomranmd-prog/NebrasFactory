@@ -109,6 +109,38 @@ function sanitizeHistory(history) {
     });
 }
 
+function sanitizeImages(images) {
+    if (!Array.isArray(images)) return [];
+    return images.slice(0, 4).filter(function(img) {
+        return img && img.media_type && img.data && String(img.data).length < 6 * 1024 * 1024;
+    }).map(function(img) {
+        return {
+            media_type: String(img.media_type).slice(0, 64),
+            data: String(img.data)
+        };
+    });
+}
+
+function buildUserMessage(prompt, context, images) {
+    const text = context
+        ? ('سياق المنصة:\n' + context + '\n\nطلب الإدارة:\n' + prompt)
+        : prompt;
+    const blocks = [];
+    images.forEach(function(img) {
+        blocks.push({
+            type: 'image',
+            source: {
+                type: 'base64',
+                media_type: img.media_type,
+                data: img.data
+            }
+        });
+    });
+    blocks.push({ type: 'text', text: text });
+    if (blocks.length === 1) return text;
+    return blocks;
+}
+
 module.exports = async function handler(req, res) {
     try {
         if (req.method === 'OPTIONS') {
@@ -129,7 +161,8 @@ module.exports = async function handler(req, res) {
         const context = String(body.context || '').trim().slice(0, 4000);
         const mode = String(body.mode || 'governance').toLowerCase();
         const history = sanitizeHistory(body.history);
-        if (!prompt) return sec.jsonRes(res, 400, { ok: false, error: 'prompt_required' });
+        const images = sanitizeImages(body.images);
+        if (!prompt && !images.length) return sec.jsonRes(res, 400, { ok: false, error: 'prompt_required' });
 
         const modeHint = MODE_PROMPTS[mode] || MODE_PROMPTS.governance;
         const systemPrompt =
@@ -137,15 +170,16 @@ module.exports = async function handler(req, res) {
             'تتصرّف مثل Microsoft Copilot داخل Excel: محادثة طبيعية، خطوات عملية، واقتراحات قابلة للتنفيذ. ' +
             'كل الفروع والمستخدمين والعملاء تحت حوكمة HQ. ' +
             'ساعد في: المتجر · المحتوى · السلة · البنوك · المستخدمين · HR · CRM · السحابة · مصمّم الأبواب. ' +
+            (images.length ? 'الإدارة أرفقت صورة/صور — حلّليها واقترحي خطوات عملية في المنصة. ' : '') +
             modeHint + ' ' +
             'أجب بالعربية. كن مختصراً وعملياً. عند اقتراح فتح قسم في المنصة أضف وسماً: [ACTION:اسم] حيث الاسم أحد: open_content, open_store, open_users, open_cloud, open_hr, open_media, push_cloud, open_settings, export_store. ' +
             'لا تخترع أسعاراً حقيقية.';
 
         const messages = history.slice();
-        const userContent = context
-            ? ('سياق المنصة:\n' + context + '\n\nطلب الإدارة:\n' + prompt)
-            : prompt;
-        messages.push({ role: 'user', content: userContent });
+        messages.push({
+            role: 'user',
+            content: buildUserMessage(prompt || 'حلّلي الصورة المرفقة.', context, images)
+        });
 
         const result = await callClaude(messages, systemPrompt);
         if (result.error) {
