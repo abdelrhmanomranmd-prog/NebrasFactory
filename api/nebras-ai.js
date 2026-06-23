@@ -23,6 +23,14 @@ const DEFAULT_MODELS = [
     'claude-haiku-4-5'
 ];
 
+const VISION_MODELS = [
+    'claude-haiku-4-5',
+    'claude-sonnet-4-6',
+    'claude-sonnet-4-5'
+];
+
+const CLAUDE_TIMEOUT_MS = 25000;
+
 function parseUpstreamError(status, errText) {
     let detail = '';
     try {
@@ -48,51 +56,85 @@ function parseUpstreamError(status, errText) {
     if (status === 429 || lower.indexOf('rate') >= 0) {
         return { error: 'ai_rate_limited', detail: detail };
     }
+    if (status === 504 || status === 408 || lower.indexOf('timeout') >= 0 || lower.indexOf('timed out') >= 0) {
+        return { error: 'ai_timeout', detail: detail };
+    }
     return { error: 'ai_upstream_failed', detail: detail };
 }
 
-async function callClaudeOnce(model, messages, systemPrompt, key) {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': key,
-            'anthropic-version': '2023-06-01'
-        },
-        body: JSON.stringify({
-            model: model,
-            max_tokens: 3200,
-            system: systemPrompt,
-            messages: messages
-        })
-    });
+async function fetchClaudeWithTimeout(url, options, timeoutMs) {
+    const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+    let timer = null;
+    const opts = Object.assign({}, options);
+    if (ctrl) {
+        opts.signal = ctrl.signal;
+        timer = setTimeout(function() { ctrl.abort(); }, timeoutMs);
+    }
+    try {
+        return await fetch(url, opts);
+    } finally {
+        if (timer) clearTimeout(timer);
+    }
+}
+
+async function callClaudeOnce(model, messages, systemPrompt, key, maxTokens) {
+    let res;
+    try {
+        res = await fetchClaudeWithTimeout('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': key,
+                'anthropic-version': '2023-06-01'
+            },
+            body: JSON.stringify({
+                model: model,
+                max_tokens: maxTokens || 3200,
+                system: systemPrompt,
+                messages: messages
+            })
+        }, CLAUDE_TIMEOUT_MS);
+    } catch (fetchErr) {
+        const msg = String(fetchErr && fetchErr.message || fetchErr || '').toLowerCase();
+        if (msg.indexOf('abort') >= 0 || msg.indexOf('timeout') >= 0) {
+            return { error: 'ai_timeout', detail: 'claude_fetch_timeout' };
+        }
+        return { error: 'ai_upstream_failed', detail: String(fetchErr && fetchErr.message || fetchErr).slice(0, 200) };
+    }
     if (!res.ok) {
         const errText = await res.text();
         console.error('Claude API error:', model, res.status, errText.slice(0, 400));
         return parseUpstreamError(res.status, errText);
     }
-    const data = await res.json();
+    let data;
+    try {
+        data = await res.json();
+    } catch (e) {
+        return { error: 'ai_upstream_failed', detail: 'invalid_claude_json' };
+    }
     const text = data.content && data.content[0] && data.content[0].text ? data.content[0].text : '';
     return { text: text, model: model };
 }
 
-async function callClaude(messages, systemPrompt) {
+async function callClaude(messages, systemPrompt, hasImages) {
     const key = String(process.env.ANTHROPIC_API_KEY || process.env.CLAUDE_API_KEY || '').trim();
     if (!key) return { error: 'ai_not_configured' };
     const envModel = String(process.env.ANTHROPIC_MODEL || '').trim();
-    const models = [];
-    if (envModel) models.push(envModel);
-    DEFAULT_MODELS.forEach(function(m) {
+    const models = hasImages ? VISION_MODELS.slice() : [];
+    if (envModel) models.unshift(envModel);
+    (hasImages ? VISION_MODELS : DEFAULT_MODELS).forEach(function(m) {
         if (models.indexOf(m) < 0) models.push(m);
     });
+    const maxTokens = hasImages ? 2048 : 3200;
     let lastError = { error: 'ai_upstream_failed' };
     for (let i = 0; i < models.length; i++) {
-        const result = await callClaudeOnce(models[i], messages, systemPrompt, key);
+        const result = await callClaudeOnce(models[i], messages, systemPrompt, key, maxTokens);
         if (result.text) return result;
         lastError = result;
         if (result.error === 'ai_invalid_key' || result.error === 'ai_billing_required' || result.error === 'ai_rate_limited') {
             return result;
         }
+        if (result.error === 'ai_timeout' && i < models.length - 1) continue;
     }
     return lastError;
 }
@@ -111,12 +153,12 @@ function sanitizeHistory(history) {
 
 function sanitizeImages(images) {
     if (!Array.isArray(images)) return [];
-    return images.slice(0, 4).filter(function(img) {
-        return img && img.media_type && img.data && String(img.data).length < 6 * 1024 * 1024;
+    return images.slice(0, 2).filter(function(img) {
+        return img && img.media_type && img.data && String(img.data).length < 520000;
     }).map(function(img) {
         return {
             media_type: String(img.media_type).slice(0, 64),
-            data: String(img.data)
+            data: String(img.data).slice(0, 520000)
         };
     });
 }
@@ -185,9 +227,10 @@ module.exports = async function handler(req, res) {
             content: buildUserMessage(prompt || 'حلّلي الصورة المرفقة.', context, images)
         });
 
-        const result = await callClaude(messages, systemPrompt);
+        const result = await callClaude(messages, systemPrompt, images.length > 0);
         if (result.error) {
-            const code = result.error === 'ai_not_configured' ? 503 : 502;
+            const code = result.error === 'ai_not_configured' ? 503
+                : result.error === 'ai_timeout' ? 504 : 502;
             return sec.jsonRes(res, code, {
                 ok: false,
                 error: result.error,

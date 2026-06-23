@@ -37,6 +37,10 @@
     }
   ],
   "functions": {
+    "api/nebras-ai.js": {
+      "maxDuration": 60,
+      "memory": 1024
+    },
     "api/**/*.js": {
       "maxDuration": 30
     }

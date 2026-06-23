@@ -7,8 +7,11 @@
 
     const CHAT_KEY = 'nebrasAdminAiChat';
     const AI_MAX_IMAGES = 4;
-    const AI_MAX_IMAGE_BYTES = 380000;
-    const AI_MAX_TOTAL_BYTES = 3400000;
+    const AI_MAX_IMAGES_SEND = 2;
+    const AI_MAX_IMAGE_BYTES = 280000;
+    const AI_MAX_TOTAL_BYTES = 2800000;
+    const AI_FETCH_TIMEOUT_MS = 55000;
+    const AI_MAX_RETRIES = 2;
     let aiMode = 'governance';
     let aiChatHistory = [];
     let aiSending = false;
@@ -116,8 +119,8 @@
                 el.onerror = reject;
                 el.src = url;
             });
-            const maxW = 1280;
-            const maxH = 1280;
+            const maxW = 1024;
+            const maxH = 1024;
             let w = img.naturalWidth || img.width || maxW;
             let h = img.naturalHeight || img.height || maxH;
             const scale = Math.min(1, maxW / w, maxH / h);
@@ -129,10 +132,10 @@
             const ctx = canvas.getContext('2d');
             ctx.drawImage(img, 0, 0, w, h);
             URL.revokeObjectURL(url);
-            let quality = 0.86;
+            let quality = 0.82;
             let dataUrl = canvas.toDataURL('image/jpeg', quality);
-            while (dataUrl.length > AI_MAX_IMAGE_BYTES * 1.37 && quality > 0.4) {
-                quality -= 0.08;
+            while (dataUrl.length > AI_MAX_IMAGE_BYTES * 1.37 && quality > 0.35) {
+                quality -= 0.1;
                 dataUrl = canvas.toDataURL('image/jpeg', quality);
             }
             return dataUrl;
@@ -167,8 +170,11 @@
             if (res.status === 413 || lower.indexOf('payload_too_large') >= 0 || lower.indexOf('entity too large') >= 0) {
                 return { ok: false, error: 'payload_too_large', detail: text.slice(0, 160), status: res.status };
             }
-            if (lower.indexOf('an error occurred') >= 0 || lower.indexOf('function_invocation') >= 0) {
+            if (lower.indexOf('an error occurred') >= 0 || lower.indexOf('function_invocation') >= 0 || lower.indexOf('internal server error') >= 0) {
                 return { ok: false, error: 'server_crash', detail: text.slice(0, 160), status: res.status };
+            }
+            if (res.status === 502 || res.status === 503 || res.status === 504 || lower.indexOf('timeout') >= 0) {
+                return { ok: false, error: 'ai_timeout', detail: text.slice(0, 160), status: res.status };
             }
             return { ok: false, error: 'invalid_json_response', detail: text.slice(0, 160), status: res.status };
         }
@@ -216,7 +222,42 @@
         }
     }
 
-    async function askNebrasAdminAi(prompt, mode, history, images) {
+    function sleepMs(ms) {
+        return new Promise(function(resolve) { setTimeout(resolve, ms); });
+    }
+
+    function isAiRetryableError(data) {
+        if (!data || data.ok) return false;
+        const retryable = ['server_crash', 'invalid_json_response', 'empty_response', 'server_error', 'ai_upstream_failed', 'ai_timeout'];
+        if (retryable.indexOf(data.error) >= 0) return true;
+        return data.status && data.status >= 502;
+    }
+
+    async function postNebrasAiRequest(token, bodyStr) {
+        const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+        let timer = null;
+        if (ctrl) timer = setTimeout(function() { ctrl.abort(); }, AI_FETCH_TIMEOUT_MS);
+        try {
+            const res = await fetch(apiBase() + '/api/nebras-ai', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: 'Bearer ' + token
+                },
+                body: bodyStr,
+                signal: ctrl ? ctrl.signal : undefined
+            });
+            return parseAiApiResponse(res);
+        } catch (e) {
+            const msg = String(e && e.message || e || '').toLowerCase();
+            if (msg.indexOf('abort') >= 0) return { ok: false, error: 'ai_timeout' };
+            return { ok: false, error: 'network_error', detail: String(e && e.message || e) };
+        } finally {
+            if (timer) clearTimeout(timer);
+        }
+    }
+
+    async function askNebrasAdminAi(prompt, mode, history, images, onRetry) {
         const session = await ensureSecureApiSession();
         if (!session.ok) {
             return {
@@ -227,26 +268,29 @@
         }
         const token = typeof global.getNebrasSecureToken === 'function' ? global.getNebrasSecureToken() : '';
         if (!token) return { ok: false, error: 'login_required' };
+        const imagesSend = (images || []).slice(0, AI_MAX_IMAGES_SEND);
+        const historySend = imagesSend.length ? (history || []).slice(-4) : (history || []).slice(-12);
         const payload = {
             prompt: prompt,
             context: buildAiContext(),
             mode: mode || aiMode,
-            history: history || [],
-            images: images || []
+            history: historySend,
+            images: imagesSend
         };
         const bodyStr = JSON.stringify(payload);
         if (bodyStr.length > AI_MAX_TOTAL_BYTES) {
             return { ok: false, error: 'payload_too_large' };
         }
-        const res = await fetch(apiBase() + '/api/nebras-ai', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: 'Bearer ' + token
-            },
-            body: bodyStr
-        });
-        return parseAiApiResponse(res);
+        let last = null;
+        for (let attempt = 0; attempt <= AI_MAX_RETRIES; attempt++) {
+            if (attempt > 0) {
+                if (typeof onRetry === 'function') onRetry(attempt);
+                await sleepMs(1800 * attempt);
+            }
+            last = await postNebrasAiRequest(token, bodyStr);
+            if (!isAiRetryableError(last)) return last;
+        }
+        return last;
     }
 
     function tryApplyProductSuggestion(text) {
@@ -436,7 +480,7 @@
         if (!p && !attachments.length) return;
         loadAiChat();
         const imagesForApi = [];
-        for (let i = 0; i < attachments.length; i++) {
+        for (let i = 0; i < attachments.length && imagesForApi.length < AI_MAX_IMAGES_SEND; i++) {
             const b64 = await urlToBase64ForAi(attachments[i].url);
             if (b64) imagesForApi.push(b64);
         }
@@ -458,7 +502,9 @@
             return { role: m.role, content: m.content };
         });
         try {
-            const data = await askNebrasAdminAi(p || 'حلّلي الصورة المرفقة.', aiMode, historyForApi, imagesForApi);
+            const data = await askNebrasAdminAi(p || 'حلّلي الصورة المرفقة.', aiMode, historyForApi, imagesForApi, function(attempt) {
+                if (status) status.textContent = 'إعادة المحاولة ' + attempt + '…';
+            });
             let reply = '';
             if (data.ok && data.reply) {
                 reply = data.reply;
@@ -499,9 +545,12 @@
             } else if (data.error === 'payload_too_large') {
                 reply = 'حجم الرسالة كبير جداً (صور كثيرة أو ضخمة). احذفي بعض الصور أو استخدمي صوراً أصغر ثم أعيدي الإرسال.';
                 if (status) status.textContent = 'حجم كبير';
+            } else if (data.error === 'ai_timeout' || data.error === 'network_error') {
+                reply = 'استغرق الطلب وقتاً طويلاً — غالباً بسبب صورة كبيرة. انتظري 10 ثوانٍ ثم أعيدي الإرسال بصورة واحدة أصغر أو برسالة نصية فقط.';
+                if (status) status.textContent = 'انتهى الوقت';
             } else if (data.error === 'server_crash' || data.error === 'invalid_json_response') {
-                reply = 'الخادم أعاد خطأ غير متوقع — انتظري 30 ثانية ثم أعيدي الإرسال. إن تكرّر: أعيدي تحميل الصفحة (Ctrl+Shift+R).';
-                if (status) status.textContent = 'خطأ خادم';
+                reply = 'الخادم مشغول مؤقتاً — جرّبتُ إعادة الإرسال تلقائياً. انتظري 15 ثانية ثم أعيدي المحاولة بصورة واحدة أو نص فقط.';
+                if (status) status.textContent = 'مشغول مؤقتاً';
             } else {
                 reply = 'تعذّر الاتصال: ' + (data.error || 'خطأ');
                 if (status) status.textContent = 'فشل';
