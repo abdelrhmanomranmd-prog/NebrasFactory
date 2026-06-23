@@ -41,6 +41,9 @@
       "maxDuration": 60,
       "memory": 1024
     },
+    "api/nebras-visitor-intake.js": {
+      "maxDuration": 15
+    },
     "api/**/*.js": {
       "maxDuration": 30
     }

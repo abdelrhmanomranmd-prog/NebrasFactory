@@ -170,6 +170,25 @@
         } catch (e) { /* ignore */ }
     }
 
+    async function submitNebrasVisitorIntake(type, data) {
+        try {
+            const res = await fetch(apiBase() + '/api/nebras-visitor-intake', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ type: type, data: data })
+            });
+            const text = await res.text();
+            try {
+                return JSON.parse(text);
+            } catch (e) {
+                return { ok: false, error: 'invalid_response', status: res.status };
+            }
+        } catch (e) {
+            console.warn('submitNebrasVisitorIntake failed:', e);
+            return { ok: false, error: 'network_error' };
+        }
+    }
+
     global.NEBRAS_PUBLIC_STORE_KEYS = PUBLIC_STORE_KEYS;
     global.NEBRAS_SENSITIVE_STORE_KEYS = SENSITIVE_STORE_KEYS;
     global.isSensitiveStoreKey = isSensitiveStoreKey;
@@ -183,5 +202,6 @@
     global.secureCloudPush = secureCloudPush;
     global.pullSensitiveCloudAndApply = pullSensitiveCloudAndApply;
     global.mergeApiAdminUser = mergeApiAdminUser;
+    global.submitNebrasVisitorIntake = submitNebrasVisitorIntake;
 
 })(typeof window !== 'undefined' ? window : globalThis);

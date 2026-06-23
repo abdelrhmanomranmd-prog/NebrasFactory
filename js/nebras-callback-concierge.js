@@ -26,11 +26,12 @@
         return callbackLeads;
     }
 
-    function saveCallbackLeads() {
+    function saveCallbackLeads(options) {
+        options = options || {};
         try {
             localStorage.setItem(CALLBACK_LEADS_KEY, JSON.stringify(callbackLeads));
         } catch (e) { /* ignore */ }
-        if (typeof schedulePushToNebrasCloud === 'function') schedulePushToNebrasCloud();
+        if (!options.skipCloud && typeof schedulePushToNebrasCloud === 'function') schedulePushToNebrasCloud();
     }
 
     function resolveBranchIdFromSelection(branchKey) {
@@ -98,7 +99,7 @@
         overlay.setAttribute('aria-hidden', 'true');
     }
 
-    function submitNebrasCallbackLead() {
+    async function submitNebrasCallbackLead() {
         const nameEl = document.getElementById('callback-visitor-name');
         const phoneEl = document.getElementById('callback-visitor-phone');
         const branchEl = document.getElementById('callback-branch-select');
@@ -134,7 +135,22 @@
         };
         loadCallbackLeads();
         callbackLeads.unshift(lead);
-        saveCallbackLeads();
+        try {
+            localStorage.setItem(CALLBACK_LEADS_KEY, JSON.stringify(callbackLeads));
+        } catch (e) { /* ignore */ }
+
+        let cloudOk = false;
+        if (typeof global.submitNebrasVisitorIntake === 'function') {
+            const cloudRes = await global.submitNebrasVisitorIntake('callback_lead', lead);
+            cloudOk = !!(cloudRes && cloudRes.ok);
+            if (statusEl) {
+                statusEl.textContent = cloudOk
+                    ? '✓ تم إرسال طلبك للإدارة — سيتواصل معك الفريق قريباً.'
+                    : 'تم حفظ طلبك محلياً — تحققي من الاتصال بالإنترنت.';
+            }
+        } else if (typeof schedulePushToNebrasCloud === 'function') {
+            schedulePushToNebrasCloud();
+        }
         if (typeof addAuditLog === 'function') addAuditLog('طلب اتصال زائر', name + ' · ' + phone + ' · ' + city);
         const form = document.getElementById('nebras-callback-form-wrap');
         const success = document.getElementById('nebras-callback-success-wrap');

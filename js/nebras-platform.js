@@ -16642,7 +16642,7 @@
             dialNumber(routedContact.phone);
         }
 
-        function submitComplaint() {
+        async function submitComplaint() {
             const name = document.getElementById('complaint-customer-name').value.trim();
             const phone = document.getElementById('complaint-customer-phone').value.trim();
             const branch = document.getElementById('complaint-customer-branch').value.trim();
@@ -16671,9 +16671,24 @@
 
             statusEl.textContent = (ui.complaintSubmitted || 'تم تسجيل الشكوى بنجاح. رقم الشكوى: ') + complaintId +
                 ' — ' + (ui.complaintRouted || 'التحويل: ') + routedContact.city + ' (' + routedContact.phone + ')';
+
+            let cloudOk = false;
+            if (typeof submitNebrasVisitorIntake === 'function') {
+                const cloudRes = await submitNebrasVisitorIntake('complaint', {
+                    id: complaintId,
+                    item: complaints[complaintId]
+                });
+                cloudOk = !!(cloudRes && cloudRes.ok);
+                if (!cloudOk) {
+                    statusEl.textContent += ' — جاري الحفظ المحلي (تأكدي من الاتصال).';
+                } else {
+                    statusEl.textContent += ' — ✓ محفوظة في السحابة للإدارة.';
+                }
+            }
+
             document.getElementById('complaint-number').value = complaintId;
             document.getElementById('complaint-description').value = '';
-            saveSystemData();
+            saveSystemData({ skipCloud: cloudOk });
             linkComplaintToCrm(complaintId, complaints[complaintId]);
             displayComplaints();
             if (currentAdmin && canManage('audit')) renderAdminAnalyticsPanel();
