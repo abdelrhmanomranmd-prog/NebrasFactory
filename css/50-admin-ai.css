@@ -276,8 +276,122 @@
 
 #admin-ai-assistant .scm-hint {
     margin-bottom: 8px;
+    padding: 0 16px;
+    flex-shrink: 0;
 }
 
 #admin-ai-assistant .admin-modal {
     max-width: min(920px, 96vw);
+}
+
+#admin-ai-assistant .admin-modal.nebras-erp-modal {
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100dvh - 72px);
+    overflow: hidden;
+}
+
+#admin-ai-assistant #admin-ai-body {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    padding: 0 16px 14px;
+}
+
+#admin-ai-assistant .admin-ai-copilot-head,
+#admin-ai-assistant .admin-ai-modes,
+#admin-ai-assistant .admin-ai-quick {
+    flex-shrink: 0;
+}
+
+#admin-ai-assistant .admin-ai-chat {
+    flex: 1 1 auto;
+    min-height: 140px;
+    max-height: none;
+    overflow-y: auto;
+    margin-bottom: 6px;
+}
+
+#admin-ai-assistant .admin-ai-compose,
+#admin-ai-assistant .admin-ai-shortcuts,
+#admin-ai-assistant .admin-ai-attachments {
+    flex-shrink: 0;
+}
+
+/* تجاوز قاعدة .admin-modal button { width:100% } — تمنع صف الكتابة من الاختفاء */
+#admin-ai-assistant .admin-modal button {
+    width: auto;
+    margin-bottom: 0;
+}
+
+#admin-ai-assistant .admin-ai-compose {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    align-items: flex-end;
+    gap: 8px;
+    padding: 10px 0 8px;
+    border-top: 2px solid rgba(21, 94, 148, 0.15);
+    background: linear-gradient(180deg, #fff 0%, #f4f9fd 100%);
+}
+
+#admin-ai-assistant .admin-ai-compose .admin-ai-prompt {
+    flex: 1 1 auto;
+    width: 100% !important;
+    min-width: 0;
+    min-height: 64px;
+    max-height: 120px;
+    margin: 0 !important;
+    background: #fff;
+    border: 2px solid rgba(21, 94, 148, 0.22);
+    box-shadow: inset 0 1px 3px rgba(13, 40, 64, 0.06);
+}
+
+#admin-ai-assistant .admin-ai-compose .admin-ai-prompt:focus {
+    outline: none;
+    border-color: #2980b9;
+    box-shadow: 0 0 0 3px rgba(41, 128, 185, 0.18);
+}
+
+#admin-ai-assistant .admin-ai-compose .workspace-action-btn,
+#admin-ai-assistant .admin-ai-attach-btn {
+    width: auto !important;
+    flex-shrink: 0;
+    margin: 0 !important;
+}
+
+#admin-ai-assistant .admin-ai-compose-actions {
+    flex-shrink: 0;
+}
+
+#admin-ai-assistant .admin-ai-mode,
+#admin-ai-assistant .admin-ai-chip,
+#admin-ai-assistant .admin-ai-action-btn {
+    width: auto !important;
+    margin: 0 !important;
+}
+
+@media (max-width: 720px) {
+    #admin-ai-assistant .admin-ai-compose {
+        flex-wrap: wrap;
+    }
+
+    #admin-ai-assistant .admin-ai-compose .admin-ai-prompt {
+        flex: 1 1 100%;
+        min-height: 72px;
+        order: 2;
+    }
+
+    #admin-ai-assistant .admin-ai-attach-btn {
+        order: 1;
+    }
+
+    #admin-ai-assistant .admin-ai-compose-actions {
+        order: 3;
+        flex-direction: row;
+        width: 100%;
+        justify-content: flex-end;
+    }
 }
