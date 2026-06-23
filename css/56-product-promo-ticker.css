@@ -1,0 +1,176 @@
+/* نبراس hrws103 — شريط عروض المنتجات المتحرك */
+.nebras-product-promo-ticker {
+    margin: 0 auto 20px;
+    max-width: min(1180px, calc(100% - 24px));
+    width: calc(100% - 24px);
+}
+
+.nebras-product-promo-ticker[hidden] {
+    display: none !important;
+}
+
+.nebras-promo-ticker-shell {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 16px;
+    background: linear-gradient(105deg, #0a2540 0%, #0d4a7a 45%, #00a8ff 100%);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 14px 36px rgba(13, 40, 64, 0.28);
+    overflow: hidden;
+}
+
+.nebras-promo-ticker-shell::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.08), transparent);
+    animation: nebrasPromoShine 4s ease-in-out infinite;
+    pointer-events: none;
+}
+
+@keyframes nebrasPromoShine {
+    0%, 100% { transform: translateX(-120%); }
+    50% { transform: translateX(120%); }
+}
+
+.nebras-promo-ticker-badge {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: rgba(255, 193, 7, 0.95);
+    color: #0d2840;
+    font-size: 0.78rem;
+    font-weight: 800;
+    white-space: nowrap;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+    z-index: 1;
+}
+
+.nebras-promo-ticker-viewport {
+    flex: 1 1 auto;
+    overflow: hidden;
+    mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+}
+
+.nebras-promo-ticker-track {
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    width: max-content;
+    animation: nebrasPromoMarquee 38s linear infinite;
+}
+
+.nebras-product-promo-ticker:hover .nebras-promo-ticker-track {
+    animation-play-state: paused;
+}
+
+@keyframes nebrasPromoMarquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+
+.nebras-promo-ticker-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    color: #fff;
+    white-space: nowrap;
+    font-size: 0.92rem;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    padding: 4px 8px;
+    font: inherit;
+}
+
+.nebras-promo-ticker-thumb {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+    background-size: cover;
+    background-position: center;
+    border: 2px solid rgba(255, 255, 255, 0.35);
+    flex-shrink: 0;
+}
+
+.nebras-promo-ticker-text strong {
+    font-weight: 700;
+}
+
+.nebras-promo-ticker-text em {
+    font-style: normal;
+    background: rgba(255, 193, 7, 0.95);
+    color: #0d2840;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-weight: 800;
+    margin: 0 4px;
+}
+
+.nebras-promo-ticker-countdown {
+    flex: 0 0 auto;
+    color: rgba(255, 255, 255, 0.92);
+    font-size: 0.75rem;
+    white-space: nowrap;
+    z-index: 1;
+}
+
+.rep-quote-manual-hint {
+    margin: 0 0 12px;
+    padding: 10px 14px;
+    border-radius: 12px;
+    background: rgba(0, 168, 255, 0.08);
+    border: 1px solid rgba(0, 168, 255, 0.2);
+    color: #0d4a7a;
+    font-size: 0.88rem;
+}
+
+.rep-quote-price-hint {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.78rem;
+    color: #5a6b7d;
+}
+
+.rep-quote-line-discount {
+    color: #c0392b;
+    font-weight: 700;
+    font-size: 0.8rem;
+}
+
+.product-promo-admin-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin: 16px 0;
+}
+
+.product-promo-admin-card {
+    padding: 14px 16px;
+    border-radius: 14px;
+    border: 1px solid rgba(13, 40, 64, 0.12);
+    background: rgba(255, 255, 255, 0.7);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .nebras-promo-ticker-track,
+    .nebras-promo-ticker-shell::before {
+        animation: none !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .nebras-promo-ticker-shell {
+        flex-wrap: wrap;
+    }
+    .nebras-promo-ticker-countdown {
+        width: 100%;
+        text-align: center;
+    }
+}

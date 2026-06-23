@@ -9,6 +9,7 @@ set
     'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     'application/vnd.ms-excel',
     'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-    'application/zip'
+    'application/zip',
+    'video/mp4', 'video/webm', 'video/quicktime', 'video/ogg'
   ]
 where id = 'nebras-media';

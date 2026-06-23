@@ -92,10 +92,11 @@
     <link rel="stylesheet" href="css/31-cloud-security.css">
     <link rel="stylesheet" href="css/32-executive-reports.css">
     <link rel="stylesheet" href="css/33-product-governance.css">
-    <link rel="stylesheet" href="css/53-platform-text-readability.css?v=hrws102">
-    <link rel="stylesheet" href="css/34-hr-platform.css?v=hrws102">
-    <link rel="stylesheet" href="css/54-hr-legal-enterprise.css?v=hrws102">
-    <link rel="stylesheet" href="css/55-department-unified.css?v=hrws102">
+    <link rel="stylesheet" href="css/53-platform-text-readability.css?v=hrws103">
+    <link rel="stylesheet" href="css/34-hr-platform.css?v=hrws103">
+    <link rel="stylesheet" href="css/54-hr-legal-enterprise.css?v=hrws103">
+    <link rel="stylesheet" href="css/55-department-unified.css?v=hrws103">
+    <link rel="stylesheet" href="css/56-product-promo-ticker.css?v=hrws103">
     <link rel="stylesheet" href="css/38-empire-hub.css?v=hrws77">
     <link rel="stylesheet" href="css/35-store-enterprise.css">
     <link rel="stylesheet" href="css/36-executive-bi.css">
@@ -115,7 +116,7 @@
     <link rel="stylesheet" href="css/51-data-warehouse.css?v=hrws77">
     <link rel="stylesheet" href="css/52-cart-enterprise.css?v=hrws79">
 </head>
-<body id="nebras-platform" class="platform-storefront" data-platform-layer="storefront" data-nebras-deploy="hrws102">
+<body id="nebras-platform" class="platform-storefront" data-platform-layer="storefront" data-nebras-deploy="hrws103">
 
     <audio id="nebras-brand-intro-audio" class="nebras-brand-intro-audio" src="audio/nebras-welcome.mp3" preload="metadata" playsinline webkit-playsinline="true" hidden></audio>
 
@@ -335,6 +336,9 @@
                 </div>
             </div>
         </div>
+    </section>
+
+    <section class="nebras-product-promo-ticker" id="nebras-product-promo-ticker" hidden aria-label="عروض المنتجات المحدودة">
     </section>
 
     <section class="nebras-occasion-promo" id="nebras-occasion-promo" hidden role="button" tabindex="0" aria-label="المناسبة الحالية">
@@ -1502,6 +1506,7 @@
                 <button type="button" class="settings-tab" role="tab" data-tab="banks" onclick="switchSettingsTab('banks')"><i class="fas fa-university"></i> بنوك</button>
                 <button type="button" class="settings-tab" role="tab" data-tab="social" onclick="switchSettingsTab('social')"><i class="fas fa-share-alt"></i> سوشيال</button>
                 <button type="button" class="settings-tab" role="tab" data-tab="occasion" onclick="switchSettingsTab('occasion')"><i class="fas fa-wand-magic-sparkles"></i> احتفال</button>
+                <button type="button" class="settings-tab" role="tab" data-tab="promos" onclick="switchSettingsTab('promos')"><i class="fas fa-tags"></i> عروض</button>
             </nav>
             <div class="settings-body">
             <section class="settings-tab-panel active" data-settings-tab="contacts" id="settings-tab-contacts">
@@ -1628,6 +1633,14 @@
                 <input id="setting-occasion-msg-en" type="text" placeholder="Occasion description for visitors (English)">
                 <input id="setting-occasion-promo-discount" type="text" placeholder="سطر العرض المختصر تحت اسم المناسبة (مثال: خصم 15% على أبواب WPC)">
                 <div class="occasion-preview-strip" id="setting-occasion-preview" aria-hidden="true"></div>
+            </div>
+            </section>
+            <section class="settings-tab-panel" data-settings-tab="promos" id="settings-tab-promos">
+            <div class="product-promo-settings-block">
+                <h3 class="settings-panel-title"><i class="fas fa-tags"></i> شريط عروض المنتجات المتحرك</h3>
+                <p class="settings-panel-hint">الإدارة الرئيسية — خصم لمنتج معيّن بصوره · مدة محددة · يظهر للزوار على الموقع</p>
+                <label class="nebras-field"><span>أقصى خصم للمندوبين % (من القائمة)</span><input id="setting-quote-discount-min-pct" type="number" min="50" max="100" step="1" placeholder="70 = خصم حتى 30%"></label>
+                <div id="product-promo-campaigns-admin"></div>
             </div>
             </section>
             </div>
@@ -1996,29 +2009,29 @@
     <script src="js/nebras-profile-2026-seed.js" defer></script>
     <script src="js/nebras-profile-hub.js" defer></script>
     <script src="js/nebras-callback-concierge.js" defer></script>
-    <script src="js/nebras-secure-cloud.js?v=hrws102" defer></script>
-    <script src="js/nebras-storage-guard.js?v=hrws102" defer></script>
-    <script src="js/nebras-platform.js?v=hrws102" defer></script>
-    <script src="js/nebras-launch-health.js?v=hrws102" defer></script>
-    <script src="js/nebras-platform-integrity.js?v=hrws102" defer></script>
-    <script src="js/nebras-admin-ai.js?v=hrws102" defer></script>
+    <script src="js/nebras-secure-cloud.js?v=hrws103" defer></script>
+    <script src="js/nebras-storage-guard.js?v=hrws103" defer></script>
+    <script src="js/nebras-platform.js?v=hrws103" defer></script>
+    <script src="js/nebras-launch-health.js?v=hrws103" defer></script>
+    <script src="js/nebras-platform-integrity.js?v=hrws103" defer></script>
+    <script src="js/nebras-admin-ai.js?v=hrws103" defer></script>
     <script src="js/nebras-site-database.js?v=hrws77" defer></script>
     <script src="js/nebras-data-warehouse.js?v=hrws77" defer></script>
     <script src="js/nebras-empire-bridges.js?v=hrws77" defer></script>
     <script src="js/nebras-hr-hcm-suite.js?v=hrws77" defer></script>
-    <script src="js/nebras-hr-advances.js?v=hrws102" defer></script>
-    <script src="js/nebras-hr-violations.js?v=hrws102" defer></script>
+    <script src="js/nebras-hr-advances.js?v=hrws103" defer></script>
+    <script src="js/nebras-hr-violations.js?v=hrws103" defer></script>
     <script src="js/nebras-hr-gps-tracker.js?v=hrws77" defer></script>
-    <script src="js/nebras-hr-companies.js?v=hrws102" defer></script>
-    <script src="js/nebras-legal-platform.js?v=hrws102" defer></script>
-    <script src="js/nebras-legal-dispatch.js?v=hrws102" defer></script>
-    <script src="js/nebras-crm-platform.js?v=hrws102" defer></script>
+    <script src="js/nebras-hr-companies.js?v=hrws103" defer></script>
+    <script src="js/nebras-legal-platform.js?v=hrws103" defer></script>
+    <script src="js/nebras-legal-dispatch.js?v=hrws103" defer></script>
+    <script src="js/nebras-crm-platform.js?v=hrws103" defer></script>
     <script src="js/nebras-customer-portal.js?v=hrws77" defer></script>
     <script src="js/nebras-order-journey.js?v=hrws77" defer></script>
-    <script src="js/nebras-accounting-platform.js?v=hrws102" defer></script>
-    <script src="js/nebras-erp-command-center.js?v=hrws102" defer></script>
+    <script src="js/nebras-accounting-platform.js?v=hrws103" defer></script>
+    <script src="js/nebras-erp-command-center.js?v=hrws103" defer></script>
     <script src="js/nebras-empire-hub.js?v=hrws77" defer></script>
-    <script src="js/nebras-hr-platform.js?v=hrws102" defer></script>
+    <script src="js/nebras-hr-platform.js?v=hrws103" defer></script>
     <script src="js/nebras-hr-boot.js?v=hrws77" defer></script>
     <script src="js/nebras-media-admin.js" defer></script>
 

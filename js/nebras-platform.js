@@ -553,6 +553,8 @@
             occasionPromoDiscountAr: '',
             occasionPromoDiscountEn: '',
             occasionPromoDiscountZh: '',
+            quoteDiscountMinPct: 70,
+            productPromoCampaigns: [],
             platformTaglineAr: 'منصة رقمية محكومة — واجهة عالمية للمصنع ومركز قيادة داخلي بصلاحيات وأتمتة.',
             platformTaglineEn: 'Governed digital platform — global factory storefront and internal command center.',
             doorDesigner: null,
@@ -7204,6 +7206,7 @@
             applySiteLogoImages();
             applyOccasionTheme();
             renderOccasionPromoBar();
+            renderProductPromoTicker();
             refreshNebrasMiniShowcases();
             applyDynamicSectionContent(currentLang || 'ar');
             updateOfficialOrganizationSchema();
@@ -14182,6 +14185,72 @@
             return canManage('quotes') || canManage('aluminum') || isMainGovernanceAdmin();
         }
 
+        function canApplyQuoteManualDiscount(admin) {
+            admin = admin || currentAdmin;
+            if (!admin) return false;
+            if (isMainGovernanceAdmin(admin)) return true;
+            const role = String(admin.role || '').toLowerCase();
+            return role === 'sales_manager' || role === 'branch_manager' || canManage('quotes', admin);
+        }
+
+        function getQuotePriceFloor(it, admin) {
+            if (!it) return 0;
+            const base = erpNum(it.basePrice);
+            if (isMainGovernanceAdmin(admin)) return 0;
+            const minPct = Math.min(100, Math.max(50, erpNum(systemSettings.quoteDiscountMinPct) || 70));
+            if (canApplyQuoteManualDiscount(admin)) {
+                return base > 0 ? Math.round(base * minPct / 100) : 0;
+            }
+            return erpNum(it.minPrice);
+        }
+
+        function getQuotePriceCeiling(it) {
+            if (!it) return Infinity;
+            const base = erpNum(it.basePrice);
+            const max = erpNum(it.maxPrice);
+            return max > 0 ? max : (base > 0 ? Math.round(base * 1.25) : Infinity);
+        }
+
+        function syncRepQuotePriceFromItem() {
+            const id = fieldVal('rq-item');
+            const it = getEffectiveSalesPriceList(currentAdmin).find(function(x) { return x.id === id; });
+            const priceEl = document.getElementById('rq-price');
+            const hintEl = document.getElementById('rq-price-hint');
+            if (!priceEl) return;
+            if (!it) {
+                priceEl.value = '';
+                if (hintEl) hintEl.textContent = '';
+                return;
+            }
+            priceEl.value = String(erpNum(it.basePrice));
+            if (hintEl) {
+                const floor = getQuotePriceFloor(it, currentAdmin);
+                hintEl.textContent = 'القائمة: ' + formatSar(it.basePrice) +
+                    ' — سعر العرض للعميل فقط (لا يغيّر القائمة الرسمية). الحد الأدنى: ' + formatSar(floor);
+            }
+        }
+
+        function applyRepQuoteDiscountPct() {
+            const pct = erpNum(fieldVal('rq-discount-pct'));
+            const id = fieldVal('rq-item');
+            const it = getEffectiveSalesPriceList(currentAdmin).find(function(x) { return x.id === id; });
+            const priceEl = document.getElementById('rq-price');
+            if (!it || !priceEl || pct <= 0 || pct >= 100) return;
+            const discounted = Math.round(erpNum(it.basePrice) * (100 - pct) / 100);
+            const floor = getQuotePriceFloor(it, currentAdmin);
+            priceEl.value = String(Math.max(floor, discounted));
+        }
+
+        function wireRepQuoteBuilderInputs() {
+            const itemSel = document.getElementById('rq-item');
+            if (itemSel) {
+                itemSel.onchange = syncRepQuotePriceFromItem;
+                syncRepQuotePriceFromItem();
+            }
+            const discBtn = document.getElementById('rq-apply-discount-btn');
+            if (discBtn) discBtn.onclick = applyRepQuoteDiscountPct;
+        }
+
         function openAluminumQuoteBuilder() {
             if (!canManage('aluminum') && !isMainGovernanceAdmin()) {
                 alert('عروض الألومنيوم — لمدير قسم الألومنيوم أو الإدارة الرئيسية.');
@@ -14238,9 +14307,16 @@
             }).join('');
             const linesHtml = repQuoteDraft.lines.length
                 ? repQuoteDraft.lines.map(function(ln, i) {
+                    const listP = erpNum(ln.listPrice);
+                    const discPct = listP > 0 && erpNum(ln.price) < listP
+                        ? Math.round((1 - erpNum(ln.price) / listP) * 100) : 0;
+                    const discTag = discPct > 0
+                        ? ' <span class="rep-quote-line-discount">خصم ' + discPct + '%</span>' : '';
                     return '<article class="erp-row">' +
                         '<div class="erp-row-main"><strong>' + escapeHtmlAttr(ln.productAr) + '</strong>' +
-                            '<small>' + erpNum(ln.qty) + ' × ' + formatSar(ln.price) + '</small></div>' +
+                            '<small>' + erpNum(ln.qty) + ' × ' + formatSar(ln.price) +
+                            (listP > erpNum(ln.price) ? ' <s>' + formatSar(listP) + '</s>' : '') +
+                            discTag + '</small></div>' +
                         '<div class="erp-row-qty">' + formatSar(erpNum(ln.qty) * erpNum(ln.price)) + '</div>' +
                         '<button type="button" class="erp-row-del" onclick="removeRepQuoteLine(' + i + ')" aria-label="حذف"><i class="fas fa-trash"></i></button>' +
                     '</article>';
@@ -14254,6 +14330,7 @@
                     ? '<p class="wpc-quote-banner"><i class="fas fa-door-closed"></i> عرض سعر WPC — الأصناف والأسعار من مركز المنتجات (أبواب جاهزة وعضم)</p>'
                     : '');
             host.innerHTML = deptBanner +
+                '<p class="rep-quote-manual-hint"><i class="fas fa-pen"></i> اختاري الصنف من القائمة (لون · مقاس) — ثم عدّلي السعر يدوياً لخصم هذا العميل فقط دون تغيير القائمة الرسمية.</p>' +
                 '<div class="erp-form-grid">' +
                     '<label class="nebras-field"><span>اسم العميل</span><input type="text" id="rq-customer" value="' + escapeHtmlAttr(repQuoteDraft.customerName) + '" placeholder="اسم العميل"></label>' +
                     '<label class="nebras-field"><span>الجوال</span><input type="text" id="rq-phone" value="' + escapeHtmlAttr(repQuoteDraft.phone) + '" placeholder="05..."></label>' +
@@ -14261,8 +14338,12 @@
                 '<div class="erp-form-grid erp-form-grid--line">' +
                     '<label class="nebras-field nebras-field--wide"><span>الصنف من القائمة المعتمدة</span><select id="rq-item">' + (opts || '<option value="">لا أصناف</option>') + '</select></label>' +
                     '<label class="nebras-field"><span>الكمية</span><input type="number" id="rq-qty" min="1" step="1" value="1"></label>' +
-                    '<label class="nebras-field"><span>السعر</span><input type="number" id="rq-price" min="0" step="any" placeholder="تلقائي"></label>' +
-                    '<div class="erp-form-actions"><button type="button" class="nebras-users-btn" onclick="addRepQuoteLine()"><i class="fas fa-plus"></i> إضافة صنف</button></div>' +
+                    '<label class="nebras-field"><span>السعر (يدوي)</span><input type="number" id="rq-price" min="0" step="any" placeholder="سعر القائمة"><small class="rep-quote-price-hint" id="rq-price-hint"></small></label>' +
+                    '<label class="nebras-field"><span>خصم % سريع</span><input type="number" id="rq-discount-pct" min="1" max="99" step="1" placeholder="مثال: 15"></label>' +
+                    '<div class="erp-form-actions">' +
+                        '<button type="button" class="nebras-users-btn" id="rq-apply-discount-btn"><i class="fas fa-percent"></i> تطبيق الخصم</button>' +
+                        '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="addRepQuoteLine()"><i class="fas fa-plus"></i> إضافة صنف</button>' +
+                    '</div>' +
                 '</div>' +
                 '<div class="erp-quote-lines">' + linesHtml + '</div>' +
                 '<div class="erp-quote-totals">' +
@@ -14279,6 +14360,7 @@
                     '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="saveRepQuote()"><i class="fas fa-floppy-disk"></i> حفظ وإرسال للمبيعات</button>' +
                 '</div>' +
                 (typeof renderRepMyQuotesSection === 'function' ? renderRepMyQuotesSection() : '');
+            wireRepQuoteBuilderInputs();
         }
 
         function captureRepQuoteHeader() {
@@ -14293,10 +14375,27 @@
             const it = getEffectiveSalesPriceList(currentAdmin).find(function(x) { return x.id === id; });
             if (!it) { alert('اختر صنفاً من القائمة.'); return; }
             const qty = Math.max(1, erpNum(fieldVal('rq-qty')) || 1);
-            let price = erpNum(fieldVal('rq-price')) || it.basePrice;
-            if (price < it.minPrice) { alert('السعر أقل من الحد الأدنى المسموح (' + formatSar(it.minPrice) + ').'); return; }
-            if (price > it.maxPrice) { alert('السعر أعلى من الحد الأقصى المسموح (' + formatSar(it.maxPrice) + ').'); return; }
-            repQuoteDraft.lines.push({ priceItemId: it.id, productAr: it.productAr + ' ' + (it.color || '') + ' ' + (it.size || ''), qty: qty, price: price });
+            const listPrice = erpNum(it.basePrice);
+            let price = erpNum(fieldVal('rq-price'));
+            if (!price) price = listPrice;
+            const floor = getQuotePriceFloor(it, currentAdmin);
+            const ceiling = getQuotePriceCeiling(it);
+            if (price < floor) {
+                alert('السعر أقل من الحد المسموح (' + formatSar(floor) + ').');
+                return;
+            }
+            if (price > ceiling) {
+                alert('السعر أعلى من الحد المسموح (' + formatSar(ceiling) + ').');
+                return;
+            }
+            repQuoteDraft.lines.push({
+                priceItemId: it.id,
+                productAr: it.productAr + ' ' + (it.color || '') + ' ' + (it.size || ''),
+                qty: qty,
+                price: price,
+                listPrice: listPrice,
+                manualOverride: price !== listPrice
+            });
             renderRepQuoteBuilder();
         }
 
@@ -17710,6 +17809,207 @@
                     }
                 });
             }
+        }
+
+        function ensureProductPromoCampaigns() {
+            if (!systemSettings || typeof systemSettings !== 'object') return;
+            if (!Array.isArray(systemSettings.productPromoCampaigns)) {
+                systemSettings.productPromoCampaigns = [];
+            }
+        }
+
+        function getActiveProductPromoCampaigns() {
+            ensureProductPromoCampaigns();
+            const today = new Date().toISOString().slice(0, 10);
+            return (systemSettings.productPromoCampaigns || []).filter(function(c) {
+                if (!c || c.enabled === false) return false;
+                if (c.startDate && String(c.startDate) > today) return false;
+                if (c.endDate && String(c.endDate) < today) return false;
+                return (c.productIds && c.productIds.length) || String(c.labelAr || c.labelEn || '').trim();
+            });
+        }
+
+        function getProductPromoThumbUrl(productId) {
+            const p = (siteProducts || []).find(function(x) { return x && x.id === productId; });
+            if (!p) return '';
+            const v = (p.variants || [])[0];
+            const raw = (v && (v.image || v.cloudUrl)) || (p.album && p.album[0]) || p.backgroundImage || '';
+            return raw ? normalizeMediaPath(raw) : '';
+        }
+
+        function openProductPromoTarget(productId) {
+            if (!productId) {
+                openNebrasWorkspace({ pillar: 'store', view: 'catalog-all' });
+                return;
+            }
+            openNebrasWorkspace({ pillar: 'store', view: 'catalog-all', productId: productId });
+        }
+
+        function renderProductPromoTicker() {
+            const wrap = document.getElementById('nebras-product-promo-ticker');
+            if (!wrap) return;
+            const campaigns = getActiveProductPromoCampaigns();
+            const lang = currentLang || 'ar';
+            if (!campaigns.length) {
+                wrap.hidden = true;
+                wrap.innerHTML = '';
+                return;
+            }
+            let itemsHtml = '';
+            campaigns.forEach(function(c) {
+                const pct = erpNum(c.discountPercent);
+                const label = lang === 'en' ? (c.labelEn || c.labelAr) : (c.labelAr || c.labelEn);
+                const ids = (c.productIds && c.productIds.length) ? c.productIds : [''];
+                ids.forEach(function(pid) {
+                    const img = String(c.imageUrl || '').trim() || (pid ? getProductPromoThumbUrl(pid) : '');
+                    const p = pid ? (siteProducts || []).find(function(x) { return x && x.id === pid; }) : null;
+                    const title = p ? (lang === 'en' ? (p.titleEn || p.titleAr) : p.titleAr) : '';
+                    itemsHtml += '<button type="button" class="nebras-promo-ticker-item" data-product-id="' + escapeHtmlAttr(pid || '') + '">' +
+                        (img ? '<span class="nebras-promo-ticker-thumb" style="background-image:url(\'' + escapeHtmlAttr(img) + '\')"></span>' : '') +
+                        '<span class="nebras-promo-ticker-text">' +
+                        (title ? '<strong>' + escapeHtmlAttr(title) + '</strong> ' : '') +
+                        (pct > 0 ? '<em>-' + pct + '%</em> ' : '') +
+                        escapeHtmlAttr(label || '') +
+                        '</span></button>';
+                });
+            });
+            if (!itemsHtml) {
+                wrap.hidden = true;
+                wrap.innerHTML = '';
+                return;
+            }
+            const endDate = campaigns[0].endDate || '';
+            const countdown = endDate
+                ? '<span class="nebras-promo-ticker-countdown"><i class="fas fa-clock"></i> ' +
+                    (lang === 'en' ? 'Until ' : 'حتى ') + endDate + '</span>' : '';
+            wrap.hidden = false;
+            wrap.innerHTML = '<div class="nebras-promo-ticker-shell">' +
+                '<div class="nebras-promo-ticker-badge"><i class="fas fa-bolt"></i> ' +
+                    (lang === 'en' ? 'Limited offer' : 'عرض محدود') + '</div>' +
+                '<div class="nebras-promo-ticker-viewport"><div class="nebras-promo-ticker-track">' +
+                    itemsHtml + itemsHtml +
+                '</div></div>' + countdown + '</div>';
+            wrap.querySelectorAll('.nebras-promo-ticker-item').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    openProductPromoTarget(btn.getAttribute('data-product-id') || '');
+                });
+            });
+        }
+
+        let productPromoEditId = null;
+
+        function renderProductPromoCampaignsAdmin() {
+            const host = document.getElementById('product-promo-campaigns-admin');
+            if (!host) return;
+            if (!isMainGovernanceAdmin(currentAdmin)) {
+                host.innerHTML = '<p class="status">شريط العروض — الإدارة الرئيسية فقط.</p>';
+                return;
+            }
+            ensureProductPromoCampaigns();
+            syncSalesPriceListFromProductMaster();
+            const productOpts = (siteProducts || []).filter(function(p) { return p && p.visible !== false; }).map(function(p) {
+                const sel = productPromoEditId && (systemSettings.productPromoCampaigns || []).find(function(c) { return c.id === productPromoEditId; });
+                const picked = sel && sel.productIds && sel.productIds.indexOf(p.id) >= 0;
+                return '<option value="' + escapeHtmlAttr(p.id) + '"' + (picked ? ' selected' : '') + '>' +
+                    escapeHtmlAttr(p.titleAr || p.id) + '</option>';
+            }).join('');
+            const edit = productPromoEditId
+                ? (systemSettings.productPromoCampaigns || []).find(function(c) { return c.id === productPromoEditId; })
+                : null;
+            const listHtml = (systemSettings.productPromoCampaigns || []).map(function(c) {
+                const active = getActiveProductPromoCampaigns().some(function(a) { return a.id === c.id; });
+                const status = active ? 'نشط الآن' : (c.enabled === false ? 'معطّل' : 'مجدول/منتهي');
+                const prods = (c.productIds || []).map(function(pid) {
+                    const p = (siteProducts || []).find(function(x) { return x && x.id === pid; });
+                    return p ? (p.titleAr || pid) : pid;
+                }).join(' · ');
+                return '<article class="product-promo-admin-card">' +
+                    '<strong>' + escapeHtmlAttr(c.labelAr || c.labelEn || 'عرض') + '</strong>' +
+                    ' — خصم ' + erpNum(c.discountPercent) + '% · ' + escapeHtmlAttr(status) + '<br>' +
+                    '<small>' + escapeHtmlAttr(prods) + ' · ' + escapeHtmlAttr(c.startDate || '') + ' → ' + escapeHtmlAttr(c.endDate || '') + '</small>' +
+                    '<div class="erp-form-actions" style="margin-top:8px">' +
+                        '<button type="button" class="nebras-users-btn" onclick="editProductPromoCampaign(\'' + escapeHtmlAttr(c.id) + '\')"><i class="fas fa-pen"></i> تعديل</button>' +
+                        '<button type="button" class="nebras-users-btn" onclick="deleteProductPromoCampaign(\'' + escapeHtmlAttr(c.id) + '\')"><i class="fas fa-trash"></i> حذف</button>' +
+                    '</div></article>';
+            }).join('') || '<p class="erp-empty">لا عروض منتجات بعد — أضيفي عرضاً جديداً.</p>';
+            host.innerHTML = '<div class="product-promo-admin-list">' + listHtml + '</div>' +
+                '<h4 class="nebras-erp-subhead"><i class="fas fa-plus-circle"></i> ' + (edit ? 'تعديل العرض' : 'عرض جديد') + '</h4>' +
+                '<div class="settings-form-grid">' +
+                    '<label class="nebras-field nebras-field--wide"><span>المنتجات (اختيار متعدد Ctrl)</span>' +
+                        '<select id="ppc-products" multiple size="5">' + productOpts + '</select></label>' +
+                    '<label class="nebras-field"><span>نسبة الخصم %</span><input type="number" id="ppc-discount" min="1" max="90" value="' + (edit ? erpNum(edit.discountPercent) : 15) + '"></label>' +
+                    '<label class="nebras-field"><span>بداية العرض</span><input type="date" id="ppc-start" value="' + escapeHtmlAttr(edit && edit.startDate || '') + '"></label>' +
+                    '<label class="nebras-field"><span>نهاية العرض</span><input type="date" id="ppc-end" value="' + escapeHtmlAttr(edit && edit.endDate || '') + '"></label>' +
+                    '<label class="nebras-field nebras-field--wide"><span>نص العرض (عربي)</span><input type="text" id="ppc-label-ar" value="' + escapeHtmlAttr(edit && edit.labelAr || '') + '" placeholder="خصم خاص — لفترة محدودة"></label>' +
+                    '<label class="nebras-field nebras-field--wide"><span>Offer text (English)</span><input type="text" id="ppc-label-en" value="' + escapeHtmlAttr(edit && edit.labelEn || '') + '"></label>' +
+                    '<label class="nebras-field nebras-field--wide"><span>صورة مخصصة (اختياري)</span><input type="text" id="ppc-image" value="' + escapeHtmlAttr(edit && edit.imageUrl || '') + '" placeholder="رابط أو ارفعي من الوسائط"></label>' +
+                    '<label class="occasion-check"><input type="checkbox" id="ppc-enabled"' + (!edit || edit.enabled !== false ? ' checked' : '') + '> <span>تفعيل العرض</span></label>' +
+                '</div>' +
+                '<div class="erp-form-actions">' +
+                    '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="saveProductPromoCampaign()"><i class="fas fa-save"></i> حفظ العرض</button>' +
+                    (edit ? '<button type="button" class="nebras-users-btn" onclick="cancelProductPromoEdit()"><i class="fas fa-xmark"></i> إلغاء</button>' : '') +
+                '</div>';
+        }
+
+        function editProductPromoCampaign(id) {
+            productPromoEditId = id;
+            renderProductPromoCampaignsAdmin();
+        }
+
+        function cancelProductPromoEdit() {
+            productPromoEditId = null;
+            renderProductPromoCampaignsAdmin();
+        }
+
+        function saveProductPromoCampaign() {
+            if (!isMainGovernanceAdmin(currentAdmin)) return;
+            ensureProductPromoCampaigns();
+            const sel = document.getElementById('ppc-products');
+            const productIds = sel ? Array.from(sel.selectedOptions).map(function(o) { return o.value; }).filter(Boolean) : [];
+            if (!productIds.length) { alert('اختاري منتجاً واحداً على الأقل.'); return; }
+            const startDate = fieldVal('ppc-start');
+            const endDate = fieldVal('ppc-end');
+            if (startDate && endDate && startDate > endDate) {
+                alert('تاريخ النهاية يجب أن يكون بعد البداية.');
+                return;
+            }
+            const row = {
+                id: productPromoEditId || ('ppc-' + Date.now()),
+                enabled: !!(document.getElementById('ppc-enabled') && document.getElementById('ppc-enabled').checked),
+                productIds: productIds,
+                discountPercent: erpNum(fieldVal('ppc-discount')) || 0,
+                startDate: startDate,
+                endDate: endDate,
+                labelAr: fieldVal('ppc-label-ar'),
+                labelEn: fieldVal('ppc-label-en'),
+                imageUrl: fieldVal('ppc-image')
+            };
+            const list = systemSettings.productPromoCampaigns || [];
+            const idx = list.findIndex(function(c) { return c.id === row.id; });
+            if (idx >= 0) list[idx] = row;
+            else list.unshift(row);
+            systemSettings.productPromoCampaigns = list;
+            productPromoEditId = null;
+            saveSystemData({ urgentCloud: true, showCloudToast: true });
+            renderProductPromoCampaignsAdmin();
+            renderProductPromoTicker();
+            addAuditLog('عرض منتج', (row.labelAr || row.labelEn || 'عرض') + ' — ' + productIds.length + ' منتج');
+            if (typeof showNebrasAdminToast === 'function') {
+                showNebrasAdminToast('تم حفظ عرض المنتج في السحابة', 'ok');
+            }
+        }
+
+        function deleteProductPromoCampaign(id) {
+            if (!isMainGovernanceAdmin(currentAdmin)) return;
+            if (!confirm('حذف هذا العرض من الشريط المتحرك؟')) return;
+            ensureProductPromoCampaigns();
+            systemSettings.productPromoCampaigns = (systemSettings.productPromoCampaigns || []).filter(function(c) {
+                return c.id !== id;
+            });
+            if (productPromoEditId === id) productPromoEditId = null;
+            saveSystemData({ urgentCloud: true, showCloudToast: true });
+            renderProductPromoCampaignsAdmin();
+            renderProductPromoTicker();
         }
 
         function getOccasionDecorationMix(preset) {
@@ -21259,6 +21559,7 @@
             updateOccasionPreviewStrip('dashboard-occasion-preview', themeId);
             renderDashboardOccasionStatus();
             renderOccasionPromoBar();
+            renderProductPromoTicker();
             applyHeroBanner();
         }
 
@@ -21460,6 +21761,9 @@
             if (occCustomEn) occCustomEn.value = systemSettings.occasionCustomLabelEn || '';
             const occPromo = document.getElementById('setting-occasion-promo-discount');
             if (occPromo) occPromo.value = systemSettings.occasionPromoDiscountAr || systemSettings.occasionPromoDiscountEn || '';
+            const quoteDiscMin = document.getElementById('setting-quote-discount-min-pct');
+            if (quoteDiscMin) quoteDiscMin.value = String(systemSettings.quoteDiscountMinPct != null ? systemSettings.quoteDiscountMinPct : 70);
+            if (typeof renderProductPromoCampaignsAdmin === 'function') renderProductPromoCampaignsAdmin();
             applyOccasionTheme();
         }
 
@@ -21587,6 +21891,11 @@
                 systemSettings.occasionPromoDiscountEn = promoText;
                 systemSettings.occasionPromoDiscountZh = promoText;
             }
+            const quoteDiscMinEl = document.getElementById('setting-quote-discount-min-pct');
+            if (quoteDiscMinEl) {
+                systemSettings.quoteDiscountMinPct = Math.min(100, Math.max(50, erpNum(quoteDiscMinEl.value) || 70));
+            }
+            ensureProductPromoCampaigns();
             if (systemSettings.occasionStartDate && systemSettings.occasionEndDate) {
                 const s = parseLocalDateOnly(systemSettings.occasionStartDate);
                 const e = parseLocalDateOnly(systemSettings.occasionEndDate);
@@ -21952,7 +22261,7 @@
         function exportNebrasGovernanceBundle() {
             if (!requireMainGovernanceAdmin('تصدير بيانات الموقع — الإدارة الرئيسية فقط.')) return;
             const bundle = {
-                version: 'hrws102',
+                version: 'hrws103',
                 codename: 'NebrasGovernanceBundle',
                 exportedAt: new Date().toISOString(),
                 storeCount: NEBRAS_CLOUD_STORE_SPECS.length,
@@ -27733,6 +28042,12 @@
         window.openBranchCommandCenter = openBranchCommandCenter;
         window.openBranchGovernanceUser = openBranchGovernanceUser;
         window.addRepQuoteLine = addRepQuoteLine;
+        window.syncRepQuotePriceFromItem = syncRepQuotePriceFromItem;
+        window.applyRepQuoteDiscountPct = applyRepQuoteDiscountPct;
+        window.saveProductPromoCampaign = saveProductPromoCampaign;
+        window.editProductPromoCampaign = editProductPromoCampaign;
+        window.cancelProductPromoEdit = cancelProductPromoEdit;
+        window.deleteProductPromoCampaign = deleteProductPromoCampaign;
         window.removeRepQuoteLine = removeRepQuoteLine;
         window.saveRepQuote = saveRepQuote;
         window.openErpOrders = openErpOrders;
