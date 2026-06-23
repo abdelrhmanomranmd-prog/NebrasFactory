@@ -157,6 +157,10 @@ module.exports = async function handler(req, res) {
         if (!sess) return sec.jsonRes(res, 403, { ok: false, error: 'main_admin_only' });
 
         const body = sec.parseBody(req);
+        const rawLen = Number(req.headers['content-length'] || 0);
+        if (rawLen > 4500000) {
+            return sec.jsonRes(res, 413, { ok: false, error: 'payload_too_large', detail: 'request_too_large' });
+        }
         const prompt = String(body.prompt || '').trim();
         const context = String(body.context || '').trim().slice(0, 4000);
         const mode = String(body.mode || 'governance').toLowerCase();

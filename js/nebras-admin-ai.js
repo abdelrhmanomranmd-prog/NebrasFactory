@@ -6,6 +6,9 @@
     'use strict';
 
     const CHAT_KEY = 'nebrasAdminAiChat';
+    const AI_MAX_IMAGES = 4;
+    const AI_MAX_IMAGE_BYTES = 380000;
+    const AI_MAX_TOTAL_BYTES = 3400000;
     let aiMode = 'governance';
     let aiChatHistory = [];
     let aiSending = false;
@@ -103,15 +106,101 @@
         };
     }
 
+    async function compressImageBlobForAi(blob) {
+        if (!blob || !blob.type || blob.type.indexOf('image/') !== 0) return null;
+        try {
+            const url = URL.createObjectURL(blob);
+            const img = await new Promise(function(resolve, reject) {
+                const el = new Image();
+                el.onload = function() { resolve(el); };
+                el.onerror = reject;
+                el.src = url;
+            });
+            const maxW = 1280;
+            const maxH = 1280;
+            let w = img.naturalWidth || img.width || maxW;
+            let h = img.naturalHeight || img.height || maxH;
+            const scale = Math.min(1, maxW / w, maxH / h);
+            w = Math.max(1, Math.round(w * scale));
+            h = Math.max(1, Math.round(h * scale));
+            const canvas = document.createElement('canvas');
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, w, h);
+            URL.revokeObjectURL(url);
+            let quality = 0.86;
+            let dataUrl = canvas.toDataURL('image/jpeg', quality);
+            while (dataUrl.length > AI_MAX_IMAGE_BYTES * 1.37 && quality > 0.4) {
+                quality -= 0.08;
+                dataUrl = canvas.toDataURL('image/jpeg', quality);
+            }
+            return dataUrl;
+        } catch (e) {
+            return null;
+        }
+    }
+
+    async function fileToAiDataUrl(file) {
+        if (!file) return null;
+        const compressed = await compressImageBlobForAi(file);
+        if (compressed) return compressed;
+        return await new Promise(function(resolve) {
+            const reader = new FileReader();
+            reader.onload = function() { resolve(reader.result || null); };
+            reader.onerror = function() { resolve(null); };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    async function parseAiApiResponse(res) {
+        const text = await res.text();
+        if (!text || !text.trim()) {
+            return { ok: false, error: res.status === 413 ? 'payload_too_large' : 'empty_response', status: res.status };
+        }
+        try {
+            const data = JSON.parse(text);
+            if (!res.ok && data && !data.error) data.error = 'http_' + res.status;
+            return data;
+        } catch (e) {
+            const lower = text.toLowerCase();
+            if (res.status === 413 || lower.indexOf('payload_too_large') >= 0 || lower.indexOf('entity too large') >= 0) {
+                return { ok: false, error: 'payload_too_large', detail: text.slice(0, 160), status: res.status };
+            }
+            if (lower.indexOf('an error occurred') >= 0 || lower.indexOf('function_invocation') >= 0) {
+                return { ok: false, error: 'server_crash', detail: text.slice(0, 160), status: res.status };
+            }
+            return { ok: false, error: 'invalid_json_response', detail: text.slice(0, 160), status: res.status };
+        }
+    }
+
     async function urlToBase64ForAi(url) {
         if (!url) return null;
         if (String(url).indexOf('data:') === 0) {
             const m = String(url).match(/^data:([^;]+);base64,(.+)$/);
-            return m ? { media_type: m[1], data: m[2] } : null;
+            if (!m) return null;
+            if (m[2].length <= AI_MAX_IMAGE_BYTES) {
+                return { media_type: m[1].indexOf('png') >= 0 ? 'image/jpeg' : m[1], data: m[2] };
+            }
+            try {
+                const res = await fetch(url);
+                const blob = await res.blob();
+                const compressed = await compressImageBlobForAi(blob);
+                if (!compressed) return { media_type: m[1], data: m[2].slice(0, AI_MAX_IMAGE_BYTES) };
+                const cm = compressed.match(/^data:([^;]+);base64,(.+)$/);
+                return cm ? { media_type: 'image/jpeg', data: cm[2] } : null;
+            } catch (e) {
+                return { media_type: 'image/jpeg', data: m[2].slice(0, AI_MAX_IMAGE_BYTES) };
+            }
         }
         try {
             const res = await fetch(url);
             const blob = await res.blob();
+            const compressed = await compressImageBlobForAi(blob);
+            if (compressed) {
+                const m = compressed.match(/^data:([^;]+);base64,(.+)$/);
+                return m ? { media_type: 'image/jpeg', data: m[2] } : null;
+            }
             return await new Promise(function(resolve) {
                 const reader = new FileReader();
                 reader.onload = function() {
@@ -138,21 +227,26 @@
         }
         const token = typeof global.getNebrasSecureToken === 'function' ? global.getNebrasSecureToken() : '';
         if (!token) return { ok: false, error: 'login_required' };
+        const payload = {
+            prompt: prompt,
+            context: buildAiContext(),
+            mode: mode || aiMode,
+            history: history || [],
+            images: images || []
+        };
+        const bodyStr = JSON.stringify(payload);
+        if (bodyStr.length > AI_MAX_TOTAL_BYTES) {
+            return { ok: false, error: 'payload_too_large' };
+        }
         const res = await fetch(apiBase() + '/api/nebras-ai', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 Authorization: 'Bearer ' + token
             },
-            body: JSON.stringify({
-                prompt: prompt,
-                context: buildAiContext(),
-                mode: mode || aiMode,
-                history: history || [],
-                images: images || []
-            })
+            body: bodyStr
         });
-        return res.json();
+        return parseAiApiResponse(res);
     }
 
     function tryApplyProductSuggestion(text) {
@@ -302,21 +396,22 @@
         for (let i = 0; i < files.length; i++) {
             const file = files[i];
             if (!file || !file.type || file.type.indexOf('image/') !== 0) continue;
-            if (aiPendingAttachments.length >= 4) {
-                alert('الحد الأقصى 4 صور في الرسالة الواحدة.');
+            if (aiPendingAttachments.length >= AI_MAX_IMAGES) {
+                alert('الحد الأقصى ' + AI_MAX_IMAGES + ' صور في الرسالة الواحدة.');
                 break;
             }
             let url = null;
             if (uploadFn) {
                 url = await uploadFn(file);
+                if (url) {
+                    const b64 = await urlToBase64ForAi(url);
+                    if (b64 && b64.data) {
+                        url = 'data:image/jpeg;base64,' + b64.data;
+                    }
+                }
             }
             if (!url) {
-                const reader = new FileReader();
-                url = await new Promise(function(resolve) {
-                    reader.onload = function() { resolve(reader.result || null); };
-                    reader.onerror = function() { resolve(null); };
-                    reader.readAsDataURL(file);
-                });
+                url = await fileToAiDataUrl(file);
             }
             if (url) {
                 aiPendingAttachments.push({ url: url, name: file.name || 'صورة' });
@@ -397,7 +492,16 @@
                 if (status) status.textContent = 'انتظري قليلاً';
             } else if (data.error === 'ai_upstream_failed') {
                 reply = 'تعذّر الاتصال بـ Claude — تأكدي من المفتاح والموديل في Vercel ثم أعيدي النشر.';
+                if (data.detail && String(data.detail).toLowerCase().indexOf('image') >= 0) {
+                    reply = 'الصورة كبيرة أو غير مدعومة — استخدمي صورة أصغر (أقل من 1 ميجا) ثم أعيدي الإرسال.';
+                }
                 if (status) status.textContent = 'فشل Claude';
+            } else if (data.error === 'payload_too_large') {
+                reply = 'حجم الرسالة كبير جداً (صور كثيرة أو ضخمة). احذفي بعض الصور أو استخدمي صوراً أصغر ثم أعيدي الإرسال.';
+                if (status) status.textContent = 'حجم كبير';
+            } else if (data.error === 'server_crash' || data.error === 'invalid_json_response') {
+                reply = 'الخادم أعاد خطأ غير متوقع — انتظري 30 ثانية ثم أعيدي الإرسال. إن تكرّر: أعيدي تحميل الصفحة (Ctrl+Shift+R).';
+                if (status) status.textContent = 'خطأ خادم';
             } else {
                 reply = 'تعذّر الاتصال: ' + (data.error || 'خطأ');
                 if (status) status.textContent = 'فشل';
@@ -407,7 +511,12 @@
             renderAiChatMessages();
             if (tryApplyProductSuggestion(reply)) renderAiChatMessages();
         } catch (e) {
-            aiChatHistory.push({ role: 'assistant', content: 'خطأ شبكة: ' + e.message, at: Date.now() });
+            const msg = String(e && e.message || e || '');
+            let reply = 'تعذّر الإرسال — تحققي من الاتصال وأعيدي المحاولة.';
+            if (msg.indexOf('JSON') >= 0 || msg.indexOf('token') >= 0) {
+                reply = 'استجابة الخادم غير صالحة — غالباً بسبب صورة كبيرة. صغّري الصورة أو أرسلي نصاً فقط ثم أعيدي المحاولة.';
+            }
+            aiChatHistory.push({ role: 'assistant', content: reply, at: Date.now() });
             saveAiChat();
             renderAiChatMessages();
             if (status) status.textContent = 'فشل';
