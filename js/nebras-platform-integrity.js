@@ -65,6 +65,8 @@
             });
             if (hasData) markGovernanceRevision();
         } catch (e) { /* ignore */ }
+    }
+
     function markGovernanceBootstrapRevision() {
         try {
             if (!localStorage.getItem(GOV_REVISION_KEY)) {

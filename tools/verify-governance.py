@@ -19,6 +19,16 @@ PLATFORM_JS_FILES = (
     'js/nebras-hr-boot.js',
     'js/nebras-hr-hcm-suite.js',
     'js/nebras-customer-portal.js',
+    'js/nebras-order-journey.js',
+    'js/nebras-erp-command-center.js',
+    'js/nebras-admin-ai.js',
+    'js/nebras-data-warehouse.js',
+    'js/nebras-empire-bridges.js',
+    'js/nebras-platform-integrity.js',
+    'js/nebras-secure-cloud.js',
+    'js/nebras-storage-guard.js',
+    'js/nebras-launch-health.js',
+    'js/nebras-site-database.js',
 )
 ERRORS = []
 WARNINGS = []

@@ -2506,7 +2506,10 @@
             openPartnersAdmin: function() { openSiteContentManager(); switchScmTab('partners'); },
             openShowroomAdmin: function() { openSiteContentManager(); switchScmTab('showroom'); },
             erpFinanceStub: function() {
-                alert('وحدة المالية ERP — مرحلة قادمة (محاسبة وتكاليف إنتاج).');
+                if (typeof window.openAccountingPlatform === 'function') {
+                    return window.openAccountingPlatform();
+                }
+                alert('تعذّر فتح قسم الحسابات — أعيدي تحميل الصفحة.');
             },
             openAdminAnalytics: function() { openAdminAnalytics(); },
             openCompanyProfileHub: function() {
