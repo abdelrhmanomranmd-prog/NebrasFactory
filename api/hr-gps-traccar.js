@@ -1,10 +1,19 @@
 /**
- * بروكسي Traccar — جلب آخر مواقع أجهزة GPS (IMEI) لتجنب CORS من المتصفح
+ * بروكسي Traccar — جلب آخر مواقع أجهزة GPS (IMEI) — يتطلب جلسة HR أو الإدارة
  */
+const sec = require('./lib/nebras-security');
+
+function hrSessionAllowed(sess) {
+    if (!sess) return false;
+    if (sec.isHqSession(sess)) return true;
+    const role = String(sess.role || '');
+    return role === 'hr' || role === 'hr_manager' || role === 'hr_admin';
+}
+
 module.exports = async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     if (req.method === 'OPTIONS') {
         res.status(204).end();
         return;
@@ -13,8 +22,13 @@ module.exports = async function handler(req, res) {
         res.status(405).json({ error: 'POST only' });
         return;
     }
+    const sess = sec.verifySession(sec.getBearerToken(req));
+    if (!hrSessionAllowed(sess)) {
+        res.status(401).json({ error: 'unauthorized', positions: [] });
+        return;
+    }
     try {
-        const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+        const body = sec.parseBody(req);
         const base = String(body.traccarUrl || '').replace(/\/$/, '');
         const user = String(body.traccarUser || '');
         const pass = String(body.traccarPass || '');

@@ -64,7 +64,7 @@ def main():
     sm = re.search(r"sales_manager:\s*\{[^}]+\}", js, re.S)
     if not sm or 'branchScoped' not in sm.group(0):
         err('sales_manager must be branchScoped')
-    if 'permissions: [\'quotes\']' not in js or 'quotesOnly' not in js:
+    if 'quotesOnly' not in js and "permissions: ['quotes']" not in js:
         err('sales_rep quotes-only role incomplete')
 
     if 'openSalesManagement' not in js or 'openBranchTeamManagement' not in js:

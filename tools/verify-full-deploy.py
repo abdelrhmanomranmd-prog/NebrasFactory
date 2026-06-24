@@ -33,7 +33,7 @@ LIVE_MARKERS = {
         'nebras-secure-cloud.js',
         '48-order-journey.css',
         'nebras-order-journey.js',
-        'data-nebras-deploy="hrws106"',
+        'data-nebras-deploy="hrws111"',
         'nebras-site-database.js',
         'exportNebrasGovernanceBundle', 'openNebrasGovernanceImportPicker',
         'nebras-data-warehouse.js',
@@ -59,7 +59,7 @@ LIVE_MARKERS = {
         'syncPlatformInteractionLayers', 'revealPlatformLayer', 'NEBRAS_PLATFORM_LAYER_SEL',
         'dash-order-journey', 'openRepCustomerJourneys', 'updateNebrasErpOrderFromJourney',
         'dash-store-catalog', 'openStoreCatalogManager', 'store_manager', 'storeCatalog',
-        'startNebrasCloudAutoSync',
+        'startNebrasCloudAutoSync', 'persistNebrasCriticalStores', 'window.flushPushToNebrasCloud',
         'assignedRepId', 'assignedRepUsername', 'getNebrasColorCatalog',
         'saveCartBackup', 'restoreCartBackupIfEmpty', 'renderCartEnterpriseChrome', 'quote-a4-customer-ribbon',
         'dash-platform-integration', 'openPlatformIntegrationHub', 'guardCloudPushRow',
@@ -69,7 +69,7 @@ LIVE_MARKERS = {
         'NEBRAS_SENSITIVE_STORE_KEYS', 'secureApiLogin', 'secureCloudPull', 'secureCloudPush',
         'establishNebrasSecureSession', 'clearNebrasSecureSession',
     ],
-    'api/nebras-auth.js': ['handleLogin', 'handleVerify', 'signSession'],
+    'api/nebras-auth.js': ['handleLogin', 'handleVerify', 'signSession', 'checkRateLimit'],
     'api/nebras-cloud.js': ['handlePull', 'handlePush', 'requireSession'],
     'js/nebras-data-warehouse.js': [
         'openNebrasDataWarehouse', 'exportSalesQuotesCsv', 'exportCrmCustomersCsv', 'exportEmpireSummaryPdf',
@@ -152,6 +152,19 @@ def live_check():
     results = []
     all_ok = True
     for rel, markers in LIVE_MARKERS.items():
+        if rel.startswith('api/'):
+            path = os.path.join(ROOT, rel.replace('/', os.sep))
+            if not os.path.isfile(path):
+                all_ok = False
+                results.append((rel, False, ['file missing locally']))
+                continue
+            with open(path, encoding='utf-8') as f:
+                body = f.read()
+            miss = [m for m in markers if m not in body]
+            ok = not miss
+            all_ok = all_ok and ok
+            results.append((rel, ok, miss))
+            continue
         url = LIVE + '/' + rel
         req = urllib.request.Request(url, headers={'User-Agent': 'NebrasVerify'})
         with urllib.request.urlopen(req, timeout=25) as r:

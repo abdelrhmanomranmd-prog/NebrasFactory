@@ -1,4 +1,5 @@
 const sec = require('./lib/nebras-security');
+const rate = require('./lib/nebras-rate-limit');
 
 async function handleLogin(body) {
     const username = String(body.username || '').trim();
@@ -72,6 +73,11 @@ module.exports = async function handler(req, res) {
         const action = String(req.query.action || body.action || 'login').toLowerCase();
 
         if (action === 'login' && req.method === 'POST') {
+            const rl = rate.checkRateLimit(req, { key: 'auth_login', max: 20, windowMs: 300000 });
+            if (!rl.ok) {
+                const blocked = rate.rateLimitResponse(res, rl.retryAfterSec);
+                return sec.jsonRes(res, blocked.code, blocked.data);
+            }
             const result = await handleLogin(body);
             return sec.jsonRes(res, result.code, result.data);
         }

@@ -1,4 +1,5 @@
 const sec = require('./lib/nebras-security');
+const rate = require('./lib/nebras-rate-limit');
 
 const ALLOWED_TYPES = ['complaint', 'callback_lead'];
 const MAX_CALLBACK_LEADS = 5000;
@@ -99,6 +100,12 @@ module.exports = async function handler(req, res) {
         }
         if (req.method !== 'POST') {
             return sec.jsonRes(res, 405, { ok: false, error: 'method_not_allowed' });
+        }
+
+        const rl = rate.checkRateLimit(req, { key: 'visitor_intake', max: 40, windowMs: 3600000 });
+        if (!rl.ok) {
+            const blocked = rate.rateLimitResponse(res, rl.retryAfterSec);
+            return sec.jsonRes(res, blocked.code, blocked.data);
         }
 
         const body = sec.parseBody(req);

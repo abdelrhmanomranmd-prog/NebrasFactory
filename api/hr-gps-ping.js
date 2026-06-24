@@ -1,45 +1,16 @@
 /**
- * استقبال موقع GPS من جوال السائق — يُحفظ في Supabase nebras_data_store
+ * استقبال موقع GPS من جوال السائق — يُحفظ في Supabase عبر SERVICE_ROLE فقط
  */
-const SUPABASE_FALLBACK_URL = 'https://oedldllrjavofpeaputz.supabase.co';
-const SUPABASE_FALLBACK_ANON = 'sb_publishable_bt6rlHxu_pjc1xpkKEWOcg_HZ43JMR0';
-
-function supabaseConfig() {
-    const url = (process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || SUPABASE_FALLBACK_URL).replace(/\/$/, '');
-    const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_ANON_KEY || SUPABASE_FALLBACK_ANON;
-    return { url, key: String(key).trim() };
-}
-
-function headers(key) {
-    return {
-        apikey: key,
-        Authorization: 'Bearer ' + key,
-        'Content-Type': 'application/json',
-        Prefer: 'return=representation'
-    };
-}
+const sec = require('./lib/nebras-security');
 
 async function loadStore(url, key, storeKey) {
-    const res = await fetch(url + '/rest/v1/nebras_data_store?store_key=eq.' + encodeURIComponent(storeKey) + '&select=payload&limit=1', {
-        headers: headers(key)
-    });
-    if (!res.ok) return null;
-    const rows = await res.json();
-    if (!rows || !rows.length) return null;
-    return rows[0].payload;
+    const row = await sec.fetchStoreRow(url, key, storeKey);
+    return row ? row.payload : null;
 }
 
 async function saveStore(url, key, storeKey, payload) {
-    await fetch(url + '/rest/v1/nebras_data_store?store_key=eq.' + encodeURIComponent(storeKey), {
-        method: 'DELETE',
-        headers: headers(key)
-    });
-    const res = await fetch(url + '/rest/v1/nebras_data_store', {
-        method: 'POST',
-        headers: headers(key),
-        body: JSON.stringify({ store_key: storeKey, payload: payload, updated_at: new Date().toISOString() })
-    });
-    return res.ok;
+    const result = await sec.upsertStoreRows(url, key, [{ store_key: storeKey, payload: payload }]);
+    return !!(result && result.ok);
 }
 
 module.exports = async function handler(req, res) {
@@ -55,7 +26,7 @@ module.exports = async function handler(req, res) {
         return;
     }
     try {
-        const body = typeof req.body === 'string' ? JSON.parse(req.body) : (req.body || {});
+        const body = sec.parseBody(req);
         const token = String(body.token || '').trim();
         const lat = Number(body.lat);
         const lng = Number(body.lng);
@@ -63,9 +34,12 @@ module.exports = async function handler(req, res) {
             res.status(400).json({ ok: false, error: 'token, lat, lng required' });
             return;
         }
-        const { url, key } = supabaseConfig();
+        const { url, key, invalidKey } = sec.supabaseServiceConfig();
         if (!url || !key) {
-            res.status(503).json({ ok: false, error: 'Supabase not configured' });
+            res.status(503).json({
+                ok: false,
+                error: invalidKey === 'non_ascii_service_key' ? 'invalid_service_key_encoding' : 'service_unavailable'
+            });
             return;
         }
         const tracking = await loadStore(url, key, 'hr_vehicle_tracking');
@@ -118,7 +92,11 @@ module.exports = async function handler(req, res) {
         };
         posList.unshift(entry);
         if (posList.length > 800) posList.length = 800;
-        await saveStore(url, key, 'hr_gps_positions', posList);
+        const saved = await saveStore(url, key, 'hr_gps_positions', posList);
+        if (!saved) {
+            res.status(500).json({ ok: false, error: 'save_failed' });
+            return;
+        }
         res.status(200).json({
             ok: true,
             plateNo: trip.plateNo,

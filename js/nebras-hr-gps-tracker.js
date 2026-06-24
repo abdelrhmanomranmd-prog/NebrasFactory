@@ -539,9 +539,14 @@
         }
         const vehs = typeof getHrVehicles === 'function' ? getHrVehicles() : [];
         const proxy = hrGpsSettings.traccarProxy || '/api/hr-gps-traccar';
+        const headers = { 'Content-Type': 'application/json' };
+        if (typeof getNebrasSecureToken === 'function') {
+            const tok = getNebrasSecureToken();
+            if (tok) headers.Authorization = 'Bearer ' + tok;
+        }
         return fetch(proxy, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: headers,
             body: JSON.stringify({
                 traccarUrl: hrGpsSettings.traccarUrl,
                 traccarUser: hrGpsSettings.traccarUser,

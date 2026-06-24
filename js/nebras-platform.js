@@ -17283,7 +17283,7 @@
                     '<div class="nebras-editor-grid">' +
                         '<label class="nebras-field"><span>معرّف المندوب</span><input type="text" id="bre-id" value="' + escapeHtmlAttr(branchRepEditorState.id) + '"></label>' +
                         '<label class="nebras-field"><span>اسم المستخدم</span><input type="text" id="bre-username" value="' + escapeHtmlAttr(branchRepEditorState.username) + '"></label>' +
-                        '<label class="nebras-field"><span>كلمة المرور</span><input type="text" id="bre-password" value="' + escapeHtmlAttr(branchRepEditorState.password) + '"></label>' +
+                        '<label class="nebras-field"><span>كلمة المرور</span><input type="password" id="bre-password" value="' + escapeHtmlAttr(branchRepEditorState.password) + '" autocomplete="new-password"></label>' +
                         '<label class="nebras-field"><span>الفرع</span><input type="text" value="' + escapeHtmlAttr(branchCity) + '" readonly></label>' +
                     '</div>' +
                     '<div class="nebras-editor-footer">' +
@@ -23448,7 +23448,7 @@
                     '<div class="nebras-editor-grid">' +
                         '<label class="nebras-field"><span>معرّف الموظف</span><input type="text" id="ue-id" value="' + escapeHtmlAttr(st.id) + '" ' + (st.isPrimary ? 'disabled' : '') + ' placeholder="EMP-102"></label>' +
                         '<label class="nebras-field"><span>اسم المستخدم (للدخول)</span><input type="text" id="ue-username" value="' + escapeHtmlAttr(st.username) + '" placeholder="sales.riyadh"></label>' +
-                        '<label class="nebras-field"><span>كلمة المرور</span><input type="text" id="ue-password" value="' + escapeHtmlAttr(st.password) + '" ' + (st.isPrimary ? 'disabled' : '') + ' placeholder="••••••"></label>' +
+                        '<label class="nebras-field"><span>كلمة المرور</span><input type="password" id="ue-password" value="' + escapeHtmlAttr(st.password) + '" ' + (st.isPrimary ? 'disabled' : '') + ' placeholder="••••••" autocomplete="new-password"></label>' +
                         '<label class="nebras-field"><span>الدور الوظيفي</span><select id="ue-role" onchange="onUserEditorRoleChange(this.value)" ' + (st.isPrimary ? 'disabled' : '') + '>' + roleOptions + '</select></label>' +
                         '<label class="nebras-field nebras-field--wide"><span>الفرع المخصّص</span><select id="ue-branch" onchange="onUserEditorBranchChange(this.value)" ' + (st.isPrimary ? 'disabled' : '') + '>' + branchOptions + '</select>' + branchHint + '</label>' +
                     '</div>' +
