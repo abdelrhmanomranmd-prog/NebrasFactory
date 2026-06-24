@@ -236,13 +236,34 @@
         else if (typeof schedulePushToNebrasCloud === 'function') schedulePushToNebrasCloud();
     }
 
-    function setLegalContractsFromCloud(v) { legalContracts = Array.isArray(v) ? v : []; saveLegalData(); }
-    function setLegalCasesFromCloud(v) { legalCases = Array.isArray(v) ? v : []; saveLegalData(); }
-    function setLegalComplianceFromCloud(v) { legalCompliance = Array.isArray(v) ? v : []; saveLegalData(); }
-    function setLegalPoliciesFromCloud(v) { legalPolicies = Array.isArray(v) ? v : []; saveLegalData(); }
-    function setLegalCorrespondenceFromCloud(v) { legalCorrespondence = Array.isArray(v) ? v : []; saveLegalData(); }
-    function setLegalActivityFromCloud(v) { legalActivity = Array.isArray(v) ? v : []; saveLegalData(); }
-    function setLegalRentalsFromCloud(v) { legalRentals = Array.isArray(v) ? v : []; saveLegalData(); }
+    function setLegalContractsFromCloud(v) {
+        legalContracts = Array.isArray(v) ? v : [];
+        try { localStorage.setItem(LEGAL_CONTRACTS_KEY, JSON.stringify(legalContracts)); } catch (e) { /* ignore */ }
+    }
+    function setLegalCasesFromCloud(v) {
+        legalCases = Array.isArray(v) ? v : [];
+        try { localStorage.setItem(LEGAL_CASES_KEY, JSON.stringify(legalCases)); } catch (e) { /* ignore */ }
+    }
+    function setLegalComplianceFromCloud(v) {
+        legalCompliance = Array.isArray(v) ? v : [];
+        try { localStorage.setItem(LEGAL_COMPLIANCE_KEY, JSON.stringify(legalCompliance)); } catch (e) { /* ignore */ }
+    }
+    function setLegalPoliciesFromCloud(v) {
+        legalPolicies = Array.isArray(v) ? v : [];
+        try { localStorage.setItem(LEGAL_POLICIES_KEY, JSON.stringify(legalPolicies)); } catch (e) { /* ignore */ }
+    }
+    function setLegalCorrespondenceFromCloud(v) {
+        legalCorrespondence = Array.isArray(v) ? v : [];
+        try { localStorage.setItem(LEGAL_CORR_KEY, JSON.stringify(legalCorrespondence)); } catch (e) { /* ignore */ }
+    }
+    function setLegalActivityFromCloud(v) {
+        legalActivity = Array.isArray(v) ? v : [];
+        try { localStorage.setItem(LEGAL_ACTIVITY_KEY, JSON.stringify(legalActivity)); } catch (e) { /* ignore */ }
+    }
+    function setLegalRentalsFromCloud(v) {
+        legalRentals = Array.isArray(v) ? v : [];
+        try { localStorage.setItem(LEGAL_RENTALS_KEY, JSON.stringify(legalRentals)); } catch (e) { /* ignore */ }
+    }
     function setLegalNotifSettingsFromCloud(v) {
         legalNotifSettings = v && typeof v === 'object' ? v : { remindDays: [30, 60], lastScan: '' };
         try { localStorage.setItem(LEGAL_NOTIF_SETTINGS_KEY, JSON.stringify(legalNotifSettings)); } catch (e) { /* ignore */ }

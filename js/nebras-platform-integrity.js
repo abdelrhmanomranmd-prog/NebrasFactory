@@ -459,25 +459,35 @@
     global.NEBRAS_CRITICAL_CLOUD_KEYS = CRITICAL_STORE_KEYS;
 
     let cloudAutoSyncTimer = null;
+    let cloudAutoPullTimer = null;
     function nebrasFlushCloudIfAdmin() {
         const admin = typeof global.getNebrasCurrentAdmin === 'function' ? global.getNebrasCurrentAdmin() : null;
         if (!admin || typeof global.flushPushToNebrasCloud !== 'function') return;
         try { global.flushPushToNebrasCloud({ silentCloud: true }); } catch (e) { /* ignore */ }
     }
+    function nebrasPullCloudIfAdmin() {
+        const admin = typeof global.getNebrasCurrentAdmin === 'function' ? global.getNebrasCurrentAdmin() : null;
+        if (!admin || typeof global.refreshNebrasCloudFromServer !== 'function') return;
+        try { global.refreshNebrasCloudFromServer({ silent: true }); } catch (e) { /* ignore */ }
+    }
     function startNebrasCloudAutoSync() {
         if (cloudAutoSyncTimer) return;
         nebrasFlushCloudIfAdmin();
+        nebrasPullCloudIfAdmin();
         cloudAutoSyncTimer = setInterval(nebrasFlushCloudIfAdmin, 15000);
+        cloudAutoPullTimer = setInterval(nebrasPullCloudIfAdmin, 45000);
         if (typeof window !== 'undefined' && !window._nebrasCloudUnloadHook) {
             window._nebrasCloudUnloadHook = true;
             window.addEventListener('pagehide', function() { nebrasFlushCloudIfAdmin(); });
             document.addEventListener('visibilitychange', function() {
                 if (document.visibilityState === 'hidden') nebrasFlushCloudIfAdmin();
+                if (document.visibilityState === 'visible') nebrasPullCloudIfAdmin();
             });
         }
     }
     function stopNebrasCloudAutoSync() {
         if (cloudAutoSyncTimer) { clearInterval(cloudAutoSyncTimer); cloudAutoSyncTimer = null; }
+        if (cloudAutoPullTimer) { clearInterval(cloudAutoPullTimer); cloudAutoPullTimer = null; }
     }
     global.startNebrasCloudAutoSync = startNebrasCloudAutoSync;
     global.stopNebrasCloudAutoSync = stopNebrasCloudAutoSync;

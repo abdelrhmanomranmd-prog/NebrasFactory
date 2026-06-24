@@ -146,10 +146,22 @@
         else if (typeof schedulePushToNebrasCloud === 'function') schedulePushToNebrasCloud();
     }
 
-    function setCrmCustomersFromCloud(v) { crmCustomers = Array.isArray(v) ? v : []; saveCrmData(); }
-    function setCrmOpportunitiesFromCloud(v) { crmOpportunities = Array.isArray(v) ? v : []; saveCrmData(); }
-    function setCrmActivitiesFromCloud(v) { crmActivities = Array.isArray(v) ? v : []; saveCrmData(); }
-    function setCrmAuditFromCloud(v) { crmAudit = Array.isArray(v) ? v : []; saveCrmData(); }
+    function setCrmCustomersFromCloud(v) {
+        crmCustomers = Array.isArray(v) ? v : [];
+        try { localStorage.setItem(CRM_CUSTOMERS_KEY, JSON.stringify(crmCustomers)); } catch (e) { /* ignore */ }
+    }
+    function setCrmOpportunitiesFromCloud(v) {
+        crmOpportunities = Array.isArray(v) ? v : [];
+        try { localStorage.setItem(CRM_OPPS_KEY, JSON.stringify(crmOpportunities)); } catch (e) { /* ignore */ }
+    }
+    function setCrmActivitiesFromCloud(v) {
+        crmActivities = Array.isArray(v) ? v : [];
+        try { localStorage.setItem(CRM_ACTIVITIES_KEY, JSON.stringify(crmActivities)); } catch (e) { /* ignore */ }
+    }
+    function setCrmAuditFromCloud(v) {
+        crmAudit = Array.isArray(v) ? v : [];
+        try { localStorage.setItem(CRM_AUDIT_KEY, JSON.stringify(crmAudit)); } catch (e) { /* ignore */ }
+    }
 
     function formatCrmDate(d) {
         if (!d) return '—';
