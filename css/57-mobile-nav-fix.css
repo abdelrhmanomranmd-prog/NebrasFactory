@@ -1,0 +1,123 @@
+/**
+ * نبراس — إصلاح قائمة الموبايل (☰ / ✕ + خيارات الإدارة)
+ * المشكلة: nav بارتفاع 0 + position:absolute → القائمة مخفية خلف الهيرو
+ */
+@media (max-width: 768px) {
+    header {
+        position: relative;
+        z-index: 1100;
+    }
+
+    .header-main-row {
+        flex-wrap: nowrap !important;
+        align-items: center;
+        position: sticky;
+        top: 0;
+        z-index: 1102;
+    }
+
+    header nav {
+        position: static !important;
+        flex: 0 0 0 !important;
+        order: 0 !important;
+        width: 0 !important;
+        height: 0 !important;
+        overflow: visible !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .menu-toggle {
+        display: flex !important;
+        align-items: center;
+        justify-content: center;
+        min-width: 44px;
+        min-height: 44px;
+        margin-inline-start: auto !important;
+        z-index: 1106 !important;
+        position: relative;
+    }
+
+    #nav-menu {
+        display: none !important;
+        position: fixed !important;
+        top: var(--nebras-header-bottom, 118px) !important;
+        left: 10px !important;
+        right: 10px !important;
+        bottom: auto !important;
+        width: auto !important;
+        max-height: min(calc(100dvh - var(--nebras-header-bottom, 118px) - 24px), 72vh) !important;
+        margin: 0 !important;
+        padding: 14px 16px 18px !important;
+        flex-direction: column !important;
+        gap: 4px !important;
+        z-index: 1105 !important;
+        background: linear-gradient(165deg, #0a4d8c 0%, #062e44 100%) !important;
+        border-radius: 16px !important;
+        box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45) !important;
+        overflow-y: auto !important;
+        -webkit-overflow-scrolling: touch;
+        list-style: none !important;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    #nav-menu.active {
+        display: flex !important;
+        visibility: visible !important;
+        pointer-events: auto !important;
+        opacity: 1 !important;
+    }
+
+    #nav-menu li {
+        width: 100%;
+        margin: 0;
+        padding: 0;
+    }
+
+    #nav-menu li a {
+        display: flex !important;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        padding: 14px 12px !important;
+        font-size: 1.05rem !important;
+        color: #fff !important;
+        border-radius: 12px;
+        text-decoration: none;
+        pointer-events: auto !important;
+    }
+
+    #nav-menu li a:active,
+    #nav-menu li a:focus-visible {
+        background: rgba(255, 255, 255, 0.14);
+    }
+
+    #nav-menu li a i {
+        width: 1.25em;
+        text-align: center;
+        opacity: 0.95;
+    }
+
+    #nav-admin {
+        background: rgba(196, 30, 58, 0.22);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        font-weight: 800;
+    }
+
+    body.nebras-mobile-nav-open::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        z-index: 1103;
+        background: rgba(0, 0, 0, 0.52);
+        pointer-events: auto;
+    }
+
+    body.nebras-mobile-nav-open {
+        overflow: hidden;
+    }
+
+    body.nebras-mobile-nav-open .nebras-mobile-commerce-bar {
+        z-index: 1000;
+    }
+}

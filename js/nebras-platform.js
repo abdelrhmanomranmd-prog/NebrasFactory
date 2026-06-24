@@ -11799,6 +11799,14 @@
                 icon.classList.remove('fa-times');
                 icon.classList.add('fa-bars');
             }
+            document.body.classList.remove('nebras-mobile-nav-open');
+        }
+
+        function updateMobileNavHeaderOffset() {
+            const header = document.querySelector('header');
+            if (!header) return;
+            const bottom = Math.ceil(header.getBoundingClientRect().bottom);
+            document.documentElement.style.setProperty('--nebras-header-bottom', bottom + 'px');
         }
 
         function toggleMenu() {
@@ -11806,8 +11814,11 @@
             const toggle = document.querySelector('.menu-toggle');
             const icon = toggle && toggle.querySelector('i');
             if (!menu) return;
+            const willOpen = !menu.classList.contains('active');
+            if (willOpen) updateMobileNavHeaderOffset();
             menu.classList.toggle('active');
             const open = menu.classList.contains('active');
+            document.body.classList.toggle('nebras-mobile-nav-open', open);
             if (toggle) toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
             if (icon) {
                 icon.classList.toggle('fa-bars', !open);
@@ -14825,7 +14836,8 @@
         }
 
         function openAdminPanel(event) {
-            event.preventDefault();
+            if (event && event.preventDefault) event.preventDefault();
+            if (typeof closeMobileNav === 'function') closeMobileNav();
             if (currentAdmin) {
                 showAdminDashboard(currentAdmin);
                 if (typeof scrollToAdminDashboard === 'function') scrollToAdminDashboard();
@@ -25814,6 +25826,14 @@
             clearStuckInteractionBlockers();
             initPlatformInteractionLayerGuard();
             bindPlatformUniversalClicks();
+            document.addEventListener('click', function(ev) {
+                if (!document.body.classList.contains('nebras-mobile-nav-open')) return;
+                if (ev.target.closest('#nav-menu') || ev.target.closest('.menu-toggle')) return;
+                closeMobileNav();
+            });
+            window.addEventListener('resize', function() {
+                if (document.body.classList.contains('nebras-mobile-nav-open')) updateMobileNavHeaderOffset();
+            });
             bindNebrasHrPlatformGlobals();
             enforceAdminDashboardGate();
             if (typeof ensureAdminPanelExitChrome === 'function') ensureAdminPanelExitChrome();
