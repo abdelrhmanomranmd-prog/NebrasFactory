@@ -66,7 +66,7 @@ async function handlePush(body, sess) {
     if (oversized.length) {
         return { code: 413, data: { ok: false, error: 'payload_too_large', keys: oversized.map(function(r) { return r.store_key; }) } };
     }
-    if (!filtered.length) return { code: 403, data: { ok: false, error: 'forbidden_keys' } };
+    if (!filtered.length) return { code: 200, data: { ok: true, count: 0, by: sess.username, note: 'no_allowed_keys' } };
     const { url, key, invalidKey } = sec.supabaseServiceConfig();
     if (!url || !key) {
         return {

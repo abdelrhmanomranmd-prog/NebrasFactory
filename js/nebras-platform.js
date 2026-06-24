@@ -24921,7 +24921,9 @@
         let nebrasCloudPushInFlight = null;
         let nebrasCloudPushQueued = false;
         let nebrasCloudShowToastNext = false;
+        let nebrasCloudPushSilent = false;
         let nebrasCloudLastToastAt = 0;
+        let nebrasCloudLastErrorToastAt = 0;
 
         function maybeCloudSaveToast(ok) {
             if (!nebrasCloudShowToastNext || !currentAdmin) return;
@@ -24938,6 +24940,7 @@
 
         async function pushToNebrasCloudCore() {
             if (!supabaseClient) return false;
+            const silent = !!nebrasCloudPushSilent;
             const rows = NEBRAS_CLOUD_STORE_SPECS.map(function(spec) {
                 let payload = spec.get();
                 if (typeof slimNebrasCloudPayload === 'function') payload = slimNebrasCloudPayload(spec.key, payload);
@@ -24954,19 +24957,7 @@
             const sensitiveRows = rows.filter(function(r) { return r && r.store_key && sensFn(r.store_key); });
             let okPublic = true;
             let okSensitive = true;
-            const hasToken = typeof getNebrasSecureToken === 'function' && getNebrasSecureToken();
             try {
-                if (hasToken && typeof secureCloudPush === 'function') {
-                    const apiResult = await secureCloudPush(rows);
-                    okPublic = !!(apiResult && apiResult.ok);
-                    okSensitive = okPublic;
-                    if (!okPublic) {
-                        console.warn('Nebras API cloud save failed:', apiResult);
-                        if (typeof markSensitiveCloudPending === 'function') markSensitiveCloudPending();
-                    } else if (typeof clearSensitiveCloudPending === 'function') {
-                        clearSensitiveCloudPending();
-                    }
-                } else {
                 if (publicRows.length) {
                     const { error } = await supabaseClient
                         .from('nebras_data_store')
@@ -24988,24 +24979,28 @@
                         okSensitive = !!(sensResult && sensResult.ok);
                         if (!okSensitive) {
                             console.warn('Nebras sensitive cloud save failed:', sensResult);
+                            if (typeof markSensitiveCloudPending === 'function') markSensitiveCloudPending();
                         } else if (typeof clearSensitiveCloudPending === 'function') {
                             clearSensitiveCloudPending();
                         }
-                    } else {
+                    } else if (currentAdmin) {
                         okSensitive = false;
                         if (typeof markSensitiveCloudPending === 'function') markSensitiveCloudPending();
                     }
                 }
-                }
                 if (!okPublic) {
-                    if (currentAdmin && typeof showNebrasAdminToast === 'function') {
-                        showNebrasAdminToast('تعذّر الرفع للسحابة — سجّلي دخولاً من جديد ثم «رفع للسحابة»', 'error');
+                    if (currentAdmin && !silent && typeof showNebrasAdminToast === 'function' &&
+                        Date.now() - nebrasCloudLastErrorToastAt > 60000) {
+                        nebrasCloudLastErrorToastAt = Date.now();
+                        showNebrasAdminToast('تعذّر رفع بيانات الموقع — تحققي من الاتصال', 'error');
                     }
                     return false;
                 }
                 if (sensitiveRows.length && !okSensitive) {
-                    if (currentAdmin && typeof showNebrasAdminToast === 'function') {
-                        showNebrasAdminToast('البيانات الحساسة لم تُرفع — اضغطي «رفع للسحابة» بعد الدخول', 'warn');
+                    if (currentAdmin && !silent && typeof showNebrasAdminToast === 'function' &&
+                        Date.now() - nebrasCloudLastErrorToastAt > 60000) {
+                        nebrasCloudLastErrorToastAt = Date.now();
+                        showNebrasAdminToast('بياناتك لم تُرفع — أعيدي تسجيل الدخول', 'warn');
                     }
                     return false;
                 }
@@ -25070,6 +25065,7 @@
         function flushPushToNebrasCloud(options) {
             options = options || {};
             if (options.showCloudToast) nebrasCloudShowToastNext = true;
+            nebrasCloudPushSilent = options.silentCloud === true;
             if (nebrasCloudSaveTimer) {
                 clearTimeout(nebrasCloudSaveTimer);
                 nebrasCloudSaveTimer = null;

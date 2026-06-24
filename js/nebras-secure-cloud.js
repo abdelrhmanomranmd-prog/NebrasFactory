@@ -30,6 +30,78 @@
         'nebras_cloud_snapshots', 'nebras_platform_integrity'
     ];
 
+    const HQ_ONLY_STORE_KEYS = [
+        'admin_users', 'admin_recovery_otp', 'analytics_governance', 'nebras_platform_integrity'
+    ];
+
+    function isHqAdmin(admin) {
+        if (!admin) return false;
+        if (admin.isPrimary || admin.role === 'superadmin') return true;
+        return String(admin.username || '').toUpperCase() === 'NEBRASFACTORY';
+    }
+
+    function managerMayAccessKey(k) {
+        const prefixes = ['erp_', 'sales_', 'quote_', 'customer_', 'crm_', 'hr_', 'legal_', 'procurement', 'complaints', 'callback_', 'audit_'];
+        const exact = [
+            'complaints', 'callback_leads', 'audit_logs', 'sales_quotes_inbox', 'quote_registry',
+            'customer_order_journeys', 'customer_service', 'customer_portal_users', 'customer_portal_audit',
+            'procurement_custom_depts', 'branches', 'site_products', 'visitor_icons', 'dashboard_tiles',
+            'site_custom_sections', 'about_pages', 'system_settings', 'site_partners', 'site_certifications',
+            'showroom_gallery', 'visitor_analytics', 'sales_data', 'sales_price_list', 'nebras_cloud_snapshots'
+        ];
+        if (exact.indexOf(k) >= 0) return true;
+        return prefixes.some(function(p) { return k.indexOf(p) === 0; });
+    }
+
+    function keysAllowedForAdmin(admin, keys) {
+        if (!admin || !Array.isArray(keys)) return [];
+        if (isHqAdmin(admin)) return keys.slice();
+        const role = String(admin.role || '');
+        return keys.filter(function(k) {
+            if (HQ_ONLY_STORE_KEYS.indexOf(k) >= 0) return false;
+            if (role === 'sales_rep') {
+                return ['sales_quotes_inbox', 'quote_registry', 'customer_order_journeys'].indexOf(k) >= 0;
+            }
+            if (role === 'hr' || role === 'hr_manager' || role === 'hr_admin') {
+                return k.indexOf('hr_') === 0 || k === 'audit_logs';
+            }
+            if (role === 'legal' || role === 'legal_manager') {
+                return k.indexOf('legal_') === 0 || k === 'audit_logs';
+            }
+            if (role === 'aluminum_manager' || role === 'wpc_manager' || role === 'production_manager') {
+                return k.indexOf('erp_') === 0 || k.indexOf('sales_') === 0 || k.indexOf('quote_') === 0 || k === 'audit_logs';
+            }
+            if (role === 'accountant' || role === 'accounting_manager') {
+                return k.indexOf('erp_') === 0 || k.indexOf('sales_') === 0 || k === 'audit_logs' || k.indexOf('procurement') >= 0;
+            }
+            if (role === 'sales_manager' || role === 'branch_manager') {
+                return k.indexOf('sales_') === 0 || k.indexOf('quote_') === 0 || k.indexOf('erp_') === 0 ||
+                    k.indexOf('customer_') === 0 || k === 'callback_leads' || k === 'audit_logs';
+            }
+            if (role === 'manager') return managerMayAccessKey(k);
+            if (role === 'inventory_manager') {
+                return k.indexOf('erp_') === 0 || k === 'audit_logs';
+            }
+            if (role === 'store_manager') {
+                return k === 'site_products' || k === 'audit_logs';
+            }
+            return false;
+        });
+    }
+
+    function filterCloudRowsForAdminSession(rows, admin) {
+        if (!rows || !rows.length || !admin) return [];
+        const allowed = keysAllowedForAdmin(admin, rows.map(function(r) { return r && r.store_key; }).filter(Boolean));
+        const set = {};
+        allowed.forEach(function(k) { set[k] = true; });
+        return rows.filter(function(r) { return r && r.store_key && set[r.store_key]; });
+    }
+
+    function getCurrentAdminUser() {
+        return typeof global.getNebrasCurrentAdmin === 'function' ? global.getNebrasCurrentAdmin() : null;
+    }
+
+
     function isSensitiveStoreKey(k) {
         return SENSITIVE_STORE_KEYS.indexOf(k) >= 0;
     }
@@ -107,11 +179,14 @@
     async function secureCloudPush(rows) {
         const token = getSecureToken();
         if (!token || !rows || !rows.length) return { ok: false, error: 'no_token_or_rows' };
+        const admin = getCurrentAdminUser();
+        const scoped = admin ? filterCloudRowsForAdminSession(rows, admin) : rows.slice();
+        if (!scoped.length) return { ok: true, count: 0, note: 'no_allowed_rows' };
         const batchSize = 8;
         let pushed = 0;
         try {
-            for (let i = 0; i < rows.length; i += batchSize) {
-                const chunk = rows.slice(i, i + batchSize);
+            for (let i = 0; i < scoped.length; i += batchSize) {
+                const chunk = scoped.slice(i, i + batchSize);
                 const res = await fetch(apiBase() + '/api/nebras-cloud?action=push', {
                     method: 'POST',
                     headers: {
@@ -150,7 +225,9 @@
     }
 
     async function pullSensitiveCloudAndApply(applyFn) {
-        const rows = await secureCloudPull(SENSITIVE_STORE_KEYS);
+        const admin = getCurrentAdminUser();
+        const keys = admin ? keysAllowedForAdmin(admin, SENSITIVE_STORE_KEYS) : SENSITIVE_STORE_KEYS.slice();
+        const rows = await secureCloudPull(keys);
         if (!rows.length || typeof applyFn !== 'function') return false;
         rows.forEach(function(row) {
             if (row && row.store_key) applyFn(row.store_key, row.payload, row.updated_at || null);
@@ -192,6 +269,8 @@
     global.NEBRAS_PUBLIC_STORE_KEYS = PUBLIC_STORE_KEYS;
     global.NEBRAS_SENSITIVE_STORE_KEYS = SENSITIVE_STORE_KEYS;
     global.isSensitiveStoreKey = isSensitiveStoreKey;
+    global.filterCloudRowsForAdminSession = filterCloudRowsForAdminSession;
+    global.keysAllowedForNebrasAdmin = keysAllowedForAdmin;
     global.isPublicStoreKey = isPublicStoreKey;
     global.getNebrasSecureToken = getSecureToken;
     global.clearNebrasSecureSession = clearSecureSession;
