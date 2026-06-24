@@ -1,123 +1,104 @@
 /**
- * نبراس — إصلاح قائمة الموبايل (☰ / ✕ + خيارات الإدارة)
- * المشكلة: nav بارتفاع 0 + position:absolute → القائمة مخفية خلف الهيرو
+ * نبراس — قائمة موبايل كلاسيكية (قائمة منسدلة حقيقية تحت الهيدر)
+ * إصلاح: position:absolute على nav بارتفاع 0 — نرجع القائمة في تدفّق الصفحة
  */
 @media (max-width: 768px) {
     header {
-        position: relative;
         z-index: 1100;
     }
 
     .header-main-row {
-        flex-wrap: nowrap !important;
+        flex-wrap: wrap !important;
         align-items: center;
         position: sticky;
         top: 0;
-        z-index: 1102;
+        z-index: 1101;
+        background: var(--primary-blue);
     }
 
     header nav {
-        position: static !important;
-        flex: 0 0 0 !important;
-        order: 0 !important;
-        width: 0 !important;
-        height: 0 !important;
+        flex: 1 1 100% !important;
+        order: 3 !important;
+        width: 100% !important;
+        position: relative !important;
+        height: auto !important;
         overflow: visible !important;
         margin: 0 !important;
         padding: 0 !important;
+        z-index: 1102;
     }
 
-    .menu-toggle {
-        display: flex !important;
-        align-items: center;
-        justify-content: center;
-        min-width: 44px;
-        min-height: 44px;
-        margin-inline-start: auto !important;
-        z-index: 1106 !important;
-        position: relative;
-    }
-
+    header nav ul,
     #nav-menu {
-        display: none !important;
-        position: fixed !important;
-        top: var(--nebras-header-bottom, 118px) !important;
-        left: 10px !important;
-        right: 10px !important;
-        bottom: auto !important;
-        width: auto !important;
-        max-height: min(calc(100dvh - var(--nebras-header-bottom, 118px) - 24px), 72vh) !important;
+        position: relative !important;
+        top: auto !important;
+        left: auto !important;
+        right: auto !important;
+        width: 100% !important;
         margin: 0 !important;
-        padding: 14px 16px 18px !important;
+        padding: 12px 20px 16px !important;
+        gap: 10px !important;
+        display: none;
         flex-direction: column !important;
-        gap: 4px !important;
-        z-index: 1105 !important;
-        background: linear-gradient(165deg, #0a4d8c 0%, #062e44 100%) !important;
-        border-radius: 16px !important;
-        box-shadow: 0 18px 48px rgba(0, 0, 0, 0.45) !important;
+        background: var(--primary-blue) !important;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25) !important;
+        border-radius: 0 !important;
+        border: none !important;
+        max-height: min(70vh, 520px) !important;
         overflow-y: auto !important;
         -webkit-overflow-scrolling: touch;
         list-style: none !important;
-        border: 1px solid rgba(255, 255, 255, 0.12);
-    }
-
-    #nav-menu.active {
-        display: flex !important;
-        visibility: visible !important;
+        z-index: 1102 !important;
         pointer-events: auto !important;
+        transform: none !important;
+        filter: none !important;
         opacity: 1 !important;
     }
 
+    header nav ul.active,
+    #nav-menu.active {
+        display: flex !important;
+        visibility: visible !important;
+    }
+
+    header nav ul li,
     #nav-menu li {
         width: 100%;
         margin: 0;
         padding: 0;
+        list-style: none;
     }
 
+    header nav ul li a,
     #nav-menu li a {
         display: flex !important;
         align-items: center;
         gap: 10px;
         width: 100%;
-        padding: 14px 12px !important;
-        font-size: 1.05rem !important;
+        padding: 12px 6px !important;
+        font-size: 1rem !important;
+        font-weight: 700 !important;
         color: #fff !important;
-        border-radius: 12px;
-        text-decoration: none;
+        text-decoration: none !important;
+        cursor: pointer !important;
         pointer-events: auto !important;
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: rgba(255, 255, 255, 0.15);
+        border-radius: 0;
+        background: transparent !important;
     }
 
-    #nav-menu li a:active,
-    #nav-menu li a:focus-visible {
-        background: rgba(255, 255, 255, 0.14);
+    header nav ul li a:active,
+    #nav-menu li a:active {
+        background: rgba(255, 255, 255, 0.12) !important;
     }
 
-    #nav-menu li a i {
-        width: 1.25em;
-        text-align: center;
-        opacity: 0.95;
-    }
-
-    #nav-admin {
-        background: rgba(196, 30, 58, 0.22);
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        font-weight: 800;
-    }
-
-    body.nebras-mobile-nav-open::before {
-        content: '';
-        position: fixed;
-        inset: 0;
-        z-index: 1103;
-        background: rgba(0, 0, 0, 0.52);
-        pointer-events: auto;
-    }
-
-    body.nebras-mobile-nav-open {
-        overflow: hidden;
-    }
-
-    body.nebras-mobile-nav-open .nebras-mobile-commerce-bar {
-        z-index: 1000;
+    .menu-toggle {
+        display: block !important;
+        margin-inline-start: auto !important;
+        z-index: 1103 !important;
+        position: relative;
+        min-width: 44px;
+        min-height: 44px;
     }
 }
