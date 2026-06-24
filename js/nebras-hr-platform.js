@@ -195,7 +195,9 @@
             if (!Array.isArray(hrVehicleTracking)) hrVehicleTracking = [];
         } catch (err) { hrVehicleTracking = []; }
         loadHrPhase12Arrays();
-        ensureBuiltinHrSeed();
+        if (!hrEmployees.length && typeof nebrasHasLocalGovernanceData === 'function' && !nebrasHasLocalGovernanceData()) {
+            ensureBuiltinHrSeed();
+        }
         if (typeof loadHrGpsData === 'function') loadHrGpsData();
         if (typeof seedDemoGpsIfNeeded === 'function') seedDemoGpsIfNeeded();
         if (typeof ensureTrackingGpsToken === 'function') {
@@ -228,19 +230,28 @@
             saveHrPhase14Data();
             saveHrPhase15Data();
             saveHrPhase17Data();
+            try { localStorage.setItem('nebrasHrProductionMode', '1'); } catch (e) { /* ignore */ }
         } catch (err) { console.warn('HR save failed', err); }
-        if (typeof saveSystemData === 'function') saveSystemData();
+        if (typeof saveSystemData === 'function') saveSystemData({ urgentCloud: true, showCloudToast: true });
         else if (typeof schedulePushToNebrasCloud === 'function') schedulePushToNebrasCloud();
+        if (typeof persistNebrasCriticalStores === 'function') {
+            persistNebrasCriticalStores([
+                'hr_employees', 'hr_vehicles', 'hr_leave', 'hr_vehicle_tracking',
+                'hr_attendance', 'hr_documents', 'hr_payroll', 'hr_companies'
+            ], { silent: true }).then(function(ok) {
+                if (!ok && typeof showNebrasAdminToast === 'function') {
+                    showNebrasAdminToast('⚠️ بيانات الموارد البشرية لم تُحفظ في السحابة — أعيدي المحاولة', 'error');
+                }
+            }).catch(function(err) { console.warn('HR cloud persist:', err); });
+        }
     }
 
     function setHrEmployeesFromCloud(v) {
         hrEmployees = Array.isArray(v) ? v : [];
-        if (!hrEmployees.length) {
-            ensureBuiltinHrSeed();
-        } else {
+        if (hrEmployees.length) {
             hrEmployees.forEach(mapEmployeeDepartmentKey);
-            try { localStorage.setItem(HR_EMP_KEY, JSON.stringify(hrEmployees)); } catch (e) { /* ignore */ }
         }
+        try { localStorage.setItem(HR_EMP_KEY, JSON.stringify(hrEmployees)); } catch (e) { /* ignore */ }
     }
 
     function setHrVehiclesFromCloud(v) {

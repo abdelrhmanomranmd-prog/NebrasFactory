@@ -23571,7 +23571,7 @@
             if (editor) { editor.hidden = true; editor.innerHTML = ''; }
         }
 
-        function saveUserFromEditor() {
+        async function saveUserFromEditor() {
             if (!nebrasUserEditorState) return;
             if (!isMainGovernanceAdmin()) { alert('العملية متاحة فقط للإدارة الرئيسية.'); return; }
             const st = nebrasUserEditorState;
@@ -23627,7 +23627,17 @@
                 });
                 addAuditLog('إضافة مستخدم', 'تمت إضافة ' + username + ' بدور ' + getRoleLabel(st.role));
             }
-            saveSystemData({ urgentCloud: true });
+            saveSystemData({ skipCloud: true });
+            let cloudOk = false;
+            if (typeof persistNebrasCriticalStores === 'function') {
+                cloudOk = await persistNebrasCriticalStores(['admin_users'], { showToast: true });
+            }
+            if (!cloudOk && typeof flushPushToNebrasCloud === 'function') {
+                cloudOk = await flushPushToNebrasCloud({ showCloudToast: true });
+            }
+            if (!cloudOk && typeof showNebrasAdminToast === 'function') {
+                showNebrasAdminToast('⚠️ المستخدم محفوظ محلياً فقط — لن يعمل من جهاز آخر حتى يُرفع للسحابة', 'error');
+            }
             cancelUserEditor();
             displayUsers();
         }
@@ -23679,7 +23689,7 @@
 
         function editUser(index) { openUserEditor(index); }
 
-        function deleteUser(index) {
+        async function deleteUser(index) {
             if (!requirePermission('users', 'هذه العملية متاحة فقط لمسؤولي المستخدمين.')) return;
             if (!isMainGovernanceAdmin()) {
                 alert('حذف المستخدمين — للإدارة الرئيسية فقط.');
@@ -23693,7 +23703,12 @@
             }
             if (confirm('هل تريد حذف المستخدم ' + user.username + '؟')) {
                 adminUsers.splice(index, 1);
-                saveSystemData();
+                saveSystemData({ skipCloud: true });
+                if (typeof persistNebrasCriticalStores === 'function') {
+                    await persistNebrasCriticalStores(['admin_users'], { showToast: true });
+                } else {
+                    saveSystemData({ urgentCloud: true, showCloudToast: true });
+                }
                 displayUsers();
                 addAuditLog('حذف مستخدم', 'تم حذف المستخدم ' + user.username);
             }
@@ -24681,6 +24696,41 @@
             }}
         ];
 
+        const NEBRAS_MERGE_BY_ID_STORE_KEYS = [
+            'admin_users', 'hr_employees', 'hr_vehicles', 'hr_documents', 'hr_leave',
+            'hr_vehicle_tracking', 'hr_attendance', 'crm_customers', 'erp_orders', 'legal_contracts'
+        ];
+
+        function nebrasCloudArrayItemKey(item) {
+            if (!item || typeof item !== 'object') return '';
+            return String(item.id || item.username || item.employeeNo || '').trim().toLowerCase();
+        }
+
+        function mergeNebrasCloudArrayById(storeKey, incoming) {
+            const spec = NEBRAS_CLOUD_STORE_SPECS.find(function(s) { return s.key === storeKey; });
+            if (!spec || !Array.isArray(incoming)) return;
+            const localArr = Array.isArray(spec.get()) ? spec.get().slice() : [];
+            if (!incoming.length && localArr.length) return;
+            const byKey = {};
+            localArr.forEach(function(item) {
+                const k = nebrasCloudArrayItemKey(item);
+                if (k) byKey[k] = item;
+            });
+            incoming.forEach(function(item) {
+                const k = nebrasCloudArrayItemKey(item);
+                if (!k) return;
+                const existing = byKey[k];
+                if (!existing) {
+                    byKey[k] = item;
+                    return;
+                }
+                const exAt = new Date(existing.updatedAt || existing.createdAt || 0).getTime();
+                const inAt = new Date(item.updatedAt || item.createdAt || 0).getTime();
+                byKey[k] = inAt >= exAt ? Object.assign({}, existing, item) : existing;
+            });
+            spec.set(Object.keys(byKey).map(function(k) { return byKey[k]; }));
+        }
+
         function applyNebrasCloudRow(storeKey, payload, cloudUpdatedAt) {
             if (typeof shouldSkipStaleCloudGovernanceRow === 'function' && shouldSkipStaleCloudGovernanceRow(storeKey)) {
                 return;
@@ -24703,7 +24753,11 @@
                 return;
                 }
             }
-            spec.set(payload);
+            if (NEBRAS_MERGE_BY_ID_STORE_KEYS.indexOf(storeKey) >= 0 && Array.isArray(payload) && payload.length) {
+                mergeNebrasCloudArrayById(storeKey, payload);
+            } else {
+                spec.set(payload);
+            }
             if (storeKey === 'showroom_gallery' && typeof repairShowroomGallerySections === 'function') {
                 repairShowroomGallerySections();
             }
@@ -24787,7 +24841,7 @@
             });
         }
 
-        /** المرحلة 1 — تحميل السحابة بعد دخول الإدارة */
+        /** المرحلة 1 — تحميل السحابة بعد دخول الإدارة (دمج لا استبدال) */
         async function hydrateGovernanceFromServerAfterLogin() {
             if (!NEBRAS_SERVER_FIRST_MODE || !supabaseClient) return false;
             if (typeof getNebrasSecureToken === 'function' && !getNebrasSecureToken()) return false;
@@ -24800,6 +24854,15 @@
                 if (typeof persistAnalyticsGovernanceLocal === 'function') persistAnalyticsGovernanceLocal();
             } catch (cacheErr) {
                 console.warn('Post-hydrate local cache:', cacheErr);
+            }
+            const pending = typeof hasPendingLocalCloudMutations === 'function' && hasPendingLocalCloudMutations();
+            const sensPending = typeof hasSensitiveCloudPending === 'function' && hasSensitiveCloudPending();
+            if ((pending || sensPending) && currentAdmin && typeof isMainGovernanceAdmin === 'function' && isMainGovernanceAdmin()) {
+                try {
+                    await flushPushToNebrasCloud({ silentCloud: true });
+                } catch (reconcileErr) {
+                    console.warn('Post-hydrate cloud reconcile:', reconcileErr);
+                }
             }
             return true;
         }
@@ -25014,6 +25077,46 @@
             return pushToNebrasCloud();
         }
 
+        /** رفع فوري لمفاتيح حرجة — مستخدمون، موارد بشرية، إلخ */
+        async function persistNebrasCriticalStores(storeKeys, options) {
+            options = options || {};
+            if (!Array.isArray(storeKeys) || !storeKeys.length || !supabaseClient) return false;
+            if (typeof getNebrasSecureToken === 'function' && !getNebrasSecureToken()) {
+                if (typeof establishNebrasSecureSession === 'function' && currentAdmin && nebrasLastLoginPassword) {
+                    try {
+                        await establishNebrasSecureSession(currentAdmin.username, nebrasLastLoginPassword);
+                    } catch (reAuthErr) { /* ignore */ }
+                }
+            }
+            const rows = [];
+            storeKeys.forEach(function(key) {
+                const spec = NEBRAS_CLOUD_STORE_SPECS.find(function(s) { return s.key === key; });
+                if (!spec) return;
+                let payload = spec.get();
+                if (typeof slimNebrasCloudPayload === 'function') payload = slimNebrasCloudPayload(key, payload);
+                if (typeof guardCloudPushRow === 'function') payload = guardCloudPushRow(key, payload);
+                if (payload === undefined) return;
+                rows.push({ store_key: key, payload: payload, updated_at: new Date().toISOString() });
+            });
+            if (!rows.length) return false;
+            let ok = false;
+            if (typeof secureCloudPush === 'function' && typeof getNebrasSecureToken === 'function' && getNebrasSecureToken()) {
+                const result = await secureCloudPush(rows);
+                ok = !!(result && result.ok);
+                if (!ok) console.warn('persistNebrasCriticalStores failed:', result);
+            }
+            if (!ok) return false;
+            nebrasCloudSynced = true;
+            nebrasLastCloudSaveAt = new Date();
+            if (typeof clearLocalCloudMutations === 'function') {
+                clearLocalCloudMutations(rows.map(function(r) { return r.store_key; }));
+            }
+            if (options.showToast && typeof showNebrasAdminToast === 'function') {
+                showNebrasAdminToast('✓ تم الحفظ في السحابة', 'ok');
+            }
+            return true;
+        }
+
         function stampNebrasLocalSaveMeta() {
             try {
                 const meta = {
@@ -25096,18 +25199,17 @@
                 showNebrasAdminToast('تعذّر الحفظ المحلي — امسحي كاش المتصفح أو استخدمي نافذة عادية (ليس خاصاً)', 'error');
             }
             if (!options.skipCloud) {
-                if (currentAdmin && NEBRAS_SERVER_FIRST_MODE) {
+                if (currentAdmin) {
                     const showToast = options.urgentCloud === true || options.showCloudToast === true;
                     flushPushToNebrasCloud({ showCloudToast: showToast, silentCloud: !showToast }).then(function(ok) {
                         if (!ok && typeof showNebrasAdminToast === 'function' && options.silentCloudFail !== true) {
                             showNebrasAdminToast('⚠️ لم يُحفظ في السحابة — تحققي من الاتصال وأعيدي المحاولة', 'error');
                         }
                     });
+                } else if (NEBRAS_SERVER_FIRST_MODE) {
+                    schedulePushToNebrasCloud();
                 } else {
-                    const isAdmin = !!currentAdmin;
-                    const urgent = options.urgentCloud === true || (isAdmin && options.urgentCloud !== false);
-                    if (urgent) flushPushToNebrasCloud({ silentCloud: true });
-                    else schedulePushToNebrasCloud();
+                    schedulePushToNebrasCloud();
                 }
             }
         }
@@ -27989,6 +28091,8 @@
         window.onUserEditorHrCompanyChange = onUserEditorHrCompanyChange;
         window.onUserEditorLegalCompanyChange = onUserEditorLegalCompanyChange;
         window.saveUserFromEditor = saveUserFromEditor;
+        window.persistNebrasCriticalStores = persistNebrasCriticalStores;
+        window.flushPushToNebrasCloud = flushPushToNebrasCloud;
         window.cancelUserEditor = cancelUserEditor;
         window.addNewUser = addNewUser;
         window.editUser = editUser;

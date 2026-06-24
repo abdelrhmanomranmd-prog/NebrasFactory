@@ -459,24 +459,20 @@
     global.NEBRAS_CRITICAL_CLOUD_KEYS = CRITICAL_STORE_KEYS;
 
     let cloudAutoSyncTimer = null;
+    function nebrasFlushCloudIfAdmin() {
+        const admin = typeof global.getNebrasCurrentAdmin === 'function' ? global.getNebrasCurrentAdmin() : null;
+        if (!admin || typeof global.flushPushToNebrasCloud !== 'function') return;
+        try { global.flushPushToNebrasCloud({ silentCloud: true }); } catch (e) { /* ignore */ }
+    }
     function startNebrasCloudAutoSync() {
         if (cloudAutoSyncTimer) return;
-        if (typeof global.flushPushToNebrasCloud === 'function') {
-            try { global.flushPushToNebrasCloud({ silentCloud: true }); } catch (e) { /* ignore */ }
-        }
-        cloudAutoSyncTimer = setInterval(function() {
-            const admin = typeof global.getNebrasCurrentAdmin === 'function' ? global.getNebrasCurrentAdmin() : null;
-            if (!admin) return;
-            if (typeof global.flushPushToNebrasCloud === 'function') {
-                try { global.flushPushToNebrasCloud({ silentCloud: true }); } catch (e) { /* ignore */ }
-            }
-        }, 20000);
+        nebrasFlushCloudIfAdmin();
+        cloudAutoSyncTimer = setInterval(nebrasFlushCloudIfAdmin, 15000);
         if (typeof window !== 'undefined' && !window._nebrasCloudUnloadHook) {
             window._nebrasCloudUnloadHook = true;
-            window.addEventListener('beforeunload', function() {
-                const admin = typeof global.getNebrasCurrentAdmin === 'function' ? global.getNebrasCurrentAdmin() : null;
-                if (!admin || typeof global.flushPushToNebrasCloud !== 'function') return;
-                try { global.flushPushToNebrasCloud({ silentCloud: true }); } catch (e) { /* ignore */ }
+            window.addEventListener('pagehide', function() { nebrasFlushCloudIfAdmin(); });
+            document.addEventListener('visibilitychange', function() {
+                if (document.visibilityState === 'hidden') nebrasFlushCloudIfAdmin();
             });
         }
     }
