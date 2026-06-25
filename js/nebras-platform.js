@@ -11231,7 +11231,21 @@
             displayShowroomAdmin();
             renderGovernanceStatusPanel();
             applyScmAccessMode();
+            bindScmGovernanceClicks();
             revealPlatformLayer('site-content-management');
+        }
+
+        function bindScmGovernanceClicks() {
+            const root = document.getElementById('site-content-management');
+            if (!root || root.dataset.scmClickBound === '1') return;
+            root.dataset.scmClickBound = '1';
+            root.addEventListener('click', function(ev) {
+                const tabBtn = ev.target.closest('.scm-tabs button[data-scm-tab]');
+                if (tabBtn) {
+                    ev.preventDefault();
+                    switchScmTab(tabBtn.getAttribute('data-scm-tab'));
+                }
+            });
         }
 
         function displayAboutPagesAdmin() {
@@ -11416,6 +11430,7 @@
                 renderGovernanceStatusPanel();
             }
             applyScmAccessMode();
+            bindScmGovernanceClicks();
             revealPlatformLayer('site-content-management');
         }
 
@@ -11569,7 +11584,7 @@
         }
 
         async function addSiteProduct() {
-            if (!requireProductMasterGovernance('إضافة المنتجات — الإدارة الرئيسية فقط.')) return;
+            if (!requirePermission('content', 'إضافة المنتجات — صلاحية المحتوى مطلوبة.')) return;
             const fields = await promptCatalogFields(null, 'product');
             if (!fields) return;
             const exp = promptCatalogExperience('shop');
@@ -11594,7 +11609,7 @@
         }
 
         async function editSiteProduct(productId) {
-            if (!requireProductMasterGovernance('تعديل المنتجات — الإدارة الرئيسية فقط.')) return;
+            if (!requirePermission('content', 'تعديل المنتجات — صلاحية المحتوى مطلوبة.')) return;
             const product = siteProducts.find(function(p) { return p.id === productId; });
             if (!product) return;
             const fields = await promptCatalogFields(product, 'product');
@@ -11652,7 +11667,7 @@
             }
             list.innerHTML = productsToShow.map(function(p) {
                 const storeOnly = isStoreCatalogOnlyAdmin();
-                const canEditProduct = !storeOnly && isMainGovernanceAdmin();
+                const canEditProduct = !storeOnly && canManage('content');
                 const canVariants = canManageProductCatalog(currentAdmin, p.id);
                 const variantCount = (p.variants || []).length;
                 const variantPreview = (p.variants || []).slice(0, 4).map(function(v, i) {
@@ -26054,6 +26069,7 @@
             initNebrasConsoleGuard();
             clearStuckInteractionBlockers();
             initPlatformInteractionLayerGuard();
+            bindScmGovernanceClicks();
             bindPlatformUniversalClicks();
             bindNebrasHrPlatformGlobals();
             enforceAdminDashboardGate();
@@ -28268,6 +28284,33 @@
         window.manageStoreIconProducts = manageStoreIconProducts;
         window.toggleSiteProductVisibility = toggleSiteProductVisibility;
         window.toggleProductStock = toggleProductStock;
+        /** إدارة محتوى الموقع — onclick في HTML يحتاج window.* */
+        window.switchScmTab = switchScmTab;
+        window.addSiteProduct = addSiteProduct;
+        window.editSiteProduct = editSiteProduct;
+        window.deleteSiteProduct = deleteSiteProduct;
+        window.manageProductVariants = manageProductVariants;
+        window.addVisitorIcon = addVisitorIcon;
+        window.editVisitorIcon = editVisitorIcon;
+        window.deleteVisitorIcon = deleteVisitorIcon;
+        window.addDashboardTile = addDashboardTile;
+        window.editDashboardTile = editDashboardTile;
+        window.deleteDashboardTile = deleteDashboardTile;
+        window.manageDashboardTileInner = manageDashboardTileInner;
+        window.manageIconDetailPack = manageIconDetailPack;
+        window.addCustomSiteSection = addCustomSiteSection;
+        window.addCustomSectionItem = addCustomSectionItem;
+        window.deleteCustomSiteSection = deleteCustomSiteSection;
+        window.editAboutPage = editAboutPage;
+        window.manageAboutGallery = manageAboutGallery;
+        window.addSiteCertification = addSiteCertification;
+        window.editSiteCertification = editSiteCertification;
+        window.deleteSiteCertification = deleteSiteCertification;
+        window.editShowroomSectionMeta = editShowroomSectionMeta;
+        window.addShowroomItem = addShowroomItem;
+        window.editShowroomItem = editShowroomItem;
+        window.deleteShowroomItem = deleteShowroomItem;
+        window.openDoorDesignerAdmin = openDoorDesignerAdmin;
         window.setStoreCatalogAvailability = setStoreCatalogAvailability;
         window.setStoreCatalogSort = setStoreCatalogSort;
         window.setStoreCatalogFacet = setStoreCatalogFacet;

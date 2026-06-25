@@ -89,6 +89,12 @@ body.nebras-workspace-active #nebras-workspace {
 .admin-section.show .nebras-erp-modal,
 .admin-section.show .nebras-users-modal,
 .admin-section.show .nebras-scm-modal,
+.admin-section.show .scm-tabs,
+.admin-section.show .scm-panel,
+.admin-section.show .scm-list,
+.admin-section.show .scm-row-actions,
+.admin-section.show .nebras-scm-toolbar,
+.admin-section.show .nebras-scm-store-hub,
 #system-settings.show .admin-modal,
 #site-content-management.show .admin-modal {
     max-height: min(90vh, 90dvh);
@@ -179,6 +185,23 @@ button:disabled,
 .erp-module-card.disabled,
 .platform-module-card.disabled {
     cursor: not-allowed;
+}
+
+.admin-section.show button,
+.admin-section.show a[href],
+.admin-section.show input,
+.admin-section.show select,
+.admin-section.show textarea,
+.admin-section.show label.nebras-check,
+.admin-section.show .scm-panel-toolbar {
+    pointer-events: auto !important;
+    cursor: pointer;
+}
+
+.admin-section.show input,
+.admin-section.show select,
+.admin-section.show textarea {
+    cursor: text;
 }
 
 /* ── 7) زخرفة لا تلتقط النقر ── */
