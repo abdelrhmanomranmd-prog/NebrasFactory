@@ -146,10 +146,15 @@
             if (statusEl) {
                 statusEl.textContent = cloudOk
                     ? '✓ تم إرسال طلبك للإدارة — سيتواصل معك الفريق قريباً.'
-                    : 'تم حفظ طلبك محلياً — تحققي من الاتصال بالإنترنت.';
+                    : '⚠️ تعذّر الإرسال للسحابة — تحققي من الاتصال وأعيدي المحاولة.';
             }
         } else if (typeof schedulePushToNebrasCloud === 'function') {
             schedulePushToNebrasCloud();
+        }
+        if (!cloudOk) {
+            callbackLeads = callbackLeads.filter(function(l) { return l && l.id !== lead.id; });
+            try { localStorage.setItem(CALLBACK_LEADS_KEY, JSON.stringify(callbackLeads)); } catch (e) { /* ignore */ }
+            return;
         }
         if (typeof addAuditLog === 'function') addAuditLog('طلب اتصال زائر', name + ' · ' + phone + ' · ' + city);
         const form = document.getElementById('nebras-callback-form-wrap');

@@ -16771,15 +16771,16 @@
                 });
                 cloudOk = !!(cloudRes && cloudRes.ok);
                 if (!cloudOk) {
-                    statusEl.textContent += ' — جاري الحفظ المحلي (تأكدي من الاتصال).';
-                } else {
-                    statusEl.textContent += ' — ✓ محفوظة في السحابة للإدارة.';
+                    delete complaints[complaintId];
+                    statusEl.textContent = '⚠️ تعذّر الإرسال للسحابة — تحققي من الاتصال وأعيدي المحاولة. (لم تُسجّل الشكوى لدى الإدارة بعد)';
+                    return;
                 }
+                statusEl.textContent += ' — ✓ محفوظة في السحابة للإدارة.';
             }
 
             document.getElementById('complaint-number').value = complaintId;
             document.getElementById('complaint-description').value = '';
-            saveSystemData({ skipCloud: cloudOk });
+            saveSystemData({ skipCloud: true });
             linkComplaintToCrm(complaintId, complaints[complaintId]);
             displayComplaints();
             if (currentAdmin && canManage('audit')) renderAdminAnalyticsPanel();
@@ -24556,9 +24557,9 @@
                     v.forEach(function(c, i) {
                         if (c && typeof c === 'object') obj[c.id || String(i)] = c;
                     });
-                    complaints = Object.assign({}, obj, complaints || {});
+                    complaints = Object.assign({}, complaints || {}, obj);
                 } else if (v && typeof v === 'object') {
-                    complaints = Object.assign({}, v, complaints || {});
+                    complaints = Object.assign({}, complaints || {}, v);
                 }
             }},
             { key: 'audit_logs', get: function() { return auditLogs; }, set: function(v) { auditLogs = Array.isArray(v) ? v : []; } },
@@ -24957,6 +24958,11 @@
                     await flushPushToNebrasCloud({ silentCloud: true });
                 } catch (reconcileErr) {
                     console.warn('Post-hydrate cloud reconcile:', reconcileErr);
+                }
+            }
+            if (typeof pullVisitorIntakeFromCloud === 'function') {
+                try { await pullVisitorIntakeFromCloud(); } catch (intakeErr) {
+                    console.warn('Post-hydrate visitor intake pull:', intakeErr);
                 }
             }
             return ok;
@@ -25385,6 +25391,9 @@
                         });
                     }
                     flushPromise.then(function(ok) {
+                        if (ok && (options.urgentCloud || options.showCloudToast) && typeof showNebrasAdminToast === 'function') {
+                            showNebrasAdminToast('✓ تم الحفظ في السحابة — متاح لكل الأجهزة والإدارات', 'ok');
+                        }
                         if (!ok && typeof showNebrasAdminToast === 'function' && options.silentCloudFail !== true) {
                             showNebrasAdminToast('⚠️ لم يُحفظ في السحابة — تحققي من الاتصال وأعيدي المحاولة', 'error');
                         }

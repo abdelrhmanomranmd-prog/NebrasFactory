@@ -430,22 +430,31 @@
     }
 
     async function submitNebrasVisitorIntake(type, data) {
-        try {
-            const res = await fetch(apiBase() + '/api/nebras-visitor-intake', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ type: type, data: data })
-            });
-            const text = await res.text();
+        const maxAttempts = 3;
+        for (let attempt = 1; attempt <= maxAttempts; attempt++) {
             try {
-                return JSON.parse(text);
+                const res = await fetch(apiBase() + '/api/nebras-visitor-intake', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: type, data: data })
+                });
+                const text = await res.text();
+                let parsed;
+                try {
+                    parsed = JSON.parse(text);
+                } catch (e) {
+                    parsed = { ok: false, error: 'invalid_response', status: res.status };
+                }
+                if (parsed && parsed.ok) return parsed;
+                if (attempt < maxAttempts) await new Promise(function(r) { setTimeout(r, 800 * attempt); });
+                else return parsed;
             } catch (e) {
-                return { ok: false, error: 'invalid_response', status: res.status };
+                console.warn('submitNebrasVisitorIntake attempt', attempt, e);
+                if (attempt >= maxAttempts) return { ok: false, error: 'network_error' };
+                await new Promise(function(r) { setTimeout(r, 800 * attempt); });
             }
-        } catch (e) {
-            console.warn('submitNebrasVisitorIntake failed:', e);
-            return { ok: false, error: 'network_error' };
         }
+        return { ok: false, error: 'network_error' };
     }
 
     global.NEBRAS_PUBLIC_STORE_KEYS = PUBLIC_STORE_KEYS;
