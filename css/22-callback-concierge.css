@@ -141,7 +141,6 @@ body.admin-session .nebras-callback-fab,
 }
 
 .nebras-callback-form input,
-.nebras-callback-form select,
 .nebras-callback-form textarea {
     width: 100%;
     padding: 11px 12px;
@@ -152,6 +151,33 @@ body.admin-session .nebras-callback-fab,
     font-family: inherit;
     font-size: 0.95rem;
     box-sizing: border-box;
+}
+
+.nebras-callback-form select {
+    width: 100%;
+    padding: 11px 12px;
+    padding-inline-start: 12px;
+    border-radius: 12px;
+    border: 1px solid rgba(26, 143, 168, 0.45);
+    background-color: #fff;
+    color: #062e44;
+    font-family: inherit;
+    font-size: 0.95rem;
+    font-weight: 600;
+    box-sizing: border-box;
+    cursor: pointer;
+    appearance: auto;
+}
+
+.nebras-callback-form select option {
+    background: #fff;
+    color: #062e44;
+    font-weight: 600;
+}
+
+.nebras-callback-form select:focus {
+    outline: 2px solid rgba(212, 168, 66, 0.65);
+    outline-offset: 1px;
 }
 
 .nebras-callback-form input::placeholder,
