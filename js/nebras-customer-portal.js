@@ -480,10 +480,16 @@
             };
         }
         if (loyaltyBtn) {
+            loyaltyBtn.hidden = !canManageCustomerPortalUsers();
+            loyaltyBtn.style.display = canManageCustomerPortalUsers() ? '' : 'none';
             loyaltyBtn.onclick = function(ev) {
                 if (ev) ev.preventDefault();
                 openCustomerLoyaltyAnalytics();
             };
+        }
+        if (newBtn) {
+            newBtn.hidden = !canCreateCustomerPortalUser();
+            newBtn.style.display = canCreateCustomerPortalUser() ? '' : 'none';
         }
     }
 
@@ -498,8 +504,8 @@
 
     /* ---------- إدارة مستخدمي العملاء (الإدارة + مدير المبيعات) ---------- */
     function openCustomerPortalGovernance() {
-        if (!canManageCustomerPortalUsers()) {
-            alert('إنشاء مستخدمي العملاء — الإدارة الرئيسية ومدير المبيعات/مدير الفرع فقط.');
+        if (!canCreateCustomerPortalUser() && !canManageCustomerPortalUsers()) {
+            alert('بوابة العملاء — الإدارة الرئيسية · مدير المبيعات/الفرع · أو مندوب مخوّل بصلاحية إنشاء عميل.');
             return;
         }
         (async function() {
@@ -528,9 +534,20 @@
             list.innerHTML = '<p class="nebras-users-empty">لا مستخدمي عملاء — أضيفي أول حساب عميل.</p>';
             return;
         }
+        const mgr = canManageCustomerPortalUsers();
+        const accessLabels = { quotes: 'عروض', orders: 'طلبات', transfers: 'حوالات', journeys: 'مسار' };
         list.innerHTML = users.map(function(u, idx) {
             const globalIdx = customerPortalUsers.indexOf(u);
             const loyalty = computeCustomerLoyaltyScore(u);
+            const accessText = Array.isArray(u.portalAccess) && u.portalAccess.length
+                ? u.portalAccess.map(function(k) { return accessLabels[k] || k; }).join(' · ')
+                : 'كل الأقسام';
+            const foot = mgr
+                ? '<footer class="nebras-user-card-foot">' +
+                    '<button class="nebras-user-act" onclick="openCpUserEditor(' + globalIdx + ')"><i class="fas fa-pen"></i> تعديل</button>' +
+                    '<button class="nebras-user-act nebras-user-act--danger" onclick="deleteCpUser(' + globalIdx + ')"><i class="fas fa-trash"></i> حذف</button>' +
+                '</footer>'
+                : '';
             return '<article class="nebras-user-card cp-gov-card">' +
                 '<header class="nebras-user-card-head">' +
                     '<span class="nebras-user-avatar"><i class="fas fa-user-circle"></i></span>' +
@@ -538,13 +555,9 @@
                 '</header>' +
                 '<span class="nebras-user-branch"><i class="fas fa-chart-line"></i> ' + loyalty.data.totalQuotes + ' عروض · ' + loyalty.data.totalOrders + ' طلبات · ' + esc(loyalty.tier) + '</span>' +
                 (u.assignedRepUsername ? '<span class="nebras-user-branch"><i class="fas fa-user-tie"></i> مندوب: ' + esc(u.assignedRepUsername) + '</span>' : '') +
-                (Array.isArray(u.portalAccess) && u.portalAccess.length < 4
-                    ? '<span class="nebras-user-branch"><i class="fas fa-key"></i> صلاحيات: ' + esc(u.portalAccess.join(' · ')) + '</span>'
-                    : '') +
-                '<footer class="nebras-user-card-foot">' +
-                    '<button class="nebras-user-act" onclick="openCpUserEditor(' + globalIdx + ')"><i class="fas fa-pen"></i> تعديل</button>' +
-                    '<button class="nebras-user-act nebras-user-act--danger" onclick="deleteCpUser(' + globalIdx + ')"><i class="fas fa-trash"></i> حذف</button>' +
-                '</footer></article>';
+                '<span class="nebras-user-branch"><i class="fas fa-key"></i> مسار العميل: ' + esc(accessText) + '</span>' +
+                foot +
+            '</article>';
         }).join('');
     }
 

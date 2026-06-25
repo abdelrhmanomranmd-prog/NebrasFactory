@@ -368,7 +368,7 @@ function keysAllowedForSession(sess, keys) {
     return keys.filter(function(k) {
         if (HQ_ONLY_STORE_KEYS.indexOf(k) >= 0) return false;
         if (role === 'sales_rep') {
-            return ['sales_quotes_inbox', 'quote_registry', 'customer_order_journeys'].indexOf(k) >= 0;
+            return ['sales_quotes_inbox', 'quote_registry', 'customer_order_journeys', 'customer_portal_users'].indexOf(k) >= 0;
         }
         if (role === 'hr' || role === 'hr_manager' || role === 'hr_admin') {
             return k.indexOf('hr_') === 0 || k === 'audit_logs';

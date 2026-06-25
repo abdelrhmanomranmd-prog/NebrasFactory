@@ -347,6 +347,28 @@
 .nebras-editor-perms-actions button:hover { background: #e6f0fa; }
 
 /* شبكة الصلاحيات */
+.nebras-perm-groups {
+    padding: 0 20px 18px;
+}
+
+.nebras-perm-group {
+    margin-bottom: 18px;
+}
+
+.nebras-perm-group-title {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #0a4d8c;
+    margin: 0 0 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.nebras-perm-grid--group {
+    padding: 0;
+}
+
 .nebras-perm-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
