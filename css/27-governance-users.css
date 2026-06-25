@@ -347,28 +347,6 @@
 .nebras-editor-perms-actions button:hover { background: #e6f0fa; }
 
 /* شبكة الصلاحيات */
-.nebras-perm-groups {
-    padding: 0 20px 18px;
-}
-
-.nebras-perm-group {
-    margin-bottom: 18px;
-}
-
-.nebras-perm-group-title {
-    font-size: 0.82rem;
-    font-weight: 700;
-    color: #0a4d8c;
-    margin: 0 0 10px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.nebras-perm-grid--group {
-    padding: 0;
-}
-
 .nebras-perm-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
@@ -421,6 +399,35 @@
     font-size: 0.72rem;
     color: #6a7888;
     line-height: 1.4;
+}
+
+.nebras-perm-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    padding: 0 20px 12px;
+}
+
+.nebras-perm-group-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--nu-line);
+    color: var(--nu-navy);
+}
+
+.nebras-perm-group-head h5 {
+    margin: 0;
+    font-size: 0.92rem;
+    font-weight: 700;
+}
+
+.nebras-perm-grid--group {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 10px;
 }
 
 .nebras-editor-footer {

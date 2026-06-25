@@ -15,7 +15,7 @@ def run(name):
 
 
 def main():
-    deploy = 'hrws125'
+    deploy = 'hrws127'
     if len(sys.argv) > 1:
         deploy = sys.argv[1]
     steps = [

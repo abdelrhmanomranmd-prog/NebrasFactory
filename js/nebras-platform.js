@@ -154,9 +154,9 @@
             productMaster: 'مركز المنتجات والأسعار',
             hr: 'الموارد البشرية',
             legal: 'الشؤون القانونية',
-            customerPortal: 'بوابة العملاء — إدارة حسابات العملاء',
-            createCustomerUser: 'إنشاء حساب عميل — للمندوبين والإدارة',
-            orderJourney: 'مسار نبراس — رحلة الطلب (7 محطات)',
+            customerPortal: 'بوابة العملاء — حسابات العملاء',
+            createCustomerUser: 'إنشاء حساب عميل (مندوب)',
+            orderJourney: 'مسار نبراس — متابعة الطلب',
             storeCatalog: 'المتجر الإلكتروني — رفع المنتجات'
         };
         /** أيقونة + وصف لكل صلاحية — تُستخدم في واجهة إدارة المستخدمين الاحترافية */
@@ -180,11 +180,47 @@
             productMaster: { icon: 'fas fa-database', descAr: 'تحديد أسماء المنتجات وأنواعها ومقاساتها وأسعارها — مصدر النظام الديناميكي' },
             hr: { icon: 'fas fa-people-roof', descAr: 'منصة HR — موظفون وعمال وسيارات وإجازات لكل الفروع' },
             legal: { icon: 'fas fa-scale-balanced', descAr: 'منصة Legal — عقود وقضايا وامتثال وPDPL لنبراس والشركات الشريكة' },
-            customerPortal: { icon: 'fas fa-user-circle', descAr: 'إنشاء · تعديل · حذف حسابات بوابة العميل — وتحديد صلاحيات مسار العميل' },
-            createCustomerUser: { icon: 'fas fa-user-plus', descAr: 'إنشاء حساب عميل جديد (اسم مستخدم وكلمة سر) — للمندوبين' },
-            orderJourney: { icon: 'fas fa-route', descAr: 'مسار الطلب — إنتاج · ورشة · مستودع · تأكيد مالي · جاهز للاستلام · QR' },
+            customerPortal: { icon: 'fas fa-user-circle', descAr: 'إنشاء حسابات بوابة العميل — لوحة خاصة لكل عميل' },
+            createCustomerUser: { icon: 'fas fa-user-plus', descAr: 'مندوب المبيعات — إنشاء حساب عميل (اسم مستخدم وكلمة سر)' },
+            orderJourney: { icon: 'fas fa-route', descAr: 'مسار الطلب — إنتاج · ورشة · مستودع · تأكيد مالي · جاهز للاستلام' },
             storeCatalog: { icon: 'fas fa-store', descAr: 'رفع وتحديث منتجات المتجر — مقاس · نوع · سعر · صورة — ديناميكي' }
         };
+        /** تجميع صلاحيات المستخدمين — مسار العملاء والبوابة أولاً */
+        const NEBRAS_PERMISSION_GROUPS = [
+            { id: 'customers', titleAr: 'مسار العملاء والبوابة', icon: 'fas fa-user-circle', keys: ['customerPortal', 'createCustomerUser', 'orderJourney', 'customerService', 'quotes', 'orders'] },
+            { id: 'operations', titleAr: 'التشغيل والمخزون', icon: 'fas fa-cubes', keys: ['erp', 'inventory', 'warehouse', 'production', 'procurement', 'accounting', 'storeCatalog', 'productMaster'] },
+            { id: 'site', titleAr: 'الموقع والفروع', icon: 'fas fa-globe', keys: ['content', 'branches', 'complaints', 'audit'] },
+            { id: 'departments', titleAr: 'الأقسام المتخصصة', icon: 'fas fa-sitemap', keys: ['hr', 'legal', 'aluminum'] },
+            { id: 'admin', titleAr: 'الحوكمة والإدارة', icon: 'fas fa-shield-halved', keys: ['users'] }
+        ];
+        function buildUserEditorPermissionGroupsHtml(permissions) {
+            const perms = Array.isArray(permissions) ? permissions : [];
+            const groupedKeys = {};
+            NEBRAS_PERMISSION_GROUPS.forEach(function(g) {
+                (g.keys || []).forEach(function(k) { groupedKeys[k] = g.id; });
+            });
+            const orphanKeys = ALL_PERMISSION_KEYS.filter(function(k) { return !groupedKeys[k]; });
+            const sections = NEBRAS_PERMISSION_GROUPS.slice();
+            if (orphanKeys.length) {
+                sections.push({ id: 'other', titleAr: 'صلاحيات أخرى', icon: 'fas fa-ellipsis', keys: orphanKeys });
+            }
+            return sections.map(function(group) {
+                const cards = (group.keys || []).map(function(key) {
+                    const meta = NEBRAS_PERMISSION_META[key] || {};
+                    const on = perms.indexOf(key) >= 0;
+                    return '<label class="nebras-perm-card' + (on ? ' is-on' : '') + '">' +
+                        '<input type="checkbox" ' + (on ? 'checked' : '') + ' onchange="toggleUserEditorPerm(\'' + key + '\', this.checked)">' +
+                        '<i class="' + (meta.icon || 'fas fa-check') + '"></i>' +
+                        '<span class="nebras-perm-card-title">' + (NEBRAS_PERMISSION_LABELS[key] || key) + '</span>' +
+                        '<span class="nebras-perm-card-desc">' + (meta.descAr || '') + '</span>' +
+                        '</label>';
+                }).join('');
+                if (!cards) return '';
+                return '<section class="nebras-perm-group" data-perm-group="' + group.id + '">' +
+                    '<header class="nebras-perm-group-head"><i class="' + (group.icon || 'fas fa-key') + '"></i><h5>' + group.titleAr + '</h5></header>' +
+                    '<div class="nebras-perm-grid nebras-perm-grid--group">' + cards + '</div></section>';
+            }).join('');
+        }
         const SHOP_CATALOG_PRODUCT_IDS = ['prod-wpc-raw', 'prod-wpc', 'prod-aluminum', 'prod-other'];
 
         function canUploadNebrasMedia(permissionKey) {
@@ -346,13 +382,6 @@
             { id: 'nebras-factory-admin', username: 'NEBRASFACTORY', password: 'NEBRASFACTORYCOMPANYBASIC', role: 'superadmin', isPrimary: true }
         ];
         const ALL_PERMISSION_KEYS = Object.keys(NEBRAS_PERMISSION_LABELS);
-        /** تجميع صلاحيات محرر المستخدمين — العملاء ومسار الطلب في قسم واحد */
-        const NEBRAS_PERMISSION_GROUPS = [
-            { id: 'governance', labelAr: 'الحوكمة والمنصة', keys: ['users', 'audit', 'branches', 'content', 'storeCatalog', 'productMaster'] },
-            { id: 'erp', labelAr: 'ERP والعمليات', keys: ['erp', 'inventory', 'warehouse', 'production', 'procurement', 'accounting', 'orders', 'sales', 'quotes', 'aluminum'] },
-            { id: 'customers', labelAr: 'العملاء ومسار الطلب', keys: ['customerService', 'complaints', 'customerPortal', 'createCustomerUser', 'orderJourney'] },
-            { id: 'people', labelAr: 'الموارد البشرية والقانونية', keys: ['hr', 'legal'] }
-        ];
         const NEBRAS_ALUMINUM_PRODUCT_ID = 'prod-aluminum';
         const NEBRAS_WPC_DEPT_SCOPE = 'wpc-dept';
         const NEBRAS_WPC_PRODUCT_IDS = ['prod-wpc', 'prod-wpc-raw'];
@@ -2392,10 +2421,9 @@
             { id: 'dash-users', zone: 'quick', dashGroup: 'command', sortOrder: 4, iconClass: 'fas fa-users-cog', titleAr: 'المستخدمون والصلاحيات', titleEn: 'Users & RBAC', textAr: 'أدوار وصلاحيات كاملة للموقع.', textEn: 'Roles and full site permissions.', handler: 'openUserManagement', permission: 'users', visible: true },
             { id: 'dash-audit', zone: 'quick', dashGroup: 'command', sortOrder: 5, iconClass: 'fas fa-clipboard-check', titleAr: 'سجل العمليات', titleEn: 'Audit Log', textAr: 'تتبع كل إجراء إداري.', textEn: 'Track admin actions.', handler: 'openAuditLog', permission: 'audit', visible: true },
             { id: 'dash-sales', zone: 'quick', dashGroup: 'command', sortOrder: 6, iconClass: 'fas fa-chart-line', titleAr: 'المبيعات', titleEn: 'Sales', textAr: 'عروض الأسعار الواردة والمبيعات.', textEn: 'Quotes and sales.', handler: 'openSalesManagement', permission: 'sales', visible: true },
+            { id: 'dash-customer-portal', zone: 'quick', dashGroup: 'command', sortOrder: 1.02, iconClass: 'fas fa-user-circle', titleAr: 'حسابات بوابة العملاء', titleEn: 'Customer Portal Accounts', textAr: 'إنشاء عملاء · مسار العروض · الطلبات · الحوالات · رحلة الطلب.', textEn: 'Portal users and customer journey paths.', cssClass: 'dashboard-tile-card--customer-portal', handler: 'openCustomerPortalGovernance', permission: 'customerPortal', visible: true },
+            { id: 'dash-create-customer-portal', zone: 'quick', dashGroup: 'command', sortOrder: 1.025, iconClass: 'fas fa-user-plus', titleAr: 'إنشاء حساب عميل', titleEn: 'New Customer Account', textAr: 'إضافة عميل جديد لبوابة نبراس — تحديد مساره في البوابة.', textEn: 'Quick portal signup with journey paths.', cssClass: 'dashboard-tile-card--create-customer', handler: 'openCpUserEditorNew', permission: 'customerPortal', visible: true },
             { id: 'dash-crm', zone: 'quick', dashGroup: 'command', sortOrder: 6.5, iconClass: 'fas fa-handshake', titleAr: 'نبراس CRM', titleEn: 'Nebras CRM', textAr: 'قاعدة عملاء · Pipeline · فرص · استيراد Leads.', textEn: 'Customers, pipeline, opportunities.', handler: 'openCrmPlatform', permission: 'customerService', visible: true },
-            { id: 'dash-customer-portal', zone: 'quick', dashGroup: 'command', sortOrder: 6.55, iconClass: 'fas fa-user-circle', titleAr: 'مستخدمي العملاء', titleEn: 'Customer Portal', textAr: 'إنشاء حسابات بوابة العميل · صلاحيات مسار الطلب · ولاء.', textEn: 'Portal accounts, journey access, loyalty.', handler: 'openCustomerPortalGovernance', permission: 'customerPortal', visible: true },
-            { id: 'dash-create-customer', zone: 'quick', dashGroup: 'command', sortOrder: 6.56, iconClass: 'fas fa-user-plus', titleAr: 'حساب عميل جديد', titleEn: 'New Customer Account', textAr: 'إنشاء حساب بوابة عميل — للمندوبين المخوّلين.', textEn: 'Create customer portal login for reps.', handler: 'openCpUserEditorForRep', permission: 'createCustomerUser', visible: true },
-            { id: 'dash-order-journey-quick', zone: 'quick', dashGroup: 'command', sortOrder: 6.57, iconClass: 'fas fa-route', titleAr: 'مسار نبراس', titleEn: 'Order Journey', textAr: '7 محطات — إنتاج · مستودع · QR استلام.', textEn: '7-stage order journey with pickup QR.', handler: 'openOrderJourneyOps', permission: 'orderJourney', visible: true },
             { id: 'dash-cs', zone: 'quick', dashGroup: 'command', sortOrder: 7, iconClass: 'fas fa-headset', titleAr: 'خدمة العملاء', titleEn: 'Customer Service', textAr: 'استفسارات وردود العملاء.', textEn: 'Customer care.', handler: 'openCustomerServiceManagement', permission: 'customerService', visible: true },
             { id: 'dash-complaints', zone: 'quick', dashGroup: 'command', sortOrder: 8, iconClass: 'fas fa-exclamation-triangle', titleAr: 'الشكاوى', titleEn: 'Complaints', textAr: 'متابعة وحل الشكاوى.', textEn: 'Complaint resolution.', handler: 'openComplaintsManagement', permission: 'complaints', visible: true },
             { id: 'dash-branches', zone: 'quick', dashGroup: 'command', sortOrder: 9, iconClass: 'fas fa-map-marked-alt', titleAr: 'الفروع', titleEn: 'Branches', textAr: 'شبكة فروع المملكة.', textEn: 'KSA branch network.', handler: 'openBranchesManagement', permission: 'branches', visible: true },
@@ -2591,6 +2619,9 @@
             },
             openCpUserEditorForRep: function() {
                 if (typeof window.openCpUserEditorForRep === 'function') return window.openCpUserEditorForRep();
+            },
+            openCpUserEditorNew: function() {
+                if (typeof window.openCpUserEditorNew === 'function') return window.openCpUserEditorNew();
             },
             openOrderJourneyOps: function() {
                 if (typeof window.openOrderJourneyOps === 'function') return window.openOrderJourneyOps();
@@ -3279,13 +3310,15 @@
                     return typeof canViewExecutiveReports === 'function' && canViewExecutiveReports(admin);
                 },
                 openCustomerPortalGovernance: function() {
-                    return (typeof canManageCustomerPortalUsers === 'function' && canManageCustomerPortalUsers(admin)) ||
-                        (typeof window.canCreateCustomerPortalUser === 'function' && window.canCreateCustomerPortalUser(admin));
+                    return typeof canManageCustomerPortalUsers === 'function' && canManageCustomerPortalUsers(admin);
                 },
                 openCustomerLoyaltyAnalytics: function() {
                     return typeof canManageCustomerPortalUsers === 'function' && canManageCustomerPortalUsers(admin);
                 },
                 openCpUserEditorForRep: function() {
+                    return typeof window.canCreateCustomerPortalUser === 'function' && window.canCreateCustomerPortalUser(admin);
+                },
+                openCpUserEditorNew: function() {
                     return typeof window.canCreateCustomerPortalUser === 'function' && window.canCreateCustomerPortalUser(admin);
                 },
                 openCpUserEditor: function() {
@@ -23562,35 +23595,7 @@
                     return '<option value="' + escapeHtmlAttr(c) + '"' + (st.assignedBranchCity === c ? ' selected' : '') + '>' + escapeHtmlAttr(c) + '</option>';
                 })
             ).join('');
-            const permCards = (function() {
-                function cardForKey(key) {
-                    const meta = NEBRAS_PERMISSION_META[key] || {};
-                    const on = st.permissions.indexOf(key) >= 0;
-                    return '<label class="nebras-perm-card' + (on ? ' is-on' : '') + '">' +
-                        '<input type="checkbox" ' + (on ? 'checked' : '') + ' onchange="toggleUserEditorPerm(\'' + key + '\', this.checked)">' +
-                        '<i class="' + (meta.icon || 'fas fa-check') + '"></i>' +
-                        '<span class="nebras-perm-card-title">' + (NEBRAS_PERMISSION_LABELS[key] || key) + '</span>' +
-                        '<span class="nebras-perm-card-desc">' + (meta.descAr || '') + '</span>' +
-                        '</label>';
-                }
-                const grouped = {};
-                NEBRAS_PERMISSION_GROUPS.forEach(function(g) { grouped[g.id] = g; });
-                const used = {};
-                let html = '';
-                NEBRAS_PERMISSION_GROUPS.forEach(function(group) {
-                    const keys = group.keys.filter(function(k) { return NEBRAS_PERMISSION_LABELS[k]; });
-                    if (!keys.length) return;
-                    keys.forEach(function(k) { used[k] = true; });
-                    html += '<div class="nebras-perm-group"><h5 class="nebras-perm-group-title"><i class="fas fa-layer-group"></i> ' + group.labelAr + '</h5><div class="nebras-perm-grid nebras-perm-grid--group">' +
-                        keys.map(cardForKey).join('') + '</div></div>';
-                });
-                const rest = ALL_PERMISSION_KEYS.filter(function(k) { return !used[k]; });
-                if (rest.length) {
-                    html += '<div class="nebras-perm-group"><h5 class="nebras-perm-group-title"><i class="fas fa-ellipsis"></i> أخرى</h5><div class="nebras-perm-grid nebras-perm-grid--group">' +
-                        rest.map(cardForKey).join('') + '</div></div>';
-                }
-                return html;
-            })();
+            const permCards = buildUserEditorPermissionGroupsHtml(st.permissions);
             const branchHint = roleDef.branchScoped
                 ? '<p class="nebras-editor-hint"><i class="fas fa-circle-info"></i> هذا الدور يُدير فرعاً محدداً — اختاري الفرع لحصر بياناته.</p>' : '';
             host.hidden = false;

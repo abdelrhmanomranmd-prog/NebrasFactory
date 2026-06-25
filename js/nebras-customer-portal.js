@@ -72,16 +72,28 @@
         const access = (user && Array.isArray(user.portalAccess) && user.portalAccess.length)
             ? user.portalAccess : CP_DEFAULT_ACCESS;
         const labels = {
-            quotes: 'عرض عروض الأسعار',
-            orders: 'عرض الطلبات',
-            transfers: 'عرض الحوالات',
-            journeys: 'تتبع رحلة الطلب'
+            quotes: 'عرض عروض الأسعار في البوابة',
+            orders: 'عرض الطلبات وحالة التنفيذ',
+            transfers: 'عرض الحوالات البنكية',
+            journeys: 'مسار نبراس — متابعة الطلب (7 محطات)'
+        };
+        const hints = {
+            quotes: 'يرى العميل عروضه المحفوظة فقط',
+            orders: 'طلباته وحالات التجهيز والتسليم',
+            transfers: 'إيصالات الحوالات المرفوعة',
+            journeys: 'محطات الإنتاج حتى الاستلام بالـ QR'
         };
         const boxes = CP_DEFAULT_ACCESS.map(function(key) {
             const on = access.indexOf(key) >= 0 ? ' checked' : '';
-            return '<label class="nebras-check"><input type="checkbox" id="cp-e-access-' + key + '"' + on + '> ' + esc(labels[key] || key) + '</label>';
+            return '<label class="nebras-check cp-portal-access-item">' +
+                '<input type="checkbox" id="cp-e-access-' + key + '"' + on + '>' +
+                '<span class="cp-portal-access-item-text"><strong>' + esc(labels[key] || key) + '</strong>' +
+                '<small>' + esc(hints[key] || '') + '</small></span></label>';
         }).join('');
-        return '<div class="nebras-field nebras-field--full"><span>صلاحيات بوابة العميل</span><div class="nebras-check-grid">' + boxes + '</div></div>';
+        return '<div class="nebras-field nebras-field--full cp-portal-access-block">' +
+            '<span class="cp-portal-access-title"><i class="fas fa-route"></i> مسار العميل في البوابة</span>' +
+            '<p class="cp-portal-access-hint">حدّدي ما يظهر للعميل بعد تسجيل الدخول — يمكن تعديله لاحقاً من «مستخدمي العملاء».</p>' +
+            '<div class="nebras-check-grid cp-portal-access-grid">' + boxes + '</div></div>';
     }
 
     async function hydrateCpUsersFromCloud() {
@@ -142,7 +154,7 @@
         user = resolveCpAdminUser(user);
         if (!user) return false;
         if (typeof isMainGovernanceAdmin === 'function' && isMainGovernanceAdmin(user)) return true;
-        if (user.role === 'sales_manager' || user.role === 'branch_manager') return true;
+        if (user.role === 'manager' || user.role === 'sales_manager' || user.role === 'branch_manager') return true;
         if (typeof canManage === 'function' && canManage('customerPortal', user)) return true;
         return false;
     }
@@ -480,16 +492,10 @@
             };
         }
         if (loyaltyBtn) {
-            loyaltyBtn.hidden = !canManageCustomerPortalUsers();
-            loyaltyBtn.style.display = canManageCustomerPortalUsers() ? '' : 'none';
             loyaltyBtn.onclick = function(ev) {
                 if (ev) ev.preventDefault();
                 openCustomerLoyaltyAnalytics();
             };
-        }
-        if (newBtn) {
-            newBtn.hidden = !canCreateCustomerPortalUser();
-            newBtn.style.display = canCreateCustomerPortalUser() ? '' : 'none';
         }
     }
 
@@ -504,8 +510,8 @@
 
     /* ---------- إدارة مستخدمي العملاء (الإدارة + مدير المبيعات) ---------- */
     function openCustomerPortalGovernance() {
-        if (!canCreateCustomerPortalUser() && !canManageCustomerPortalUsers()) {
-            alert('بوابة العملاء — الإدارة الرئيسية · مدير المبيعات/الفرع · أو مندوب مخوّل بصلاحية إنشاء عميل.');
+        if (!canManageCustomerPortalUsers()) {
+            alert('إنشاء مستخدمي العملاء — الإدارة الرئيسية ومدير المبيعات/مدير الفرع فقط.');
             return;
         }
         (async function() {
@@ -534,20 +540,9 @@
             list.innerHTML = '<p class="nebras-users-empty">لا مستخدمي عملاء — أضيفي أول حساب عميل.</p>';
             return;
         }
-        const mgr = canManageCustomerPortalUsers();
-        const accessLabels = { quotes: 'عروض', orders: 'طلبات', transfers: 'حوالات', journeys: 'مسار' };
         list.innerHTML = users.map(function(u, idx) {
             const globalIdx = customerPortalUsers.indexOf(u);
             const loyalty = computeCustomerLoyaltyScore(u);
-            const accessText = Array.isArray(u.portalAccess) && u.portalAccess.length
-                ? u.portalAccess.map(function(k) { return accessLabels[k] || k; }).join(' · ')
-                : 'كل الأقسام';
-            const foot = mgr
-                ? '<footer class="nebras-user-card-foot">' +
-                    '<button class="nebras-user-act" onclick="openCpUserEditor(' + globalIdx + ')"><i class="fas fa-pen"></i> تعديل</button>' +
-                    '<button class="nebras-user-act nebras-user-act--danger" onclick="deleteCpUser(' + globalIdx + ')"><i class="fas fa-trash"></i> حذف</button>' +
-                '</footer>'
-                : '';
             return '<article class="nebras-user-card cp-gov-card">' +
                 '<header class="nebras-user-card-head">' +
                     '<span class="nebras-user-avatar"><i class="fas fa-user-circle"></i></span>' +
@@ -555,9 +550,13 @@
                 '</header>' +
                 '<span class="nebras-user-branch"><i class="fas fa-chart-line"></i> ' + loyalty.data.totalQuotes + ' عروض · ' + loyalty.data.totalOrders + ' طلبات · ' + esc(loyalty.tier) + '</span>' +
                 (u.assignedRepUsername ? '<span class="nebras-user-branch"><i class="fas fa-user-tie"></i> مندوب: ' + esc(u.assignedRepUsername) + '</span>' : '') +
-                '<span class="nebras-user-branch"><i class="fas fa-key"></i> مسار العميل: ' + esc(accessText) + '</span>' +
-                foot +
-            '</article>';
+                (Array.isArray(u.portalAccess) && u.portalAccess.length < 4
+                    ? '<span class="nebras-user-branch"><i class="fas fa-key"></i> صلاحيات: ' + esc(u.portalAccess.join(' · ')) + '</span>'
+                    : '') +
+                '<footer class="nebras-user-card-foot">' +
+                    '<button class="nebras-user-act" onclick="openCpUserEditor(' + globalIdx + ')"><i class="fas fa-pen"></i> تعديل</button>' +
+                    '<button class="nebras-user-act nebras-user-act--danger" onclick="deleteCpUser(' + globalIdx + ')"><i class="fas fa-trash"></i> حذف</button>' +
+                '</footer></article>';
         }).join('');
     }
 
@@ -745,6 +744,23 @@
         openCpUserEditor(undefined, {});
     }
 
+    function openCpUserEditorNew() {
+        if (!canCreateCustomerPortalUser()) {
+            alert('إنشاء حساب عميل — الإدارة أو مدير المبيعات أو مندوب المبيعات المخوّل.');
+            return;
+        }
+        (async function() {
+            if (typeof hydrateCpUsersFromCloud === 'function') {
+                try { await hydrateCpUsersFromCloud(); } catch (e) { /* ignore */ }
+            }
+            renderCustomerPortalGovernancePanel();
+            bindCpGovernanceToolbar();
+            showCpAdminSection('customer-portal-governance');
+            if (typeof global.revealPlatformLayer === 'function') global.revealPlatformLayer('customer-portal-governance');
+            openCpUserEditor(undefined, {});
+        })();
+    }
+
     function openCpUserEditorFromQuote(customerName, phone) {
         openCpUserEditorForRep();
         setTimeout(function() {
@@ -859,6 +875,7 @@
     global.saveCpUserFromEditor = saveCpUserFromEditor;
     global.deleteCpUser = deleteCpUser;
     global.openCpUserEditorForRep = openCpUserEditorForRep;
+    global.openCpUserEditorNew = openCpUserEditorNew;
     global.openCpUserEditorFromQuote = openCpUserEditorFromQuote;
     global.canCreateCustomerPortalUser = canCreateCustomerPortalUser;
     global.canManageCustomerPortalUsers = canManageCustomerPortalUsers;
