@@ -35,16 +35,16 @@
         system_settings: 'nebrasSystemSettings'
     };
     const PRODUCTION_RESET_TOKEN_KEY = 'nebrasProductionResetToken';
-    const PRODUCTION_RESET_TOKEN_VALUE = 'prod-live-1';
+    const PRODUCTION_RESET_TOKEN_VALUE = 'prod-live-2';
     const PRODUCTION_LOCAL_PURGE_KEYS = [
-        'nebrasAdminUsers', 'nebrasSiteProducts', 'nebrasVisitorIcons', 'nebrasDashboardTiles',
-        'nebrasBranches', 'nebrasHrEmployees', 'nebrasHrVehicles', 'nebrasHrLeave', 'nebrasHrVehicleTracking',
+        'nebrasAdminUsers', 'nebrasSiteProducts', 'nebrasDashboardTiles',
+        'nebrasHrEmployees', 'nebrasHrVehicles', 'nebrasHrLeave', 'nebrasHrVehicleTracking',
         'nebrasHrAttendance', 'nebrasHrDocuments', 'nebrasHrPayroll', 'nebrasHrCompanies',
         'nebrasLegalContracts', 'nebrasCrmCustomers', 'nebrasCrmOpportunities', 'nebrasCrmActivities',
         'nebrasErpInventory', 'nebrasErpOrders', 'nebrasErpProduction', 'nebrasErpProcurement',
         'nebrasErpPurchases', 'nebrasSalesData', 'nebrasSalesPriceList', 'nebrasCustomerPortalUsers',
         'nebrasCustomerPortalAudit', 'nebrasComplaints', 'nebrasAuditLogs', 'nebrasCallbackLeads',
-        'nebrasSalesQuotesInbox', 'nebrasCustomerService', 'nebrasSitePartners', 'nebrasSiteCertifications'
+        'nebrasSalesQuotesInbox', 'nebrasCustomerService',
     ];
 
     function purgeProductionLocalCacheIfNeeded() {
