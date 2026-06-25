@@ -7,6 +7,8 @@
 
     const SESSION_KEY = 'nebrasSecureAdminToken';
     const SESSION_EXP_KEY = 'nebrasSecureAdminExp';
+    const SESSION_PERSIST_KEY = 'nebrasSecureAdminTokenPersist';
+    const SESSION_PERSIST_EXP_KEY = 'nebrasSecureAdminExpPersist';
 
     const PUBLIC_STORE_KEYS = [
         'site_products', 'visitor_icons', 'dashboard_tiles', 'site_custom_sections',
@@ -112,11 +114,23 @@
 
     function getSecureToken() {
         try {
-            const t = sessionStorage.getItem(SESSION_KEY);
-            const exp = Number(sessionStorage.getItem(SESSION_EXP_KEY) || 0);
+            let t = sessionStorage.getItem(SESSION_KEY);
+            let exp = Number(sessionStorage.getItem(SESSION_EXP_KEY) || 0);
+            if (!t || !exp || Date.now() > exp) {
+                t = localStorage.getItem(SESSION_PERSIST_KEY);
+                exp = Number(localStorage.getItem(SESSION_PERSIST_EXP_KEY) || 0);
+                if (t && exp && Date.now() <= exp) {
+                    sessionStorage.setItem(SESSION_KEY, t);
+                    sessionStorage.setItem(SESSION_EXP_KEY, String(exp));
+                }
+            }
             if (!t || !exp || Date.now() > exp) return '';
             return t;
         } catch (e) { return ''; }
+    }
+
+    function hasSecureSession() {
+        return !!getSecureToken();
     }
 
     function setSecureToken(token, expiresAt) {
@@ -124,10 +138,15 @@
             if (!token) {
                 sessionStorage.removeItem(SESSION_KEY);
                 sessionStorage.removeItem(SESSION_EXP_KEY);
+                localStorage.removeItem(SESSION_PERSIST_KEY);
+                localStorage.removeItem(SESSION_PERSIST_EXP_KEY);
                 return;
             }
+            const exp = expiresAt || Date.now() + 28800000;
             sessionStorage.setItem(SESSION_KEY, token);
-            sessionStorage.setItem(SESSION_EXP_KEY, String(expiresAt || Date.now() + 28800000));
+            sessionStorage.setItem(SESSION_EXP_KEY, String(exp));
+            localStorage.setItem(SESSION_PERSIST_KEY, token);
+            localStorage.setItem(SESSION_PERSIST_EXP_KEY, String(exp));
         } catch (e) { /* ignore */ }
     }
 
@@ -220,8 +239,84 @@
         return !!(r && r.ok && r.token);
     }
 
-    function hasSecureSession() {
-        return !!getSecureToken();
+    async function ensureNebrasCloudSessionReady(options) {
+        options = options || {};
+        if (getSecureToken()) return true;
+        const admin = getCurrentAdminUser();
+        if (!admin) return false;
+        let password = '';
+        try {
+            if (typeof global.getNebrasLastLoginPassword === 'function') {
+                password = global.getNebrasLastLoginPassword() || '';
+            }
+        } catch (e) { /* ignore */ }
+        if (password) {
+            const ok = await establishSecureSession(admin.username, password);
+            if (ok) return true;
+        }
+        if (options.promptReauth) {
+            const entered = window.prompt('أدخل كلمة مرورك لحفظ البيانات في السحابة:');
+            if (entered) {
+                const ok = await establishSecureSession(admin.username, entered);
+                if (ok) {
+                    try {
+                        if (typeof global.setNebrasLastLoginPassword === 'function') global.setNebrasLastLoginPassword(entered);
+                    } catch (e2) { /* ignore */ }
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    async function persistGovernanceStore(storeKey, payload, options) {
+        options = options || {};
+        const sessionOk = await ensureNebrasCloudSessionReady(options);
+        if (!sessionOk) return { ok: false, error: 'no_session' };
+        const token = getSecureToken();
+        if (!token) return { ok: false, error: 'no_token' };
+        try {
+            const res = await fetch(apiBase() + '/api/nebras-governance-persist', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: 'Bearer ' + token
+                },
+                body: JSON.stringify({ store_key: storeKey, payload: payload }),
+                keepalive: !!options.keepalive
+            });
+            const data = await res.json().catch(function() { return {}; });
+            if (!res.ok || !data.ok) {
+                return {
+                    ok: false,
+                    error: data.error || 'persist_failed',
+                    detail: data.detail || '',
+                    status: res.status
+                };
+            }
+            return data;
+        } catch (e) {
+            console.warn('persistGovernanceStore failed:', storeKey, e);
+            return { ok: false, error: 'network_error' };
+        }
+    }
+
+    async function securePortalLogin(username, password) {
+        try {
+            const res = await fetch(apiBase() + '/api/nebras-auth?action=portal-login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: username, password: password })
+            });
+            const data = await res.json();
+            if (!res.ok || !data.ok || !data.user) {
+                return { ok: false, error: data.error || 'login_failed' };
+            }
+            return data;
+        } catch (e) {
+            console.warn('securePortalLogin failed:', e);
+            return { ok: false, error: 'network_error' };
+        }
     }
 
     async function pullSensitiveCloudAndApply(applyFn) {
@@ -282,5 +377,8 @@
     global.pullSensitiveCloudAndApply = pullSensitiveCloudAndApply;
     global.mergeApiAdminUser = mergeApiAdminUser;
     global.submitNebrasVisitorIntake = submitNebrasVisitorIntake;
+    global.persistGovernanceStore = persistGovernanceStore;
+    global.ensureNebrasCloudSessionReady = ensureNebrasCloudSessionReady;
+    global.securePortalLogin = securePortalLogin;
 
 })(typeof window !== 'undefined' ? window : globalThis);

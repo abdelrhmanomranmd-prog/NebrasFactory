@@ -60,6 +60,33 @@ async function handleVerify(req) {
     return { code: 200, data: { ok: true, session: sess } };
 }
 
+async function handlePortalLogin(body) {
+    const username = String(body.username || '').trim();
+    const password = String(body.password || '').trim();
+    if (!username || !password) {
+        return { code: 400, data: { ok: false, error: 'credentials_required' } };
+    }
+    const { url, key } = sec.supabaseServiceConfig();
+    if (!url || !key) {
+        return { code: 503, data: { ok: false, error: 'service_unavailable' } };
+    }
+    const users = await sec.loadCustomerPortalUsers();
+    const unLower = username.toLowerCase();
+    const user = users.find(function(u) {
+        return u && u.isActive !== false && String(u.username || '').toLowerCase() === unLower;
+    });
+    if (!user || !sec.verifyNebrasPassword(user.password, password)) {
+        return { code: 401, data: { ok: false, error: 'invalid_credentials' } };
+    }
+    return {
+        code: 200,
+        data: {
+            ok: true,
+            user: sec.sanitizePortalUser(user)
+        }
+    };
+}
+
 module.exports = async function handler(req, res) {
     try {
         if (req.method === 'OPTIONS') {
@@ -83,6 +110,15 @@ module.exports = async function handler(req, res) {
         }
         if (action === 'verify' && req.method === 'GET') {
             const result = await handleVerify(req);
+            return sec.jsonRes(res, result.code, result.data);
+        }
+        if (action === 'portal-login' && req.method === 'POST') {
+            const rl = rate.checkRateLimit(req, { key: 'portal_login', max: 25, windowMs: 300000 });
+            if (!rl.ok) {
+                const blocked = rate.rateLimitResponse(res, rl.retryAfterSec);
+                return sec.jsonRes(res, blocked.code, blocked.data);
+            }
+            const result = await handlePortalLogin(body);
             return sec.jsonRes(res, result.code, result.data);
         }
         return sec.jsonRes(res, 405, { ok: false, error: 'method_not_allowed' });

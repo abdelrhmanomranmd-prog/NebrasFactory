@@ -29,6 +29,7 @@
         legal_contracts: 'nebrasLegalContracts',
         erp_inventory: 'nebrasErpInventory',
         erp_orders: 'nebrasErpOrders',
+        customer_portal_users: 'nebrasCustomerPortalUsers',
         crm_customers: 'nebrasCrmCustomers',
         sales_data: 'nebrasSalesData',
         system_settings: 'nebrasSystemSettings'
@@ -462,8 +463,18 @@
     let cloudAutoPullTimer = null;
     function nebrasFlushCloudIfAdmin() {
         const admin = typeof global.getNebrasCurrentAdmin === 'function' ? global.getNebrasCurrentAdmin() : null;
-        if (!admin || typeof global.flushPushToNebrasCloud !== 'function') return;
-        try { global.flushPushToNebrasCloud({ silentCloud: true }); } catch (e) { /* ignore */ }
+        if (!admin) return;
+        const sensPending = hasSensitiveCloudPending();
+        if (sensPending && typeof global.persistNebrasCriticalStores === 'function') {
+            const keys = ['admin_users', 'customer_portal_users', 'hr_employees'];
+            try {
+                global.persistNebrasCriticalStores(keys, { showToast: false, promptReauth: false, keepalive: true });
+                return;
+            } catch (e) { /* fallback below */ }
+        }
+        if (typeof global.flushPushToNebrasCloud === 'function') {
+            try { global.flushPushToNebrasCloud({ silentCloud: true }); } catch (e) { /* ignore */ }
+        }
     }
     function nebrasPullCloudIfAdmin() {
         const admin = typeof global.getNebrasCurrentAdmin === 'function' ? global.getNebrasCurrentAdmin() : null;

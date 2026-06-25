@@ -24707,7 +24707,7 @@
         ];
 
         const NEBRAS_MERGE_BY_ID_STORE_KEYS = [
-            'admin_users', 'hr_employees', 'hr_vehicles', 'hr_documents', 'hr_leave',
+            'admin_users', 'customer_portal_users', 'hr_employees', 'hr_vehicles', 'hr_documents', 'hr_leave',
             'hr_vehicle_tracking', 'hr_attendance', 'crm_customers', 'erp_orders', 'legal_contracts'
         ];
 
@@ -25103,11 +25103,15 @@
         async function persistNebrasCriticalStores(storeKeys, options) {
             options = options || {};
             if (!Array.isArray(storeKeys) || !storeKeys.length || !supabaseClient) return false;
-            if (typeof getNebrasSecureToken === 'function' && !getNebrasSecureToken()) {
-                if (typeof establishNebrasSecureSession === 'function' && currentAdmin && nebrasLastLoginPassword) {
-                    try {
-                        await establishNebrasSecureSession(currentAdmin.username, nebrasLastLoginPassword);
-                    } catch (reAuthErr) { /* ignore */ }
+            if (typeof ensureNebrasCloudSessionReady === 'function') {
+                const sessionOk = await ensureNebrasCloudSessionReady({
+                    promptReauth: options.promptReauth !== false
+                });
+                if (!sessionOk) {
+                    if (options.showToast && typeof showNebrasAdminToast === 'function') {
+                        showNebrasAdminToast('⚠️ لا جلسة سحابة — أعيدي تسجيل الدخول ثم احفظي مرة أخرى', 'error');
+                    }
+                    return false;
                 }
             }
             const rows = [];
@@ -25122,10 +25126,28 @@
             });
             if (!rows.length) return false;
             let ok = false;
-            if (typeof secureCloudPush === 'function' && typeof getNebrasSecureToken === 'function' && getNebrasSecureToken()) {
+            const govKeys = ['admin_users', 'customer_portal_users', 'customer_portal_audit', 'hr_employees'];
+            const useGovernanceApi = typeof persistGovernanceStore === 'function' &&
+                rows.every(function(r) { return govKeys.indexOf(r.store_key) >= 0; });
+            if (useGovernanceApi) {
+                let allOk = true;
+                for (let gi = 0; gi < rows.length; gi++) {
+                    const row = rows[gi];
+                    const result = await persistGovernanceStore(row.store_key, row.payload, {
+                        keepalive: !!options.keepalive
+                    });
+                    if (!result || !result.ok || result.verified === false) {
+                        console.warn('persistGovernanceStore failed:', row.store_key, result);
+                        allOk = false;
+                        break;
+                    }
+                }
+                ok = allOk;
+            }
+            if (!ok && typeof secureCloudPush === 'function' && typeof getNebrasSecureToken === 'function' && getNebrasSecureToken()) {
                 const result = await secureCloudPush(rows);
                 ok = !!(result && result.ok);
-                if (!ok) console.warn('persistNebrasCriticalStores failed:', result);
+                if (!ok) console.warn('persistNebrasCriticalStores fallback push failed:', result);
             }
             if (!ok) return false;
             nebrasCloudSynced = true;
@@ -25133,8 +25155,9 @@
             if (typeof clearLocalCloudMutations === 'function') {
                 clearLocalCloudMutations(rows.map(function(r) { return r.store_key; }));
             }
+            if (typeof clearSensitiveCloudPending === 'function') clearSensitiveCloudPending();
             if (options.showToast && typeof showNebrasAdminToast === 'function') {
-                showNebrasAdminToast('✓ تم الحفظ في السحابة', 'ok');
+                showNebrasAdminToast('✓ تم الحفظ في السحابة — متاح لكل الأجهزة', 'ok');
             }
             return true;
         }
@@ -28133,6 +28156,8 @@
         window.persistNebrasCriticalStores = persistNebrasCriticalStores;
         window.flushPushToNebrasCloud = flushPushToNebrasCloud;
         window.refreshNebrasCloudFromServer = refreshNebrasCloudFromServer;
+        window.getNebrasLastLoginPassword = function() { return nebrasLastLoginPassword || ''; };
+        window.setNebrasLastLoginPassword = function(pw) { nebrasLastLoginPassword = pw || null; };
         window.cancelUserEditor = cancelUserEditor;
         window.addNewUser = addNewUser;
         window.editUser = editUser;

@@ -53,8 +53,61 @@
         cpDataReady = true;
     }
 
+    const CP_DEFAULT_ACCESS = ['quotes', 'orders', 'transfers', 'journeys'];
+
+    function readCpPortalAccessFromEditor(user) {
+        const base = (user && Array.isArray(user.portalAccess) && user.portalAccess.length)
+            ? user.portalAccess.slice() : CP_DEFAULT_ACCESS.slice();
+        if (!canManageCustomerPortalUsers()) return base;
+        const picked = [];
+        CP_DEFAULT_ACCESS.forEach(function(key) {
+            const el = document.getElementById('cp-e-access-' + key);
+            if (!el || el.checked) picked.push(key);
+        });
+        return picked.length ? picked : CP_DEFAULT_ACCESS.slice();
+    }
+
+    function buildCpAccessFieldsHtml(user) {
+        if (!canManageCustomerPortalUsers()) return '';
+        const access = (user && Array.isArray(user.portalAccess) && user.portalAccess.length)
+            ? user.portalAccess : CP_DEFAULT_ACCESS;
+        const labels = {
+            quotes: 'عرض عروض الأسعار',
+            orders: 'عرض الطلبات',
+            transfers: 'عرض الحوالات',
+            journeys: 'تتبع رحلة الطلب'
+        };
+        const boxes = CP_DEFAULT_ACCESS.map(function(key) {
+            const on = access.indexOf(key) >= 0 ? ' checked' : '';
+            return '<label class="nebras-check"><input type="checkbox" id="cp-e-access-' + key + '"' + on + '> ' + esc(labels[key] || key) + '</label>';
+        }).join('');
+        return '<div class="nebras-field nebras-field--full"><span>صلاحيات بوابة العميل</span><div class="nebras-check-grid">' + boxes + '</div></div>';
+    }
+
+    async function hydrateCpUsersFromCloud() {
+        if (typeof global.ensureNebrasCloudSessionReady === 'function' &&
+            typeof global.getNebrasSecureToken === 'function' && !global.getNebrasSecureToken()) {
+            try { await global.ensureNebrasCloudSessionReady({ promptReauth: false }); } catch (e) { /* ignore */ }
+        }
+        if (typeof global.secureCloudPull !== 'function' || typeof global.getNebrasSecureToken !== 'function') return false;
+        if (!global.getNebrasSecureToken()) return false;
+        try {
+            const rows = await global.secureCloudPull(['customer_portal_users']);
+            const row = (rows || []).find(function(r) { return r && r.store_key === 'customer_portal_users'; });
+            if (row && Array.isArray(row.payload)) {
+                setCustomerPortalUsersFromCloud(row.payload);
+                return true;
+            }
+        } catch (e) { console.warn('hydrateCpUsersFromCloud:', e); }
+        return false;
+    }
+
     function saveCpData() {
         try { localStorage.setItem(CP_USERS_KEY, JSON.stringify(customerPortalUsers)); } catch (e) { /* ignore */ }
+        if (typeof global.markLocalCloudMutationBatch === 'function') {
+            global.markLocalCloudMutationBatch(['customer_portal_users']);
+        }
+        if (typeof global.markSensitiveCloudPending === 'function') global.markSensitiveCloudPending();
         if (typeof global.syncNebrasCloudInBackground === 'function') global.syncNebrasCloudInBackground();
     }
 
@@ -266,21 +319,44 @@
             if (status) status.textContent = 'أدخل اسم المستخدم وكلمة المرور.';
             return;
         }
-        const user = customerPortalUsers.find(function(u) {
-            return String(u.username || '').toLowerCase() === username.toLowerCase() && u.isActive !== false;
-        });
-        if (!user || !verifyPw(user.password, password)) {
-            if (status) status.textContent = 'بيانات الدخول غير صحيحة.';
-            cpAudit('محاولة دخول فاشلة', username);
-            return;
-        }
-        user.lastLoginAt = new Date().toISOString();
-        currentPortalCustomer = user;
-        try { localStorage.setItem(CP_SESSION_KEY, JSON.stringify({ id: user.id, at: Date.now() })); } catch (e) { /* ignore */ }
-        saveCpData();
-        cpAudit('دخول عميل', user.username);
-        closeCustomerPortalLogin();
-        showCustomerPortalApp();
+        (async function() {
+            let user = null;
+            if (typeof global.securePortalLogin === 'function') {
+                try {
+                    const api = await global.securePortalLogin(username, password);
+                    if (api && api.ok && api.user) {
+                        const idx = customerPortalUsers.findIndex(function(u) {
+                            return u && String(u.id) === String(api.user.id);
+                        });
+                        if (idx >= 0) {
+                            customerPortalUsers[idx] = Object.assign({}, customerPortalUsers[idx], api.user);
+                            user = customerPortalUsers[idx];
+                        } else {
+                            user = api.user;
+                            customerPortalUsers.push(user);
+                        }
+                        saveCpData();
+                    }
+                } catch (apiErr) { console.warn('portal API login:', apiErr); }
+            }
+            if (!user) {
+                user = customerPortalUsers.find(function(u) {
+                    return String(u.username || '').toLowerCase() === username.toLowerCase() && u.isActive !== false;
+                });
+                if (!user || !verifyPw(user.password, password)) {
+                    if (status) status.textContent = 'بيانات الدخول غير صحيحة.';
+                    cpAudit('محاولة دخول فاشلة', username);
+                    return;
+                }
+            }
+            user.lastLoginAt = new Date().toISOString();
+            currentPortalCustomer = user;
+            try { localStorage.setItem(CP_SESSION_KEY, JSON.stringify({ id: user.id, at: Date.now() })); } catch (e) { /* ignore */ }
+            saveCpData();
+            cpAudit('دخول عميل', user.username);
+            closeCustomerPortalLogin();
+            showCustomerPortalApp();
+        })();
     }
 
     function logoutCustomerPortal() {
@@ -411,9 +487,14 @@
             alert('إنشاء مستخدمي العملاء — الإدارة الرئيسية ومدير المبيعات/مدير الفرع فقط.');
             return;
         }
-        renderCustomerPortalGovernancePanel();
-        bindCpGovernanceToolbar();
-        showCpAdminSection('customer-portal-governance');
+        (async function() {
+            if (typeof hydrateCpUsersFromCloud === 'function') {
+                try { await hydrateCpUsersFromCloud(); } catch (e) { /* ignore */ }
+            }
+            renderCustomerPortalGovernancePanel();
+            bindCpGovernanceToolbar();
+            showCpAdminSection('customer-portal-governance');
+        })();
     }
 
     function renderCustomerPortalGovernancePanel() {
@@ -442,6 +523,9 @@
                 '</header>' +
                 '<span class="nebras-user-branch"><i class="fas fa-chart-line"></i> ' + loyalty.data.totalQuotes + ' عروض · ' + loyalty.data.totalOrders + ' طلبات · ' + esc(loyalty.tier) + '</span>' +
                 (u.assignedRepUsername ? '<span class="nebras-user-branch"><i class="fas fa-user-tie"></i> مندوب: ' + esc(u.assignedRepUsername) + '</span>' : '') +
+                (Array.isArray(u.portalAccess) && u.portalAccess.length < 4
+                    ? '<span class="nebras-user-branch"><i class="fas fa-key"></i> صلاحيات: ' + esc(u.portalAccess.join(' · ')) + '</span>'
+                    : '') +
                 '<footer class="nebras-user-card-foot">' +
                     '<button class="nebras-user-act" onclick="openCpUserEditor(' + globalIdx + ')"><i class="fas fa-pen"></i> تعديل</button>' +
                     '<button class="nebras-user-act nebras-user-act--danger" onclick="deleteCpUser(' + globalIdx + ')"><i class="fas fa-trash"></i> حذف</button>' +
@@ -522,6 +606,7 @@
                     '<label class="nebras-field"><span>البريد</span><input id="cp-e-email" type="email" value="' + escAttr(user ? user.email : '') + '"></label>' +
                     '<label class="nebras-field"><span>ربط CRM</span><select id="cp-e-crm">' + crmSelect + '</select></label>' +
                     repSelect +
+                    buildCpAccessFieldsHtml(user) +
                     '<label class="nebras-field"><span>الفرع</span><input readonly value="' + escAttr(cpEditorState.branchCity || 'المجموعة') + '"></label>' +
                 '</div>' +
                 '<div class="nebras-editor-footer">' +
@@ -541,7 +626,7 @@
         if (host) { host.hidden = true; host.innerHTML = ''; }
     }
 
-    function saveCpUserFromEditor() {
+    async function saveCpUserFromEditor() {
         if (!cpEditorState || !canCreateCustomerPortalUser()) return;
         if (cpEditorState.isEdit && !canManageCustomerPortalUsers()) {
             alert('تعديل حسابات العملاء — مدير المبيعات أو الإدارة فقط.');
@@ -562,6 +647,7 @@
         });
         if (dup) { alert('اسم المستخدم مستخدم مسبقاً.'); return; }
         const admin = resolveCpAdminUser();
+        const portalAccess = readCpPortalAccessFromEditor(cpEditorState.isEdit ? customerPortalUsers[cpEditorState.index] : null);
         const payload = {
             id: cpEditorState.id,
             username: username,
@@ -571,6 +657,7 @@
             crmCustomerId: crmCustomerId || null,
             branchId: cpEditorState.branchId,
             branchCity: cpEditorState.branchCity,
+            portalAccess: portalAccess,
             isActive: true,
             createdBy: admin ? admin.username : 'system',
             updatedAt: new Date().toISOString()
@@ -602,6 +689,13 @@
             if (typeof addAuditLog === 'function') addAuditLog('إنشاء حساب عميل', username + ' — ' + displayName);
         }
         saveCpData();
+        let cloudOk = false;
+        if (typeof global.persistNebrasCriticalStores === 'function') {
+            cloudOk = await global.persistNebrasCriticalStores(['customer_portal_users', 'customer_portal_audit'], { showToast: true });
+        }
+        if (!cloudOk && typeof global.showNebrasAdminToast === 'function') {
+            global.showNebrasAdminToast('⚠️ حساب العميل محفوظ محلياً فقط — لن يعمل من جهاز آخر حتى يُرفع للسحابة', 'error');
+        }
         cancelCpUserEditor();
         renderCustomerPortalGovernancePanel();
     }
@@ -634,7 +728,7 @@
         }, 80);
     }
 
-    function deleteCpUser(index) {
+    async function deleteCpUser(index) {
         if (!canManageCustomerPortalUsers()) {
             alert('حذف مستخدمي العملاء — الإدارة الرئيسية ومدير المبيعات/مدير الفرع فقط.');
             return;
@@ -649,6 +743,9 @@
         saveCpData();
         cpAudit('حذف حساب عميل', u.username);
         if (typeof addAuditLog === 'function') addAuditLog('حذف حساب عميل', u.username);
+        if (typeof global.persistNebrasCriticalStores === 'function') {
+            await global.persistNebrasCriticalStores(['customer_portal_users', 'customer_portal_audit'], { showToast: true });
+        }
         renderCustomerPortalGovernancePanel();
     }
 
@@ -750,6 +847,7 @@
     global.findCustomerPortalUserByPhone = findCustomerPortalUserByPhone;
     global.getCustomerPortalAudit = function() { loadCpData(); return customerPortalAudit; };
     global.buildCustomerLoyaltyRankings = buildCustomerLoyaltyRankings;
+    global.hydrateCpUsersFromCloud = hydrateCpUsersFromCloud;
     global.setCustomerPortalUsersFromCloud = setCustomerPortalUsersFromCloud;
     global.setCustomerPortalAuditFromCloud = setCustomerPortalAuditFromCloud;
     global.collectPortalCustomerData = collectPortalCustomerData;

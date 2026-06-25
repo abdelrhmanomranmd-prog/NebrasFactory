@@ -116,6 +116,26 @@ function sanitizeAdminUser(user) {
     return safe;
 }
 
+function sanitizePortalUser(user) {
+    if (!user) return null;
+    const safe = Object.assign({}, user);
+    delete safe.password;
+    return safe;
+}
+
+async function loadCustomerPortalUsers() {
+    try {
+        const { url, key } = supabaseServiceConfig();
+        if (!url || !key) return [];
+        const row = await fetchStoreRow(url, key, 'customer_portal_users');
+        const payload = row && row.payload !== undefined ? row.payload : null;
+        return Array.isArray(payload) ? payload : [];
+    } catch (err) {
+        console.error('loadCustomerPortalUsers error:', err);
+        return [];
+    }
+}
+
 function sanitizePayloadForPull(storeKey, payload) {
     if (storeKey === 'admin_users' && Array.isArray(payload)) {
         return payload.map(sanitizeAdminUser);
@@ -282,10 +302,12 @@ module.exports = {
     signSession,
     verifySession,
     sanitizeAdminUser,
+    sanitizePortalUser,
     sanitizePayloadForPull,
     fetchStoreRow,
     upsertStoreRows,
     loadAdminUsers,
+    loadCustomerPortalUsers,
     parseBody,
     getBearerToken,
     jsonRes,
