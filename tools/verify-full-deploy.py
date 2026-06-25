@@ -33,7 +33,7 @@ LIVE_MARKERS = {
         'nebras-secure-cloud.js',
         '48-order-journey.css',
         'nebras-order-journey.js',
-        'data-nebras-deploy="hrws111"',
+        'data-nebras-deploy="hrws125"',
         'nebras-site-database.js',
         'exportNebrasGovernanceBundle', 'openNebrasGovernanceImportPicker',
         'nebras-data-warehouse.js',
@@ -60,6 +60,7 @@ LIVE_MARKERS = {
         'dash-order-journey', 'openRepCustomerJourneys', 'updateNebrasErpOrderFromJourney',
         'dash-store-catalog', 'openStoreCatalogManager', 'store_manager', 'storeCatalog',
         'startNebrasCloudAutoSync', 'persistNebrasCriticalStores', 'window.flushPushToNebrasCloud',
+        'enforceProductionBusinessCleanState', 'NEBRAS_PRODUCTION_LIVE_MODE', 'submitNebrasVisitorIntake',
         'assignedRepId', 'assignedRepUsername', 'getNebrasColorCatalog',
         'saveCartBackup', 'restoreCartBackupIfEmpty', 'renderCartEnterpriseChrome', 'quote-a4-customer-ribbon',
         'dash-platform-integration', 'openPlatformIntegrationHub', 'guardCloudPushRow',
@@ -84,7 +85,7 @@ LIVE_MARKERS = {
     ],
     'js/nebras-platform-integrity.js': [
         'openPlatformIntegrationHub', 'guardCloudPushRow', 'guardCloudPullRow',
-        'getCloudSnapshotsForCloud', 'NEBRAS_CRITICAL_CLOUD_KEYS',
+        'getCloudSnapshotsForCloud', 'NEBRAS_CRITICAL_CLOUD_KEYS', 'prod-live-3',
     ],
     'js/nebras-hr-platform.js': ['__nebrasHrOpenImpl', 'renderHrOrgTreePanel', 'requireHrRecordInScope', 'closeHrWorkspace', 'syncPlatformInteractionLayers'],
     'js/nebras-accounting-platform.js': ['exportAccountingPdf', 'openAccountingPlatform', 'closeAccountingWorkspace'],
@@ -220,7 +221,7 @@ def main():
         errors.append('Live site: ' + str(e))
         print('LIVE FAIL:', e)
 
-    for script in ['verify-governance.py', 'verify-empire-governance.py', 'verify-site-full.py', 'verify-project-health.py', 'verify-supabase-cloud.py']:
+    for script in ['verify-production-live.py', 'verify-site-chrome-live.py', 'test-real-persist-live.py', 'verify-project-health.py']:
         name, state, tail = run_script(script)
         print(f'TOOL {name}: {state}')
         if state == 'FAIL':
