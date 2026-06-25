@@ -53,6 +53,7 @@
     }
 
     function ensureBuiltinHrCompaniesSeed() {
+        if (typeof global.NEBRAS_PRODUCTION_LIVE_MODE !== 'undefined' && global.NEBRAS_PRODUCTION_LIVE_MODE) return;
         if (hrPartnerCompanies.length) return;
         const now = new Date().toISOString().slice(0, 10);
         hrPartnerCompanies = [{

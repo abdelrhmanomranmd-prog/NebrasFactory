@@ -195,11 +195,13 @@
             if (!Array.isArray(hrVehicleTracking)) hrVehicleTracking = [];
         } catch (err) { hrVehicleTracking = []; }
         loadHrPhase12Arrays();
-        if (!hrEmployees.length && typeof nebrasHasLocalGovernanceData === 'function' && !nebrasHasLocalGovernanceData()) {
+        if (!hrEmployees.length && typeof nebrasHasLocalGovernanceData === 'function' && !nebrasHasLocalGovernanceData() &&
+            !(typeof global.NEBRAS_PRODUCTION_LIVE_MODE !== 'undefined' && global.NEBRAS_PRODUCTION_LIVE_MODE)) {
             ensureBuiltinHrSeed();
         }
         if (typeof loadHrGpsData === 'function') loadHrGpsData();
-        if (typeof seedDemoGpsIfNeeded === 'function') seedDemoGpsIfNeeded();
+        if (!(typeof global.NEBRAS_PRODUCTION_LIVE_MODE !== 'undefined' && global.NEBRAS_PRODUCTION_LIVE_MODE) &&
+            typeof seedDemoGpsIfNeeded === 'function') seedDemoGpsIfNeeded();
         if (typeof ensureTrackingGpsToken === 'function') {
             hrVehicleTracking.forEach(function(t) {
                 if (t.status === 'on_road') ensureTrackingGpsToken(t);
@@ -283,6 +285,7 @@
     }
 
     function ensureBuiltinHrSeed() {
+        if (typeof global.NEBRAS_PRODUCTION_LIVE_MODE !== 'undefined' && global.NEBRAS_PRODUCTION_LIVE_MODE) return;
         const now = new Date().toISOString().slice(0, 10);
         if (!hrEmployees.length) {
             hrEmployees = [
@@ -2075,6 +2078,7 @@
     }
 
     function ensureBuiltinHrPhase12Seed() {
+        if (typeof global.NEBRAS_PRODUCTION_LIVE_MODE !== 'undefined' && global.NEBRAS_PRODUCTION_LIVE_MODE) return;
         const today = new Date().toISOString().slice(0, 10);
         const month = today.slice(0, 7);
         if (!hrAttendance.length) {
@@ -3206,6 +3210,7 @@
     }
 
     function ensureBuiltinHrPhase15Seed() {
+        if (typeof global.NEBRAS_PRODUCTION_LIVE_MODE !== 'undefined' && global.NEBRAS_PRODUCTION_LIVE_MODE) return;
         const today = new Date().toISOString().slice(0, 10);
         hrEmployees.forEach(function(e) {
             if (!e.departmentKey && e.department) {

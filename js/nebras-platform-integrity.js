@@ -34,6 +34,33 @@
         sales_data: 'nebrasSalesData',
         system_settings: 'nebrasSystemSettings'
     };
+    const PRODUCTION_RESET_TOKEN_KEY = 'nebrasProductionResetToken';
+    const PRODUCTION_RESET_TOKEN_VALUE = 'prod-live-1';
+    const PRODUCTION_LOCAL_PURGE_KEYS = [
+        'nebrasAdminUsers', 'nebrasSiteProducts', 'nebrasVisitorIcons', 'nebrasDashboardTiles',
+        'nebrasBranches', 'nebrasHrEmployees', 'nebrasHrVehicles', 'nebrasHrLeave', 'nebrasHrVehicleTracking',
+        'nebrasHrAttendance', 'nebrasHrDocuments', 'nebrasHrPayroll', 'nebrasHrCompanies',
+        'nebrasLegalContracts', 'nebrasCrmCustomers', 'nebrasCrmOpportunities', 'nebrasCrmActivities',
+        'nebrasErpInventory', 'nebrasErpOrders', 'nebrasErpProduction', 'nebrasErpProcurement',
+        'nebrasErpPurchases', 'nebrasSalesData', 'nebrasSalesPriceList', 'nebrasCustomerPortalUsers',
+        'nebrasCustomerPortalAudit', 'nebrasComplaints', 'nebrasAuditLogs', 'nebrasCallbackLeads',
+        'nebrasSalesQuotesInbox', 'nebrasCustomerService', 'nebrasSitePartners', 'nebrasSiteCertifications'
+    ];
+
+    function purgeProductionLocalCacheIfNeeded() {
+        if (typeof global.NEBRAS_PRODUCTION_LIVE_MODE === 'undefined' || !global.NEBRAS_PRODUCTION_LIVE_MODE) return false;
+        try {
+            if (localStorage.getItem(PRODUCTION_RESET_TOKEN_KEY) === PRODUCTION_RESET_TOKEN_VALUE) return false;
+            PRODUCTION_LOCAL_PURGE_KEYS.forEach(function(k) {
+                try { localStorage.removeItem(k); } catch (e) { /* ignore */ }
+            });
+            localStorage.removeItem(LOCAL_MUTATION_KEY);
+            localStorage.removeItem(SENSITIVE_PENDING_KEY);
+            localStorage.removeItem(GOV_REVISION_KEY);
+            localStorage.setItem(PRODUCTION_RESET_TOKEN_KEY, PRODUCTION_RESET_TOKEN_VALUE);
+            return true;
+        } catch (e) { return false; }
+    }
 
     function markSensitiveCloudPending() {
         try { localStorage.setItem(SENSITIVE_PENDING_KEY, String(Date.now())); } catch (e) { /* ignore */ }
@@ -449,6 +476,7 @@
     global.nebrasHasLocalGovernanceData = nebrasHasLocalGovernanceData;
     global.isGovernanceBootstrapOnly = isGovernanceBootstrapOnly;
     global.ensureGovernanceRevisionFromLocalData = ensureGovernanceRevisionFromLocalData;
+    global.purgeProductionLocalCacheIfNeeded = purgeProductionLocalCacheIfNeeded;
     global.shouldRejectStaleCloudPull = shouldRejectStaleCloudPull;
     global.shouldRejectRegressiveCloudPull = shouldRejectRegressiveCloudPull;
     global.getCloudSnapshotsForCloud = getCloudSnapshotsForCloud;

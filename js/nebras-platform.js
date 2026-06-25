@@ -31,6 +31,41 @@
         const NEBRAS_LINKTREE_URL = 'https://linktr.ee/abdelrhmanomranmd';
         /** المرحلة 1 — السحابة مصدر الحقيقة عند دخول الإدارة */
         const NEBRAS_SERVER_FIRST_MODE = true;
+        /** إنتاج حي — بدون بذور تجريبية؛ الإدارة تضيف كل البيانات */
+        const NEBRAS_PRODUCTION_LIVE_MODE = true;
+        const NEBRAS_CLIENT_RESET_TOKEN = 'prod-live-1';
+        window.NEBRAS_PRODUCTION_LIVE_MODE = NEBRAS_PRODUCTION_LIVE_MODE;
+
+        function shouldSeedBuiltinData() {
+            return !NEBRAS_PRODUCTION_LIVE_MODE;
+        }
+
+        function enforceProductionGovernanceCleanState() {
+            if (!NEBRAS_PRODUCTION_LIVE_MODE) return;
+            adminUsers = (adminUsers || []).filter(function(u) {
+                return u && isImmutablePrimaryAdmin(u);
+            });
+            if (!adminUsers.some(function(u) { return isImmutablePrimaryAdmin(u); })) {
+                adminUsers.unshift({
+                    id: IMMUTABLE_PRIMARY_ADMIN_ID,
+                    username: IMMUTABLE_PRIMARY_ADMIN_USERNAME,
+                    password: storeNebrasPasswordValue('NEBRASFACTORYCOMPANYBASIC'),
+                    role: 'superadmin',
+                    isPrimary: true,
+                    isActive: true,
+                    permissions: null
+                });
+            }
+            siteProducts = Array.isArray(siteProducts) ? siteProducts : [];
+            if (!shouldSeedBuiltinData()) siteProducts = [];
+            erpInventory = shouldSeedBuiltinData() ? (erpInventory || []) : [];
+            erpOrders = shouldSeedBuiltinData() ? (erpOrders || []) : [];
+            erpProcurement = shouldSeedBuiltinData() ? (erpProcurement || []) : [];
+            erpProduction = shouldSeedBuiltinData() ? (erpProduction || []) : [];
+            erpPurchases = shouldSeedBuiltinData() ? (erpPurchases || []) : [];
+            salesData = shouldSeedBuiltinData() ? (salesData || []) : [];
+            if (!shouldSeedBuiltinData()) branchesData = Array.isArray(branchesData) ? branchesData : [];
+        }
         const NEBRAS_DEFAULT_SOCIAL_LINKS = {
             socialInstagram: 'https://www.instagram.com/nebras.factory',
             socialTiktok: 'https://www.tiktok.com/@nebras.factory1',
@@ -3049,6 +3084,13 @@
         }
 
         function ensureBuiltinSiteCatalog() {
+            if (!shouldSeedBuiltinData()) {
+                siteProducts = Array.isArray(siteProducts) ? siteProducts : [];
+                dashboardTiles = Array.isArray(dashboardTiles) ? dashboardTiles : [];
+                siteCustomSections = Array.isArray(siteCustomSections) ? siteCustomSections : [];
+                if (!systemSettings || typeof systemSettings !== 'object') systemSettings = Object.assign({}, DEFAULT_SYSTEM_SETTINGS);
+                return;
+            }
             if (!Array.isArray(siteProducts) || !siteProducts.length) {
                 siteProducts = DEFAULT_SITE_PRODUCTS.map(function(p) {
                     const copy = Object.assign({}, p);
@@ -9957,6 +9999,7 @@
 
         function ensureBuiltinSitePartners() {
             if (!Array.isArray(sitePartners)) sitePartners = [];
+            if (!shouldSeedBuiltinData()) return;
             let seedVer = 0;
             try {
                 seedVer = Number(localStorage.getItem('nebrasPartnersSeedVersion') || 0) || 0;
@@ -12358,6 +12401,11 @@
         let branchesData = DEFAULT_BRANCHES.map(function(b) { return Object.assign({}, b); });
 
         function ensureBuiltinBranches() {
+            if (!shouldSeedBuiltinData()) {
+                branchesData = Array.isArray(branchesData) ? branchesData : [];
+                branchesData = branchesData.map(normalizeBranchRecord);
+                return;
+            }
             if (!Array.isArray(branchesData) || !branchesData.length) {
                 branchesData = DEFAULT_BRANCHES.map(function(b) { return Object.assign({}, b); });
                 return;
@@ -12795,6 +12843,12 @@
         }
 
         function ensureBuiltinErpData() {
+            if (!shouldSeedBuiltinData()) {
+                erpInventory = Array.isArray(erpInventory) ? erpInventory : [];
+                erpOrders = Array.isArray(erpOrders) ? erpOrders : [];
+                erpProcurement = Array.isArray(erpProcurement) ? erpProcurement : [];
+                return;
+            }
             if (!Array.isArray(erpInventory) || !erpInventory.length) {
                 erpInventory = DEFAULT_ERP_INVENTORY.map(function(i) { return Object.assign({}, i); });
             }
@@ -24798,7 +24852,7 @@
 
         function finalizePlatformDataAfterLoad(options) {
             options = options || {};
-            const skipSeeds = options.skipBuiltinSeeds === true;
+            const skipSeeds = options.skipBuiltinSeeds === true || !shouldSeedBuiltinData();
             branchesData = (branchesData || []).map(normalizeBranchRecord);
             if (!skipSeeds && typeof applyNebrasProfile2026Seed === 'function') {
                 applyNebrasProfile2026Seed();
@@ -24857,6 +24911,7 @@
                     u.isPrimary = false;
                 }
             });
+            enforceProductionGovernanceCleanState();
         }
 
         /** المرحلة 1 — تحميل السحابة بعد دخول الإدارة (دمج + بدون مسح البذور) */
@@ -25801,6 +25856,7 @@
             if (nebrasPlatformBootstrapped) return;
             nebrasPlatformBootstrapped = true;
             try {
+                if (typeof purgeProductionLocalCacheIfNeeded === 'function') purgeProductionLocalCacheIfNeeded();
                 loadSystemData();
                 if (typeof ensureGovernanceRevisionFromLocalData === 'function') ensureGovernanceRevisionFromLocalData();
                 if (typeof markGovernanceBootstrapRevision === 'function') markGovernanceBootstrapRevision();
