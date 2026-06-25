@@ -35,16 +35,25 @@
         system_settings: 'nebrasSystemSettings'
     };
     const PRODUCTION_RESET_TOKEN_KEY = 'nebrasProductionResetToken';
-    const PRODUCTION_RESET_TOKEN_VALUE = 'prod-live-2';
+    const PRODUCTION_RESET_TOKEN_VALUE = 'prod-live-3';
     const PRODUCTION_LOCAL_PURGE_KEYS = [
         'nebrasAdminUsers', 'nebrasSiteProducts', 'nebrasDashboardTiles',
         'nebrasHrEmployees', 'nebrasHrVehicles', 'nebrasHrLeave', 'nebrasHrVehicleTracking',
         'nebrasHrAttendance', 'nebrasHrDocuments', 'nebrasHrPayroll', 'nebrasHrCompanies',
+        'nebrasHrNotifications', 'nebrasHrNotifSettings', 'nebrasHrEmailQueue', 'nebrasHrShiftRoster',
+        'nebrasHrDeptActivity', 'nebrasHrGpsPositions', 'nebrasHrGpsSettings', 'nebrasHrGpsConsents',
         'nebrasLegalContracts', 'nebrasCrmCustomers', 'nebrasCrmOpportunities', 'nebrasCrmActivities',
         'nebrasErpInventory', 'nebrasErpOrders', 'nebrasErpProduction', 'nebrasErpProcurement',
         'nebrasErpPurchases', 'nebrasSalesData', 'nebrasSalesPriceList', 'nebrasCustomerPortalUsers',
         'nebrasCustomerPortalAudit', 'nebrasComplaints', 'nebrasAuditLogs', 'nebrasCallbackLeads',
-        'nebrasSalesQuotesInbox', 'nebrasCustomerService',
+        'nebrasSalesQuotesInbox', 'nebrasCustomerService', 'nebrasCloudSnapshots',
+    ];
+    const PRODUCTION_BUSINESS_PULL_KEYS = [
+        'site_products', 'hr_employees', 'hr_vehicles', 'hr_leave', 'hr_vehicle_tracking',
+        'hr_attendance', 'hr_documents', 'hr_payroll', 'hr_companies', 'crm_customers',
+        'crm_opportunities', 'erp_inventory', 'erp_orders', 'erp_production', 'erp_procurement',
+        'erp_purchases', 'sales_quotes_inbox', 'customer_order_journeys', 'customer_portal_users',
+        'legal_contracts', 'sales_data', 'sales_price_list'
     ];
 
     function purgeProductionLocalCacheIfNeeded() {
@@ -205,6 +214,10 @@
 
     /** لا نقبل سحابة أقل من المحلي — يحمي حتى بعد مسح علامات المزامنة بالخطأ */
     function shouldRejectRegressiveCloudPull(storeKey, payload) {
+        if (global.NEBRAS_PRODUCTION_LIVE_MODE && PRODUCTION_BUSINESS_PULL_KEYS.indexOf(storeKey) >= 0) {
+            const cloudSize = payloadSize(payload);
+            if (cloudSize === 0 && !hasLocalCloudMutation(storeKey)) return false;
+        }
         if (CRITICAL_STORE_KEYS.indexOf(storeKey) < 0) return false;
         const localSize = getNebrasPersistedPayloadSize(storeKey);
         const cloudSize = payloadSize(payload);

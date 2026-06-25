@@ -33,7 +33,7 @@
         const NEBRAS_SERVER_FIRST_MODE = true;
         /** إنتاج حي — بدون بذور تجريبية؛ الإدارة تضيف كل البيانات */
         const NEBRAS_PRODUCTION_LIVE_MODE = true;
-        const NEBRAS_CLIENT_RESET_TOKEN = 'prod-live-2';
+        const NEBRAS_CLIENT_RESET_TOKEN = 'prod-live-3';
         window.NEBRAS_PRODUCTION_LIVE_MODE = NEBRAS_PRODUCTION_LIVE_MODE;
 
         function shouldSeedBusinessDemoData() {
@@ -79,14 +79,45 @@
                     permissions: null
                 });
             }
-            if (!Array.isArray(siteProducts)) siteProducts = [];
-            if (!shouldSeedBusinessDemoData()) {
-                erpInventory = Array.isArray(erpInventory) ? erpInventory : [];
-                erpOrders = Array.isArray(erpOrders) ? erpOrders : [];
-                erpProcurement = Array.isArray(erpProcurement) ? erpProcurement : [];
-                erpProduction = Array.isArray(erpProduction) ? erpProduction : [];
-                erpPurchases = Array.isArray(erpPurchases) ? erpPurchases : [];
-                salesData = Array.isArray(salesData) ? salesData : [];
+            enforceProductionBusinessCleanState();
+        }
+
+        const BUILTIN_DEMO_PRODUCT_IDS = ['prod-wpc-raw', 'prod-wpc', 'prod-aluminum', 'prod-other', 'prod-complaints'];
+        const BUILTIN_DEMO_HR_EMP_IDS = /^emp-(hq|riy|jed)-\d{3}$/;
+        const BUILTIN_DEMO_HR_VEH_IDS = /^veh-00[1-3]$/;
+        const BUILTIN_DEMO_ERP_INV_IDS = ['inv-1', 'inv-2', 'inv-3'];
+
+        /** إزالة البيانات التجريبية المدمجة — الإنتاج يبدأ فارغاً حتى تضيف الإدارة */
+        function enforceProductionBusinessCleanState() {
+            if (!NEBRAS_PRODUCTION_LIVE_MODE) return;
+            siteProducts = (siteProducts || []).filter(function(p) {
+                return p && BUILTIN_DEMO_PRODUCT_IDS.indexOf(p.id) < 0;
+            });
+            erpInventory = (erpInventory || []).filter(function(i) {
+                return i && BUILTIN_DEMO_ERP_INV_IDS.indexOf(i.id) < 0;
+            });
+            erpOrders = Array.isArray(erpOrders) ? erpOrders : [];
+            erpProcurement = Array.isArray(erpProcurement) ? erpProcurement : [];
+            erpProduction = Array.isArray(erpProduction) ? erpProduction : [];
+            erpPurchases = Array.isArray(erpPurchases) ? erpPurchases : [];
+            salesData = Array.isArray(salesData) ? salesData : [];
+            if (typeof getHrEmployees === 'function') {
+                const emps = getHrEmployees() || [];
+                const cleaned = emps.filter(function(e) {
+                    return e && e.id && !BUILTIN_DEMO_HR_EMP_IDS.test(String(e.id));
+                });
+                if (typeof setHrEmployeesFromCloud === 'function' && cleaned.length !== emps.length) {
+                    setHrEmployeesFromCloud(cleaned);
+                }
+            }
+            if (typeof getHrVehicles === 'function') {
+                const vehs = getHrVehicles() || [];
+                const cleanedV = vehs.filter(function(v) {
+                    return v && v.id && !BUILTIN_DEMO_HR_VEH_IDS.test(String(v.id));
+                });
+                if (typeof setHrVehiclesFromCloud === 'function' && cleanedV.length !== vehs.length) {
+                    setHrVehiclesFromCloud(cleanedV);
+                }
             }
         }
         const NEBRAS_DEFAULT_SOCIAL_LINKS = {
@@ -24831,6 +24862,17 @@
             spec.set(Object.keys(byKey).map(function(k) { return byKey[k]; }));
         }
 
+        const NEBRAS_PRODUCTION_BUSINESS_STORE_KEYS = [
+            'site_products', 'hr_employees', 'hr_vehicles', 'hr_leave', 'hr_vehicle_tracking',
+            'hr_attendance', 'hr_documents', 'hr_payroll', 'hr_companies', 'crm_customers',
+            'crm_opportunities', 'erp_inventory', 'erp_orders', 'erp_production', 'erp_procurement',
+            'erp_purchases', 'sales_quotes_inbox', 'customer_order_journeys', 'customer_portal_users',
+            'legal_contracts', 'sales_data', 'sales_price_list'
+        ];
+        const NEBRAS_CHROME_EMPTY_CLOUD_SKIP_KEYS = [
+            'branches', 'site_partners', 'site_certifications', 'visitor_icons', 'dashboard_tiles', 'admin_users'
+        ];
+
         function applyNebrasCloudRow(storeKey, payload, cloudUpdatedAt) {
             if (typeof shouldSkipStaleCloudGovernanceRow === 'function' && shouldSkipStaleCloudGovernanceRow(storeKey)) {
                 return;
@@ -24845,13 +24887,8 @@
             const spec = NEBRAS_CLOUD_STORE_SPECS.find(function(s) { return s.key === storeKey; });
             if (!spec || payload === undefined || payload === null) return;
             if (Array.isArray(payload) && !payload.length) {
-                if (storeKey === 'branches' || storeKey === 'site_partners' || storeKey === 'site_certifications' ||
-                    storeKey === 'admin_users' || storeKey === 'visitor_icons' || storeKey === 'dashboard_tiles' ||
-                    storeKey === 'site_products' || storeKey === 'sales_quotes_inbox' || storeKey === 'customer_order_journeys' ||
-                    storeKey === 'customer_portal_users' || storeKey === 'hr_employees' || storeKey === 'crm_customers' ||
-                    storeKey === 'erp_orders' || storeKey === 'legal_contracts') {
-                return;
-                }
+                if (NEBRAS_CHROME_EMPTY_CLOUD_SKIP_KEYS.indexOf(storeKey) >= 0) return;
+                if (!NEBRAS_PRODUCTION_LIVE_MODE && NEBRAS_PRODUCTION_BUSINESS_STORE_KEYS.indexOf(storeKey) >= 0) return;
             }
             if (NEBRAS_MERGE_BY_ID_STORE_KEYS.indexOf(storeKey) >= 0 && Array.isArray(payload) && payload.length) {
                 mergeNebrasCloudArrayById(storeKey, payload);
@@ -24889,6 +24926,7 @@
             }
             ensureDefaultBankAccounts();
             ensureSiteChromeDefaults();
+            enforceProductionBusinessCleanState();
             if (!skipBusinessSeeds) ensureBuiltinErpData();
             if (!skipBusinessSeeds) ensureErpOperationsData();
             if (!skipBusinessSeeds) ensureBuiltinSiteCatalog();
@@ -25075,6 +25113,7 @@
 
         async function pushToNebrasCloudCore() {
             const silent = !!nebrasCloudPushSilent;
+            if (typeof enforceProductionBusinessCleanState === 'function') enforceProductionBusinessCleanState();
             const rows = NEBRAS_CLOUD_STORE_SPECS.map(function(spec) {
                 let payload = spec.get();
                 if (typeof slimNebrasCloudPayload === 'function') payload = slimNebrasCloudPayload(spec.key, payload);
@@ -25536,6 +25575,7 @@
                     u.isPrimary = false;
                 }
             });
+            enforceProductionGovernanceCleanState();
         }
 
         async function fetchDynamicContentBlocks() {
@@ -28299,6 +28339,7 @@
         window.flushPushToNebrasCloud = flushPushToNebrasCloud;
         window.refreshNebrasCloudFromServer = refreshNebrasCloudFromServer;
         window.pullVisitorIntakeFromCloud = pullVisitorIntakeFromCloud;
+        window.enforceProductionBusinessCleanState = enforceProductionBusinessCleanState;
         window.getNebrasLastLoginPassword = function() { return nebrasLastLoginPassword || ''; };
         window.setNebrasLastLoginPassword = function(pw) { nebrasLastLoginPassword = pw || null; };
         window.cancelUserEditor = cancelUserEditor;
