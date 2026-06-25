@@ -15159,6 +15159,9 @@
                 }
                 if (user && !apiAuthenticated) {
                     console.warn('[Nebras] دخول محلي بدون جلسة API — البيانات الحساسة قد تكون محدودة.');
+                    if (typeof setAdminLoginStatus === 'function') {
+                        setAdminLoginStatus('تنبيه: جلسة السحابة غير متصلة — الحفظ قد يكون محلياً فقط. أعيدي المحاولة.', 'warn');
+                    }
                 }
             }
 
@@ -15168,6 +15171,9 @@
                         const sessOk = await establishNebrasSecureSession(username, password);
                         if (sessOk) apiAuthenticated = true;
                     } catch (e) { /* ignore */ }
+                }
+                if (!apiAuthenticated && typeof hasNebrasSecureSession === 'function' && hasNebrasSecureSession()) {
+                    apiAuthenticated = true;
                 }
                 if (user.isActive === false) {
                     if (typeof setAdminLoginStatus === 'function') setAdminLoginStatus(ui.adminLoginDisabled || 'هذا الحساب معطّل — تواصل مع الإدارة الرئيسية.', 'error');
@@ -24898,38 +24904,25 @@
         }
 
         async function loadFromNebrasCloud() {
-            if (!supabaseClient) return false;
             let loadedAny = false;
             try {
-                const publicKeys = (typeof NEBRAS_PUBLIC_STORE_KEYS !== 'undefined' && NEBRAS_PUBLIC_STORE_KEYS.length)
-                    ? NEBRAS_PUBLIC_STORE_KEYS
-                    : null;
-                if (publicKeys) {
-                    const { data, error } = await supabaseClient
-                        .from('nebras_data_store')
-                        .select('store_key, payload, updated_at')
-                        .in('store_key', publicKeys);
-                    if (error) {
-                        console.warn('Nebras public cloud load failed:', error.message || error);
-                    } else if (data && data.length) {
-                        data.forEach(function(row) {
-                            if (row && row.store_key) applyNebrasCloudRow(row.store_key, row.payload, row.updated_at);
-                        });
-                        loadedAny = true;
-                    }
-                } else {
-                    const { data, error } = await supabaseClient
-                        .from('nebras_data_store')
-                        .select('store_key, payload, updated_at');
-                    if (error) {
-                        console.warn('Nebras cloud load failed:', error.message || error);
-                        return false;
-                    }
-                    if (data && data.length) {
-                        data.forEach(function(row) {
-                            if (row && row.store_key) applyNebrasCloudRow(row.store_key, row.payload, row.updated_at);
-                        });
-                        loadedAny = true;
+                if (supabaseClient) {
+                    const publicKeys = (typeof NEBRAS_PUBLIC_STORE_KEYS !== 'undefined' && NEBRAS_PUBLIC_STORE_KEYS.length)
+                        ? NEBRAS_PUBLIC_STORE_KEYS
+                        : null;
+                    if (publicKeys) {
+                        const { data, error } = await supabaseClient
+                            .from('nebras_data_store')
+                            .select('store_key, payload, updated_at')
+                            .in('store_key', publicKeys);
+                        if (error) {
+                            console.warn('Nebras public cloud load failed:', error.message || error);
+                        } else if (data && data.length) {
+                            data.forEach(function(row) {
+                                if (row && row.store_key) applyNebrasCloudRow(row.store_key, row.payload, row.updated_at);
+                            });
+                            loadedAny = true;
+                        }
                     }
                 }
                 if (typeof getNebrasSecureToken === 'function' && getNebrasSecureToken() &&
@@ -24969,7 +24962,6 @@
         }
 
         async function pushToNebrasCloudCore() {
-            if (!supabaseClient) return false;
             const silent = !!nebrasCloudPushSilent;
             const rows = NEBRAS_CLOUD_STORE_SPECS.map(function(spec) {
                 let payload = spec.get();
@@ -24985,37 +24977,55 @@
             const sensFn = typeof isSensitiveStoreKey === 'function' ? isSensitiveStoreKey : function() { return false; };
             const publicRows = rows.filter(function(r) { return r && r.store_key && !sensFn(r.store_key); });
             const sensitiveRows = rows.filter(function(r) { return r && r.store_key && sensFn(r.store_key); });
-            let okPublic = true;
-            let okSensitive = true;
+            if (!publicRows.length && !sensitiveRows.length) return true;
+            let okPublic = !publicRows.length;
+            let okSensitive = !sensitiveRows.length;
             try {
                 if (publicRows.length) {
-                    const { error } = await supabaseClient
-                        .from('nebras_data_store')
-                        .upsert(publicRows, { onConflict: 'store_key' });
-                    if (error) {
-                        console.warn('Nebras public cloud save failed:', error.message || error);
+                    if (supabaseClient) {
+                        const { error } = await supabaseClient
+                            .from('nebras_data_store')
+                            .upsert(publicRows, { onConflict: 'store_key' });
+                        if (error) {
+                            console.warn('Nebras public cloud save failed:', error.message || error);
+                            okPublic = false;
+                        } else {
+                            okPublic = true;
+                        }
+                    } else if (typeof secureCloudPush === 'function' && typeof getNebrasSecureToken === 'function' && getNebrasSecureToken()) {
+                        const pubResult = await secureCloudPush(publicRows);
+                        okPublic = !!(pubResult && pubResult.ok);
+                    } else {
                         okPublic = false;
                     }
                 }
                 if (sensitiveRows.length) {
-                    if (typeof getNebrasSecureToken === 'function' && !getNebrasSecureToken() &&
+                    if (typeof ensureNebrasCloudSessionReady === 'function') {
+                        try { await ensureNebrasCloudSessionReady({ promptReauth: false }); } catch (reAuthErr) { /* ignore */ }
+                    } else if (typeof getNebrasSecureToken === 'function' && !getNebrasSecureToken() &&
                         typeof establishNebrasSecureSession === 'function' && currentAdmin && nebrasLastLoginPassword) {
                         try {
                             await establishNebrasSecureSession(currentAdmin.username, nebrasLastLoginPassword);
-                        } catch (reAuthErr) { /* ignore */ }
+                        } catch (reAuthErr2) { /* ignore */ }
                     }
-                    if (typeof secureCloudPush === 'function' && typeof getNebrasSecureToken === 'function' && getNebrasSecureToken()) {
+                    if (typeof persistGovernanceBatch === 'function' && typeof getNebrasSecureToken === 'function' && getNebrasSecureToken()) {
+                        const batchResult = await persistGovernanceBatch(sensitiveRows, { promptReauth: false });
+                        okSensitive = !!(batchResult && batchResult.ok);
+                        if (!okSensitive && typeof secureCloudPush === 'function') {
+                            const sensResult = await secureCloudPush(sensitiveRows);
+                            okSensitive = !!(sensResult && sensResult.ok);
+                        }
+                    } else if (typeof secureCloudPush === 'function' && typeof getNebrasSecureToken === 'function' && getNebrasSecureToken()) {
                         const sensResult = await secureCloudPush(sensitiveRows);
                         okSensitive = !!(sensResult && sensResult.ok);
-                        if (!okSensitive) {
-                            console.warn('Nebras sensitive cloud save failed:', sensResult);
-                            if (typeof markSensitiveCloudPending === 'function') markSensitiveCloudPending();
-                        } else if (typeof clearSensitiveCloudPending === 'function') {
-                            clearSensitiveCloudPending();
-                        }
                     } else if (currentAdmin) {
                         okSensitive = false;
+                    }
+                    if (!okSensitive) {
+                        console.warn('Nebras sensitive cloud save failed');
                         if (typeof markSensitiveCloudPending === 'function') markSensitiveCloudPending();
+                    } else if (typeof clearSensitiveCloudPending === 'function') {
+                        clearSensitiveCloudPending();
                     }
                 }
                 if (!okPublic) {
@@ -25102,7 +25112,7 @@
         /** رفع فوري لمفاتيح حرجة — مستخدمون، موارد بشرية، إلخ */
         async function persistNebrasCriticalStores(storeKeys, options) {
             options = options || {};
-            if (!Array.isArray(storeKeys) || !storeKeys.length || !supabaseClient) return false;
+            if (!Array.isArray(storeKeys) || !storeKeys.length) return false;
             if (typeof ensureNebrasCloudSessionReady === 'function') {
                 const sessionOk = await ensureNebrasCloudSessionReady({
                     promptReauth: options.promptReauth !== false
@@ -25126,15 +25136,21 @@
             });
             if (!rows.length) return false;
             let ok = false;
-            const govKeys = ['admin_users', 'customer_portal_users', 'customer_portal_audit', 'hr_employees'];
-            const useGovernanceApi = typeof persistGovernanceStore === 'function' &&
-                rows.every(function(r) { return govKeys.indexOf(r.store_key) >= 0; });
-            if (useGovernanceApi) {
+            if (typeof persistGovernanceBatch === 'function' && typeof getNebrasSecureToken === 'function' && getNebrasSecureToken()) {
+                const batchResult = await persistGovernanceBatch(rows, {
+                    keepalive: !!options.keepalive,
+                    promptReauth: options.promptReauth !== false
+                });
+                ok = !!(batchResult && batchResult.ok);
+                if (!ok) console.warn('persistGovernanceBatch failed:', batchResult);
+            }
+            if (!ok && typeof persistGovernanceStore === 'function') {
                 let allOk = true;
                 for (let gi = 0; gi < rows.length; gi++) {
                     const row = rows[gi];
                     const result = await persistGovernanceStore(row.store_key, row.payload, {
-                        keepalive: !!options.keepalive
+                        keepalive: !!options.keepalive,
+                        promptReauth: options.promptReauth !== false
                     });
                     if (!result || !result.ok || result.verified === false) {
                         console.warn('persistGovernanceStore failed:', row.store_key, result);
@@ -25250,7 +25266,17 @@
             if (!options.skipCloud) {
                 if (currentAdmin) {
                     const showToast = options.urgentCloud === true || options.showCloudToast === true;
-                    flushPushToNebrasCloud({ showCloudToast: showToast, silentCloud: !showToast }).then(function(ok) {
+                    const flushPromise = flushPushToNebrasCloud({ showCloudToast: showToast, silentCloud: !showToast });
+                    if (options.urgentCloud && typeof persistNebrasCriticalStores === 'function' &&
+                        typeof hasSensitiveCloudPending === 'function' && hasSensitiveCloudPending()) {
+                        persistNebrasCriticalStores([
+                            'admin_users', 'customer_portal_users', 'hr_employees',
+                            'crm_customers', 'legal_contracts', 'sales_quotes_inbox'
+                        ], { showToast: showToast, promptReauth: false }).catch(function(e) {
+                            console.warn('urgent critical persist:', e);
+                        });
+                    }
+                    flushPromise.then(function(ok) {
                         if (!ok && typeof showNebrasAdminToast === 'function' && options.silentCloudFail !== true) {
                             showNebrasAdminToast('⚠️ لم يُحفظ في السحابة — تحققي من الاتصال وأعيدي المحاولة', 'error');
                         }

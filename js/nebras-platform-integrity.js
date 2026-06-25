@@ -466,7 +466,11 @@
         if (!admin) return;
         const sensPending = hasSensitiveCloudPending();
         if (sensPending && typeof global.persistNebrasCriticalStores === 'function') {
-            const keys = ['admin_users', 'customer_portal_users', 'hr_employees'];
+            const keys = [
+                'admin_users', 'customer_portal_users', 'customer_portal_audit', 'hr_employees',
+                'crm_customers', 'crm_opportunities', 'legal_contracts', 'sales_quotes_inbox',
+                'erp_orders', 'erp_inventory', 'complaints', 'audit_logs'
+            ];
             try {
                 global.persistNebrasCriticalStores(keys, { showToast: false, promptReauth: false, keepalive: true });
                 return;

@@ -142,8 +142,18 @@
             localStorage.setItem(CRM_ACTIVITIES_KEY, JSON.stringify(crmActivities));
             localStorage.setItem(CRM_AUDIT_KEY, JSON.stringify(crmAudit));
         } catch (e) { console.warn('CRM save', e); }
-        if (typeof saveSystemData === 'function') saveSystemData();
+        if (typeof markSensitiveCloudPending === 'function') markSensitiveCloudPending();
+        if (typeof saveSystemData === 'function') saveSystemData({ urgentCloud: true });
         else if (typeof schedulePushToNebrasCloud === 'function') schedulePushToNebrasCloud();
+        if (typeof persistNebrasCriticalStores === 'function') {
+            persistNebrasCriticalStores([
+                'crm_customers', 'crm_opportunities', 'crm_activities', 'crm_audit'
+            ], { showToast: false, promptReauth: false }).then(function(ok) {
+                if (!ok && typeof showNebrasAdminToast === 'function') {
+                    showNebrasAdminToast('⚠️ بيانات CRM لم تُحفظ في السحابة', 'error');
+                }
+            }).catch(function(err) { console.warn('CRM cloud persist:', err); });
+        }
     }
 
     function setCrmCustomersFromCloud(v) {

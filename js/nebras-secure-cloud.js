@@ -301,6 +301,40 @@
         }
     }
 
+    async function persistGovernanceBatch(rows, options) {
+        options = options || {};
+        if (!rows || !rows.length) return { ok: false, error: 'no_rows' };
+        const sessionOk = await ensureNebrasCloudSessionReady(options);
+        if (!sessionOk) return { ok: false, error: 'no_session' };
+        const token = getSecureToken();
+        if (!token) return { ok: false, error: 'no_token' };
+        try {
+            const res = await fetch(apiBase() + '/api/nebras-governance-persist', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: 'Bearer ' + token
+                },
+                body: JSON.stringify({ action: 'batch', rows: rows }),
+                keepalive: !!options.keepalive
+            });
+            const data = await res.json().catch(function() { return {}; });
+            if (!res.ok || !data.ok) {
+                return {
+                    ok: false,
+                    error: data.error || 'batch_failed',
+                    detail: data.detail || '',
+                    status: res.status,
+                    saved: data.saved || []
+                };
+            }
+            return data;
+        } catch (e) {
+            console.warn('persistGovernanceBatch failed:', e);
+            return { ok: false, error: 'network_error' };
+        }
+    }
+
     async function securePortalLogin(username, password) {
         try {
             const res = await fetch(apiBase() + '/api/nebras-auth?action=portal-login', {
@@ -378,6 +412,7 @@
     global.mergeApiAdminUser = mergeApiAdminUser;
     global.submitNebrasVisitorIntake = submitNebrasVisitorIntake;
     global.persistGovernanceStore = persistGovernanceStore;
+    global.persistGovernanceBatch = persistGovernanceBatch;
     global.ensureNebrasCloudSessionReady = ensureNebrasCloudSessionReady;
     global.securePortalLogin = securePortalLogin;
 

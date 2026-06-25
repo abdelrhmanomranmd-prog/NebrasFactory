@@ -232,8 +232,19 @@
             localStorage.setItem(LEGAL_RENTALS_KEY, JSON.stringify(legalRentals));
             localStorage.setItem(LEGAL_NOTIF_SETTINGS_KEY, JSON.stringify(legalNotifSettings));
         } catch (e) { console.warn('Legal save', e); }
-        if (typeof saveSystemData === 'function') saveSystemData();
+        if (typeof markSensitiveCloudPending === 'function') markSensitiveCloudPending();
+        if (typeof saveSystemData === 'function') saveSystemData({ urgentCloud: true });
         else if (typeof schedulePushToNebrasCloud === 'function') schedulePushToNebrasCloud();
+        if (typeof persistNebrasCriticalStores === 'function') {
+            persistNebrasCriticalStores([
+                'legal_contracts', 'legal_cases', 'legal_compliance', 'legal_policies',
+                'legal_correspondence', 'legal_activity', 'legal_rentals'
+            ], { showToast: false, promptReauth: false }).then(function(ok) {
+                if (!ok && typeof showNebrasAdminToast === 'function') {
+                    showNebrasAdminToast('⚠️ بيانات القانونية لم تُحفظ في السحابة', 'error');
+                }
+            }).catch(function(err) { console.warn('Legal cloud persist:', err); });
+        }
     }
 
     function setLegalContractsFromCloud(v) {
