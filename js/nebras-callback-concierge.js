@@ -177,7 +177,11 @@
         if (!lead) return;
         lead.status = status;
         lead.updatedAt = Date.now();
-        saveCallbackLeads();
+        saveCallbackLeads({ skipCloud: false });
+        if (typeof saveSystemData === 'function') saveSystemData({ urgentCloud: true });
+        if (typeof persistNebrasCriticalStores === 'function') {
+            persistNebrasCriticalStores(['callback_leads'], { silent: true });
+        }
         if (typeof renderAdminAnalyticsPanel === 'function') renderAdminAnalyticsPanel();
     }
 

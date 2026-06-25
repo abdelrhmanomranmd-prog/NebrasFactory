@@ -24050,7 +24050,10 @@
             complaint.status = newStatus;
             if (!complaint.crmLinked) linkComplaintToCrm(complaintId, complaint);
             else syncComplaintToCrm(complaintId, newStatus);
-            saveSystemData();
+            saveSystemData({ urgentCloud: true, showCloudToast: true });
+            if (typeof persistNebrasCriticalStores === 'function') {
+                persistNebrasCriticalStores(['complaints'], { silent: true });
+            }
             displayComplaints();
             if (canManage('customerService')) displayCustomerService();
             if (currentAdmin && canManage('audit')) renderAdminAnalyticsPanel();
@@ -24553,9 +24556,9 @@
                     v.forEach(function(c, i) {
                         if (c && typeof c === 'object') obj[c.id || String(i)] = c;
                     });
-                    complaints = obj;
+                    complaints = Object.assign({}, obj, complaints || {});
                 } else if (v && typeof v === 'object') {
-                    complaints = v;
+                    complaints = Object.assign({}, v, complaints || {});
                 }
             }},
             { key: 'audit_logs', get: function() { return auditLogs; }, set: function(v) { auditLogs = Array.isArray(v) ? v : []; } },
@@ -24758,7 +24761,9 @@
                 return typeof getCallbackLeads === 'function' ? getCallbackLeads() : [];
             }, set: function(v) {
                 if (typeof setCallbackLeadsFromCloud === 'function') setCallbackLeadsFromCloud(Array.isArray(v) ? v : []);
-                if (typeof saveCallbackLeads === 'function') saveCallbackLeads();
+                try {
+                    localStorage.setItem('nebrasCallbackLeads', JSON.stringify(typeof getCallbackLeads === 'function' ? getCallbackLeads() : []));
+                } catch (e) { /* ignore */ }
             }},
             { key: 'customer_portal_users', get: function() {
                 return typeof getCustomerPortalUsers === 'function' ? getCustomerPortalUsers() : [];
@@ -24792,7 +24797,7 @@
 
         const NEBRAS_MERGE_BY_ID_STORE_KEYS = [
             'admin_users', 'customer_portal_users', 'hr_employees', 'hr_vehicles', 'hr_documents', 'hr_leave',
-            'hr_vehicle_tracking', 'hr_attendance', 'crm_customers', 'erp_orders', 'legal_contracts'
+            'hr_vehicle_tracking', 'hr_attendance', 'crm_customers', 'erp_orders', 'legal_contracts', 'callback_leads'
         ];
 
         function nebrasCloudArrayItemKey(item) {
@@ -24957,10 +24962,36 @@
             return ok;
         }
 
+        /** سحب شكاوى وطلبات اتصال الزوار — حتى مع تعديلات محلية معلّقة */
+        async function pullVisitorIntakeFromCloud() {
+            if (!currentAdmin || typeof secureCloudPull !== 'function' || typeof getNebrasSecureToken !== 'function') return false;
+            if (!getNebrasSecureToken()) return false;
+            try {
+                const rows = await secureCloudPull(['complaints', 'callback_leads']);
+                if (!rows || !rows.length) return false;
+                let changed = false;
+                rows.forEach(function(row) {
+                    if (!row || !row.store_key) return;
+                    applyNebrasCloudRow(row.store_key, row.payload, row.updated_at);
+                    changed = true;
+                });
+                if (changed) {
+                    try { persistLocalGovernanceKeys(); } catch (e) { /* ignore */ }
+                    if (typeof renderAdminAnalyticsPanel === 'function' && canManage('audit')) renderAdminAnalyticsPanel();
+                    if (typeof displayComplaints === 'function' && canManage('complaints')) displayComplaints();
+                }
+                return changed;
+            } catch (e) {
+                console.warn('pullVisitorIntakeFromCloud:', e);
+                return false;
+            }
+        }
+
         /** تحديث دوري من السحابة — يظهر تعديلات الزملاء (Odoo-like pull) */
         async function refreshNebrasCloudFromServer(options) {
             options = options || {};
             if (!supabaseClient || !currentAdmin) return false;
+            await pullVisitorIntakeFromCloud();
             const hasPending = typeof hasPendingLocalCloudMutations === 'function' && hasPendingLocalCloudMutations();
             if (hasPending && !options.force) return false;
             const ok = await loadFromNebrasCloud();
@@ -28258,6 +28289,7 @@
         window.persistNebrasCriticalStores = persistNebrasCriticalStores;
         window.flushPushToNebrasCloud = flushPushToNebrasCloud;
         window.refreshNebrasCloudFromServer = refreshNebrasCloudFromServer;
+        window.pullVisitorIntakeFromCloud = pullVisitorIntakeFromCloud;
         window.getNebrasLastLoginPassword = function() { return nebrasLastLoginPassword || ''; };
         window.setNebrasLastLoginPassword = function(pw) { nebrasLastLoginPassword = pw || null; };
         window.cancelUserEditor = cancelUserEditor;

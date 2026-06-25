@@ -510,7 +510,11 @@
     }
     function nebrasPullCloudIfAdmin() {
         const admin = typeof global.getNebrasCurrentAdmin === 'function' ? global.getNebrasCurrentAdmin() : null;
-        if (!admin || typeof global.refreshNebrasCloudFromServer !== 'function') return;
+        if (!admin) return;
+        if (typeof global.pullVisitorIntakeFromCloud === 'function') {
+            try { global.pullVisitorIntakeFromCloud(); } catch (e) { /* ignore */ }
+        }
+        if (typeof global.refreshNebrasCloudFromServer !== 'function') return;
         try { global.refreshNebrasCloudFromServer({ silent: true }); } catch (e) { /* ignore */ }
     }
     function startNebrasCloudAutoSync() {
@@ -518,7 +522,7 @@
         nebrasFlushCloudIfAdmin();
         nebrasPullCloudIfAdmin();
         cloudAutoSyncTimer = setInterval(nebrasFlushCloudIfAdmin, 15000);
-        cloudAutoPullTimer = setInterval(nebrasPullCloudIfAdmin, 45000);
+        cloudAutoPullTimer = setInterval(nebrasPullCloudIfAdmin, 15000);
         if (typeof window !== 'undefined' && !window._nebrasCloudUnloadHook) {
             window._nebrasCloudUnloadHook = true;
             window.addEventListener('pagehide', function() { nebrasFlushCloudIfAdmin(); });
