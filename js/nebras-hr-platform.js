@@ -239,7 +239,9 @@
         if (typeof persistNebrasCriticalStores === 'function') {
             persistNebrasCriticalStores([
                 'hr_employees', 'hr_vehicles', 'hr_leave', 'hr_vehicle_tracking',
-                'hr_attendance', 'hr_documents', 'hr_payroll', 'hr_companies'
+                'hr_attendance', 'hr_documents', 'hr_payroll', 'hr_companies',
+                'hr_travel', 'hr_deductions', 'hr_advances', 'hr_vehicle_violations',
+                'hr_notifications', 'hr_notif_settings', 'hr_email_queue', 'hr_shift_roster', 'hr_dept_activity'
             ], { silent: true }).then(function(ok) {
                 if (!ok && typeof showNebrasAdminToast === 'function') {
                     showNebrasAdminToast('⚠️ بيانات الموارد البشرية لم تُحفظ في السحابة — أعيدي المحاولة', 'error');

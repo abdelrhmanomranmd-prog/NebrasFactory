@@ -79,7 +79,15 @@
 
     function saveJourneys() {
         try { localStorage.setItem(JOURNEYS_KEY, JSON.stringify(journeys)); } catch (e) { /* ignore */ }
-        if (typeof global.syncNebrasCloudInBackground === 'function') global.syncNebrasCloudInBackground();
+        if (typeof global.markLocalCloudMutation === 'function') {
+            global.markLocalCloudMutation('customer_order_journeys');
+        }
+        if (typeof global.markSensitiveCloudPending === 'function') global.markSensitiveCloudPending();
+        if (typeof global.saveSystemData === 'function') {
+            global.saveSystemData({ urgentCloud: true, skipMutationMark: true });
+        } else if (typeof global.syncNebrasCloudInBackground === 'function') {
+            global.syncNebrasCloudInBackground();
+        }
         updateOrderJourneyBadge();
     }
 

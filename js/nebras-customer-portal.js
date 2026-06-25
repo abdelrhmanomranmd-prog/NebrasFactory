@@ -396,6 +396,12 @@
         return (Number(n) || 0).toLocaleString('ar-SA') + ' ر.س';
     }
 
+    function cpHasPortalAccess(user, key) {
+        const access = (user && Array.isArray(user.portalAccess) && user.portalAccess.length)
+            ? user.portalAccess : CP_DEFAULT_ACCESS;
+        return access.indexOf(key) >= 0;
+    }
+
     function renderCustomerPortalDashboard() {
         const host = document.getElementById('customer-portal-body');
         const head = document.getElementById('customer-portal-head');
@@ -411,27 +417,24 @@
         }
         const tierMeta = computeCustomerLoyaltyScore(u);
         const tierLabel = { vip: 'عميل VIP', trusted: 'عميل موثوق', active: 'عميل نشط', new: 'عميل جديد' };
-        host.innerHTML =
-            (typeof global.renderCustomerJourneyAlertsHtml === 'function' ? global.renderCustomerJourneyAlertsHtml(u) : '') +
-            '<div class="cp-stats">' +
-                '<article class="cp-stat"><strong>' + d.totalQuotes + '</strong><span>عروض أسعار</span></article>' +
-                '<article class="cp-stat"><strong>' + d.preparing.length + '</strong><span>قيد التجهيز</span></article>' +
-                '<article class="cp-stat"><strong>' + d.delivered.length + '</strong><span>مُستلَمة</span></article>' +
-                '<article class="cp-stat cp-stat--tier cp-stat--' + tierMeta.tier + '"><strong>' + esc(tierLabel[tierMeta.tier] || '') + '</strong><span>تصنيفك</span></article>' +
-            '</div>' +
-            '<section class="cp-panel cp-panel--journey"><h3><i class="fas fa-route"></i> مسار نبراس — طلبك</h3>' +
+        const journeyHtml = cpHasPortalAccess(u, 'journeys')
+            ? '<section class="cp-panel cp-panel--journey"><h3><i class="fas fa-route"></i> مسار نبراس — طلبك</h3>' +
                 (typeof global.renderCustomerJourneysHtml === 'function'
                     ? global.renderCustomerJourneysHtml(u)
                     : '<p class="cp-empty">مسار الطلب قيد التفعيل.</p>') +
-            '</section>' +
-            '<section class="cp-panel"><h3><i class="fas fa-file-invoice"></i> عروض الأسعار</h3>' +
+            '</section>'
+            : '';
+        const quotesHtml = cpHasPortalAccess(u, 'quotes')
+            ? '<section class="cp-panel"><h3><i class="fas fa-file-invoice"></i> عروض الأسعار</h3>' +
                 (d.quotes.length ? '<div class="cp-list">' + d.quotes.slice(0, 20).map(function(q) {
                     return '<article class="cp-row"><strong>' + esc(q.quoteNo || q.id || '—') + '</strong>' +
                         '<span>' + formatMoney(q.totalIncVat || q.total || 0) + '</span>' +
                         '<small>' + esc(q.status || 'جديد') + (q.convertedToOrder ? ' · طلب OMS' : '') + '</small></article>';
                 }).join('') + '</div>' : '<p class="cp-empty">لا عروض مسجّلة بعد — تواصلي مع مبيعات نبراس.</p>') +
-            '</section>' +
-            '<section class="cp-panel"><h3><i class="fas fa-truck"></i> الطلبات</h3>' +
+            '</section>'
+            : '';
+        const ordersHtml = cpHasPortalAccess(u, 'orders')
+            ? '<section class="cp-panel"><h3><i class="fas fa-truck"></i> الطلبات</h3>' +
                 '<div class="cp-subtabs">' +
                     '<span class="cp-subtab">قيد التجهيز: ' + d.preparing.length + '</span>' +
                     '<span class="cp-subtab">مُستلَمة: ' + d.delivered.length + '</span>' +
@@ -442,14 +445,26 @@
                         '<span>' + esc(o.status || 'pending') + '</span>' +
                         '<small>' + esc(o.product || o.branch || '') + '</small></article>';
                 }).join('') + '</div>' : '<p class="cp-empty">لا طلبات بعد.</p>') +
-            '</section>' +
-            '<section class="cp-panel"><h3><i class="fas fa-building-columns"></i> حوالاتك البنكية</h3>' +
+            '</section>'
+            : '';
+        const transfersHtml = cpHasPortalAccess(u, 'transfers')
+            ? '<section class="cp-panel"><h3><i class="fas fa-building-columns"></i> حوالاتك البنكية</h3>' +
                 (d.transfers.length ? '<div class="cp-list">' + d.transfers.slice(0, 15).map(function(t) {
                     return '<article class="cp-row"><strong>' + formatMoney(t.amount) + '</strong>' +
                         '<span>' + esc(t.bankAr || t.bank || '—') + '</span>' +
                         '<small>' + esc(t.date || '') + ' · ' + esc(t.refNo || t.quoteNo || '') + '</small></article>';
                 }).join('') + '</div>' : '<p class="cp-empty">لا حوالات مسجّلة — ارفع إيصال الحوالة عند الدفع من السلة.</p>') +
-            '</section>';
+            '</section>'
+            : '';
+        host.innerHTML =
+            (typeof global.renderCustomerJourneyAlertsHtml === 'function' ? global.renderCustomerJourneyAlertsHtml(u) : '') +
+            '<div class="cp-stats">' +
+                '<article class="cp-stat"><strong>' + d.totalQuotes + '</strong><span>عروض أسعار</span></article>' +
+                '<article class="cp-stat"><strong>' + d.preparing.length + '</strong><span>قيد التجهيز</span></article>' +
+                '<article class="cp-stat"><strong>' + d.delivered.length + '</strong><span>مُستلَمة</span></article>' +
+                '<article class="cp-stat cp-stat--tier cp-stat--' + tierMeta.tier + '"><strong>' + esc(tierLabel[tierMeta.tier] || '') + '</strong><span>تصنيفك</span></article>' +
+            '</div>' +
+            journeyHtml + quotesHtml + ordersHtml + transfersHtml;
         if (typeof global.markJourneysReadyViewed === 'function') global.markJourneysReadyViewed(u);
     }
 

@@ -6062,9 +6062,7 @@
 
         function isMainGovernanceAdmin(user) {
             const u = user || currentAdmin;
-            if (!u) return false;
-            if (u.isPrimary === true) return true;
-            if (u.role === 'superadmin') return true;
+            if (!u || u.isPrimary !== true) return false;
             if (PRIMARY_GOVERNANCE_ADMIN_IDS.indexOf(u.id) >= 0) return true;
             return PRIMARY_GOVERNANCE_USERNAMES.indexOf(String(u.username || '').toUpperCase()) >= 0;
         }
@@ -17424,7 +17422,10 @@
                 adminUsers.push(payload);
                 addAuditLog('إضافة مندوب فرع', username + ' — ' + branchCity);
             }
-            saveSystemData();
+            saveSystemData({ urgentCloud: true, showCloudToast: true });
+            if (typeof persistNebrasCriticalStores === 'function') {
+                persistNebrasCriticalStores(['admin_users'], { silent: true });
+            }
             cancelBranchRepEditor();
             renderBranchTeamPanel();
         }
@@ -25300,7 +25301,7 @@
         }
 
         const NEBRAS_SAVE_STORE_KEYS = [
-            'admin_users', 'site_products', 'visitor_icons', 'dashboard_tiles', 'site_custom_sections',
+            'admin_users', 'admin_presence', 'site_products', 'visitor_icons', 'dashboard_tiles', 'site_custom_sections',
             'branches', 'system_settings', 'about_pages', 'site_partners', 'site_certifications',
             'showroom_gallery', 'visitor_analytics', 'sales_quotes_inbox', 'sales_data', 'sales_price_list',
             'quote_registry', 'callback_leads', 'customer_portal_users', 'customer_portal_audit',
@@ -25309,10 +25310,12 @@
             'erp_transfers', 'erp_stock_transfers', 'procurement_custom_depts',
             'hr_employees', 'hr_vehicles', 'hr_leave', 'hr_vehicle_tracking', 'hr_attendance',
             'hr_documents', 'hr_payroll', 'hr_companies', 'hr_advances', 'hr_vehicle_violations',
-            'hr_travel', 'hr_deductions', 'hr_notifications', 'hr_gps_positions',
+            'hr_travel', 'hr_deductions', 'hr_notifications', 'hr_notif_settings', 'hr_email_queue',
+            'hr_shift_roster', 'hr_dept_activity', 'hr_gps_positions', 'hr_gps_settings', 'hr_gps_consents',
             'crm_customers', 'crm_opportunities', 'crm_activities', 'crm_audit',
             'legal_contracts', 'legal_rentals', 'legal_cases', 'legal_compliance', 'legal_policies',
-            'legal_correspondence', 'legal_activity', 'nebras_cloud_snapshots', 'nebras_platform_integrity'
+            'legal_correspondence', 'legal_activity', 'legal_notif_settings',
+            'nebras_cloud_snapshots', 'nebras_platform_integrity'
         ];
 
         function saveSystemData(options) {

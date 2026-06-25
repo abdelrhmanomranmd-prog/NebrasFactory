@@ -85,8 +85,11 @@
             localStorage.setItem(HR_GPS_SETTINGS_KEY, JSON.stringify(hrGpsSettings));
             localStorage.setItem(HR_GPS_CONSENTS_KEY, JSON.stringify(hrGpsConsents.slice(0, 500)));
         } catch (e) { console.warn('HR GPS save', e); }
-        if (typeof saveSystemData === 'function') saveSystemData();
+        if (typeof saveSystemData === 'function') saveSystemData({ urgentCloud: true });
         else if (typeof schedulePushToNebrasCloud === 'function') schedulePushToNebrasCloud();
+        if (typeof persistNebrasCriticalStores === 'function') {
+            persistNebrasCriticalStores(['hr_gps_positions', 'hr_gps_settings', 'hr_gps_consents'], { silent: true });
+        }
     }
 
     function setHrGpsPositionsFromCloud(v) {

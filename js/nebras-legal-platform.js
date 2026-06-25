@@ -238,7 +238,7 @@
         if (typeof persistNebrasCriticalStores === 'function') {
             persistNebrasCriticalStores([
                 'legal_contracts', 'legal_cases', 'legal_compliance', 'legal_policies',
-                'legal_correspondence', 'legal_activity', 'legal_rentals'
+                'legal_correspondence', 'legal_activity', 'legal_rentals', 'legal_notif_settings'
             ], { showToast: false, promptReauth: false }).then(function(ok) {
                 if (!ok && typeof showNebrasAdminToast === 'function') {
                     showNebrasAdminToast('⚠️ بيانات القانونية لم تُحفظ في السحابة', 'error');

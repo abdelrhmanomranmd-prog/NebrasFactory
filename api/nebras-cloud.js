@@ -53,7 +53,7 @@ async function handlePush(body, sess) {
     const safe = rows.filter(function(r) {
         if (!r || !r.store_key || r.payload === undefined) return false;
         if (sec.isSensitiveKey(r.store_key)) return true;
-        if (hq && sec.PUBLIC_STORE_KEYS.indexOf(r.store_key) >= 0) return true;
+        if (sec.PUBLIC_STORE_KEYS.indexOf(r.store_key) >= 0) return true;
         return false;
     });
     const allowed = sec.keysAllowedForSession(sess, safe.map(function(r) { return r.store_key; }));

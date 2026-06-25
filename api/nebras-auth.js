@@ -34,6 +34,9 @@ async function handleLogin(body) {
             username: user.username,
             role: user.role,
             isPrimary: !!user.isPrimary,
+            permissions: Array.isArray(user.permissions) && user.permissions.length ? user.permissions.slice() : null,
+            assignedBranchCity: user.assignedBranchCity || null,
+            assignedBranchId: user.assignedBranchId != null ? user.assignedBranchId : null,
             exp: exp
         });
     } catch (signErr) {

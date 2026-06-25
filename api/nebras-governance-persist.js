@@ -12,11 +12,12 @@ function payloadItemCount(payload) {
 
 function isStoreKeyAllowed(storeKey, sess) {
     if (!storeKey || !sess) return false;
-    const hq = sec.isHqSession(sess);
     if (sec.isSensitiveKey(storeKey)) {
         return sec.keysAllowedForSession(sess, [storeKey]).length > 0;
     }
-    if (hq && sec.isPublicKey(storeKey)) return true;
+    if (sec.isPublicKey(storeKey)) {
+        return sec.keysAllowedForSession(sess, [storeKey]).length > 0;
+    }
     return false;
 }
 
@@ -24,9 +25,18 @@ async function persistOne(storeKey, payload, sess) {
     if (!isStoreKeyAllowed(storeKey, sess)) {
         return { ok: false, error: 'forbidden_for_role', store_key: storeKey };
     }
+    let finalPayload = payload;
+    if (storeKey === 'admin_users' && !sec.isHqSession(sess)) {
+        const currentUsers = await sec.loadAdminUsers();
+        const merged = sec.mergeBranchTeamAdminUsers(sess, payload, currentUsers);
+        if (!merged) {
+            return { ok: false, error: 'forbidden_for_role', store_key: storeKey };
+        }
+        finalPayload = merged;
+    }
     let size = 0;
     try {
-        size = JSON.stringify(payload).length;
+        size = JSON.stringify(finalPayload).length;
     } catch (e) {
         return { ok: false, error: 'invalid_payload', store_key: storeKey };
     }
@@ -44,7 +54,7 @@ async function persistOne(storeKey, payload, sess) {
     }
     const upsert = await sec.upsertStoreRows(url, key, [{
         store_key: storeKey,
-        payload: payload,
+        payload: finalPayload,
         updated_at: new Date().toISOString()
     }]);
     if (!upsert || !upsert.ok) {
@@ -115,6 +125,8 @@ module.exports = async function handler(req, res) {
         }
         const sess = requireSession(req);
         if (!sess) return sec.jsonRes(res, 401, { ok: false, error: 'unauthorized' });
+        const live = await sec.validateActiveSession(sess);
+        if (!live.ok) return sec.jsonRes(res, 401, { ok: false, error: live.error || 'invalid_session' });
         const body = sec.parseBody(req);
         const action = String(body.action || req.query.action || 'persist').toLowerCase();
         const result = action === 'batch' ? await handleBatch(body, sess) : await handlePersist(body, sess);

@@ -231,19 +231,113 @@ function jsonRes(res, code, obj) {
 
 function isHqSession(sess) {
     if (!sess) return false;
-    if (sess.isPrimary) return true;
-    if (sess.role === 'superadmin') return true;
-    return String(sess.username || '').toUpperCase() === 'NEBRASFACTORY';
+    return !!sess.isPrimary && String(sess.username || '').toUpperCase() === 'NEBRASFACTORY';
 }
 
 const MANAGER_ALLOWED_PREFIXES = ['erp_', 'sales_', 'quote_', 'customer_', 'crm_', 'hr_', 'legal_', 'procurement', 'complaints', 'callback_', 'audit_'];
 const MANAGER_ALLOWED_EXACT = [
     'complaints', 'callback_leads', 'audit_logs', 'sales_quotes_inbox', 'quote_registry',
     'customer_order_journeys', 'customer_service', 'customer_portal_users', 'customer_portal_audit',
-    'procurement_custom_depts', 'branches', 'site_products', 'visitor_icons', 'dashboard_tiles',
-    'site_custom_sections', 'about_pages', 'system_settings', 'site_partners', 'site_certifications',
-    'showroom_gallery', 'visitor_analytics', 'sales_data', 'sales_price_list', 'nebras_cloud_snapshots'
+    'procurement_custom_depts', 'branches', 'site_products', 'site_custom_sections', 'about_pages',
+    'site_partners', 'site_certifications', 'showroom_gallery', 'visitor_analytics',
+    'sales_data', 'sales_price_list', 'nebras_cloud_snapshots'
 ];
+
+const PERMISSION_STORE_EXACT = {
+    users: ['admin_users'],
+    content: ['site_products', 'visitor_icons', 'showroom_gallery', 'site_custom_sections', 'about_pages', 'site_certifications', 'dashboard_tiles'],
+    inventory: ['erp_inventory'],
+    warehouse: ['erp_inventory', 'erp_transfers', 'erp_stock_transfers'],
+    production: ['erp_production'],
+    procurement: ['erp_procurement', 'erp_purchases', 'procurement_custom_depts'],
+    accounting: ['erp_purchases', 'sales_data'],
+    orders: ['erp_orders', 'customer_order_journeys'],
+    sales: ['sales_data', 'sales_price_list'],
+    quotes: ['sales_quotes_inbox', 'quote_registry'],
+    customerService: ['customer_service'],
+    complaints: ['complaints'],
+    branches: ['branches'],
+    audit: ['audit_logs'],
+    productMaster: ['site_products', 'sales_price_list'],
+    customerPortal: ['customer_portal_users', 'customer_portal_audit'],
+    createCustomerUser: ['customer_portal_users'],
+    orderJourney: ['customer_order_journeys'],
+    storeCatalog: ['site_products']
+};
+
+function normalizeBranchCity(v) {
+    return String(v || '').trim().toLowerCase();
+}
+
+function keysAllowedByCustomPermissions(permissions, keys) {
+    if (!Array.isArray(permissions) || !permissions.length || !Array.isArray(keys)) return [];
+    const allowed = {};
+    permissions.forEach(function(perm) {
+        const exact = PERMISSION_STORE_EXACT[perm];
+        if (exact) exact.forEach(function(k) { allowed[k] = true; });
+        if (perm === 'erp' || perm === 'aluminum') {
+            keys.forEach(function(k) {
+                if (k.indexOf('erp_') === 0) allowed[k] = true;
+            });
+        }
+        if (perm === 'hr') {
+            keys.forEach(function(k) {
+                if (k.indexOf('hr_') === 0) allowed[k] = true;
+            });
+        }
+        if (perm === 'legal') {
+            keys.forEach(function(k) {
+                if (k.indexOf('legal_') === 0) allowed[k] = true;
+            });
+        }
+    });
+    return keys.filter(function(k) {
+        if (HQ_ONLY_STORE_KEYS.indexOf(k) >= 0) return false;
+        return !!allowed[k];
+    });
+}
+
+function mergeBranchTeamAdminUsers(sess, incoming, current) {
+    const role = String(sess.role || '');
+    if (role !== 'sales_manager' && role !== 'branch_manager') return null;
+    const branch = normalizeBranchCity(sess.assignedBranchCity);
+    if (!branch) return null;
+    const currentArr = Array.isArray(current) ? current : [];
+    const incomingArr = Array.isArray(incoming) ? incoming : [];
+
+    for (let i = 0; i < currentArr.length; i++) {
+        const cur = currentArr[i];
+        if (!cur) continue;
+        const inc = incomingArr.find(function(x) { return x && String(x.id) === String(cur.id); });
+        if (!inc) {
+            if (cur.role === 'sales_rep' && normalizeBranchCity(cur.assignedBranchCity) === branch) continue;
+            return null;
+        }
+        if (cur.role !== 'sales_rep') {
+            if (String(cur.role || '') !== String(inc.role || '') || String(cur.username || '').toUpperCase() !== String(inc.username || '').toUpperCase()) {
+                return null;
+            }
+        } else if (normalizeBranchCity(cur.assignedBranchCity) !== branch) {
+            if (normalizeBranchCity(inc.assignedBranchCity) !== normalizeBranchCity(cur.assignedBranchCity)) return null;
+            if (String(cur.role || '') !== String(inc.role || '')) return null;
+        }
+    }
+    for (let j = 0; j < incomingArr.length; j++) {
+        const inc = incomingArr[j];
+        if (!inc) continue;
+        if (inc.role === 'sales_rep' && normalizeBranchCity(inc.assignedBranchCity) !== branch) return null;
+        if (inc.role !== 'sales_rep' && !currentArr.find(function(c) { return c && String(c.id) === String(inc.id); })) return null;
+    }
+
+    const ourReps = incomingArr.filter(function(u) {
+        return u && u.role === 'sales_rep' && normalizeBranchCity(u.assignedBranchCity) === branch;
+    });
+    return currentArr.filter(function(u) {
+        if (!u) return false;
+        if (u.role === 'sales_rep' && normalizeBranchCity(u.assignedBranchCity) === branch) return false;
+        return true;
+    }).concat(ourReps);
+}
 
 function managerMayAccessKey(k) {
     if (MANAGER_ALLOWED_EXACT.indexOf(k) >= 0) return true;
@@ -254,9 +348,22 @@ const HQ_ONLY_STORE_KEYS = [
     'admin_users', 'admin_recovery_otp', 'analytics_governance', 'nebras_platform_integrity'
 ];
 
+async function validateActiveSession(sess) {
+    if (!sess || !sess.sub) return { ok: false, error: 'invalid_session' };
+    const users = await loadAdminUsers();
+    const user = users.find(function(u) {
+        return String(u.id) === String(sess.sub);
+    });
+    if (!user || user.isActive === false) return { ok: false, error: 'user_inactive' };
+    return { ok: true, user: user };
+}
+
 function keysAllowedForSession(sess, keys) {
     if (!sess || !Array.isArray(keys)) return [];
     if (isHqSession(sess)) return keys.slice();
+    if (Array.isArray(sess.permissions) && sess.permissions.length) {
+        return keysAllowedByCustomPermissions(sess.permissions, keys);
+    }
     const role = String(sess.role || '');
     return keys.filter(function(k) {
         if (HQ_ONLY_STORE_KEYS.indexOf(k) >= 0) return false;
@@ -276,11 +383,12 @@ function keysAllowedForSession(sess, keys) {
             return k.indexOf('erp_') === 0 || k.indexOf('sales_') === 0 || k === 'audit_logs' || k.indexOf('procurement') >= 0;
         }
         if (role === 'sales_manager' || role === 'branch_manager') {
+            if (k === 'admin_users') return true;
             return k.indexOf('sales_') === 0 || k.indexOf('quote_') === 0 || k.indexOf('erp_') === 0 ||
                 k.indexOf('customer_') === 0 || k === 'callback_leads' || k === 'audit_logs';
         }
         if (role === 'manager') return managerMayAccessKey(k);
-        if (role === 'inventory_manager') {
+        if (role === 'inventory_manager' || role === 'warehouse_manager') {
             return k.indexOf('erp_') === 0 || k === 'audit_logs';
         }
         if (role === 'store_manager') {
@@ -315,5 +423,8 @@ module.exports = {
     isPublicKey: function(k) { return PUBLIC_STORE_KEYS.indexOf(k) >= 0; },
     isHqSession: isHqSession,
     keysAllowedForSession: keysAllowedForSession,
+    keysAllowedByCustomPermissions: keysAllowedByCustomPermissions,
+    validateActiveSession: validateActiveSession,
+    mergeBranchTeamAdminUsers: mergeBranchTeamAdminUsers,
     HQ_ONLY_STORE_KEYS: HQ_ONLY_STORE_KEYS
 };

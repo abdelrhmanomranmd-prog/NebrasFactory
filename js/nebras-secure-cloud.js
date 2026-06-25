@@ -38,8 +38,57 @@
 
     function isHqAdmin(admin) {
         if (!admin) return false;
-        if (admin.isPrimary || admin.role === 'superadmin') return true;
-        return String(admin.username || '').toUpperCase() === 'NEBRASFACTORY';
+        return !!admin.isPrimary && String(admin.username || '').toUpperCase() === 'NEBRASFACTORY';
+    }
+
+    const PERMISSION_STORE_EXACT = {
+        users: ['admin_users'],
+        content: ['site_products', 'visitor_icons', 'showroom_gallery', 'site_custom_sections', 'about_pages', 'site_certifications', 'dashboard_tiles'],
+        inventory: ['erp_inventory'],
+        warehouse: ['erp_inventory', 'erp_transfers', 'erp_stock_transfers'],
+        production: ['erp_production'],
+        procurement: ['erp_procurement', 'erp_purchases', 'procurement_custom_depts'],
+        accounting: ['erp_purchases', 'sales_data'],
+        orders: ['erp_orders', 'customer_order_journeys'],
+        sales: ['sales_data', 'sales_price_list'],
+        quotes: ['sales_quotes_inbox', 'quote_registry'],
+        customerService: ['customer_service'],
+        complaints: ['complaints'],
+        branches: ['branches'],
+        audit: ['audit_logs'],
+        productMaster: ['site_products', 'sales_price_list'],
+        customerPortal: ['customer_portal_users', 'customer_portal_audit'],
+        createCustomerUser: ['customer_portal_users'],
+        orderJourney: ['customer_order_journeys'],
+        storeCatalog: ['site_products']
+    };
+
+    function keysAllowedByCustomPermissions(permissions, keys) {
+        if (!Array.isArray(permissions) || !permissions.length || !Array.isArray(keys)) return [];
+        const allowed = {};
+        permissions.forEach(function(perm) {
+            const exact = PERMISSION_STORE_EXACT[perm];
+            if (exact) exact.forEach(function(k) { allowed[k] = true; });
+            if (perm === 'erp' || perm === 'aluminum') {
+                keys.forEach(function(k) {
+                    if (k.indexOf('erp_') === 0) allowed[k] = true;
+                });
+            }
+            if (perm === 'hr') {
+                keys.forEach(function(k) {
+                    if (k.indexOf('hr_') === 0) allowed[k] = true;
+                });
+            }
+            if (perm === 'legal') {
+                keys.forEach(function(k) {
+                    if (k.indexOf('legal_') === 0) allowed[k] = true;
+                });
+            }
+        });
+        return keys.filter(function(k) {
+            if (HQ_ONLY_STORE_KEYS.indexOf(k) >= 0) return false;
+            return !!allowed[k];
+        });
     }
 
     function managerMayAccessKey(k) {
@@ -47,9 +96,9 @@
         const exact = [
             'complaints', 'callback_leads', 'audit_logs', 'sales_quotes_inbox', 'quote_registry',
             'customer_order_journeys', 'customer_service', 'customer_portal_users', 'customer_portal_audit',
-            'procurement_custom_depts', 'branches', 'site_products', 'visitor_icons', 'dashboard_tiles',
-            'site_custom_sections', 'about_pages', 'system_settings', 'site_partners', 'site_certifications',
-            'showroom_gallery', 'visitor_analytics', 'sales_data', 'sales_price_list', 'nebras_cloud_snapshots'
+            'procurement_custom_depts', 'branches', 'site_products', 'site_custom_sections', 'about_pages',
+            'site_partners', 'site_certifications', 'showroom_gallery', 'visitor_analytics',
+            'sales_data', 'sales_price_list', 'nebras_cloud_snapshots'
         ];
         if (exact.indexOf(k) >= 0) return true;
         return prefixes.some(function(p) { return k.indexOf(p) === 0; });
@@ -58,6 +107,9 @@
     function keysAllowedForAdmin(admin, keys) {
         if (!admin || !Array.isArray(keys)) return [];
         if (isHqAdmin(admin)) return keys.slice();
+        if (Array.isArray(admin.permissions) && admin.permissions.length) {
+            return keysAllowedByCustomPermissions(admin.permissions, keys);
+        }
         const role = String(admin.role || '');
         return keys.filter(function(k) {
             if (HQ_ONLY_STORE_KEYS.indexOf(k) >= 0) return false;
@@ -77,11 +129,12 @@
                 return k.indexOf('erp_') === 0 || k.indexOf('sales_') === 0 || k === 'audit_logs' || k.indexOf('procurement') >= 0;
             }
             if (role === 'sales_manager' || role === 'branch_manager') {
+                if (k === 'admin_users') return true;
                 return k.indexOf('sales_') === 0 || k.indexOf('quote_') === 0 || k.indexOf('erp_') === 0 ||
                     k.indexOf('customer_') === 0 || k === 'callback_leads' || k === 'audit_logs';
             }
             if (role === 'manager') return managerMayAccessKey(k);
-            if (role === 'inventory_manager') {
+            if (role === 'inventory_manager' || role === 'warehouse_manager') {
                 return k.indexOf('erp_') === 0 || k === 'audit_logs';
             }
             if (role === 'store_manager') {
