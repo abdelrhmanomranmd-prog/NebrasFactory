@@ -41,7 +41,7 @@ def main():
         ('critical_persist', 'persistNebrasCriticalStores' in js),
         ('cloud_guard', 'guardCloudPushRow' in js),
         ('hr_platform', 'nebras-hr-platform.js' in html),
-        ('scm_honest_save', 'persistScmContentHonest' in html),
+        ('scm_honest_save', 'persistScmContentHonest' in js),
         ('data_warehouse', 'nebras-data-warehouse.js' in html),
     ]
     failed = []
