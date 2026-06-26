@@ -1,5 +1,81 @@
 /* سلة التسوق — تصميم v2 منظم وسلس */
 
+/* ثيم البروفايل يورّث نصاً أبيض — نُثبّت تبايناً عالياً داخل السلة */
+.cart-drawer--v2,
+.cart-drawer--v2 .cart-drawer-scroll {
+    color: #0d2840;
+}
+
+.cart-drawer--v2 .cart-commerce-hint {
+    color: #0a3d5c !important;
+    background: rgba(26, 143, 168, 0.14);
+    border: 1px solid rgba(26, 143, 168, 0.22);
+    opacity: 1;
+}
+
+.cart-drawer--v2 .cart-session-hint {
+    color: #3d5668 !important;
+    background: rgba(13, 40, 64, 0.07);
+    border: 1px solid rgba(13, 40, 64, 0.12);
+    opacity: 1;
+}
+
+.cart-drawer--v2 .cart-session-hint code {
+    color: #062e44;
+    background: rgba(255, 255, 255, 0.85);
+}
+
+.cart-drawer--v2 .cart-saved-hint {
+    color: #1e8449 !important;
+}
+
+.cart-drawer--v2 .cart-checkout-steps li {
+    color: #0d2840 !important;
+}
+
+.cart-drawer--v2 .cart-checkout-steps li .cart-step-label {
+    color: inherit;
+}
+
+.cart-drawer--v2 .cart-total-row,
+.cart-drawer--v2 .cart-subtotal-ex-row,
+.cart-drawer--v2 .cart-vat-row,
+.cart-drawer--v2 .cart-total-inc-row {
+    color: #062e44 !important;
+}
+
+.cart-drawer--v2 .cart-totals-vat-block {
+    color: #0d2840;
+}
+
+.cart-drawer--v2 .cart-checkout-form h3,
+.cart-drawer--v2 .cart-checkout-form label,
+.cart-drawer--v2 .cart-checkout-sub,
+.cart-drawer--v2 .cart-transfer-hint,
+.cart-drawer--v2 .cart-transfer-block-title,
+.cart-drawer--v2 .cart-payment-intro,
+.cart-drawer--v2 .cart-enterprise-pay h3,
+.cart-drawer--v2 .cart-send-channel-label,
+.cart-drawer--v2 .cart-order-preview {
+    color: #0d2840 !important;
+}
+
+.cart-drawer--v2 .cart-checkout-form input,
+.cart-drawer--v2 .cart-checkout-form textarea {
+    color: #0d2840;
+    background: #fff;
+}
+
+.cart-drawer--v2 .cart-drawer-actions .primary {
+    color: #fff !important;
+}
+
+.cart-drawer--v2 .cart-drawer-actions .secondary {
+    color: #0d2840 !important;
+    background: #fff;
+    border: 1px solid rgba(13, 40, 64, 0.18);
+}
+
 .cart-drawer--v2 {
     display: flex;
     flex-direction: column;

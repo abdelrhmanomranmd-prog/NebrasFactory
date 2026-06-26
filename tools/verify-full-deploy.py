@@ -33,7 +33,7 @@ LIVE_MARKERS = {
         'nebras-secure-cloud.js',
         '48-order-journey.css',
         'nebras-order-journey.js',
-        'data-nebras-deploy="hrws140"',
+        'data-nebras-deploy="hrws141"',
         'getNebrasPaymentMethods', 'openSystemSettingsForPayments', 'paymentMethods',
         'cart-drawer--v2', '58-cart-checkout-premium.css',
         'window.switchScmTab = switchScmTab',
