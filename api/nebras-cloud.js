@@ -38,7 +38,7 @@ async function handlePull(req, sess) {
         if (row && row.payload !== null && row.payload !== undefined) {
             rows.push({
                 store_key: keys[i],
-                payload: sec.sanitizePayloadForPull(keys[i], row.payload),
+                payload: sec.sanitizePayloadForPull(keys[i], row.payload, sess),
                 updated_at: row.updated_at || null
             });
         }

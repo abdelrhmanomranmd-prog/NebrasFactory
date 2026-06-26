@@ -136,9 +136,68 @@ async function loadCustomerPortalUsers() {
     }
 }
 
-function sanitizePayloadForPull(storeKey, payload) {
+function sanitizePayloadForPull(storeKey, payload, sess) {
     if (storeKey === 'admin_users' && Array.isArray(payload)) {
         return payload.map(sanitizeAdminUser);
+    }
+    if (!sess || isHqSession(sess)) return payload;
+    return filterPayloadForBranchSession(storeKey, payload, sess);
+}
+
+function normalizeBranchMatchText(v) {
+    return String(v || '').trim().toLowerCase().replace(/\s+/g, ' ');
+}
+
+function entryMatchesBranchSession(entry, sess) {
+    if (!entry || typeof entry !== 'object') return false;
+    const bid = sess.assignedBranchId != null ? Number(sess.assignedBranchId) : null;
+    const city = normalizeBranchMatchText(sess.assignedBranchCity);
+    if (entry.branchId != null && bid != null && Number(entry.branchId) === bid) return true;
+    const fields = [
+        entry.city, entry.branchCity, entry.assignedBranchCity, entry.branch,
+        entry.fromWarehouse, entry.toWarehouse, entry.warehouse
+    ];
+    for (let i = 0; i < fields.length; i++) {
+        const f = normalizeBranchMatchText(fields[i]);
+        if (!f || !city) continue;
+        if (f === city || f.indexOf(city) >= 0 || city.indexOf(f) >= 0) return true;
+    }
+    if (String(sess.role || '') === 'sales_rep') {
+        if (entry.assignedRepId && sess.sub && String(entry.assignedRepId) === String(sess.sub)) return true;
+        if (entry.assignedRepUsername && sess.username &&
+            normalizeBranchMatchText(entry.assignedRepUsername) === normalizeBranchMatchText(sess.username)) return true;
+        if (entry.createdBy && sess.username &&
+            normalizeBranchMatchText(entry.createdBy) === normalizeBranchMatchText(sess.username)) return true;
+    }
+    return false;
+}
+
+const BRANCH_FILTER_STORE_PREFIXES = ['erp_', 'hr_', 'sales_', 'crm_', 'customer_', 'legal_', 'quote_'];
+const BRANCH_FILTER_STORE_EXACT = [
+    'complaints', 'callback_leads', 'sales_quotes_inbox', 'quote_registry',
+    'customer_order_journeys', 'customer_service', 'customer_portal_users', 'customer_portal_audit',
+    'procurement_custom_depts', 'sales_data', 'sales_price_list'
+];
+
+function storeKeyIsBranchFilterable(storeKey) {
+    if (!storeKey) return false;
+    if (BRANCH_FILTER_STORE_EXACT.indexOf(storeKey) >= 0) return true;
+    return BRANCH_FILTER_STORE_PREFIXES.some(function(p) { return storeKey.indexOf(p) === 0; });
+}
+
+function filterPayloadForBranchSession(storeKey, payload, sess) {
+    if (!sess || isHqSession(sess)) return payload;
+    if (!storeKeyIsBranchFilterable(storeKey)) return payload;
+    if (!Array.isArray(payload)) return payload;
+    const role = String(sess.role || '');
+    const hasBranch = sess.assignedBranchId != null || normalizeBranchMatchText(sess.assignedBranchCity);
+    if (!hasBranch && role !== 'sales_rep') return payload;
+    if (role === 'sales_rep' && storeKey === 'customer_portal_users') {
+        return payload.filter(function(item) { return entryMatchesBranchSession(item, sess); });
+    }
+    const branchRoles = ['sales_manager', 'branch_manager', 'accountant', 'accounting_manager'];
+    if (branchRoles.indexOf(role) >= 0 || hasBranch) {
+        return payload.filter(function(item) { return entryMatchesBranchSession(item, sess); });
     }
     return payload;
 }
