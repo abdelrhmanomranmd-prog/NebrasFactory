@@ -90,9 +90,7 @@
         /** إزالة البيانات التجريبية المدمجة — الإنتاج يبدأ فارغاً حتى تضيف الإدارة */
         function enforceProductionBusinessCleanState() {
             if (!NEBRAS_PRODUCTION_LIVE_MODE) return;
-            siteProducts = (siteProducts || []).filter(function(p) {
-                return p && BUILTIN_DEMO_PRODUCT_IDS.indexOf(p.id) < 0;
-            });
+            /* لا نمسح site_products — منتجات المتجر (حتى prod-wpc-raw…) بيانات إنتاج حقيقية */
             erpInventory = (erpInventory || []).filter(function(i) {
                 return i && BUILTIN_DEMO_ERP_INV_IDS.indexOf(i.id) < 0;
             });
@@ -3909,7 +3907,7 @@
             product.inStock = product.inStock === false;
             displaySiteProductsAdmin();
             addAuditLog('تغيير توفر منتج', (product.inStock !== false ? 'متاح: ' : 'غير متاح: ') + (product.titleAr || productId));
-            await persistScmContentHonest('توفر منتج');
+            await persistScmContentHonest('توفر منتج', { storeKeys: ['site_products'] });
         }
 
         function getProductsForVisitorIcon(icon) {
@@ -11607,7 +11605,7 @@
             purgeStaleCatalogReferences();
             displaySiteProductsAdmin();
             addAuditLog(willHide ? 'إخفاء منتج' : 'إظهار منتج', product.titleAr || productId);
-            await persistScmContentHonest(willHide ? 'إخفاء منتج' : 'إظهار منتج');
+            await persistScmContentHonest(willHide ? 'إخفاء منتج' : 'إظهار منتج', { storeKeys: ['site_products'] });
         }
 
         async function addSiteProduct() {
@@ -11638,7 +11636,7 @@
             displaySiteProductsAdmin();
             displayVisitorIconsAdmin();
             addAuditLog('حذف منتج', product.titleAr || product.id);
-            await persistScmContentHonest('حذف منتج');
+            await persistScmContentHonest('حذف منتج', { storeKeys: ['site_products'] });
         }
 
         function getCatalogCategoryDef(categoryId) {
@@ -11647,6 +11645,9 @@
 
         function resolveProductCatalogCategoryId(product) {
             if (!product) return 'other';
+            if (product.catalogCategoryId && NEBRAS_CATALOG_CATEGORIES.some(function(c) { return c.id === product.catalogCategoryId; })) {
+                return product.catalogCategoryId;
+            }
             if (SHOP_CATALOG_PRODUCT_IDS.indexOf(product.id) >= 0) return product.id;
             if (product.legacyKey === 'wpc-raw' || product.cssClass === 'card-wpc-raw') return 'prod-wpc-raw';
             if (product.legacyKey === 'wpc' || product.cssClass === 'card-wpc') return 'prod-wpc';
@@ -11744,7 +11745,8 @@
             let cloudOk = false;
             if (currentAdmin && typeof persistNebrasCriticalStores === 'function') {
                 try {
-                    cloudOk = await persistNebrasCriticalStores(SCM_CONTENT_CLOUD_KEYS, {
+                    const keysToPersist = options.storeKeys || SCM_CONTENT_CLOUD_KEYS;
+                    cloudOk = await persistNebrasCriticalStores(keysToPersist, {
                         showToast: false,
                         promptReauth: options.promptReauth !== false
                     });
@@ -11820,9 +11822,9 @@
                 mode: existing ? 'edit' : 'new',
                 categoryId: catId,
                 draft: existing ? Object.assign({}, existing) : {
-                    id: cat.id, titleAr: '', titleEn: '', textAr: '', textEn: '', iconClass: 'fas fa-box',
+                    id: '', titleAr: '', titleEn: '', textAr: '', textEn: '', iconClass: 'fas fa-box',
                     backgroundImage: cat.defaultBg || '', cssClass: cat.cssClass, legacyKey: cat.legacyKey || '',
-                    visible: true, shopEnabled: true, action: 'shop', variants: [], album: []
+                    catalogCategoryId: catId, visible: true, shopEnabled: true, action: 'shop', variants: [], album: []
                 }
             };
             switchScmTab('products');
@@ -11880,13 +11882,16 @@
             const catSel = document.getElementById('scm-prod-category');
             const categoryId = catSel ? catSel.value : st.categoryId;
             const experience = (document.getElementById('scm-prod-experience') || {}).value || 'shop';
-            if (!titleAr.trim()) { alert('أدخلي عنوان المنتج.'); return; }
+            if (!titleAr.trim()) {
+                if (saveBtn) { saveBtn.disabled = false; saveBtn.innerHTML = '<i class="fas fa-check"></i> حفظ المنتج + السحابة'; }
+                alert('أدخلي عنوان المنتج.');
+                return;
+            }
             const cat = getCatalogCategoryDef(categoryId);
             let product = st.mode === 'edit' ? siteProducts.find(function(p) { return p.id === st.draft.id; }) : null;
             if (!product) {
-                const newId = categoryId !== 'other' && st.mode === 'new' && !(siteProducts || []).some(function(p) { return p && p.id === categoryId; })
-                    ? categoryId : ('prod-' + Date.now());
-                product = Object.assign({}, st.draft, { id: newId, sortOrder: siteProducts.length + 1, visible: true, variants: [] });
+                const newId = 'prod-' + Date.now();
+                product = Object.assign({}, st.draft, { id: newId, sortOrder: siteProducts.length + 1, visible: true, variants: [], adminManaged: true });
                 siteProducts.push(product);
             }
             product.titleAr = titleAr.trim();
@@ -11894,6 +11899,8 @@
             product.textAr = textAr.trim();
             product.iconClass = iconClass.trim();
             product.backgroundImage = st.draft.backgroundImage || (cat && cat.defaultBg) || '';
+            product.catalogCategoryId = categoryId;
+            product.adminManaged = true;
             if (cat && categoryId !== 'other') { product.cssClass = cat.cssClass; product.legacyKey = cat.legacyKey; }
             applyExperienceToCatalogItem(product, experience);
             if (experience === 'shop' && !product.variants) product.variants = [];
@@ -11902,7 +11909,7 @@
             scmExpandedProductId = product.id;
             displaySiteProductsAdmin();
             addAuditLog(st.mode === 'edit' ? 'تعديل منتج' : 'إضافة منتج', product.titleAr);
-            await persistScmContentHonest(st.mode === 'edit' ? 'تعديل المنتج' : 'منتج جديد');
+            await persistScmContentHonest(st.mode === 'edit' ? 'تعديل المنتج' : 'منتج جديد', { storeKeys: ['site_products'] });
             if (getCatalogExperience(product) === 'shop' && (product.variants || []).length === 0) {
                 openScmVariantEditor(product.id, null);
             }
@@ -12000,7 +12007,7 @@
             scmExpandedProductId = product.id;
             displaySiteProductsAdmin();
             addAuditLog('صنف منتج', product.titleAr + ' — ' + payload.typeAr);
-            await persistScmContentHonest('صنف «' + (payload.typeAr || payload.sizeAr || 'جديد') + '»');
+            await persistScmContentHonest('صنف «' + (payload.typeAr || payload.sizeAr || 'جديد') + '»', { storeKeys: ['site_products'] });
         }
 
         async function deleteScmVariantFromEditor() {
@@ -12010,7 +12017,7 @@
             if (product && product.variants) product.variants.splice(scmVariantEditorState.variantIndex, 1);
             cancelScmVariantEditor();
             displaySiteProductsAdmin();
-            await persistScmContentHonest('حذف صنف');
+            await persistScmContentHonest('حذف صنف', { storeKeys: ['site_products'] });
         }
 
         function cancelScmVariantEditor() {
@@ -25326,7 +25333,10 @@
             if (!spec || payload === undefined || payload === null) return;
             if (Array.isArray(payload) && !payload.length) {
                 if (NEBRAS_CHROME_EMPTY_CLOUD_SKIP_KEYS.indexOf(storeKey) >= 0) return;
-                if (!NEBRAS_PRODUCTION_LIVE_MODE && NEBRAS_PRODUCTION_BUSINESS_STORE_KEYS.indexOf(storeKey) >= 0) return;
+                if (NEBRAS_PRODUCTION_BUSINESS_STORE_KEYS.indexOf(storeKey) >= 0) {
+                    const localArr = Array.isArray(spec.get()) ? spec.get() : [];
+                    if (localArr.length) return;
+                }
             }
             if (NEBRAS_MERGE_BY_ID_STORE_KEYS.indexOf(storeKey) >= 0 && Array.isArray(payload) && payload.length) {
                 mergeNebrasCloudArrayById(storeKey, payload);
@@ -25551,7 +25561,6 @@
 
         async function pushToNebrasCloudCore() {
             const silent = !!nebrasCloudPushSilent;
-            if (typeof enforceProductionBusinessCleanState === 'function') enforceProductionBusinessCleanState();
             const rows = NEBRAS_CLOUD_STORE_SPECS.map(function(spec) {
                 let payload = spec.get();
                 if (typeof slimNebrasCloudPayload === 'function') payload = slimNebrasCloudPayload(spec.key, payload);
