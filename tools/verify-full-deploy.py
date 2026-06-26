@@ -33,7 +33,7 @@ LIVE_MARKERS = {
         'nebras-secure-cloud.js',
         '48-order-journey.css',
         'nebras-order-journey.js',
-        'data-nebras-deploy="hrws131"',
+        'data-nebras-deploy="hrws132"',
         'window.switchScmTab = switchScmTab',
         'window.addSiteProduct = addSiteProduct',
         'window.manageProductVariants = manageProductVariants',

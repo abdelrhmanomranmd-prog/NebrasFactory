@@ -16,6 +16,92 @@
     box-shadow: 0 40px 120px rgba(4, 22, 40, 0.48);
 }
 
+/* وضوح النص — تجاوز admin-modal الداكن (نص أبيض كان غير مقروء على خلفية SCM الفاتحة) */
+.admin-section .admin-modal.nebras-scm-modal {
+    background: linear-gradient(180deg, #ffffff 0%, #f4f8fc 100%);
+    color: var(--scm-ink);
+    padding: 0;
+}
+
+.admin-section .admin-modal.nebras-scm-modal .scm-panel,
+.admin-section .admin-modal.nebras-scm-modal .scm-hint,
+.admin-section .admin-modal.nebras-scm-modal .scm-subhead,
+.admin-section .admin-modal.nebras-scm-modal .scm-list li,
+.admin-section .admin-modal.nebras-scm-modal .scm-governance-checklist li,
+.admin-section .admin-modal.nebras-scm-modal .scm-category-summary,
+.admin-section .admin-modal.nebras-scm-modal .scm-cloud-save-status,
+.admin-section .admin-modal.nebras-scm-modal p,
+.admin-section .admin-modal.nebras-scm-modal small,
+.admin-section .admin-modal.nebras-scm-modal h4,
+.admin-section .admin-modal.nebras-scm-modal h5,
+.admin-section .admin-modal.nebras-scm-modal label {
+    color: var(--scm-ink);
+}
+
+.admin-section .admin-modal.nebras-scm-modal .scm-hint,
+.admin-section .admin-modal.nebras-scm-modal .scm-list li small,
+.admin-section .admin-modal.nebras-scm-modal .scm-list-copy small {
+    color: #4a5a6a;
+    opacity: 1;
+}
+
+.nebras-scm-modal .scm-tabs button {
+    color: var(--scm-navy);
+    background: #f4f8fc;
+    border: 1px solid var(--scm-line);
+}
+
+.nebras-scm-modal .scm-tabs button:hover {
+    background: #e8f2fa;
+    border-color: #1a6fa8;
+}
+
+.nebras-scm-modal .scm-tabs button.active {
+    background: linear-gradient(135deg, #0a4d8c, #1a6fa8);
+    color: #fff;
+    border-color: #d4af37;
+}
+
+.nebras-scm-modal .scm-list li {
+    background: #fff;
+    border: 1px solid var(--scm-line);
+    color: var(--scm-ink);
+}
+
+.nebras-scm-modal .scm-governance-status-inner {
+    background: linear-gradient(135deg, rgba(10, 77, 140, 0.08), rgba(212, 175, 55, 0.1));
+    border: 1px solid var(--scm-line);
+}
+
+.nebras-scm-modal .scm-governance-status-inner h4 {
+    color: var(--scm-navy-2);
+}
+
+.nebras-scm-modal .scm-governance-checklist li.is-ok {
+    color: var(--scm-ink);
+}
+
+.admin-section .admin-modal.nebras-scm-modal .scm-editor-grid input,
+.admin-section .admin-modal.nebras-scm-modal .scm-editor-grid textarea,
+.admin-section .admin-modal.nebras-scm-modal .scm-editor-grid select {
+    color: var(--scm-ink) !important;
+    background: #fff !important;
+    -webkit-text-fill-color: var(--scm-ink) !important;
+}
+
+.admin-section .admin-modal.nebras-scm-modal button.secondary,
+.admin-section .admin-modal.nebras-scm-modal .scm-btn-sm.secondary {
+    color: var(--scm-navy-2) !important;
+    background: #fff !important;
+    border: 1px solid var(--scm-line) !important;
+}
+
+.admin-section .admin-modal.nebras-scm-modal button.primary {
+    color: #fff !important;
+    background: linear-gradient(135deg, #0a4d8c, #1a6fa8) !important;
+    border: 1px solid transparent !important;
+}
+
 .nebras-scm-head {
     display: flex;
     align-items: center;
