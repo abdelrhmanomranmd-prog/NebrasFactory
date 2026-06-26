@@ -35,7 +35,7 @@ def main():
     integrity = get('/js/nebras-platform-integrity.js?v=' + v)
     markers = [
         ('production_live_mode', 'NEBRAS_PRODUCTION_LIVE_MODE = true' in js),
-        ('demo_admin_purge', 'NEBRAS_DEMO_ADMIN_USERNAME_RE' in js),
+        ('demo_admin_purge', 'isBuiltinDemoAdminUser' in js),
         ('chrome_empty_skip', 'NEBRAS_CHROME_EMPTY_CLOUD_SKIP_KEYS' in js and "'about_pages'" in js),
         ('persistNebrasLiveNow', 'persistNebrasLiveNow' in js and 'window.persistNebrasLiveNow' in js),
         ('live_cloud_ribbon', 'nebras-live-cloud-ribbon' in html),

@@ -63,15 +63,25 @@
             if (typeof renderPartnersMarquees === 'function') renderPartnersMarquees();
         }
 
-        const NEBRAS_DEMO_ADMIN_USERNAME_RE = /^(ZAKI|TEST|SAMPLE|DEMO)(?:USER)?\d*$/i;
+        const NEBRAS_BUILTIN_DEMO_ADMIN_IDS = ['demo-zaki-sales', 'seed-demo-admin'];
+
+        /** حسابات تجريبية مدمجة فقط — لا نمسح مستخدمين أنشأتها الإدارة الرئيسية (createdAt/createdBy) */
+        function isBuiltinDemoAdminUser(u) {
+            if (!u || isImmutablePrimaryAdmin(u)) return false;
+            if (u.isBuiltinDemo === true) return true;
+            if (NEBRAS_BUILTIN_DEMO_ADMIN_IDS.indexOf(String(u.id || '')) >= 0) return true;
+            const name = String(u.username || '').trim();
+            if (/^(TEST|SAMPLE|DEMO)(?:USER)?\d+$/i.test(name)) return true;
+            if (/^(ZAKI|TEST|SAMPLE|DEMO)(?:USER)?\d*$/i.test(name) && !u.createdAt && !u.createdBy) return true;
+            return false;
+        }
 
         function enforceProductionGovernanceCleanState() {
             if (!NEBRAS_PRODUCTION_LIVE_MODE) return;
             adminUsers = (adminUsers || []).filter(function(u) {
                 if (!u) return false;
                 if (isImmutablePrimaryAdmin(u)) return true;
-                const name = String(u.username || '').trim();
-                return !NEBRAS_DEMO_ADMIN_USERNAME_RE.test(name);
+                return !isBuiltinDemoAdminUser(u);
             });
             if (!adminUsers.some(function(u) { return isImmutablePrimaryAdmin(u); })) {
                 adminUsers.unshift({
@@ -17433,7 +17443,7 @@
         }).join('');
     }
 
-    function toggleUserActive(index) {
+    async function toggleUserActive(index) {
         if (!requirePermission('users')) return;
         if (!isMainGovernanceAdmin()) { alert('تعطيل/تفعيل المستخدمين — الإدارة الرئيسية فقط.'); return; }
         const user = adminUsers[index];
@@ -17441,12 +17451,16 @@
         const next = user.isActive === false;
         adminUsers[index] = Object.assign({}, user, { isActive: next, updatedAt: new Date().toISOString() });
         if (!next) clearAdminPresence(user);
-        saveSystemData();
+        saveSystemData({ skipCloud: true });
+        const cloudOk = await persistAdminUsersToCloud({ showToast: true, verifyUsername: user.username });
         addAuditLogGoverned(next ? 'تفعيل مستخدم' : 'تعطيل مستخدم', user.username + ' — ' + getRoleLabel(user.role));
+        if (!cloudOk && typeof showNebrasAdminToast === 'function') {
+            showNebrasAdminToast('⚠️ التغيير محلي فقط — لم يُرفع للسحابة', 'error');
+        }
         displayUsersGoverned();
     }
 
-    function adminResetUserPassword(index) {
+    async function adminResetUserPassword(index) {
         if (!requirePermission('users')) return;
         if (!isMainGovernanceAdmin()) { alert('إعادة تعيين كلمة المرور — الإدارة الرئيسية فقط.'); return; }
         const user = adminUsers[index];
@@ -17458,9 +17472,14 @@
             password: storeNebrasPasswordValue(String(pwd).trim()),
             updatedAt: new Date().toISOString()
         });
-        saveSystemData();
+        saveSystemData({ skipCloud: true });
+        const cloudOk = await persistAdminUsersToCloud({ showToast: true, verifyUsername: user.username });
         addAuditLogGoverned('إعادة تعيين كلمة مرور', 'بواسطة الإدارة الرئيسية — ' + user.username);
-        alert('تم تحديث كلمة المرور — يُحفظ في النظام والسحابة فوراً.');
+        if (cloudOk) {
+            alert('تم تحديث كلمة المرور — محفوظة في السحابة ومتاحة من كل الأجهزة.');
+        } else {
+            alert('تم التحديث محلياً فقط — لم يُرفع للسحابة. أعيدي تسجيل الدخول ثم أعيدي تعيين كلمة المرور.');
+        }
         displayUsersGoverned();
     }
 
@@ -24537,6 +24556,42 @@
             if (editor) { editor.hidden = true; editor.innerHTML = ''; }
         }
 
+        async function verifyAdminUserExistsInCloud(username) {
+            const un = String(username || '').trim().toUpperCase();
+            if (!un || typeof secureCloudPull !== 'function' || typeof getNebrasSecureToken !== 'function') return false;
+            if (!getNebrasSecureToken()) return false;
+            try {
+                const rows = await secureCloudPull(['admin_users']);
+                const row = rows && rows.find(function(r) { return r && r.store_key === 'admin_users'; });
+                const users = row && row.payload;
+                if (!Array.isArray(users)) return false;
+                return users.some(function(u) {
+                    return u && String(u.username || '').trim().toUpperCase() === un && u.isActive !== false;
+                });
+            } catch (e) {
+                console.warn('verifyAdminUserExistsInCloud:', e);
+                return false;
+            }
+        }
+
+        async function persistAdminUsersToCloud(options) {
+            options = options || {};
+            let cloudOk = false;
+            if (typeof persistNebrasCriticalStores === 'function') {
+                cloudOk = await persistNebrasCriticalStores(['admin_users'], {
+                    showToast: !!options.showToast,
+                    promptReauth: options.promptReauth !== false
+                });
+            }
+            if (!cloudOk && typeof flushPushToNebrasCloud === 'function') {
+                cloudOk = await flushPushToNebrasCloud({ showCloudToast: !!options.showToast });
+            }
+            if (cloudOk && options.verifyUsername) {
+                cloudOk = await verifyAdminUserExistsInCloud(options.verifyUsername);
+            }
+            return cloudOk;
+        }
+
         async function saveUserFromEditor() {
             if (!nebrasUserEditorState) return;
             if (!isMainGovernanceAdmin()) { alert('العملية متاحة فقط للإدارة الرئيسية.'); return; }
@@ -24594,15 +24649,13 @@
                 addAuditLog('إضافة مستخدم', 'تمت إضافة ' + username + ' بدور ' + getRoleLabel(st.role));
             }
             saveSystemData({ skipCloud: true });
-            let cloudOk = false;
-            if (typeof persistNebrasCriticalStores === 'function') {
-                cloudOk = await persistNebrasCriticalStores(['admin_users'], { showToast: true });
-            }
-            if (!cloudOk && typeof flushPushToNebrasCloud === 'function') {
-                cloudOk = await flushPushToNebrasCloud({ showCloudToast: true });
-            }
-            if (!cloudOk && typeof showNebrasAdminToast === 'function') {
-                showNebrasAdminToast('⚠️ المستخدم محفوظ محلياً فقط — لن يعمل من جهاز آخر حتى يُرفع للسحابة', 'error');
+            const cloudOk = await persistAdminUsersToCloud({ showToast: true, verifyUsername: username });
+            if (!cloudOk) {
+                if (typeof showNebrasAdminToast === 'function') {
+                    showNebrasAdminToast('⚠️ المستخدم محفوظ محلياً فقط — لن يعمل من جهاز/فرع آخر. أعيدي تسجيل الدخول ثم احفظي مرة أخرى.', 'error');
+                }
+                displayUsers();
+                return;
             }
             cancelUserEditor();
             displayUsers();
