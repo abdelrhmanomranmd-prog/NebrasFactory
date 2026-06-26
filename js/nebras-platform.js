@@ -222,6 +222,17 @@
             }).join('');
         }
         const SHOP_CATALOG_PRODUCT_IDS = ['prod-wpc-raw', 'prod-wpc', 'prod-aluminum', 'prod-other'];
+        /** فئات المتجر الرئيسية — ترتيب لوحة التحكم من الأعلى */
+        const NEBRAS_CATALOG_CATEGORIES = [
+            { id: 'prod-wpc-raw', labelAr: 'WPC عضم', icon: 'fas fa-door-closed', descAr: 'أبواب وقطع للورش والمصانع', cssClass: 'card-wpc-raw', defaultBg: 'wpc-background', legacyKey: 'wpc-raw' },
+            { id: 'prod-wpc', labelAr: 'WPC جاهز', icon: 'fas fa-door-open', descAr: 'أبواب WPC جاهزة للتركيب', cssClass: 'card-wpc', defaultBg: 'wpc-background', legacyKey: 'wpc' },
+            { id: 'prod-aluminum', labelAr: 'ألومنيوم', icon: 'fas fa-industry', descAr: 'قطاعات ومقاطع الألومنيوم', cssClass: 'card-aluminum', defaultBg: 'aluminum-background', legacyKey: 'aluminum' },
+            { id: 'prod-other', labelAr: 'منتجات أخرى', icon: 'fas fa-cubes', descAr: 'PVC · إكسسوارات · منتجات متنوعة', cssClass: 'card-other', defaultBg: 'background-other-products', legacyKey: 'other' }
+        ];
+        let scmProductCatalogFilter = 'prod-wpc-raw';
+        let scmProductEditorState = null;
+        let scmVariantEditorState = null;
+        let scmExpandedProductId = null;
 
         function canUploadNebrasMedia(permissionKey) {
             if (!currentAdmin) return false;
@@ -11244,6 +11255,12 @@
                 if (tabBtn) {
                     ev.preventDefault();
                     switchScmTab(tabBtn.getAttribute('data-scm-tab'));
+                    return;
+                }
+                const catBtn = ev.target.closest('.scm-store-chip[data-scm-category]');
+                if (catBtn) {
+                    ev.preventDefault();
+                    setScmProductCategory(catBtn.getAttribute('data-scm-category'));
                 }
             });
         }
@@ -11408,7 +11425,7 @@
                 if (title) title.textContent = 'المتجر الإلكتروني — إدارة المنتجات';
                 if (hint) hint.innerHTML = 'صلاحية <strong>المتجر</strong> فقط: رفع وتحديث الأصناف (مقاس · نوع · سعر · صورة) — يُحفظ ديناميكياً ويُزامَن مع السحابة.';
             }
-            const addBtn = scm.querySelector('#scm-panel-products > button.primary');
+            const addBtn = scm.querySelector('.scm-catalog-toolbar .primary');
             if (addBtn) addBtn.style.display = storeOnly ? 'none' : '';
         }
 
@@ -11585,45 +11602,12 @@
 
         async function addSiteProduct() {
             if (!requirePermission('content', 'إضافة المنتجات — صلاحية المحتوى مطلوبة.')) return;
-            const fields = await promptCatalogFields(null, 'product');
-            if (!fields) return;
-            const exp = promptCatalogExperience('shop');
-            if (exp === null) return;
-            const newProd = Object.assign({
-                id: 'prod-' + Date.now(),
-                sortOrder: siteProducts.length + 1,
-                cssClass: 'card-wpc-raw',
-                anchorId: '',
-                legacyKey: '',
-                visible: true,
-                variants: exp === 'shop' ? [] : undefined
-            }, fields);
-            applyExperienceToCatalogItem(newProd, exp);
-            siteProducts.push(newProd);
-            saveContentData();
-            displaySiteProductsAdmin();
-            addAuditLog('إضافة منتج', 'منتج جديد: ' + fields.titleAr);
-            if (exp === 'shop' && confirm('هل تريد إضافة أصناف (مقاس / لون / سعر) الآن؟')) {
-                manageProductVariants(newProd.id);
-            }
+            openScmProductEditor(null, scmProductCatalogFilter === 'other' ? 'prod-wpc-raw' : scmProductCatalogFilter);
         }
 
         async function editSiteProduct(productId) {
             if (!requirePermission('content', 'تعديل المنتجات — صلاحية المحتوى مطلوبة.')) return;
-            const product = siteProducts.find(function(p) { return p.id === productId; });
-            if (!product) return;
-            const fields = await promptCatalogFields(product, 'product');
-            if (!fields) return;
-            Object.assign(product, fields);
-            delete product.titleKey;
-            const exp = promptCatalogExperience(getCatalogExperience(product));
-            if (exp !== null) applyExperienceToCatalogItem(product, exp);
-            saveContentData();
-            displaySiteProductsAdmin();
-            addAuditLog('تعديل منتج', product.titleAr);
-            if (getCatalogExperience(product) === 'shop' && confirm('هل تريد إدارة أصناف المنتج (شكل · مقاس · لون · سعر) الآن؟')) {
-                manageProductVariants(productId);
-            }
+            openScmProductEditor(productId);
         }
 
         function deleteSiteProduct(productId) {
@@ -11647,54 +11631,331 @@
             addAuditLog('حذف منتج', product.titleAr || product.id);
         }
 
-        function displaySiteProductsAdmin() {
-            const list = document.getElementById('scm-products-list');
-            if (!list) return;
-            const iconByProduct = {};
-            (visitorIcons || []).forEach(function(ic) {
-                if (!ic) return;
-                const label = ic.titleAr || ic.title || ('أيقونة ' + ic.id);
-                if (ic.linkedProductId) iconByProduct[ic.linkedProductId] = label;
-                if (Array.isArray(ic.productIds)) {
-                    ic.productIds.forEach(function(pid) { iconByProduct[pid] = label; });
-                }
+        function getCatalogCategoryDef(categoryId) {
+            return NEBRAS_CATALOG_CATEGORIES.find(function(c) { return c.id === categoryId; }) || null;
+        }
+
+        function resolveProductCatalogCategoryId(product) {
+            if (!product) return 'other';
+            if (SHOP_CATALOG_PRODUCT_IDS.indexOf(product.id) >= 0) return product.id;
+            if (product.legacyKey === 'wpc-raw' || product.cssClass === 'card-wpc-raw') return 'prod-wpc-raw';
+            if (product.legacyKey === 'wpc' || product.cssClass === 'card-wpc') return 'prod-wpc';
+            if (product.id === 'prod-aluminum' || product.legacyKey === 'aluminum' || product.cssClass === 'card-aluminum') return 'prod-aluminum';
+            if (product.legacyKey === 'other' || product.cssClass === 'card-other') return 'prod-other';
+            return 'other';
+        }
+
+        function setScmProductCategory(categoryId) {
+            if (!canManage('content') && !canManageStoreCatalog()) {
+                alert('إدارة المنتجات — صلاحية المحتوى أو المتجر مطلوبة.');
+                return;
+            }
+            scmProductCatalogFilter = categoryId || 'prod-wpc-raw';
+            switchScmTab('products');
+            cancelScmProductEditor();
+            cancelScmVariantEditor();
+            scmExpandedProductId = null;
+            syncScmCategoryChipUi();
+            displaySiteProductsAdmin();
+        }
+
+        function syncScmCategoryChipUi() {
+            document.querySelectorAll('.scm-store-chip[data-scm-category]').forEach(function(btn) {
+                btn.classList.toggle('is-active', btn.getAttribute('data-scm-category') === scmProductCatalogFilter);
             });
-            let productsToShow = siteProducts;
+            const cat = getCatalogCategoryDef(scmProductCatalogFilter);
+            const hint = document.getElementById('scm-products-hint');
+            if (hint && cat) {
+                hint.innerHTML = 'الفئة الحالية: <strong>' + escapeHtmlAttr(cat.labelAr) + '</strong> — ' + escapeHtmlAttr(cat.descAr) +
+                    '. أضيفي المنتج ثم <strong>الأصناف</strong> (شكل · مقاس · لون · سعر قبل الضريبة · صورة).';
+            }
+        }
+
+        function getScmProductsForCurrentCategory() {
+            let pool = (siteProducts || []).slice();
             if (isStoreCatalogOnlyAdmin()) {
-                productsToShow = siteProducts.filter(function(p) {
-                    return p && SHOP_CATALOG_PRODUCT_IDS.indexOf(p.id) >= 0;
+                pool = pool.filter(function(p) { return p && SHOP_CATALOG_PRODUCT_IDS.indexOf(p.id) >= 0; });
+            }
+            if (scmProductCatalogFilter === 'other') {
+                return pool.filter(function(p) {
+                    return p && SHOP_CATALOG_PRODUCT_IDS.indexOf(p.id) < 0 && resolveProductCatalogCategoryId(p) === 'other';
                 });
             }
-            list.innerHTML = productsToShow.map(function(p) {
-                const storeOnly = isStoreCatalogOnlyAdmin();
-                const canEditProduct = !storeOnly && canManage('content');
+            return pool.filter(function(p) { return p && resolveProductCatalogCategoryId(p) === scmProductCatalogFilter; });
+        }
+
+        function getPrimaryProductForCategory(categoryId) {
+            return (siteProducts || []).find(function(p) { return p && p.id === categoryId; }) ||
+                (siteProducts || []).find(function(p) { return p && resolveProductCatalogCategoryId(p) === categoryId; }) ||
+                null;
+        }
+
+        function openScmVariantForCategory() {
+            const product = getPrimaryProductForCategory(scmProductCatalogFilter);
+            if (!product) { alert('لا يوجد منتج في هذه الفئة — اضغطي «منتج في هذه الفئة» أولاً.'); return; }
+            if (!canManageProductCatalog(currentAdmin, product.id)) { alert('ليس لديك صلاحية إضافة أصناف.'); return; }
+            scmExpandedProductId = product.id;
+            openScmVariantEditor(product.id, null);
+            displaySiteProductsAdmin();
+        }
+
+        function openScmProductEditor(productId, categoryId) {
+            if (!requirePermission('content', 'إضافة/تعديل المنتجات — صلاحية المحتوى مطلوبة.')) return;
+            cancelScmVariantEditor();
+            const existing = productId ? siteProducts.find(function(p) { return p.id === productId; }) : null;
+            const catId = existing ? resolveProductCatalogCategoryId(existing) : (categoryId || scmProductCatalogFilter || 'prod-wpc-raw');
+            const cat = getCatalogCategoryDef(catId) || NEBRAS_CATALOG_CATEGORIES[0];
+            scmProductEditorState = {
+                mode: existing ? 'edit' : 'new',
+                categoryId: catId,
+                draft: existing ? Object.assign({}, existing) : {
+                    id: cat.id, titleAr: '', titleEn: '', textAr: '', textEn: '', iconClass: 'fas fa-box',
+                    backgroundImage: cat.defaultBg || '', cssClass: cat.cssClass, legacyKey: cat.legacyKey || '',
+                    visible: true, shopEnabled: true, action: 'shop', variants: [], album: []
+                }
+            };
+            switchScmTab('products');
+            renderScmProductEditor();
+        }
+
+        function renderScmProductEditor() {
+            const host = document.getElementById('scm-product-editor');
+            if (!host || !scmProductEditorState) return;
+            const st = scmProductEditorState;
+            const d = st.draft;
+            const catOptions = NEBRAS_CATALOG_CATEGORIES.map(function(c) {
+                return '<option value="' + escapeHtmlAttr(c.id) + '"' + (st.categoryId === c.id ? ' selected' : '') + '>' + escapeHtmlAttr(c.labelAr) + '</option>';
+            }).join('') + '<option value="other"' + (st.categoryId === 'other' ? ' selected' : '') + '>فئة مخصصة</option>';
+            const bgPreview = d.backgroundImage
+                ? '<img src="' + escapeHtmlAttr(normalizeMediaPath(d.backgroundImage)) + '" alt="" class="scm-editor-thumb">'
+                : '<span class="scm-editor-thumb scm-editor-thumb--empty"><i class="fas fa-image"></i></span>';
+            const exp = getCatalogExperience(d);
+            host.hidden = false;
+            host.innerHTML = '<div class="scm-editor-card scm-editor-card--product"><h4><i class="fas fa-box"></i> ' +
+                (st.mode === 'edit' ? 'تعديل منتج' : 'منتج جديد') + ' — الخطوة 2</h4><div class="scm-editor-grid">' +
+                '<label>الفئة<select id="scm-prod-category"' + (st.mode === 'edit' && SHOP_CATALOG_PRODUCT_IDS.indexOf(d.id) >= 0 ? ' disabled' : '') + '>' + catOptions + '</select></label>' +
+                '<label>العنوان (عربي)<input type="text" id="scm-prod-title-ar" value="' + escapeHtmlAttr(d.titleAr || '') + '"></label>' +
+                '<label>العنوان (إنجليزي)<input type="text" id="scm-prod-title-en" value="' + escapeHtmlAttr(d.titleEn || '') + '"></label>' +
+                '<label class="nebras-field--full">الوصف<textarea id="scm-prod-text-ar" rows="2">' + escapeHtmlAttr(d.textAr || '') + '</textarea></label>' +
+                '<label>أيقونة<input type="text" id="scm-prod-icon" value="' + escapeHtmlAttr(d.iconClass || 'fas fa-box') + '"></label>' +
+                '<label>تجربة الزائر<select id="scm-prod-experience">' +
+                '<option value="shop"' + (exp === 'shop' ? ' selected' : '') + '>متجر + سلة</option>' +
+                '<option value="gallery"' + (exp === 'gallery' ? ' selected' : '') + '>معرض فقط</option>' +
+                '<option value="browse"' + (exp === 'browse' ? ' selected' : '') + '>تصفح</option></select></label>' +
+                '<div class="scm-editor-media nebras-field--full"><span>صورة المنتج</span>' + bgPreview +
+                '<button type="button" class="secondary" onclick="scmProductPickBackground()"><i class="fas fa-cloud-upload-alt"></i> رفع صورة</button></div></div>' +
+                '<div class="scm-editor-actions"><button type="button" class="primary" onclick="saveScmProductFromEditor()"><i class="fas fa-check"></i> حفظ</button>' +
+                '<button type="button" class="secondary" onclick="cancelScmProductEditor()">إلغاء</button></div></div>';
+            host.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        async function scmProductPickBackground() {
+            if (!scmProductEditorState) return;
+            const url = await pickMediaPath({ label: 'صورة المنتج', defaultValue: scmProductEditorState.draft.backgroundImage || '' });
+            if (!url) return;
+            scmProductEditorState.draft.backgroundImage = url;
+            renderScmProductEditor();
+        }
+
+        function saveScmProductFromEditor() {
+            if (!scmProductEditorState) return;
+            const st = scmProductEditorState;
+            const titleAr = (document.getElementById('scm-prod-title-ar') || {}).value || '';
+            const titleEn = (document.getElementById('scm-prod-title-en') || {}).value || '';
+            const textAr = (document.getElementById('scm-prod-text-ar') || {}).value || '';
+            const iconClass = (document.getElementById('scm-prod-icon') || {}).value || 'fas fa-box';
+            const catSel = document.getElementById('scm-prod-category');
+            const categoryId = catSel ? catSel.value : st.categoryId;
+            const experience = (document.getElementById('scm-prod-experience') || {}).value || 'shop';
+            if (!titleAr.trim()) { alert('أدخلي عنوان المنتج.'); return; }
+            const cat = getCatalogCategoryDef(categoryId);
+            let product = st.mode === 'edit' ? siteProducts.find(function(p) { return p.id === st.draft.id; }) : null;
+            if (!product) {
+                const newId = categoryId !== 'other' && st.mode === 'new' && !(siteProducts || []).some(function(p) { return p && p.id === categoryId; })
+                    ? categoryId : ('prod-' + Date.now());
+                product = Object.assign({}, st.draft, { id: newId, sortOrder: siteProducts.length + 1, visible: true, variants: [] });
+                siteProducts.push(product);
+            }
+            product.titleAr = titleAr.trim();
+            product.titleEn = (titleEn || titleAr).trim();
+            product.textAr = textAr.trim();
+            product.iconClass = iconClass.trim();
+            product.backgroundImage = st.draft.backgroundImage || (cat && cat.defaultBg) || '';
+            if (cat && categoryId !== 'other') { product.cssClass = cat.cssClass; product.legacyKey = cat.legacyKey; }
+            applyExperienceToCatalogItem(product, experience);
+            if (experience === 'shop' && !product.variants) product.variants = [];
+            if (categoryId !== 'other') scmProductCatalogFilter = categoryId;
+            saveContentData({ urgentCloud: true });
+            cancelScmProductEditor();
+            scmExpandedProductId = product.id;
+            displaySiteProductsAdmin();
+            addAuditLog(st.mode === 'edit' ? 'تعديل منتج' : 'إضافة منتج', product.titleAr);
+            if (typeof showNebrasAdminToast === 'function') showNebrasAdminToast('✓ تم حفظ المنتج — أضيفي الأصناف (الخطوة 3)', 'ok');
+        }
+
+        function cancelScmProductEditor() {
+            scmProductEditorState = null;
+            const host = document.getElementById('scm-product-editor');
+            if (host) { host.hidden = true; host.innerHTML = ''; }
+        }
+
+        function openScmVariantEditor(productId, variantIndex) {
+            if (!requireProductCatalogAccess(productId)) return;
+            const product = siteProducts.find(function(p) { return p.id === productId; });
+            if (!product) return;
+            cancelScmProductEditor();
+            if (!product.variants) product.variants = [];
+            const isEdit = typeof variantIndex === 'number' && product.variants[variantIndex];
+            const v = isEdit ? product.variants[variantIndex] : {
+                id: 'var-' + Date.now(), typeAr: '', sizeAr: '', colorAr: '', price: 0, sku: '',
+                image: (product.album && product.album[0]) || (product.id === 'prod-aluminum' ? 'images/aluminum-background.webp' : 'images/wpc-background.avif')
+            };
+            scmVariantEditorState = { productId: productId, variantIndex: isEdit ? variantIndex : -1, draft: Object.assign({}, v) };
+            scmExpandedProductId = productId;
+            renderScmVariantEditor();
+        }
+
+        function renderScmVariantEditor() {
+            const host = document.getElementById('scm-variant-editor');
+            if (!host || !scmVariantEditorState) return;
+            const st = scmVariantEditorState;
+            const product = siteProducts.find(function(p) { return p.id === st.productId; });
+            const d = st.draft;
+            const ex = Number(d.price) || 0;
+            const imgPreview = d.image ? '<img src="' + escapeHtmlAttr(normalizeMediaPath(d.image)) + '" alt="" class="scm-editor-thumb">' :
+                '<span class="scm-editor-thumb scm-editor-thumb--empty"><i class="fas fa-image"></i></span>';
+            host.hidden = false;
+            host.innerHTML = '<div class="scm-editor-card scm-editor-card--variant"><h4><i class="fas fa-tags"></i> ' +
+                (st.variantIndex >= 0 ? 'تعديل صنف' : 'صنف جديد') + ' — «' + escapeHtmlAttr(product ? product.titleAr : '') + '»</h4><div class="scm-editor-grid">' +
+                '<label>الشكل / النوع<input type="text" id="scm-var-type" value="' + escapeHtmlAttr(d.typeAr || '') + '"></label>' +
+                '<label>المقاس<input type="text" id="scm-var-size" value="' + escapeHtmlAttr(d.sizeAr || '') + '"></label>' +
+                '<label>اللون<input type="text" id="scm-var-color" value="' + escapeHtmlAttr(d.colorAr || '') + '"></label>' +
+                '<label>SKU<input type="text" id="scm-var-sku" value="' + escapeHtmlAttr(d.sku || '') + '"></label>' +
+                '<label>السعر قبل الضريبة<input type="number" id="scm-var-price" min="0" step="0.01" value="' + escapeHtmlAttr(String(d.price || 0)) + '"></label>' +
+                '<label>شامل ' + escapeHtmlAttr(getNebrasVatPercentLabel()) + '%<input type="text" id="scm-var-price-inc" readonly value="' +
+                (ex > 0 ? Math.round(priceIncVat(ex)) + ' ر.س' : 'عند الطلب') + '"></label>' +
+                '<div class="scm-editor-media nebras-field--full"><span>صورة الصنف</span>' + imgPreview +
+                '<button type="button" class="secondary" onclick="scmVariantPickImage()"><i class="fas fa-cloud-upload-alt"></i> رفع صورة</button></div></div>' +
+                '<div class="scm-editor-actions"><button type="button" class="primary" onclick="saveScmVariantFromEditor()"><i class="fas fa-check"></i> حفظ</button>' +
+                (st.variantIndex >= 0 ? '<button type="button" class="secondary scm-btn-danger" onclick="deleteScmVariantFromEditor()"><i class="fas fa-trash"></i></button>' : '') +
+                '<button type="button" class="secondary" onclick="cancelScmVariantEditor()">إلغاء</button></div></div>';
+            const priceEl = document.getElementById('scm-var-price');
+            const incEl = document.getElementById('scm-var-price-inc');
+            if (priceEl && incEl) priceEl.oninput = function() {
+                const p = parseFloat(priceEl.value) || 0;
+                incEl.value = p > 0 ? Math.round(priceIncVat(p)) + ' ر.س' : 'عند الطلب';
+            };
+            host.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        async function scmVariantPickImage() {
+            if (!scmVariantEditorState) return;
+            const url = await pickMediaPath({ label: 'صورة الصنف', defaultValue: scmVariantEditorState.draft.image || '' });
+            if (!url) return;
+            scmVariantEditorState.draft.image = url;
+            renderScmVariantEditor();
+        }
+
+        function saveScmVariantFromEditor() {
+            if (!scmVariantEditorState) return;
+            const st = scmVariantEditorState;
+            const product = siteProducts.find(function(p) { return p.id === st.productId; });
+            if (!product) return;
+            if (!product.variants) product.variants = [];
+            const typeAr = (document.getElementById('scm-var-type') || {}).value || '';
+            const sizeAr = (document.getElementById('scm-var-size') || {}).value || '';
+            const colorAr = (document.getElementById('scm-var-color') || {}).value || '';
+            const sku = (document.getElementById('scm-var-sku') || {}).value || '';
+            const price = parseFloat((document.getElementById('scm-var-price') || {}).value || '0');
+            if (!typeAr.trim() && !sizeAr.trim()) { alert('أدخلي الشكل أو المقاس.'); return; }
+            if (!st.draft.image) { alert('ارفعي صورة للصنف.'); return; }
+            const payload = {
+                id: st.draft.id || ('var-' + Date.now()),
+                typeAr: typeAr.trim(), typeEn: typeAr.trim(), sizeAr: sizeAr.trim(), sizeEn: sizeAr.trim(),
+                colorAr: colorAr.trim(), colorEn: colorAr.trim(), sku: sku.trim(),
+                price: isNaN(price) ? 0 : price, image: st.draft.image
+            };
+            if (st.variantIndex >= 0) product.variants[st.variantIndex] = Object.assign({}, product.variants[st.variantIndex], payload);
+            else product.variants.push(payload);
+            product.shopEnabled = true;
+            product.action = 'shop';
+            saveContentData({ urgentCloud: true });
+            cancelScmVariantEditor();
+            scmExpandedProductId = product.id;
+            displaySiteProductsAdmin();
+            addAuditLog('صنف منتج', product.titleAr + ' — ' + payload.typeAr);
+            if (typeof showNebrasAdminToast === 'function') showNebrasAdminToast('✓ تم حفظ الصنف', 'ok');
+        }
+
+        function deleteScmVariantFromEditor() {
+            if (!scmVariantEditorState || scmVariantEditorState.variantIndex < 0) return;
+            if (!confirm('حذف هذا الصنف؟')) return;
+            const product = siteProducts.find(function(p) { return p.id === scmVariantEditorState.productId; });
+            if (product && product.variants) product.variants.splice(scmVariantEditorState.variantIndex, 1);
+            saveContentData({ urgentCloud: true });
+            cancelScmVariantEditor();
+            displaySiteProductsAdmin();
+        }
+
+        function cancelScmVariantEditor() {
+            scmVariantEditorState = null;
+            const host = document.getElementById('scm-variant-editor');
+            if (host) { host.hidden = true; host.innerHTML = ''; }
+        }
+
+        function toggleScmProductExpanded(productId) {
+            scmExpandedProductId = scmExpandedProductId === productId ? null : productId;
+            displaySiteProductsAdmin();
+        }
+
+        function renderScmProductCatalogPanel() {
+            const host = document.getElementById('scm-products-catalog');
+            if (!host) return;
+            syncScmCategoryChipUi();
+            const products = getScmProductsForCurrentCategory();
+            const storeOnly = isStoreCatalogOnlyAdmin();
+            const canEditProduct = !storeOnly && canManage('content');
+            if (!products.length) {
+                const cat = getCatalogCategoryDef(scmProductCatalogFilter);
+                host.innerHTML = '<div class="scm-catalog-empty"><i class="fas fa-box-open"></i><p>لا منتجات في «' +
+                    escapeHtmlAttr(cat ? cat.labelAr : 'هذه الفئة') + '».</p>' +
+                    (canEditProduct ? '<button type="button" class="primary" onclick="addSiteProduct()"><i class="fas fa-plus"></i> إضافة منتج</button>' : '') + '</div>';
+                return;
+            }
+            host.innerHTML = products.map(function(p) {
                 const canVariants = canManageProductCatalog(currentAdmin, p.id);
-                const variantCount = (p.variants || []).length;
-                const variantPreview = (p.variants || []).slice(0, 4).map(function(v, i) {
-                    const ex = Number(v.price) || 0;
-                    const pr = ex > 0 ? (ex + ' ر.س قبل ض') : 'عند الطلب';
-                    return '#' + i + ' ' + [v.typeAr, v.sizeAr, v.colorAr].filter(Boolean).join(' · ') + ' — ' + pr;
-                }).join(' | ');
-                const modeLabel = escapeHtmlAttr(getCatalogProductModeLabel(p));
-                const variantsBtn = (p.action === 'complaint' || !canVariants)
-                    ? ''
-                    : '<button type="button" onclick="manageProductVariants(\'' + p.id + '\')">أصناف (صورة · سعر قبل الضريبة)</button>';
-                const iconNote = iconByProduct[p.id] ? (' · أيقونة المتجر: ' + iconByProduct[p.id]) : '';
-                const hiddenBadge = p.visible === false ? ' <span class="scm-product-hidden-badge">مخفي</span>' : '';
-                const visBtn = storeOnly ? '' : (p.visible === false
-                    ? '<button type="button" onclick="toggleSiteProductVisibility(\'' + p.id + '\')">إظهار</button>'
-                    : '<button type="button" onclick="toggleSiteProductVisibility(\'' + p.id + '\')">إخفاء</button>');
-                const stockBadge = p.inStock === false
-                    ? ' <span class="scm-product-stock-badge scm-product-stock-badge--out">غير متاح</span>'
-                    : ' <span class="scm-product-stock-badge scm-product-stock-badge--in">متاح</span>';
-                const stockBtn = canVariants ? '<button type="button" onclick="toggleProductStock(\'' + p.id + '\')">' + (p.inStock === false ? 'تفعيل التوفر' : 'تعطيل التوفر') + '</button>' : '';
-                const editBtn = canEditProduct ? '<button type="button" onclick="editSiteProduct(\'' + p.id + '\')">تعديل</button>' : '';
-                const delBtn = canEditProduct ? '<button type="button" onclick="deleteSiteProduct(\'' + p.id + '\')">حذف</button>' : '';
-                return '<li' + (p.visible === false ? ' class="scm-product-row--hidden"' : '') + '><strong>' + escapeHtmlAttr(p.titleAr || p.id) + '</strong>' + hiddenBadge + stockBadge + escapeHtmlAttr(iconNote) + ' — ' + escapeHtmlAttr(p.iconClass || '') +
-                    ' <span style="opacity:0.85">[' + modeLabel + ']</span>' +
-                    '<small>خلفية: ' + escapeHtmlAttr(p.backgroundImage || 'افتراضي') + ' | ألبوم: ' + ((p.album || []).length) + ' | أصناف: ' + variantCount + (variantPreview ? ' — ' + escapeHtmlAttr(variantPreview) : '') + '</small>' +
-                    '<div class="scm-row-actions">' + editBtn + variantsBtn + stockBtn + visBtn + delBtn + '</div></li>';
+                const variants = p.variants || [];
+                const expanded = scmExpandedProductId === p.id;
+                const thumb = p.backgroundImage ? normalizeMediaPath(p.backgroundImage) : 'images/logo.png';
+                let variantRows = '';
+                if (expanded) {
+                    if (variants.length) {
+                        variantRows = '<table class="scm-variant-table"><thead><tr><th></th><th>النوع</th><th>المقاس</th><th>اللون</th><th>SKU</th><th>قبل ض</th><th>شامل</th><th></th></tr></thead><tbody>' +
+                            variants.map(function(v, idx) {
+                                const ex = Number(v.price) || 0;
+                                const img = v.image ? '<img src="' + escapeHtmlAttr(normalizeMediaPath(v.image)) + '" class="scm-variant-thumb">' : '—';
+                                return '<tr><td>' + img + '</td><td>' + escapeHtmlAttr(v.typeAr || '—') + '</td><td>' + escapeHtmlAttr(v.sizeAr || '—') + '</td>' +
+                                    '<td>' + escapeHtmlAttr(v.colorAr || '—') + '</td><td>' + escapeHtmlAttr(v.sku || '—') + '</td><td>' + (ex > 0 ? ex + ' ر.س' : 'عند الطلب') + '</td>' +
+                                    '<td>' + (ex > 0 ? Math.round(priceIncVat(ex)) + ' ر.س' : '—') + '</td>' +
+                                    (canVariants ? '<td><button type="button" onclick="openScmVariantEditor(\'' + escapeHtmlAttr(p.id) + '\',' + idx + ')"><i class="fas fa-pen"></i></button></td>' : '<td></td>') + '</tr>';
+                            }).join('') + '</tbody></table>';
+                    } else variantRows = '<p class="scm-variant-empty">لا أصناف — اضغطي + صنف.</p>';
+                }
+                return '<article class="scm-product-card' + (expanded ? ' is-expanded' : '') + '">' +
+                    '<div class="scm-product-card-head"><img src="' + escapeHtmlAttr(thumb) + '" class="scm-product-card-thumb" alt="">' +
+                    '<div class="scm-product-card-meta"><h5>' + escapeHtmlAttr(p.titleAr || p.id) +
+                    (p.visible === false ? ' <span class="scm-product-badge scm-product-badge--hidden">مخفي</span>' : '') +
+                    '</h5><p>' + escapeHtmlAttr((p.textAr || '').slice(0, 100)) + '</p><small>' + variants.length + ' صنف</small></div></div>' +
+                    '<div class="scm-product-card-actions">' +
+                    (canVariants ? '<button type="button" class="primary scm-btn-sm" onclick="openScmVariantEditor(\'' + escapeHtmlAttr(p.id) + '\',null)"><i class="fas fa-plus"></i> صنف</button>' +
+                    '<button type="button" class="secondary scm-btn-sm" onclick="toggleScmProductExpanded(\'' + escapeHtmlAttr(p.id) + '\')"><i class="fas fa-list"></i> ' + (expanded ? 'إخفاء' : variants.length) + '</button>' : '') +
+                    (canEditProduct ? '<button type="button" class="secondary scm-btn-sm" onclick="editSiteProduct(\'' + escapeHtmlAttr(p.id) + '\')"><i class="fas fa-pen"></i></button>' : '') +
+                    '</div>' + (expanded ? '<div class="scm-product-variants-panel">' + variantRows + '</div>' : '') + '</article>';
             }).join('');
+        }
+
+        function displaySiteProductsAdmin() {
+            renderScmProductCatalogPanel();
         }
 
         async function addDashboardTile() {
@@ -25739,78 +26000,10 @@
         }
 
         async function manageProductVariants(productId) {
-            if (!requireProductCatalogAccess(productId, 'تحديد الأسماء والأنواع والمقاسات والأسعار — الإدارة الرئيسية أو مدير قسم الألومنيوم للألومنيوم فقط.')) return;
-            const product = siteProducts.find(function(p) { return p.id === productId; });
-            if (!product) return;
-            const listPreview = (product.variants || []).map(function(v, i) {
-                const ex = Number(v.price) || 0;
-                const priceTxt = ex > 0
-                    ? (ex + ' ر.س قبل الضريبة · ' + Math.round(priceIncVat(ex)) + ' ر.س شامل ' + getNebrasVatPercentLabel() + '%')
-                    : 'عند الطلب';
-                return i + ': شكل/نوع ' + (v.typeAr || '—') + ' | مقاس ' + (v.sizeAr || '—') + ' | لون ' + (v.colorAr || '—') + ' — ' + priceTxt;
-            }).join('\n');
-            const action = prompt('أصناف «' + (product.titleAr || productId) + '» (شكل · مقاس · لون · سعر · صورة)\n' + (listPreview || '(لا أصناف بعد)') + '\n\nadd = إضافة صنف جديد\nرقم = تعديل (مثال 0)\ndel+رقم = حذف (مثال del0)', 'add');
-            if (!action) return;
-            if (!product.variants) product.variants = [];
-            const cmd = String(action).trim().toLowerCase();
-            if (cmd === 'add') {
-                const typeAr = prompt('الشكل أو النوع (عربي) — مثال: بروفيل، صفائح، زاوية:', 'بروفيل');
-                const sizeAr = prompt('المقاس (عربي) — مثال: 6م، 122×244 سم:', '6 م');
-                const colorAr = prompt('اللون (عربي):', 'فضي');
-                const price = parseFloat(prompt('السعر قبل الضريبة (ر.س) — 0 = عند الطلب:\n(تُضاف 15% ضريبة في السلة وعرض السعر)', '0') || '0');
-                const defaultImg = product.id === 'prod-aluminum' ? 'images/aluminum-background.webp' : (product.id === 'prod-other' ? 'images/background-other-products.jpeg' : 'images/wpc-background.avif');
-                const image = await pickMediaPath({ label: 'صورة الصنف (للزائر في المتجر)', defaultValue: (product.album || [])[0] || defaultImg });
-                if (!image) return;
-                const sku = prompt('SKU (اختياري):', '');
-                product.variants.push({
-                    id: 'var-' + Date.now(),
-                    colorAr: (colorAr || '').trim(),
-                    colorEn: (colorAr || '').trim(),
-                    sizeAr: (sizeAr || '').trim(),
-                    sizeEn: (sizeAr || '').trim(),
-                    typeAr: (typeAr || '').trim(),
-                    typeEn: (typeAr || '').trim(),
-                    price: isNaN(price) ? 0 : price,
-                    image: image.trim(),
-                    sku: (sku || '').trim()
-                });
-                product.shopEnabled = true;
-                product.action = 'shop';
-            } else if (cmd.indexOf('del') === 0) {
-                const idx = parseInt(cmd.replace(/\D/g, ''), 10);
-                if (!isNaN(idx)) product.variants.splice(idx, 1);
-            } else {
-                const idx = parseInt(cmd, 10);
-                const v = product.variants[idx];
-                if (!v) { alert('فهرس غير صحيح'); return; }
-                const typeAr = prompt('الشكل / النوع:', v.typeAr || '');
-                if (typeAr !== null) { v.typeAr = typeAr.trim(); v.typeEn = v.typeAr; }
-                const sizeAr = prompt('المقاس:', v.sizeAr || '');
-                if (sizeAr !== null) { v.sizeAr = sizeAr.trim(); v.sizeEn = v.sizeAr; }
-                const colorAr = prompt('اللون:', v.colorAr || '');
-                if (colorAr !== null) { v.colorAr = colorAr.trim(); v.colorEn = v.colorAr; }
-                const price = parseFloat(prompt('السعر قبل الضريبة (ر.س):', String(v.price || 0)) || '0');
-                if (!isNaN(price)) v.price = price;
-                const imgChoice = prompt('تعديل الصورة:\n1 = رفع جديد\n2 = يدوي\nEnter = بدون تغيير', '1');
-                if (imgChoice === '1') {
-                    const img = await pickMediaPath({ label: 'صورة الصنف', defaultValue: v.image || '' });
-                    if (img) v.image = img.trim();
-                } else if (imgChoice === '2') {
-                    const img = prompt('مسار أو رابط الصورة:', v.image || '');
-                    if (img !== null && img.trim()) v.image = img.trim();
-                }
-                const sku = prompt('SKU:', v.sku || '');
-                if (sku !== null) v.sku = sku.trim();
-            }
-            saveContentData({ urgentCloud: true });
+            if (!requireProductCatalogAccess(productId, 'تحديد الأسماء والأنواع والمقاسات والأسعار — صلاحية المتجر أو المحتوى.')) return;
+            scmExpandedProductId = productId;
+            openScmVariantEditor(productId, null);
             displaySiteProductsAdmin();
-            if (document.getElementById('product-master-hub') && document.getElementById('product-master-hub').classList.contains('show')) {
-                renderProductMasterPanel();
-            }
-            if (document.getElementById('aluminum-department') && document.getElementById('aluminum-department').classList.contains('show')) {
-                renderAluminumDepartmentPanel();
-            }
-            addAuditLog('أسعار المنتج', product.titleAr || productId);
         }
 
         function exportStoreCatalogCsv(productFilter) {
@@ -28311,6 +28504,18 @@
         window.editShowroomItem = editShowroomItem;
         window.deleteShowroomItem = deleteShowroomItem;
         window.openDoorDesignerAdmin = openDoorDesignerAdmin;
+        window.setScmProductCategory = setScmProductCategory;
+        window.openScmProductEditor = openScmProductEditor;
+        window.openScmVariantEditor = openScmVariantEditor;
+        window.openScmVariantForCategory = openScmVariantForCategory;
+        window.saveScmProductFromEditor = saveScmProductFromEditor;
+        window.saveScmVariantFromEditor = saveScmVariantFromEditor;
+        window.cancelScmProductEditor = cancelScmProductEditor;
+        window.cancelScmVariantEditor = cancelScmVariantEditor;
+        window.scmProductPickBackground = scmProductPickBackground;
+        window.scmVariantPickImage = scmVariantPickImage;
+        window.deleteScmVariantFromEditor = deleteScmVariantFromEditor;
+        window.toggleScmProductExpanded = toggleScmProductExpanded;
         window.setStoreCatalogAvailability = setStoreCatalogAvailability;
         window.setStoreCatalogSort = setStoreCatalogSort;
         window.setStoreCatalogFacet = setStoreCatalogFacet;
