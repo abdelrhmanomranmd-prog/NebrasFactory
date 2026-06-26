@@ -2693,7 +2693,6 @@
             visitorIcons = visitorIcons.filter(function(i) {
                 if (!i) return false;
                 if (DEPRECATED_VISITOR_ICON_IDS.indexOf(Number(i.id)) >= 0) return false;
-                if (i.catalogHub) return false;
                 if (i.titleKey && DEPRECATED_VISITOR_ICON_KEYS.indexOf(i.titleKey) >= 0) return false;
                 return true;
             });
@@ -23894,7 +23893,8 @@
         }
 
         function openVisitorIcon(iconId) {
-            const icon = visitorIcons.find(item => item.id === iconId);
+            const idNum = Number(iconId);
+            const icon = visitorIcons.find(function(item) { return Number(item.id) === idNum; });
             if (!icon) return;
             if (icon.openHandler === 'callback-concierge') {
                 if (typeof window.openNebrasCallbackConcierge === 'function') window.openNebrasCallbackConcierge();
@@ -25400,8 +25400,82 @@
 
         const NEBRAS_MERGE_BY_ID_STORE_KEYS = [
             'admin_users', 'customer_portal_users', 'hr_employees', 'hr_vehicles', 'hr_documents', 'hr_leave',
-            'hr_vehicle_tracking', 'hr_attendance', 'crm_customers', 'erp_orders', 'legal_contracts', 'callback_leads'
+            'hr_vehicle_tracking', 'hr_attendance', 'crm_customers', 'erp_orders', 'legal_contracts', 'callback_leads',
+            'visitor_icons'
         ];
+
+        function nebrasChromePayloadIsEmpty(storeKey, payload) {
+            if (payload === undefined || payload === null) return true;
+            if (Array.isArray(payload)) return !payload.length;
+            if (storeKey === 'showroom_gallery' && typeof payload === 'object') {
+                if (typeof getShowroomGallerySectionKeys === 'function') {
+                    let total = 0;
+                    getShowroomGallerySectionKeys().forEach(function(k) {
+                        const sec = payload[k];
+                        if (sec && Array.isArray(sec.items)) {
+                            total += sec.items.filter(function(it) { return it && typeof it === 'object'; }).length;
+                        }
+                    });
+                    return total === 0;
+                }
+            }
+            if (storeKey === 'about_pages' && typeof payload === 'object') {
+                return !Object.keys(payload).length;
+            }
+            if (storeKey === 'system_settings' && typeof payload === 'object') {
+                return !Object.keys(payload).length;
+            }
+            return false;
+        }
+
+        function countShowroomGalleryItems(gallery) {
+            if (!gallery || typeof gallery !== 'object') return 0;
+            let total = 0;
+            (typeof getShowroomGallerySectionKeys === 'function' ? getShowroomGallerySectionKeys() : Object.keys(gallery)).forEach(function(k) {
+                const sec = gallery[k];
+                if (sec && Array.isArray(sec.items)) {
+                    total += sec.items.filter(function(it) { return it && typeof it === 'object'; }).length;
+                }
+            });
+            return total;
+        }
+
+        function mergeShowroomGalleryFromCloud(incoming) {
+            if (!incoming || typeof incoming !== 'object') return false;
+            ensureShowroomGallery();
+            const normalized = normalizeShowroomGallery(incoming);
+            const local = showroomGallery;
+            const localCount = countShowroomGalleryItems(local);
+            const cloudCount = countShowroomGalleryItems(normalized);
+            if (!cloudCount && localCount) return false;
+            if (cloudCount >= localCount) {
+                showroomGallery = normalized;
+                return true;
+            }
+            let changed = false;
+            getShowroomGallerySectionKeys().forEach(function(key) {
+                const cloudSec = normalized[key] || { items: [] };
+                const localSec = local[key] || { items: [] };
+                const cloudItems = cloudSec.items || [];
+                const localItems = localSec.items || [];
+                if (!localItems.length && cloudItems.length) {
+                    local[key] = Object.assign({}, localSec, cloudSec, { items: cloudItems.slice() });
+                    changed = true;
+                    return;
+                }
+                if (cloudItems.length > localItems.length) {
+                    local[key] = Object.assign({}, localSec, cloudSec, { items: cloudItems.slice() });
+                    changed = true;
+                    return;
+                }
+                if (cloudSec.titleAr && !localSec.titleAr) local[key].titleAr = cloudSec.titleAr;
+                if (cloudSec.titleEn && !localSec.titleEn) local[key].titleEn = cloudSec.titleEn;
+                if (cloudSec.introAr && !localSec.introAr) local[key].introAr = cloudSec.introAr;
+                if (cloudSec.introEn && !localSec.introEn) local[key].introEn = cloudSec.introEn;
+            });
+            if (changed) showroomGallery = local;
+            return changed;
+        }
 
         function nebrasCloudArrayItemKey(item) {
             if (!item || typeof item !== 'object') return '';
@@ -25458,6 +25532,13 @@
             if (typeof guardCloudPullRow === 'function') payload = guardCloudPullRow(storeKey, payload);
             const spec = NEBRAS_CLOUD_STORE_SPECS.find(function(s) { return s.key === storeKey; });
             if (!spec || payload === undefined || payload === null) return;
+            if (nebrasChromePayloadIsEmpty(storeKey, payload)) {
+                if (NEBRAS_CHROME_EMPTY_CLOUD_SKIP_KEYS.indexOf(storeKey) >= 0) return;
+                if (NEBRAS_PRODUCTION_BUSINESS_STORE_KEYS.indexOf(storeKey) >= 0) {
+                    const localArr = Array.isArray(spec.get()) ? spec.get() : [];
+                    if (localArr.length) return;
+                }
+            }
             if (Array.isArray(payload) && !payload.length) {
                 if (NEBRAS_CHROME_EMPTY_CLOUD_SKIP_KEYS.indexOf(storeKey) >= 0) return;
                 if (NEBRAS_PRODUCTION_BUSINESS_STORE_KEYS.indexOf(storeKey) >= 0) {
@@ -25465,7 +25546,9 @@
                     if (localArr.length) return;
                 }
             }
-            if (NEBRAS_MERGE_BY_ID_STORE_KEYS.indexOf(storeKey) >= 0 && Array.isArray(payload) && payload.length) {
+            if (storeKey === 'showroom_gallery' && typeof payload === 'object' && !Array.isArray(payload)) {
+                mergeShowroomGalleryFromCloud(payload);
+            } else if (NEBRAS_MERGE_BY_ID_STORE_KEYS.indexOf(storeKey) >= 0 && Array.isArray(payload) && payload.length) {
                 mergeNebrasCloudArrayById(storeKey, payload);
             } else {
                 spec.set(payload);
@@ -25496,19 +25579,24 @@
             options = options || {};
             const skipBusinessSeeds = options.skipBuiltinSeeds === true || !shouldSeedBusinessDemoData();
             branchesData = (branchesData || []).map(normalizeBranchRecord);
-            if (!skipBusinessSeeds && typeof applyNebrasProfile2026Seed === 'function') {
+            if (typeof applyNebrasProfile2026Seed === 'function') {
                 applyNebrasProfile2026Seed();
             }
             ensureDefaultBankAccounts();
             ensureSiteChromeDefaults();
             enforceProductionBusinessCleanState();
+            if (countShowroomGalleryItems(showroomGallery) < 12 && typeof repairShowroomGallerySections === 'function') {
+                repairShowroomGallerySections();
+            }
             if (!skipBusinessSeeds) ensureBuiltinErpData();
             if (!skipBusinessSeeds) ensureErpOperationsData();
             if (!skipBusinessSeeds) ensureBuiltinSiteCatalog();
             ensurePrimaryRecoveryEmail();
             if (!Array.isArray(siteCertifications)) siteCertifications = [];
             if (typeof repairShowroomGallerySections === 'function' && repairShowroomGallerySections()) {
-                if (nebrasCloudSynced && typeof pushToNebrasCloud === 'function') {
+                if (typeof persistNebrasCriticalStores === 'function') {
+                    persistNebrasCriticalStores(['showroom_gallery', 'visitor_icons', 'site_certifications'], { silent: true });
+                } else if (nebrasCloudSynced && typeof pushToNebrasCloud === 'function') {
                     pushToNebrasCloud();
                 }
             }

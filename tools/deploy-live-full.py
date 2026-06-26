@@ -15,7 +15,7 @@ def run(name):
 
 
 def main():
-    deploy = 'hrws136'
+    deploy = 'hrws137'
     if len(sys.argv) > 1:
         deploy = sys.argv[1]
     steps = [
@@ -24,6 +24,7 @@ def main():
         ('verify-scm-catalog-live.py', []),
         ('verify-scm-content-persist-live.py', []),
         ('verify-hr-platform-live.py', []),
+        ('verify-showroom-chrome-live.py', []),
         ('verify-media-upload-live.py', []),
         ('verify-production-live.py', []),
         ('verify-site-chrome-live.py', []),

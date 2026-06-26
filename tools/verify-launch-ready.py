@@ -53,6 +53,7 @@ def main():
     scripts = [
         'verify-production-live.py',
         'verify-hr-platform-live.py',
+        'verify-showroom-chrome-live.py',
         'verify-scm-content-persist-live.py',
         'verify-site-chrome-live.py',
         'test-real-persist-live.py',
