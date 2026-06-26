@@ -15,12 +15,13 @@ def run(name):
 
 
 def main():
-    deploy = 'hrws129'
+    deploy = 'hrws130'
     if len(sys.argv) > 1:
         deploy = sys.argv[1]
     steps = [
         ('wait-live-deploy.py', [deploy]),
         ('restore-site-chrome-cloud.py', []),
+        ('verify-scm-catalog-live.py', []),
         ('verify-production-live.py', []),
         ('verify-site-chrome-live.py', []),
         ('test-real-persist-live.py', []),

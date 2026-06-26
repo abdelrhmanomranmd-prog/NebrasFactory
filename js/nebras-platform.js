@@ -11665,9 +11665,38 @@
             });
             const cat = getCatalogCategoryDef(scmProductCatalogFilter);
             const hint = document.getElementById('scm-products-hint');
+            const products = getScmProductsForCurrentCategory();
+            const variantTotal = products.reduce(function(n, p) { return n + ((p && p.variants) ? p.variants.length : 0); }, 0);
             if (hint && cat) {
-                hint.innerHTML = 'الفئة الحالية: <strong>' + escapeHtmlAttr(cat.labelAr) + '</strong> — ' + escapeHtmlAttr(cat.descAr) +
-                    '. أضيفي المنتج ثم <strong>الأصناف</strong> (شكل · مقاس · لون · سعر قبل الضريبة · صورة).';
+                hint.innerHTML = 'الفئة: <strong>' + escapeHtmlAttr(cat.labelAr) + '</strong> — ' + escapeHtmlAttr(cat.descAr) +
+                    ' · <strong>' + products.length + '</strong> منتج · <strong>' + variantTotal + '</strong> صنف.';
+            }
+            const summary = document.getElementById('scm-category-summary');
+            if (summary && cat) {
+                summary.innerHTML = '<div class="scm-category-summary-inner">' +
+                    '<span><i class="' + escapeHtmlAttr(cat.icon) + '"></i> ' + escapeHtmlAttr(cat.labelAr) + '</span>' +
+                    '<span class="scm-category-summary-stat"><strong>' + products.length + '</strong> منتج</span>' +
+                    '<span class="scm-category-summary-stat"><strong>' + variantTotal + '</strong> صنف للمتجر</span>' +
+                    '<span class="scm-category-summary-tip">الترتيب: فئة → منتج → صنف (صورة + سعر قبل الضريبة)</span></div>';
+            }
+            syncScmCatalogStepsUi();
+        }
+
+        function syncScmCatalogStepsUi() {
+            let step = 1;
+            if (scmVariantEditorState || scmExpandedProductId) step = 3;
+            else if (scmProductEditorState) step = 2;
+            document.querySelectorAll('#scm-catalog-steps .scm-catalog-step[data-scm-step]').forEach(function(el) {
+                const n = parseInt(el.getAttribute('data-scm-step'), 10);
+                el.classList.toggle('is-active', n === step);
+                el.classList.toggle('is-done', n < step);
+            });
+        }
+
+        function saveScmCatalogNow() {
+            saveContentData({ urgentCloud: true });
+            if (typeof showNebrasAdminToast === 'function') {
+                showNebrasAdminToast('✓ تم الحفظ — جاري الرفع للسحابة', 'ok');
             }
         }
 
@@ -11941,15 +11970,26 @@
                             }).join('') + '</tbody></table>';
                     } else variantRows = '<p class="scm-variant-empty">لا أصناف — اضغطي + صنف.</p>';
                 }
-                return '<article class="scm-product-card' + (expanded ? ' is-expanded' : '') + '">' +
+                return '<article class="scm-product-card' + (expanded ? ' is-expanded' : '') + (p.visible === false ? ' is-hidden-product' : '') + '">' +
                     '<div class="scm-product-card-head"><img src="' + escapeHtmlAttr(thumb) + '" class="scm-product-card-thumb" alt="">' +
                     '<div class="scm-product-card-meta"><h5>' + escapeHtmlAttr(p.titleAr || p.id) +
                     (p.visible === false ? ' <span class="scm-product-badge scm-product-badge--hidden">مخفي</span>' : '') +
-                    '</h5><p>' + escapeHtmlAttr((p.textAr || '').slice(0, 100)) + '</p><small>' + variants.length + ' صنف</small></div></div>' +
+                    (p.inStock === false ? ' <span class="scm-product-badge scm-product-badge--out">غير متاح</span>' : ' <span class="scm-product-badge scm-product-badge--in">متاح</span>') +
+                    '</h5><p>' + escapeHtmlAttr((p.textAr || '').slice(0, 100)) + '</p>' +
+                    '<small><i class="fas fa-tags"></i> ' + variants.length + ' صنف · ' + escapeHtmlAttr(getCatalogProductModeLabel(p)) + '</small></div></div>' +
                     '<div class="scm-product-card-actions">' +
-                    (canVariants ? '<button type="button" class="primary scm-btn-sm" onclick="openScmVariantEditor(\'' + escapeHtmlAttr(p.id) + '\',null)"><i class="fas fa-plus"></i> صنف</button>' +
-                    '<button type="button" class="secondary scm-btn-sm" onclick="toggleScmProductExpanded(\'' + escapeHtmlAttr(p.id) + '\')"><i class="fas fa-list"></i> ' + (expanded ? 'إخفاء' : variants.length) + '</button>' : '') +
-                    (canEditProduct ? '<button type="button" class="secondary scm-btn-sm" onclick="editSiteProduct(\'' + escapeHtmlAttr(p.id) + '\')"><i class="fas fa-pen"></i></button>' : '') +
+                    (canVariants && getCatalogExperience(p) !== 'complaint'
+                        ? '<button type="button" class="primary scm-btn-sm" onclick="openScmVariantEditor(\'' + escapeHtmlAttr(p.id) + '\',null)"><i class="fas fa-plus"></i> صنف</button>' +
+                          '<button type="button" class="secondary scm-btn-sm" onclick="toggleScmProductExpanded(\'' + escapeHtmlAttr(p.id) + '\')"><i class="fas fa-list"></i> ' + (expanded ? 'إخفاء' : variants.length) + '</button>'
+                        : '') +
+                    (canEditProduct
+                        ? '<button type="button" class="secondary scm-btn-sm" onclick="editSiteProduct(\'' + escapeHtmlAttr(p.id) + '\')" title="تعديل المنتج"><i class="fas fa-pen"></i></button>' +
+                          '<button type="button" class="secondary scm-btn-sm" onclick="toggleSiteProductVisibility(\'' + escapeHtmlAttr(p.id) + '\')">' + (p.visible === false ? 'إظهار' : 'إخفاء') + '</button>'
+                        : '') +
+                    (canVariants ? '<button type="button" class="secondary scm-btn-sm" onclick="toggleProductStock(\'' + escapeHtmlAttr(p.id) + '\')">' + (p.inStock === false ? 'تفعيل' : 'تعطيل') + '</button>' : '') +
+                    (canEditProduct && isMainGovernanceAdmin()
+                        ? '<button type="button" class="secondary scm-btn-sm scm-btn-danger" onclick="deleteSiteProduct(\'' + escapeHtmlAttr(p.id) + '\')"><i class="fas fa-trash"></i></button>'
+                        : '') +
                     '</div>' + (expanded ? '<div class="scm-product-variants-panel">' + variantRows + '</div>' : '') + '</article>';
             }).join('');
         }
@@ -28516,6 +28556,7 @@
         window.scmVariantPickImage = scmVariantPickImage;
         window.deleteScmVariantFromEditor = deleteScmVariantFromEditor;
         window.toggleScmProductExpanded = toggleScmProductExpanded;
+        window.saveScmCatalogNow = saveScmCatalogNow;
         window.setStoreCatalogAvailability = setStoreCatalogAvailability;
         window.setStoreCatalogSort = setStoreCatalogSort;
         window.setStoreCatalogFacet = setStoreCatalogFacet;
