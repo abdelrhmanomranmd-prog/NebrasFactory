@@ -227,6 +227,14 @@
             { id: 'prod-aluminum', labelAr: 'ألومنيوم', icon: 'fas fa-industry', descAr: 'قطاعات ومقاطع الألومنيوم', cssClass: 'card-aluminum', defaultBg: 'aluminum-background', legacyKey: 'aluminum' },
             { id: 'prod-other', labelAr: 'منتجات أخرى', icon: 'fas fa-cubes', descAr: 'PVC · إكسسوارات · منتجات متنوعة', cssClass: 'card-other', defaultBg: 'background-other-products', legacyKey: 'other' }
         ];
+        /** أيقونات المتجر الأربع (8–11) ↔ فئة الكتالوج */
+        const STORE_HUB_ICON_CATEGORIES = { 8: 'prod-wpc-raw', 9: 'prod-wpc', 10: 'prod-aluminum', 11: 'prod-other' };
+        const CATEGORY_STORE_TARGETS = {
+            'prod-wpc-raw': { target: '#products', anchorId: 'products' },
+            'prod-wpc': { target: '#doors', anchorId: 'doors' },
+            'prod-aluminum': { target: '#aluminum', anchorId: 'aluminum' },
+            'prod-other': { target: '#products', anchorId: '' }
+        };
         let scmProductCatalogFilter = 'prod-wpc-raw';
         let scmProductEditorState = null;
         let scmVariantEditorState = null;
@@ -2720,9 +2728,13 @@
                     if (def.placement && !cur.placement) cur.placement = def.placement;
                     if (def.sortOrder != null && cur.sortOrder == null) cur.sortOrder = def.sortOrder;
                     if (def.linkedProductId && !cur.linkedProductId) cur.linkedProductId = def.linkedProductId;
-                    if (def.id === 11 && (!cur.visitorMode || cur.visitorMode === 'browse')) {
+                    if ([8, 9, 10, 11].indexOf(def.id) >= 0) {
+                        cur.catalogHub = true;
+                        cur.lane = cur.lane || 'store';
                         cur.visitorMode = 'shop';
-                        if (!cur.linkedProductId) cur.linkedProductId = 'prod-other';
+                        delete cur.linkedProductId;
+                    } else if (def.id === 11 && (!cur.visitorMode || cur.visitorMode === 'browse')) {
+                        cur.visitorMode = 'shop';
                     }
                     if (def.id >= 14 && def.id <= 16) {
                         if (!cur.placement) cur.placement = 'services';
@@ -3910,8 +3922,102 @@
             await persistScmContentHonest('توفر منتج', { storeKeys: ['site_products'] });
         }
 
+        function getStoreHubCategoryForIcon(icon) {
+            if (!icon) return null;
+            return STORE_HUB_ICON_CATEGORIES[Number(icon.id)] || null;
+        }
+
+        function normalizeCatalogCategoryId(categoryId) {
+            const c = String(categoryId || '').trim();
+            if (!c || c === 'other') return 'prod-other';
+            if (NEBRAS_CATALOG_CATEGORIES.some(function(x) { return x.id === c; })) return c;
+            return 'prod-other';
+        }
+
+        function applyStoreCategoryMetaToProduct(product, categoryId) {
+            if (!product) return;
+            const catId = normalizeCatalogCategoryId(categoryId);
+            const meta = CATEGORY_STORE_TARGETS[catId];
+            const cat = getCatalogCategoryDef(catId);
+            product.catalogCategoryId = catId;
+            if (meta) {
+                product.target = meta.target;
+                product.anchorId = meta.anchorId || '';
+            }
+            if (cat) {
+                product.cssClass = cat.cssClass;
+                product.legacyKey = cat.legacyKey;
+            }
+        }
+
+        function getProductsForStoreCategory(categoryId) {
+            const catId = normalizeCatalogCategoryId(categoryId);
+            return (siteProducts || []).filter(function(p) {
+                return p && p.visible !== false && getCatalogExperience(p) !== 'complaint' &&
+                    resolveProductCatalogCategoryId(p) === catId;
+            }).sort(function(a, b) { return (a.sortOrder || 0) - (b.sortOrder || 0); });
+        }
+
+        function linkProductToStoreHub(product) {
+            if (!product || !product.id || product.visible === false) return false;
+            if (getCatalogExperience(product) === 'complaint') return false;
+            const catId = normalizeCatalogCategoryId(resolveProductCatalogCategoryId(product));
+            if (!CATEGORY_STORE_TARGETS[catId]) return false;
+            applyStoreCategoryMetaToProduct(product, catId);
+            let hubIconId = null;
+            Object.keys(STORE_HUB_ICON_CATEGORIES).forEach(function(k) {
+                if (STORE_HUB_ICON_CATEGORIES[k] === catId) hubIconId = Number(k);
+            });
+            if (!hubIconId) return false;
+            const icon = (visitorIcons || []).find(function(i) { return Number(i.id) === hubIconId; });
+            if (!icon) return false;
+            icon.catalogHub = true;
+            icon.lane = icon.lane || 'store';
+            icon.visitorMode = 'shop';
+            delete icon.linkedProductId;
+            const inCat = getProductsForStoreCategory(catId);
+            icon.productIds = inCat.map(function(p) { return p.id; });
+            return true;
+        }
+
+        function repairStoreHubCatalogBindings() {
+            ensureBuiltinVisitorIcons();
+            (siteProducts || []).forEach(function(p) {
+                if (!p || p.visible === false || getCatalogExperience(p) === 'complaint') return;
+                const cat = resolveProductCatalogCategoryId(p);
+                if (cat && cat !== 'other') applyStoreCategoryMetaToProduct(p, cat);
+            });
+            getStoreCatalogHubIconIds().forEach(function(iconId) {
+                const icon = (visitorIcons || []).find(function(i) { return Number(i.id) === iconId; });
+                if (!icon) return;
+                icon.catalogHub = true;
+                icon.lane = icon.lane || 'store';
+                icon.visitorMode = 'shop';
+                delete icon.linkedProductId;
+                const cat = STORE_HUB_ICON_CATEGORIES[iconId];
+                if (!cat) return;
+                const inCat = getProductsForStoreCategory(cat);
+                if (inCat.length) icon.productIds = inCat.map(function(p) { return p.id; });
+                else delete icon.productIds;
+            });
+        }
+
         function getProductsForVisitorIcon(icon) {
             if (!icon) return [];
+            const hubCat = getStoreHubCategoryForIcon(icon);
+            if (icon.catalogHub && hubCat) {
+                const pool = getProductsForStoreCategory(hubCat);
+                if (pool.length) {
+                    if (Array.isArray(icon.productIds) && icon.productIds.length) {
+                        const picked = icon.productIds.map(function(id) {
+                            return pool.find(function(p) { return p.id === id; }) ||
+                                (siteProducts || []).find(function(p) { return p && p.id === id && p.visible !== false; });
+                        }).filter(Boolean);
+                        if (picked.length) return picked;
+                    }
+                    return pool;
+                }
+            }
             if (icon.linkedProductId) {
                 const linked = siteProducts.find(function(p) { return p.id === icon.linkedProductId; });
                 if (!linked || linked.visible === false) return [];
@@ -11645,8 +11751,8 @@
 
         function resolveProductCatalogCategoryId(product) {
             if (!product) return 'other';
-            if (product.catalogCategoryId && NEBRAS_CATALOG_CATEGORIES.some(function(c) { return c.id === product.catalogCategoryId; })) {
-                return product.catalogCategoryId;
+            if (product.catalogCategoryId) {
+                return normalizeCatalogCategoryId(product.catalogCategoryId);
             }
             if (SHOP_CATALOG_PRODUCT_IDS.indexOf(product.id) >= 0) return product.id;
             if (product.legacyKey === 'wpc-raw' || product.cssClass === 'card-wpc-raw') return 'prod-wpc-raw';
@@ -11787,7 +11893,9 @@
         function getScmProductsForCurrentCategory() {
             let pool = (siteProducts || []).slice();
             if (isStoreCatalogOnlyAdmin()) {
-                pool = pool.filter(function(p) { return p && SHOP_CATALOG_PRODUCT_IDS.indexOf(p.id) >= 0; });
+                return pool.filter(function(p) {
+                    return p && resolveProductCatalogCategoryId(p) === scmProductCatalogFilter;
+                });
             }
             if (scmProductCatalogFilter === 'other') {
                 return pool.filter(function(p) {
@@ -11899,17 +12007,20 @@
             product.textAr = textAr.trim();
             product.iconClass = iconClass.trim();
             product.backgroundImage = st.draft.backgroundImage || (cat && cat.defaultBg) || '';
-            product.catalogCategoryId = categoryId;
             product.adminManaged = true;
-            if (cat && categoryId !== 'other') { product.cssClass = cat.cssClass; product.legacyKey = cat.legacyKey; }
+            const normCat = normalizeCatalogCategoryId(categoryId);
+            applyStoreCategoryMetaToProduct(product, normCat);
+            if (cat && normCat !== 'prod-other') { product.cssClass = cat.cssClass; product.legacyKey = cat.legacyKey; }
             applyExperienceToCatalogItem(product, experience);
             if (experience === 'shop' && !product.variants) product.variants = [];
-            if (categoryId !== 'other') scmProductCatalogFilter = categoryId;
+            if (normCat !== 'prod-other') scmProductCatalogFilter = normCat;
+            linkProductToStoreHub(product);
             cancelScmProductEditor();
             scmExpandedProductId = product.id;
             displaySiteProductsAdmin();
+            refreshPublicSiteFromGovernance();
             addAuditLog(st.mode === 'edit' ? 'تعديل منتج' : 'إضافة منتج', product.titleAr);
-            await persistScmContentHonest(st.mode === 'edit' ? 'تعديل المنتج' : 'منتج جديد', { storeKeys: ['site_products'] });
+            await persistScmContentHonest(st.mode === 'edit' ? 'تعديل المنتج' : 'منتج جديد', { storeKeys: ['site_products', 'visitor_icons'] });
             if (getCatalogExperience(product) === 'shop' && (product.variants || []).length === 0) {
                 openScmVariantEditor(product.id, null);
             }
@@ -12003,11 +12114,13 @@
             else product.variants.push(payload);
             product.shopEnabled = true;
             product.action = 'shop';
+            linkProductToStoreHub(product);
             cancelScmVariantEditor();
             scmExpandedProductId = product.id;
             displaySiteProductsAdmin();
+            refreshPublicSiteFromGovernance();
             addAuditLog('صنف منتج', product.titleAr + ' — ' + payload.typeAr);
-            await persistScmContentHonest('صنف «' + (payload.typeAr || payload.sizeAr || 'جديد') + '»', { storeKeys: ['site_products'] });
+            await persistScmContentHonest('صنف «' + (payload.typeAr || payload.sizeAr || 'جديد') + '»', { storeKeys: ['site_products', 'visitor_icons'] });
         }
 
         async function deleteScmVariantFromEditor() {
@@ -25403,6 +25516,7 @@
             });
             if (!Array.isArray(visitorIcons)) visitorIcons = [];
             purgeStaleCatalogReferences();
+            repairStoreHubCatalogBindings();
             if (!adminUsers.some(function(user) { return String(user.username || '').toUpperCase() === IMMUTABLE_PRIMARY_ADMIN_USERNAME; })) {
                 adminUsers.unshift({
                     id: IMMUTABLE_PRIMARY_ADMIN_ID,
