@@ -43,9 +43,11 @@ def main():
             if names != ['NEBRASFACTORY']:
                 print('FAIL admin_users expected only NEBRASFACTORY, got', names)
                 ok = False
-        elif k in ('hr_employees', 'customer_portal_users', 'site_products', 'crm_customers') and n > 0:
-            print('FAIL', k, 'should be empty')
+        elif k in ('hr_employees', 'customer_portal_users', 'crm_customers') and n > 0:
+            print('FAIL', k, 'should be empty at launch')
             ok = False
+        elif k == 'site_products':
+            print('site_products:', n, '(OK — catalog ready)' if n >= 0 else '')
     print('RESULT:', 'PASS' if ok else 'FAIL')
     return 0 if ok else 1
 

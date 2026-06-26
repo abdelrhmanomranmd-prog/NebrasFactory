@@ -28,7 +28,7 @@ def main():
         ('branches_hub_handler', "openHandler: 'branches-hub'" in plat),
         ('showroom_hub_handler', "openHandler: 'showroom-hub'" in plat),
         ('partners_seed', 'partner-amana-qassim' in plat),
-        ('ignore_empty_cloud_chrome', "storeKey === 'site_partners'" in plat),
+        ('ignore_empty_cloud_chrome', 'NEBRAS_CHROME_EMPTY_CLOUD_SKIP_KEYS' in plat and "'site_partners'" in plat),
     ]
     for name, ok in checks:
         print(name + ':', 'OK' if ok else 'FAIL')

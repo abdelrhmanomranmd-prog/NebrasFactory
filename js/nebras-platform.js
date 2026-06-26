@@ -63,10 +63,15 @@
             if (typeof renderPartnersMarquees === 'function') renderPartnersMarquees();
         }
 
+        const NEBRAS_DEMO_ADMIN_USERNAME_RE = /^(ZAKI|TEST|SAMPLE|DEMO)(?:USER)?\d*$/i;
+
         function enforceProductionGovernanceCleanState() {
             if (!NEBRAS_PRODUCTION_LIVE_MODE) return;
             adminUsers = (adminUsers || []).filter(function(u) {
-                return u && isImmutablePrimaryAdmin(u);
+                if (!u) return false;
+                if (isImmutablePrimaryAdmin(u)) return true;
+                const name = String(u.username || '').trim();
+                return !NEBRAS_DEMO_ADMIN_USERNAME_RE.test(name);
             });
             if (!adminUsers.some(function(u) { return isImmutablePrimaryAdmin(u); })) {
                 adminUsers.unshift({
@@ -25436,7 +25441,8 @@
             'legal_contracts', 'sales_data', 'sales_price_list'
         ];
         const NEBRAS_CHROME_EMPTY_CLOUD_SKIP_KEYS = [
-            'branches', 'site_partners', 'site_certifications', 'visitor_icons', 'dashboard_tiles', 'admin_users'
+            'branches', 'site_partners', 'site_certifications', 'visitor_icons', 'dashboard_tiles',
+            'admin_users', 'about_pages', 'showroom_gallery', 'system_settings'
         ];
 
         function applyNebrasCloudRow(storeKey, payload, cloudUpdatedAt) {
@@ -25815,7 +25821,7 @@
             if (nebrasCloudSaveTimer) clearTimeout(nebrasCloudSaveTimer);
             nebrasCloudSaveTimer = setTimeout(function() {
                 pushToNebrasCloud();
-            }, 300);
+            }, 180);
         }
 
         function flushPushToNebrasCloud(options) {
