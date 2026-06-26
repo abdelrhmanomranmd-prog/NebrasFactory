@@ -25,6 +25,7 @@ def main():
         ('verify-scm-content-persist-live.py', []),
         ('verify-hr-platform-live.py', []),
         ('verify-showroom-chrome-live.py', []),
+        ('verify-cloud-storage-live.py', []),
         ('verify-media-upload-live.py', []),
         ('verify-production-live.py', []),
         ('verify-site-chrome-live.py', []),
