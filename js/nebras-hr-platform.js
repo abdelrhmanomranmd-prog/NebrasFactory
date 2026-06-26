@@ -215,10 +215,10 @@
         loadHrPhase17Data();
         ensureBuiltinHrPhase15Seed();
         if (typeof loadHrCompaniesData === 'function') loadHrCompaniesData();
+        hrDataReady = true;
         if (typeof migrateHrRecordsCompanyId === 'function') migrateHrRecordsCompanyId();
         applyHrScopeDefaultsOnLogin();
         if (typeof global.enforceProductionBusinessCleanState === 'function') global.enforceProductionBusinessCleanState();
-        hrDataReady = true;
         return { employees: hrEmployees, vehicles: hrVehicles, leave: hrLeaveRequests, tracking: hrVehicleTracking, attendance: hrAttendance, documents: hrDocuments, payroll: hrPayrollRuns };
     }
 

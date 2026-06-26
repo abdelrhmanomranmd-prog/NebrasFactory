@@ -156,8 +156,7 @@
     }
 
     function migrateHrRecordsCompanyId() {
-        if (typeof loadHrData !== 'function') return;
-        loadHrData();
+        /* يُستدعى من داخل loadHrData — لا نعيد استدعاء loadHrData/getHrEmployees هنا (تسبب stack overflow) */
         const emps = typeof getHrEmployees === 'function' ? getHrEmployees() : [];
         const vehs = typeof getHrVehicles === 'function' ? getHrVehicles() : [];
         let changed = false;

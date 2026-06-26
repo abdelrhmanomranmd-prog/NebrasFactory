@@ -13,6 +13,7 @@
         if (global.__hrPanelReady) return true;
         var fallback = c.querySelector('#hr-static-fallback');
         if (fallback) return false;
+        if (c.querySelector('.hr-ws-loading')) return true;
         return !!(c.querySelector('.hr-panel.is-active, .hr-command-hero, .hr-command-kpi-ring, .hr-emp-grid, .hr-leave-table, .hr-fleet-hub-grid, .hr-editor-overlay'));
     }
 
