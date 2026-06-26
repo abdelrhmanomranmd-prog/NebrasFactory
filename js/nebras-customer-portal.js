@@ -120,7 +120,67 @@
             global.markLocalCloudMutationBatch(['customer_portal_users']);
         }
         if (typeof global.markSensitiveCloudPending === 'function') global.markSensitiveCloudPending();
-        if (typeof global.syncNebrasCloudInBackground === 'function') global.syncNebrasCloudInBackground();
+    }
+
+    async function verifyCpUserInCloud(username) {
+        const un = String(username || '').trim().toLowerCase();
+        if (!un || typeof global.secureCloudPull !== 'function' || typeof global.getNebrasSecureToken !== 'function') return false;
+        if (!global.getNebrasSecureToken()) return false;
+        try {
+            const rows = await global.secureCloudPull(['customer_portal_users']);
+            const row = rows && rows.find(function(r) { return r && r.store_key === 'customer_portal_users'; });
+            const users = row && row.payload;
+            if (!Array.isArray(users)) return false;
+            return users.some(function(u) {
+                return u && String(u.username || '').trim().toLowerCase() === un && u.isActive !== false;
+            });
+        } catch (e) {
+            console.warn('verifyCpUserInCloud:', e);
+            return false;
+        }
+    }
+
+    async function verifyCpUserAbsentFromCloud(username) {
+        const un = String(username || '').trim().toLowerCase();
+        if (!un || typeof global.secureCloudPull !== 'function' || typeof global.getNebrasSecureToken !== 'function') return false;
+        if (!global.getNebrasSecureToken()) return false;
+        try {
+            const rows = await global.secureCloudPull(['customer_portal_users']);
+            const row = rows && rows.find(function(r) { return r && r.store_key === 'customer_portal_users'; });
+            const users = row && row.payload;
+            if (!Array.isArray(users)) return true;
+            return !users.some(function(u) {
+                return u && String(u.username || '').trim().toLowerCase() === un;
+            });
+        } catch (e) {
+            console.warn('verifyCpUserAbsentFromCloud:', e);
+            return false;
+        }
+    }
+
+    async function persistCustomerPortalUsersToCloud(options) {
+        options = options || {};
+        if (typeof global.ensureNebrasCloudSessionReady === 'function') {
+            const sessionOk = await global.ensureNebrasCloudSessionReady({
+                promptReauth: options.promptReauth !== false
+            });
+            if (!sessionOk) return false;
+        }
+        let cloudOk = false;
+        if (typeof global.persistNebrasCriticalStores === 'function') {
+            cloudOk = await global.persistNebrasCriticalStores(['customer_portal_users', 'customer_portal_audit'], {
+                showToast: !!options.showToast,
+                promptReauth: options.promptReauth !== false
+            });
+        }
+        if (!cloudOk) return false;
+        if (options.verifyUsernameAbsent) {
+            return await verifyCpUserAbsentFromCloud(options.verifyUsernameAbsent);
+        }
+        if (options.verifyUsername) {
+            return await verifyCpUserInCloud(options.verifyUsername);
+        }
+        return true;
     }
 
     function saveCpAuditLocal() {
@@ -716,12 +776,22 @@
             if (typeof addAuditLog === 'function') addAuditLog('إنشاء حساب عميل', username + ' — ' + displayName);
         }
         saveCpData();
-        let cloudOk = false;
-        if (typeof global.persistNebrasCriticalStores === 'function') {
-            cloudOk = await global.persistNebrasCriticalStores(['customer_portal_users', 'customer_portal_audit'], { showToast: true });
-        }
-        if (!cloudOk && typeof global.showNebrasAdminToast === 'function') {
-            global.showNebrasAdminToast('⚠️ حساب العميل محفوظ محلياً فقط — لن يعمل من جهاز آخر حتى يُرفع للسحابة', 'error');
+        const cloudOk = await persistCustomerPortalUsersToCloud({
+            showToast: true,
+            verifyUsername: username
+        });
+        if (!cloudOk) {
+            if (cpEditorState.isEdit) {
+                /* keep editor open */
+            } else {
+                customerPortalUsers = customerPortalUsers.filter(function(u) { return u.id !== payload.id; });
+                saveCpData();
+            }
+            if (typeof global.showNebrasAdminToast === 'function') {
+                global.showNebrasAdminToast('⚠️ حساب العميل محفوظ محلياً فقط — لن يعمل من جهاز آخر', 'error');
+            }
+            renderCustomerPortalGovernancePanel();
+            return;
         }
         cancelCpUserEditor();
         renderCustomerPortalGovernancePanel();
@@ -783,12 +853,22 @@
             return;
         }
         if (!confirm('حذف حساب العميل ' + u.username + '؟')) return;
+        const deletedUser = Object.assign({}, u);
+        const deletedUsername = u.username;
         customerPortalUsers.splice(index, 1);
         saveCpData();
-        cpAudit('حذف حساب عميل', u.username);
-        if (typeof addAuditLog === 'function') addAuditLog('حذف حساب عميل', u.username);
-        if (typeof global.persistNebrasCriticalStores === 'function') {
-            await global.persistNebrasCriticalStores(['customer_portal_users', 'customer_portal_audit'], { showToast: true });
+        cpAudit('حذف حساب عميل', deletedUsername);
+        if (typeof addAuditLog === 'function') addAuditLog('حذف حساب عميل', deletedUsername);
+        const cloudOk = await persistCustomerPortalUsersToCloud({
+            showToast: true,
+            verifyUsernameAbsent: deletedUsername
+        });
+        if (!cloudOk) {
+            customerPortalUsers.splice(index, 0, deletedUser);
+            saveCpData();
+            if (typeof global.showNebrasAdminToast === 'function') {
+                global.showNebrasAdminToast('⚠️ لم يُحذف حساب العميل من السحابة', 'error');
+            }
         }
         renderCustomerPortalGovernancePanel();
     }

@@ -18180,7 +18180,7 @@
                 isEdit: !!isEdit,
                 id: user ? user.id : ('REP-' + Date.now()),
                 username: user ? user.username : '',
-                password: user ? user.password : '',
+                password: user ? '' : '',
                 assignedBranchCity: branchCity
             };
             const host = document.getElementById('branch-team-editor');
@@ -18196,7 +18196,7 @@
                     '<div class="nebras-editor-grid">' +
                         '<label class="nebras-field"><span>معرّف المندوب</span><input type="text" id="bre-id" value="' + escapeHtmlAttr(branchRepEditorState.id) + '"></label>' +
                         '<label class="nebras-field"><span>اسم المستخدم</span><input type="text" id="bre-username" value="' + escapeHtmlAttr(branchRepEditorState.username) + '"></label>' +
-                        '<label class="nebras-field"><span>كلمة المرور</span><input type="password" id="bre-password" value="' + escapeHtmlAttr(branchRepEditorState.password) + '" autocomplete="new-password"></label>' +
+                        '<label class="nebras-field"><span>كلمة المرور</span><input type="password" id="bre-password" value="" placeholder="' + (isEdit ? 'اتركي فارغاً للإبقاء على الحالية' : 'كلمة مرور الدخول') + '" autocomplete="new-password"></label>' +
                         '<label class="nebras-field"><span>الفرع</span><input type="text" value="' + escapeHtmlAttr(branchCity) + '" readonly></label>' +
                     '</div>' +
                     '<div class="nebras-editor-footer">' +
@@ -18212,13 +18212,14 @@
             if (host) { host.hidden = true; host.innerHTML = ''; }
         }
 
-        function saveBranchRepFromEditor() {
+        async function saveBranchRepFromEditor() {
             if (!branchRepEditorState || !canManageBranchTeam()) return;
             const id = String((document.getElementById('bre-id') || {}).value || '').trim();
             const username = String((document.getElementById('bre-username') || {}).value || '').trim();
-            const password = String((document.getElementById('bre-password') || {}).value || '').trim();
+            const rawPassword = String((document.getElementById('bre-password') || {}).value || '').trim();
             const branchCity = branchRepEditorState.assignedBranchCity;
-            if (!id || !username || !password) { alert('أكملي كل الحقول.'); return; }
+            if (!id || !username) { alert('أكملي المعرّف واسم المستخدم.'); return; }
+            if (!branchRepEditorState.isEdit && !rawPassword) { alert('يرجى إدخال كلمة المرور.'); return; }
             const dupId = adminUsers.some(function(u, i) { return u.id === id && i !== branchRepEditorState.index; });
             if (dupId) { alert('المعرّف مستخدم مسبقاً.'); return; }
             const dupName = adminUsers.some(function(u, i) {
@@ -18228,31 +18229,50 @@
             const branch = (branchesData || []).find(function(b) {
                 return normalizeText(b.city || '') === normalizeText(branchCity);
             });
+            const existing = branchRepEditorState.isEdit ? (adminUsers[branchRepEditorState.index] || {}) : {};
+            let password = existing.password;
+            if (rawPassword) {
+                password = isNebrasPasswordHash(rawPassword) ? existing.password : storeNebrasPasswordValue(rawPassword);
+            } else if (!branchRepEditorState.isEdit) {
+                alert('يرجى إدخال كلمة المرور.');
+                return;
+            }
+            const nowIso = new Date().toISOString();
             const payload = {
                 id: id, username: username,
-                password: storeNebrasPasswordValue(password),
+                password: password,
                 role: 'sales_rep',
                 permissions: (rolePermissions.sales_rep || []).slice(),
                 assignedBranchCity: branchCity,
                 assignedBranchId: branch ? branch.id : null,
-                isPrimary: false
+                isPrimary: false,
+                isActive: existing.isActive !== false,
+                updatedAt: nowIso
             };
             if (branchRepEditorState.isEdit) {
-                adminUsers[branchRepEditorState.index] = Object.assign({}, adminUsers[branchRepEditorState.index], payload);
+                adminUsers[branchRepEditorState.index] = Object.assign({}, existing, payload);
                 addAuditLog('تعديل مندوب فرع', username + ' — ' + branchCity);
             } else {
-                adminUsers.push(payload);
+                adminUsers.push(Object.assign({}, payload, {
+                    createdAt: nowIso,
+                    createdBy: currentAdmin ? currentAdmin.username : ''
+                }));
                 addAuditLog('إضافة مندوب فرع', username + ' — ' + branchCity);
             }
-            saveSystemData({ urgentCloud: true, showCloudToast: true });
-            if (typeof persistNebrasCriticalStores === 'function') {
-                persistNebrasCriticalStores(['admin_users'], { silent: true });
+            saveSystemData({ skipCloud: true });
+            const cloudOk = await persistAdminUsersToCloud({ showToast: true, verifyUsername: username });
+            if (!cloudOk) {
+                if (typeof showNebrasAdminToast === 'function') {
+                    showNebrasAdminToast('⚠️ المندوب محفوظ محلياً فقط — لن يعمل من جهاز آخر', 'error');
+                }
+                renderBranchTeamPanel();
+                return;
             }
             cancelBranchRepEditor();
             renderBranchTeamPanel();
         }
 
-        function deleteBranchRep(index) {
+        async function deleteBranchRep(index) {
             if (!canManageBranchTeam()) return;
             const user = adminUsers[index];
             if (!user || !userBelongsToBranchTeam(user, currentAdmin)) {
@@ -18260,10 +18280,24 @@
                 return;
             }
             if (!confirm('حذف المندوب ' + user.username + '؟')) return;
+            const deletedUser = Object.assign({}, user);
+            const deletedUsername = user.username;
             adminUsers.splice(index, 1);
-            saveSystemData();
+            saveSystemData({ skipCloud: true });
+            const cloudOk = await persistAdminUsersToCloud({
+                showToast: true,
+                verifyUsernameAbsent: deletedUsername
+            });
+            if (!cloudOk) {
+                adminUsers.splice(index, 0, deletedUser);
+                saveSystemData({ skipCloud: true });
+                if (typeof showNebrasAdminToast === 'function') {
+                    showNebrasAdminToast('⚠️ لم يُحذف المندوب من السحابة', 'error');
+                }
+            } else {
+                addAuditLog('حذف مندوب فرع', deletedUsername);
+            }
             renderBranchTeamPanel();
-            addAuditLog('حذف مندوب فرع', user.username);
         }
 
         function openProductMasterHub() {
@@ -24395,7 +24429,7 @@
                 isPrimary: !!(user && isImmutablePrimaryAdmin(user)),
                 id: user ? (user.id || '') : ('EMP-' + Date.now()),
                 username: user ? (user.username || '') : '',
-                password: user ? (user.password || '') : '',
+                password: user && !isImmutablePrimaryAdmin(user) ? '' : (user ? (user.password || '') : ''),
                 role: user ? (user.role || defaultRole) : defaultRole,
                 assignedBranchCity: user ? (user.assignedBranchCity || '') : '',
                 assignedBranchId: user ? (user.assignedBranchId || resolveBranchIdByCity(user.assignedBranchCity)) : null,
@@ -24438,7 +24472,7 @@
                     '<div class="nebras-editor-grid">' +
                         '<label class="nebras-field"><span>معرّف الموظف</span><input type="text" id="ue-id" value="' + escapeHtmlAttr(st.id) + '" ' + (st.isPrimary ? 'disabled' : '') + ' placeholder="EMP-102"></label>' +
                         '<label class="nebras-field"><span>اسم المستخدم (للدخول)</span><input type="text" id="ue-username" value="' + escapeHtmlAttr(st.username) + '" placeholder="sales.riyadh"></label>' +
-                        '<label class="nebras-field"><span>كلمة المرور</span><input type="password" id="ue-password" value="' + escapeHtmlAttr(st.password) + '" ' + (st.isPrimary ? 'disabled' : '') + ' placeholder="••••••" autocomplete="new-password"></label>' +
+                        '<label class="nebras-field"><span>كلمة المرور</span><input type="password" id="ue-password" value="' + escapeHtmlAttr(st.password) + '" ' + (st.isPrimary ? 'disabled' : '') + ' placeholder="' + (st.isEdit && !st.isPrimary ? 'اتركي فارغاً للإبقاء على الحالية' : '••••••') + '" autocomplete="new-password"></label>' +
                         '<label class="nebras-field"><span>الدور الوظيفي</span><select id="ue-role" onchange="onUserEditorRoleChange(this.value)" ' + (st.isPrimary ? 'disabled' : '') + '>' + roleOptions + '</select></label>' +
                         '<label class="nebras-field nebras-field--wide"><span>الفرع المخصّص</span><select id="ue-branch" onchange="onUserEditorBranchChange(this.value)" ' + (st.isPrimary ? 'disabled' : '') + '>' + branchOptions + '</select>' + branchHint + '</label>' +
                     '</div>' +
@@ -24579,6 +24613,24 @@
             }
         }
 
+        async function verifyAdminUserAbsentFromCloud(username) {
+            const un = String(username || '').trim().toUpperCase();
+            if (!un || typeof secureCloudPull !== 'function' || typeof getNebrasSecureToken !== 'function') return false;
+            if (!getNebrasSecureToken()) return false;
+            try {
+                const rows = await secureCloudPull(['admin_users']);
+                const row = rows && rows.find(function(r) { return r && r.store_key === 'admin_users'; });
+                const users = row && row.payload;
+                if (!Array.isArray(users)) return true;
+                return !users.some(function(u) {
+                    return u && String(u.username || '').trim().toUpperCase() === un;
+                });
+            } catch (e) {
+                console.warn('verifyAdminUserAbsentFromCloud:', e);
+                return false;
+            }
+        }
+
         async function persistAdminUsersToCloud(options) {
             options = options || {};
             let cloudOk = false;
@@ -24591,10 +24643,14 @@
             if (!cloudOk && typeof flushPushToNebrasCloud === 'function') {
                 cloudOk = await flushPushToNebrasCloud({ showCloudToast: !!options.showToast });
             }
-            if (cloudOk && options.verifyUsername) {
-                cloudOk = await verifyAdminUserExistsInCloud(options.verifyUsername);
+            if (!cloudOk) return false;
+            if (options.verifyUsernameAbsent) {
+                return await verifyAdminUserAbsentFromCloud(options.verifyUsernameAbsent);
             }
-            return cloudOk;
+            if (options.verifyUsername) {
+                return await verifyAdminUserExistsInCloud(options.verifyUsername);
+            }
+            return true;
         }
 
         async function saveUserFromEditor() {
@@ -24607,9 +24663,23 @@
             const id = st.isPrimary ? st.id : String((idEl && idEl.value) || '').trim();
             const username = String((userEl && userEl.value) || '').trim();
             const rawPassword = st.isPrimary ? st.password : String((passEl && passEl.value) || '').trim();
-            const password = st.isPrimary ? rawPassword : storeNebrasPasswordValue(rawPassword);
+            let password = rawPassword;
+            if (!st.isPrimary) {
+                if (st.isEdit) {
+                    const existing = adminUsers[st.index] || {};
+                    if (!rawPassword) {
+                        password = existing.password;
+                    } else if (isNebrasPasswordHash(rawPassword)) {
+                        password = existing.password;
+                    } else {
+                        password = storeNebrasPasswordValue(rawPassword);
+                    }
+                } else {
+                    password = storeNebrasPasswordValue(rawPassword);
+                }
+            }
             if (!username) { alert('يرجى إدخال اسم المستخدم.'); return; }
-            if (!st.isPrimary && !password) { alert('يرجى إدخال كلمة المرور.'); return; }
+            if (!st.isPrimary && !st.isEdit && !rawPassword) { alert('يرجى إدخال كلمة المرور.'); return; }
             if (!st.isPrimary && !id) { alert('يرجى إدخال معرّف الموظف.'); return; }
             const dupId = adminUsers.some(function(u, i) { return u.id === id && i !== st.index; });
             if (dupId) { alert('معرّف الموظف مستخدم مسبقاً.'); return; }
@@ -24726,15 +24796,25 @@
                 return;
             }
             if (confirm('هل تريد حذف المستخدم ' + user.username + '؟')) {
+                const deletedUser = Object.assign({}, user);
+                const deletedUsername = user.username;
                 adminUsers.splice(index, 1);
                 saveSystemData({ skipCloud: true });
-                if (typeof persistNebrasCriticalStores === 'function') {
-                    await persistNebrasCriticalStores(['admin_users'], { showToast: true });
-                } else {
-                    saveSystemData({ urgentCloud: true, showCloudToast: true });
+                const cloudOk = await persistAdminUsersToCloud({
+                    showToast: true,
+                    verifyUsernameAbsent: deletedUsername
+                });
+                if (!cloudOk) {
+                    adminUsers.splice(index, 0, deletedUser);
+                    saveSystemData({ skipCloud: true });
+                    if (typeof showNebrasAdminToast === 'function') {
+                        showNebrasAdminToast('⚠️ لم يُحذف من السحابة — المستخدم ما زال نشطاً على الأجهزة الأخرى', 'error');
+                    }
+                    displayUsers();
+                    return;
                 }
+                addAuditLog('حذف مستخدم', 'تم حذف المستخدم ' + deletedUsername + ' من السحابة');
                 displayUsers();
-                addAuditLog('حذف مستخدم', 'تم حذف المستخدم ' + user.username);
             }
         }
 
