@@ -233,6 +233,11 @@
         let scmProductEditorState = null;
         let scmVariantEditorState = null;
         let scmExpandedProductId = null;
+        let scmPersistInFlight = false;
+        const SCM_CONTENT_CLOUD_KEYS = [
+            'site_products', 'visitor_icons', 'dashboard_tiles', 'site_custom_sections',
+            'about_pages', 'site_partners', 'site_certifications', 'showroom_gallery', 'branches'
+        ];
 
         function canUploadNebrasMedia(permissionKey) {
             if (!currentAdmin) return false;
@@ -3894,7 +3899,7 @@
             refreshStoreCatalogView(contextKey);
         }
 
-        function toggleProductStock(productId) {
+        async function toggleProductStock(productId) {
             if (!canManageProductCatalog(currentAdmin, productId)) {
                 alert('تغيير توفر المنتج — صلاحية المتجر أو المحتوى مطلوبة.');
                 return;
@@ -3902,9 +3907,9 @@
             const product = siteProducts.find(function(p) { return p.id === productId; });
             if (!product) return;
             product.inStock = product.inStock === false;
-            saveContentData();
             displaySiteProductsAdmin();
             addAuditLog('تغيير توفر منتج', (product.inStock !== false ? 'متاح: ' : 'غير متاح: ') + (product.titleAr || productId));
+            await persistScmContentHonest('توفر منتج');
         }
 
         function getProductsForVisitorIcon(icon) {
@@ -10722,7 +10727,7 @@
             renderScmPartnerEditor();
         }
 
-        function saveScmPartnerFromEditor() {
+        async function saveScmPartnerFromEditor() {
             if (!scmPartnerEditorState) return;
             const nameAr = (document.getElementById('scm-partner-name-ar') || {}).value || '';
             const nameEn = (document.getElementById('scm-partner-name-en') || {}).value || '';
@@ -10742,10 +10747,12 @@
             const idx = sitePartners.findIndex(function(p) { return p.id === payload.id; });
             if (idx >= 0) sitePartners[idx] = Object.assign({}, sitePartners[idx], payload);
             else sitePartners.push(payload);
-            saveContentData();
+            const partnerMode = scmPartnerEditorState.mode;
             cancelScmPartnerEditor();
             displayPartnersAdmin();
-            addAuditLog(scmPartnerEditorState.mode === 'edit' ? 'تعديل شريك' : 'إضافة شريك', payload.nameAr);
+            renderPartnersMarquees();
+            addAuditLog(partnerMode === 'edit' ? 'تعديل شريك' : 'إضافة شريك', payload.nameAr);
+            await persistScmContentHonest('شريك «' + payload.nameAr + '»');
         }
 
         function cancelScmPartnerEditor() {
@@ -10819,7 +10826,7 @@
                 '<button type="button" class="secondary" onclick="scmCertPickMedia()"><i class="fas fa-cloud-upload-alt"></i> رفع وسائط</button></div>' +
                 '</div>' +
                 '<div class="scm-editor-actions">' +
-                '<button type="button" class="primary" onclick="saveScmCertFromEditor()"><i class="fas fa-check"></i> حفظ</button>' +
+                '<button type="button" class="primary" id="scm-cert-save-btn" onclick="saveScmCertFromEditor()"><i class="fas fa-check"></i> حفظ + السحابة</button>' +
                 '<button type="button" class="secondary" onclick="cancelScmCertEditor()">إلغاء</button></div></div>';
         }
 
@@ -10832,8 +10839,10 @@
             renderScmCertEditor();
         }
 
-        function saveScmCertFromEditor() {
+        async function saveScmCertFromEditor() {
             if (!scmCertEditorState) return;
+            const saveBtn = document.getElementById('scm-cert-save-btn');
+            if (saveBtn) { saveBtn.disabled = true; saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ…'; }
             const titleAr = (document.getElementById('scm-cert-title-ar') || {}).value || '';
             const titleEn = (document.getElementById('scm-cert-title-en') || {}).value || '';
             const captionAr = (document.getElementById('scm-cert-caption-ar') || {}).value || '';
@@ -10855,10 +10864,11 @@
             const idx = siteCertifications.findIndex(function(c) { return c.id === payload.id; });
             if (idx >= 0) siteCertifications[idx] = Object.assign({}, siteCertifications[idx], payload);
             else siteCertifications.push(payload);
-            saveContentData();
+            const certMode = scmCertEditorState.mode;
             cancelScmCertEditor();
             displayCertificationsAdmin();
-            addAuditLog(scmCertEditorState.mode === 'edit' ? 'تعديل اعتماد' : 'إضافة اعتماد/شهادة', payload.titleAr);
+            addAuditLog(certMode === 'edit' ? 'تعديل اعتماد' : 'إضافة اعتماد/شهادة', payload.titleAr);
+            await persistScmContentHonest('اعتماد «' + payload.titleAr + '»');
         }
 
         function cancelScmCertEditor() {
@@ -11583,7 +11593,7 @@
             alert('تم تحديث منتجات الأيقونة — التغيير ظاهر للزوار فوراً.');
         }
 
-        function toggleSiteProductVisibility(productId) {
+        async function toggleSiteProductVisibility(productId) {
             if (!requireFullSiteContent()) return;
             const product = siteProducts.find(function(p) { return p.id === productId; });
             if (!product) return;
@@ -11595,9 +11605,9 @@
             product.visible = willHide ? false : true;
             if (willHide) removeProductReferences(productId);
             purgeStaleCatalogReferences();
-            saveContentData();
             displaySiteProductsAdmin();
             addAuditLog(willHide ? 'إخفاء منتج' : 'إظهار منتج', product.titleAr || productId);
+            await persistScmContentHonest(willHide ? 'إخفاء منتج' : 'إظهار منتج');
         }
 
         async function addSiteProduct() {
@@ -11610,7 +11620,7 @@
             openScmProductEditor(productId);
         }
 
-        function deleteSiteProduct(productId) {
+        async function deleteSiteProduct(productId) {
             if (!requireProductMasterGovernance('حذف المنتجات — الإدارة الرئيسية فقط.')) return;
             const product = siteProducts.find(function(p) { return p.id === productId; });
             if (!product) return;
@@ -11625,10 +11635,10 @@
             siteProducts = siteProducts.filter(function(p) { return p.id !== productId; });
             removeProductReferences(productId);
             purgeStaleCatalogReferences();
-            saveContentData();
             displaySiteProductsAdmin();
             displayVisitorIconsAdmin();
             addAuditLog('حذف منتج', product.titleAr || product.id);
+            await persistScmContentHonest('حذف منتج');
         }
 
         function getCatalogCategoryDef(categoryId) {
@@ -11694,10 +11704,82 @@
         }
 
         function saveScmCatalogNow() {
-            saveContentData({ urgentCloud: true });
-            if (typeof showNebrasAdminToast === 'function') {
-                showNebrasAdminToast('✓ تم الحفظ — جاري الرفع للسحابة', 'ok');
+            persistScmContentHonest('مزامنة المحتوى', { force: true });
+        }
+
+        function renderScmCloudSaveStatus(state, detail) {
+            const el = document.getElementById('scm-cloud-save-status');
+            if (!el) return;
+            const presets = {
+                saving: { icon: 'fa-spinner fa-spin', text: 'جاري الحفظ والرفع للسحابة…', cls: 'is-saving' },
+                ok: { icon: 'fa-circle-check', text: detail || '✓ محفوظ في السحابة — متاح لكل الأجهزة', cls: 'is-ok' },
+                local: { icon: 'fa-triangle-exclamation', text: detail || '⚠️ محفوظ محلياً فقط — لم يُؤكَّد في السحابة', cls: 'is-warn' },
+                error: { icon: 'fa-circle-xmark', text: detail || '✗ فشل الحفظ — تحققي من الاتصال', cls: 'is-error' },
+                idle: { icon: 'fa-cloud', text: 'جاهز — كل حفظ يُزامَن مع السحابة', cls: 'is-idle' }
+            };
+            const s = presets[state] || presets.idle;
+            el.className = 'scm-cloud-save-status ' + s.cls;
+            el.innerHTML = '<i class="fas ' + s.icon + '"></i> ' + escapeHtmlAttr(s.text);
+        }
+
+        async function persistScmContentHonest(label, options) {
+            options = options || {};
+            if (scmPersistInFlight && !options.force) {
+                return { ok: false, busy: true, cloudOk: false, localOk: false };
             }
+            scmPersistInFlight = true;
+            renderScmCloudSaveStatus('saving');
+            let localOk = true;
+            try {
+                saveContentData({
+                    urgentCloud: false,
+                    showCloudToast: false,
+                    silentCloudFail: true,
+                    skipCloud: true
+                });
+            } catch (localErr) {
+                console.warn('persistScmContentHonest local:', localErr);
+                localOk = false;
+            }
+            let cloudOk = false;
+            if (currentAdmin && typeof persistNebrasCriticalStores === 'function') {
+                try {
+                    cloudOk = await persistNebrasCriticalStores(SCM_CONTENT_CLOUD_KEYS, {
+                        showToast: false,
+                        promptReauth: options.promptReauth !== false
+                    });
+                } catch (cloudErr) {
+                    console.warn('persistScmContentHonest cloud:', cloudErr);
+                    cloudOk = false;
+                }
+            }
+            if (!cloudOk && typeof flushPushToNebrasCloud === 'function') {
+                try {
+                    cloudOk = await flushPushToNebrasCloud({ silentCloud: true, showCloudToast: false });
+                } catch (flushErr) {
+                    console.warn('persistScmContentHonest flush:', flushErr);
+                }
+            }
+            scmPersistInFlight = false;
+            const msgLabel = label ? String(label) : 'المحتوى';
+            if (cloudOk) {
+                renderScmCloudSaveStatus('ok', '✓ ' + msgLabel + ' — مؤكَّد في السحابة');
+                if (typeof showNebrasAdminToast === 'function') {
+                    showNebrasAdminToast('✓ ' + msgLabel + ' — محفوظ في السحابة ومتاح من أي جهاز', 'ok');
+                }
+            } else if (localOk) {
+                renderScmCloudSaveStatus('local', '⚠️ ' + msgLabel + ' — محلي فقط (أعيدي «حفظ سحابي الآن»)');
+                if (typeof showNebrasAdminToast === 'function') {
+                    showNebrasAdminToast('⚠️ ' + msgLabel + ' محفوظ محلياً — لم يُؤكَّد في السحابة. اضغطي «حفظ سحابي الآن»', 'error');
+                }
+            } else {
+                renderScmCloudSaveStatus('error', '✗ تعذّر حفظ ' + msgLabel);
+                if (typeof showNebrasAdminToast === 'function') {
+                    showNebrasAdminToast('✗ تعذّر الحفظ — تحققي من التخزين والاتصال', 'error');
+                }
+            }
+            if (typeof renderGovernanceStatusPanel === 'function') renderGovernanceStatusPanel();
+            return { ok: cloudOk || localOk, cloudOk: cloudOk, localOk: localOk };
         }
 
         function getScmProductsForCurrentCategory() {
@@ -11773,7 +11855,7 @@
                 '<option value="browse"' + (exp === 'browse' ? ' selected' : '') + '>تصفح</option></select></label>' +
                 '<div class="scm-editor-media nebras-field--full"><span>صورة المنتج</span>' + bgPreview +
                 '<button type="button" class="secondary" onclick="scmProductPickBackground()"><i class="fas fa-cloud-upload-alt"></i> رفع صورة</button></div></div>' +
-                '<div class="scm-editor-actions"><button type="button" class="primary" onclick="saveScmProductFromEditor()"><i class="fas fa-check"></i> حفظ</button>' +
+                '<div class="scm-editor-actions"><button type="button" class="primary" id="scm-prod-save-btn" onclick="saveScmProductFromEditor()"><i class="fas fa-check"></i> حفظ المنتج + السحابة</button>' +
                 '<button type="button" class="secondary" onclick="cancelScmProductEditor()">إلغاء</button></div></div>';
             host.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
@@ -11786,8 +11868,10 @@
             renderScmProductEditor();
         }
 
-        function saveScmProductFromEditor() {
+        async function saveScmProductFromEditor() {
             if (!scmProductEditorState) return;
+            const saveBtn = document.getElementById('scm-prod-save-btn');
+            if (saveBtn) { saveBtn.disabled = true; saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ…'; }
             const st = scmProductEditorState;
             const titleAr = (document.getElementById('scm-prod-title-ar') || {}).value || '';
             const titleEn = (document.getElementById('scm-prod-title-en') || {}).value || '';
@@ -11814,12 +11898,14 @@
             applyExperienceToCatalogItem(product, experience);
             if (experience === 'shop' && !product.variants) product.variants = [];
             if (categoryId !== 'other') scmProductCatalogFilter = categoryId;
-            saveContentData({ urgentCloud: true });
             cancelScmProductEditor();
             scmExpandedProductId = product.id;
             displaySiteProductsAdmin();
             addAuditLog(st.mode === 'edit' ? 'تعديل منتج' : 'إضافة منتج', product.titleAr);
-            if (typeof showNebrasAdminToast === 'function') showNebrasAdminToast('✓ تم حفظ المنتج — أضيفي الأصناف (الخطوة 3)', 'ok');
+            await persistScmContentHonest(st.mode === 'edit' ? 'تعديل المنتج' : 'منتج جديد');
+            if (getCatalogExperience(product) === 'shop' && (product.variants || []).length === 0) {
+                openScmVariantEditor(product.id, null);
+            }
         }
 
         function cancelScmProductEditor() {
@@ -11865,7 +11951,7 @@
                 (ex > 0 ? Math.round(priceIncVat(ex)) + ' ر.س' : 'عند الطلب') + '"></label>' +
                 '<div class="scm-editor-media nebras-field--full"><span>صورة الصنف</span>' + imgPreview +
                 '<button type="button" class="secondary" onclick="scmVariantPickImage()"><i class="fas fa-cloud-upload-alt"></i> رفع صورة</button></div></div>' +
-                '<div class="scm-editor-actions"><button type="button" class="primary" onclick="saveScmVariantFromEditor()"><i class="fas fa-check"></i> حفظ</button>' +
+                '<div class="scm-editor-actions"><button type="button" class="primary" id="scm-var-save-btn" onclick="saveScmVariantFromEditor()"><i class="fas fa-check"></i> حفظ الصنف + السحابة</button>' +
                 (st.variantIndex >= 0 ? '<button type="button" class="secondary scm-btn-danger" onclick="deleteScmVariantFromEditor()"><i class="fas fa-trash"></i></button>' : '') +
                 '<button type="button" class="secondary" onclick="cancelScmVariantEditor()">إلغاء</button></div></div>';
             const priceEl = document.getElementById('scm-var-price');
@@ -11885,8 +11971,10 @@
             renderScmVariantEditor();
         }
 
-        function saveScmVariantFromEditor() {
+        async function saveScmVariantFromEditor() {
             if (!scmVariantEditorState) return;
+            const saveBtn = document.getElementById('scm-var-save-btn');
+            if (saveBtn) { saveBtn.disabled = true; saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري الحفظ…'; }
             const st = scmVariantEditorState;
             const product = siteProducts.find(function(p) { return p.id === st.productId; });
             if (!product) return;
@@ -11908,22 +11996,21 @@
             else product.variants.push(payload);
             product.shopEnabled = true;
             product.action = 'shop';
-            saveContentData({ urgentCloud: true });
             cancelScmVariantEditor();
             scmExpandedProductId = product.id;
             displaySiteProductsAdmin();
             addAuditLog('صنف منتج', product.titleAr + ' — ' + payload.typeAr);
-            if (typeof showNebrasAdminToast === 'function') showNebrasAdminToast('✓ تم حفظ الصنف', 'ok');
+            await persistScmContentHonest('صنف «' + (payload.typeAr || payload.sizeAr || 'جديد') + '»');
         }
 
-        function deleteScmVariantFromEditor() {
+        async function deleteScmVariantFromEditor() {
             if (!scmVariantEditorState || scmVariantEditorState.variantIndex < 0) return;
             if (!confirm('حذف هذا الصنف؟')) return;
             const product = siteProducts.find(function(p) { return p.id === scmVariantEditorState.productId; });
             if (product && product.variants) product.variants.splice(scmVariantEditorState.variantIndex, 1);
-            saveContentData({ urgentCloud: true });
             cancelScmVariantEditor();
             displaySiteProductsAdmin();
+            await persistScmContentHonest('حذف صنف');
         }
 
         function cancelScmVariantEditor() {
@@ -28557,6 +28644,8 @@
         window.deleteScmVariantFromEditor = deleteScmVariantFromEditor;
         window.toggleScmProductExpanded = toggleScmProductExpanded;
         window.saveScmCatalogNow = saveScmCatalogNow;
+        window.persistScmContentHonest = persistScmContentHonest;
+        window.renderScmCloudSaveStatus = renderScmCloudSaveStatus;
         window.setStoreCatalogAvailability = setStoreCatalogAvailability;
         window.setStoreCatalogSort = setStoreCatalogSort;
         window.setStoreCatalogFacet = setStoreCatalogFacet;
