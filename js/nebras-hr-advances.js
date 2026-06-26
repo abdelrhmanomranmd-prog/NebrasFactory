@@ -38,7 +38,7 @@
 
     function saveHrAdvancesData() {
         try { localStorage.setItem(HR_ADVANCES_KEY, JSON.stringify(hrAdvances)); } catch (e) { /* ignore */ }
-        if (typeof saveSystemData === 'function') saveSystemData();
+        if (typeof saveSystemData === 'function') saveSystemData({ urgentCloud: true });
         else if (typeof schedulePushToNebrasCloud === 'function') schedulePushToNebrasCloud();
     }
 

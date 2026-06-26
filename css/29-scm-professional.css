@@ -678,8 +678,28 @@
 .scm-cloud-save-status.is-ok { color: #1a7a45; }
 .scm-cloud-save-status.is-warn { color: #b45309; }
 .scm-cloud-save-status.is-error { color: #b42318; }
-.scm-cloud-save-status.is-idle { color: #4a6075; }
-
 .scm-cloud-save-status i {
     font-size: 1rem;
 }
+
+.nebras-live-cloud-ribbon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    margin: 0 0 0.75rem;
+    padding: 0.55rem 1rem;
+    border-radius: 10px;
+    font-size: 0.92rem;
+    font-weight: 600;
+    border: 1px solid rgba(21, 94, 148, 0.2);
+    background: linear-gradient(90deg, rgba(21, 94, 148, 0.08), rgba(26, 122, 69, 0.06));
+    color: #155e94;
+}
+.nebras-live-cloud-ribbon--saving { border-color: #155e94; color: #155e94; }
+.nebras-live-cloud-ribbon--ok { border-color: #1a7a45; background: rgba(26, 122, 69, 0.1); color: #1a7a45; }
+.nebras-live-cloud-ribbon--warn,
+.nebras-live-cloud-ribbon--local { border-color: #b45309; background: rgba(180, 83, 9, 0.08); color: #b45309; }
+.nebras-live-cloud-ribbon--error { border-color: #b42318; background: rgba(180, 35, 24, 0.08); color: #b42318; }
+.dashboard-command-sync--saving { color: #155e94 !important; animation: nebras-cloud-pulse 1.2s ease-in-out infinite; }
+@keyframes nebras-cloud-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }

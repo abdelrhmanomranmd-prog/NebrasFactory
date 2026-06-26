@@ -105,7 +105,7 @@
 
     function saveHrCompaniesData() {
         try { localStorage.setItem(HR_COMPANIES_KEY, JSON.stringify(hrPartnerCompanies)); } catch (e) { console.warn('HR companies save', e); }
-        if (typeof saveSystemData === 'function') saveSystemData();
+        if (typeof saveSystemData === 'function') saveSystemData({ urgentCloud: true });
         else if (typeof schedulePushToNebrasCloud === 'function') schedulePushToNebrasCloud();
     }
 

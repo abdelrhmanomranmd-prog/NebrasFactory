@@ -505,6 +505,7 @@
     function nebrasFlushCloudIfAdmin() {
         const admin = typeof global.getNebrasCurrentAdmin === 'function' ? global.getNebrasCurrentAdmin() : null;
         if (!admin) return;
+        const pending = typeof global.hasPendingLocalCloudMutations === 'function' && global.hasPendingLocalCloudMutations();
         const sensPending = hasSensitiveCloudPending();
         if (sensPending && typeof global.persistNebrasCriticalStores === 'function') {
             const keys = [
@@ -534,8 +535,8 @@
         if (cloudAutoSyncTimer) return;
         nebrasFlushCloudIfAdmin();
         nebrasPullCloudIfAdmin();
-        cloudAutoSyncTimer = setInterval(nebrasFlushCloudIfAdmin, 15000);
-        cloudAutoPullTimer = setInterval(nebrasPullCloudIfAdmin, 15000);
+        cloudAutoSyncTimer = setInterval(nebrasFlushCloudIfAdmin, 8000);
+        cloudAutoPullTimer = setInterval(nebrasPullCloudIfAdmin, 8000);
         if (typeof window !== 'undefined' && !window._nebrasCloudUnloadHook) {
             window._nebrasCloudUnloadHook = true;
             window.addEventListener('pagehide', function() { nebrasFlushCloudIfAdmin(); });

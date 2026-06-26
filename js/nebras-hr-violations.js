@@ -44,7 +44,7 @@
 
     function saveHrViolationsData() {
         try { localStorage.setItem(HR_VIOLATIONS_KEY, JSON.stringify(hrViolations)); } catch (e) { /* ignore */ }
-        if (typeof saveSystemData === 'function') saveSystemData();
+        if (typeof saveSystemData === 'function') saveSystemData({ urgentCloud: true });
         else if (typeof schedulePushToNebrasCloud === 'function') schedulePushToNebrasCloud();
     }
 

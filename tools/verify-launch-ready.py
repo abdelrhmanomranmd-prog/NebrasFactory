@@ -32,11 +32,14 @@ def main():
     print('deploy:', v)
 
     js = get('/js/nebras-platform.js?v=' + v)
+    integrity = get('/js/nebras-platform-integrity.js?v=' + v)
     markers = [
         ('production_live_mode', 'NEBRAS_PRODUCTION_LIVE_MODE = true' in js),
         ('demo_admin_purge', 'NEBRAS_DEMO_ADMIN_USERNAME_RE' in js),
         ('chrome_empty_skip', 'NEBRAS_CHROME_EMPTY_CLOUD_SKIP_KEYS' in js and "'about_pages'" in js),
-        ('fast_cloud_debounce', '}, 180);' in js),
+        ('persistNebrasLiveNow', 'persistNebrasLiveNow' in js and 'window.persistNebrasLiveNow' in js),
+        ('live_cloud_ribbon', 'nebras-live-cloud-ribbon' in html),
+        ('live_cloud_sync_8s', 'setInterval(nebrasFlushCloudIfAdmin, 8000)' in integrity),
         ('media_upload', 'uploadNebrasMediaFile' in js and "NEBRAS_MEDIA_BUCKET = 'nebras-media'" in js),
         ('critical_persist', 'persistNebrasCriticalStores' in js),
         ('cloud_guard', 'guardCloudPushRow' in js),
