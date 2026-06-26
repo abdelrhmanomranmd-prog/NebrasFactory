@@ -11883,6 +11883,7 @@
             let localOk = true;
             try {
                 if (!options.skipLocal) {
+                    if (typeof repairStoreHubCatalogBindings === 'function') repairStoreHubCatalogBindings();
                     persistLocalGovernanceKeys();
                     if (typeof persistAnalyticsGovernanceLocal === 'function') persistAnalyticsGovernanceLocal();
                 }
@@ -11915,6 +11916,7 @@
             const msgLabel = label ? String(label) : 'البيانات';
             if (cloudOk) {
                 renderNebrasLiveCloudRibbon('ok', '✓ ' + msgLabel + ' — مؤكَّد في السحابة');
+                if (typeof refreshPublicSiteFromGovernance === 'function') refreshPublicSiteFromGovernance();
                 if (options.showToast && typeof showNebrasAdminToast === 'function') {
                     showNebrasAdminToast('✓ ' + msgLabel + ' — محفوظ سحابياً ومستمر', 'ok');
                 }
@@ -25688,13 +25690,46 @@
             enforceProductionGovernanceCleanState();
         }
 
+        async function pullPublicSiteGovernanceFromCloud(options) {
+            options = options || {};
+            if (!supabaseClient || !NEBRAS_SERVER_FIRST_MODE) return false;
+            const ok = await loadFromNebrasCloud();
+            if (!ok) return false;
+            finalizePlatformDataAfterLoad({ skipBuiltinSeeds: true });
+            ensureSiteChromeDefaults();
+            if (typeof repairStoreHubCatalogBindings === 'function') repairStoreHubCatalogBindings();
+            if (typeof refreshPublicSiteFromGovernance === 'function') refreshPublicSiteFromGovernance();
+            try { persistLocalGovernanceKeys(); } catch (cacheErr) { /* visitor cache */ }
+            if (!options.silent && window.__NEBRAS_LAUNCH_DEBUG__) {
+                console.log('[Nebras] public site cloud refresh OK');
+            }
+            return true;
+        }
+
+        let nebrasPublicSiteCloudRefreshTimer = null;
+        function startNebrasPublicSiteCloudRefresh() {
+            if (nebrasPublicSiteCloudRefreshTimer) return;
+            async function tick() {
+                try {
+                    await pullPublicSiteGovernanceFromCloud({ silent: true });
+                } catch (tickErr) { /* ignore */ }
+            }
+            nebrasPublicSiteCloudRefreshTimer = setInterval(tick, 20000);
+            document.addEventListener('visibilitychange', function() {
+                if (document.visibilityState === 'visible') tick();
+            });
+            window.addEventListener('focus', tick);
+        }
+
         /** المرحلة 1 — تحميل السحابة بعد دخول الإدارة (دمج + بدون مسح البذور) */
         async function hydrateGovernanceFromServerAfterLogin() {
             if (!NEBRAS_SERVER_FIRST_MODE || !supabaseClient) return false;
             const ok = await loadFromNebrasCloud();
             finalizePlatformDataAfterLoad({ skipBuiltinSeeds: ok });
             ensureSiteChromeDefaults();
+            if (typeof repairStoreHubCatalogBindings === 'function') repairStoreHubCatalogBindings();
             if (typeof refreshPublicSiteFromGovernance === 'function') refreshPublicSiteFromGovernance();
+            startNebrasPublicSiteCloudRefresh();
             try {
                 persistLocalGovernanceKeys();
                 if (typeof persistAnalyticsGovernanceLocal === 'function') persistAnalyticsGovernanceLocal();
@@ -26498,7 +26533,7 @@
 
         function cloudLoadWithTimeout(ms) {
             const mobile = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
-            const budget = ms || (mobile ? 1800 : 3000);
+            const budget = ms || (mobile ? 5000 : 7000);
             return Promise.race([
                 loadFromNebrasCloud(),
                 new Promise(function(resolve) {
@@ -26585,7 +26620,8 @@
         function revealSiteAfterIntro() {
             document.body.classList.add('nebras-site-reveal');
             try { document.documentElement.classList.remove('nebras-first-visit'); } catch (e) { /* ignore */ }
-            if (window._nebrasCloudDataReady && !nebrasSiteWarmedBehindIntro) {
+            if (window._nebrasCloudDataReady) {
+                if (typeof repairStoreHubCatalogBindings === 'function') repairStoreHubCatalogBindings();
                 renderAllPublicCatalog();
                 applyOccasionTheme();
             }
@@ -26611,7 +26647,10 @@
             }
             initStorefrontExperience();
             syncNebrasCloudInBackgroundDeferred();
-            revealSiteAfterIntro();
+            startNebrasPublicSiteCloudRefresh();
+            pullPublicSiteGovernanceFromCloud({ silent: true }).finally(function() {
+                revealSiteAfterIntro();
+            });
             clearStuckInteractionBlockers();
             bindStorefrontCommerceClicks();
             restoreWorkspaceFromHashIfNeeded();
@@ -26635,6 +26674,9 @@
                 }
                 window._nebrasCloudDataReady = true;
                 finalizePlatformDataAfterLoad({ skipBuiltinSeeds: cloudBootOk });
+                if (typeof repairStoreHubCatalogBindings === 'function') repairStoreHubCatalogBindings();
+                if (typeof refreshPublicSiteFromGovernance === 'function') refreshPublicSiteFromGovernance();
+                startNebrasPublicSiteCloudRefresh();
                 loadNebrasCart();
                 updateSalesQuoteFab();
                 try {
@@ -26662,7 +26704,10 @@
                 if (!introActive) {
                     initStorefrontExperience();
                     syncNebrasCloudInBackgroundDeferred();
-                    revealSiteAfterIntro();
+                    startNebrasPublicSiteCloudRefresh();
+                    pullPublicSiteGovernanceFromCloud({ silent: true }).finally(function() {
+                        revealSiteAfterIntro();
+                    });
                     restoreWorkspaceFromHashIfNeeded();
                 }
             }
@@ -28939,6 +28984,8 @@
         window.saveScmCatalogNow = saveScmCatalogNow;
         window.persistScmContentHonest = persistScmContentHonest;
         window.persistNebrasLiveNow = persistNebrasLiveNow;
+        window.pullPublicSiteGovernanceFromCloud = pullPublicSiteGovernanceFromCloud;
+        window.startNebrasPublicSiteCloudRefresh = startNebrasPublicSiteCloudRefresh;
         window.renderNebrasLiveCloudRibbon = renderNebrasLiveCloudRibbon;
         window.renderScmCloudSaveStatus = renderScmCloudSaveStatus;
         window.setStoreCatalogAvailability = setStoreCatalogAvailability;
