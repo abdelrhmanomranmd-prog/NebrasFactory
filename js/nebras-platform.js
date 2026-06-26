@@ -646,6 +646,14 @@
                 sortOrder: 3
             }
         ];
+        const DEFAULT_PAYMENT_METHODS = [
+            { id: 'bank_transfer', iconClass: 'fas fa-building-columns', labelAr: 'حوالة بنكية', labelEn: 'Bank transfer', subAr: 'نشط — حسابات نبراس الرسمية', subEn: 'Active — official Nebras accounts', enabled: true, sortOrder: 1, requiresBank: true },
+            { id: 'mada', iconClass: 'fas fa-credit-card', labelAr: 'mada مدى', labelEn: 'mada', subAr: 'قريباً — بوابة دفع معتمدة', subEn: 'Coming soon — payment gateway', enabled: false, sortOrder: 2 },
+            { id: 'visa_mc', iconClass: 'fab fa-cc-visa', labelAr: 'Visa / Mastercard', labelEn: 'Visa / Mastercard', subAr: 'قريباً — بطاقات ائتمان', subEn: 'Coming soon — cards', enabled: false, sortOrder: 3 },
+            { id: 'apple_pay', iconClass: 'fab fa-apple-pay', labelAr: 'Apple Pay', labelEn: 'Apple Pay', subAr: 'قريباً — دفع سريع', subEn: 'Coming soon — fast pay', enabled: false, sortOrder: 4 },
+            { id: 'tabby', iconClass: 'fas fa-calendar-check', labelAr: 'Tabby تقسيط', labelEn: 'Tabby', subAr: 'قريباً — تقسيط بدون فوائد', subEn: 'Coming soon — installments', enabled: false, sortOrder: 5 },
+            { id: 'tamara', iconClass: 'fas fa-wallet', labelAr: 'Tamara تمارا', labelEn: 'Tamara', subAr: 'قريباً — تقسيط تمارا', subEn: 'Coming soon — Tamara', enabled: false, sortOrder: 6 }
+        ];
         const DEFAULT_QUOTE_A4_SETTINGS = {
             layout: 'nebras-official',
             logoUrl: 'images/logo-nebras-mark.png',
@@ -685,6 +693,7 @@
             heroBannerImageUrl: 'images/hero-nebras-banner.png',
             quoteA4: null,
             bankAccounts: DEFAULT_BANK_ACCOUNTS.map(function(b) { return Object.assign({}, b); }),
+            paymentMethods: DEFAULT_PAYMENT_METHODS.map(function(m) { return Object.assign({}, m); }),
             socialWhatsApp: '',
             socialTiktok: NEBRAS_DEFAULT_SOCIAL_LINKS.socialTiktok,
             socialFacebook: NEBRAS_DEFAULT_SOCIAL_LINKS.socialFacebook,
@@ -4541,41 +4550,101 @@
         }
     }
 
+    function ensurePaymentMethodsDefaults() {
+        if (!systemSettings || typeof systemSettings !== 'object') return;
+        if (!Array.isArray(systemSettings.paymentMethods) || !systemSettings.paymentMethods.length) {
+            systemSettings.paymentMethods = DEFAULT_PAYMENT_METHODS.map(function(m) { return Object.assign({}, m); });
+            return;
+        }
+        const seen = {};
+        systemSettings.paymentMethods = systemSettings.paymentMethods.filter(function(m) {
+            if (!m || !m.id || seen[m.id]) return false;
+            seen[m.id] = true;
+            return true;
+        });
+        DEFAULT_PAYMENT_METHODS.forEach(function(def) {
+            if (!systemSettings.paymentMethods.some(function(m) { return m.id === def.id; })) {
+                systemSettings.paymentMethods.push(Object.assign({}, def));
+            }
+        });
+        systemSettings.paymentMethods.forEach(function(m) {
+            const def = DEFAULT_PAYMENT_METHODS.find(function(d) { return d.id === m.id; });
+            if (!def) return;
+            if (!m.iconClass) m.iconClass = def.iconClass;
+            if (!m.labelAr) m.labelAr = def.labelAr;
+            if (!m.labelEn) m.labelEn = def.labelEn;
+            if (m.sortOrder == null) m.sortOrder = def.sortOrder;
+            if (m.requiresBank == null && def.requiresBank) m.requiresBank = true;
+        });
+        systemSettings.paymentMethods.sort(function(a, b) { return (a.sortOrder || 0) - (b.sortOrder || 0); });
+    }
+
+    function getLocalizedPaymentMethod(method, lang) {
+        if (!method) return { label: '', sub: '' };
+        const l = lang === 'en' || lang === 'zh' ? lang : 'ar';
+        const label = l === 'en' ? (method.labelEn || method.labelAr) : (method.labelAr || method.labelEn);
+        const sub = l === 'en' ? (method.subEn || method.subAr) : (method.subAr || method.subEn);
+        return { label: String(label || '').trim(), sub: String(sub || '').trim() };
+    }
+
+    function getNebrasPaymentMethods() {
+        ensurePaymentMethodsDefaults();
+        return (systemSettings.paymentMethods || []).slice().sort(function(a, b) {
+            return (a.sortOrder || 0) - (b.sortOrder || 0);
+        });
+    }
+
     function buildCartEnterprisePaymentHtml(lang) {
         lang = lang || currentLang || 'ar';
         const ui = siteText[lang] || siteText.ar;
         const method = getCheckoutPaymentMethod();
-        const methods = [
-            { id: 'bank_transfer', icon: 'fas fa-building-columns', label: ui.payBankTransfer || 'حوالة بنكية', sub: ui.payBankSub || 'نشط — حسابات نبراس الرسمية', active: true },
-            { id: 'mada', icon: 'fas fa-credit-card', label: 'mada مدى', sub: ui.paySoon || 'قريباً — بوابة دفع', active: false },
-            { id: 'visa_mc', icon: 'fab fa-cc-visa', label: 'Visa / Mastercard', sub: ui.paySoon || 'قريباً', active: false },
-            { id: 'apple_pay', icon: 'fab fa-apple-pay', label: 'Apple Pay', sub: ui.paySoon || 'قريباً', active: false },
-            { id: 'tabby', icon: 'fas fa-calendar-check', label: 'Tabby تقسيط', sub: ui.paySoon || 'قريباً', active: false },
-            { id: 'tamara', icon: 'fas fa-wallet', label: 'Tamara تمارا', sub: ui.paySoon || 'قريباً', active: false }
-        ];
+        ensurePaymentMethodsDefaults();
+        const catalog = getNebrasPaymentMethods();
+        const methods = catalog.map(function(m) {
+            const loc = getLocalizedPaymentMethod(m, lang);
+            const active = !!m.enabled;
+            return {
+                id: m.id,
+                icon: m.iconClass || 'fas fa-wallet',
+                label: loc.label,
+                sub: active ? loc.sub : (loc.sub || ui.paySoon || 'قريباً'),
+                active: active,
+                requiresBank: !!m.requiresBank
+            };
+        });
+        const enabledCount = methods.filter(function(m) { return m.active; }).length;
+        const pendingCount = methods.length - enabledCount;
         const grid = methods.map(function(m) {
             const sel = method === m.id ? ' is-selected' : '';
             const dis = m.active ? '' : ' is-disabled';
             const click = m.active ? 'onclick="setCheckoutPaymentMethod(\'' + m.id + '\')"' : '';
             return '<button type="button" class="cart-pay-method' + sel + dis + '" ' + click + '>' +
-                '<i class="' + m.icon + '"></i>' +
+                '<i class="' + escapeHtmlAttr(m.icon) + '"></i>' +
                 '<strong>' + escapeHtmlAttr(m.label) + '</strong>' +
                 '<small>' + escapeHtmlAttr(m.sub) + '</small>' +
                 (m.active ? '<span class="cart-pay-method-badge">' + escapeHtmlAttr(ui.payActive || 'متاح') + '</span>' : '') +
             '</button>';
         }).join('');
-            const trust = '<div class="cart-enterprise-trust">' +
+        const trust = '<div class="cart-enterprise-trust">' +
             '<span><i class="fas fa-shield-halved"></i> ' + escapeHtmlAttr(ui.cartTrustSecure || 'دفع آمن') + '</span>' +
             '<span><i class="fas fa-file-invoice"></i> ' + escapeHtmlAttr(ui.cartTrustVat || 'ضريبة 15% — فاتورة رسمية') + '</span>' +
             '<span><i class="fas fa-receipt"></i> ' + escapeHtmlAttr(ui.cartTrustReceipt || 'إيصال حوالة للعميل بعد التحويل') + '</span>' +
             '<span><i class="fas fa-headset"></i> ' + escapeHtmlAttr(ui.cartTrustSupport || 'متابعة مبيعات وخدمة عملاء') + '</span></div>';
-        const bankBlock = method === 'bank_transfer' ? buildCartBankPaymentHtmlCore(lang) : '';
+        const selected = methods.find(function(m) { return m.id === method; });
+        const bankBlock = (selected && selected.requiresBank) || method === 'bank_transfer'
+            ? buildCartBankPaymentHtmlCore(lang) : '';
+        const soonNote = pendingCount > 0
+            ? '<p class="cart-pay-coming-soon"><i class="fas fa-clock"></i> ' + escapeHtmlAttr(ui.payComingSoonNote || (enabledCount + ' طريقة نشطة — ' + pendingCount + ' قيد التفعيل من الإدارة')) + '</p>'
+            : '';
+        const intro = enabledCount > 1
+            ? (ui.cartPaymentMethodsIntro || 'اختر طريقة الدفع المناسبة — تُفعَّل من الإدارة الرئيسية')
+            : (ui.cartPaymentMethodsIntro || 'حوالة بنكية نشطة الآن — بطاقات وتقسيط تُفعَّل لاحقاً من الإدارة');
         return '<section class="cart-enterprise-pay" aria-labelledby="cart-enterprise-pay-title">' +
             '<h3 id="cart-enterprise-pay-title"><i class="fas fa-wallet"></i> ' + escapeHtmlAttr(ui.cartPaymentMethodsTitle || 'طرق الدفع') + '</h3>' +
-            '<p class="cart-payment-intro">' + escapeHtmlAttr(ui.cartPaymentMethodsIntro || 'حوالة بنكية نشطة الآن — بطاقات وتقسيط قريباً عبر بوابة دفع معتمدة.') + '</p>' +
+            '<p class="cart-payment-intro">' + escapeHtmlAttr(intro) + '</p>' +
             trust +
-            '<div class="cart-pay-methods-grid cart-pay-methods-grid--compact">' + grid + '</div>' +
-            '<p class="cart-pay-coming-soon"><i class="fas fa-clock"></i> ' + escapeHtmlAttr(ui.payComingSoonNote || 'مدى · Visa · Apple Pay · Tabby · Tamara — قريباً عبر بوابة دفع معتمدة') + '</p>' +
+            '<div class="cart-pay-methods-grid cart-pay-methods-grid--premium">' + grid + '</div>' +
+            soonNote +
             bankBlock +
         '</section>';
     }
@@ -6149,17 +6218,26 @@
             const lang = currentLang || 'ar';
             const ui = siteText[lang] || siteText.ar;
             if (!nebrasCart.length) {
-                linesEl.innerHTML = '<p>' + escapeHtmlAttr(ui.cartEmpty || '') + '</p>';
+                linesEl.innerHTML = '<div class="cart-empty-state">' +
+                    '<div class="cart-empty-icon"><i class="fas fa-shopping-bag"></i></div>' +
+                    '<p class="cart-empty-title">' + escapeHtmlAttr(ui.cartEmpty || 'سلتك فارغة') + '</p>' +
+                    '<p class="cart-empty-hint">' + escapeHtmlAttr(ui.cartEmptyHint || 'تصفّح المتجر وأضف المنتجات لطلب عرض سعر رسمي') + '</p>' +
+                    '<button type="button" class="cart-empty-cta" onclick="closeCartDrawer();openNebrasWorkspace({pillar:\'store\',view:\'catalog-all\'})">' +
+                    '<i class="fas fa-store"></i> ' + escapeHtmlAttr(ui.cartBrowseStore || 'تصفح المتجر') + '</button></div>';
             } else {
                 linesEl.innerHTML = nebrasCart.map(function(line, i) {
-                    const img = line.image ? '<img src="' + escapeHtmlAttr(line.image) + '" alt="">' : '';
-                    return '<div class="cart-line">' + img +
+                    const img = line.image
+                        ? '<div class="cart-line-thumb"><img src="' + escapeHtmlAttr(line.image) + '" alt=""></div>'
+                        : '<div class="cart-line-thumb cart-line-thumb--empty"><i class="fas fa-box"></i></div>';
+                    return '<article class="cart-line cart-line--premium">' + img +
                         '<div class="cart-line-body"><h4>' + escapeHtmlAttr(line.productTitle) + '</h4>' +
-                        '<div class="cart-line-meta">' + escapeHtmlAttr([line.color, line.size, line.type].filter(Boolean).join(' · ')) + '</div>' +
-                        '<div class="cart-line-qty-row"><button type="button" onclick="changeCartLineQty(' + i + ',-1)" aria-label="-">−</button><span>' +
-                        escapeHtmlAttr(String(line.qty)) + '</span><button type="button" onclick="changeCartLineQty(' + i + ',1)" aria-label="+">+</button>' +
-                        '<button type="button" class="cart-line-remove" onclick="removeCartLine(' + i + ')">' + escapeHtmlAttr(ui.cartRemove || 'حذف') + '</button></div></div>' +
-                        formatCartLinePriceHtml(line, lang) + '</div>';
+                        '<div class="cart-line-meta">' + escapeHtmlAttr([line.type, line.size, line.color].filter(Boolean).join(' · ')) + '</div>' +
+                        '<div class="cart-line-qty-row"><button type="button" class="cart-qty-btn" onclick="changeCartLineQty(' + i + ',-1)" aria-label="-">−</button>' +
+                        '<span class="cart-qty-val">' + escapeHtmlAttr(String(line.qty)) + '</span>' +
+                        '<button type="button" class="cart-qty-btn" onclick="changeCartLineQty(' + i + ',1)" aria-label="+">+</button>' +
+                        '<button type="button" class="cart-line-remove" onclick="removeCartLine(' + i + ')"><i class="fas fa-trash-can"></i> ' +
+                        escapeHtmlAttr(ui.cartRemove || 'حذف') + '</button></div></div>' +
+                        '<div class="cart-line-price-col">' + formatCartLinePriceHtml(line, lang) + '</div></article>';
                 }).join('');
             }
             const totals = calcCartTotals();
@@ -18378,6 +18456,13 @@
             revealPlatformLayer('system-settings');
         }
 
+        function openSystemSettingsForPayments() {
+            if (!requireMainGovernanceAdmin('إدارة طرق الدفع — الإدارة الرئيسية فقط.')) return;
+            renderSystemSettings();
+            switchSettingsTab('payments');
+            revealPlatformLayer('system-settings');
+        }
+
         function populateOccasionThemeSelect() {
             const select = document.getElementById('setting-occasion-theme');
             if (!select) return;
@@ -22463,6 +22548,8 @@
             if (heroBannerInput) heroBannerInput.value = systemSettings.heroBannerImageUrl || '';
             if (!Array.isArray(systemSettings.bankAccounts)) systemSettings.bankAccounts = [];
             renderBankAccountsSettingsList();
+            ensurePaymentMethodsDefaults();
+            renderPaymentMethodsSettingsList();
 
             const q = getQuoteA4Settings();
             const qLogo = document.getElementById('setting-quote-a4-logo');
@@ -22587,6 +22674,7 @@
             if (!Array.isArray(systemSettings.bankAccounts)) systemSettings.bankAccounts = [];
 
             if (isMainGovernanceAdmin()) {
+                collectPaymentMethodsFromSettingsForm();
                 const heroSlides = collectHeroSlideshowSlidesFromAdminForm();
                 systemSettings.heroSlideshowSlides = heroSlides.length ? heroSlides : null;
                 const q = getQuoteA4Settings();
@@ -26341,6 +26429,7 @@
                     u.isPrimary = false;
                 }
             });
+            ensurePaymentMethodsDefaults();
             enforceProductionGovernanceCleanState();
         }
 
@@ -26452,6 +26541,82 @@
             systemSettings.bankAccounts.splice(index, 1);
             renderBankAccountsSettingsList();
             saveContentData();
+        }
+
+        function renderPaymentMethodsSettingsList() {
+            const list = document.getElementById('setting-payment-methods-list');
+            if (!list) return;
+            if (!isMainGovernanceAdmin()) {
+                list.innerHTML = '<p class="erp-empty">طرق الدفع — الإدارة الرئيسية فقط.</p>';
+                return;
+            }
+            ensurePaymentMethodsDefaults();
+            list.innerHTML = getNebrasPaymentMethods().map(function(m, idx) {
+                const on = !!m.enabled;
+                return '<div class="payment-method-admin-row" data-pay-id="' + escapeHtmlAttr(m.id) + '">' +
+                    '<label class="payment-method-admin-toggle">' +
+                    '<input type="checkbox" data-pay-enabled="' + escapeHtmlAttr(m.id) + '"' + (on ? ' checked' : '') + ' onchange="togglePaymentMethodEnabled(\'' + String(m.id).replace(/'/g, "\\'") + '\')">' +
+                    '<span class="payment-method-admin-icon"><i class="' + escapeHtmlAttr(m.iconClass || 'fas fa-wallet') + '"></i></span>' +
+                    '<span class="payment-method-admin-label"><strong>' + escapeHtmlAttr(m.labelAr || m.id) + '</strong>' +
+                    '<small>' + escapeHtmlAttr(m.labelEn || '') + '</small></span>' +
+                    '<span class="payment-method-admin-status ' + (on ? 'is-on' : 'is-off') + '">' + (on ? 'نشط في السلة' : 'غير مفعّل') + '</span>' +
+                    '</label>' +
+                    '<div class="payment-method-admin-fields">' +
+                    '<input type="text" data-pay-sub-ar="' + escapeHtmlAttr(m.id) + '" value="' + escapeHtmlAttr(m.subAr || '') + '" placeholder="وصف عربي للزائر">' +
+                    '<input type="text" data-pay-sub-en="' + escapeHtmlAttr(m.id) + '" value="' + escapeHtmlAttr(m.subEn || '') + '" placeholder="English subtitle">' +
+                    '</div></div>';
+            }).join('');
+        }
+
+        function collectPaymentMethodsFromSettingsForm() {
+            ensurePaymentMethodsDefaults();
+            getNebrasPaymentMethods().forEach(function(m) {
+                const subArEl = document.querySelector('[data-pay-sub-ar="' + m.id + '"]');
+                const subEnEl = document.querySelector('[data-pay-sub-en="' + m.id + '"]');
+                const enEl = document.querySelector('[data-pay-enabled="' + m.id + '"]');
+                if (subArEl) m.subAr = subArEl.value.trim();
+                if (subEnEl) m.subEn = subEnEl.value.trim();
+                if (enEl) m.enabled = !!enEl.checked;
+            });
+        }
+
+        function togglePaymentMethodEnabled(methodId) {
+            if (!requireMainGovernanceAdmin('تفعيل طرق الدفع — الإدارة الرئيسية فقط.')) return;
+            ensurePaymentMethodsDefaults();
+            const m = (systemSettings.paymentMethods || []).find(function(x) { return x && x.id === methodId; });
+            if (!m) return;
+            const enEl = document.querySelector('[data-pay-enabled="' + methodId + '"]');
+            if (enEl) m.enabled = !!enEl.checked;
+            if (methodId === 'bank_transfer' && !m.enabled) {
+                alert('حوالة بنكية يجب أن تبقى متاحة كخيار أساسي.');
+                m.enabled = true;
+                if (enEl) enEl.checked = true;
+            }
+            collectPaymentMethodsFromSettingsForm();
+            renderPaymentMethodsSettingsList();
+            if (typeof persistNebrasLiveNow === 'function') {
+                persistNebrasLiveNow('طرق الدفع', { storeKeys: ['system_settings'], showToast: true });
+            } else {
+                saveContentData({ urgentCloud: true, showCloudToast: true });
+            }
+            addAuditLog('طرق الدفع', (m.enabled ? 'تفعيل ' : 'إيقاف ') + (m.labelAr || methodId));
+        }
+
+        function applyPaymentMethodsFromGovernance(payload) {
+            if (!Array.isArray(payload) || !payload.length) return false;
+            ensurePaymentMethodsDefaults();
+            payload.forEach(function(row) {
+                if (!row || !row.id) return;
+                const m = systemSettings.paymentMethods.find(function(x) { return x.id === row.id; });
+                if (!m) return;
+                if (row.enabled != null) m.enabled = !!row.enabled;
+                if (row.subAr != null) m.subAr = String(row.subAr);
+                if (row.subEn != null) m.subEn = String(row.subEn);
+                if (row.labelAr != null) m.labelAr = String(row.labelAr);
+                if (row.labelEn != null) m.labelEn = String(row.labelEn);
+            });
+            renderPaymentMethodsSettingsList();
+            return true;
         }
 
         async function manageProductVariants(productId) {
@@ -29061,7 +29226,12 @@
         window.openSiteContentManager = openSiteContentManager;
         window.openIconManagement = openIconManagement;
         window.openSystemSettings = openSystemSettings;
+        window.openSystemSettingsForPayments = openSystemSettingsForPayments;
         window.openSystemSettingsForChannels = openSystemSettingsForChannels;
+        window.getNebrasPaymentMethods = getNebrasPaymentMethods;
+        window.togglePaymentMethodEnabled = togglePaymentMethodEnabled;
+        window.applyPaymentMethodsFromGovernance = applyPaymentMethodsFromGovernance;
+        window.ensurePaymentMethodsDefaults = ensurePaymentMethodsDefaults;
         window.openSystemSettingsForOccasion = openSystemSettingsForOccasion;
         window.pickQuoteA4LogoFromSettings = pickQuoteA4LogoFromSettings;
         window.pickQuoteA4StaticPageFromSettings = pickQuoteA4StaticPageFromSettings;

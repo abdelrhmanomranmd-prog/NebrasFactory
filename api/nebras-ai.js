@@ -12,9 +12,10 @@ function requireMainAdminSession(req) {
 const MODE_PROMPTS = {
     governance: 'ركّز على الحوكمة: الإدارة الرئيسية · الفروع · الأقسام · الصلاحيات · RBAC. عند اقتراح فتح لوحة أضف [ACTION:open_users] أو [ACTION:open_cloud].',
     products: 'ركّز على المتجر: أصناف · مقاسات · ألوان · أسعار · SKU. عند اقتراح أصناف أخرج JSON: {"product_id":"...","variants":[...]}. لفتح المتجر: [ACTION:open_store].',
-    content: 'ركّز على إدارة محتوى الموقع: أيقونات الزوار الأربع · المعرض · الصور · PDF. لفتح المحتوى: [ACTION:open_content] · للوسائط: [ACTION:open_media].',
+    content: 'ركّز على إدارة محتوى الموقع: أيقونات الزوار · المعرض · الصور · PDF · رفع وسائط. لفتح المحتوى: [ACTION:open_content] · للوسائط: [ACTION:open_media] · للمعرض: [ACTION:open_showroom].',
     users: 'ركّز على المستخدمين والصلاحيات. لفتح إدارة المستخدمين: [ACTION:open_users].',
-    cloud: 'ركّز على Supabase والمزامنة. للرفع: [ACTION:push_cloud] · للحوكمة: [ACTION:open_cloud].'
+    cloud: 'ركّز على Supabase والمزامنة. للرفع: [ACTION:push_cloud] · للحوكمة: [ACTION:open_cloud].',
+    cart: 'ركّز على السلة وطرق الدفع والبنوك. لتفعيل طرق الدفع أخرج JSON: {"payment_methods":[{"id":"mada","enabled":true,"subAr":"..."}]}. لفتح إعدادات الدفع: [ACTION:open_payments].'
 };
 
 const DEFAULT_MODELS = [
@@ -213,12 +214,16 @@ module.exports = async function handler(req, res) {
         const modeHint = MODE_PROMPTS[mode] || MODE_PROMPTS.governance;
         const systemPrompt =
             'أنت Claude — المساعد الشخصي للإدارة الرئيسية في منصة نبراس (مصنع نبراس للبلاستيك WPC). ' +
-            'تتصرّف مثل Microsoft Copilot داخل Excel: محادثة طبيعية، خطوات عملية، واقتراحات قابلة للتنفيذ. ' +
+            'تتصرّف مثل Microsoft Copilot داخل Excel وWord وPowerPoint: محادثة طبيعية، خطوات عملية، وتنفيذ مباشر في المنصة. ' +
+            'صلاحياتك كاملة للإدارة الرئيسية: رفع وسائط · إضافة منتجات · تعديل محتوى · تفعيل طرق دفع · إدارة مستخدمين · مزامنة سحابة. ' +
             'كل الفروع والمستخدمين والعملاء تحت حوكمة HQ. ' +
-            'ساعد في: المتجر · المحتوى · السلة · البنوك · المستخدمين · HR · CRM · السحابة · مصمّم الأبواب. ' +
+            'ساعد في: المتجر · المحتوى · السلة · طرق الدفع · البنوك · المستخدمين · HR · CRM · السحابة · مصمّم الأبواب · المعرض. ' +
             (images.length ? 'الإدارة أرفقت صورة/صور — حلّليها واقترحي خطوات عملية في المنصة. ' : '') +
             modeHint + ' ' +
-            'أجب بالعربية. كن مختصراً وعملياً. عند اقتراح فتح قسم في المنصة أضف وسماً: [ACTION:اسم] حيث الاسم أحد: open_content, open_store, open_users, open_cloud, open_hr, open_media, push_cloud, open_settings, export_store. ' +
+            'أجب بالعربية. كن مختصراً وعملياً. عند اقتراح فتح قسم في المنصة أضف وسماً: [ACTION:اسم] حيث الاسم أحد: ' +
+            'open_content, open_store, open_showroom, open_users, open_cloud, open_hr, open_media, push_cloud, open_settings, open_payments, export_store. ' +
+            'لتفعيل طرق دفع أخرج JSON: {"payment_methods":[{"id":"mada","enabled":true,"subAr":"نشط عبر بوابة الدفع"}]}. ' +
+            'لإضافة أصناف أخرج JSON: {"product_id":"...","variants":[...]}. ' +
             'لا تخترع أسعاراً حقيقية.';
 
         const messages = history.slice();

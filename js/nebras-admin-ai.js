@@ -64,6 +64,11 @@
             parts.push('مستخدمون إداريون: ' + (global.adminUsers || []).length);
             parts.push('فروع: ' + (global.branchesData || []).length);
             parts.push('حسابات بنكية: ' + ((global.systemSettings && global.systemSettings.bankAccounts) || []).length);
+            if (typeof global.getNebrasPaymentMethods === 'function') {
+                const pays = global.getNebrasPaymentMethods();
+                const on = pays.filter(function(p) { return p && p.enabled; }).length;
+                parts.push('طرق دفع: ' + on + ' نشطة من ' + pays.length);
+            }
             parts.push('عروض/طلبات: ' + (typeof global.loadSalesQuotesInbox === 'function' ? global.loadSalesQuotesInbox().length : 0));
             if (typeof global.getNebrasCloudStoreCount === 'function') {
                 parts.push('مخازن سحابة: ' + global.getNebrasCloudStoreCount());
@@ -329,10 +334,35 @@
         }
     }
 
+    function tryApplyPaymentMethodsSuggestion(text) {
+        if (!text) return false;
+        const match = text.match(/\{[\s\S]*"payment_methods"[\s\S]*\}/);
+        if (!match) return false;
+        try {
+            const data = JSON.parse(match[0]);
+            if (!Array.isArray(data.payment_methods) || !data.payment_methods.length) return false;
+            if (!confirm('تطبيق إعدادات طرق الدفع (' + data.payment_methods.length + ') على السلة؟')) return false;
+            if (typeof global.applyPaymentMethodsFromGovernance === 'function') {
+                global.applyPaymentMethodsFromGovernance(data.payment_methods);
+            }
+            if (typeof global.persistNebrasLiveNow === 'function') {
+                global.persistNebrasLiveNow('طرق الدفع', { storeKeys: ['system_settings'], showToast: true });
+            } else if (typeof global.saveContentData === 'function') {
+                global.saveContentData({ urgentCloud: true });
+            }
+            if (typeof global.addAuditLog === 'function') global.addAuditLog('مساعد Claude', 'تطبيق طرق دفع');
+            alert('تم تطبيق طرق الدفع — ستظهر في سلة الزوار بعد الحفظ السحابي.');
+            return true;
+        } catch (e) {
+            return false;
+        }
+    }
+
     function runAiAction(actionId) {
         const map = {
             open_content: function() { if (typeof global.openSiteContentManager === 'function') global.openSiteContentManager(); },
             open_store: function() { if (typeof global.openStoreCatalogManager === 'function') global.openStoreCatalogManager(); },
+            open_showroom: function() { if (typeof global.openShowroomHub === 'function') global.openShowroomHub(); },
             open_users: function() { if (typeof global.openNebrasUserManagement === 'function') global.openNebrasUserManagement(); },
             open_cloud: function() { if (typeof global.openCloudGovernance === 'function') global.openCloudGovernance(); },
             open_hr: function() { if (typeof global.openHrPlatform === 'function') global.openHrPlatform(); },
@@ -340,6 +370,7 @@
             push_cloud: function() { if (typeof global.syncPushToNebrasCloudNow === 'function') global.syncPushToNebrasCloudNow(); },
             open_media: function() { if (typeof global.openNebrasMediaHubQuick === 'function') global.openNebrasMediaHubQuick(); },
             open_settings: function() { if (typeof global.openSystemSettings === 'function') global.openSystemSettings(); },
+            open_payments: function() { if (typeof global.openSystemSettingsForPayments === 'function') global.openSystemSettingsForPayments(); },
             export_store: function() { if (typeof global.exportStoreCatalogCsv === 'function') global.exportStoreCatalogCsv(); }
         };
         if (map[actionId]) map[actionId]();
@@ -377,7 +408,8 @@
             el.innerHTML = '<div class="admin-ai-welcome">' +
                 '<i class="fas fa-sparkles"></i>' +
                 '<strong>مرحباً — أنا مساعدك الشخصي في الإدارة الرئيسية</strong>' +
-                '<p>اسألني عن أي شيء: منتجات · مستخدمون · سحابة · سلة · بنوك · HR · محتوى الموقع.</p>' +
+                '<p>مثل Copilot في Office: أرفع · أضيف · أعدّل · أفعل طرق الدفع · أزامن السحابة.</p>' +
+                '<p>اسألني عن: منتجات · محتوى · معرض · سلة · طرق دفع · مستخدمون · سحابة · HR.</p>' +
                 '<p><i class="fas fa-paperclip"></i> ارفقي صوراً مباشرة في المحادثة — زر المشبك بجانب الإرسال.</p>' +
                 '</div>';
             return;
@@ -390,12 +422,14 @@
                 const labels = {
                     open_content: 'فتح إدارة المحتوى',
                     open_store: 'فتح المتجر',
+                    open_showroom: 'المعرض',
                     open_users: 'المستخدمون',
                     open_cloud: 'السحابة',
                     open_hr: 'HR',
                     open_media: 'رفع وسائط',
                     push_cloud: 'رفع للسحابة',
                     open_settings: 'الإعدادات',
+                    open_payments: 'طرق الدفع',
                     export_store: 'تصدير المتجر'
                 };
                 return '<button type="button" class="admin-ai-action-btn" onclick="runNebrasAiAction(\'' + a + '\')"><i class="fas fa-bolt"></i> ' + escHtml(labels[a] || a) + '</button>';
@@ -559,6 +593,7 @@
             saveAiChat();
             renderAiChatMessages();
             if (tryApplyProductSuggestion(reply)) renderAiChatMessages();
+            if (tryApplyPaymentMethodsSuggestion(reply)) renderAiChatMessages();
         } catch (e) {
             const msg = String(e && e.message || e || '');
             let reply = 'تعذّر الإرسال — تحققي من الاتصال وأعيدي المحاولة.';
@@ -597,19 +632,20 @@
             '<div class="admin-ai-copilot-head">' +
                 '<span class="admin-ai-copilot-badge"><i class="fas fa-sparkles"></i> Claude AI</span>' +
                 sessionStatusLabel() +
-                '<span class="admin-ai-copilot-sub">مساعد شخصي — محادثة · صور · تنفيذ مباشر</span>' +
+                '<span class="admin-ai-copilot-sub">مساعد شخصي — رفع · إضافة · تعديل · طرق دفع · سحابة</span>' +
             '</div>' +
             '<div class="admin-ai-modes">' +
             '<button type="button" class="admin-ai-mode' + (aiMode === 'governance' ? ' active' : '') + '" data-mode="governance"><i class="fas fa-crown"></i> حوكمة</button>' +
             '<button type="button" class="admin-ai-mode' + (aiMode === 'products' ? ' active' : '') + '" data-mode="products"><i class="fas fa-store"></i> المتجر</button>' +
             '<button type="button" class="admin-ai-mode' + (aiMode === 'content' ? ' active' : '') + '" data-mode="content"><i class="fas fa-pen-to-square"></i> المحتوى</button>' +
+            '<button type="button" class="admin-ai-mode' + (aiMode === 'cart' ? ' active' : '') + '" data-mode="cart"><i class="fas fa-shopping-cart"></i> السلة</button>' +
             '<button type="button" class="admin-ai-mode' + (aiMode === 'users' ? ' active' : '') + '" data-mode="users"><i class="fas fa-users-cog"></i> المستخدمون</button>' +
             '<button type="button" class="admin-ai-mode' + (aiMode === 'cloud' ? ' active' : '') + '" data-mode="cloud"><i class="fas fa-cloud"></i> السحابة</button>' +
             '</div>' +
             '<div class="admin-ai-quick">' +
             '<button type="button" class="admin-ai-chip" data-q="ساعدني أضيف منتج WPC جديد بأصناف ومقاسات — اقترح JSON للتطبيق">منتج WPC</button>' +
-            '<button type="button" class="admin-ai-chip" data-q="كيف أضيف بنكاً جديداً لطرق الدفع في السلة؟">بنوك السلة</button>' +
-            '<button type="button" class="admin-ai-chip" data-q="راجع صلاحيات الأدوار واقترح توزيعاً للفروع">الصلاحيات</button>' +
+            '<button type="button" class="admin-ai-chip" data-q="فعّلي mada وVisa في السلة — أخرج JSON payment_methods">تفعيل الدفع</button>' +
+            '<button type="button" class="admin-ai-chip" data-q="ارفعي صورة منتج للمعرض واربطيها بأيقونة المتجر">رفع ومعرض</button>' +
             '<button type="button" class="admin-ai-chip" data-q="ما خطوات ضمان عدم فقدان البيانات في السحابة؟">حماية البيانات</button>' +
             '</div>' +
             '<div id="admin-ai-chat" class="admin-ai-chat" aria-live="polite"></div>' +
@@ -628,7 +664,8 @@
             '<button type="button" class="admin-ai-chip" onclick="runNebrasAiAction(\'open_content\')"><i class="fas fa-pen-to-square"></i> المحتوى</button>' +
             '<button type="button" class="admin-ai-chip" onclick="runNebrasAiAction(\'open_media\')"><i class="fas fa-cloud-upload-alt"></i> رفع وسائط</button>' +
             '<button type="button" class="admin-ai-chip" onclick="runNebrasAiAction(\'push_cloud\')"><i class="fas fa-cloud-upload-alt"></i> رفع سحابة</button>' +
-            '<button type="button" class="admin-ai-chip" onclick="runNebrasAiAction(\'open_warehouse\')"><i class="fas fa-database"></i> مستودع البيانات</button>' +
+            '<button type="button" class="admin-ai-chip" onclick="runNebrasAiAction(\'open_payments\')"><i class="fas fa-wallet"></i> طرق الدفع</button>' +
+            '<button type="button" class="admin-ai-chip" onclick="runNebrasAiAction(\'open_showroom\')"><i class="fas fa-images"></i> المعرض</button>' +
             '</div>';
         body.querySelectorAll('.admin-ai-mode').forEach(function(btn) {
             btn.onclick = function() {
