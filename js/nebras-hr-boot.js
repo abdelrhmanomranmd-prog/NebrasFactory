@@ -11,6 +11,8 @@
         var c = document.getElementById('hr-platform-content');
         if (!c) return false;
         if (global.__hrPanelReady) return true;
+        var fallback = c.querySelector('#hr-static-fallback');
+        if (fallback) return false;
         return !!(c.querySelector('.hr-panel.is-active, .hr-command-hero, .hr-command-kpi-ring, .hr-emp-grid, .hr-leave-table, .hr-fleet-hub-grid, .hr-editor-overlay'));
     }
 

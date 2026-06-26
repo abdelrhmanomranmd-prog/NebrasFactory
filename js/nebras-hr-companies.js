@@ -45,6 +45,10 @@
     function canManageHrCompanies() {
         if (typeof isMainGovernanceAdmin === 'function' && isMainGovernanceAdmin()) return true;
         if (typeof isStrictHrUser === 'function' && isStrictHrUser()) return true;
+        if (typeof getHrAdminScope === 'function') {
+            const scope = getHrAdminScope();
+            if (scope && scope.mode === 'full') return true;
+        }
         return false;
     }
 

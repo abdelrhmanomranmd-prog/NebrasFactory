@@ -2500,6 +2500,9 @@
             }
             if (typeof ensureHrData === 'function') ensureHrData();
             else if (typeof loadHrData === 'function') loadHrData();
+            if (typeof showHrPlatformShell === 'function') {
+                if (!showHrPlatformShell()) return;
+            } else {
             const el = document.getElementById('hr-platform');
             if (!el) {
                 alert('تعذّر فتح منصة HR — أعيدي تحميل الصفحة.');
@@ -2509,6 +2512,7 @@
             el.setAttribute('aria-hidden', 'false');
             document.body.classList.add('hr-platform-open');
             clearStuckInteractionBlockers();
+            }
             if (typeof paintHrWorkspaceShell === 'function') paintHrWorkspaceShell();
             if (typeof initHrWorkspaceInteractions === 'function') initHrWorkspaceInteractions();
             if (typeof scheduleHrWorkspaceRender === 'function') scheduleHrWorkspaceRender(0);
@@ -23937,6 +23941,10 @@
         }
 
         function closeAllAdminSections() {
+            if (document.getElementById('hr-platform') && document.getElementById('hr-platform').classList.contains('show') &&
+                typeof closeHrWorkspace === 'function') {
+                closeHrWorkspace();
+            }
             document.querySelectorAll('.admin-section.show').forEach(function(el) {
                 el.classList.remove('show');
                 el.setAttribute('aria-hidden', 'true');

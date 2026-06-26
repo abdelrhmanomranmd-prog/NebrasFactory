@@ -553,7 +553,7 @@
         const summary = document.getElementById('hr-platform-summary');
         const content = document.getElementById('hr-platform-content');
         const msg = message || 'جاري تحميل نبراس HCM…';
-        const hasPanel = content && content.querySelector('.hr-panel.is-active');
+        const hasPanel = content && content.querySelector('.hr-panel.is-active:not(#hr-static-fallback)');
         if (hasPanel) return;
         if (summary && !summary.querySelector('.erp-stat')) {
             summary.innerHTML =
@@ -647,6 +647,7 @@
             el.setAttribute('aria-hidden', 'true');
         }
         document.body.classList.remove('hr-platform-open');
+        if (typeof global !== 'undefined') global.__hrPanelReady = false;
         const dash = document.getElementById('admin-dashboard');
         if (dash && typeof currentAdmin !== 'undefined' && currentAdmin) {
             dash.classList.add('show');
@@ -672,7 +673,7 @@
             });
         }
         const dash = document.getElementById('admin-dashboard');
-        if (dash && isStrictHrUser()) {
+        if (dash) {
             dash.classList.remove('show');
             dash.setAttribute('aria-hidden', 'true');
         }
@@ -696,6 +697,8 @@
         }
         hrRenderBusy = true;
         try {
+            const staticFb = document.getElementById('hr-static-fallback');
+            if (staticFb) staticFb.remove();
             loadHrData();
             if (typeof loadHcmSuiteData === 'function') loadHcmSuiteData();
             renderHrWorkspaceSidebar(getHrTabDefinitions());
@@ -795,11 +798,9 @@
                 tabDefs.push({ id: 'reports', icon: 'fas fa-file-export', label: 'تقارير الإدارة الرئيسية', group: 'الإدارة الرئيسية' });
             }
             if (typeof isHrTabAllowedForScope === 'function') {
-                const hrGov = typeof isHrGovernorScope === 'function' && isHrGovernorScope();
                 tabDefs = tabDefs.filter(function(t) {
                     if (t.id === 'companies') return typeof canManageHrCompanies === 'function' && canManageHrCompanies();
-                    if (hrGov) return t.id !== 'reports';
-                    if (t.id === 'fleet-hub' || t.id === 'travel' || t.id === 'deductions' || t.id === 'saudization' || t.id === 'violations') return true;
+                    if (t.id === 'reports') return canViewHrExecutiveReports();
                     return isHrTabAllowedForScope(t.id);
                 });
             }
@@ -3616,13 +3617,15 @@
     function isHrTabAllowedForScope(tabId) {
         const scope = getHrAdminScope();
         if (scope.mode === 'full') return true;
+        if (isHrGovernorScope(scope)) return tabId !== 'reports' || canViewHrExecutiveReports();
         if (tabId === 'governance') return true;
         if (tabId === 'reports') return canViewHrExecutiveReports();
         if (scope.departmentKey) {
             const prodDepts = ['production_wpc', 'production_alu', 'workshop', 'quality'];
             if (tabId === 'factory' && prodDepts.indexOf(scope.departmentKey) < 0) return false;
             const fleetDepts = ['installation', 'warehouse', 'sales', 'admin', 'maintenance', 'hr'];
-            if ((tabId === 'vehicles' || tabId === 'tracking' || tabId === 'fleet-reps' || tabId === 'violations') && fleetDepts.indexOf(scope.departmentKey) < 0) return false;
+            const fleetTabs = ['vehicles', 'tracking', 'fleet-reps', 'violations', 'fleet-hub'];
+            if (fleetTabs.indexOf(tabId) >= 0 && fleetDepts.indexOf(scope.departmentKey) < 0) return false;
         }
         if (tabId === 'fleet-reps' && typeof isHrFleetRepsTabAllowed === 'function') return isHrFleetRepsTabAllowed();
         return true;
@@ -4298,6 +4301,9 @@
                 if (typeof canManage === 'function' && canManage('hr', admin)) {
                     return { mode: 'full', branchId: '', departmentKey: '', label: 'مدير عمليات — HR', icon: 'fas fa-industry' };
                 }
+            }
+            if (typeof canManage === 'function' && canManage('hr', admin)) {
+                return { mode: 'full', branchId: '', departmentKey: '', label: 'صلاحية HR — كل الفروع والأقسام', icon: 'fas fa-people-roof' };
             }
             return { mode: 'restricted', branchId: '', departmentKey: '', label: 'نطاق HR غير معيّن — تواصلي مع الإدارة', icon: 'fas fa-lock' };
         }
