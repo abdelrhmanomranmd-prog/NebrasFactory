@@ -93,12 +93,190 @@
         try { localStorage.setItem(HR_COMPANIES_KEY, JSON.stringify(hrPartnerCompanies)); } catch (e) { /* ignore */ }
     }
 
+    /** الشركة الأم — مطلوبة في الإنتاج حتى لو السحابة فارغة (ليست بيانات تجريبية) */
+    function ensurePrimaryHrCompanyExists() {
+        const now = new Date().toISOString().slice(0, 10);
+        let primary = hrPartnerCompanies.find(function(c) { return c && (c.id === DEFAULT_HR_COMPANY_ID || c.isPrimary); });
+        if (!primary) {
+            primary = {
+                id: DEFAULT_HR_COMPANY_ID,
+                type: 'primary',
+                nameAr: 'مصنع نبراس للبلاستيك WPC',
+                nameEn: 'Nebras Plastic Factory WPC',
+                crNumber: '1128185177',
+                taxNumber: '312765384700003',
+                unifiedNumber: '',
+                address: 'القصيم — صناعية عنيزة — إمتداد طريق الزلفي',
+                city: 'القصيم',
+                region: 'القصيم',
+                phone: '920033382',
+                email: 'nebrasfactory@hotmail.com',
+                website: 'https://www.nebrasplasticcompany.com',
+                managerName: '',
+                managerPhone: '',
+                activityDescription: 'تصنيع أبواب ومنتجات WPC والبلاستيك',
+                notes: 'الشركة الأم — سجل إنتاج نبراس',
+                status: 'active',
+                isPrimary: true,
+                logoUrl: '',
+                crDocumentUrl: '',
+                taxDocumentUrl: '',
+                documents: [],
+                mudadEstablishmentId: '',
+                gosiSubscriptionNo: '',
+                payrollBankCode: '',
+                createdAt: now,
+                updatedAt: now
+            };
+            hrPartnerCompanies.unshift(primary);
+            try { localStorage.setItem(HR_COMPANIES_KEY, JSON.stringify(hrPartnerCompanies)); } catch (e) { /* ignore */ }
+        } else if (!primary.isPrimary) {
+            primary.isPrimary = true;
+        }
+    }
+
+    function ensureHrCompanyFromManualName(nameAr) {
+        const name = String(nameAr || '').trim();
+        if (!name || name.length < 2) return getHrCompanyIdForNewRecord();
+        loadHrCompaniesData();
+        const hit = hrPartnerCompanies.find(function(c) {
+            return c && (c.nameAr === name || c.nameEn === name);
+        });
+        if (hit) return hit.id;
+        if (!canManageHrCompanies()) return getHrCompanyIdForNewRecord();
+        const now = new Date().toISOString().slice(0, 10);
+        const id = 'comp-partner-' + Date.now();
+        hrPartnerCompanies.push({
+            id: id,
+            type: 'partner',
+            nameAr: name,
+            nameEn: '',
+            crNumber: '',
+            taxNumber: '',
+            status: 'active',
+            isPrimary: false,
+            createdAt: now,
+            updatedAt: now
+        });
+        saveHrCompaniesData();
+        if (typeof hrAudit === 'function') hrAudit('HR شركة يدوية', 'إضافة من نموذج موظف: ' + name);
+        return id;
+    }
+
+    function resolveHrCompanyFromCombo(displayId, hiddenId) {
+        loadHrCompaniesData();
+        ensurePrimaryHrCompanyExists();
+        const displayEl = document.getElementById(displayId);
+        const hiddenEl = document.getElementById(hiddenId);
+        const text = displayEl ? String(displayEl.value || '').trim() : '';
+        let hid = hiddenEl ? String(hiddenEl.value || '').trim() : '';
+        const companies = getHrCompanies();
+        if (!text) return hid || getHrCompanyIdForNewRecord();
+        const byHidden = companies.find(function(c) { return c.id === hid; });
+        if (byHidden && (byHidden.nameAr === text || byHidden.nameEn === text)) return hid;
+        const exact = companies.find(function(c) { return c.nameAr === text || (c.nameEn && c.nameEn === text); });
+        if (exact) return exact.id;
+        const partial = companies.find(function(c) {
+            return text.indexOf(c.nameAr) >= 0 || c.nameAr.indexOf(text) >= 0;
+        });
+        if (partial) return partial.id;
+        return ensureHrCompanyFromManualName(text);
+    }
+
+    function renderHrCompanyComboField(selectedId, ids) {
+        ids = ids || { hidden: 'he-company', display: 'he-company-display' };
+        loadHrCompaniesData();
+        ensurePrimaryHrCompanyExists();
+        const companies = getActiveHrCompanies();
+        const sel = selectedId || getHrCompanyIdForNewRecord();
+        const displayVal = resolveHrCompanyLabel(sel);
+        const listId = 'nebras-hr-companies-datalist-' + ids.hidden;
+        const datalist = companies.map(function(c) {
+            return '<option value="' + esc(c.nameAr) + '" label="' + esc(c.nameAr + (c.type === 'partner' ? ' (شريكة)' : '')) + '"></option>';
+        }).join('');
+        return '<label class="nebras-field nebras-field--combo hr-company-combo">' +
+            '<span>الشركة التابعة *</span>' +
+            '<div class="nebras-combo-wrap" data-hr-company-combo data-hidden-id="' + esc(ids.hidden) + '" data-display-id="' + esc(ids.display) + '">' +
+                '<input type="text" id="' + esc(ids.display) + '" class="nebras-combo-input" list="' + esc(listId) + '" ' +
+                    'value="' + esc(displayVal) + '" placeholder="اختر من القائمة أو اكتب اسم الشركة يدوياً" autocomplete="off">' +
+                '<input type="hidden" id="' + esc(ids.hidden) + '" value="' + esc(sel) + '">' +
+                '<button type="button" class="nebras-combo-toggle" tabindex="-1" aria-label="عرض الشركات" title="عرض الشركات">' +
+                    '<i class="fas fa-building"></i></button>' +
+            '</div>' +
+            '<datalist id="' + esc(listId) + '">' + datalist + '</datalist>' +
+            '<small class="nebras-combo-hint"><i class="fas fa-pen"></i> اختيار من السجل أو إدخال يدوي — تُربط بالسحابة عند الحفظ</small>' +
+        '</label>';
+    }
+
+    function renderLegalCompanyComboField(selectedId, hiddenId) {
+        return renderHrCompanyComboField(selectedId, {
+            hidden: hiddenId,
+            display: hiddenId + '-display'
+        });
+    }
+
+    function bindHrCompanyComboFields(scopeEl) {
+        const root = scopeEl || document;
+        root.querySelectorAll('[data-hr-company-combo]').forEach(function(wrap) {
+            if (wrap.__hrComboBound) return;
+            wrap.__hrComboBound = true;
+            const displayId = wrap.getAttribute('data-display-id');
+            const hiddenId = wrap.getAttribute('data-hidden-id');
+            const display = document.getElementById(displayId);
+            const hidden = document.getElementById(hiddenId);
+            if (!display || !hidden) return;
+            function sync() {
+                hidden.value = resolveHrCompanyFromCombo(displayId, hiddenId);
+            }
+            display.addEventListener('input', sync);
+            display.addEventListener('change', sync);
+            display.addEventListener('blur', sync);
+            const btn = wrap.querySelector('.nebras-combo-toggle');
+            if (btn) {
+                btn.addEventListener('mousedown', function(ev) {
+                    ev.preventDefault();
+                    display.focus();
+                    try { if (typeof display.showPicker === 'function') display.showPicker(); } catch (e) { /* ignore */ }
+                });
+            }
+        });
+    }
+
+    function bindHrFormSelectOverflowFix(scopeEl) {
+        const root = scopeEl || document;
+        root.querySelectorAll('#hr-platform select, #legal-platform select, #crm-platform select').forEach(function(sel) {
+            if (sel.__hrSelectOfx) return;
+            sel.__hrSelectOfx = true;
+            sel.addEventListener('mousedown', function() {
+                const panel = sel.closest('.hr-ws-content, .hr-platform-content, .legal-platform-content');
+                if (panel) panel.classList.add('hr-form-dropdown-open');
+            });
+            sel.addEventListener('blur', function() {
+                setTimeout(function() {
+                    document.querySelectorAll('.hr-form-dropdown-open').forEach(function(el) {
+                        el.classList.remove('hr-form-dropdown-open');
+                    });
+                }, 250);
+            });
+        });
+    }
+
+    function initHrFormEnterpriseFields(scopeEl) {
+        bindHrCompanyComboFields(scopeEl);
+        bindHrFormSelectOverflowFix(scopeEl);
+    }
+
+    function resolveLegalCompanyField(hiddenId) {
+        return resolveHrCompanyFromCombo(hiddenId + '-display', hiddenId);
+    }
+
     function loadHrCompaniesData() {
         try {
             const raw = localStorage.getItem(HR_COMPANIES_KEY);
             hrPartnerCompanies = raw ? JSON.parse(raw) : [];
             if (!Array.isArray(hrPartnerCompanies)) hrPartnerCompanies = [];
         } catch (e) { hrPartnerCompanies = []; }
+        ensurePrimaryHrCompanyExists();
         ensureBuiltinHrCompaniesSeed();
         return hrPartnerCompanies;
     }
@@ -111,10 +289,9 @@
 
     function setHrCompaniesFromCloud(v) {
         hrPartnerCompanies = Array.isArray(v) ? v : [];
+        ensurePrimaryHrCompanyExists();
         if (!hrPartnerCompanies.length) ensureBuiltinHrCompaniesSeed();
-        else {
-            try { localStorage.setItem(HR_COMPANIES_KEY, JSON.stringify(hrPartnerCompanies)); } catch (e) { /* ignore */ }
-        }
+        try { localStorage.setItem(HR_COMPANIES_KEY, JSON.stringify(hrPartnerCompanies)); } catch (e) { /* ignore */ }
     }
 
     function getHrCompanies() {
@@ -599,14 +776,18 @@
 
     function renderHrCompanyFieldInForm(selectedId) {
         if (!canManageHrCompanies()) return '';
-        return '<label class="nebras-field"><span>الشركة التابعة *</span><select id="he-company">' +
-            companySelectHtml(selectedId || getHrCompanyIdForNewRecord(), false) + '</select></label>';
+        return renderHrCompanyComboField(selectedId || getHrCompanyIdForNewRecord(), {
+            hidden: 'he-company',
+            display: 'he-company-display'
+        });
     }
 
     function renderHrCompanyFieldInVehicleForm(selectedId) {
         if (!canManageHrCompanies()) return '';
-        return '<label class="nebras-field"><span>الشركة التابعة *</span><select id="hv-company">' +
-            companySelectHtml(selectedId || getHrCompanyIdForNewRecord(), false) + '</select></label>';
+        return renderHrCompanyComboField(selectedId || getHrCompanyIdForNewRecord(), {
+            hidden: 'hv-company',
+            display: 'hv-company-display'
+        });
     }
 
     global.loadHrCompaniesData = loadHrCompaniesData;
@@ -635,6 +816,13 @@
     global.getHrCompanyIdForNewRecord = getHrCompanyIdForNewRecord;
     global.renderHrCompanyFieldInForm = renderHrCompanyFieldInForm;
     global.renderHrCompanyFieldInVehicleForm = renderHrCompanyFieldInVehicleForm;
+    global.renderHrCompanyComboField = renderHrCompanyComboField;
+    global.renderLegalCompanyComboField = renderLegalCompanyComboField;
+    global.resolveHrCompanyFromCombo = resolveHrCompanyFromCombo;
+    global.resolveLegalCompanyField = resolveLegalCompanyField;
+    global.bindHrCompanyComboFields = bindHrCompanyComboFields;
+    global.initHrFormEnterpriseFields = initHrFormEnterpriseFields;
+    global.ensurePrimaryHrCompanyExists = ensurePrimaryHrCompanyExists;
     global.canManageHrCompanies = canManageHrCompanies;
     global.countHrCompanyStats = countHrCompanyStats;
     global.hrPickCompanyMedia = hrPickCompanyMedia;

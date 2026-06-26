@@ -28,6 +28,7 @@ def main():
         ('tab scope filter fixed', 'fleet-hub' in js_hr and 'hrGov) return t.id' not in js_hr),
         ('showHrPlatformShell hides dash', 'if (dash) {' in js_hr and 'dash.classList.remove' in js_hr),
         ('hr migrate no reload loop', 'stack overflow' in get('/js/nebras-hr-companies.js?v=' + v)),
+        ('hr company combo field', 'nebras-combo-input' in get('/js/nebras-hr-companies.js?v=' + v)),
     ]
     failed = []
     for name, ok in checks:

@@ -704,6 +704,7 @@
             renderHrWorkspaceSidebar(getHrTabDefinitions());
             updateHrWorkspaceChrome();
             renderHrPlatformPanel();
+            if (typeof initHrFormEnterpriseFields === 'function') initHrFormEnterpriseFields(document.getElementById('hr-platform'));
             if (typeof global !== 'undefined') global.__hrPanelReady = true;
             return true;
         } catch (err) {
@@ -1108,7 +1109,13 @@
                 '<label class="nebras-field"><span>الهوية الوطنية / الإقامة</span><input id="he-national" value="' + esc(e.nationalId || e.iqamaNo || '') + '"></label>' +
                 '<label class="nebras-field"><span>رقم الحدود</span><input id="he-border" value="' + esc(e.borderNumber || '') + '" placeholder="للعمالة الجديدة"></label>' +
                 '<label class="nebras-field"><span>انتهاء الإقامة</span><input type="date" id="he-iqama-expiry" value="' + esc(e.iqamaExpiry || '') + '"></label>' +
-                '<label class="nebras-field"><span>الجنسية</span><input id="he-nationality" value="' + esc(e.nationality || 'سعودي') + '"></label>' +
+                '<label class="nebras-field"><span>الجنسية</span><input id="he-nationality" list="nebras-hr-nationalities" value="' + esc(e.nationality || 'سعودي') + '" placeholder="اختر أو اكتب الجنسية"></label>' +
+                '<datalist id="nebras-hr-nationalities">' +
+                    '<option value="سعودي"></option><option value="مصري"></option><option value="يمني"></option>' +
+                    '<option value="سوداني"></option><option value="باكستاني"></option><option value="هندي"></option>' +
+                    '<option value="بنغلاديشي"></option><option value="فلبيني"></option><option value="أردني"></option>' +
+                    '<option value="سوري"></option><option value="لبناني"></option><option value="فلسطيني"></option>' +
+                '</datalist>' +
                 '<label class="nebras-field"><span>الفرع</span><select id="he-branch">' + branchSelectHtml(e.branchId || 'hq') + '</select></label>' +
                 '<div class="nebras-field nebras-field--wide hr-nafath-row">' +
                     '<label class="nebras-field--inline"><input type="checkbox" id="he-nafath-verified"' + (e.nafathVerified ? ' checked' : '') + '> تم التحقق عبر نفاذ (NAFAZ)</label>' +
@@ -1219,7 +1226,9 @@
             nafathVerified: !!(document.getElementById('he-nafath-verified') && document.getElementById('he-nafath-verified').checked),
             nafathVerifiedAt: hrField('he-nafath-date'),
             nationality: hrField('he-nationality'),
-            companyId: (document.getElementById('he-company') ? hrField('he-company') : '') || (typeof getHrCompanyIdForNewRecord === 'function' ? getHrCompanyIdForNewRecord() : 'comp-nebras'),
+            companyId: (typeof resolveHrCompanyFromCombo === 'function' && document.getElementById('he-company-display'))
+                ? resolveHrCompanyFromCombo('he-company-display', 'he-company')
+                : ((document.getElementById('he-company') ? hrField('he-company') : '') || (typeof getHrCompanyIdForNewRecord === 'function' ? getHrCompanyIdForNewRecord() : 'comp-nebras')),
             branchId: hrField('he-branch') || getHrAdminScope().branchId || 'hq',
             departmentKey: hrField('he-dept-key'),
             department: (typeof HR_FACTORY_DEPTS !== 'undefined' && HR_FACTORY_DEPTS[hrField('he-dept-key')]) ? HR_FACTORY_DEPTS[hrField('he-dept-key')] : hrField('he-dept-key'),
@@ -1406,7 +1415,9 @@
         const record = {
             id: id || ('veh-' + Date.now()),
             plateNo: plate,
-            companyId: (document.getElementById('hv-company') ? hrField('hv-company') : '') || (typeof getHrCompanyIdForNewRecord === 'function' ? getHrCompanyIdForNewRecord() : 'comp-nebras'),
+            companyId: (typeof resolveHrCompanyFromCombo === 'function' && document.getElementById('hv-company-display'))
+                ? resolveHrCompanyFromCombo('hv-company-display', 'hv-company')
+                : ((document.getElementById('hv-company') ? hrField('hv-company') : '') || (typeof getHrCompanyIdForNewRecord === 'function' ? getHrCompanyIdForNewRecord() : 'comp-nebras')),
             make: hrField('hv-make'),
             model: hrField('hv-model'),
             year: hrField('hv-year'),

@@ -132,6 +132,85 @@
     gap: 0.85rem 1rem;
 }
 
+/* ── HR combo: شركة تابعة — اختيار + إدخال يدوي ── */
+.nebras-field--combo .nebras-combo-wrap {
+    display: flex;
+    align-items: stretch;
+    width: 100%;
+    position: relative;
+    z-index: 3;
+}
+
+.nebras-combo-input {
+    flex: 1 1 auto;
+    min-width: 0;
+    min-height: 44px;
+    border-radius: 12px 0 0 12px !important;
+}
+
+.nebras-combo-toggle {
+    flex: 0 0 auto;
+    border: 1px solid #c5d4e0;
+    border-inline-start: none;
+    background: linear-gradient(180deg, #f0f6fc 0%, #e3edf7 100%);
+    color: #1a5276;
+    padding: 0 14px;
+    border-radius: 0 12px 12px 0;
+    cursor: pointer;
+    font-size: 0.95rem;
+}
+
+.nebras-combo-toggle:hover {
+    background: #dceaf7;
+}
+
+.nebras-combo-hint {
+    display: block;
+    font-size: 0.72rem;
+    color: #546e7a;
+    margin-top: 5px;
+    line-height: 1.45;
+}
+
+.hr-company-combo {
+    grid-column: 1 / -1;
+}
+
+.hr-editor-overlay,
+.hr-form-section,
+.hr-form-sections,
+.hr-editor-overlay .erp-form-grid,
+.hr-company-combo,
+.hr-company-combo .nebras-combo-wrap {
+    overflow: visible !important;
+}
+
+#hr-platform .hr-ws-content.hr-form-dropdown-open,
+#hr-platform .hr-platform-content.hr-form-dropdown-open,
+#legal-platform .hr-ws-content.hr-form-dropdown-open,
+#legal-platform .hr-platform-content.hr-form-dropdown-open {
+    overflow: visible !important;
+}
+
+#hr-platform .hr-editor-overlay select,
+#hr-platform .nebras-field select,
+#legal-platform .nebras-field select {
+    min-height: 44px;
+    line-height: 1.35;
+    appearance: auto;
+    -webkit-appearance: menulist;
+    cursor: pointer;
+    position: relative;
+    z-index: 2;
+}
+
+#hr-platform .nebras-combo-input,
+#legal-platform .nebras-combo-input {
+    color: #0d2233 !important;
+    background: #fff !important;
+    -webkit-text-fill-color: #0d2233 !important;
+}
+
 .legal-platform-shell .hr-command-hero,
 #legal-platform-root .hr-command-hero {
     border-radius: 16px;

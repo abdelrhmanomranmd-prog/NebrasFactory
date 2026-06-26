@@ -669,7 +669,7 @@
         return '<div class="hr-editor-overlay" id="legal-editor">' +
             '<h4><i class="fas fa-building"></i> ' + (id ? 'تعديل عقد إيجار' : 'عقد إيجار جديد') + '</h4>' +
             '<div class="erp-form-grid">' +
-                '<label class="nebras-field"><span>الشركة التابعة *</span><select id="lrent-company">' + companySelectLegal(r.companyId || legalCompanyFilter) + '</select></label>' +
+                (typeof renderLegalCompanyComboField === 'function' ? renderLegalCompanyComboField(r.companyId || legalCompanyFilter, 'lrent-company') : '') +
                 '<label class="nebras-field"><span>دور الشركة *</span><select id="lrent-role">' + roleOpts + '</select></label>' +
                 '<label class="nebras-field"><span>عنوان العقد *</span><input id="lrent-title" value="' + esc(r.title || '') + '" placeholder="إيجار مستودع الرياض"></label>' +
                 '<label class="nebras-field"><span>الطرف الآخر</span><input id="lrent-party" value="' + esc(r.partyName || '') + '" placeholder="اسم المستأجر أو المؤجّر"></label>' +
@@ -719,7 +719,7 @@
         return '<div class="hr-editor-overlay" id="legal-editor">' +
             '<h4><i class="fas fa-file-signature"></i> ' + (id ? 'تعديل عقد' : 'عقد / اتفاقية جديدة') + '</h4>' +
             '<div class="erp-form-grid">' +
-                '<label class="nebras-field"><span>الشركة التابعة *</span><select id="lc-company">' + companySelectLegal(c.companyId || legalCompanyFilter) + '</select></label>' +
+                (typeof renderLegalCompanyComboField === 'function' ? renderLegalCompanyComboField(c.companyId || legalCompanyFilter, 'lc-company') : '') +
                 (forceType ? '<input type="hidden" id="lc-type" value="partnership">' :
                     '<label class="nebras-field"><span>نوع العقد</span><select id="lc-type">' + typeOpts + '</select></label>') +
                 '<label class="nebras-field"><span>عنوان العقد *</span><input id="lc-title" value="' + esc(c.title || '') + '"></label>' +
@@ -775,7 +775,7 @@
         return '<div class="hr-editor-overlay" id="legal-editor">' +
             '<h4><i class="fas fa-gavel"></i> ' + (id ? 'تعديل قضية' : 'قضية / نزاع جديد') + '</h4>' +
             '<div class="erp-form-grid">' +
-                '<label class="nebras-field"><span>الشركة *</span><select id="lcase-company">' + companySelectLegal(c.companyId) + '</select></label>' +
+                (typeof renderLegalCompanyComboField === 'function' ? renderLegalCompanyComboField(c.companyId, 'lcase-company') : '') +
                 '<label class="nebras-field"><span>عنوان القضية *</span><input id="lcase-title" value="' + esc(c.title || '') + '"></label>' +
                 '<label class="nebras-field"><span>النوع</span><select id="lcase-type">' + typeOpts + '</select></label>' +
                 '<label class="nebras-field"><span>الحالة</span><select id="lcase-status">' + statusOpts + '</select></label>' +
@@ -820,7 +820,7 @@
         return '<div class="hr-editor-overlay" id="legal-editor">' +
             '<h4><i class="fas fa-certificate"></i> ' + (id ? 'تعديل امتثال' : 'بند امتثال / ترخيص') + '</h4>' +
             '<div class="erp-form-grid">' +
-                '<label class="nebras-field"><span>الشركة *</span><select id="lcomp-company">' + companySelectLegal(c.companyId) + '</select></label>' +
+                (typeof renderLegalCompanyComboField === 'function' ? renderLegalCompanyComboField(c.companyId, 'lcomp-company') : '') +
                 '<label class="nebras-field"><span>النوع</span><select id="lcomp-type">' + typeOpts + '</select></label>' +
                 '<label class="nebras-field"><span>العنوان *</span><input id="lcomp-title" value="' + esc(c.title || '') + '"></label>' +
                 '<label class="nebras-field"><span>الجهة الرسمية</span><input id="lcomp-authority" value="' + esc(c.authority || '') + '"></label>' +
@@ -859,7 +859,7 @@
         return '<div class="hr-editor-overlay" id="legal-editor">' +
             '<h4><i class="fas fa-book"></i> ' + (id ? 'تعديل سياسة' : 'سياسة / لائحة') + '</h4>' +
             '<div class="erp-form-grid">' +
-                '<label class="nebras-field"><span>الشركة *</span><select id="lpol-company">' + companySelectLegal(p.companyId) + '</select></label>' +
+                (typeof renderLegalCompanyComboField === 'function' ? renderLegalCompanyComboField(p.companyId, 'lpol-company') : '') +
                 '<label class="nebras-field"><span>النوع</span><select id="lpol-type">' + typeOpts + '</select></label>' +
                 '<label class="nebras-field"><span>العنوان *</span><input id="lpol-title" value="' + esc(p.title || '') + '"></label>' +
                 '<label class="nebras-field"><span>الإصدار</span><input id="lpol-version" value="' + esc(p.version || '1.0') + '"></label>' +
@@ -916,7 +916,7 @@
         return '<div class="hr-editor-overlay" id="legal-editor">' +
             '<h4><i class="fas fa-envelope"></i> مراسلة قانونية</h4>' +
             '<div class="erp-form-grid">' +
-                '<label class="nebras-field"><span>الشركة</span><select id="lcorr-company">' + companySelectLegal(c.companyId) + '</select></label>' +
+                (typeof renderLegalCompanyComboField === 'function' ? renderLegalCompanyComboField(c.companyId, 'lcorr-company') : '') +
                 '<label class="nebras-field"><span>الاتجاه</span><select id="lcorr-dir"><option value="outgoing"' + (c.direction !== 'incoming' ? ' selected' : '') + '>صادر</option><option value="incoming"' + (c.direction === 'incoming' ? ' selected' : '') + '>وارد</option></select></label>' +
                 '<label class="nebras-field"><span>الموضوع *</span><input id="lcorr-subject" value="' + esc(c.subject || '') + '"></label>' +
                 '<label class="nebras-field"><span>الجهة / المستلم</span><input id="lcorr-recipient" value="' + esc(c.recipient || '') + '"></label>' +
@@ -966,7 +966,7 @@
         if (!title) { alert('عنوان العقد مطلوب.'); return; }
         const record = {
             id: id || ('lct-' + Date.now()),
-            companyId: legalField('lc-company'),
+            companyId: typeof resolveLegalCompanyField === 'function' ? resolveLegalCompanyField('lc-company') : legalField('lc-company'),
             type: legalField('lc-type') || 'commercial',
             title: title,
             partyName: legalField('lc-party'),
@@ -1013,7 +1013,7 @@
         if (!title) { alert('عنوان القضية مطلوب.'); return; }
         const record = {
             id: id || ('lcs-' + Date.now()),
-            companyId: legalField('lcase-company'),
+            companyId: typeof resolveLegalCompanyField === 'function' ? resolveLegalCompanyField('lcase-company') : legalField('lcase-company'),
             type: legalField('lcase-type'),
             status: legalField('lcase-status'),
             title: title,
@@ -1051,7 +1051,7 @@
         if (!title) { alert('العنوان مطلوب.'); return; }
         const record = {
             id: id || ('lcmp-' + Date.now()),
-            companyId: legalField('lcomp-company'),
+            companyId: typeof resolveLegalCompanyField === 'function' ? resolveLegalCompanyField('lcomp-company') : legalField('lcomp-company'),
             type: legalField('lcomp-type'),
             title: title,
             authority: legalField('lcomp-authority'),
@@ -1087,7 +1087,7 @@
         if (!title) { alert('عنوان السياسة مطلوب.'); return; }
         const record = {
             id: id || ('lpol-' + Date.now()),
-            companyId: legalField('lpol-company'),
+            companyId: typeof resolveLegalCompanyField === 'function' ? resolveLegalCompanyField('lpol-company') : legalField('lpol-company'),
             type: legalField('lpol-type'),
             title: title,
             version: legalField('lpol-version') || '1.0',
@@ -1116,7 +1116,7 @@
         if (!endDate) { alert('تاريخ انتهاء العقد مطلوب للتنبيهات.'); return; }
         const record = {
             id: id || ('lrent-' + Date.now()),
-            companyId: legalField('lrent-company'),
+            companyId: typeof resolveLegalCompanyField === 'function' ? resolveLegalCompanyField('lrent-company') : legalField('lrent-company'),
             leaseRole: legalField('lrent-role') || 'tenant',
             title: title,
             partyName: legalField('lrent-party'),
@@ -1160,7 +1160,7 @@
         if (!subject) { alert('الموضوع مطلوب.'); return; }
         const record = {
             id: id || ('lcor-' + Date.now()),
-            companyId: legalField('lcorr-company'),
+            companyId: typeof resolveLegalCompanyField === 'function' ? resolveLegalCompanyField('lcorr-company') : legalField('lcorr-company'),
             direction: legalField('lcorr-dir'),
             subject: subject,
             recipient: legalField('lcorr-recipient'),
@@ -1263,6 +1263,7 @@
         else if (legalActiveTab === 'activity') panel = renderLegalActivityPanel();
         else panel = renderLegalDashboard();
         content.innerHTML = ctx + toolbar + '<div class="hr-panels">' + panel + '</div>';
+        if (typeof initHrFormEnterpriseFields === 'function') initHrFormEnterpriseFields(document.getElementById('legal-platform'));
     }
 
     function renderLegalPlatformPanelSafe() {
