@@ -222,7 +222,7 @@
         return { employees: hrEmployees, vehicles: hrVehicles, leave: hrLeaveRequests, tracking: hrVehicleTracking, attendance: hrAttendance, documents: hrDocuments, payroll: hrPayrollRuns };
     }
 
-    function saveHrData() {
+    async function saveHrData() {
         try {
             localStorage.setItem(HR_EMP_KEY, JSON.stringify(hrEmployees));
             localStorage.setItem(HR_VEH_KEY, JSON.stringify(hrVehicles));
@@ -235,19 +235,22 @@
             saveHrPhase17Data();
             try { localStorage.setItem('nebrasHrProductionMode', '1'); } catch (e) { /* ignore */ }
         } catch (err) { console.warn('HR save failed', err); }
-        if (typeof saveSystemData === 'function') saveSystemData({ urgentCloud: true, showCloudToast: true });
+        if (typeof saveSystemData === 'function') saveSystemData({ skipCloud: true });
         else if (typeof schedulePushToNebrasCloud === 'function') schedulePushToNebrasCloud();
+        const hrCloudKeys = [
+            'hr_employees', 'hr_vehicles', 'hr_leave', 'hr_vehicle_tracking',
+            'hr_attendance', 'hr_documents', 'hr_payroll', 'hr_companies',
+            'hr_travel', 'hr_deductions', 'hr_advances', 'hr_vehicle_violations',
+            'hr_notifications', 'hr_notif_settings', 'hr_email_queue', 'hr_shift_roster', 'hr_dept_activity'
+        ];
         if (typeof persistNebrasCriticalStores === 'function') {
-            persistNebrasCriticalStores([
-                'hr_employees', 'hr_vehicles', 'hr_leave', 'hr_vehicle_tracking',
-                'hr_attendance', 'hr_documents', 'hr_payroll', 'hr_companies',
-                'hr_travel', 'hr_deductions', 'hr_advances', 'hr_vehicle_violations',
-                'hr_notifications', 'hr_notif_settings', 'hr_email_queue', 'hr_shift_roster', 'hr_dept_activity'
-            ], { silent: true }).then(function(ok) {
-                if (!ok && typeof showNebrasAdminToast === 'function') {
-                    showNebrasAdminToast('⚠️ بيانات الموارد البشرية لم تُحفظ في السحابة — أعيدي المحاولة', 'error');
-                }
-            }).catch(function(err) { console.warn('HR cloud persist:', err); });
+            const cloudOk = await persistNebrasCriticalStores(hrCloudKeys, {
+                showToast: true,
+                promptReauth: false
+            });
+            if (!cloudOk && typeof showNebrasAdminToast === 'function') {
+                showNebrasAdminToast('⚠️ بيانات الموارد البشرية لم تُحفظ في السحابة — أعيدي تسجيل الدخول ثم احفظي مرة أخرى', 'error');
+            }
         }
     }
 

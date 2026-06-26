@@ -23238,7 +23238,12 @@
                     }
                 }
             }
-            const ok = await pushToNebrasCloud();
+            let ok = false;
+            if (typeof reconcileHqBusinessDataToCloud === 'function') {
+                const recon = await reconcileHqBusinessDataToCloud({ showToast: false, promptReauth: false });
+                ok = !!(recon && recon.ok);
+            }
+            if (!ok) ok = await pushToNebrasCloud();
             renderCloudGovernancePanel();
             if (currentAdmin) renderDashboardCommandShell(currentAdmin);
             addAuditLog('مزامنة سحابة', ok ? ('رفع يدوي — ' + NEBRAS_CLOUD_STORE_SPECS.length + ' مخزن') : 'رفع يدوي فشل');
@@ -25836,6 +25841,81 @@
             'erp_purchases', 'sales_quotes_inbox', 'customer_order_journeys', 'customer_portal_users',
             'legal_contracts', 'sales_data', 'sales_price_list'
         ];
+        const NEBRAS_HQ_RECONCILE_STORE_KEYS = NEBRAS_PRODUCTION_BUSINESS_STORE_KEYS.concat([
+            'showroom_gallery', 'visitor_icons', 'branches', 'legal_rentals', 'legal_cases',
+            'legal_compliance', 'legal_policies', 'hr_advances', 'hr_vehicle_violations',
+            'hr_travel', 'hr_deductions', 'hr_shift_roster', 'hr_dept_activity'
+        ]);
+
+        function nebrasPayloadRecordCount(payload) {
+            if (Array.isArray(payload)) return payload.length;
+            if (payload && typeof payload === 'object') {
+                if (typeof countShowroomGalleryItems === 'function' && payload.items === undefined) {
+                    const galleryCount = countShowroomGalleryItems(payload);
+                    if (galleryCount) return galleryCount;
+                }
+                return Object.keys(payload).length;
+            }
+            return payload == null ? 0 : 1;
+        }
+
+        function getLocalNebrasStoreCount(storeKey) {
+            const spec = NEBRAS_CLOUD_STORE_SPECS.find(function(s) { return s.key === storeKey; });
+            if (!spec) return 0;
+            try { return nebrasPayloadRecordCount(spec.get()); } catch (e) { return 0; }
+        }
+
+        /** الإدارة الرئيسية — رفع ما هو محلي وأكثر من السحابة (يحل «أرى البيانات وأنا فقط») */
+        async function reconcileHqBusinessDataToCloud(options) {
+            options = options || {};
+            if (!isMainGovernanceAdmin() || !currentAdmin) {
+                return { ok: false, pushed: false, reason: 'not_hq' };
+            }
+            if (typeof ensureNebrasCloudSessionReady === 'function') {
+                let sessionOk = await ensureNebrasCloudSessionReady({ promptReauth: options.promptReauth !== false });
+                if (!sessionOk && nebrasLastLoginPassword && typeof establishNebrasSecureSession === 'function') {
+                    sessionOk = await establishNebrasSecureSession(currentAdmin.username, nebrasLastLoginPassword);
+                }
+                if (!sessionOk) return { ok: false, pushed: false, reason: 'no_session' };
+            }
+            const behind = [];
+            NEBRAS_HQ_RECONCILE_STORE_KEYS.forEach(function(storeKey) {
+                const localCount = getLocalNebrasStoreCount(storeKey);
+                if (!localCount) return;
+                behind.push({ storeKey: storeKey, localCount: localCount });
+            });
+            if (!behind.length) return { ok: true, pushed: false, reason: 'local_empty' };
+            let cloudCounts = {};
+            if (typeof secureCloudPull === 'function' && typeof getNebrasSecureToken === 'function' && getNebrasSecureToken()) {
+                try {
+                    const keys = behind.map(function(b) { return b.storeKey; });
+                    const rows = await secureCloudPull(keys);
+                    (rows || []).forEach(function(row) {
+                        if (row && row.store_key) {
+                            cloudCounts[row.store_key] = nebrasPayloadRecordCount(row.payload);
+                        }
+                    });
+                } catch (pullErr) {
+                    console.warn('reconcileHqBusinessDataToCloud pull:', pullErr);
+                }
+            }
+            const keysToPush = behind.filter(function(b) {
+                const cloudCount = cloudCounts[b.storeKey] || 0;
+                return b.localCount > cloudCount;
+            }).map(function(b) { return b.storeKey; });
+            if (!keysToPush.length) return { ok: true, pushed: false, reason: 'cloud_up_to_date' };
+            let ok = false;
+            if (typeof persistNebrasCriticalStores === 'function') {
+                ok = await persistNebrasCriticalStores(keysToPush, {
+                    showToast: !!options.showToast,
+                    promptReauth: false
+                });
+            }
+            if (!ok && typeof pushToNebrasCloud === 'function') {
+                ok = await pushToNebrasCloud();
+            }
+            return { ok: !!ok, pushed: true, keys: keysToPush, behind: behind };
+        }
         const NEBRAS_CHROME_EMPTY_CLOUD_SKIP_KEYS = [
             'branches', 'site_partners', 'site_certifications', 'visitor_icons', 'dashboard_tiles',
             'admin_users', 'about_pages', 'showroom_gallery', 'system_settings'
@@ -26015,6 +26095,18 @@
                     await flushPushToNebrasCloud({ silentCloud: true });
                 } catch (reconcileErr) {
                     console.warn('Post-hydrate cloud reconcile:', reconcileErr);
+                }
+            }
+            if (isMainGovernanceAdmin() && currentAdmin) {
+                try {
+                    const recon = await reconcileHqBusinessDataToCloud({ showToast: true, promptReauth: false });
+                    if (recon.pushed && recon.ok && typeof showNebrasAdminToast === 'function') {
+                        showNebrasAdminToast('✓ تم رفع بياناتك للسحابة — متاحة لكل الفروع والأجهزة', 'ok');
+                    } else if (recon.pushed && !recon.ok && typeof showNebrasAdminToast === 'function') {
+                        showNebrasAdminToast('⚠️ بياناتك ما زالت محلية — من الحوكمة اضغطي «رفع للسحابة الآن»', 'error');
+                    }
+                } catch (hqReconErr) {
+                    console.warn('HQ business cloud reconcile:', hqReconErr);
                 }
             }
             if (typeof pullVisitorIntakeFromCloud === 'function') {
@@ -29645,6 +29737,7 @@
         window.changeAdminCredentialsByOldPassword = changeAdminCredentialsByOldPassword;
         window.openCloudGovernance = openCloudGovernance;
         window.syncPushToNebrasCloudNow = syncPushToNebrasCloudNow;
+        window.reconcileHqBusinessDataToCloud = reconcileHqBusinessDataToCloud;
         window.syncLoadFromNebrasCloudNow = syncLoadFromNebrasCloudNow;
         window.openLinkedOmsOrderFromQuote = openLinkedOmsOrderFromQuote;
         window.openExecutiveReports = openExecutiveReports;
