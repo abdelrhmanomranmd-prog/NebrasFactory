@@ -15,7 +15,7 @@ const MODE_PROMPTS = {
     content: 'ركّز على إدارة محتوى الموقع: أيقونات الزوار · المعرض · الصور · PDF · رفع وسائط. لفتح المحتوى: [ACTION:open_content] · للوسائط: [ACTION:open_media] · للمعرض: [ACTION:open_showroom].',
     users: 'ركّز على المستخدمين والصلاحيات. لفتح إدارة المستخدمين: [ACTION:open_users].',
     cloud: 'ركّز على Supabase والمزامنة. للرفع: [ACTION:push_cloud] · للحوكمة: [ACTION:open_cloud].',
-    cart: 'ركّز على السلة وطرق الدفع والبنوك. لتفعيل طرق الدفع أخرج JSON: {"payment_methods":[{"id":"mada","enabled":true,"subAr":"..."}]}. لفتح إعدادات الدفع: [ACTION:open_payments].'
+    cart: 'ركّز على السلة وطرق الدفع والبنوك. لتفعيل طرق الدفع للتحضير أخرج JSON: {"payment_methods":[{"id":"mada","enabled":true,"subAr":"..."}]}. النشر النهائي للزوار يدوي من الإدارة الرئيسية فقط (زر نشر طرق الدفع). لفتح إعدادات الدفع: [ACTION:open_payments].'
 };
 
 const DEFAULT_MODELS = [

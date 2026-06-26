@@ -694,6 +694,11 @@
             quoteA4: null,
             bankAccounts: DEFAULT_BANK_ACCOUNTS.map(function(b) { return Object.assign({}, b); }),
             paymentMethods: DEFAULT_PAYMENT_METHODS.map(function(m) { return Object.assign({}, m); }),
+            visitorPaymentsGovernance: {
+                published: false,
+                publishedAt: '',
+                publishedBy: ''
+            },
             socialWhatsApp: '',
             socialTiktok: NEBRAS_DEFAULT_SOCIAL_LINKS.socialTiktok,
             socialFacebook: NEBRAS_DEFAULT_SOCIAL_LINKS.socialFacebook,
@@ -2019,6 +2024,7 @@
             ],
             modules: [
                 { id: 'content', status: 'live', icon: 'fas fa-pen-to-square', permission: 'content', handler: 'openSiteContentManager', nameAr: 'المحتوى والكتالوج', descAr: 'منتجات بأصناف وأسعار، من نحن، أيقونات — بدون كود', nameEn: 'Content & catalogue' },
+                { id: 'visitor-payments', status: 'live', icon: 'fas fa-wallet', permission: 'content', handler: 'openVisitorPaymentsGovernance', nameAr: 'طرق الدفع للزائر', descAr: 'تحضير السلة — النشر النهائي للإدارة الرئيسية فقط', nameEn: 'Visitor cart payments' },
                 { id: 'celebration', status: 'live', icon: 'fas fa-wand-magic-sparkles', superadminOnly: true, handler: 'openSystemSettingsForOccasion', nameAr: 'الوضع الاحتفالي', descAr: 'تهيئة شكل المناسبات للداشبورد والموقع', nameEn: 'Celebration mode' },
                 { id: 'users', status: 'live', icon: 'fas fa-users-cog', permission: 'users', handler: 'openUserManagement', nameAr: 'المستخدمون والصلاحيات', descAr: 'أدوار، حسابات، حوكمة الوصول', nameEn: 'Users & RBAC' },
                 { id: 'branches', status: 'live', icon: 'fas fa-map-marked-alt', permission: 'branches', handler: 'openBranchesManagement', nameAr: 'الفروع', descAr: 'شبكة فروع المملكة وأرقام المبيعات', nameEn: 'Branches' },
@@ -2451,6 +2457,7 @@
             { id: 'dash-empire-hub', zone: 'quick', dashGroup: 'command', sortOrder: 0.98, iconClass: 'fas fa-crown', titleAr: 'إمبراطورية نبراس — مركز القيادة', titleEn: 'Nebras Empire HQ', textAr: 'الواجهة الخارجية · ERP · HR · Legal · فروع · شركاء — كل المنصة في مكان واحد.', textEn: 'Full empire command — external + internal platforms.', handler: 'openNebrasEmpireHub', permission: 'audit', visible: true },
             { id: 'dash-content', zone: 'quick', dashGroup: 'command', sortOrder: 1, iconClass: 'fas fa-pen-to-square', titleAr: 'إدارة محتوى الموقع', titleEn: 'Site Content', textAr: 'منتجات، بوابة الزائر، شركاء، شهادات — ديناميكي بالكامل.', textEn: 'Products, gateway icons, partners, certs — fully dynamic.', handler: 'openSiteContentManager', permission: 'content', visible: true },
             { id: 'dash-store-catalog', zone: 'quick', dashGroup: 'command', sortOrder: 1.02, iconClass: 'fas fa-store', titleAr: 'المتجر الإلكتروني', titleEn: 'E-Store', textAr: 'رفع المنتجات — مقاس · نوع · سعر · صورة — تخزين ديناميكي.', textEn: 'Upload store products with variants.', handler: 'openStoreCatalogManager', permission: 'storeCatalog', visible: true },
+            { id: 'dash-visitor-payments', zone: 'quick', dashGroup: 'command', sortOrder: 1.015, iconClass: 'fas fa-wallet', titleAr: 'طرق الدفع للزائر', titleEn: 'Visitor Payments', textAr: 'تحضير المدفوع في السلة — النشر النهائي للإدارة الرئيسية فقط.', textEn: 'Cart payment methods — HQ publishes to live storefront.', cssClass: 'dashboard-tile-card--visitor-payments', handler: 'openVisitorPaymentsGovernance', permission: 'content', visible: true },
             { id: 'dash-about-pages', zone: 'quick', dashGroup: 'command', sortOrder: 2, iconClass: 'fas fa-building', titleAr: 'من نحن ورؤيتنا', titleEn: 'About & Vision', textAr: 'نصوص المصنع ووثائق الصفحات الداخلية.', textEn: 'Factory pages and documents.', handler: 'openAboutContentAdmin', permission: 'content', visible: true },
             { id: 'dash-certs', zone: 'quick', dashGroup: 'command', sortOrder: 3, iconClass: 'fas fa-award', titleAr: 'اعتمادات وشهادات', titleEn: 'Certifications', textAr: 'شهادات المعرض — صور وPDF.', textEn: 'Showroom certificates.', cssClass: 'dashboard-tile-card--certs', handler: 'openCertificationsHub', permission: 'content', visible: true },
             { id: 'dash-showroom', zone: 'quick', dashGroup: 'command', sortOrder: 4, iconClass: 'fas fa-images', titleAr: 'معرض نبراس', titleEn: 'Nebras Showroom', textAr: '5 أقسام: أبواب نبراس · خزائن نبراس · WPC · CNC · مشاريع NHC.', textEn: '5 galleries: doors, cabinets, WPC, CNC, NHC projects.', handler: 'openShowroomHub', permission: 'content', visible: true },
@@ -2691,6 +2698,7 @@
             openCallbackLeadsAdmin: function() {
                 if (typeof window.openCallbackLeadsAdmin === 'function') window.openCallbackLeadsAdmin();
             },
+            openVisitorPaymentsGovernance: function() { openVisitorPaymentsGovernance(); },
             openNebrasMediaHubQuick: function() { openNebrasMediaHubQuick(); }
         };
 
@@ -4579,6 +4587,50 @@
         systemSettings.paymentMethods.sort(function(a, b) { return (a.sortOrder || 0) - (b.sortOrder || 0); });
     }
 
+    function ensureVisitorPaymentsGovernanceDefaults() {
+        if (!systemSettings || typeof systemSettings !== 'object') return;
+        if (!systemSettings.visitorPaymentsGovernance || typeof systemSettings.visitorPaymentsGovernance !== 'object') {
+            systemSettings.visitorPaymentsGovernance = { published: false, publishedAt: '', publishedBy: '' };
+        }
+        const g = systemSettings.visitorPaymentsGovernance;
+        if (g.published == null) g.published = false;
+        if (!g.publishedAt) g.publishedAt = '';
+        if (!g.publishedBy) g.publishedBy = '';
+    }
+
+    function isVisitorPaymentsPublished() {
+        ensureVisitorPaymentsGovernanceDefaults();
+        return !!(systemSettings.visitorPaymentsGovernance && systemSettings.visitorPaymentsGovernance.published);
+    }
+
+    /** طرق الدفع كما يراها الزائر — قبل النشر: حوالة بنكية فقط */
+    function getNebrasPaymentMethodsForVisitor() {
+        ensurePaymentMethodsDefaults();
+        ensureVisitorPaymentsGovernanceDefaults();
+        const published = isVisitorPaymentsPublished();
+        return getNebrasPaymentMethods().map(function(m) {
+            const copy = Object.assign({}, m);
+            if (!published) {
+                copy.enabled = m.id === 'bank_transfer' && m.enabled !== false;
+            }
+            return copy;
+        });
+    }
+
+    function getVisitorPaymentsReadiness() {
+        ensurePaymentMethodsDefaults();
+        ensureVisitorPaymentsGovernanceDefaults();
+        const enabled = getNebrasPaymentMethods().filter(function(m) { return m.enabled; });
+        const banks = (systemSettings.bankAccounts || []).filter(function(b) { return b && (b.iban || b.accountNo); });
+        const bankEnabled = enabled.some(function(m) { return m.id === 'bank_transfer'; });
+        return {
+            enabledCount: enabled.length,
+            bankCount: banks.length,
+            published: isVisitorPaymentsPublished(),
+            readyToPublish: enabled.length > 0 && (!bankEnabled || banks.length > 0)
+        };
+    }
+
     function getLocalizedPaymentMethod(method, lang) {
         if (!method) return { label: '', sub: '' };
         const l = lang === 'en' || lang === 'zh' ? lang : 'ar';
@@ -4599,15 +4651,19 @@
         const ui = siteText[lang] || siteText.ar;
         const method = getCheckoutPaymentMethod();
         ensurePaymentMethodsDefaults();
-        const catalog = getNebrasPaymentMethods();
+        const catalog = getNebrasPaymentMethodsForVisitor();
+        const published = isVisitorPaymentsPublished();
         const methods = catalog.map(function(m) {
             const loc = getLocalizedPaymentMethod(m, lang);
             const active = !!m.enabled;
+            const prepOnly = !published && m.id !== 'bank_transfer';
             return {
                 id: m.id,
                 icon: m.iconClass || 'fas fa-wallet',
                 label: loc.label,
-                sub: active ? loc.sub : (loc.sub || ui.paySoon || 'قريباً'),
+                sub: prepOnly
+                    ? (ui.payHqPending || 'يُفعّل بعد اعتماد الإدارة الرئيسية')
+                    : (active ? loc.sub : (loc.sub || ui.paySoon || 'قريباً')),
                 active: active,
                 requiresBank: !!m.requiresBank
             };
@@ -4636,9 +4692,11 @@
         const soonNote = pendingCount > 0
             ? '<p class="cart-pay-coming-soon"><i class="fas fa-clock"></i> ' + escapeHtmlAttr(ui.payComingSoonNote || (enabledCount + ' طريقة نشطة — ' + pendingCount + ' قيد التفعيل من الإدارة')) + '</p>'
             : '';
-        const intro = enabledCount > 1
-            ? (ui.cartPaymentMethodsIntro || 'اختر طريقة الدفع المناسبة — تُفعَّل من الإدارة الرئيسية')
-            : (ui.cartPaymentMethodsIntro || 'حوالة بنكية نشطة الآن — بطاقات وتقسيط تُفعَّل لاحقاً من الإدارة');
+        const intro = published
+            ? (enabledCount > 1
+                ? (ui.cartPaymentMethodsIntro || 'اختر طريقة الدفع المناسبة')
+                : (ui.cartPaymentMethodsIntro || 'طريقة الدفع المتاحة للزوار'))
+            : (ui.cartPaymentMethodsDraftIntro || 'حوالة بنكية نشطة — باقي الطرق تُنشر من الإدارة الرئيسية عند الاعتماد النهائي');
         return '<section class="cart-enterprise-pay" aria-labelledby="cart-enterprise-pay-title">' +
             '<h3 id="cart-enterprise-pay-title"><i class="fas fa-wallet"></i> ' + escapeHtmlAttr(ui.cartPaymentMethodsTitle || 'طرق الدفع') + '</h3>' +
             '<p class="cart-payment-intro">' + escapeHtmlAttr(intro) + '</p>' +
@@ -7615,7 +7673,8 @@
             { id: 'dash-rep-quotes', publicEffect: 'عروض أسعار المندوبين', handler: 'openRepQuoteBuilder' },
             { id: 'dash-orders', publicEffect: 'طلبات OMS وحالات التنفيذ', handler: 'openErpOrders' },
             { id: 'dash-warehouse-transfers', publicEffect: 'تحويلات مخزون بين الفروع', handler: 'openErpWarehouseTransfers' },
-            { id: 'dash-settings', publicEffect: 'بانر · بنوك · ضريبة · احتفال · سوشيال', handler: 'openSystemSettings' }
+            { id: 'dash-settings', publicEffect: 'بانر · بنوك · ضريبة · احتفال · سوشيال', handler: 'openSystemSettings' },
+            { id: 'dash-visitor-payments', publicEffect: 'طرق الدفع في سلة الزوار — نشر الإدارة الرئيسية', handler: 'openVisitorPaymentsGovernance' }
         ];
 
         function ensureDashboardGovernanceHandlers() {
@@ -7659,6 +7718,15 @@
                 { ok: (branchesData || []).length > 0, label: 'فروع المملكة', detail: (branchesData || []).length + ' فرع' },
                 { ok: !!document.getElementById('nebras-visitor-qr-section'), label: 'QR الموقع للزوار', detail: 'قسم عام — مسح · تحميل · مشاركة' },
                 { ok: typeof submitNebrasCallbackLead === 'function', label: 'نبراس يتصل بك', detail: callbackLeadCount + ' طلب — إدارة رئيسية وفروع حسب المدينة' },
+                { ok: (function() {
+                    const r = typeof getVisitorPaymentsReadiness === 'function' ? getVisitorPaymentsReadiness() : { published: false, enabledCount: 0 };
+                    return r.published && r.enabledCount > 0;
+                })(), label: 'طرق الدفع للزائر (السلة)', detail: (function() {
+                    const r = typeof getVisitorPaymentsReadiness === 'function' ? getVisitorPaymentsReadiness() : { published: false, enabledCount: 0, bankCount: 0 };
+                    return r.published
+                        ? (r.enabledCount + ' طريقة منشورة للزوار')
+                        : (r.enabledCount + ' جاهزة للتحضير — النشر بانتظار الإدارة الرئيسية');
+                })() },
                 { ok: ADMIN_GOVERNANCE_TILE_REGISTRY.every(function(r) {
                     const t = dashboardTiles.find(function(x) { return x.id === r.id; });
                     return t && t.handler === r.handler;
@@ -18457,10 +18525,73 @@
         }
 
         function openSystemSettingsForPayments() {
-            if (!requireMainGovernanceAdmin('إدارة طرق الدفع — الإدارة الرئيسية فقط.')) return;
-            renderSystemSettings();
-            switchSettingsTab('payments');
-            revealPlatformLayer('system-settings');
+            openVisitorPaymentsGovernance();
+        }
+
+        function openVisitorPaymentsGovernance() {
+            if (typeof isMainGovernanceAdmin === 'function' && isMainGovernanceAdmin()) {
+                renderSystemSettings();
+                switchSettingsTab('payments');
+                revealPlatformLayer('system-settings');
+                return;
+            }
+            if (typeof canManage === 'function' && canManage('content')) {
+                renderSystemSettings();
+                switchSettingsTab('payments');
+                revealPlatformLayer('system-settings');
+                return;
+            }
+            alert('طرق الدفع للزائر — إدارة المحتوى أو الإدارة الرئيسية فقط.');
+        }
+
+        function previewVisitorCartPayments() {
+            if (typeof openCartDrawer === 'function') {
+                openCartDrawer();
+                if (typeof showNebrasAdminToast === 'function') {
+                    showNebrasAdminToast('معاينة سلة الزائر — طرق الدفع كما يراها العميل', 'ok');
+                }
+            }
+        }
+
+        function publishVisitorPaymentsToStorefront() {
+            if (!requireMainGovernanceAdmin('نشر طرق الدفع للزوار — الإدارة الرئيسية (NEBRASFACTORY) فقط.')) return;
+            ensurePaymentMethodsDefaults();
+            ensureVisitorPaymentsGovernanceDefaults();
+            const readiness = getVisitorPaymentsReadiness();
+            if (!readiness.readyToPublish) {
+                alert('أكملي التحضير: فعّلي طريقة دفع واحدة على الأقل، وأضيفي حساباً بنكياً إن كانت الحوالة مفعّلة.');
+                return;
+            }
+            if (!confirm('نشر طرق الدفع للزوار على الموقع الحي؟\n\nستظهر كل الطرق المفعّلة أدناه في سلة الزوار بعد تأكيد السحابة.')) return;
+            const admin = typeof currentAdmin !== 'undefined' ? currentAdmin : null;
+            systemSettings.visitorPaymentsGovernance.published = true;
+            systemSettings.visitorPaymentsGovernance.publishedAt = new Date().toISOString().slice(0, 16).replace('T', ' ');
+            systemSettings.visitorPaymentsGovernance.publishedBy = admin ? String(admin.username || 'HQ') : 'HQ';
+            renderVisitorPaymentsGovernancePanel();
+            renderPaymentMethodsSettingsList();
+            if (typeof persistNebrasLiveNow === 'function') {
+                persistNebrasLiveNow('نشر طرق الدفع للزوار', { storeKeys: ['system_settings'], showCloudToast: true });
+            } else {
+                saveContentData({ urgentCloud: true, showCloudToast: true });
+            }
+            addAuditLog('طرق الدفع', 'نشر للزوار — ' + getNebrasPaymentMethods().filter(function(m) { return m.enabled; }).map(function(m) { return m.labelAr; }).join(' · '));
+            if (typeof showNebrasAdminToast === 'function') {
+                showNebrasAdminToast('✓ نُشرت طرق الدفع للزوار — انتظري الشريط الأخضر في السحابة', 'ok');
+            }
+        }
+
+        function unpublishVisitorPaymentsFromStorefront() {
+            if (!requireMainGovernanceAdmin('إيقاف نشر طرق الدفع — الإدارة الرئيسية فقط.')) return;
+            if (!confirm('إيقاف نشر طرق الدفع للزوار؟\n\nالزوار سيرون الحوالة البنكية فقط حتى إعادة النشر من الإدارة الرئيسية.')) return;
+            ensureVisitorPaymentsGovernanceDefaults();
+            systemSettings.visitorPaymentsGovernance.published = false;
+            renderVisitorPaymentsGovernancePanel();
+            if (typeof persistNebrasLiveNow === 'function') {
+                persistNebrasLiveNow('إيقاف نشر طرق الدفع', { storeKeys: ['system_settings'], showCloudToast: true });
+            } else {
+                saveContentData({ urgentCloud: true, showCloudToast: true });
+            }
+            addAuditLog('طرق الدفع', 'إيقاف النشر للزوار');
         }
 
         function populateOccasionThemeSelect() {
@@ -26543,7 +26674,53 @@
             saveContentData();
         }
 
+        function renderVisitorPaymentsGovernancePanel() {
+            const host = document.getElementById('visitor-payments-governance-panel');
+            if (!host) return;
+            ensureVisitorPaymentsGovernanceDefaults();
+            ensurePaymentMethodsDefaults();
+            const g = systemSettings.visitorPaymentsGovernance;
+            const readiness = getVisitorPaymentsReadiness();
+            const published = readiness.published;
+            const isHq = typeof isMainGovernanceAdmin === 'function' && isMainGovernanceAdmin();
+            const enabledLabels = getNebrasPaymentMethods().filter(function(m) { return m.enabled; }).map(function(m) { return m.labelAr || m.id; }).join(' · ') || '—';
+            host.innerHTML =
+                '<div class="visitor-payments-gov' + (published ? ' is-live' : ' is-draft') + '">' +
+                    '<div class="visitor-payments-gov-head">' +
+                        '<span class="visitor-payments-gov-badge ' + (published ? 'is-live' : 'is-draft') + '">' +
+                            '<i class="fas fa-' + (published ? 'broadcast-tower' : 'lock') + '"></i> ' +
+                            (published ? 'منشور للزوار' : 'تحضير — لم يُنشر بعد') +
+                        '</span>' +
+                        '<h4><i class="fas fa-satellite-dish"></i> النشر للزوار — الخطوة الأخيرة</h4>' +
+                        '<p>' + (published
+                            ? 'طرق الدفع المفعّلة تظهر الآن في سلة الزوار. يمكن إيقاف النشر أو تعديل الطرق ثم إعادة الحفظ.'
+                            : 'جهّزي الطرق والبنوك أدناه — ثم الإدارة الرئيسية تنقر «نشر للزوار» لإظهارها في الموقع الحي.') +
+                        '</p>' +
+                    '</div>' +
+                    '<ul class="visitor-payments-gov-checklist">' +
+                        '<li class="' + (readiness.enabledCount ? 'is-ok' : 'is-pending') + '"><i class="fas fa-' + (readiness.enabledCount ? 'check-circle' : 'clock') + '"></i> ' +
+                            '<strong>طرق مفعّلة للتحضير:</strong> ' + escapeHtmlAttr(enabledLabels) + '</li>' +
+                        '<li class="' + (readiness.bankCount ? 'is-ok' : 'is-pending') + '"><i class="fas fa-' + (readiness.bankCount ? 'university' : 'clock') + '"></i> ' +
+                            '<strong>حسابات بنكية:</strong> ' + readiness.bankCount + '</li>' +
+                        '<li class="' + (published ? 'is-ok' : 'is-pending') + '"><i class="fas fa-' + (published ? 'cloud-arrow-up' : 'hourglass-half') + '"></i> ' +
+                            '<strong>النشر للزوار:</strong> ' + (published
+                                ? ('نعم — ' + escapeHtmlAttr(g.publishedBy || '') + (g.publishedAt ? ' · ' + escapeHtmlAttr(g.publishedAt) : ''))
+                                : 'بانتظار اعتماد الإدارة الرئيسية') + '</li>' +
+                    '</ul>' +
+                    '<div class="visitor-payments-gov-actions">' +
+                        (isHq
+                            ? (published
+                                ? '<button type="button" class="nebras-users-btn" onclick="unpublishVisitorPaymentsFromStorefront()"><i class="fas fa-pause-circle"></i> إيقاف النشر للزوار</button>'
+                                : '<button type="button" class="nebras-users-btn nebras-users-btn--primary"' + (readiness.readyToPublish ? '' : ' disabled title="فعّلي طريقة دفع وحساب بنكي أولاً"') + ' onclick="publishVisitorPaymentsToStorefront()"><i class="fas fa-rocket"></i> نشر طرق الدفع للزوار الآن</button>')
+                            : '<p class="visitor-payments-gov-hq-note"><i class="fas fa-crown"></i> النشر النهائي للزوار — <strong>الإدارة الرئيسية (NEBRASFACTORY)</strong> فقط. يمكنك معاينة التحضير.</p>') +
+                        '<button type="button" class="nebras-users-btn" onclick="previewVisitorCartPayments()"><i class="fas fa-eye"></i> معاينة سلة الزوار</button>' +
+                        '<button type="button" class="nebras-users-btn" onclick="switchSettingsTab(\'banks\')"><i class="fas fa-university"></i> الحسابات البنكية</button>' +
+                    '</div>' +
+                '</div>';
+        }
+
         function renderPaymentMethodsSettingsList() {
+            renderVisitorPaymentsGovernancePanel();
             const list = document.getElementById('setting-payment-methods-list');
             if (!list) return;
             if (!isMainGovernanceAdmin()) {
@@ -26599,7 +26776,7 @@
             } else {
                 saveContentData({ urgentCloud: true, showCloudToast: true });
             }
-            addAuditLog('طرق الدفع', (m.enabled ? 'تفعيل ' : 'إيقاف ') + (m.labelAr || methodId));
+            addAuditLog('طرق الدفع', (m.enabled ? 'تفعيل تحضير ' : 'إيقاف تحضير ') + (m.labelAr || methodId));
         }
 
         function applyPaymentMethodsFromGovernance(payload) {
@@ -29227,8 +29404,15 @@
         window.openIconManagement = openIconManagement;
         window.openSystemSettings = openSystemSettings;
         window.openSystemSettingsForPayments = openSystemSettingsForPayments;
+        window.openVisitorPaymentsGovernance = openVisitorPaymentsGovernance;
+        window.publishVisitorPaymentsToStorefront = publishVisitorPaymentsToStorefront;
+        window.unpublishVisitorPaymentsFromStorefront = unpublishVisitorPaymentsFromStorefront;
+        window.previewVisitorCartPayments = previewVisitorCartPayments;
         window.openSystemSettingsForChannels = openSystemSettingsForChannels;
         window.getNebrasPaymentMethods = getNebrasPaymentMethods;
+        window.getNebrasPaymentMethodsForVisitor = getNebrasPaymentMethodsForVisitor;
+        window.getVisitorPaymentsReadiness = getVisitorPaymentsReadiness;
+        window.isVisitorPaymentsPublished = isVisitorPaymentsPublished;
         window.togglePaymentMethodEnabled = togglePaymentMethodEnabled;
         window.applyPaymentMethodsFromGovernance = applyPaymentMethodsFromGovernance;
         window.ensurePaymentMethodsDefaults = ensurePaymentMethodsDefaults;
