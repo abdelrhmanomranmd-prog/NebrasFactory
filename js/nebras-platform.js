@@ -11245,7 +11245,10 @@
                 const group = tile.dashGroup || (zone === 'grid' ? 'erp' : 'command');
                 const groupLabel = group === 'erp' ? 'ERP' : 'قيادة';
                 const groupClass = group === 'erp' ? 'dashboard-tile-group-badge--erp' : 'dashboard-tile-group-badge--command';
-                return '<button type="button" class="dashboard-tile-card' + zoneClass + extraClass + '" data-tile-id="' + escapeHtmlAttr(tile.id) + '" style="--tile-i:' + index + '" onclick="onDashboardTileClick(\'' + String(tile.id).replace(/'/g, "\\'") + '\')">' +
+                let premiumClass = '';
+                if (tile.id === 'dash-hq-branch-empire') premiumClass = ' dashboard-tile-card--branch-empire';
+                else if (tile.id === 'dash-branch-command') premiumClass = ' dashboard-tile-card--branch-command';
+                return '<button type="button" class="dashboard-tile-card' + zoneClass + extraClass + premiumClass + '" data-tile-id="' + escapeHtmlAttr(tile.id) + '" style="--tile-i:' + index + '" onclick="onDashboardTileClick(\'' + String(tile.id).replace(/'/g, "\\'") + '\')">' +
                     '<span class="dashboard-tile-group-badge ' + groupClass + '">' + escapeHtmlAttr(groupLabel) + '</span>' +
                     '<div class="dashboard-tile-glow" aria-hidden="true"></div>' +
                     '<div class="dashboard-tile-icon"><i class="' + escapeHtmlAttr(tile.iconClass || 'fas fa-star') + '"></i></div>' +
@@ -13141,10 +13144,12 @@
                     return '<span class="hq-branch-mgr-badge"><i class="' + icon + '"></i> ' + label + ': ' + escapeHtmlAttr(user.username) + '</span>';
                 };
                 return '<article class="hq-branch-empire-card">' +
+                    '<div class="hq-branch-empire-card-accent" aria-hidden="true"></div>' +
+                    '<div class="hq-branch-empire-card-body">' +
                     '<header class="hq-branch-empire-card-head">' +
                         '<div><h3><i class="fas fa-store"></i> ' + escapeHtmlAttr(branch.city || 'فرع') + '</h3>' +
                         '<small>#' + escapeHtmlAttr(String(branch.id || '')) + ' · ' + escapeHtmlAttr(branch.salesPhone || 'بدون هاتف') + '</small></div>' +
-                        '<span class="erp-tag erp-tag--ok">' + kpis.teamUsers + ' مستخدم</span>' +
+                        '<span class="hq-branch-team-pill">' + kpis.teamUsers + ' مستخدم</span>' +
                     '</header>' +
                     '<div class="hq-branch-managers">' +
                         mgrBadge('مدير فرع', mgrs.branchManager, 'fas fa-user-tie') +
@@ -13162,11 +13167,11 @@
                         '<div class="hq-branch-kpi"><strong>' + kpis.transfers + '</strong><span>تحويلات</span></div>' +
                     '</div>' +
                     '<div class="hq-branch-gov-btns">' +
-                        '<button type="button" class="is-primary" onclick="spawnBranchRoleUser(' + index + ',\'branch_manager\')"><i class="fas fa-user-shield"></i> مدير فرع</button>' +
+                        '<button type="button" class="is-primary" onclick="spawnBranchRoleUser(' + index + ',\'branch_manager\')"><i class="fas fa-user-shield"></i> تعيين مدير فرع</button>' +
                         '<button type="button" onclick="spawnBranchRoleUser(' + index + ',\'sales_manager\')"><i class="fas fa-chart-line"></i> مدير مبيعات</button>' +
                         '<button type="button" onclick="spawnBranchRoleUser(' + index + ',\'accountant\')"><i class="fas fa-calculator"></i> محاسب فرع</button>' +
-                        '<button type="button" onclick="openHqBranchDetailReport(' + index + ')"><i class="fas fa-chart-bar"></i> تقرير الفرع</button>' +
-                    '</div>' +
+                        '<button type="button" onclick="openHqBranchDetailReport(' + index + ')"><i class="fas fa-chart-bar"></i> تقرير الفرع للإدارة</button>' +
+                    '</div></div>' +
                 '</article>';
             }).join('');
         }

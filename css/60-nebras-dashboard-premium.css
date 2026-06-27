@@ -1,0 +1,247 @@
+/**
+ * نبراس — طبقة تصميم موحّدة للوحات التحكم
+ * navy · gold · sky — ERP enterprise premium
+ */
+
+:root {
+    --nb-navy: #0d2840;
+    --nb-navy-deep: #071525;
+    --nb-accent: #155e94;
+    --nb-sky: #38bdf8;
+    --nb-gold: #c9a227;
+    --nb-gold-soft: rgba(201, 162, 39, 0.18);
+    --nb-radius-xl: 22px;
+    --nb-shadow-soft: 0 14px 40px rgba(7, 21, 37, 0.12);
+    --nb-shadow-deep: 0 24px 56px rgba(7, 21, 37, 0.22);
+}
+
+/* ── لوحة التحكم الرئيسية ── */
+body.admin-session #admin-dashboard.show {
+    background: linear-gradient(180deg, #eef3f9 0%, #f5f7fb 38%, #eef2f7 100%);
+}
+
+.dashboard-command-shell {
+    border-radius: var(--nb-radius-xl);
+    box-shadow: var(--nb-shadow-deep);
+    position: relative;
+}
+.dashboard-command-shell::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: radial-gradient(ellipse at 92% 8%, rgba(201, 162, 39, 0.22), transparent 48%);
+}
+
+.dashboard-tile-card {
+    position: relative;
+    border-radius: var(--nb-radius-xl);
+    background: linear-gradient(155deg, #ffffff 0%, #f4f9fd 55%, #eef6fc 100%);
+    border: 1px solid rgba(13, 40, 64, 0.1);
+    box-shadow: var(--nb-shadow-soft);
+}
+.dashboard-tile-card::before {
+    content: "";
+    position: absolute;
+    inset-inline-start: 0;
+    top: 12%;
+    bottom: 12%;
+    width: 4px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, var(--nb-sky), var(--nb-accent));
+    opacity: 0.85;
+}
+.dashboard-tile-card:hover {
+    border-color: rgba(56, 189, 248, 0.55);
+    box-shadow: 0 22px 48px rgba(21, 94, 148, 0.2);
+}
+.dashboard-tile-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+    display: grid;
+    place-items: center;
+    background: linear-gradient(145deg, rgba(56, 189, 248, 0.2), rgba(21, 94, 148, 0.12));
+    border: 1px solid rgba(21, 94, 148, 0.15);
+    color: var(--nb-accent);
+    font-size: 1.25rem;
+    margin-bottom: 12px;
+}
+.dashboard-tile-card h3 {
+    color: var(--nb-navy);
+    font-weight: 800;
+    letter-spacing: 0.01em;
+}
+.dashboard-tile-group-badge {
+    font-weight: 700;
+    letter-spacing: 0.04em;
+}
+.dashboard-tile-group-badge--command {
+    background: linear-gradient(135deg, rgba(201, 162, 39, 0.2), rgba(201, 162, 39, 0.08));
+    color: #8a6914;
+    border: 1px solid rgba(201, 162, 39, 0.35);
+}
+.dashboard-tile-group-badge--erp {
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.18), rgba(21, 94, 148, 0.08));
+    color: var(--nb-accent);
+    border: 1px solid rgba(21, 94, 148, 0.2);
+}
+
+/* بلاطات مميزة — حوكمة الفروع · لوحة الفرع */
+.dashboard-tile-card--branch-empire {
+    background: linear-gradient(145deg, #fffef8 0%, #fff9e8 42%, #f0f7ff 100%);
+    border-color: rgba(201, 162, 39, 0.35);
+}
+.dashboard-tile-card--branch-empire::before {
+    background: linear-gradient(180deg, var(--nb-gold), #8a6914);
+}
+.dashboard-tile-card--branch-empire .dashboard-tile-icon {
+    background: linear-gradient(145deg, rgba(201, 162, 39, 0.28), rgba(13, 40, 64, 0.12));
+    color: #8a6914;
+    border-color: rgba(201, 162, 39, 0.4);
+}
+.dashboard-tile-card--branch-command {
+    background: linear-gradient(145deg, #f4fffb 0%, #eefaf6 50%, #f0f7ff 100%);
+    border-color: rgba(27, 158, 87, 0.28);
+}
+.dashboard-tile-card--branch-command::before {
+    background: linear-gradient(180deg, #1b9e57, var(--nb-accent));
+}
+.dashboard-tile-card--branch-command .dashboard-tile-icon {
+    color: #1b9e57;
+    border-color: rgba(27, 158, 87, 0.3);
+}
+
+/* نظرة الإمبراطورية */
+.empire-overview-head h4 {
+    font-weight: 800;
+    color: var(--nb-navy);
+}
+.empire-overview-cell {
+    border-radius: 16px;
+    border: 1px solid rgba(13, 40, 64, 0.1);
+    background: linear-gradient(180deg, #fff, #f6fafd);
+    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+}
+.empire-overview-cell:hover {
+    transform: translateY(-3px);
+    border-color: rgba(56, 189, 248, 0.45);
+    box-shadow: 0 12px 28px rgba(21, 94, 148, 0.12);
+}
+.empire-overview-cell i { color: var(--nb-accent); }
+.empire-overview-cell strong { color: var(--nb-navy); font-size: 1.25rem; }
+
+.dashboard-governance-pillars {
+    border-radius: var(--nb-radius-xl);
+    box-shadow: var(--nb-shadow-soft);
+}
+.gov-pillar-card {
+    border-radius: 16px;
+    transition: transform 0.2s ease;
+}
+.gov-pillar-card:hover { transform: translateY(-2px); }
+
+/* ── ERP modals — رأس موحّد ── */
+.nebras-erp-head {
+    background: linear-gradient(125deg, var(--nb-navy-deep) 0%, var(--nb-navy) 48%, #134e6f 100%);
+    position: relative;
+    overflow: hidden;
+}
+.nebras-erp-head::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 88% 12%, rgba(201, 162, 39, 0.28), transparent 52%);
+    pointer-events: none;
+}
+.nebras-erp-head-title { position: relative; z-index: 1; }
+
+/* ── KPI stats ── */
+.erp-stat {
+    border-radius: 16px;
+    box-shadow: 0 6px 18px rgba(13, 40, 64, 0.06);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.erp-stat:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(13, 40, 64, 0.1);
+}
+.erp-stat--accent {
+    background: linear-gradient(135deg, #f0faf5 0%, #eef6fc 100%);
+    border-color: rgba(27, 158, 87, 0.25);
+}
+.erp-stat--accent strong { color: var(--nb-navy); }
+
+/* ── بطاقات الأقسام ── */
+.nebras-dept-card,
+.branch-command-card {
+    border-radius: 18px;
+    border: 1px solid rgba(13, 40, 64, 0.1);
+    background: linear-gradient(180deg, #fff 0%, #f8fbfe 100%);
+    box-shadow: 0 8px 22px rgba(13, 40, 64, 0.07);
+    transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s;
+    text-align: right;
+    padding: 18px 16px;
+}
+.nebras-dept-card:hover,
+.branch-command-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(56, 189, 248, 0.45);
+    box-shadow: 0 16px 36px rgba(21, 94, 148, 0.14);
+}
+.nebras-dept-card i,
+.branch-command-card i {
+    font-size: 1.35rem;
+    color: var(--nb-accent);
+    margin-bottom: 8px;
+}
+.nebras-dept-card h4,
+.branch-command-card h4 {
+    color: var(--nb-navy);
+    font-weight: 800;
+    margin: 0 0 6px;
+}
+.nebras-dept-card small,
+.branch-command-card small {
+    color: #5a6b7a;
+    line-height: 1.45;
+}
+
+/* ── شريط السحابة الحي ── */
+.nebras-live-cloud-ribbon {
+    border-radius: 999px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+.nebras-live-cloud-ribbon--ok {
+    background: linear-gradient(90deg, rgba(27, 158, 87, 0.15), rgba(56, 189, 248, 0.12));
+    border-color: rgba(27, 158, 87, 0.35);
+    color: #0d5c36;
+}
+
+/* ── بطاقات المستخدمين ── */
+.nebras-user-card {
+    border-radius: 18px;
+    box-shadow: 0 8px 24px rgba(13, 40, 64, 0.08);
+    border: 1px solid rgba(13, 40, 64, 0.08);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.nebras-user-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 32px rgba(13, 40, 64, 0.12);
+}
+
+/* ── HR workspace ── */
+.hr-ws-sidebar {
+    background: linear-gradient(180deg, var(--nb-navy-deep), var(--nb-navy));
+}
+.hr-ws-nav-item.is-active {
+    background: linear-gradient(90deg, rgba(56, 189, 248, 0.22), rgba(201, 162, 39, 0.12));
+    border-color: rgba(56, 189, 248, 0.35);
+}
+
+@media (max-width: 768px) {
+    .dashboard-tile-card { min-height: 148px; padding: 20px 18px; }
+    .erp-stat { min-width: calc(50% - 8px); }
+}
