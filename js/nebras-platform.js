@@ -4927,8 +4927,18 @@
         applyAnalyticsTabVisibility();
     }
 
+    let _nebrasCloudToastLastOkAt = 0;
+    const NEBRAS_CLOUD_TOAST_OK_COOLDOWN_MS = 12000;
+
     function showNebrasAdminToast(msg, type) {
         if (!currentAdmin) return;
+        const toastType = type || 'info';
+        const msgStr = String(msg || '');
+        if (toastType === 'ok' && /السحابة|سحابياً|سحابي/.test(msgStr)) {
+            const now = Date.now();
+            if (now - _nebrasCloudToastLastOkAt < NEBRAS_CLOUD_TOAST_OK_COOLDOWN_MS) return;
+            _nebrasCloudToastLastOkAt = now;
+        }
         let host = document.getElementById('nebras-admin-toast-host');
         if (!host) {
             host = document.createElement('div');
@@ -4937,7 +4947,6 @@
             document.body.appendChild(host);
         }
         const el = document.createElement('div');
-        const toastType = type || 'info';
         el.className = 'nebras-admin-toast nebras-admin-toast--' + toastType;
         const icon = toastType === 'error' ? 'circle-exclamation' : (toastType === 'ok' ? 'circle-check' : 'info-circle');
         el.innerHTML = '<i class="fas fa-' + icon + '"></i> ' + escapeHtmlAttr(msg || '');
@@ -12004,15 +12013,49 @@
             'site_certifications', 'about_pages', 'system_settings', 'dashboard_tiles', 'site_custom_sections'
         ];
 
+        function renderNebrasCloudStatusOrb(state, detail) {
+            const wrap = document.getElementById('nebras-cloud-status-orb-wrap');
+            const orb = document.getElementById('nebras-cloud-status-orb');
+            const label = document.getElementById('nebras-cloud-orb-label');
+            const orbDetail = document.getElementById('nebras-cloud-orb-detail');
+            if (!orb || !wrap) return;
+            const st = state || 'idle';
+            orb.setAttribute('data-state', st);
+            wrap.setAttribute('data-state', st);
+            const presets = {
+                saving: { label: 'جاري الرفع', detail: 'حفظ حي في السحابة…', icon: 'fa-cloud-arrow-up' },
+                ok: { label: 'محفوظ', detail: detail || '✓ متزامن — كل الأجهزة', icon: 'fa-cloud-check' },
+                warn: { label: 'انتظار', detail: detail || '⚠️ لم يُؤكَّد بعد', icon: 'fa-cloud-exclamation' },
+                local: { label: 'محلي', detail: detail || '⚠️ محفوظ على هذا الجهاز', icon: 'fa-cloud-exclamation' },
+                error: { label: 'تعذّر', detail: detail || '✗ فشل الرفع', icon: 'fa-cloud-bolt' },
+                idle: { label: 'السحابة', detail: 'متصل — حفظ حي', icon: 'fa-cloud' }
+            };
+            const p = presets[st] || presets.idle;
+            if (label) label.textContent = p.label;
+            if (orbDetail) orbDetail.textContent = p.detail;
+            const iconEl = orb.querySelector('.nebras-cloud-orb-icon i');
+            if (iconEl) iconEl.className = 'fas ' + p.icon;
+            if (st === 'ok') {
+                clearTimeout(renderNebrasCloudStatusOrb._idleTimer);
+                renderNebrasCloudStatusOrb._idleTimer = setTimeout(function() {
+                    renderNebrasCloudStatusOrb('idle');
+                }, 4500);
+            }
+        }
+
         function renderNebrasLiveCloudRibbon(state, detail) {
             renderScmCloudSaveStatus(state, detail);
+            renderNebrasCloudStatusOrb(state, detail);
             const ribbon = document.getElementById('nebras-live-cloud-ribbon');
             const ribbonText = document.getElementById('nebras-live-cloud-ribbon-text');
+            const showRibbon = state === 'warn' || state === 'local' || state === 'error';
             if (ribbon) {
-                ribbon.hidden = false;
-                ribbon.className = 'nebras-live-cloud-ribbon admin-only-ui nebras-live-cloud-ribbon--' + (state || 'idle');
+                ribbon.hidden = !showRibbon;
+                if (showRibbon) {
+                    ribbon.className = 'nebras-live-cloud-ribbon admin-only-ui nebras-live-cloud-ribbon--' + (state || 'idle');
+                }
             }
-            if (ribbonText) {
+            if (ribbonText && showRibbon) {
                 const msgs = {
                     saving: 'جاري الحفظ الحي في السحابة…',
                     ok: detail || '✓ محفوظ سحابياً — مباشر ومستمر',

@@ -245,3 +245,144 @@ body.admin-session #admin-dashboard.show {
     .dashboard-tile-card { min-height: 148px; padding: 20px 18px; }
     .erp-stat { min-width: calc(50% - 8px); }
 }
+
+/* ── مؤشر السحابة الحي — شعار ثابت في الداشبورد ── */
+.nebras-cloud-status-orb-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 6px 12px 6px 8px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    cursor: default;
+    transition: border-color 0.25s, background 0.25s, box-shadow 0.25s;
+}
+.nebras-cloud-status-orb {
+    position: relative;
+    width: 38px;
+    height: 38px;
+    flex-shrink: 0;
+}
+.nebras-cloud-orb-icon {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    background: linear-gradient(145deg, rgba(56, 189, 248, 0.35), rgba(21, 94, 148, 0.25));
+    border: 1px solid rgba(56, 189, 248, 0.45);
+    color: #e8f6ff;
+    font-size: 1rem;
+    z-index: 2;
+    transition: transform 0.3s, background 0.3s, color 0.3s;
+}
+.nebras-cloud-orb-ring {
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    z-index: 1;
+}
+.nebras-cloud-orb-pulse {
+    position: absolute;
+    inset: -6px;
+    border-radius: 50%;
+    opacity: 0;
+    z-index: 0;
+}
+.nebras-cloud-orb-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+}
+.nebras-cloud-orb-meta strong {
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: 0.02em;
+}
+.nebras-cloud-orb-meta small {
+    font-size: 0.68rem;
+    color: rgba(255, 255, 255, 0.78);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 140px;
+}
+
+.nebras-cloud-status-orb[data-state="idle"] .nebras-cloud-orb-icon {
+    background: linear-gradient(145deg, rgba(56, 189, 248, 0.32), rgba(13, 40, 64, 0.4));
+}
+.nebras-cloud-status-orb[data-state="saving"] .nebras-cloud-orb-icon {
+    animation: nb-cloud-bob 1.1s ease-in-out infinite;
+}
+.nebras-cloud-status-orb[data-state="saving"] .nebras-cloud-orb-ring {
+    border-color: rgba(56, 189, 248, 0.65);
+    animation: nb-cloud-spin 1.4s linear infinite;
+}
+.nebras-cloud-status-orb[data-state="saving"] .nebras-cloud-orb-pulse {
+    background: rgba(56, 189, 248, 0.25);
+    animation: nb-cloud-pulse 1.6s ease-out infinite;
+    opacity: 1;
+}
+.nebras-cloud-status-orb[data-state="ok"] .nebras-cloud-orb-icon {
+    background: linear-gradient(145deg, rgba(27, 158, 87, 0.55), rgba(13, 40, 64, 0.35));
+    border-color: rgba(27, 158, 87, 0.65);
+    color: #d4ffe8;
+    transform: scale(1.06);
+}
+.nebras-cloud-status-orb[data-state="ok"] .nebras-cloud-orb-ring {
+    border-color: rgba(27, 158, 87, 0.55);
+    animation: nb-cloud-ok-flash 0.9s ease-out 1;
+}
+.nebras-cloud-status-orb-wrap[data-state="ok"] {
+    border-color: rgba(27, 158, 87, 0.45);
+    box-shadow: 0 0 0 1px rgba(27, 158, 87, 0.15), 0 8px 22px rgba(27, 158, 87, 0.12);
+}
+.nebras-cloud-status-orb[data-state="warn"] .nebras-cloud-orb-icon,
+.nebras-cloud-status-orb[data-state="local"] .nebras-cloud-orb-icon {
+    background: linear-gradient(145deg, rgba(201, 162, 39, 0.45), rgba(180, 83, 9, 0.25));
+    border-color: rgba(201, 162, 39, 0.55);
+    color: #fff8e6;
+}
+.nebras-cloud-status-orb[data-state="error"] .nebras-cloud-orb-icon {
+    background: linear-gradient(145deg, rgba(180, 35, 24, 0.55), rgba(120, 20, 15, 0.35));
+    border-color: rgba(255, 120, 100, 0.55);
+    color: #ffe8e6;
+    animation: nb-cloud-shake 0.45s ease;
+}
+.nebras-cloud-status-orb-wrap[data-state="error"] {
+    border-color: rgba(180, 35, 24, 0.45);
+}
+
+@keyframes nb-cloud-bob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-3px); }
+}
+@keyframes nb-cloud-spin {
+    to { transform: rotate(360deg); }
+}
+@keyframes nb-cloud-pulse {
+    0% { transform: scale(0.85); opacity: 0.55; }
+    100% { transform: scale(1.35); opacity: 0; }
+}
+@keyframes nb-cloud-ok-flash {
+    0% { transform: scale(0.9); opacity: 0.2; }
+    50% { transform: scale(1.15); opacity: 1; }
+    100% { transform: scale(1); opacity: 0.6; }
+}
+@keyframes nb-cloud-shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-2px); }
+    75% { transform: translateX(2px); }
+}
+
+@media (max-width: 900px) {
+    .nebras-cloud-orb-meta small { max-width: 96px; }
+}
+@media (max-width: 640px) {
+    .nebras-cloud-orb-meta { display: none; }
+    .nebras-cloud-status-orb-wrap { padding: 4px; }
+}
