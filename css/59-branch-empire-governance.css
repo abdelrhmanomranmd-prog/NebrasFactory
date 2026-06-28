@@ -258,3 +258,23 @@
     .hq-branch-gov-btns { grid-template-columns: 1fr; }
     .hq-branch-empire-grid { grid-template-columns: 1fr; padding-inline: 16px; }
 }
+
+.nebras-branch-gov-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 8px 0 0;
+}
+.nebras-branch-gov-strip span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    background: rgba(21, 94, 148, 0.08);
+    border: 1px solid rgba(21, 94, 148, 0.15);
+    color: #1a5276;
+}
+.nebras-branch-gov-strip span i { color: #155e94; }

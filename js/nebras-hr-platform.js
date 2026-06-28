@@ -904,11 +904,13 @@
             ? '<div class="hr-company-ctx-banner"><i class="fas fa-filter"></i> تعرض بيانات: <strong>' + esc(resolveHrCompanyLabel(getHrCompanyFilter())) + '</strong>' +
                 ' <button type="button" class="erp-tag" onclick="setHrCompanyFilter(\'\')"><i class="fas fa-xmark"></i> كل الشركات</button></div>'
             : '';
+        const hrScope = typeof getHrAdminScope === 'function' ? getHrAdminScope() : { mode: 'full', branchId: '' };
+        const lockBranchFilter = hrScope.branchId && hrScope.mode !== 'full' && hrScope.mode !== 'company';
         const toolbar =
             companyCtx +
             '<div class="hr-toolbar">' +
                 companyToolbar +
-                '<label class="nebras-field"><span>الفرع</span><select onchange="setHrBranchFilter(this.value)">' + branchOpts + '</select></label>' +
+                '<label class="nebras-field"><span>الفرع</span><select id="hr-branch-filter-select"' + (lockBranchFilter ? ' disabled title="فرعك المخصّص — ' + esc(hrScope.label || '') + '"' : '') + ' onchange="setHrBranchFilter(this.value)">' + branchOpts + '</select></label>' +
                 '<label class="nebras-field hr-search-input"><span>بحث</span><input type="search" placeholder="اسم · رقم · جوال · قسم…" value="' + esc(hrSearchQuery) +
                     '" oninput="setHrSearch(this.value)"></label>' +
             '</div>';
@@ -1077,10 +1079,32 @@
         '</div>';
     }
 
-    function branchSelectHtml(selectedId, fieldId) {
-        return getHrBranches().filter(function(b) { return b.id !== ''; }).map(function(b) {
-            return '<option value="' + esc(b.id) + '"' + (String(selectedId) === String(b.id) ? ' selected' : '') + '>' + esc(b.label) + '</option>';
+    function branchSelectHtml(selectedId, options) {
+        options = options || {};
+        const scope = typeof getHrAdminScope === 'function' ? getHrAdminScope() : { mode: 'full', branchId: '' };
+        let branches = getHrBranches().filter(function(b) { return b.id !== ''; });
+        if (options.lockToScope && scope.branchId) {
+            branches = branches.filter(function(b) { return String(b.id) === String(scope.branchId); });
+        }
+        const defaultId = options.lockToScope && scope.branchId ? scope.branchId : (selectedId || scope.branchId || 'hq');
+        return branches.map(function(b) {
+            return '<option value="' + esc(b.id) + '"' + (String(defaultId) === String(b.id) ? ' selected' : '') + '>' + esc(b.label) + '</option>';
         }).join('');
+    }
+
+    function applyHrBranchFieldLock(selectId) {
+        const el = document.getElementById(selectId);
+        if (!el) return;
+        const scope = typeof getHrAdminScope === 'function' ? getHrAdminScope() : { mode: 'full', branchId: '' };
+        const lock = scope.branchId && scope.mode !== 'full' && scope.mode !== 'company';
+        if (lock) {
+            el.value = scope.branchId;
+            el.disabled = true;
+            el.title = 'الفرع محدّد تلقائياً حسب صلاحياتك — ' + (scope.label || '');
+        } else {
+            el.disabled = false;
+            el.removeAttribute('title');
+        }
     }
 
     function renderHrEmployeeEditor(id) {
@@ -1119,7 +1143,7 @@
                     '<option value="بنغلاديشي"></option><option value="فلبيني"></option><option value="أردني"></option>' +
                     '<option value="سوري"></option><option value="لبناني"></option><option value="فلسطيني"></option>' +
                 '</datalist>' +
-                '<label class="nebras-field"><span>الفرع</span><select id="he-branch">' + branchSelectHtml(e.branchId || 'hq') + '</select></label>' +
+                '<label class="nebras-field"><span>الفرع</span><select id="he-branch">' + branchSelectHtml(e.branchId || 'hq', { lockToScope: !isEdit }) + '</select></label>' +
                 '<div class="nebras-field nebras-field--wide hr-nafath-row">' +
                     '<label class="nebras-field--inline"><input type="checkbox" id="he-nafath-verified"' + (e.nafathVerified ? ' checked' : '') + '> تم التحقق عبر نفاذ (NAFAZ)</label>' +
                     '<label class="nebras-field"><span>تاريخ التحقق</span><input type="date" id="he-nafath-date" value="' + esc(e.nafathVerifiedAt || '') + '"></label>' +
@@ -1196,6 +1220,7 @@
         hrEmployeeEditorId = id ? id : null;
         renderHrPlatformPanelSafe();
         setTimeout(function() {
+            applyHrBranchFieldLock('he-branch');
             const ed = document.getElementById('hr-emp-editor');
             if (ed) ed.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }, 60);
@@ -1379,7 +1404,7 @@
                 '<label class="nebras-field"><span>سنة الصنع</span><input id="hv-year" value="' + esc(v.year || '') + '"></label>' +
                 '<label class="nebras-field"><span>اللون</span><input id="hv-color" value="' + esc(v.color || '') + '"></label>' +
                 '<label class="nebras-field"><span>النوع</span><select id="hv-type">' + typeOpts + '</select></label>' +
-                '<label class="nebras-field"><span>الفرع</span><select id="hv-branch">' + branchSelectHtml(v.branchId || 'hq') + '</select></label>' +
+                '<label class="nebras-field"><span>الفرع</span><select id="hv-branch">' + branchSelectHtml(v.branchId || 'hq', { lockToScope: !isEdit }) + '</select></label>' +
                 '<label class="nebras-field"><span>الحالة</span><select id="hv-status">' + statusOpts + '</select></label>' +
                 '<label class="nebras-field"><span>الموظف المُسنَد</span><select id="hv-employee">' + empOpts + '</select></label>' +
                 '<label class="nebras-field"><span>انتهاء التأمين</span><input type="date" id="hv-insurance" value="' + esc(v.insuranceExp || '') + '"></label>' +
@@ -1403,6 +1428,11 @@
         hrActiveTab = 'vehicles';
         hrVehicleEditorId = id ? id : null;
         renderHrPlatformPanelSafe();
+        setTimeout(function() {
+            applyHrBranchFieldLock('hv-branch');
+            const ed = document.getElementById('hr-veh-editor');
+            if (ed) ed.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 60);
     }
 
     function cancelHrVehicleEditor() {
@@ -1412,8 +1442,13 @@
 
     function saveHrVehicle(id) {
         if (!requireHrAccess()) return;
+        if (id) {
+            const existing = getVehicleById(id);
+            if (existing && typeof requireHrRecordInScope === 'function' && !requireHrRecordInScope(existing, 'vehicle')) return;
+        }
         const plate = hrField('hv-plate');
         if (!plate) { alert('رقم اللوحة مطلوب.'); return; }
+        const scope = typeof getHrAdminScope === 'function' ? getHrAdminScope() : { branchId: '' };
 
         const record = {
             id: id || ('veh-' + Date.now()),
@@ -1426,7 +1461,7 @@
             year: hrField('hv-year'),
             color: hrField('hv-color'),
             type: hrField('hv-type') || 'car',
-            branchId: hrField('hv-branch') || 'hq',
+            branchId: hrField('hv-branch') || scope.branchId || 'hq',
             status: hrField('hv-status') || 'active',
             assignedEmployeeId: hrField('hv-employee') || null,
             insuranceExp: hrField('hv-insurance'),
@@ -1438,6 +1473,9 @@
             gpsTracker: hrField('hv-gps'),
             notes: hrField('hv-notes')
         };
+
+        if (!id && typeof assertHrNewRecordInScope === 'function' && !assertHrNewRecordInScope(record)) return;
+        if (id && typeof requireHrRecordInScope === 'function' && !requireHrRecordInScope(record, 'vehicle')) return;
 
         if (id) {
             const idx = hrVehicles.findIndex(function(v) { return v.id === id; });
@@ -4317,6 +4355,21 @@
                 }
             }
             if (typeof canManage === 'function' && canManage('hr', admin)) {
+                const roleDef = typeof getRoleDefinition === 'function' ? getRoleDefinition(admin.role) : null;
+                if (roleDef && roleDef.branchScoped && (admin.assignedBranchCity || admin.assignedBranchId != null)) {
+                    const bid = String(admin.hrScopeBranchId || '').trim() ||
+                        (admin.assignedBranchCity ? branchCityToHrBranchId(admin.assignedBranchCity) : '') ||
+                        String(admin.assignedBranchId || '');
+                    if (bid) {
+                        return {
+                            mode: 'branch',
+                            branchId: bid,
+                            departmentKey: '',
+                            label: 'HR فرع — ' + (admin.assignedBranchCity || resolveHrBranchLabel(bid)),
+                            icon: 'fas fa-people-roof'
+                        };
+                    }
+                }
                 return { mode: 'full', branchId: '', departmentKey: '', label: 'صلاحية HR — كل الفروع والأقسام', icon: 'fas fa-people-roof' };
             }
             return { mode: 'restricted', branchId: '', departmentKey: '', label: 'نطاق HR غير معيّن — تواصلي مع الإدارة', icon: 'fas fa-lock' };
@@ -4634,6 +4687,7 @@
     global.exportHrFactoryCsv = exportHrFactoryCsv;
     global.calcSaudizationStats = calcSaudizationStats;
     global.getHrAdminScope = getHrAdminScope;
+    global.branchCityToHrBranchId = branchCityToHrBranchId;
     global.getHrFactoryDepts = function() { return typeof HR_FACTORY_DEPTS !== 'undefined' ? HR_FACTORY_DEPTS : {}; };
     global.renderHrAdminCommandCenter = renderHrAdminCommandCenter;
     global.renderHrScopedDashboard = renderHrScopedDashboard;

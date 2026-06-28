@@ -487,8 +487,8 @@
             branch_manager: {
                 labelAr: 'مدير فرع', labelEn: 'Branch Manager',
                 icon: 'fas fa-store', accent: '#2c3e50',
-                descAr: 'يدير فرعه — مبيعات · عروض · طلبات · ألومنيوم · فريق المندوبين — حسب ما تمنحه الإدارة الرئيسية.',
-                permissions: ['sales', 'quotes', 'orders', 'customerService', 'customerPortal', 'createCustomerUser', 'orderJourney', 'complaints', 'audit', 'aluminum', 'inventory', 'warehouse'], branchScoped: true
+                descAr: 'يدير فرعه — مبيعات · مخزون · مندوبون · HR فرع · حسابات — حسب ما تمنحه الإدارة الرئيسية.',
+                permissions: ['sales', 'quotes', 'orders', 'customerService', 'customerPortal', 'createCustomerUser', 'orderJourney', 'complaints', 'audit', 'aluminum', 'inventory', 'warehouse', 'hr'], branchScoped: true
             },
             hr: {
                 labelAr: 'موارد بشرية', labelEn: 'HR Manager',
@@ -13032,6 +13032,12 @@
             return admin.role === 'wpc_manager' || admin.role === 'production_manager';
         }
 
+        function canAccessBranchHr(admin) {
+            admin = admin || currentAdmin;
+            if (!admin) return false;
+            return typeof canManage === 'function' && canManage('hr', admin);
+        }
+
         function canAccessBranchCommandCenter(admin) {
             admin = admin || currentAdmin;
             if (!admin) return false;
@@ -13124,6 +13130,9 @@
             const def = NEBRAS_ROLE_DEFINITIONS[roleKey] || NEBRAS_ROLE_DEFINITIONS.branch_manager;
             const prefix = roleKey === 'accountant' || roleKey === 'accounting_manager' ? 'ACC' :
                 (roleKey === 'sales_manager' ? 'SM' : 'BR');
+            const branchHrId = branch.id != null ? String(branch.id) : (typeof branchCityToHrBranchId === 'function' ? branchCityToHrBranchId(branch.city) : '');
+            let perms = (rolePermissions[roleKey] || def.permissions || []).slice();
+            if (roleKey === 'branch_manager' && perms.indexOf('hr') < 0) perms.push('hr');
             openUserManagement();
             nebrasUserEditorState = {
                 index: -1,
@@ -13135,11 +13144,11 @@
                 role: roleKey,
                 assignedBranchCity: branch.city || '',
                 assignedBranchId: branch.id || resolveBranchIdByCity(branch.city),
-                hrScopeBranchId: '',
+                hrScopeBranchId: roleKey === 'branch_manager' ? (branchHrId || '') : '',
                 hrScopeDepartmentKey: '',
                 hrScopeCompanyId: '',
                 legalScopeCompanyId: '',
-                permissions: (rolePermissions[roleKey] || def.permissions || []).slice()
+                permissions: perms
             };
             renderUserEditorForm();
             const editor = document.getElementById('nebras-user-editor');
@@ -18756,7 +18765,7 @@
                 { icon: 'fas fa-boxes-stacked', title: 'مخزون الفرع', desc: 'SKU وكميات مستودع فرعك', handler: 'openErpInventory', show: canManage('inventory') || canManage('warehouse') },
                 { icon: 'fas fa-dolly', title: 'تحويلات المستودع', desc: 'حركة مخزون فرعك فقط', handler: 'openErpWarehouseTransfers', show: canManage('warehouse') || canManage('inventory') },
                 { icon: 'fas fa-calculator', title: 'حسابات الفرع', desc: 'تحويلات · مشتريات · تقارير PDF', handler: 'openAccountingPlatform', show: canManage('accounting') },
-                { icon: 'fas fa-people-roof', title: 'الموارد البشرية', desc: 'موظفون وسيارات فرعك', handler: 'openHrPlatform', show: canManage('hr') },
+                { icon: 'fas fa-people-roof', title: 'الموارد البشرية', desc: 'موظفون وسيارات فرعك — يظهرون هنا فور الإضافة', handler: 'openHrPlatform', show: canAccessBranchHr() },
                 { icon: 'fas fa-headset', title: 'خدمة العملاء', desc: 'استفسارات وردود العملاء', handler: 'openCustomerServiceManagement', show: canManage('customerService') },
                 { icon: 'fas fa-handshake', title: 'CRM', desc: 'عملاء وفرص مبيعات فرعك', handler: 'openCrmPlatform', show: canManage('customerService') },
                 { icon: 'fas fa-chart-pie', title: 'ولاء العملاء', desc: 'تحليل ولاء عملاء الفرع', handler: 'openCustomerLoyaltyAnalytics', show: typeof canManageCustomerPortalUsers === 'function' && canManageCustomerPortalUsers() },
@@ -24727,7 +24736,13 @@
             ).join('');
             const permCards = buildUserEditorPermissionGroupsHtml(st.permissions);
             const branchHint = roleDef.branchScoped
-                ? '<p class="nebras-editor-hint"><i class="fas fa-circle-info"></i> هذا الدور يُدير فرعاً محدداً — اختاري الفرع لحصر بياناته.</p>' : '';
+                ? '<p class="nebras-editor-hint"><i class="fas fa-circle-info"></i> هذا الدور يُدير فرعاً محدداً — اختاري الفرع لحصر مندوبيه · مخزونه · عروضه · حساباته · HR.</p>' +
+                    '<div class="nebras-branch-gov-strip">' +
+                    '<span><i class="fas fa-store"></i> نطاق: مبيعات · مخزون · مستودع · عروض · طلبات</span>' +
+                    (st.permissions.indexOf('hr') >= 0 ? '<span><i class="fas fa-people-roof"></i> HR فرع</span>' : '') +
+                    (st.permissions.indexOf('accounting') >= 0 ? '<span><i class="fas fa-calculator"></i> حسابات</span>' : '') +
+                    '</div>'
+                : '';
             host.hidden = false;
             host.innerHTML =
                 '<div class="nebras-editor-card">' +
@@ -24953,6 +24968,9 @@
                     alert('هذا الدور يتطلب تحديد فرع — اختاري «الفرع المخصّص» قبل الحفظ.');
                     return;
                 }
+                if (st.permissions.indexOf('hr') >= 0 && st.assignedBranchId != null) {
+                    st.hrScopeBranchId = String(st.hrScopeBranchId || st.assignedBranchId || resolveBranchIdByCity(st.assignedBranchCity) || '');
+                }
             }
             if (!st.isPrimary && !id) { alert('يرجى إدخال معرّف الموظف.'); return; }
             const dupId = adminUsers.some(function(u, i) { return u.id === id && i !== st.index; });
@@ -24971,7 +24989,7 @@
                     permissions: st.isPrimary ? null : st.permissions.slice(),
                     assignedBranchCity: st.isPrimary ? '' : st.assignedBranchCity,
                     assignedBranchId: st.isPrimary ? null : (st.assignedBranchId || resolveBranchIdByCity(st.assignedBranchCity)),
-                    hrScopeBranchId: st.isPrimary || st.role !== 'hr' ? '' : (st.hrScopeBranchId || ''),
+                    hrScopeBranchId: st.isPrimary ? '' : (st.permissions.indexOf('hr') >= 0 ? (st.hrScopeBranchId || st.assignedBranchId || resolveBranchIdByCity(st.assignedBranchCity) || '') : (st.role === 'hr' ? (st.hrScopeBranchId || '') : '')),
                     hrScopeDepartmentKey: st.isPrimary || st.role !== 'hr' ? '' : (st.hrScopeDepartmentKey || ''),
                     hrScopeCompanyId: st.isPrimary || st.role !== 'hr' ? '' : (st.hrScopeCompanyId || ''),
                     legalScopeCompanyId: st.isPrimary || st.role !== 'legal' ? '' : (st.legalScopeCompanyId || ''),
@@ -24987,7 +25005,7 @@
                     role: st.role, permissions: st.permissions.slice(),
                     assignedBranchCity: st.assignedBranchCity,
                     assignedBranchId: st.assignedBranchId || resolveBranchIdByCity(st.assignedBranchCity),
-                    hrScopeBranchId: st.role === 'hr' ? (st.hrScopeBranchId || '') : '',
+                    hrScopeBranchId: st.permissions.indexOf('hr') >= 0 ? (st.hrScopeBranchId || st.assignedBranchId || resolveBranchIdByCity(st.assignedBranchCity) || '') : (st.role === 'hr' ? (st.hrScopeBranchId || '') : ''),
                     hrScopeDepartmentKey: st.role === 'hr' ? (st.hrScopeDepartmentKey || '') : '',
                     hrScopeCompanyId: st.role === 'hr' ? (st.hrScopeCompanyId || '') : '',
                     legalScopeCompanyId: st.role === 'legal' ? (st.legalScopeCompanyId || '') : '',
@@ -26449,6 +26467,9 @@
                 try { await pullVisitorIntakeFromCloud(); } catch (intakeErr) {
                     console.warn('Post-hydrate visitor intake pull:', intakeErr);
                 }
+            }
+            if (typeof startNebrasRealtimeSync === 'function') {
+                try { startNebrasRealtimeSync(); } catch (rtErr) { console.warn('Realtime shadow:', rtErr); }
             }
             return ok;
         }
@@ -29734,6 +29755,8 @@
         window.assertQuoteAccess = assertQuoteAccess;
         window.switchAnalyticsTab = switchAnalyticsTab;
         window.showNebrasAdminToast = showNebrasAdminToast;
+        window.renderNebrasCloudStatusOrb = renderNebrasCloudStatusOrb;
+        window.getNebrasSupabaseClient = function() { return supabaseClient; };
         window.refreshDashboardExecutiveBi = refreshDashboardExecutiveBi;
         window.setCheckoutPaymentMethod = setCheckoutPaymentMethod;
         window.buildCartEnterprisePaymentHtml = buildCartEnterprisePaymentHtml;

@@ -202,6 +202,35 @@ function filterPayloadForBranchSession(storeKey, payload, sess) {
     return payload;
 }
 
+function mergeBranchScopedStorePayload(storeKey, incoming, serverPayload, sess) {
+    if (!sess || isHqSession(sess) || !Array.isArray(incoming)) return incoming;
+    if (!storeKeyIsBranchFilterable(storeKey)) return incoming;
+    const server = Array.isArray(serverPayload) ? serverPayload.slice() : [];
+    const incomingScoped = incoming.filter(function(item) { return entryMatchesBranchSession(item, sess); });
+    if (!incomingScoped.length && incoming.length) {
+        return null;
+    }
+    const outOfScope = incoming.filter(function(item) { return !entryMatchesBranchSession(item, sess); });
+    if (outOfScope.length) {
+        console.warn('mergeBranchScopedStorePayload: rejected out-of-scope rows for', storeKey, outOfScope.length);
+    }
+    const idKey = function(item) {
+        if (!item || typeof item !== 'object') return '';
+        return String(item.id || item.employeeId || item.quoteNo || item.sku || item.username || '');
+    };
+    const scopedIds = {};
+    incomingScoped.forEach(function(item) {
+        const k = idKey(item);
+        if (k) scopedIds[k] = true;
+    });
+    const kept = server.filter(function(item) {
+        if (!entryMatchesBranchSession(item, sess)) return true;
+        const k = idKey(item);
+        return k && !scopedIds[k];
+    });
+    return kept.concat(incomingScoped);
+}
+
 async function fetchStoreRow(url, key, storeKey) {
     try {
         const res = await fetch(
@@ -443,6 +472,9 @@ function keysAllowedForSession(sess, keys) {
         }
         if (role === 'sales_manager' || role === 'branch_manager') {
             if (k === 'admin_users') return true;
+            if (Array.isArray(sess.permissions) && sess.permissions.indexOf('hr') >= 0) {
+                if (k.indexOf('hr_') === 0 || k === 'audit_logs') return true;
+            }
             return k.indexOf('sales_') === 0 || k.indexOf('quote_') === 0 || k.indexOf('erp_') === 0 ||
                 k.indexOf('customer_') === 0 || k === 'callback_leads' || k === 'audit_logs';
         }
@@ -485,5 +517,9 @@ module.exports = {
     keysAllowedByCustomPermissions: keysAllowedByCustomPermissions,
     validateActiveSession: validateActiveSession,
     mergeBranchTeamAdminUsers: mergeBranchTeamAdminUsers,
+    storeKeyIsBranchFilterable: storeKeyIsBranchFilterable,
+    filterPayloadForBranchSession: filterPayloadForBranchSession,
+    mergeBranchScopedStorePayload: mergeBranchScopedStorePayload,
+    entryMatchesBranchSession: entryMatchesBranchSession,
     HQ_ONLY_STORE_KEYS: HQ_ONLY_STORE_KEYS
 };

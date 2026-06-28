@@ -33,6 +33,17 @@ async function persistOne(storeKey, payload, sess) {
             return { ok: false, error: 'forbidden_for_role', store_key: storeKey };
         }
         finalPayload = merged;
+    } else if (!sec.isHqSession(sess) && sec.storeKeyIsBranchFilterable(storeKey) && Array.isArray(payload)) {
+        const cfg = sec.supabaseServiceConfig();
+        if (cfg.url && cfg.key) {
+            const serverRow = await sec.fetchStoreRow(cfg.url, cfg.key, storeKey);
+            const serverPayload = serverRow && Array.isArray(serverRow.payload) ? serverRow.payload : [];
+            const merged = sec.mergeBranchScopedStorePayload(storeKey, payload, serverPayload, sess);
+            if (merged === null) {
+                return { ok: false, error: 'forbidden_branch_scope', store_key: storeKey };
+            }
+            finalPayload = merged;
+        }
     }
     let size = 0;
     try {

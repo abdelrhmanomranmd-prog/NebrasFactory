@@ -145,15 +145,24 @@
             '<button type="button" class="dw-export-card" onclick="exportEmpireSummaryPdf()"><i class="fas fa-file-pdf"></i><strong>تقرير الإمبراطورية</strong><small>PDF</small></button>' +
             '</div>' +
             (global.isMainGovernanceAdmin && global.isMainGovernanceAdmin()
-                ? '<section class="dw-governance-section"><h3><i class="fas fa-database"></i> قاعدة بيانات الموقع — الإدارة الرئيسية فقط</h3>' +
-                '<p class="scm-hint">استيراد/تصدير كقاعدة بيانات — Excel · PDF · Word (ليس كود)</p>' +
+                ? '<section class="dw-governance-section"><h3><i class="fas fa-database"></i> قاعدة بيانات الموقع — الإدارة الرئيسية · دفعتين</h3>' +
+                '<p class="scm-hint">الدفعة 1: تشغيلية (منتجات · مبيعات · مخزون · CRM) — الدفعة 2: حساسة (مستخدمون · HR)</p>' +
+                '<div class="dw-export-grid dw-export-grid--batches">' +
+                '<div class="dw-batch-card"><h4><i class="fas fa-boxes-stacked"></i> دفعة 1 — تشغيلية</h4>' +
+                '<button type="button" class="dw-export-card" onclick="typeof exportNebrasSiteDatabaseExcelBatch1===\'function\'&&exportNebrasSiteDatabaseExcelBatch1()"><i class="fas fa-file-excel"></i><strong>Excel</strong><small>منتجات · عروض · مخزون</small></button>' +
+                '<button type="button" class="dw-export-card" onclick="typeof exportNebrasSiteDatabasePdfBatch1===\'function\'&&exportNebrasSiteDatabasePdfBatch1()"><i class="fas fa-file-pdf"></i><strong>PDF</strong><small>تقرير تشغيلي</small></button></div>' +
+                '<div class="dw-batch-card dw-batch-card--sensitive"><h4><i class="fas fa-shield-halved"></i> دفعة 2 — حساسة</h4>' +
+                '<button type="button" class="dw-export-card" onclick="typeof exportNebrasSiteDatabaseExcelBatch2===\'function\'&&exportNebrasSiteDatabaseExcelBatch2()"><i class="fas fa-file-excel"></i><strong>Excel</strong><small>مستخدمون · HR</small></button>' +
+                '<button type="button" class="dw-export-card" onclick="typeof exportNebrasSiteDatabasePdfBatch2===\'function\'&&exportNebrasSiteDatabasePdfBatch2()"><i class="fas fa-file-pdf"></i><strong>PDF</strong><small>تقرير HR</small></button></div>' +
+                '</div>' +
+                '<details class="dw-full-export-details"><summary>تصدير كامل (كل الجداول دفعة واحدة)</summary>' +
                 '<div class="dw-export-grid">' +
-                '<button type="button" class="dw-export-card" onclick="typeof exportNebrasSiteDatabaseExcel===\'function\'&&exportNebrasSiteDatabaseExcel()"><i class="fas fa-file-excel"></i><strong>تصدير Excel</strong><small>كل الجداول</small></button>' +
-                '<button type="button" class="dw-export-card" onclick="typeof exportNebrasSiteDatabasePdf===\'function\'&&exportNebrasSiteDatabasePdf()"><i class="fas fa-file-pdf"></i><strong>تصدير PDF</strong><small>تقرير كامل</small></button>' +
-                '<button type="button" class="dw-export-card" onclick="typeof exportNebrasSiteDatabaseWord===\'function\'&&exportNebrasSiteDatabaseWord()"><i class="fas fa-file-word"></i><strong>تصدير Word</strong><small>مستند .doc</small></button>' +
-                '<button type="button" class="dw-export-card" onclick="typeof exportNebrasSiteImportTemplate===\'function\'&&exportNebrasSiteImportTemplate()"><i class="fas fa-file-download"></i><strong>قالب الاستيراد</strong><small>Excel CSV</small></button>' +
-                '<button type="button" class="dw-export-card" onclick="typeof openNebrasSiteDatabaseImportPicker===\'function\'&&openNebrasSiteDatabaseImportPicker()"><i class="fas fa-file-import"></i><strong>استيراد Excel</strong><small>من الملف</small></button>' +
-                '</div></section>'
+                '<button type="button" class="dw-export-card" onclick="typeof exportNebrasSiteDatabaseExcel===\'function\'&&exportNebrasSiteDatabaseExcel()"><i class="fas fa-file-excel"></i><strong>Excel كامل</strong></button>' +
+                '<button type="button" class="dw-export-card" onclick="typeof exportNebrasSiteDatabasePdf===\'function\'&&exportNebrasSiteDatabasePdf()"><i class="fas fa-file-pdf"></i><strong>PDF كامل</strong></button>' +
+                '<button type="button" class="dw-export-card" onclick="typeof exportNebrasSiteDatabaseWord===\'function\'&&exportNebrasSiteDatabaseWord()"><i class="fas fa-file-word"></i><strong>Word</strong></button>' +
+                '<button type="button" class="dw-export-card" onclick="typeof exportNebrasSiteImportTemplate===\'function\'&&exportNebrasSiteImportTemplate()"><i class="fas fa-file-download"></i><strong>قالب استيراد</strong></button>' +
+                '<button type="button" class="dw-export-card" onclick="typeof openNebrasSiteDatabaseImportPicker===\'function\'&&openNebrasSiteDatabaseImportPicker()"><i class="fas fa-file-import"></i><strong>استيراد Excel</strong></button>' +
+                '</div></details></section>'
                 : '') +
             '<div class="workspace-actions-row" style="margin-top:16px">' +
             '<button type="button" class="workspace-action-btn workspace-action-btn--primary" onclick="typeof syncPushToNebrasCloudNow===\'function\'&&syncPushToNebrasCloudNow()"><i class="fas fa-cloud-upload-alt"></i> رفع للسحابة</button>' +

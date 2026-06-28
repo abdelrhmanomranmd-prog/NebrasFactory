@@ -135,6 +135,103 @@
         return sheets;
     }
 
+    const SITE_DB_BATCH1_NAMES = ['منتجات_المتجر', 'كتالوج_20_لون', 'عروض_المبيعات', 'مخزون_ERP', 'عملاء_CRM', 'الإنتاج_اليومي', 'عملاء_البوابة'];
+    const SITE_DB_BATCH2_NAMES = ['المستخدمون'];
+
+    function collectSiteDatabaseSheetsBatch(batch) {
+        const all = collectSiteDatabaseSheets();
+        const names = batch === 2 ? SITE_DB_BATCH2_NAMES : SITE_DB_BATCH1_NAMES;
+        const hrSheets = [];
+        const emps = (typeof global.getHrEmployees === 'function' ? global.getHrEmployees() : []) || [];
+        if (batch === 2 && emps.length) {
+            hrSheets.push({
+                name: 'HR_موظفون',
+                headers: ['id', 'employee_no', 'name_ar', 'branch_id', 'department', 'job', 'phone', 'status'],
+                rows: emps.map(function(e) {
+                    return [e.id, e.employeeNo, e.nameAr, e.branchId, e.department, e.jobTitle, e.phone, e.status];
+                })
+            });
+        }
+        const vehs = (typeof global.getHrVehicles === 'function' ? global.getHrVehicles() : []) || [];
+        if (batch === 2 && vehs.length) {
+            hrSheets.push({
+                name: 'HR_سيارات',
+                headers: ['id', 'plate', 'make', 'model', 'branch_id', 'status', 'employee_id'],
+                rows: vehs.map(function(v) {
+                    return [v.id, v.plateNo, v.make, v.model, v.branchId, v.status, v.assignedEmployeeId || ''];
+                })
+            });
+        }
+        const branches = global.branchesData || [];
+        if (batch === 1 && branches.length) {
+            hrSheets.push({
+                name: 'الفروع',
+                headers: ['id', 'city', 'phone', 'address'],
+                rows: branches.map(function(b) {
+                    return [b.id, b.city || b.cityAr, b.salesPhone || '', b.address || ''];
+                })
+            });
+        }
+        const filtered = all.filter(function(s) { return names.indexOf(s.name) >= 0; });
+        return filtered.concat(hrSheets);
+    }
+
+    function exportSiteDatabaseExcelBatch(batch) {
+        if (!requireMain()) return;
+        const sheets = collectSiteDatabaseSheetsBatch(batch);
+        let worksheets = '';
+        sheets.forEach(function(s) {
+            worksheets += buildExcelSheet(s.name, s.headers, s.rows);
+        });
+        const html = '<?xml version="1.0"?><?mso-application progid="Excel.Sheet"?>' +
+            '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">' +
+            '<head><meta charset="UTF-8"><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets>' +
+            worksheets + '</x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]--></head><body>' +
+            sheets.map(function(s) {
+                return '<h2>' + esc(s.name) + '</h2><table border="1"><thead><tr>' +
+                    s.headers.map(function(h) { return '<th>' + esc(h) + '</th>'; }).join('') +
+                    '</tr></thead><tbody>' +
+                    s.rows.map(function(row) {
+                        return '<tr>' + row.map(function(c) { return '<td>' + esc(c) + '</td>'; }).join('') + '</tr>';
+                    }).join('') + '</tbody></table><br/>';
+            }).join('') + '</body></html>';
+        const blob = new Blob(['\ufeff' + html], { type: 'application/vnd.ms-excel;charset=utf-8' });
+        const label = batch === 2 ? 'sensitive' : 'operational';
+        downloadBlob(blob, 'nebras-database-' + label + '-' + new Date().toISOString().slice(0, 10) + '.xls');
+        if (typeof global.addAuditLog === 'function') global.addAuditLog('تصدير قاعدة بيانات', 'Excel دفعة ' + batch + ' — ' + sheets.length + ' جداول');
+    }
+
+    function exportSiteDatabasePdfBatch(batch) {
+        if (!requireMain()) return;
+        const sheets = collectSiteDatabaseSheetsBatch(batch);
+        const win = window.open('', '_blank');
+        if (!win) { alert('اسمحي بفتح نافذة للتقرير.'); return; }
+        const title = batch === 2 ? 'دفعة 2 — حساسة (مستخدمون · HR)' : 'دفعة 1 — تشغيلية (منتجات · مبيعات · مخزون)';
+        let body = '<h1>قاعدة بيانات نبراس — ' + esc(title) + '</h1><p>تاريخ: ' + new Date().toLocaleString('ar-SA') + '</p>';
+        sheets.forEach(function(s) {
+            body += '<h2>' + esc(s.name) + ' (' + s.rows.length + ' سجل)</h2>';
+            body += '<table border="1" cellpadding="6" cellspacing="0" style="width:100%;border-collapse:collapse;font-size:11px">';
+            body += '<thead><tr>' + s.headers.map(function(h) { return '<th>' + esc(h) + '</th>'; }).join('') + '</tr></thead><tbody>';
+            s.rows.slice(0, 200).forEach(function(row) {
+                body += '<tr>' + row.map(function(c) { return '<td>' + esc(c) + '</td>'; }).join('') + '</tr>';
+            });
+            if (s.rows.length > 200) body += '<tr><td colspan="' + s.headers.length + '">… +' + (s.rows.length - 200) + ' سجل (راجعي Excel)</td></tr>';
+            body += '</tbody></table><br/>';
+        });
+        win.document.write('<html dir="rtl"><head><meta charset="utf-8"><title>نبراس — ' + esc(title) + '</title>' +
+            '<style>body{font-family:Cairo,Tahoma,sans-serif;padding:24px;color:#0d2840}h1{border-bottom:3px solid #00a8ff}' +
+            'table{margin-bottom:20px}th{background:#155e94;color:#fff}</style></head><body>' + body + '</body></html>');
+        win.document.close();
+        win.focus();
+        win.print();
+        if (typeof global.addAuditLog === 'function') global.addAuditLog('تصدير قاعدة بيانات', 'PDF دفعة ' + batch);
+    }
+
+    function exportNebrasSiteDatabaseExcelBatch1() { exportSiteDatabaseExcelBatch(1); }
+    function exportNebrasSiteDatabaseExcelBatch2() { exportSiteDatabaseExcelBatch(2); }
+    function exportNebrasSiteDatabasePdfBatch1() { exportSiteDatabasePdfBatch(1); }
+    function exportNebrasSiteDatabasePdfBatch2() { exportSiteDatabasePdfBatch(2); }
+
     function exportNebrasSiteDatabaseExcel() {
         if (!requireMain()) return;
         const sheets = collectSiteDatabaseSheets();
@@ -397,6 +494,10 @@
 
     global.exportNebrasSiteDatabaseExcel = exportNebrasSiteDatabaseExcel;
     global.exportNebrasSiteDatabasePdf = exportNebrasSiteDatabasePdf;
+    global.exportNebrasSiteDatabaseExcelBatch1 = exportNebrasSiteDatabaseExcelBatch1;
+    global.exportNebrasSiteDatabaseExcelBatch2 = exportNebrasSiteDatabaseExcelBatch2;
+    global.exportNebrasSiteDatabasePdfBatch1 = exportNebrasSiteDatabasePdfBatch1;
+    global.exportNebrasSiteDatabasePdfBatch2 = exportNebrasSiteDatabasePdfBatch2;
     global.exportNebrasSiteDatabaseWord = exportNebrasSiteDatabaseWord;
     global.exportNebrasSiteImportTemplate = exportNebrasSiteImportTemplate;
     global.importNebrasSiteDatabaseFromFile = importNebrasSiteDatabaseFromFile;
