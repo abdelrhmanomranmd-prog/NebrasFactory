@@ -12111,7 +12111,7 @@
                 warn: { label: 'انتظار', detail: detail || '⚠️ لم يُؤكَّد بعد', icon: 'fa-cloud-exclamation' },
                 local: { label: 'محلي', detail: detail || '⚠️ محفوظ على هذا الجهاز', icon: 'fa-cloud-exclamation' },
                 error: { label: 'تعذّر', detail: detail || '✗ فشل الرفع', icon: 'fa-cloud-bolt' },
-                idle: { label: 'السحابة', detail: 'متصل — حفظ حي', icon: 'fa-cloud' }
+                idle: { label: 'السحابة', detail: 'حفظ حي على السيرفر — Odoo Mode', icon: 'fa-cloud' }
             };
             const p = presets[st] || presets.idle;
             if (label) label.textContent = p.label;
@@ -26592,6 +26592,17 @@
             return nebrasHydrateInFlight;
         }
 
+        function applyNebrasRealtimeStorePatch(storeKey, payload, cloudUpdatedAt) {
+            if (typeof isNebrasCloudHydrating === 'function' && isNebrasCloudHydrating()) return;
+            if (typeof shouldSkipStaleCloudGovernanceRow === 'function' && shouldSkipStaleCloudGovernanceRow(storeKey)) return;
+            if (typeof shouldRejectStaleCloudPull === 'function' && shouldRejectStaleCloudPull(storeKey, cloudUpdatedAt, payload)) return;
+            applyNebrasCloudRow(storeKey, payload, cloudUpdatedAt);
+            try { persistLocalGovernanceKeys(); } catch (e) { /* ignore */ }
+            if (currentAdmin && typeof renderDashboardCommandShell === 'function') {
+                renderDashboardCommandShell(currentAdmin);
+            }
+        }
+
         /** المرحلة 1 — تحميل السحابة بعد دخول الإدارة (دمج + بدون مسح البذور) */
         async function hydrateGovernanceFromServerAfterLogin(options) {
             options = options || {};
@@ -27050,6 +27061,16 @@
 
         function saveSystemData(options) {
             options = options || {};
+            if (typeof window !== 'undefined' && window.NEBRAS_ODOO_WRITE_MODE &&
+                typeof window.nebrasOdooSaveSystemData === 'function' &&
+                currentAdmin && !options.skipCloud && !options.skipOdooWrite) {
+                if (options.urgentCloud !== false) options.urgentCloud = true;
+                if (!options.skipMutationMark) {
+                    if (typeof markGovernanceRevision === 'function') markGovernanceRevision();
+                }
+                window.nebrasOdooSaveSystemData(options);
+                return;
+            }
             if (currentAdmin && options.urgentCloud !== false) {
                 options.urgentCloud = true;
             }
@@ -30154,6 +30175,9 @@
         window.flushPushToNebrasCloud = flushPushToNebrasCloud;
         window.isNebrasCloudHydrating = isNebrasCloudHydrating;
         window.waitForNebrasCloudHydrate = waitForNebrasCloudHydrate;
+        window.persistLocalGovernanceKeys = persistLocalGovernanceKeys;
+        window.persistAnalyticsGovernanceLocal = persistAnalyticsGovernanceLocal;
+        window.applyNebrasRealtimeStorePatch = applyNebrasRealtimeStorePatch;
         window.refreshNebrasCloudFromServer = refreshNebrasCloudFromServer;
         window.pullVisitorIntakeFromCloud = pullVisitorIntakeFromCloud;
         window.enforceProductionBusinessCleanState = enforceProductionBusinessCleanState;

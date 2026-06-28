@@ -223,6 +223,32 @@
     }
 
     async function saveHrData() {
+        const hrCloudKeys = [
+            'hr_employees', 'hr_vehicles', 'hr_leave', 'hr_vehicle_tracking',
+            'hr_attendance', 'hr_documents', 'hr_payroll', 'hr_companies',
+            'hr_travel', 'hr_deductions', 'hr_advances', 'hr_vehicle_violations',
+            'hr_notifications', 'hr_notif_settings', 'hr_email_queue', 'hr_shift_roster', 'hr_dept_activity'
+        ];
+        if (global.NEBRAS_ODOO_WRITE_MODE && typeof global.nebrasOdooPersistKeys === 'function') {
+            const cloudOk = await global.nebrasOdooPersistKeys(hrCloudKeys, { showToast: true, promptReauth: false });
+            try {
+                localStorage.setItem(HR_EMP_KEY, JSON.stringify(hrEmployees));
+                localStorage.setItem(HR_VEH_KEY, JSON.stringify(hrVehicles));
+                localStorage.setItem(HR_LEAVE_KEY, JSON.stringify(hrLeaveRequests));
+                localStorage.setItem(HR_TRACK_KEY, JSON.stringify(hrVehicleTracking));
+                saveHrPhase12Arrays();
+                saveHrPhase13Data();
+                saveHrPhase14Data();
+                saveHrPhase15Data();
+                saveHrPhase17Data();
+                try { localStorage.setItem('nebrasHrProductionMode', '1'); } catch (e) { /* ignore */ }
+            } catch (err) { console.warn('HR local cache failed', err); }
+            if (!cloudOk && typeof showNebrasAdminToast === 'function') {
+                showNebrasAdminToast('✗ لم يُحفظ HR على السيرفر — أعيدي المحاولة', 'error');
+            }
+            if (typeof updateCloudSafetyBanner === 'function') updateCloudSafetyBanner();
+            return;
+        }
         try {
             localStorage.setItem(HR_EMP_KEY, JSON.stringify(hrEmployees));
             localStorage.setItem(HR_VEH_KEY, JSON.stringify(hrVehicles));
@@ -235,12 +261,6 @@
             saveHrPhase17Data();
             try { localStorage.setItem('nebrasHrProductionMode', '1'); } catch (e) { /* ignore */ }
         } catch (err) { console.warn('HR save failed', err); }
-        const hrCloudKeys = [
-            'hr_employees', 'hr_vehicles', 'hr_leave', 'hr_vehicle_tracking',
-            'hr_attendance', 'hr_documents', 'hr_payroll', 'hr_companies',
-            'hr_travel', 'hr_deductions', 'hr_advances', 'hr_vehicle_violations',
-            'hr_notifications', 'hr_notif_settings', 'hr_email_queue', 'hr_shift_roster', 'hr_dept_activity'
-        ];
         if (typeof markLocalCloudMutationBatch === 'function') markLocalCloudMutationBatch(hrCloudKeys);
         if (typeof saveSystemData === 'function') saveSystemData({ skipCloud: true });
         if (typeof persistNebrasCriticalStores === 'function') {

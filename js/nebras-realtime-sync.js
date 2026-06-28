@@ -5,7 +5,7 @@
 (function(global) {
     'use strict';
 
-    const REALTIME_ENABLED = false;
+    const REALTIME_ENABLED = true;
     const REALTIME_SHADOW_LOG = true;
     let realtimeChannel = null;
     let lastRealtimeAt = 0;
