@@ -5103,11 +5103,64 @@
         if (typeof refreshDashboardExecutiveBi === 'function' && currentAdmin) refreshDashboardExecutiveBi(currentAdmin);
     }
 
+    function getAnalyticsGovernanceCounts() {
+        let quotes = [];
+        try {
+            quotes = typeof loadSalesQuotesInbox === 'function' ? (loadSalesQuotesInbox() || []) : [];
+        } catch (e) { quotes = []; }
+        const transfers = quotes.filter(function(e) { return e && (e.transferReceiptDataUrl || e.transferDeclared); }).length;
+        loadVisitorAnalyticsFromStorage();
+        ensureVisitorAnalytics();
+        const visitors = (visitorAnalytics && visitorAnalytics.sessions) ? visitorAnalytics.sessions.length : 0;
+        const complaintsCount = Object.keys(complaints || {}).length;
+        let restoreBin = 0;
+        try {
+            ensureAnalyticsGovernance();
+            ['quotes', 'visitors', 'complaints', 'sales', 'customers'].forEach(function(k) {
+                restoreBin += (analyticsGovernance.deleted[k] || []).length;
+            });
+        } catch (e) { /* ignore */ }
+        return { quotes: quotes.length, transfers: transfers, visitors: visitors, complaints: complaintsCount, restoreBin: restoreBin };
+    }
+
+    async function refreshAnalyticsFromCloud() {
+        if (!currentAdmin || !canManage('audit')) return;
+        const btn = document.querySelector('.analytics-sync-btn');
+        if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث…'; }
+        try {
+            if (typeof waitForNebrasCloudHydrate === 'function') await waitForNebrasCloudHydrate();
+            if (typeof refreshNebrasCloudFromServer === 'function') await refreshNebrasCloudFromServer({ force: true });
+            if (typeof pullVisitorIntakeFromCloud === 'function') await pullVisitorIntakeFromCloud();
+            await renderAdminAnalyticsPanel();
+            if (typeof showNebrasAdminToast === 'function') showNebrasAdminToast('✓ تم تحديث التحليلات من السحابة', 'ok');
+        } catch (refreshErr) {
+            console.warn('refreshAnalyticsFromCloud:', refreshErr);
+            if (typeof showNebrasAdminToast === 'function') showNebrasAdminToast('⚠️ تعذّر التحديث — البيانات المحلية معروضة', 'warn');
+            await renderAdminAnalyticsPanel();
+        } finally {
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-cloud-arrow-down"></i> تحديث من السحابة'; }
+        }
+    }
+
     function buildAnalyticsGovernanceToolbarHtml() {
         if (!isMainGovernanceAdmin()) return '';
-        return '<div class="analytics-governance-toolbar admin-only-ui" id="analytics-governance-toolbar">' +
-            '<p class="analytics-governance-title"><i class="fas fa-shield-halved"></i> حوكمة التحليلات — الإدارة الرئيسية فقط (NEBRASFACTORY)</p>' +
-            '<p class="analytics-governance-hint">حذف يومي / شهري / سنوي لمنع تراكم البيانات — كل عملية تُسجّل في التدقيق.</p>' +
+        const counts = getAnalyticsGovernanceCounts();
+        const cloudLabel = (typeof isNebrasCloudHydrating === 'function' && isNebrasCloudHydrating())
+            ? 'جاري مزامنة السحابة…'
+            : 'تحديث من السحابة';
+        return '<p class="analytics-governance-title"><i class="fas fa-shield-halved"></i> حوكمة التحليلات — الإدارة الرئيسية فقط (NEBRASFACTORY)</p>' +
+            '<p class="analytics-governance-hint">حذف يومي / شهري / سنوي — كل عملية تُسجّل في التدقيق وتُرفع للسحابة تلقائياً.</p>' +
+            '<div class="analytics-governance-stats">' +
+                '<span class="analytics-gov-stat"><strong>' + counts.quotes + '</strong> عروض</span>' +
+                '<span class="analytics-gov-stat"><strong>' + counts.transfers + '</strong> حوالات</span>' +
+                '<span class="analytics-gov-stat"><strong>' + counts.visitors + '</strong> زوار</span>' +
+                '<span class="analytics-gov-stat"><strong>' + counts.complaints + '</strong> شكاوى</span>' +
+                '<span class="analytics-gov-stat analytics-gov-stat--bin"><strong>' + counts.restoreBin + '</strong> سلة استعادة</span>' +
+            '</div>' +
+            '<div class="analytics-governance-sync-row">' +
+                '<button type="button" class="analytics-sync-btn" onclick="refreshAnalyticsFromCloud()"><i class="fas fa-cloud-arrow-down"></i> ' + escapeHtmlAttr(cloudLabel) + '</button>' +
+                '<span class="analytics-governance-sync-hint"><i class="fas fa-circle-check"></i> كل حذف/استعادة يُحفظ محلياً + سحابة</span>' +
+            '</div>' +
             '<div class="analytics-governance-period-row">' +
                 '<span class="analytics-governance-period-label"><i class="fas fa-calendar-day"></i> حذف بالفترة:</span>' +
                 '<button type="button" class="analytics-period-btn" onclick="purgeAllAnalyticsByPeriod(\'daily\')"><i class="fas fa-sun"></i> اليوم</button>' +
@@ -5122,14 +5175,14 @@
                 '<button type="button" class="analytics-period-btn analytics-period-btn--cat" onclick="purgeAnalyticsByPeriod(\'audit\',\'monthly\')">تدقيق — شهر</button>' +
             '</div>' +
             '<div class="analytics-governance-btns">' +
-                '<button type="button" class="analytics-clear-btn" onclick="clearAllAnalyticsQuotes()"><i class="fas fa-file-invoice"></i> إفراغ كل العروض</button>' +
-                '<button type="button" class="analytics-clear-btn" onclick="clearAllAnalyticsTransfers()"><i class="fas fa-receipt"></i> إفراغ الحوالات</button>' +
+                '<button type="button" class="analytics-clear-btn" onclick="clearAllAnalyticsQuotes()"><i class="fas fa-file-invoice"></i> إفراغ العروض (' + counts.quotes + ')</button>' +
+                '<button type="button" class="analytics-clear-btn" onclick="clearAllAnalyticsTransfers()"><i class="fas fa-receipt"></i> إفراغ الحوالات (' + counts.transfers + ')</button>' +
                 '<button type="button" class="analytics-clear-btn" onclick="clearAllAnalyticsCustomers()"><i class="fas fa-users"></i> إفراغ العملاء</button>' +
-                '<button type="button" class="analytics-clear-btn" onclick="clearAllAnalyticsVisitors()"><i class="fas fa-eye"></i> إفراغ الزوار</button>' +
-                '<button type="button" class="analytics-clear-btn" onclick="clearAllAnalyticsComplaints()"><i class="fas fa-exclamation-circle"></i> إفراغ الشكاوى</button>' +
-                '<button type="button" class="analytics-restore-btn analytics-restore-btn--all" onclick="restoreAllAnalyticsRecords()"><i class="fas fa-trash-restore"></i> Restore الكل</button>' +
-                '<button type="button" class="analytics-delete-btn analytics-delete-btn--bin" onclick="emptyAnalyticsRestoreBin()"><i class="fas fa-trash"></i> سلة الاستعادة</button>' +
-            '</div></div>';
+                '<button type="button" class="analytics-clear-btn" onclick="clearAllAnalyticsVisitors()"><i class="fas fa-eye"></i> إفراغ الزوار (' + counts.visitors + ')</button>' +
+                '<button type="button" class="analytics-clear-btn" onclick="clearAllAnalyticsComplaints()"><i class="fas fa-comment-dots"></i> إفراغ الشكاوى (' + counts.complaints + ')</button>' +
+                '<button type="button" class="analytics-restore-btn analytics-restore-btn--all" onclick="restoreAllAnalyticsRecords()"><i class="fas fa-trash-restore"></i> Restore (' + counts.restoreBin + ')</button>' +
+                '<button type="button" class="analytics-delete-btn analytics-delete-btn--bin" onclick="emptyAnalyticsRestoreBin()"><i class="fas fa-trash"></i> تفريغ السلة</button>' +
+            '</div>';
     }
 
     function renderUserScopeLockBanner(user) {
@@ -5321,9 +5374,20 @@
     function finalizeAnalyticsGovernanceMutation(actionLabel, detail) {
         if (typeof markGovernanceMutation === 'function') markGovernanceMutation();
         if (typeof persistAnalyticsGovernanceLocal === 'function') persistAnalyticsGovernanceLocal();
-        if (typeof saveSystemData === 'function') saveSystemData();
-        if (actionLabel && typeof addAuditLog === 'function') addAuditLog(actionLabel, detail || '');
-        if (typeof schedulePushToNebrasCloud === 'function') schedulePushToNebrasCloud();
+        const hydrating = typeof isNebrasCloudHydrating === 'function' && isNebrasCloudHydrating();
+        if (typeof saveSystemData === 'function') {
+            saveSystemData({ skipCloud: hydrating, silentCloudFail: true, urgentCloud: !hydrating });
+        }
+        if (actionLabel && typeof addAuditLog === 'function') {
+            if (hydrating) {
+                const actor = currentAdmin ? (currentAdmin.username + ' (' + currentAdmin.role + ')') : 'system';
+                auditLogs.unshift({ id: Date.now(), action: actionLabel, details: detail || '', actor: actor, at: formatNebrasDateTime(new Date(), 'ar') });
+                if (typeof persistLocalGovernanceKeys === 'function') persistLocalGovernanceKeys();
+            } else {
+                addAuditLog(actionLabel, detail || '');
+            }
+        }
+        if (!hydrating && typeof schedulePushToNebrasCloud === 'function') schedulePushToNebrasCloud();
     }
 
     async function purgeAnalyticsQuotesByPeriod(period, skipConfirm) {
@@ -7319,8 +7383,15 @@
             const quoteCatalogEl = document.getElementById('quote-catalog-panel');
             const bankTransfersEl = document.getElementById('bank-transfers-panel');
             if (kpisEl) kpisEl.innerHTML = '<p class="analytics-empty">جاري تحميل التقارير…</p>';
-            let quotes = await getMergedSalesQuotesForAnalytics();
+            let quotes = [];
+            try {
+                quotes = await getMergedSalesQuotesForAnalytics();
+            } catch (quotesErr) {
+                console.warn('Analytics quotes merge:', quotesErr);
+                quotes = typeof loadSalesQuotesInbox === 'function' ? (loadSalesQuotesInbox() || []) : [];
+            }
             quotes = filterQuotesForAdmin(quotes, currentAdmin);
+            try {
             loadVisitorAnalyticsFromStorage();
             ensureVisitorAnalytics();
             const scopedVisitors = filterVisitorsForAdmin(visitorAnalytics.sessions || [], currentAdmin);
@@ -7436,6 +7507,12 @@
             const restoreMount = document.getElementById('analytics-restore-mount');
             if (restoreMount) restoreMount.innerHTML = buildAnalyticsRestorePanelHtml();
             if (typeof mountAnalyticsTabSystem === 'function') mountAnalyticsTabSystem();
+            } catch (analyticsRenderErr) {
+                console.warn('renderAdminAnalyticsPanel:', analyticsRenderErr);
+                if (kpisEl) {
+                    kpisEl.innerHTML = '<p class="analytics-empty analytics-empty--err">تعذّر تحميل بعض التقارير — <button type="button" class="analytics-retry-btn" onclick="renderAdminAnalyticsPanel()">أعيدي المحاولة</button></p>';
+                }
+            }
         }
 
         function openAdminAnalytics() {
@@ -7779,11 +7856,17 @@
         async function fetchSalesQuotesFromCloud() {
             if (!supabaseClient) return [];
             try {
-                const { data, error } = await supabaseClient
+                const fetchOp = supabaseClient
                     .from('nebras_sales_quotes')
                     .select('id, quote_number, payload, status, created_at')
                     .order('created_at', { ascending: false })
                     .limit(80);
+                const { data, error } = await Promise.race([
+                    fetchOp,
+                    new Promise(function(resolve) {
+                        setTimeout(function() { resolve({ data: null, error: { message: 'timeout' } }); }, 6000);
+                    })
+                ]);
                 if (error || !data) return [];
                 return data.map(mapCloudQuoteRow);
             } catch (e) {
@@ -17541,7 +17624,8 @@
             atIso: now.toISOString()
         });
         if (auditLogs.length > AUDIT_LOG_MAX) auditLogs.length = AUDIT_LOG_MAX;
-        saveSystemData();
+        const hydrating = typeof isNebrasCloudHydrating === 'function' && isNebrasCloudHydrating();
+        saveSystemData({ skipCloud: hydrating, silentCloudFail: true });
         if (typeof displayAuditLog === 'function') displayAuditLog();
     }
 
@@ -26484,6 +26568,12 @@
                     showNebrasAdminToast('✓ اكتمل تحميل البيانات من السحابة — جاهز للعمل', 'ok');
                 }
                 if (typeof startNebrasCloudAutoSync === 'function') startNebrasCloudAutoSync();
+                if (currentAdmin && typeof renderAdminAnalyticsPanel === 'function' && canManage('audit')) {
+                    try { renderAdminAnalyticsPanel(); } catch (anErr) { console.warn('Post-hydrate analytics:', anErr); }
+                }
+                if (typeof refreshDashboardExecutiveBi === 'function' && currentAdmin) {
+                    refreshDashboardExecutiveBi(currentAdmin).catch(function(biErr) { console.warn('Post-hydrate BI:', biErr); });
+                }
                 return ok;
             }).catch(function(hydrateErr) {
                 console.warn('Background cloud hydrate:', hydrateErr);
@@ -26982,6 +27072,12 @@
             }
             if (!localOk && currentAdmin && typeof showNebrasAdminToast === 'function') {
                 showNebrasAdminToast('تعذّر الحفظ المحلي — امسحي كاش المتصفح أو استخدمي نافذة عادية (ليس خاصاً)', 'error');
+            }
+            if (!options.skipCloud) {
+                if (typeof isNebrasCloudHydrating === 'function' && isNebrasCloudHydrating()) {
+                    options.skipCloud = true;
+                    options.silentCloudFail = true;
+                }
             }
             if (!options.skipCloud) {
                 if (currentAdmin) {
@@ -29865,6 +29961,8 @@
         window.setCheckoutPaymentMethod = setCheckoutPaymentMethod;
         window.buildCartEnterprisePaymentHtml = buildCartEnterprisePaymentHtml;
         window.renderAdminAnalyticsPanel = renderAdminAnalyticsPanel;
+        window.refreshAnalyticsFromCloud = refreshAnalyticsFromCloud;
+        window.getAnalyticsGovernanceCounts = getAnalyticsGovernanceCounts;
         window.viewSalesQuoteDocument = viewSalesQuoteDocument;
         window.submitQuoteA4Pdf = submitQuoteA4Pdf;
         window.downloadQuoteA4Pdf = downloadQuoteA4Pdf;
