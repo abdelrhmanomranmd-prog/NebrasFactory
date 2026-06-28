@@ -20219,6 +20219,9 @@
             setTxt('trust-item-3-sub', text.trustItem3Sub);
             setTxt('trust-item-4-title', text.trustItem4Title);
             setTxt('trust-item-4-sub', text.trustItem4Sub);
+            setTxt('nebras-official-verified-text', text.officialVerifiedText);
+            const verifiedBar = document.getElementById('nebras-official-verified-bar');
+            if (verifiedBar && text.officialVerifiedAria) verifiedBar.setAttribute('aria-label', text.officialVerifiedAria);
             const exploreBtn = document.getElementById('gateway-explore-store-btn');
             if (exploreBtn && text.gatewayExploreStore) {
                 exploreBtn.innerHTML = '<i class="fas fa-store" aria-hidden="true"></i> ' + escapeHtmlAttr(text.gatewayExploreStore);
@@ -28022,8 +28025,10 @@
                 trustStripAria: 'مزايا مصنع نبراس',
                 trustItem1Title: 'مصنع سعودي',
                 trustItem1Sub: 'بجودة عالمية وأسعار منافسة',
-                trustItem2Title: 'ضمان وثقة',
-                trustItem2Sub: 'منتجات WPC معتمدة',
+                trustItem2Title: 'معتمد وموثّق',
+                trustItem2Sub: 'NHC · SASO · ISO',
+                officialVerifiedText: 'منصة نبراس الرسمية — موثّقة',
+                officialVerifiedAria: 'منصة رسمية موثقة — معتمد NHC SASO ISO',
                 trustItem3Title: 'عرض سعر رسمي',
                 trustItem3Sub: 'بأقل من 30 ثانية',
                 trustItem4Title: 'صمّم بابك',
@@ -28654,8 +28659,10 @@
                 trustStripAria: 'Nebras factory advantages',
                 trustItem1Title: 'Saudi factory',
                 trustItem1Sub: 'Global quality, competitive prices',
-                trustItem2Title: 'Trust & warranty',
-                trustItem2Sub: 'Certified WPC products',
+                trustItem2Title: 'Certified & verified',
+                trustItem2Sub: 'NHC · SASO · ISO',
+                officialVerifiedText: 'Official Nebras Platform — Verified',
+                officialVerifiedAria: 'Official verified platform — NHC SASO ISO',
                 trustItem3Title: 'Official quotation',
                 trustItem3Sub: 'In under 30 seconds',
                 trustItem4Title: 'Design your door',
@@ -29085,8 +29092,10 @@
                 trustStripAria: 'Nebras 工厂优势',
                 trustItem1Title: '沙特工厂',
                 trustItem1Sub: '全球品质，竞争力价格',
-                trustItem2Title: '保障与信任',
-                trustItem2Sub: '认证 WPC 产品',
+                trustItem2Title: '认证可信',
+                trustItem2Sub: 'NHC · SASO · ISO',
+                officialVerifiedText: 'نبراس官方平台 — 已认证',
+                officialVerifiedAria: '官方认证平台 NHC SASO ISO',
                 trustItem3Title: '正式报价',
                 trustItem3Sub: '30 秒内完成',
                 trustItem4Title: '定制您的门',

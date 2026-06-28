@@ -1,0 +1,103 @@
+/**
+ * نبراس — شريط المنصة الرسمية الموثّقة (✓ أخضر)
+ */
+
+.nebras-official-verified-bar {
+    position: relative;
+    z-index: 12;
+    margin: 0;
+    padding: 0 5% 10px;
+    background: linear-gradient(180deg, rgba(6, 46, 68, 0.06) 0%, transparent 100%);
+}
+
+.nebras-official-verified-bar-inner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px 14px;
+    padding: 10px 18px;
+    border-radius: 999px;
+    border: 1px solid rgba(22, 163, 74, 0.35);
+    background: linear-gradient(90deg, rgba(22, 163, 74, 0.1) 0%, rgba(255, 255, 255, 0.96) 42%, rgba(22, 163, 74, 0.08) 100%);
+    box-shadow:
+        0 8px 28px rgba(22, 163, 74, 0.12),
+        inset 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+
+.nebras-official-verified-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.92rem;
+    font-weight: 800;
+    color: #0f5132;
+    letter-spacing: 0.01em;
+}
+
+.nebras-official-verified-badge--primary > i {
+    color: #16a34a;
+    font-size: 1.15rem;
+    filter: drop-shadow(0 0 6px rgba(22, 163, 74, 0.45));
+}
+
+.nebras-official-verified-sep {
+    color: rgba(15, 81, 50, 0.35);
+    font-weight: 700;
+    user-select: none;
+}
+
+.nebras-official-verified-certs {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.nebras-cert-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 11px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    color: #14532d;
+    background: rgba(22, 163, 74, 0.14);
+    border: 1px solid rgba(22, 163, 74, 0.28);
+}
+
+.nebras-cert-chip > i {
+    color: #16a34a;
+    font-size: 0.72rem;
+}
+
+.nebras-trust-item--verified > i,
+.nebras-trust-item:nth-child(2) > i {
+    background: linear-gradient(145deg, #15803d, #16a34a) !important;
+    box-shadow:
+        0 10px 26px rgba(22, 163, 74, 0.32),
+        inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+body.nebras-admin-session .nebras-official-verified-bar {
+    margin-top: 4px;
+}
+
+@media (max-width: 640px) {
+    .nebras-official-verified-bar {
+        padding: 0 12px 8px;
+    }
+    .nebras-official-verified-bar-inner {
+        border-radius: 16px;
+        padding: 10px 14px;
+        justify-content: flex-start;
+    }
+    .nebras-official-verified-badge {
+        font-size: 0.84rem;
+    }
+    .nebras-official-verified-sep {
+        display: none;
+    }
+}
