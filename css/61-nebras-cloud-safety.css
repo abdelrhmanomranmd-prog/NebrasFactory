@@ -1,0 +1,47 @@
+/**
+ * نبراس — شريط حماية التخزين السحابي
+ */
+
+.nebras-cloud-safety-banner {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin: 0 0 12px;
+    padding: 12px 16px;
+    border-radius: 14px;
+    font-size: 0.88rem;
+    line-height: 1.55;
+    border: 1px solid rgba(21, 94, 148, 0.2);
+    background: linear-gradient(90deg, rgba(21, 94, 148, 0.08), rgba(56, 189, 248, 0.06));
+    color: #1a5276;
+}
+.nebras-cloud-safety-banner[hidden] { display: none !important; }
+.nebras-cloud-safety-banner i { font-size: 1.1rem; }
+.nebras-cloud-safety-banner--pending {
+    border-color: rgba(201, 162, 39, 0.45);
+    background: linear-gradient(90deg, rgba(201, 162, 39, 0.12), rgba(255, 248, 230, 0.9));
+    color: #7a5c10;
+}
+.nebras-cloud-safety-banner--offline {
+    border-color: rgba(180, 35, 24, 0.35);
+    background: linear-gradient(90deg, rgba(180, 35, 24, 0.1), rgba(255, 240, 238, 0.95));
+    color: #8b1a12;
+}
+.nebras-cloud-safety-btn {
+    font-family: inherit;
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 6px 14px;
+    border-radius: 999px;
+    border: 1px solid rgba(21, 94, 148, 0.35);
+    background: #fff;
+    color: #155e94;
+    cursor: pointer;
+    margin-inline-start: auto;
+    transition: 0.2s;
+}
+.nebras-cloud-safety-btn:hover {
+    background: #155e94;
+    color: #fff;
+}

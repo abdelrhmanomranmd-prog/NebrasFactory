@@ -235,22 +235,23 @@
             saveHrPhase17Data();
             try { localStorage.setItem('nebrasHrProductionMode', '1'); } catch (e) { /* ignore */ }
         } catch (err) { console.warn('HR save failed', err); }
-        if (typeof saveSystemData === 'function') saveSystemData({ skipCloud: true });
-        else if (typeof schedulePushToNebrasCloud === 'function') schedulePushToNebrasCloud();
         const hrCloudKeys = [
             'hr_employees', 'hr_vehicles', 'hr_leave', 'hr_vehicle_tracking',
             'hr_attendance', 'hr_documents', 'hr_payroll', 'hr_companies',
             'hr_travel', 'hr_deductions', 'hr_advances', 'hr_vehicle_violations',
             'hr_notifications', 'hr_notif_settings', 'hr_email_queue', 'hr_shift_roster', 'hr_dept_activity'
         ];
+        if (typeof markLocalCloudMutationBatch === 'function') markLocalCloudMutationBatch(hrCloudKeys);
+        if (typeof saveSystemData === 'function') saveSystemData({ skipCloud: true });
         if (typeof persistNebrasCriticalStores === 'function') {
             const cloudOk = await persistNebrasCriticalStores(hrCloudKeys, {
                 showToast: true,
                 promptReauth: false
             });
             if (!cloudOk && typeof showNebrasAdminToast === 'function') {
-                showNebrasAdminToast('⚠️ بيانات الموارد البشرية لم تُحفظ في السحابة — أعيدي تسجيل الدخول ثم احفظي مرة أخرى', 'error');
+                showNebrasAdminToast('⚠️ بيانات الموارد البشرية لم تُحفظ في السحابة — اضغطي «رفع الآن» أو أعيدي تسجيل الدخول', 'error');
             }
+            if (typeof updateCloudSafetyBanner === 'function') updateCloudSafetyBanner();
         }
     }
 

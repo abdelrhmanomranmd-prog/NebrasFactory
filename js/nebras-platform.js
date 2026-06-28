@@ -17233,15 +17233,22 @@
                 saveSystemData({ skipCloud: true });
                 if (typeof flushPushToNebrasCloud === 'function') {
                     try {
-                        const pushed = await flushPushToNebrasCloud({ silentCloud: true });
+                        let pushed = false;
+                        if (typeof nebrasCloudSafetyFlushNow === 'function') {
+                            pushed = await nebrasCloudSafetyFlushNow();
+                        } else {
+                            pushed = await flushPushToNebrasCloud({ silentCloud: true });
+                        }
                         if (!pushed && typeof showNebrasAdminToast === 'function') {
-                            showNebrasAdminToast('تنبيه: لم يُرفَع كل شيء للسحابة — سجّلي دخولاً واضغطي «رفع للسحابة»', 'warn');
+                            showNebrasAdminToast('تنبيه: لم يُرفَع كل شيء للسحابة — سجّلي دخولاً واضغطي «رفع الآن»', 'warn');
                         }
                     } catch (logoutPushErr) {
                         console.warn('logout cloud push:', logoutPushErr);
                     }
                 }
             }
+            if (typeof stopNebrasCloudSafety === 'function') stopNebrasCloudSafety();
+            if (typeof stopNebrasRealtimeSync === 'function') stopNebrasRealtimeSync();
             if (typeof clearNebrasSecureSession === 'function') clearNebrasSecureSession();
             if (typeof stopNebrasCloudAutoSync === 'function') stopNebrasCloudAutoSync();
             if (dashboardClockTimer) {
@@ -23549,11 +23556,21 @@
                 }
             }
             let ok = false;
-            if (typeof reconcileHqBusinessDataToCloud === 'function') {
-                const recon = await reconcileHqBusinessDataToCloud({ showToast: false, promptReauth: false });
-                ok = !!(recon && recon.ok);
+            if (typeof nebrasCloudPushWithRetry === 'function') {
+                ok = await nebrasCloudPushWithRetry(async function() {
+                    if (typeof reconcileHqBusinessDataToCloud === 'function') {
+                        const recon = await reconcileHqBusinessDataToCloud({ showToast: false, promptReauth: false });
+                        if (recon && recon.ok) return true;
+                    }
+                    return await pushToNebrasCloud();
+                }, 'manual-sync');
+            } else {
+                if (typeof reconcileHqBusinessDataToCloud === 'function') {
+                    const recon = await reconcileHqBusinessDataToCloud({ showToast: false, promptReauth: false });
+                    ok = !!(recon && recon.ok);
+                }
+                if (!ok) ok = await pushToNebrasCloud();
             }
-            if (!ok) ok = await pushToNebrasCloud();
             renderCloudGovernancePanel();
             if (currentAdmin) renderDashboardCommandShell(currentAdmin);
             addAuditLog('مزامنة سحابة', ok ? ('رفع يدوي — ' + NEBRAS_CLOUD_STORE_SPECS.length + ' مخزن') : 'رفع يدوي فشل');
@@ -26471,6 +26488,9 @@
             if (typeof startNebrasRealtimeSync === 'function') {
                 try { startNebrasRealtimeSync(); } catch (rtErr) { console.warn('Realtime shadow:', rtErr); }
             }
+            if (typeof initNebrasCloudSafety === 'function') {
+                try { initNebrasCloudSafety(); } catch (csErr) { console.warn('Cloud safety init:', csErr); }
+            }
             return ok;
         }
 
@@ -26755,6 +26775,10 @@
             });
             if (!rows.length) return false;
             let ok = false;
+            for (let attempt = 0; attempt < 3 && !ok; attempt++) {
+                if (attempt > 0) {
+                    await new Promise(function(resolve) { setTimeout(resolve, 800 * attempt); });
+                }
             if (typeof persistGovernanceBatch === 'function' && typeof getNebrasSecureToken === 'function' && getNebrasSecureToken()) {
                 const batchResult = await persistGovernanceBatch(rows, {
                     keepalive: !!options.keepalive,
@@ -26783,6 +26807,7 @@
                 const result = await secureCloudPush(rows);
                 ok = !!(result && result.ok);
                 if (!ok) console.warn('persistNebrasCriticalStores fallback push failed:', result);
+            }
             }
             if (!ok) return false;
             nebrasCloudSynced = true;
@@ -26917,6 +26942,7 @@
                     Promise.all([flushPromise, criticalPromise]).then(function(results) {
                         const ok = !!(results[0] || results[1]);
                         renderNebrasLiveCloudRibbon(ok ? 'ok' : 'warn');
+                        if (typeof updateCloudSafetyBanner === 'function') updateCloudSafetyBanner();
                         if (ok && (options.urgentCloud || options.showCloudToast) && typeof showNebrasAdminToast === 'function') {
                             showNebrasAdminToast('✓ تم الحفظ في السحابة — متاح لكل الأجهزة والإدارات', 'ok');
                         }
