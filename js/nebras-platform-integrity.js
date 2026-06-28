@@ -505,6 +505,7 @@
     function nebrasFlushCloudIfAdmin() {
         const admin = typeof global.getNebrasCurrentAdmin === 'function' ? global.getNebrasCurrentAdmin() : null;
         if (!admin) return;
+        if (typeof global.isNebrasCloudHydrating === 'function' && global.isNebrasCloudHydrating()) return;
         const pending = typeof global.hasPendingLocalCloudMutations === 'function' && global.hasPendingLocalCloudMutations();
         const sensPending = hasSensitiveCloudPending();
         if (sensPending && typeof global.persistNebrasCriticalStores === 'function') {
@@ -525,6 +526,7 @@
     function nebrasPullCloudIfAdmin() {
         const admin = typeof global.getNebrasCurrentAdmin === 'function' ? global.getNebrasCurrentAdmin() : null;
         if (!admin) return;
+        if (typeof global.isNebrasCloudHydrating === 'function' && global.isNebrasCloudHydrating()) return;
         if (typeof global.pullVisitorIntakeFromCloud === 'function') {
             try { global.pullVisitorIntakeFromCloud(); } catch (e) { /* ignore */ }
         }

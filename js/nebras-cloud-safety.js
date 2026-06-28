@@ -28,6 +28,9 @@
     function updateCloudSafetyBanner() {
         const banner = document.getElementById('nebras-cloud-safety-banner');
         if (!banner) return;
+        if (typeof global.isNebrasCloudHydrating === 'function' && global.isNebrasCloudHydrating()) {
+            return;
+        }
         const admin = typeof global.getNebrasCurrentAdmin === 'function' ? global.getNebrasCurrentAdmin() : null;
         if (!admin) {
             banner.hidden = true;
@@ -80,6 +83,9 @@
         const admin = typeof global.getNebrasCurrentAdmin === 'function' ? global.getNebrasCurrentAdmin() : null;
         if (!admin || !hasPendingCloudWork()) {
             updateCloudSafetyBanner();
+            return;
+        }
+        if (typeof global.isNebrasCloudHydrating === 'function' && global.isNebrasCloudHydrating()) {
             return;
         }
         if (typeof navigator.onLine === 'boolean' && !navigator.onLine) {

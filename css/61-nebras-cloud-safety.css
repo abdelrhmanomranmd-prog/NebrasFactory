@@ -28,6 +28,28 @@
     background: linear-gradient(90deg, rgba(180, 35, 24, 0.1), rgba(255, 240, 238, 0.95));
     color: #8b1a12;
 }
+.nebras-cloud-safety-banner--hydrating {
+    border-color: rgba(21, 94, 148, 0.45);
+    background: linear-gradient(90deg, rgba(21, 94, 148, 0.14), rgba(56, 189, 248, 0.1));
+    color: #0d4a73;
+}
+body.nebras-cloud-hydrating #admin-dashboard {
+    position: relative;
+}
+body.nebras-cloud-hydrating #admin-dashboard::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 40;
+    pointer-events: auto;
+    background: rgba(248, 251, 255, 0.02);
+    cursor: wait;
+}
+body.nebras-cloud-hydrating #admin-dashboard .dashboard-command-shell {
+    position: relative;
+    z-index: 41;
+    pointer-events: auto;
+}
 .nebras-cloud-safety-btn {
     font-family: inherit;
     font-size: 0.78rem;
