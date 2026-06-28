@@ -231,6 +231,33 @@ function mergeBranchScopedStorePayload(storeKey, incoming, serverPayload, sess) 
     return kept.concat(incomingScoped);
 }
 
+async function fetchStoreRowsForKeys(url, key, keys, since) {
+    if (!url || !key || !Array.isArray(keys) || !keys.length) return [];
+    try {
+        const inList = keys.map(function(k) { return encodeURIComponent(String(k)); }).join(',');
+        let apiUrl = url + '/rest/v1/nebras_data_store?select=store_key,payload,updated_at&store_key=in.(' + inList + ')';
+        if (since) apiUrl += '&updated_at=gt.' + encodeURIComponent(since);
+        const res = await fetch(apiUrl, { headers: supabaseHeaders(key) });
+        if (!res.ok) {
+            const errText = await res.text().catch(function() { return ''; });
+            console.error('fetchStoreRowsForKeys failed:', res.status, errText.slice(0, 200));
+            return [];
+        }
+        const rows = await res.json();
+        if (!Array.isArray(rows)) return [];
+        return rows.map(function(r) {
+            return {
+                store_key: r.store_key,
+                payload: r.payload,
+                updated_at: r.updated_at || null
+            };
+        });
+    } catch (err) {
+        console.error('fetchStoreRowsForKeys error:', err);
+        return [];
+    }
+}
+
 async function fetchStoreRow(url, key, storeKey) {
     try {
         const res = await fetch(
@@ -504,6 +531,7 @@ module.exports = {
     sanitizePortalUser,
     sanitizePayloadForPull,
     fetchStoreRow,
+    fetchStoreRowsForKeys,
     upsertStoreRows,
     loadAdminUsers,
     loadCustomerPortalUsers,

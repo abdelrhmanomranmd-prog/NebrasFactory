@@ -38,6 +38,11 @@
         }
         const pending = hasPendingCloudWork();
         const online = typeof navigator.onLine === 'boolean' ? navigator.onLine : true;
+        if (global.NEBRAS_ODOO_QUIET_UI && !pending && online) {
+            banner.hidden = true;
+            banner.className = 'nebras-cloud-safety-banner admin-only-ui';
+            return;
+        }
         if (!pending && online) {
             banner.hidden = true;
             banner.className = 'nebras-cloud-safety-banner admin-only-ui';

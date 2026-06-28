@@ -7521,11 +7521,19 @@
                 return;
             }
             if (!requirePermission('audit', 'التحليلات متاحة لمن لديه صلاحية التدقيق / التقارير.')) return;
-            if (typeof switchAnalyticsTab === 'function') switchAnalyticsTab('overview');
-            revealPlatformLayer('admin-dashboard');
-            renderAdminAnalyticsPanel().then(function() {
-                scrollToDashboardSection('admin-analytics-hub');
-            });
+            const openPanel = function() {
+                if (typeof switchAnalyticsTab === 'function') switchAnalyticsTab('overview');
+                revealPlatformLayer('admin-dashboard');
+                renderAdminAnalyticsPanel().then(function() {
+                    scrollToDashboardSection('admin-analytics-hub');
+                });
+            };
+            if (typeof window !== 'undefined' && window.NEBRAS_ODOO_WRITE_MODE &&
+                typeof window.nebrasOdooBeforePanel === 'function') {
+                window.nebrasOdooBeforePanel('analytics').then(openPanel);
+                return;
+            }
+            openPanel();
         }
 
         async function buildAnalyticsReportLines() {
@@ -13989,9 +13997,17 @@
         }
 
         function scrollErpHub() {
-            const el = document.getElementById('erp-hub-panel');
-            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            document.body.classList.add('platform-erp-active');
+            const scroll = function() {
+                const el = document.getElementById('erp-hub-panel');
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                document.body.classList.add('platform-erp-active');
+            };
+            if (typeof window !== 'undefined' && window.NEBRAS_ODOO_WRITE_MODE &&
+                typeof window.nebrasOdooBeforePanel === 'function') {
+                window.nebrasOdooBeforePanel('erp').then(scroll);
+                return;
+            }
+            scroll();
         }
 
         function ensureBuiltinErpData() {
@@ -14030,12 +14046,20 @@
                 alert(ui.platformModuleLocked || 'غير متاح لصلاحياتك.');
                 return;
             }
-            if (mod.handler.indexOf('iconDetail:') === 0) {
-                openIconDetails(mod.handler.split(':')[1]);
+            const openMod = function() {
+                if (mod.handler.indexOf('iconDetail:') === 0) {
+                    openIconDetails(mod.handler.split(':')[1]);
+                    return;
+                }
+                const fn = DASHBOARD_HANDLER_MAP[mod.handler];
+                if (typeof fn === 'function') fn();
+            };
+            if (typeof window !== 'undefined' && window.NEBRAS_ODOO_WRITE_MODE &&
+                typeof window.nebrasOdooBeforePanel === 'function') {
+                window.nebrasOdooBeforePanel('erp').then(openMod);
                 return;
             }
-            const fn = DASHBOARD_HANDLER_MAP[mod.handler];
-            if (typeof fn === 'function') fn();
+            openMod();
         }
 
         function renderErpHubPanel() {
@@ -26692,7 +26716,8 @@
             await pullVisitorIntakeFromCloud();
             const hasPending = typeof hasPendingLocalCloudMutations === 'function' && hasPendingLocalCloudMutations();
             if (hasPending && !options.force) return false;
-            const ok = await loadFromNebrasCloud();
+            const odooDelta = typeof window !== 'undefined' && window.NEBRAS_ODOO_WRITE_MODE;
+            const ok = await loadFromNebrasCloud(odooDelta ? { delta: true, silent: true } : {});
             if (!ok) return false;
             finalizePlatformDataAfterLoad({ skipBuiltinSeeds: true });
             ensureSiteChromeDefaults();
@@ -26707,7 +26732,23 @@
             return true;
         }
 
-        async function loadFromNebrasCloud() {
+        async function loadFromNebrasCloud(options) {
+            options = options || {};
+            if (typeof window !== 'undefined' && window.NEBRAS_ODOO_WRITE_MODE &&
+                typeof window.nebrasOdooLoadFromServer === 'function') {
+                const ok = await window.nebrasOdooLoadFromServer({
+                    force: options.delta !== true,
+                    delta: options.delta === true,
+                    silent: options.silent,
+                    storeKeys: options.storeKeys
+                });
+                if (ok) {
+                    nebrasCloudSynced = true;
+                    nebrasLastCloudLoadAt = new Date();
+                    if (currentAdmin) renderDashboardCommandShell(currentAdmin);
+                }
+                return ok;
+            }
             let loadedAny = false;
             try {
                 if (supabaseClient) {
@@ -26753,6 +26794,16 @@
         let nebrasCloudLastErrorToastAt = 0;
 
         function maybeCloudSaveToast(ok) {
+            if (typeof window !== 'undefined' && window.NEBRAS_ODOO_QUIET_UI) {
+                if (!ok && nebrasCloudShowToastNext && currentAdmin &&
+                    typeof showNebrasAdminToast === 'function' &&
+                    Date.now() - nebrasCloudLastErrorToastAt > 60000) {
+                    nebrasCloudLastErrorToastAt = Date.now();
+                    showNebrasAdminToast('✗ لم يُحفظ على السيرفر — تحققي من الاتصال', 'error');
+                }
+                nebrasCloudShowToastNext = false;
+                return;
+            }
             if (!nebrasCloudShowToastNext || !currentAdmin) return;
             nebrasCloudShowToastNext = false;
             if (Date.now() - nebrasCloudLastToastAt < 5000) return;
@@ -30178,6 +30229,10 @@
         window.persistLocalGovernanceKeys = persistLocalGovernanceKeys;
         window.persistAnalyticsGovernanceLocal = persistAnalyticsGovernanceLocal;
         window.applyNebrasRealtimeStorePatch = applyNebrasRealtimeStorePatch;
+        window.applyNebrasCloudRow = applyNebrasCloudRow;
+        window.finalizePlatformDataAfterLoad = finalizePlatformDataAfterLoad;
+        window.loadFromNebrasCloud = loadFromNebrasCloud;
+        window.renderErpHubPanel = renderErpHubPanel;
         window.refreshNebrasCloudFromServer = refreshNebrasCloudFromServer;
         window.pullVisitorIntakeFromCloud = pullVisitorIntakeFromCloud;
         window.enforceProductionBusinessCleanState = enforceProductionBusinessCleanState;

@@ -231,10 +231,11 @@
         }
     }
 
-    async function secureCloudPull(keys) {
+    async function secureCloudPull(keys, since) {
         const token = getSecureToken();
         if (!token) return [];
-        const qs = keys && keys.length ? '&keys=' + encodeURIComponent(keys.join(',')) : '';
+        let qs = keys && keys.length ? '&keys=' + encodeURIComponent(keys.join(',')) : '';
+        if (since) qs += '&since=' + encodeURIComponent(since);
         try {
             const res = await fetch(apiBase() + '/api/nebras-cloud?action=pull' + qs, {
                 headers: { Authorization: 'Bearer ' + token }

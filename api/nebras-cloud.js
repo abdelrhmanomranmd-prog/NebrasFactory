@@ -32,18 +32,19 @@ async function handlePull(req, sess) {
             }
         };
     }
+    const since = String(req.query.since || '').trim() || null;
     const rows = [];
-    for (let i = 0; i < keys.length; i++) {
-        const row = await sec.fetchStoreRow(url, key, keys[i]);
+    const batch = await sec.fetchStoreRowsForKeys(url, key, keys, since);
+    batch.forEach(function(row) {
         if (row && row.payload !== null && row.payload !== undefined) {
             rows.push({
-                store_key: keys[i],
-                payload: sec.sanitizePayloadForPull(keys[i], row.payload, sess),
+                store_key: row.store_key,
+                payload: sec.sanitizePayloadForPull(row.store_key, row.payload, sess),
                 updated_at: row.updated_at || null
             });
         }
-    }
-    return { code: 200, data: { ok: true, rows: rows, by: sess.username } };
+    });
+    return { code: 200, data: { ok: true, rows: rows, by: sess.username, delta: !!since } };
 }
 
 async function handlePush(body, sess) {

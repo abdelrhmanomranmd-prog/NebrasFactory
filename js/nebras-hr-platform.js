@@ -755,11 +755,18 @@
 
     function openHrPlatform() {
         if (!requireHrAccess()) return;
-        hrActiveTab = hrActiveTab || 'dashboard';
-        if (!showHrPlatformShell()) return;
-        renderHrPlatformPanelSafe();
-        scheduleHrWorkspaceRender(0);
-        if (typeof startNebrasHrBoot === 'function') startNebrasHrBoot();
+        const openPanel = function() {
+            hrActiveTab = hrActiveTab || 'dashboard';
+            if (!showHrPlatformShell()) return;
+            renderHrPlatformPanelSafe();
+            scheduleHrWorkspaceRender(0);
+            if (typeof startNebrasHrBoot === 'function') startNebrasHrBoot();
+        };
+        if (global.NEBRAS_ODOO_WRITE_MODE && typeof global.nebrasOdooBeforePanel === 'function') {
+            global.nebrasOdooBeforePanel('hr').then(openPanel);
+            return;
+        }
+        openPanel();
     }
 
     function switchHrTab(tab) {
