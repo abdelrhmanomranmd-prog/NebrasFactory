@@ -1127,6 +1127,106 @@ body.nebras-mobile-bar-active.admin-session .nebras-mobile-commerce-bar {
     line-height: 1.5;
 }
 
+.nebras-store-subsections-intro {
+    margin: 0 0 1rem;
+    padding: 12px 16px;
+    border-radius: 12px;
+    background: rgba(13, 74, 110, 0.12);
+    border: 1px solid rgba(13, 74, 110, 0.22);
+    font-size: 0.92rem;
+    line-height: 1.55;
+    color: #1a3a4a;
+}
+
+.nebras-store-subsections-intro--product {
+    margin-top: 12px;
+}
+
+.nebras-store-subnav {
+    margin: 0 0 1.25rem;
+    padding: 14px 16px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(6, 46, 68, 0.92), rgba(13, 74, 110, 0.88));
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.nebras-store-subnav-kicker {
+    margin: 0 0 10px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.85);
+    letter-spacing: 0.02em;
+}
+
+.nebras-store-subnav-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.nebras-store-subnav-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 9px 14px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #fff;
+    font-size: 0.84rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: background 0.2s, transform 0.15s;
+}
+
+.nebras-store-subnav-pill:hover {
+    background: rgba(255, 255, 255, 0.22);
+    transform: translateY(-1px);
+}
+
+.nebras-store-subcategory--hub {
+    scroll-margin-top: 88px;
+    margin: 0 0 2rem;
+    padding: 1.25rem 1rem 1.5rem;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.nebras-store-subcategory-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 0.5rem;
+}
+
+.nebras-store-subcategory--hub .nebras-store-subcategory-title {
+    margin: 0;
+    font-size: 1.15rem;
+    color: #fff;
+}
+
+.nebras-store-subcategory-count {
+    font-size: 0.78rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 999px;
+    background: rgba(5, 150, 105, 0.2);
+    color: #6ee7b7;
+    border: 1px solid rgba(5, 150, 105, 0.35);
+}
+
+.nebras-store-layout--subsections .nebras-store-main--full {
+    grid-column: 1 / -1;
+}
+
+.nebras-store-subsections-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
 @media (max-width: 1100px) {
     .nebras-store-layout {
         grid-template-columns: 1fr 220px;

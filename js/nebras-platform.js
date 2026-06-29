@@ -2428,23 +2428,23 @@
 
         const WPC_READY_INSTALL_SUBCATEGORY = {
             id: 'wpc-ready-install',
-            labelAr: 'أبواب جاهزة للتركيب شامل الاكسسوار',
-            labelEn: 'Ready-to-install doors including accessories',
-            descAr: 'توريد وتركيب — شامل الاكسسوارات',
-            descEn: 'Supply & install — accessories included',
-            sortOrder: 2
+            labelAr: 'أبواب جاهزة للتركيب — شامل الاكسسوار',
+            labelEn: 'Ready-to-install doors — accessories included',
+            descAr: 'توريد وتركيب — شامل الاكسسوارات والمقابض والإكسسوارات',
+            descEn: 'Supply & install — full accessories included',
+            sortOrder: 1
         };
 
         const WPC_READY_SUPPLY_SUBCATEGORY = {
             id: 'wpc-ready-supply',
-            labelAr: 'أبواب جاهزة للتركيب بدون اكسسوارات',
-            labelEn: 'Ready doors — factory pickup, no accessories',
-            descAr: 'توريد فقط — استلام أرض المصنع — بدون اكسسوارات',
-            descEn: 'Supply only — factory pickup — no accessories',
-            sortOrder: 1
+            labelAr: 'أبواب جاهزة للتركيب — بدون اكسسوارات · استلام أرض المصنع',
+            labelEn: 'Ready doors — no accessories · factory pickup',
+            descAr: 'توريد فقط — استلام أرض المصنع — الضلفة بدون اكسسوارات',
+            descEn: 'Supply only — factory pickup — door leaf without accessories',
+            sortOrder: 2
         };
 
-        const WPC_READY_CATALOG_VERSION = 2;
+        const WPC_READY_CATALOG_VERSION = 3;
         const WPC_READY_INSTALL_IMG = 'images/catalog/wpc-ready-install/';
         const WPC_READY_SUPPLY_IMG = 'images/catalog/wpc-ready-supply/';
 
@@ -2546,11 +2546,60 @@
             return groups;
         }
 
+        function productHasStoreSubCategories(product) {
+            return !!(product && Array.isArray(product.subCategories) && product.subCategories.length > 0);
+        }
+
+        function buildStoreSubCategoryNavHtml(product, lang) {
+            if (!productHasStoreSubCategories(product)) return '';
+            const ui = siteText[lang] || siteText.ar;
+            const variants = product.variants || [];
+            const groups = groupVariantsBySubCategory(product, variants).filter(function(g) {
+                return g.sub && g.items && g.items.length;
+            });
+            if (groups.length < 2) return '';
+            const pills = groups.map(function(grp) {
+                const label = lang === 'en'
+                    ? (grp.sub.labelEn || grp.sub.labelAr)
+                    : (grp.sub.labelAr || grp.sub.labelEn);
+                const anchor = 'store-sub-' + grp.sub.id;
+                return '<a class="nebras-store-subnav-pill" href="#' + escapeHtmlAttr(anchor) + '" onclick="event.preventDefault();var el=document.getElementById(\'' + anchor + '\');if(el){el.scrollIntoView({behavior:\'smooth\',block:\'start\'});}">' +
+                    escapeHtmlAttr(label) + '</a>';
+            }).join('');
+            return '<nav class="nebras-store-subnav" aria-label="' + escapeHtmlAttr(ui.storeSubNavLabel || 'أقسام المنتج') + '">' +
+                '<p class="nebras-store-subnav-kicker"><i class="fas fa-sitemap"></i> ' + escapeHtmlAttr(ui.storeSubNavKicker || 'اختر القسم الفرعي') + '</p>' +
+                '<div class="nebras-store-subnav-pills">' + pills + '</div></nav>';
+        }
+
+        function buildStoreSubCategorySectionHtml(product, grp, lang, shopable, ui) {
+            if (!grp || !grp.items || !grp.items.length) return '';
+            const sub = grp.sub;
+            const subLabel = sub
+                ? (lang === 'en' ? (sub.labelEn || sub.labelAr) : (sub.labelAr || sub.labelEn))
+                : (ui.catalogVariantsTitle || 'الأصناف');
+            const subDesc = sub && (sub.descAr || sub.descEn)
+                ? ('<p class="nebras-store-subcategory-desc">' + escapeHtmlAttr(lang === 'en' ? (sub.descEn || sub.descAr) : sub.descAr) + '</p>')
+                : '';
+            const countLabel = (ui.storeSubProductCount || '{n} صنف').replace('{n}', String(grp.items.length));
+            const cards = grp.items.map(function(item) {
+                return buildVariantSkuCardHtml(product, item.variant, item.index, lang, shopable, ui);
+            }).join('');
+            const anchorId = sub && sub.id ? ('store-sub-' + sub.id) : '';
+            return '<section class="nebras-store-subcategory nebras-store-subcategory--hub"' +
+                (anchorId ? (' id="' + escapeHtmlAttr(anchorId) + '"') : '') + '>' +
+                '<header class="nebras-store-subcategory-head">' +
+                '<h3 class="nebras-store-subcategory-title"><i class="fas fa-folder-open"></i> ' + escapeHtmlAttr(subLabel) + '</h3>' +
+                '<span class="nebras-store-subcategory-count">' + escapeHtmlAttr(countLabel) + '</span>' +
+                '</header>' +
+                subDesc +
+                '<div class="nebras-store-sku-grid">' + cards + '</div></section>';
+        }
+
         function seedWpcReadyCatalog() {
             const wpc = (siteProducts || []).find(function(p) { return p && p.id === 'prod-wpc'; });
             if (!wpc) return 0;
             if (!Array.isArray(wpc.subCategories)) wpc.subCategories = [];
-            [WPC_READY_SUPPLY_SUBCATEGORY, WPC_READY_INSTALL_SUBCATEGORY].forEach(function(subDef) {
+            [WPC_READY_INSTALL_SUBCATEGORY, WPC_READY_SUPPLY_SUBCATEGORY].forEach(function(subDef) {
                 if (!wpc.subCategories.some(function(s) { return s && s.id === subDef.id; })) {
                     wpc.subCategories.push(Object.assign({}, subDef));
                 } else {
@@ -3869,23 +3918,16 @@
             const vatNote = '<p class="nebras-store-vat-note"><i class="fas fa-info-circle"></i> ' +
                 escapeHtmlAttr(ui.pricesExVatNotice || 'الأسعار المعروضة قبل ضريبة القيمة المضافة — تُحسب الضريبة عند إضافة السلة وعرض السعر.') + '</p>';
             const groups = groupVariantsBySubCategory(product, variants);
-            const hasSubSections = groups.length > 1 || (groups[0] && groups[0].sub);
+            const hasSubSections = productHasStoreSubCategories(product) && groups.some(function(g) { return g.sub; });
             let bodyHtml = '';
             if (hasSubSections) {
-                bodyHtml = groups.map(function(grp) {
-                    const subLabel = grp.sub
-                        ? (lang === 'en' ? (grp.sub.labelEn || grp.sub.labelAr) : (grp.sub.labelAr || grp.sub.labelEn))
-                        : (ui.catalogVariantsTitle || 'الأنواع · المقاسات · الألوان');
-                    const subDesc = grp.sub && grp.sub.descAr
-                        ? ('<p class="nebras-store-subcategory-desc">' + escapeHtmlAttr(lang === 'en' ? (grp.sub.descEn || grp.sub.descAr) : grp.sub.descAr) + '</p>')
-                        : '';
-                    const cards = grp.items.map(function(item) {
-                        return buildVariantSkuCardHtml(product, item.variant, item.index, lang, shopable, ui);
+                bodyHtml = buildStoreSubCategoryNavHtml(product, lang) +
+                    groups.filter(function(g) { return g.sub && g.items.length; }).map(function(grp) {
+                        return buildStoreSubCategorySectionHtml(product, grp, lang, shopable, ui);
                     }).join('');
-                    return '<section class="nebras-store-subcategory">' +
-                        '<h4 class="nebras-store-subcategory-title"><i class="fas fa-layer-group"></i> ' + escapeHtmlAttr(subLabel) + '</h4>' +
-                        subDesc +
-                        '<div class="nebras-store-sku-grid">' + cards + '</div></section>';
+            } else if (groups.length > 1 || (groups[0] && groups[0].sub)) {
+                bodyHtml = groups.map(function(grp) {
+                    return buildStoreSubCategorySectionHtml(product, grp, lang, shopable, ui);
                 }).join('');
             } else {
                 bodyHtml = '<div class="nebras-store-sku-grid">' +
@@ -3951,6 +3993,7 @@
                             color: color,
                             size: size,
                             type: type,
+                            subCategoryId: v.subCategoryId || '',
                             inStock: isCatalogItemInStock(product, v),
                             shopEnabled: productHasShop(product)
                         });
@@ -4031,8 +4074,39 @@
                 '</span></article>';
         }
 
+        function buildStoreProductSubCategoryCatalogHtml(product, lang, contextKey, options) {
+            const opts = options || {};
+            const ui = siteText[lang] || siteText.ar;
+            const key = getStoreCatalogFilterKey(contextKey);
+            const title = opts.title || getLocalizedCatalogField(product, 'title', lang);
+            const shopable = productHasShop(product);
+            const variants = product.variants || [];
+            const totalCount = variants.length;
+            const countLabel = (ui.storeProductCount || '{n} منتج').replace('{n}', String(totalCount));
+            const groups = groupVariantsBySubCategory(product, variants);
+            const vatNote = '<p class="nebras-store-vat-note"><i class="fas fa-info-circle"></i> ' +
+                escapeHtmlAttr(ui.pricesExVatNotice || 'الأسعار المعروضة قبل ضريبة القيمة المضافة — تُحسب الضريبة عند إضافة السلة وعرض السعر.') + '</p>';
+            const intro = '<p class="nebras-store-subsections-intro"><i class="fas fa-sitemap"></i> ' +
+                escapeHtmlAttr(ui.storeSubSectionsIntro || 'هذا القسم يحتوي أقساماً فرعية — كل قسم بعنوانه ومنتجاته. اختر القسم المناسب ثم الصنف.') + '</p>';
+            const sectionsHtml = buildStoreSubCategoryNavHtml(product, lang) +
+                groups.filter(function(g) { return g.sub && g.items.length; }).map(function(grp) {
+                    return buildStoreSubCategorySectionHtml(product, grp, lang, shopable, ui);
+                }).join('');
+            return '<div class="nebras-store-layout nebras-store-layout--subsections" data-store-context="' + escapeHtmlAttr(key) + '">' +
+                '<div class="nebras-store-main nebras-store-main--full">' +
+                '<div class="nebras-store-toolbar">' +
+                '<div class="nebras-store-toolbar-head">' +
+                '<h4 class="nebras-store-toolbar-title">' + escapeHtmlAttr(title) + '</h4>' +
+                '<span class="nebras-store-toolbar-count">' + escapeHtmlAttr(countLabel) + '</span></div></div>' +
+                intro + vatNote + '<div class="nebras-store-subsections-stack">' + sectionsHtml + '</div>' +
+                '</div></div>';
+        }
+
         function buildStoreCatalogLayoutHtml(products, lang, contextKey, options) {
             const opts = options || {};
+            if (products && products.length === 1 && productHasStoreSubCategories(products[0])) {
+                return buildStoreProductSubCategoryCatalogHtml(products[0], lang, contextKey, opts);
+            }
             const ui = siteText[lang] || siteText.ar;
             const key = getStoreCatalogFilterKey(contextKey);
             const filters = getStoreCatalogFilters(key);
@@ -4327,6 +4401,10 @@
             html += '<div class="nebras-store-product-info">' +
                 '<h3 class="nebras-store-product-title">' + escapeHtmlAttr(title) + '</h3>' +
                 (text ? '<p class="nebras-store-product-desc">' + escapeHtmlAttr(text) + '</p>' : '') +
+                (productHasStoreSubCategories(product)
+                    ? ('<p class="nebras-store-subsections-intro nebras-store-subsections-intro--product"><i class="fas fa-sitemap"></i> ' +
+                        escapeHtmlAttr(ui.storeSubSectionsIntro || 'أقسام فرعية — اختر القسم ثم الصنف المناسب.') + '</p>')
+                    : '') +
                 '</div>';
             if (gallery.length > 1) {
                 html += '<div class="nebras-store-product-gallery" role="list">';
@@ -24394,10 +24472,14 @@
                 return { pillar: 'store', view: 'catalog-hub', iconId: icon.id };
             }
             if (linked.length === 1) {
+                const sole = linked[0];
+                if (exp === 'shop' && productHasStoreSubCategories(sole)) {
+                    return { pillar: 'store', view: 'product', productId: sole.id, iconId: icon.id };
+                }
                 if (exp === 'shop') {
                     return { pillar: 'store', view: 'icon', iconId: icon.id };
                 }
-                return { pillar: 'store', view: 'product', productId: linked[0].id, iconId: icon.id };
+                return { pillar: 'store', view: 'product', productId: sole.id, iconId: icon.id };
             }
             if (exp === 'shop') {
                 return { pillar: 'store', view: 'icon', iconId: icon.id };
