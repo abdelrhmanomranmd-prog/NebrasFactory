@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 640" role="img">
+  <defs>
+    <linearGradient id="frameG" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#5a6269"/><stop offset="100%" stop-color="#3a4046"/>
+    </linearGradient>
+    <linearGradient id="leafG" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#e8eaee"/>
+      <stop offset="50%" stop-color="#c8ccd4"/>
+      <stop offset="100%" stop-color="#9aa0a8"/>
+    </linearGradient>
+    <linearGradient id="glassG" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="rgba(200,225,245,0.85)"/>
+      <stop offset="100%" stop-color="rgba(120,160,190,0.55)"/>
+    </linearGradient>
+    <filter id="sh"><feDropShadow dx="6" dy="10" stdDeviation="8" flood-opacity="0.35"/></filter>
+  </defs>
+  <rect width="360" height="640" fill="#f0f3f7"/>
+
+  <g filter="url(#sh)">
+    <rect x="48" y="24" width="264" height="580" rx="4" fill="url(#frameG)" stroke="#2e3338" stroke-width="2"/>
+    <rect x="62" y="38" width="236" height="552" rx="3" fill="url(#leafG)" stroke="rgba(0,0,0,0.12)"/>
+    <rect x="140" y="68" width="80" height="492" rx="4" fill="url(#frameG)" stroke="#8a929a" stroke-width="2"/>
+    <line x1="180" y1="78" x2="180" y2="550" stroke="#c0c8d0" stroke-width="2"/>
+    <rect x="44" y="598" width="272" height="10" rx="2" fill="#3a4046"/>
+  <g>
+    <rect x="24" y="548" width="312" height="40" rx="8" fill="#0d4a6e" opacity="0.93"/>
+    <text x="180" y="574" text-anchor="middle" font-family="Segoe UI,Tahoma,sans-serif" font-size="12" font-weight="700" fill="#fff">توريد فقط · استلام المصنع · بدون اكسسوار</text>
+  </g>
+  </g></svg>
