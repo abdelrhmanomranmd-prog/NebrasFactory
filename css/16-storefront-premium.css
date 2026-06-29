@@ -1227,6 +1227,146 @@ body.nebras-mobile-bar-active.admin-session .nebras-mobile-commerce-bar {
     gap: 0.5rem;
 }
 
+.nebras-store-subhub {
+    margin: 0.5rem 0 1.5rem;
+}
+
+.nebras-store-subhub-head {
+    margin-bottom: 1rem;
+}
+
+.nebras-store-subhub-main-title {
+    margin: 0 0 0.35rem;
+    font-size: 1.35rem;
+    font-weight: 800;
+    color: #fff;
+}
+
+.nebras-store-subhub-subtitle {
+    margin: 0;
+    font-size: 0.92rem;
+    opacity: 0.82;
+}
+
+.nebras-store-subhub-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.25rem;
+    margin-top: 1rem;
+}
+
+.nebras-store-subhub-card {
+    display: flex;
+    flex-direction: column;
+    border-radius: 18px;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+    text-align: right;
+}
+
+.nebras-store-subhub-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(5, 150, 105, 0.55);
+    box-shadow: 0 14px 32px rgba(0, 0, 0, 0.28);
+}
+
+.nebras-store-subhub-card-media {
+    aspect-ratio: 4/5;
+    background: #eef1f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.nebras-store-subhub-card-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 12px;
+}
+
+.nebras-store-subhub-card-placeholder {
+    font-size: 3rem;
+    opacity: 0.35;
+    color: #0d4a6e;
+}
+
+.nebras-store-subhub-card-body {
+    padding: 1rem 1.1rem 1.15rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+}
+
+.nebras-store-subhub-card-title {
+    margin: 0;
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.45;
+}
+
+.nebras-store-subhub-card-desc {
+    margin: 0;
+    font-size: 0.86rem;
+    opacity: 0.82;
+    line-height: 1.5;
+}
+
+.nebras-store-subhub-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.nebras-store-subhub-card-count,
+.nebras-store-subhub-card-price {
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.nebras-store-subhub-card-price {
+    color: #6ee7b7;
+}
+
+.nebras-store-subhub-card-cta {
+    margin-top: 0.35rem;
+    font-size: 0.88rem;
+    font-weight: 800;
+    color: #7dd3fc;
+}
+
+.nebras-store-sub-back-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 1rem;
+    padding: 10px 16px;
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.nebras-store-sub-back-btn:hover {
+    background: rgba(255, 255, 255, 0.14);
+}
+
+.nebras-store-subcategory-page {
+    margin-top: 0.25rem;
+}
+
+.nebras-store-sku-grid--sub-only {
+    margin-top: 0.75rem;
+}
+
 @media (max-width: 1100px) {
     .nebras-store-layout {
         grid-template-columns: 1fr 220px;
