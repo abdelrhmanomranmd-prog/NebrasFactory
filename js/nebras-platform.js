@@ -2454,7 +2454,7 @@
             { id: 'wpc-rdy-u45-std', sku: 'WPC-RDY-U45-STD', subCategoryId: 'wpc-ready-install', image: WPC_READY_INSTALL_IMG + 'u-plain.svg', typeAr: 'باب U — 45ملم عادي', typeEn: 'U-door 45mm — standard', sizeAr: 'ارتفاع 250 سم · عرض حتى 130 سم', sizeEn: 'H 250 cm · W up to 130 cm', colorAr: 'شامل الاكسسوار', colorEn: 'Accessories included', price: wpcReadyInstallPriceExVat(840), inStock: true },
             { id: 'wpc-rdy-u45-classic', sku: 'WPC-RDY-U45-CLS', subCategoryId: 'wpc-ready-install', image: WPC_READY_INSTALL_IMG + 'u-classic.svg', typeAr: 'باب U — 45ملم ديكور كلاسيك جهة واحدة', typeEn: 'U-door 45mm — classic decor', sizeAr: 'ارتفاع 250 سم · عرض حتى 130 سم', sizeEn: 'H 250 cm · W up to 130 cm', colorAr: 'شامل الاكسسوار', colorEn: 'Accessories included', price: wpcReadyInstallPriceExVat(990), inStock: true },
             { id: 'wpc-rdy-u45-steel', sku: 'WPC-RDY-U45-STEEL', subCategoryId: 'wpc-ready-install', image: WPC_READY_INSTALL_IMG + 'u-steel.svg', typeAr: 'باب U — 45ملم ديكور استانلس جهة واحدة', typeEn: 'U-door 45mm — stainless decor', sizeAr: 'ارتفاع 250 سم · عرض حتى 130 سم', sizeEn: 'H 250 cm · W up to 130 cm', colorAr: 'شامل الاكسسوار', colorEn: 'Accessories included', price: wpcReadyInstallPriceExVat(940), inStock: true },
-            { id: 'wpc-rdy-u60-std', sku: 'WPC-RDY-U60-STD', subCategoryId: 'wpc-ready-install', image: WPC_READY_INSTALL_IMG + 'u60-plain.svg', typeAr: 'باب U — 60ملم ستANDARD', typeEn: 'U-door 60mm — standard', sizeAr: 'ارتفاع 250 سم · عرض حتى 130 سم', sizeEn: 'H 250 cm · W up to 130 cm', colorAr: 'شامل الاكسسوار', colorEn: 'Accessories included', price: wpcReadyInstallPriceExVat(940), inStock: true },
+            { id: 'wpc-rdy-u60-std', sku: 'WPC-RDY-U60-STD', subCategoryId: 'wpc-ready-install', image: WPC_READY_INSTALL_IMG + 'u60-plain.svg', typeAr: 'باب U — 60ملم قياسي', typeEn: 'U-door 60mm — standard', sizeAr: 'ارتفاع 250 سم · عرض حتى 130 سم', sizeEn: 'H 250 cm · W up to 130 cm', colorAr: 'شامل الاكسسوار', colorEn: 'Accessories included', price: wpcReadyInstallPriceExVat(940), inStock: true },
             { id: 'wpc-rdy-u60-steel', sku: 'WPC-RDY-U60-STEEL', subCategoryId: 'wpc-ready-install', image: WPC_READY_INSTALL_IMG + 'u60-steel.svg', typeAr: 'باب U — 60ملم ديكور استانلس جهة واحدة', typeEn: 'U-door 60mm — stainless decor', sizeAr: 'ارتفاع 250 سم · عرض حتى 130 سم', sizeEn: 'H 250 cm · W up to 130 cm', colorAr: 'شامل الاكسسوار', colorEn: 'Accessories included', price: wpcReadyInstallPriceExVat(1040), inStock: true },
             { id: 'wpc-rdy-u60-classic', sku: 'WPC-RDY-U60-CLS', subCategoryId: 'wpc-ready-install', image: WPC_READY_INSTALL_IMG + 'u60-classic.svg', typeAr: 'باب U — 60ملم ديكور كلاسيك جهة واحدة', typeEn: 'U-door 60mm — classic decor', sizeAr: 'ارتفاع 250 سم · عرض حتى 130 سم', sizeEn: 'H 250 cm · W up to 130 cm', colorAr: 'شامل الاكسسوار', colorEn: 'Accessories included', price: wpcReadyInstallPriceExVat(1090), inStock: true },
             { id: 'wpc-rdy-u60-glass', sku: 'WPC-RDY-U60-GLASS', subCategoryId: 'wpc-ready-install', image: WPC_READY_INSTALL_IMG + 'u60-glass.svg', typeAr: 'باب U — 60ملم ديكور زجاج شامل الزجاج', typeEn: 'U-door 60mm — glass decor incl. glass', sizeAr: 'ارتفاع 250 سم · عرض حتى 130 سم', sizeEn: 'H 250 cm · W up to 130 cm', colorAr: 'شامل الاكسسوار', colorEn: 'Accessories included', price: wpcReadyInstallPriceExVat(1240), inStock: true },
@@ -2465,9 +2465,9 @@
             { id: 'wpc-rdy-lq-flat', sku: 'WPC-RDY-LQ-FLAT', subCategoryId: 'wpc-ready-install', image: WPC_READY_INSTALL_IMG + 'leaf-quarter-flat.svg', typeAr: 'باب وربعه — ضلفة وربعه فلات', typeEn: 'Leaf & quarter — flat', sizeAr: 'ارتفاع 236 سم · عرض حتى 160 سم', sizeEn: 'H 236 cm · W up to 160 cm', colorAr: 'شامل الاكسسوار', colorEn: 'Accessories included', price: wpcReadyInstallPriceExVat(1140), inStock: true },
             { id: 'wpc-rdy-lq-u', sku: 'WPC-RDY-LQ-U', subCategoryId: 'wpc-ready-install', image: WPC_READY_INSTALL_IMG + 'leaf-quarter-u.svg', typeAr: 'باب وربعه — ضلفة وربعه U', typeEn: 'Leaf & quarter — U-style', sizeAr: 'ارتفاع 250 سم · عرض حتى 175 سم', sizeEn: 'H 250 cm · W up to 175 cm', colorAr: 'شامل الاكسسوار', colorEn: 'Accessories included', price: wpcReadyInstallPriceExVat(1340), inStock: true },
             { id: 'wpc-rdy-lq-lib', sku: 'WPC-RDY-LQ-LIB', subCategoryId: 'wpc-ready-install', image: WPC_READY_INSTALL_IMG + 'leaf-quarter-lib.svg', typeAr: 'باب وربعه — ضلفة وربعه Lib', typeEn: 'Leaf & quarter — Lib-style', sizeAr: 'ارتفاع 236 سم · عرض حتى 160 سم', sizeEn: 'H 236 cm · W up to 160 cm', colorAr: 'شامل الاكسسوار', colorEn: 'Accessories included', price: wpcReadyInstallPriceExVat(1270), inStock: true },
-            { id: 'wpc-rdy-slide-flat', sku: 'WPC-RDY-SLD-FLAT', subCategoryId: 'wpc-ready-install', image: WPC_READY_INSTALL_IMG + 'sliding-flat.svg', typeAr: 'باب سحب فلات — ستANDARD', typeEn: 'Sliding flat door — standard', sizeAr: 'ارتفاع 236 سم · عرض حتى 115 سم', sizeEn: 'H 236 cm · W up to 115 cm', colorAr: 'شامل الاكسسوار', colorEn: 'Accessories included', price: wpcReadyInstallPriceExVat(1200), inStock: true },
-            { id: 'wpc-rdy-slide-u', sku: 'WPC-RDY-SLD-U', subCategoryId: 'wpc-ready-install', image: WPC_READY_INSTALL_IMG + 'sliding-u.svg', typeAr: 'باب سحب U — ستANDARD', typeEn: 'Sliding U-door — standard', sizeAr: 'ارتفاع 250 سم · عرض حتى 130 سم', sizeEn: 'H 250 cm · W up to 130 cm', colorAr: 'شامل الاكسسوار', colorEn: 'Accessories included', price: wpcReadyInstallPriceExVat(1300), inStock: true },
-            { id: 'wpc-rdy-slide-lib', sku: 'WPC-RDY-SLD-LIB', subCategoryId: 'wpc-ready-install', image: WPC_READY_INSTALL_IMG + 'sliding-lib.svg', typeAr: 'باب سحب Lib — ستANDARD', typeEn: 'Sliding Lib door — standard', sizeAr: 'ارتفاع 236 سم · عرض حتى 115 سم', sizeEn: 'H 236 cm · W up to 115 cm', colorAr: 'شامل الاكسسوار', colorEn: 'Accessories included', price: wpcReadyInstallPriceExVat(1250), inStock: true }
+            { id: 'wpc-rdy-slide-flat', sku: 'WPC-RDY-SLD-FLAT', subCategoryId: 'wpc-ready-install', image: WPC_READY_INSTALL_IMG + 'sliding-flat.svg', typeAr: 'باب سحب فلات — قياسي', typeEn: 'Sliding flat door — standard', sizeAr: 'ارتفاع 236 سم · عرض حتى 115 سم', sizeEn: 'H 236 cm · W up to 115 cm', colorAr: 'شامل الاكسسوار', colorEn: 'Accessories included', price: wpcReadyInstallPriceExVat(1200), inStock: true },
+            { id: 'wpc-rdy-slide-u', sku: 'WPC-RDY-SLD-U', subCategoryId: 'wpc-ready-install', image: WPC_READY_INSTALL_IMG + 'sliding-u.svg', typeAr: 'باب سحب U — قياسي', typeEn: 'Sliding U-door — standard', sizeAr: 'ارتفاع 250 سم · عرض حتى 130 سم', sizeEn: 'H 250 cm · W up to 130 cm', colorAr: 'شامل الاكسسوار', colorEn: 'Accessories included', price: wpcReadyInstallPriceExVat(1300), inStock: true },
+            { id: 'wpc-rdy-slide-lib', sku: 'WPC-RDY-SLD-LIB', subCategoryId: 'wpc-ready-install', image: WPC_READY_INSTALL_IMG + 'sliding-lib.svg', typeAr: 'باب سحب Lib — قياسي', typeEn: 'Sliding Lib door — standard', sizeAr: 'ارتفاع 236 سم · عرض حتى 115 سم', sizeEn: 'H 236 cm · W up to 115 cm', colorAr: 'شامل الاكسسوار', colorEn: 'Accessories included', price: wpcReadyInstallPriceExVat(1250), inStock: true }
         ];
 
         function getProductSubCategoryLabel(product, subCategoryId, lang) {
@@ -2506,7 +2506,6 @@
         function seedWpcReadyInstallCatalog() {
             const wpc = (siteProducts || []).find(function(p) { return p && p.id === 'prod-wpc'; });
             if (!wpc) return 0;
-            const prevVer = (systemSettings && systemSettings.wpcReadyInstallCatalogVersion) || 0;
             if (!Array.isArray(wpc.subCategories)) wpc.subCategories = [];
             if (!wpc.subCategories.some(function(s) { return s && s.id === WPC_READY_INSTALL_SUBCATEGORY.id; })) {
                 wpc.subCategories.push(Object.assign({}, WPC_READY_INSTALL_SUBCATEGORY));
@@ -2533,13 +2532,8 @@
             if (merged > 0 && typeof syncSalesPriceListFromProductMaster === 'function') {
                 try { syncSalesPriceListFromProductMaster(); } catch (seedSyncErr) { /* ignore */ }
             }
-            if (prevVer < WPC_READY_INSTALL_CATALOG_VERSION) {
-                wpcReadyInstallCatalogNeedsCloudPersist = true;
-            }
             return merged;
         }
-
-        let wpcReadyInstallCatalogNeedsCloudPersist = false;
 
         /** أصناف الألومنيوم — شكل/نوع + مقاس + لون (تُدار بالكامل من الإدارة) */
         const DEFAULT_ALUMINUM_VARIANTS = [
@@ -26597,6 +26591,9 @@
             if (storeKey === 'showroom_gallery' && typeof repairShowroomGallerySections === 'function') {
                 repairShowroomGallerySections();
             }
+            if (storeKey === 'site_products' && typeof migrateLegacyCatalogProducts === 'function') {
+                migrateLegacyCatalogProducts();
+            }
         }
 
         let nebrasThreeLoadPromise = null;
@@ -26632,6 +26629,7 @@
             if (!skipBusinessSeeds) ensureBuiltinErpData();
             if (!skipBusinessSeeds) ensureErpOperationsData();
             if (!skipBusinessSeeds) ensureBuiltinSiteCatalog();
+            else if (typeof migrateLegacyCatalogProducts === 'function') migrateLegacyCatalogProducts();
             ensurePrimaryRecoveryEmail();
             if (!Array.isArray(siteCertifications)) siteCertifications = [];
             if (typeof repairShowroomGallerySections === 'function' && repairShowroomGallerySections()) {
@@ -26679,37 +26677,6 @@
                 }
             });
             enforceProductionGovernanceCleanState();
-            migrateLegacyCatalogProducts();
-            if (typeof syncSalesPriceListFromProductMaster === 'function') {
-                try { syncSalesPriceListFromProductMaster(); } catch (catSyncErr) { /* ignore */ }
-            }
-            if (typeof refreshPublicSiteFromGovernance === 'function') {
-                try { refreshPublicSiteFromGovernance(); } catch (catUiErr) { /* ignore */ }
-            }
-            maybePersistWpcReadyInstallCatalogToCloud();
-        }
-
-        let wpcReadyInstallCatalogPersistQueued = false;
-
-        function maybePersistWpcReadyInstallCatalogToCloud() {
-            if (wpcReadyInstallCatalogPersistQueued || !wpcReadyInstallCatalogNeedsCloudPersist) return;
-            if (!nebrasCloudSynced || !supabaseClient) return;
-            if (!currentAdmin || !isMainGovernanceAdmin(currentAdmin)) return;
-            wpcReadyInstallCatalogPersistQueued = true;
-            setTimeout(function() {
-                if (typeof persistScmContentHonest !== 'function') {
-                    wpcReadyInstallCatalogPersistQueued = false;
-                    return;
-                }
-                persistScmContentHonest('أبواب WPC جاهزة للتركيب شامل الاكسسوار', {
-                    storeKeys: ['site_products', 'sales_price_list', 'system_settings'],
-                    showToast: false
-                }).then(function(res) {
-                    if (res && res.cloudOk) wpcReadyInstallCatalogNeedsCloudPersist = false;
-                }).finally(function() {
-                    wpcReadyInstallCatalogPersistQueued = false;
-                });
-            }, 2500);
         }
 
         async function pullPublicSiteGovernanceFromCloud(options) {
@@ -26803,11 +26770,6 @@
                 if (typeof refreshDashboardExecutiveBi === 'function' && currentAdmin) {
                     refreshDashboardExecutiveBi(currentAdmin).catch(function(biErr) { console.warn('Post-hydrate BI:', biErr); });
                 }
-                migrateLegacyCatalogProducts();
-                if (typeof syncSalesPriceListFromProductMaster === 'function') {
-                    try { syncSalesPriceListFromProductMaster(); } catch (postHydrateSync) { /* ignore */ }
-                }
-                maybePersistWpcReadyInstallCatalogToCloud();
                 return ok;
             }).catch(function(hydrateErr) {
                 console.warn('Background cloud hydrate:', hydrateErr);
