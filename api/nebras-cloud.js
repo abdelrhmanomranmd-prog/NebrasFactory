@@ -17,6 +17,7 @@ function chunkRows(rows, size) {
 
 async function handlePull(req, sess) {
     const q = String(req.query.keys || '').trim();
+    const since = String(req.query.since || '').trim();
     let keys = q ? q.split(',').map(function(k) { return k.trim(); }).filter(Boolean) : sec.SENSITIVE_STORE_KEYS.slice();
     keys = keys.filter(function(k) { return sec.isSensitiveKey(k); });
     keys = sec.keysAllowedForSession(sess, keys);
@@ -32,19 +33,23 @@ async function handlePull(req, sess) {
             }
         };
     }
-    const since = String(req.query.since || '').trim() || null;
     const rows = [];
-    const batch = await sec.fetchStoreRowsForKeys(url, key, keys, since);
-    batch.forEach(function(row) {
+    for (let i = 0; i < keys.length; i++) {
+        const row = await sec.fetchStoreRow(url, key, keys[i]);
         if (row && row.payload !== null && row.payload !== undefined) {
+            if (since && row.updated_at) {
+                try {
+                    if (new Date(row.updated_at) <= new Date(since)) continue;
+                } catch (sinceErr) { /* include row */ }
+            }
             rows.push({
-                store_key: row.store_key,
-                payload: sec.sanitizePayloadForPull(row.store_key, row.payload, sess),
+                store_key: keys[i],
+                payload: sec.sanitizePayloadForPull(keys[i], row.payload, sess),
                 updated_at: row.updated_at || null
             });
         }
-    });
-    return { code: 200, data: { ok: true, rows: rows, by: sess.username, delta: !!since } };
+    }
+    return { code: 200, data: { ok: true, rows: rows, by: sess.username } };
 }
 
 async function handlePush(body, sess) {

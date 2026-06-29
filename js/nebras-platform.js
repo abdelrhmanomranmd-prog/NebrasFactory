@@ -2556,6 +2556,9 @@
         }
 
         function openHrPlatformBridge() {
+            if (typeof window.nebrasOdooReadForPanel === 'function') {
+                window.nebrasOdooReadForPanel('erp-hr-platform', 'erp');
+            }
             const impl = (typeof window.__nebrasHrOpenImpl === 'function')
                 ? window.__nebrasHrOpenImpl
                 : ((typeof window.openHrPlatform === 'function' && window.openHrPlatform !== openHrPlatformBridge)
@@ -7521,19 +7524,11 @@
                 return;
             }
             if (!requirePermission('audit', 'التحليلات متاحة لمن لديه صلاحية التدقيق / التقارير.')) return;
-            const openPanel = function() {
-                if (typeof switchAnalyticsTab === 'function') switchAnalyticsTab('overview');
-                revealPlatformLayer('admin-dashboard');
-                renderAdminAnalyticsPanel().then(function() {
-                    scrollToDashboardSection('admin-analytics-hub');
-                });
-            };
-            if (typeof window !== 'undefined' && window.NEBRAS_ODOO_WRITE_MODE &&
-                typeof window.nebrasOdooBeforePanel === 'function') {
-                window.nebrasOdooBeforePanel('analytics').then(openPanel);
-                return;
-            }
-            openPanel();
+            if (typeof switchAnalyticsTab === 'function') switchAnalyticsTab('overview');
+            revealPlatformLayer('admin-dashboard');
+            renderAdminAnalyticsPanel().then(function() {
+                scrollToDashboardSection('admin-analytics-hub');
+            });
         }
 
         async function buildAnalyticsReportLines() {
@@ -13953,6 +13948,9 @@
         }
 
         function openPlatformModule(moduleId) {
+            if (typeof window.nebrasOdooReadForPanel === 'function') {
+                window.nebrasOdooReadForPanel(moduleId, 'platform');
+            }
             const mod = NEBRAS_PLATFORM.modules.find(function(m) { return m.id === moduleId; });
             if (!mod) return;
             if (!canOpenPlatformModule(mod)) {
@@ -13997,17 +13995,9 @@
         }
 
         function scrollErpHub() {
-            const scroll = function() {
-                const el = document.getElementById('erp-hub-panel');
-                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                document.body.classList.add('platform-erp-active');
-            };
-            if (typeof window !== 'undefined' && window.NEBRAS_ODOO_WRITE_MODE &&
-                typeof window.nebrasOdooBeforePanel === 'function') {
-                window.nebrasOdooBeforePanel('erp').then(scroll);
-                return;
-            }
-            scroll();
+            const el = document.getElementById('erp-hub-panel');
+            if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            document.body.classList.add('platform-erp-active');
         }
 
         function ensureBuiltinErpData() {
@@ -14039,6 +14029,9 @@
         }
 
         function openErpModule(moduleId) {
+            if (typeof window.nebrasOdooReadForPanel === 'function') {
+                window.nebrasOdooReadForPanel(moduleId, 'erp');
+            }
             const mod = NEBRAS_ERP.modules.find(function(m) { return m.id === moduleId; });
             if (!mod) return;
             if (!canOpenErpModule(mod)) {
@@ -14046,20 +14039,12 @@
                 alert(ui.platformModuleLocked || 'غير متاح لصلاحياتك.');
                 return;
             }
-            const openMod = function() {
-                if (mod.handler.indexOf('iconDetail:') === 0) {
-                    openIconDetails(mod.handler.split(':')[1]);
-                    return;
-                }
-                const fn = DASHBOARD_HANDLER_MAP[mod.handler];
-                if (typeof fn === 'function') fn();
-            };
-            if (typeof window !== 'undefined' && window.NEBRAS_ODOO_WRITE_MODE &&
-                typeof window.nebrasOdooBeforePanel === 'function') {
-                window.nebrasOdooBeforePanel('erp').then(openMod);
+            if (mod.handler.indexOf('iconDetail:') === 0) {
+                openIconDetails(mod.handler.split(':')[1]);
                 return;
             }
-            openMod();
+            const fn = DASHBOARD_HANDLER_MAP[mod.handler];
+            if (typeof fn === 'function') fn();
         }
 
         function renderErpHubPanel() {
@@ -16449,7 +16434,7 @@
                 } else if (typeof startNebrasCloudAutoSync === 'function') {
                     startNebrasCloudAutoSync();
                 }
-                if (typeof nebrasStorageHealthReport === 'function') {
+                if (typeof nebrasStorageHealthReport === 'function' && !(typeof window !== 'undefined' && window.NEBRAS_ODOO_QUIET_UI)) {
                     const sh = nebrasStorageHealthReport();
                     if (sh.warn && typeof showNebrasAdminToast === 'function') {
                         showNebrasAdminToast('تنبيه تخزين محلي: ' + Math.round(sh.totalBytes / 1024) + ' KB — البيانات الأساسية في السحابة.', 'warn');
@@ -26588,10 +26573,11 @@
                 if (typeof renderNebrasCloudStatusOrb === 'function') {
                     renderNebrasCloudStatusOrb(ok ? 'ok' : 'warn', ok ? '✓ جميع البيانات متزامنة 100%' : '⚠️ بعض البيانات من الذاكرة المحلية');
                 }
-                if (ok && typeof showNebrasAdminToast === 'function') {
+                if (ok && typeof showNebrasAdminToast === 'function' && !(typeof window !== 'undefined' && window.NEBRAS_ODOO_QUIET_UI)) {
                     showNebrasAdminToast('✓ اكتمل تحميل البيانات من السحابة — جاهز للعمل', 'ok');
                 }
                 if (typeof startNebrasCloudAutoSync === 'function') startNebrasCloudAutoSync();
+                if (typeof window.startNebrasOdooDeltaSync === 'function') window.startNebrasOdooDeltaSync();
                 if (currentAdmin && typeof renderAdminAnalyticsPanel === 'function' && canManage('audit')) {
                     try { renderAdminAnalyticsPanel(); } catch (anErr) { console.warn('Post-hydrate analytics:', anErr); }
                 }
@@ -26604,10 +26590,11 @@
                 if (typeof renderNebrasCloudStatusOrb === 'function') {
                     renderNebrasCloudStatusOrb('warn', '⚠️ تحميل جزئي — أعيدي تحميل الصفحة');
                 }
-                if (typeof showNebrasAdminToast === 'function') {
+                if (typeof showNebrasAdminToast === 'function' && !(typeof window !== 'undefined' && window.NEBRAS_ODOO_QUIET_UI)) {
                     showNebrasAdminToast('⚠️ تعذّر اكتمال تحميل السحابة — أعيدي المحاولة أو حدّثي الصفحة', 'error');
                 }
                 if (typeof startNebrasCloudAutoSync === 'function') startNebrasCloudAutoSync();
+                if (typeof window.startNebrasOdooDeltaSync === 'function') window.startNebrasOdooDeltaSync();
                 return false;
             }).finally(function() {
                 setNebrasCloudHydrateGate(false);
@@ -26713,11 +26700,24 @@
             options = options || {};
             if (nebrasCloudHydrateInProgress) return false;
             if (!supabaseClient || !currentAdmin) return false;
+            if (typeof window !== 'undefined' && window.NEBRAS_ODOO_WRITE_MODE &&
+                typeof window.nebrasOdooDeltaPull === 'function') {
+                await pullVisitorIntakeFromCloud();
+                const ok = await window.nebrasOdooDeltaPull();
+                if (ok) {
+                    finalizePlatformDataAfterLoad({ skipBuiltinSeeds: true });
+                    try { persistLocalGovernanceKeys(); } catch (e) { /* ignore */ }
+                    if (typeof renderDashboardCommandShell === 'function') renderDashboardCommandShell(currentAdmin);
+                    if (typeof window.renderHrPlatformPanelSafe === 'function') {
+                        try { window.renderHrPlatformPanelSafe(); } catch (hrUi) { /* ignore */ }
+                    }
+                }
+                return ok;
+            }
             await pullVisitorIntakeFromCloud();
             const hasPending = typeof hasPendingLocalCloudMutations === 'function' && hasPendingLocalCloudMutations();
             if (hasPending && !options.force) return false;
-            const odooDelta = typeof window !== 'undefined' && window.NEBRAS_ODOO_WRITE_MODE;
-            const ok = await loadFromNebrasCloud(odooDelta ? { delta: true, silent: true } : {});
+            const ok = await loadFromNebrasCloud();
             if (!ok) return false;
             finalizePlatformDataAfterLoad({ skipBuiltinSeeds: true });
             ensureSiteChromeDefaults();
@@ -26732,22 +26732,20 @@
             return true;
         }
 
-        async function loadFromNebrasCloud(options) {
-            options = options || {};
+        async function loadFromNebrasCloud() {
             if (typeof window !== 'undefined' && window.NEBRAS_ODOO_WRITE_MODE &&
-                typeof window.nebrasOdooLoadFromServer === 'function') {
-                const ok = await window.nebrasOdooLoadFromServer({
-                    force: options.delta !== true,
-                    delta: options.delta === true,
-                    silent: options.silent,
-                    storeKeys: options.storeKeys
-                });
-                if (ok) {
-                    nebrasCloudSynced = true;
-                    nebrasLastCloudLoadAt = new Date();
-                    if (currentAdmin) renderDashboardCommandShell(currentAdmin);
+                typeof window.nebrasOdooPullFromServer === 'function') {
+                try {
+                    const ok = await window.nebrasOdooPullFromServer({ full: true });
+                    if (ok) {
+                        nebrasCloudSynced = true;
+                        nebrasLastCloudLoadAt = new Date();
+                        if (currentAdmin) renderDashboardCommandShell(currentAdmin);
+                        return true;
+                    }
+                } catch (odooLoadErr) {
+                    console.warn('Odoo full pull:', odooLoadErr);
                 }
-                return ok;
             }
             let loadedAny = false;
             try {
@@ -26794,16 +26792,7 @@
         let nebrasCloudLastErrorToastAt = 0;
 
         function maybeCloudSaveToast(ok) {
-            if (typeof window !== 'undefined' && window.NEBRAS_ODOO_QUIET_UI) {
-                if (!ok && nebrasCloudShowToastNext && currentAdmin &&
-                    typeof showNebrasAdminToast === 'function' &&
-                    Date.now() - nebrasCloudLastErrorToastAt > 60000) {
-                    nebrasCloudLastErrorToastAt = Date.now();
-                    showNebrasAdminToast('✗ لم يُحفظ على السيرفر — تحققي من الاتصال', 'error');
-                }
-                nebrasCloudShowToastNext = false;
-                return;
-            }
+            if (typeof window !== 'undefined' && window.NEBRAS_ODOO_QUIET_UI) return;
             if (!nebrasCloudShowToastNext || !currentAdmin) return;
             nebrasCloudShowToastNext = false;
             if (Date.now() - nebrasCloudLastToastAt < 5000) return;
@@ -30230,9 +30219,7 @@
         window.persistAnalyticsGovernanceLocal = persistAnalyticsGovernanceLocal;
         window.applyNebrasRealtimeStorePatch = applyNebrasRealtimeStorePatch;
         window.applyNebrasCloudRow = applyNebrasCloudRow;
-        window.finalizePlatformDataAfterLoad = finalizePlatformDataAfterLoad;
-        window.loadFromNebrasCloud = loadFromNebrasCloud;
-        window.renderErpHubPanel = renderErpHubPanel;
+        window.getNebrasSupabaseClient = function() { return supabaseClient; };
         window.refreshNebrasCloudFromServer = refreshNebrasCloudFromServer;
         window.pullVisitorIntakeFromCloud = pullVisitorIntakeFromCloud;
         window.enforceProductionBusinessCleanState = enforceProductionBusinessCleanState;

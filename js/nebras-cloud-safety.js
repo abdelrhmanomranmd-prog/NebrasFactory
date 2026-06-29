@@ -31,6 +31,18 @@
         if (typeof global.isNebrasCloudHydrating === 'function' && global.isNebrasCloudHydrating()) {
             return;
         }
+        if (global.NEBRAS_ODOO_QUIET_UI) {
+            const admin = typeof global.getNebrasCurrentAdmin === 'function' ? global.getNebrasCurrentAdmin() : null;
+            const online = typeof navigator.onLine === 'boolean' ? navigator.onLine : true;
+            if (!admin || online) {
+                banner.hidden = true;
+                return;
+            }
+            banner.hidden = false;
+            banner.className = 'nebras-cloud-safety-banner nebras-cloud-safety-banner--offline admin-only-ui';
+            banner.innerHTML = '<i class="fas fa-wifi-slash"></i> <strong>لا اتصال</strong> — أوقفي الإدخال حتى عودة الشبكة. البيانات المحفوظة على السيرفر آمنة.';
+            return;
+        }
         const admin = typeof global.getNebrasCurrentAdmin === 'function' ? global.getNebrasCurrentAdmin() : null;
         if (!admin) {
             banner.hidden = true;
@@ -38,11 +50,6 @@
         }
         const pending = hasPendingCloudWork();
         const online = typeof navigator.onLine === 'boolean' ? navigator.onLine : true;
-        if (global.NEBRAS_ODOO_QUIET_UI && !pending && online) {
-            banner.hidden = true;
-            banner.className = 'nebras-cloud-safety-banner admin-only-ui';
-            return;
-        }
         if (!pending && online) {
             banner.hidden = true;
             banner.className = 'nebras-cloud-safety-banner admin-only-ui';
@@ -119,7 +126,16 @@
 
     function onBeforeUnload(e) {
         const admin = typeof global.getNebrasCurrentAdmin === 'function' ? global.getNebrasCurrentAdmin() : null;
-        if (!admin || !hasPendingCloudWork()) return;
+        if (!admin) return;
+        if (global.NEBRAS_ODOO_QUIET_UI) {
+            if (typeof navigator.onLine === 'boolean' && !navigator.onLine && hasPendingCloudWork()) {
+                e.preventDefault();
+                e.returnValue = 'لا اتصال — انتظري عودة الشبكة قبل الإغلاق.';
+                return e.returnValue;
+            }
+            return;
+        }
+        if (!hasPendingCloudWork()) return;
         e.preventDefault();
         e.returnValue = 'لديك بيانات لم تُرفع للسحابة بعد — انتظري حتى يظهر «محفوظ سحابياً» قبل إغلاق الصفحة.';
         return e.returnValue;

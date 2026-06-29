@@ -1,0 +1,38 @@
+/**
+ * نبراس Odoo Mode — واجهة هادئة (بدون تنبيهات تخزين مزعجة)
+ */
+body.nebras-odoo-write-mode .nebras-live-cloud-ribbon {
+    display: none !important;
+}
+
+body.nebras-odoo-write-mode .nebras-cloud-safety-banner:not(.nebras-cloud-safety-banner--offline) {
+    display: none !important;
+}
+
+body.nebras-odoo-write-mode .nebras-cloud-safety-banner--hydrating {
+    display: flex !important;
+}
+
+body.nebras-odoo-write-mode .scm-cloud-save-status.is-idle,
+body.nebras-odoo-write-mode .scm-cloud-save-status.is-ok {
+    opacity: 0;
+    height: 0;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+    border: none;
+}
+
+body.nebras-odoo-write-mode .nebras-cloud-status-orb-wrap[data-state="idle"] .nebras-cloud-orb-detail,
+body.nebras-odoo-write-mode .nebras-cloud-status-orb-wrap[data-state="saving"] .nebras-cloud-orb-detail {
+    display: none;
+}
+
+body.nebras-odoo-write-mode .nebras-cloud-status-orb-wrap[data-state="error"] .nebras-cloud-orb-icon {
+    animation: nebras-odoo-pulse-error 1.2s ease infinite;
+}
+
+@keyframes nebras-odoo-pulse-error {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.55; }
+}
