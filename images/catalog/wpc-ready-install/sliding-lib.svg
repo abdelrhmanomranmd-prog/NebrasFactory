@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 640" role="img">
+  <defs>
+    <linearGradient id="frameG" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#5a6269"/><stop offset="100%" stop-color="#3a4046"/>
+    </linearGradient>
+    <linearGradient id="leafG" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#e8eaee"/>
+      <stop offset="50%" stop-color="#c8ccd4"/>
+      <stop offset="100%" stop-color="#9aa0a8"/>
+    </linearGradient>
+    <linearGradient id="glassG" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="rgba(200,225,245,0.85)"/>
+      <stop offset="100%" stop-color="rgba(120,160,190,0.55)"/>
+    </linearGradient>
+    <filter id="sh"><feDropShadow dx="6" dy="10" stdDeviation="8" flood-opacity="0.35"/></filter>
+  </defs>
+  <rect width="360" height="640" fill="#eef1f5"/>
+
+  <g filter="url(#sh)">
+    <rect x="48" y="24" width="264" height="580" rx="4" fill="url(#frameG)" stroke="#2e3338" stroke-width="2"/>
+    <rect x="62" y="38" width="117" height="552" rx="3" fill="url(#leafG)" stroke="rgba(0,0,0,0.12)"/>
+    <rect x="68" y="44" width="105" height="267" rx="2" fill="rgba(0,0,0,0.04)" stroke="rgba(255,255,255,0.2)"/>
+    <rect x="68" y="317" width="105" height="267" rx="2" fill="rgba(0,0,0,0.04)" stroke="rgba(255,255,255,0.2)"/>
+    <rect x="172" y="38" width="117" height="552" rx="3" fill="url(#leafG)" stroke="rgba(0,0,0,0.12)"/>
+    <rect x="178" y="44" width="105" height="267" rx="2" fill="rgba(0,0,0,0.04)" stroke="rgba(255,255,255,0.2)"/>
+    <rect x="178" y="317" width="105" height="267" rx="2" fill="rgba(0,0,0,0.04)" stroke="rgba(255,255,255,0.2)"/>
+    <line x1="180" y1="34" x2="180" y2="594" stroke="#4a5056" stroke-width="3" stroke-dasharray="8 6"/>
+    <rect x="44" y="598" width="272" height="10" rx="2" fill="#3a4046"/>
+  </g>
+  <text x="180" y="180" text-anchor="middle" font-family="Segoe UI,Tahoma,sans-serif" font-size="11" fill="#6a727a" opacity="0">sliding-lib.svg</text>
+</svg>

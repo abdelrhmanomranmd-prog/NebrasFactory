@@ -1,4 +1,4 @@
-        const SUPABASE_URL = 'https://oedldllrjavofpeaputz.supabase.co';
+﻿        const SUPABASE_URL = 'https://oedldllrjavofpeaputz.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_bt6rlHxu_pjc1xpkKEWOcg_HZ43JMR0';
         let supabaseClient = null;
         try {
@@ -2424,10 +2424,122 @@
             { id: 'wpc-raw-100-oak', image: 'images/wpc-background.avif', colorAr: 'بلوط', colorEn: 'Oak', sizeAr: '100 × 210 سم', sizeEn: '100×210 cm', typeAr: 'ضلفة عضم', typeEn: 'Raw leaf', price: 0, sku: 'WPC-RAW-100-O' }
         ];
 
-        const DEFAULT_WPC_READY_VARIANTS = [
-            { id: 'wpc-ready-80', image: 'images/wpc-background.avif', colorAr: 'أبيض', colorEn: 'White', sizeAr: '80 × 210 سم', sizeEn: '80×210 cm', typeAr: 'جاهز للتركيب', typeEn: 'Ready to install', price: 0, sku: 'WPC-RDY-80' },
-            { id: 'wpc-ready-90', image: 'images/wpc-background.avif', colorAr: 'رمادي', colorEn: 'Grey', sizeAr: '90 × 210 سم', sizeEn: '90×210 cm', typeAr: 'جاهز للتركيب', typeEn: 'Ready to install', price: 0, sku: 'WPC-RDY-90' }
+        const DEFAULT_WPC_READY_VARIANTS = [];
+
+        const WPC_READY_INSTALL_SUBCATEGORY = {
+            id: 'wpc-ready-install',
+            labelAr: 'أبواب جاهزة للتركيب شامل الاكسسوار',
+            labelEn: 'Ready-to-install doors including accessories',
+            descAr: 'توريد وتركيب — شامل الاكسسوارات',
+            descEn: 'Supply & install — accessories included',
+            sortOrder: 1
+        };
+
+        const WPC_READY_INSTALL_CATALOG_VERSION = 1;
+        const WPC_READY_INSTALL_IMG = 'images/catalog/wpc-ready-install/';
+
+        function wpcReadyInstallPriceExVat(baseTablePrice) {
+            const n = parseFloat(baseTablePrice);
+            const base = isNaN(n) ? 0 : n;
+            return Math.round(base * 1.05 * 100) / 100;
+        }
+
+        /** أبواب WPC جاهزة للتركيب — جدول توريد وتركيب شامل اكسسوارات (+5% على الأسعار المعتمدة) */
+        const DEFAULT_WPC_READY_INSTALL_VARIANTS = [
+            { id: 'wpc-rdy-flat-45-std', sku: 'WPC-RDY-FLAT-45-STD', subCategoryId: 'wpc-ready-install', image: WPC_READY_INSTALL_IMG + 'flat-plain.svg', typeAr: 'باب فلات عادي مع شريط — 45ملم', typeEn: 'Flat plain with strip — 45mm', sizeAr: 'ارتفاع 236 سم · عرض حتى 115 سم', sizeEn: 'H 236 cm · W up to 115 cm', colorAr: 'شامل الاكسسوار', colorEn: 'Accessories included', price: wpcReadyInstallPriceExVat(750), inStock: true },
+            { id: 'wpc-rdy-flat-45-net110', sku: 'WPC-RDY-FLAT-45-N110', subCategoryId: 'wpc-ready-install', image: WPC_READY_INSTALL_IMG + 'flat-plain.svg', typeAr: 'باب فلات عادي مع شريط — 45ملم نت 110', typeEn: 'Flat plain with strip — 45mm net 110', sizeAr: 'ارتفاع 236 سم · عرض حتى 120 سم', sizeEn: 'H 236 cm · W up to 120 cm', colorAr: 'شامل الاكسسوار', colorEn: 'Accessories included', price: wpcReadyInstallPriceExVat(820), inStock: true },
+            { id: 'wpc-rdy-flat-steel', sku: 'WPC-RDY-FLAT-STEEL', subCategoryId: 'wpc-ready-install', image: WPC_READY_INSTALL_IMG + 'flat-steel.svg', typeAr: 'باب فلات بديكور استانلس — جهة واحدة', typeEn: 'Flat door — stainless decor one side', sizeAr: 'ارتفاع 236 سم · عرض حتى 115 سم', sizeEn: 'H 236 cm · W up to 115 cm', colorAr: 'شامل الاكسسوار', colorEn: 'Accessories included', price: wpcReadyInstallPriceExVat(850), inStock: true },
+            { id: 'wpc-rdy-flat-glass', sku: 'WPC-RDY-FLAT-GLASS', subCategoryId: 'wpc-ready-install', image: WPC_READY_INSTALL_IMG + 'flat-glass.svg', typeAr: 'باب فلات بديكور زجاج — شامل الزجاج', typeEn: 'Flat door — glass decor incl. glass', sizeAr: 'ارتفاع 236 سم · عرض حتى 115 سم', sizeEn: 'H 236 cm · W up to 115 cm', colorAr: 'شامل الاكسسوار', colorEn: 'Accessories included', price: wpcReadyInstallPriceExVat(1050), inStock: true },
+            { id: 'wpc-rdy-flat-classic', sku: 'WPC-RDY-FLAT-CLS', subCategoryId: 'wpc-ready-install', image: WPC_READY_INSTALL_IMG + 'flat-classic.svg', typeAr: 'باب فلات بديكور كلاسيك — جهة واحدة', typeEn: 'Flat door — classic decor one side', sizeAr: 'ارتفاع 236 سم · عرض حتى 115 سم', sizeEn: 'H 236 cm · W up to 115 cm', colorAr: 'شامل الاكسسوار', colorEn: 'Accessories included', price: wpcReadyInstallPriceExVat(900), inStock: true },
+            { id: 'wpc-rdy-u45-std', sku: 'WPC-RDY-U45-STD', subCategoryId: 'wpc-ready-install', image: WPC_READY_INSTALL_IMG + 'u-plain.svg', typeAr: 'باب U — 45ملم عادي', typeEn: 'U-door 45mm — standard', sizeAr: 'ارتفاع 250 سم · عرض حتى 130 سم', sizeEn: 'H 250 cm · W up to 130 cm', colorAr: 'شامل الاكسسوار', colorEn: 'Accessories included', price: wpcReadyInstallPriceExVat(840), inStock: true },
+            { id: 'wpc-rdy-u45-classic', sku: 'WPC-RDY-U45-CLS', subCategoryId: 'wpc-ready-install', image: WPC_READY_INSTALL_IMG + 'u-classic.svg', typeAr: 'باب U — 45ملم ديكور كلاسيك جهة واحدة', typeEn: 'U-door 45mm — classic decor', sizeAr: 'ارتفاع 250 سم · عرض حتى 130 سم', sizeEn: 'H 250 cm · W up to 130 cm', colorAr: 'شامل الاكسسوار', colorEn: 'Accessories included', price: wpcReadyInstallPriceExVat(990), inStock: true },
+            { id: 'wpc-rdy-u45-steel', sku: 'WPC-RDY-U45-STEEL', subCategoryId: 'wpc-ready-install', image: WPC_READY_INSTALL_IMG + 'u-steel.svg', typeAr: 'باب U — 45ملم ديكور استانلس جهة واحدة', typeEn: 'U-door 45mm — stainless decor', sizeAr: 'ارتفاع 250 سم · عرض حتى 130 سم', sizeEn: 'H 250 cm · W up to 130 cm', colorAr: 'شامل الاكسسوار', colorEn: 'Accessories included', price: wpcReadyInstallPriceExVat(940), inStock: true },
+            { id: 'wpc-rdy-u60-std', sku: 'WPC-RDY-U60-STD', subCategoryId: 'wpc-ready-install', image: WPC_READY_INSTALL_IMG + 'u60-plain.svg', typeAr: 'باب U — 60ملم ستANDARD', typeEn: 'U-door 60mm — standard', sizeAr: 'ارتفاع 250 سم · عرض حتى 130 سم', sizeEn: 'H 250 cm · W up to 130 cm', colorAr: 'شامل الاكسسوار', colorEn: 'Accessories included', price: wpcReadyInstallPriceExVat(940), inStock: true },
+            { id: 'wpc-rdy-u60-steel', sku: 'WPC-RDY-U60-STEEL', subCategoryId: 'wpc-ready-install', image: WPC_READY_INSTALL_IMG + 'u60-steel.svg', typeAr: 'باب U — 60ملم ديكور استانلس جهة واحدة', typeEn: 'U-door 60mm — stainless decor', sizeAr: 'ارتفاع 250 سم · عرض حتى 130 سم', sizeEn: 'H 250 cm · W up to 130 cm', colorAr: 'شامل الاكسسوار', colorEn: 'Accessories included', price: wpcReadyInstallPriceExVat(1040), inStock: true },
+            { id: 'wpc-rdy-u60-classic', sku: 'WPC-RDY-U60-CLS', subCategoryId: 'wpc-ready-install', image: WPC_READY_INSTALL_IMG + 'u60-classic.svg', typeAr: 'باب U — 60ملم ديكور كلاسيك جهة واحدة', typeEn: 'U-door 60mm — classic decor', sizeAr: 'ارتفاع 250 سم · عرض حتى 130 سم', sizeEn: 'H 250 cm · W up to 130 cm', colorAr: 'شامل الاكسسوار', colorEn: 'Accessories included', price: wpcReadyInstallPriceExVat(1090), inStock: true },
+            { id: 'wpc-rdy-u60-glass', sku: 'WPC-RDY-U60-GLASS', subCategoryId: 'wpc-ready-install', image: WPC_READY_INSTALL_IMG + 'u60-glass.svg', typeAr: 'باب U — 60ملم ديكور زجاج شامل الزجاج', typeEn: 'U-door 60mm — glass decor incl. glass', sizeAr: 'ارتفاع 250 سم · عرض حتى 130 سم', sizeEn: 'H 250 cm · W up to 130 cm', colorAr: 'شامل الاكسسوار', colorEn: 'Accessories included', price: wpcReadyInstallPriceExVat(1240), inStock: true },
+            { id: 'wpc-rdy-lib40-std', sku: 'WPC-RDY-LIB40-STD', subCategoryId: 'wpc-ready-install', image: WPC_READY_INSTALL_IMG + 'lib-plain.svg', typeAr: 'باب Lib — 40ملم عادي', typeEn: 'Lib door 40mm — plain', sizeAr: 'ارتفاع 236 سم · عرض حتى 115 سم', sizeEn: 'H 236 cm · W up to 115 cm', colorAr: 'شامل الاكسسوار', colorEn: 'Accessories included', price: wpcReadyInstallPriceExVat(800), inStock: true },
+            { id: 'wpc-rdy-lib40-steel', sku: 'WPC-RDY-LIB40-STEEL', subCategoryId: 'wpc-ready-install', image: WPC_READY_INSTALL_IMG + 'lib-steel.svg', typeAr: 'باب Lib — 40ملم استانلس جهة واحدة', typeEn: 'Lib door 40mm — stainless one side', sizeAr: 'ارتفاع 236 سم · عرض حتى 115 سم', sizeEn: 'H 236 cm · W up to 115 cm', colorAr: 'شامل الاكسسوار', colorEn: 'Accessories included', price: wpcReadyInstallPriceExVat(900), inStock: true },
+            { id: 'wpc-rdy-lib40-glass', sku: 'WPC-RDY-LIB40-GLASS', subCategoryId: 'wpc-ready-install', image: WPC_READY_INSTALL_IMG + 'lib-glass.svg', typeAr: 'باب Lib — 40ملم زجاج (بدون زجاج)', typeEn: 'Lib door 40mm — glass prep (glass excluded)', sizeAr: 'ارتفاع 236 سم · عرض حتى 115 سم', sizeEn: 'H 236 cm · W up to 115 cm', colorAr: 'شامل الاكسسوار', colorEn: 'Accessories included', price: wpcReadyInstallPriceExVat(1100), inStock: true },
+            { id: 'wpc-rdy-lib40-classic', sku: 'WPC-RDY-LIB40-CLS', subCategoryId: 'wpc-ready-install', image: WPC_READY_INSTALL_IMG + 'lib-classic.svg', typeAr: 'باب Lib — 40ملم ديكور كلاسيك جهة واحدة', typeEn: 'Lib door 40mm — classic decor', sizeAr: 'ارتفاع 236 سم · عرض حتى 115 سم', sizeEn: 'H 236 cm · W up to 115 cm', colorAr: 'شامل الاكسسوار', colorEn: 'Accessories included', price: wpcReadyInstallPriceExVat(1050), inStock: true },
+            { id: 'wpc-rdy-lq-flat', sku: 'WPC-RDY-LQ-FLAT', subCategoryId: 'wpc-ready-install', image: WPC_READY_INSTALL_IMG + 'leaf-quarter-flat.svg', typeAr: 'باب وربعه — ضلفة وربعه فلات', typeEn: 'Leaf & quarter — flat', sizeAr: 'ارتفاع 236 سم · عرض حتى 160 سم', sizeEn: 'H 236 cm · W up to 160 cm', colorAr: 'شامل الاكسسوار', colorEn: 'Accessories included', price: wpcReadyInstallPriceExVat(1140), inStock: true },
+            { id: 'wpc-rdy-lq-u', sku: 'WPC-RDY-LQ-U', subCategoryId: 'wpc-ready-install', image: WPC_READY_INSTALL_IMG + 'leaf-quarter-u.svg', typeAr: 'باب وربعه — ضلفة وربعه U', typeEn: 'Leaf & quarter — U-style', sizeAr: 'ارتفاع 250 سم · عرض حتى 175 سم', sizeEn: 'H 250 cm · W up to 175 cm', colorAr: 'شامل الاكسسوار', colorEn: 'Accessories included', price: wpcReadyInstallPriceExVat(1340), inStock: true },
+            { id: 'wpc-rdy-lq-lib', sku: 'WPC-RDY-LQ-LIB', subCategoryId: 'wpc-ready-install', image: WPC_READY_INSTALL_IMG + 'leaf-quarter-lib.svg', typeAr: 'باب وربعه — ضلفة وربعه Lib', typeEn: 'Leaf & quarter — Lib-style', sizeAr: 'ارتفاع 236 سم · عرض حتى 160 سم', sizeEn: 'H 236 cm · W up to 160 cm', colorAr: 'شامل الاكسسوار', colorEn: 'Accessories included', price: wpcReadyInstallPriceExVat(1270), inStock: true },
+            { id: 'wpc-rdy-slide-flat', sku: 'WPC-RDY-SLD-FLAT', subCategoryId: 'wpc-ready-install', image: WPC_READY_INSTALL_IMG + 'sliding-flat.svg', typeAr: 'باب سحب فلات — ستANDARD', typeEn: 'Sliding flat door — standard', sizeAr: 'ارتفاع 236 سم · عرض حتى 115 سم', sizeEn: 'H 236 cm · W up to 115 cm', colorAr: 'شامل الاكسسوار', colorEn: 'Accessories included', price: wpcReadyInstallPriceExVat(1200), inStock: true },
+            { id: 'wpc-rdy-slide-u', sku: 'WPC-RDY-SLD-U', subCategoryId: 'wpc-ready-install', image: WPC_READY_INSTALL_IMG + 'sliding-u.svg', typeAr: 'باب سحب U — ستANDARD', typeEn: 'Sliding U-door — standard', sizeAr: 'ارتفاع 250 سم · عرض حتى 130 سم', sizeEn: 'H 250 cm · W up to 130 cm', colorAr: 'شامل الاكسسوار', colorEn: 'Accessories included', price: wpcReadyInstallPriceExVat(1300), inStock: true },
+            { id: 'wpc-rdy-slide-lib', sku: 'WPC-RDY-SLD-LIB', subCategoryId: 'wpc-ready-install', image: WPC_READY_INSTALL_IMG + 'sliding-lib.svg', typeAr: 'باب سحب Lib — ستANDARD', typeEn: 'Sliding Lib door — standard', sizeAr: 'ارتفاع 236 سم · عرض حتى 115 سم', sizeEn: 'H 236 cm · W up to 115 cm', colorAr: 'شامل الاكسسوار', colorEn: 'Accessories included', price: wpcReadyInstallPriceExVat(1250), inStock: true }
         ];
+
+        function getProductSubCategoryLabel(product, subCategoryId, lang) {
+            if (!product || !subCategoryId) return '';
+            const subs = product.subCategories || [];
+            const sub = subs.find(function(s) { return s && s.id === subCategoryId; });
+            if (!sub) return subCategoryId;
+            return lang === 'en' ? (sub.labelEn || sub.labelAr || sub.id) : (sub.labelAr || sub.labelEn || sub.id);
+        }
+
+        function groupVariantsBySubCategory(product, variants) {
+            const subs = (product && product.subCategories) ? product.subCategories.slice() : [];
+            const bySub = {};
+            (variants || []).forEach(function(v, idx) {
+                const sid = (v && v.subCategoryId) ? v.subCategoryId : '_default';
+                if (!bySub[sid]) bySub[sid] = [];
+                bySub[sid].push({ variant: v, index: idx });
+            });
+            const groups = [];
+            subs.sort(function(a, b) { return (a.sortOrder || 0) - (b.sortOrder || 0); }).forEach(function(sub) {
+                if (bySub[sub.id] && bySub[sub.id].length) {
+                    groups.push({ sub: sub, items: bySub[sub.id] });
+                    delete bySub[sub.id];
+                }
+            });
+            Object.keys(bySub).forEach(function(sid) {
+                if (!bySub[sid].length) return;
+                groups.push({
+                    sub: sid === '_default' ? null : { id: sid, labelAr: sid, labelEn: sid },
+                    items: bySub[sid]
+                });
+            });
+            return groups;
+        }
+
+        function seedWpcReadyInstallCatalog() {
+            const wpc = (siteProducts || []).find(function(p) { return p && p.id === 'prod-wpc'; });
+            if (!wpc) return 0;
+            const prevVer = (systemSettings && systemSettings.wpcReadyInstallCatalogVersion) || 0;
+            if (!Array.isArray(wpc.subCategories)) wpc.subCategories = [];
+            if (!wpc.subCategories.some(function(s) { return s && s.id === WPC_READY_INSTALL_SUBCATEGORY.id; })) {
+                wpc.subCategories.push(Object.assign({}, WPC_READY_INSTALL_SUBCATEGORY));
+            }
+            wpc.subCategories.sort(function(a, b) { return (a.sortOrder || 0) - (b.sortOrder || 0); });
+            if (!Array.isArray(wpc.variants)) wpc.variants = [];
+            let merged = 0;
+            DEFAULT_WPC_READY_INSTALL_VARIANTS.forEach(function(def) {
+                const payload = Object.assign({}, def);
+                const idx = wpc.variants.findIndex(function(v) {
+                    return v && (v.sku === payload.sku || v.id === payload.id);
+                });
+                if (idx >= 0) {
+                    wpc.variants[idx] = Object.assign({}, wpc.variants[idx], payload);
+                } else {
+                    wpc.variants.push(payload);
+                }
+                merged++;
+            });
+            if (!systemSettings || typeof systemSettings !== 'object') {
+                systemSettings = Object.assign({}, DEFAULT_SYSTEM_SETTINGS);
+            }
+            systemSettings.wpcReadyInstallCatalogVersion = WPC_READY_INSTALL_CATALOG_VERSION;
+            if (merged > 0 && typeof syncSalesPriceListFromProductMaster === 'function') {
+                try { syncSalesPriceListFromProductMaster(); } catch (seedSyncErr) { /* ignore */ }
+            }
+            if (prevVer < WPC_READY_INSTALL_CATALOG_VERSION) {
+                wpcReadyInstallCatalogNeedsCloudPersist = true;
+            }
+            return merged;
+        }
+
+        let wpcReadyInstallCatalogNeedsCloudPersist = false;
 
         /** أصناف الألومنيوم — شكل/نوع + مقاس + لون (تُدار بالكامل من الإدارة) */
         const DEFAULT_ALUMINUM_VARIANTS = [
@@ -3197,6 +3309,7 @@
                 if (!wpc.variants || !wpc.variants.length) wpc.variants = cloneVariants(DEFAULT_WPC_READY_VARIANTS);
                 if (!wpc.action || wpc.action === 'overlay') wpc.action = 'shop';
                 wpc.shopEnabled = true;
+                seedWpcReadyInstallCatalog();
             }
             const raw = siteProducts.find(function(p) { return p.id === 'prod-wpc-raw'; });
             if (raw) {
@@ -3256,6 +3369,7 @@
                 }
                 siteCustomSections = Array.isArray(siteCustomSections) ? siteCustomSections : [];
                 if (!systemSettings || typeof systemSettings !== 'object') systemSettings = Object.assign({}, DEFAULT_SYSTEM_SETTINGS);
+                migrateLegacyCatalogProducts();
                 return;
             }
             if (!Array.isArray(siteProducts) || !siteProducts.length) {
@@ -3665,44 +3779,70 @@
             return urls;
         }
 
+        function buildVariantSkuCardHtml(product, v, idx, lang, shopable, ui) {
+            const isEn = lang === 'en';
+            const pid = String(product.id).replace(/'/g, "\\'");
+            const img = resolveDisplayMediaUrl(v.image || '');
+            const fullSrc = mediaUrlForLightbox(v.image || '');
+            const color = isEn ? (v.colorEn || v.colorAr) : (v.colorAr || v.colorEn);
+            const size = isEn ? (v.sizeEn || v.sizeAr) : (v.sizeAr || v.sizeEn);
+            const type = isEn ? (v.typeEn || v.typeAr) : (v.typeAr || v.typeEn);
+            const label = [type, size, color].filter(Boolean).join(' · ') || (ui.variantDefaultLabel || 'صنف #' + (idx + 1));
+            const specs = [];
+            if (type) specs.push('<li><span>' + escapeHtmlAttr(ui.variantTypeLabel || 'النوع') + '</span><strong>' + escapeHtmlAttr(type) + '</strong></li>');
+            if (size) specs.push('<li><span>' + escapeHtmlAttr(ui.variantSizeLabel || 'المقاس') + '</span><strong>' + escapeHtmlAttr(size) + '</strong></li>');
+            if (color) specs.push('<li><span>' + escapeHtmlAttr(ui.variantColorLabel || 'اللون') + '</span><strong>' + escapeHtmlAttr(color) + '</strong></li>');
+            const addBtn = shopable
+                ? '<button type="button" class="nebras-store-sku-add-btn" onclick="event.stopPropagation();addVariantIndexToCart(\'' + pid + '\',' + idx + ',1)"><i class="fas fa-cart-plus"></i> ' + escapeHtmlAttr(ui.addVariantToCart || 'أضف للسلة') + '</button>'
+                : (productHasShop(product) ? '<span class="nebras-store-sku-preview-only">' + escapeHtmlAttr(ui.variantPreviewOnly || 'للمعاينة') + '</span>' : '');
+            const media = img
+                ? '<div class="nebras-store-sku-media"><img class="nebras-clickable-media" src="' + escapeHtmlAttr(img) + '" data-full-src="' + escapeHtmlAttr(fullSrc || img) + '" alt="' + escapeHtmlAttr(label) + '" loading="lazy" decoding="async" title="' + escapeHtmlAttr(ui.lightboxOpenHint || 'اضغط للتكبير') + '"></div>'
+                : '<div class="nebras-store-sku-media nebras-store-sku-media--empty"><i class="fas fa-box-open"></i></div>';
+            return '<article class="nebras-store-sku-card">' + media +
+                '<div class="nebras-store-sku-body">' +
+                '<strong class="nebras-store-sku-name">' + escapeHtmlAttr(label) + '</strong>' +
+                (specs.length ? '<ul class="nebras-store-sku-specs">' + specs.join('') + '</ul>' : '') +
+                '<div class="nebras-store-sku-price">' + formatVariantPriceBlock(v.price, lang) + '</div>' +
+                addBtn +
+                '</div></article>';
+        }
+
         function buildVariantShowcaseHtml(product, lang, showShopActions) {
             const variants = (product && product.variants) ? product.variants : [];
             if (!variants.length) return '';
-            const isEn = lang === 'en';
             const shopable = showShopActions !== false && productHasShop(product);
             const ui = siteText[lang] || siteText.ar;
-            const pid = String(product.id).replace(/'/g, "\\'");
             const vatNote = '<p class="nebras-store-vat-note"><i class="fas fa-info-circle"></i> ' +
                 escapeHtmlAttr(ui.pricesExVatNotice || 'الأسعار المعروضة قبل ضريبة القيمة المضافة — تُحسب الضريبة عند إضافة السلة وعرض السعر.') + '</p>';
+            const groups = groupVariantsBySubCategory(product, variants);
+            const hasSubSections = groups.length > 1 || (groups[0] && groups[0].sub);
+            let bodyHtml = '';
+            if (hasSubSections) {
+                bodyHtml = groups.map(function(grp) {
+                    const subLabel = grp.sub
+                        ? (lang === 'en' ? (grp.sub.labelEn || grp.sub.labelAr) : (grp.sub.labelAr || grp.sub.labelEn))
+                        : (ui.catalogVariantsTitle || 'الأنواع · المقاسات · الألوان');
+                    const subDesc = grp.sub && grp.sub.descAr
+                        ? ('<p class="nebras-store-subcategory-desc">' + escapeHtmlAttr(lang === 'en' ? (grp.sub.descEn || grp.sub.descAr) : grp.sub.descAr) + '</p>')
+                        : '';
+                    const cards = grp.items.map(function(item) {
+                        return buildVariantSkuCardHtml(product, item.variant, item.index, lang, shopable, ui);
+                    }).join('');
+                    return '<section class="nebras-store-subcategory">' +
+                        '<h4 class="nebras-store-subcategory-title"><i class="fas fa-layer-group"></i> ' + escapeHtmlAttr(subLabel) + '</h4>' +
+                        subDesc +
+                        '<div class="nebras-store-sku-grid">' + cards + '</div></section>';
+                }).join('');
+            } else {
+                bodyHtml = '<div class="nebras-store-sku-grid">' +
+                    variants.map(function(v, idx) {
+                        return buildVariantSkuCardHtml(product, v, idx, lang, shopable, ui);
+                    }).join('') +
+                    '</div>';
+            }
             return vatNote +
-                '<h4 class="nebras-store-skus-title">' + escapeHtmlAttr(ui.catalogVariantsTitle || 'الأنواع · المقاسات · الألوان') + '</h4>' +
-                '<div class="nebras-store-sku-grid">' +
-                variants.map(function(v, idx) {
-                    const img = resolveDisplayMediaUrl(v.image || '');
-                    const fullSrc = mediaUrlForLightbox(v.image || '');
-                    const color = isEn ? (v.colorEn || v.colorAr) : (v.colorAr || v.colorEn);
-                    const size = isEn ? (v.sizeEn || v.sizeAr) : (v.sizeAr || v.sizeEn);
-                    const type = isEn ? (v.typeEn || v.typeAr) : (v.typeAr || v.typeEn);
-                    const label = [type, size, color].filter(Boolean).join(' · ') || (ui.variantDefaultLabel || 'صنف #' + (idx + 1));
-                    const specs = [];
-                    if (type) specs.push('<li><span>' + escapeHtmlAttr(ui.variantTypeLabel || 'النوع') + '</span><strong>' + escapeHtmlAttr(type) + '</strong></li>');
-                    if (size) specs.push('<li><span>' + escapeHtmlAttr(ui.variantSizeLabel || 'المقاس') + '</span><strong>' + escapeHtmlAttr(size) + '</strong></li>');
-                    if (color) specs.push('<li><span>' + escapeHtmlAttr(ui.variantColorLabel || 'اللون') + '</span><strong>' + escapeHtmlAttr(color) + '</strong></li>');
-                    const addBtn = shopable
-                        ? '<button type="button" class="nebras-store-sku-add-btn" onclick="event.stopPropagation();addVariantIndexToCart(\'' + pid + '\',' + idx + ',1)"><i class="fas fa-cart-plus"></i> ' + escapeHtmlAttr(ui.addVariantToCart || 'أضف للسلة') + '</button>'
-                        : (productHasShop(product) ? '<span class="nebras-store-sku-preview-only">' + escapeHtmlAttr(ui.variantPreviewOnly || 'للمعاينة') + '</span>' : '');
-                    const media = img
-                        ? '<div class="nebras-store-sku-media"><img class="nebras-clickable-media" src="' + escapeHtmlAttr(img) + '" data-full-src="' + escapeHtmlAttr(fullSrc || img) + '" alt="' + escapeHtmlAttr(label) + '" loading="lazy" decoding="async" title="' + escapeHtmlAttr(ui.lightboxOpenHint || 'اضغط للتكبير') + '"></div>'
-                        : '<div class="nebras-store-sku-media nebras-store-sku-media--empty"><i class="fas fa-box-open"></i></div>';
-                    return '<article class="nebras-store-sku-card">' + media +
-                        '<div class="nebras-store-sku-body">' +
-                        '<strong class="nebras-store-sku-name">' + escapeHtmlAttr(label) + '</strong>' +
-                        (specs.length ? '<ul class="nebras-store-sku-specs">' + specs.join('') + '</ul>' : '') +
-                        '<div class="nebras-store-sku-price">' + formatVariantPriceBlock(v.price, lang) + '</div>' +
-                        addBtn +
-                        '</div></article>';
-                }).join('') +
-                '</div>';
+                (hasSubSections ? '' : ('<h4 class="nebras-store-skus-title">' + escapeHtmlAttr(ui.catalogVariantsTitle || 'الأنواع · المقاسات · الألوان') + '</h4>')) +
+                bodyHtml;
         }
 
         function getProductPriceLine(product, lang, ui) {
@@ -6207,13 +6347,27 @@
             const title = getLocalizedCatalogField(product, 'title', lang);
             const desc = getLocalizedCatalogField(product, 'text', lang);
             const variants = (product.variants && product.variants.length) ? product.variants : [{ id: 'default', image: (product.album || [])[0] || '', colorAr: '—', colorEn: '—', sizeAr: '—', sizeEn: '—', typeAr: '—', typeEn: '—', price: 0 }];
-            const options = variants.map(function(v, idx) {
+            function variantOptionHtml(v, idx) {
                 const color = isEn ? (v.colorEn || v.colorAr) : (v.colorAr || v.colorEn);
                 const size = isEn ? (v.sizeEn || v.sizeAr) : (v.sizeAr || v.sizeEn);
                 const type = isEn ? (v.typeEn || v.typeAr) : (v.typeAr || v.typeEn);
                 const priceLabel = Number(v.price) > 0 ? formatSar(v.price) : (isEn ? 'Price on request' : 'السعر عند الطلب');
                 return '<option value="' + idx + '">' + escapeHtmlAttr([color, size, type, priceLabel].filter(Boolean).join(' · ')) + '</option>';
-            }).join('');
+            }
+            const variantGroups = groupVariantsBySubCategory(product, variants);
+            const hasSubGroups = variantGroups.length > 1 || (variantGroups[0] && variantGroups[0].sub);
+            let options = '';
+            if (hasSubGroups) {
+                options = variantGroups.map(function(grp) {
+                    const subLabel = grp.sub
+                        ? getProductSubCategoryLabel(product, grp.sub.id, lang)
+                        : (isEn ? 'Other variants' : 'أصناف أخرى');
+                    const opts = grp.items.map(function(item) { return variantOptionHtml(item.variant, item.index); }).join('');
+                    return '<optgroup label="' + escapeHtmlAttr(subLabel) + '">' + opts + '</optgroup>';
+                }).join('');
+            } else {
+                options = variants.map(function(v, idx) { return variantOptionHtml(v, idx); }).join('');
+            }
             const heroImg = normalizeMediaPath((variants[0] && variants[0].image) || (product.album || [])[0] || '');
             modal.innerHTML =
                 (heroImg ? '<img class="shop-hero" id="shop-hero-img" src="' + escapeHtmlAttr(heroImg) + '" alt="">' : '') +
@@ -13370,7 +13524,10 @@
 
         function buildPriceListItemFromVariant(product, variant) {
             const typeLabel = variant.typeAr || variant.typeEn || '';
-            const productLabel = (product.titleAr || product.id) + (typeLabel ? ' — ' + typeLabel : '');
+            const subLabel = variant.subCategoryId ? getProductSubCategoryLabel(product, variant.subCategoryId, 'ar') : '';
+            const productLabel = (product.titleAr || product.id) +
+                (subLabel ? ' · ' + subLabel : '') +
+                (typeLabel ? ' — ' + typeLabel : '');
             const base = erpNum(variant.price);
             return {
                 id: 'pl-' + (variant.id || product.id),
@@ -15414,7 +15571,7 @@
             if (!admin) return false;
             if (isMainGovernanceAdmin(admin)) return true;
             const role = String(admin.role || '').toLowerCase();
-            return role === 'sales_manager' || role === 'branch_manager' || canManage('quotes', admin);
+            return role === 'sales_manager' || role === 'branch_manager' || role === 'sales_rep' || canManage('quotes', admin);
         }
 
         function getQuotePriceFloor(it, admin) {
@@ -15536,11 +15693,16 @@
                         ? Math.round((1 - erpNum(ln.price) / listP) * 100) : 0;
                     const discTag = discPct > 0
                         ? ' <span class="rep-quote-line-discount">خصم ' + discPct + '%</span>' : '';
+                    const manualTag = ln.manualOverride
+                        ? ' <span class="rep-quote-line-manual">سعر يدوي</span>' : '';
+                    const priceEdit = canApplyQuoteManualDiscount(currentAdmin)
+                        ? '<label class="rep-quote-line-price-edit"><span>سعر يدوي</span><input type="number" min="0" step="any" value="' + erpNum(ln.price) + '" onchange="updateRepQuoteLinePrice(' + i + ', this.value)"></label>'
+                        : '';
                     return '<article class="erp-row">' +
                         '<div class="erp-row-main"><strong>' + escapeHtmlAttr(ln.productAr) + '</strong>' +
                             '<small>' + erpNum(ln.qty) + ' × ' + formatSar(ln.price) +
                             (listP > erpNum(ln.price) ? ' <s>' + formatSar(listP) + '</s>' : '') +
-                            discTag + '</small></div>' +
+                            discTag + manualTag + '</small>' + priceEdit + '</div>' +
                         '<div class="erp-row-qty">' + formatSar(erpNum(ln.qty) * erpNum(ln.price)) + '</div>' +
                         '<button type="button" class="erp-row-del" onclick="removeRepQuoteLine(' + i + ')" aria-label="حذف"><i class="fas fa-trash"></i></button>' +
                     '</article>';
@@ -15626,6 +15788,32 @@
         function removeRepQuoteLine(i) {
             captureRepQuoteHeader();
             repQuoteDraft.lines.splice(i, 1);
+            renderRepQuoteBuilder();
+        }
+
+        function updateRepQuoteLinePrice(lineIndex, rawPrice) {
+            if (!canApplyQuoteManualDiscount(currentAdmin)) return;
+            captureRepQuoteHeader();
+            const ln = repQuoteDraft.lines[lineIndex];
+            if (!ln) return;
+            const price = erpNum(rawPrice);
+            if (!price) return;
+            const it = getEffectiveSalesPriceList(currentAdmin).find(function(x) { return x.id === ln.priceItemId; });
+            const floor = it ? getQuotePriceFloor(it, currentAdmin) : 0;
+            const ceiling = it ? getQuotePriceCeiling(it) : Infinity;
+            if (price < floor) {
+                alert('السعر أقل من الحد المسموح (' + formatSar(floor) + ').');
+                renderRepQuoteBuilder();
+                return;
+            }
+            if (price > ceiling) {
+                alert('السعر أعلى من الحد المسموح (' + formatSar(ceiling) + ').');
+                renderRepQuoteBuilder();
+                return;
+            }
+            const listPrice = erpNum(ln.listPrice) || (it ? erpNum(it.basePrice) : price);
+            ln.price = price;
+            ln.manualOverride = price !== listPrice;
             renderRepQuoteBuilder();
         }
 
@@ -26491,6 +26679,37 @@
                 }
             });
             enforceProductionGovernanceCleanState();
+            migrateLegacyCatalogProducts();
+            if (typeof syncSalesPriceListFromProductMaster === 'function') {
+                try { syncSalesPriceListFromProductMaster(); } catch (catSyncErr) { /* ignore */ }
+            }
+            if (typeof refreshPublicSiteFromGovernance === 'function') {
+                try { refreshPublicSiteFromGovernance(); } catch (catUiErr) { /* ignore */ }
+            }
+            maybePersistWpcReadyInstallCatalogToCloud();
+        }
+
+        let wpcReadyInstallCatalogPersistQueued = false;
+
+        function maybePersistWpcReadyInstallCatalogToCloud() {
+            if (wpcReadyInstallCatalogPersistQueued || !wpcReadyInstallCatalogNeedsCloudPersist) return;
+            if (!nebrasCloudSynced || !supabaseClient) return;
+            if (!currentAdmin || !isMainGovernanceAdmin(currentAdmin)) return;
+            wpcReadyInstallCatalogPersistQueued = true;
+            setTimeout(function() {
+                if (typeof persistScmContentHonest !== 'function') {
+                    wpcReadyInstallCatalogPersistQueued = false;
+                    return;
+                }
+                persistScmContentHonest('أبواب WPC جاهزة للتركيب شامل الاكسسوار', {
+                    storeKeys: ['site_products', 'sales_price_list', 'system_settings'],
+                    showToast: false
+                }).then(function(res) {
+                    if (res && res.cloudOk) wpcReadyInstallCatalogNeedsCloudPersist = false;
+                }).finally(function() {
+                    wpcReadyInstallCatalogPersistQueued = false;
+                });
+            }, 2500);
         }
 
         async function pullPublicSiteGovernanceFromCloud(options) {
@@ -26584,6 +26803,11 @@
                 if (typeof refreshDashboardExecutiveBi === 'function' && currentAdmin) {
                     refreshDashboardExecutiveBi(currentAdmin).catch(function(biErr) { console.warn('Post-hydrate BI:', biErr); });
                 }
+                migrateLegacyCatalogProducts();
+                if (typeof syncSalesPriceListFromProductMaster === 'function') {
+                    try { syncSalesPriceListFromProductMaster(); } catch (postHydrateSync) { /* ignore */ }
+                }
+                maybePersistWpcReadyInstallCatalogToCloud();
                 return ok;
             }).catch(function(hydrateErr) {
                 console.warn('Background cloud hydrate:', hydrateErr);
@@ -30308,6 +30532,7 @@
         window.cancelProductPromoEdit = cancelProductPromoEdit;
         window.deleteProductPromoCampaign = deleteProductPromoCampaign;
         window.removeRepQuoteLine = removeRepQuoteLine;
+        window.updateRepQuoteLinePrice = updateRepQuoteLinePrice;
         window.saveRepQuote = saveRepQuote;
         window.openErpOrders = openErpOrders;
         window.addErpOrder = addErpOrder;

@@ -144,6 +144,27 @@
     font-size: 0.8rem;
 }
 
+.rep-quote-line-manual {
+    color: #0d6e4f;
+    font-weight: 700;
+    font-size: 0.8rem;
+}
+
+.rep-quote-line-price-edit {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    font-size: 0.82rem;
+}
+
+.rep-quote-line-price-edit input {
+    width: 120px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    border: 1px solid rgba(13, 40, 64, 0.2);
+}
+
 .product-promo-admin-list {
     display: flex;
     flex-direction: column;
