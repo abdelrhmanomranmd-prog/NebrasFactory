@@ -1465,9 +1465,14 @@ body.nebras-mobile-bar-active.admin-session .nebras-mobile-commerce-bar {
 }
 
 .nebras-store-sku-grid--section .nebras-store-sku-media img {
-    object-fit: contain;
-    padding: 10px;
-    background: #f8fafc;
+    object-fit: cover;
+    padding: 0;
+    background: #f1f5f9;
+}
+
+.nebras-store-subhub-card--premium .nebras-store-subhub-card-media img {
+    object-fit: cover;
+    padding: 0;
 }
 
 .nebras-store-sku-grid--section .nebras-store-sku-body {

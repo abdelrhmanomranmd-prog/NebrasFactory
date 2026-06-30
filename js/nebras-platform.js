@@ -2448,7 +2448,7 @@
             sortOrder: 2
         };
 
-        const WPC_RAW_CATALOG_VERSION = 1;
+        const WPC_RAW_CATALOG_VERSION = 2;
         const WPC_RAW_BARE_IMG = 'images/catalog/wpc-raw-bare/';
         const WPC_RAW_CLAD_IMG = 'images/catalog/wpc-raw-clad/';
 
@@ -2553,9 +2553,102 @@
             sortOrder: 2
         };
 
-        const WPC_READY_CATALOG_VERSION = 3;
+        const WPC_READY_CATALOG_VERSION = 4;
         const WPC_READY_INSTALL_IMG = 'images/catalog/wpc-ready-install/';
         const WPC_READY_SUPPLY_IMG = 'images/catalog/wpc-ready-supply/';
+
+        /** صور حقيقية من معرض نبراس — أبواب وتركيبات فعلية */
+        const NEBRAS_REAL_DOOR_PHOTOS = {
+            d01: 'images/profile-2026/doors/doors-01.jpg',
+            d02: 'images/profile-2026/doors/doors-02.jpg',
+            d03: 'images/profile-2026/doors/doors-03.jpg',
+            d04: 'images/profile-2026/doors/doors-04.jpg',
+            d05: 'images/profile-2026/doors/doors-05.jpg',
+            d06: 'images/profile-2026/doors/doors-06.jpg',
+            d07: 'images/profile-2026/doors/doors-07.jpg',
+            d08: 'images/profile-2026/doors/doors-08.jpg',
+            d09: 'images/profile-2026/doors/doors-09.jpg',
+            d10: 'images/profile-2026/doors/doors-10.jpg',
+            d11: 'images/profile-2026/doors/doors-11.jpg',
+            d12: 'images/profile-2026/doors/doors-12.jpg',
+            g05: 'images/profile-2026/gallery-extra/gallery-extra-05.jpg',
+            g10: 'images/profile-2026/gallery-extra/gallery-extra-10.jpg',
+            g20: 'images/profile-2026/gallery-extra/gallery-extra-20.jpg',
+            g30: 'images/profile-2026/gallery-extra/gallery-extra-30.jpg',
+            c01: 'images/profile-2026/cnc/cnc-01.jpg',
+            c02: 'images/profile-2026/cnc/cnc-02.jpg'
+        };
+
+        const WPC_READY_INSTALL_REAL_PHOTOS = {
+            'flat-plain': NEBRAS_REAL_DOOR_PHOTOS.g05,
+            'flat-steel': NEBRAS_REAL_DOOR_PHOTOS.d08,
+            'flat-glass': NEBRAS_REAL_DOOR_PHOTOS.g20,
+            'flat-classic': NEBRAS_REAL_DOOR_PHOTOS.d01,
+            'u-plain': NEBRAS_REAL_DOOR_PHOTOS.g10,
+            'u-classic': NEBRAS_REAL_DOOR_PHOTOS.d06,
+            'u-steel': NEBRAS_REAL_DOOR_PHOTOS.d08,
+            'u60-plain': NEBRAS_REAL_DOOR_PHOTOS.d06,
+            'u60-steel': NEBRAS_REAL_DOOR_PHOTOS.d08,
+            'u60-classic': NEBRAS_REAL_DOOR_PHOTOS.d01,
+            'u60-glass': NEBRAS_REAL_DOOR_PHOTOS.g20,
+            'lib-plain': NEBRAS_REAL_DOOR_PHOTOS.g10,
+            'lib-steel': NEBRAS_REAL_DOOR_PHOTOS.d08,
+            'lib-glass': NEBRAS_REAL_DOOR_PHOTOS.g20,
+            'lib-classic': NEBRAS_REAL_DOOR_PHOTOS.d01,
+            'leaf-quarter-flat': NEBRAS_REAL_DOOR_PHOTOS.g05,
+            'leaf-quarter-u': NEBRAS_REAL_DOOR_PHOTOS.d06,
+            'leaf-quarter-lib': NEBRAS_REAL_DOOR_PHOTOS.g10,
+            'sliding-flat': NEBRAS_REAL_DOOR_PHOTOS.g20,
+            'sliding-u': NEBRAS_REAL_DOOR_PHOTOS.g20,
+            'sliding-lib': NEBRAS_REAL_DOOR_PHOTOS.g20
+        };
+
+        const WPC_READY_SUPPLY_REAL_PHOTOS = Object.assign({}, WPC_READY_INSTALL_REAL_PHOTOS);
+
+        const WPC_RAW_BARE_REAL_PHOTOS = {
+            leaf: NEBRAS_REAL_DOOR_PHOTOS.g05,
+            frame: NEBRAS_REAL_DOOR_PHOTOS.d01,
+            slice: NEBRAS_REAL_DOOR_PHOTOS.g30,
+            'decor-jumbo': NEBRAS_REAL_DOOR_PHOTOS.d01,
+            'decor-normal': NEBRAS_REAL_DOOR_PHOTOS.g05,
+            'decor-flat': NEBRAS_REAL_DOOR_PHOTOS.g05,
+            'u-profile': NEBRAS_REAL_DOOR_PHOTOS.g30,
+            'edge-band': NEBRAS_REAL_DOOR_PHOTOS.g30,
+            'pvc-sheet': NEBRAS_REAL_DOOR_PHOTOS.g20,
+            'mdf-sheet': NEBRAS_REAL_DOOR_PHOTOS.g30
+        };
+
+        const WPC_RAW_CLAD_REAL_PHOTOS = {
+            leaf: NEBRAS_REAL_DOOR_PHOTOS.d06,
+            frame: NEBRAS_REAL_DOOR_PHOTOS.d06,
+            slice: NEBRAS_REAL_DOOR_PHOTOS.d08,
+            'decor-jumbo': NEBRAS_REAL_DOOR_PHOTOS.c01,
+            'decor-normal': NEBRAS_REAL_DOOR_PHOTOS.g10,
+            'decor-flat': NEBRAS_REAL_DOOR_PHOTOS.d08,
+            'u-profile': NEBRAS_REAL_DOOR_PHOTOS.d08,
+            'edge-band': NEBRAS_REAL_DOOR_PHOTOS.g30,
+            'pvc-sheet': NEBRAS_REAL_DOOR_PHOTOS.g20,
+            'mdf-sheet': NEBRAS_REAL_DOOR_PHOTOS.g30
+        };
+
+        function catalogImageFileKey(imagePath) {
+            if (!imagePath) return '';
+            const file = String(imagePath).split('?')[0].split('/').pop() || '';
+            return file.replace(/\.(svg|jpg|jpeg|png|webp|avif)$/i, '');
+        }
+
+        function resolveWpcReadyCatalogImage(variant) {
+            if (!variant || !variant.image) return '';
+            const key = catalogImageFileKey(variant.image);
+            return WPC_READY_INSTALL_REAL_PHOTOS[key] || variant.image;
+        }
+
+        function resolveWpcRawCatalogImage(variant) {
+            if (!variant || !variant.image) return '';
+            const key = catalogImageFileKey(variant.image);
+            const map = variant.subCategoryId === 'wpc-raw-clad' ? WPC_RAW_CLAD_REAL_PHOTOS : WPC_RAW_BARE_REAL_PHOTOS;
+            return map[key] || variant.image;
+        }
 
         function wpcReadyCatalogPriceExVat(baseTablePrice) {
             const n = parseFloat(baseTablePrice);
@@ -2889,6 +2982,7 @@
             let merged = 0;
             WPC_RAW_CATALOG_ALL_VARIANTS.forEach(function(def) {
                 const payload = Object.assign({}, def);
+                payload.image = resolveWpcRawCatalogImage(def);
                 const idx = raw.variants.findIndex(function(v) {
                     return v && (v.sku === payload.sku || v.id === payload.id);
                 });
@@ -2933,6 +3027,7 @@
             let merged = 0;
             WPC_READY_CATALOG_ALL_VARIANTS.forEach(function(def) {
                 const payload = Object.assign({}, def);
+                payload.image = resolveWpcReadyCatalogImage(def);
                 const idx = wpc.variants.findIndex(function(v) {
                     return v && (v.sku === payload.sku || v.id === payload.id);
                 });
@@ -2948,6 +3043,7 @@
             }
             systemSettings.wpcReadyCatalogVersion = WPC_READY_CATALOG_VERSION;
             systemSettings.wpcReadyInstallCatalogVersion = WPC_READY_CATALOG_VERSION;
+            systemSettings.wpcCatalogRealPhotosVersion = 1;
             if (merged > 0 && typeof syncSalesPriceListFromProductMaster === 'function') {
                 try { syncSalesPriceListFromProductMaster(); } catch (seedSyncErr) { /* ignore */ }
             }
