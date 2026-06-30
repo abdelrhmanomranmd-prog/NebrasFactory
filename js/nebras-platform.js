@@ -3905,6 +3905,17 @@
                 const icon = visitorIcons.find(function(i) { return i.id === route.iconId; });
                 return !!(icon && getCatalogExperience(icon) === 'shop');
             }
+            if (route.view === 'product-sub' || route.view === 'product-sub-hub') {
+                if (route.iconId) {
+                    const icon = visitorIcons.find(function(i) { return i.id === route.iconId; });
+                    if (icon) return getCatalogExperience(icon) === 'shop';
+                }
+                if (route.productId) {
+                    const product = siteProducts.find(function(p) { return p.id === route.productId; });
+                    return productHasShop(product);
+                }
+                return false;
+            }
             if (route.iconId) {
                 const icon = visitorIcons.find(function(i) { return i.id === route.iconId; });
                 if (icon && getCatalogExperience(icon) !== 'shop') return false;
