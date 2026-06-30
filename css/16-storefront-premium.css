@@ -1291,6 +1291,14 @@ body.nebras-mobile-bar-active.admin-session .nebras-mobile-commerce-bar {
     border-top: 4px solid #0284c7;
 }
 
+.nebras-store-subhub-card--premium[data-sub-id="wpc-raw-bare"] {
+    border-top: 4px solid #b45309;
+}
+
+.nebras-store-subhub-card--premium[data-sub-id="wpc-raw-clad"] {
+    border-top: 4px solid #7c3aed;
+}
+
 .nebras-store-subhub-card--premium:hover {
     transform: translateY(-4px);
     box-shadow: 0 18px 40px rgba(21, 94, 148, 0.14);

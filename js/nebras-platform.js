@@ -2418,11 +2418,116 @@
 
         let aboutPages = {};
 
-        const DEFAULT_WPC_RAW_VARIANTS = [
-            { id: 'wpc-raw-80-w', image: 'images/wpc-background.avif', colorAr: 'أبيض', colorEn: 'White', sizeAr: '80 × 210 سم', sizeEn: '80×210 cm', typeAr: 'ضلفة عضم', typeEn: 'Raw leaf', price: 0, sku: 'WPC-RAW-80-W' },
-            { id: 'wpc-raw-90-w', image: 'images/wpc-background.avif', colorAr: 'أبيض', colorEn: 'White', sizeAr: '90 × 210 سم', sizeEn: '90×210 cm', typeAr: 'ضلفة عضم', typeEn: 'Raw leaf', price: 0, sku: 'WPC-RAW-90-W' },
-            { id: 'wpc-raw-100-oak', image: 'images/wpc-background.avif', colorAr: 'بلوط', colorEn: 'Oak', sizeAr: '100 × 210 سم', sizeEn: '100×210 cm', typeAr: 'ضلفة عضم', typeEn: 'Raw leaf', price: 0, sku: 'WPC-RAW-100-O' }
+        const DEFAULT_WPC_RAW_VARIANTS = [];
+
+        function wpcRawCatalogPriceExVat(baseTablePrice) {
+            const n = parseFloat(baseTablePrice);
+            const base = isNaN(n) ? 0 : n;
+            return Math.round(base * 1.10 * 100) / 100;
+        }
+
+        const WPC_RAW_BARE_SUBCATEGORY = {
+            id: 'wpc-raw-bare',
+            labelAr: 'أسعار القطاعات بدون تلبيس',
+            labelEn: 'Section prices — no cladding',
+            shortLabelAr: 'بدون تلبيس',
+            shortLabelEn: 'No cladding',
+            descAr: 'قطاعات WPC عضم بدون تلبيس — للورش والمصانع — كميات لا تقل عن ١٠٠٠ باب شهرياً',
+            descEn: 'WPC raw sections without cladding — workshops — min. 1000 doors/month',
+            sortOrder: 1
+        };
+
+        const WPC_RAW_CLAD_SUBCATEGORY = {
+            id: 'wpc-raw-clad',
+            labelAr: 'أسعار القطاعات الملبسة',
+            labelEn: 'Section prices — clad',
+            shortLabelAr: 'ملبس',
+            shortLabelEn: 'Clad',
+            descAr: 'قطاعات WPC عضم الملبسة — للورش والمصانع — كميات لا تقل عن ١٠٠٠ باب شهرياً',
+            descEn: 'Clad WPC raw sections — workshops — min. 1000 doors/month',
+            sortOrder: 2
+        };
+
+        const WPC_RAW_CATALOG_VERSION = 1;
+        const WPC_RAW_BARE_IMG = 'images/catalog/wpc-raw-bare/';
+        const WPC_RAW_CLAD_IMG = 'images/catalog/wpc-raw-clad/';
+
+        function buildWpcRawVariant(subId, image, id, sku, typeAr, typeEn, sizeAr, sizeEn, basePrice) {
+            const clad = subId === 'wpc-raw-clad';
+            return {
+                id: id,
+                sku: sku,
+                subCategoryId: subId,
+                image: image,
+                typeAr: typeAr,
+                typeEn: typeEn,
+                sizeAr: sizeAr,
+                sizeEn: sizeEn,
+                colorAr: clad ? 'قطاع ملبس' : 'قطاع بدون تلبيس',
+                colorEn: clad ? 'Clad section' : 'Section — no cladding',
+                price: wpcRawCatalogPriceExVat(basePrice),
+                inStock: true
+            };
+        }
+
+        /** صفوف: صورة، id، sku، نوع ع، نوع إ، مقاس ع، مقاس إ، سعر الجدول قبل الضريبة */
+        const WPC_RAW_BARE_ROWS = [
+            ['leaf.svg', 'wpc-raw-bare-leaf-90', 'WPC-RAW-B-L90', 'ضلفة WPC عضم', 'WPC raw leaf', '90 × 4.5 × 230 سم', '90 × 4.5 × 230 cm', 150],
+            ['leaf.svg', 'wpc-raw-bare-leaf-105', 'WPC-RAW-B-L105', 'ضلفة WPC عضم', 'WPC raw leaf', '105 × 4.5 × 230 سم', '105 × 4.5 × 230 cm', 165],
+            ['leaf.svg', 'wpc-raw-bare-leaf-80', 'WPC-RAW-B-L80', 'ضلفة WPC عضم', 'WPC raw leaf', '80 × 3.5 × 230 سم', '80 × 3.5 × 230 cm', 145],
+            ['leaf.svg', 'wpc-raw-bare-leaf-100', 'WPC-RAW-B-L100', 'ضلفة WPC عضم', 'WPC raw leaf', '100 × 3.5 × 230 سم', '100 × 3.5 × 230 cm', 155],
+            ['slice.svg', 'wpc-raw-bare-slice-25', 'WPC-RAW-B-SL25', 'شريحة slice', 'Slice profile', '25 × 251 سم', '25 × 251 cm', 60],
+            ['frame.svg', 'wpc-raw-bare-frame-21', 'WPC-RAW-B-F21', 'حلق فلات بدون فرزة من الخلف', 'Flat frame — no back rebate', '21 سم × 250 سم', '21 cm × 250 cm', 33],
+            ['frame.svg', 'wpc-raw-bare-frame-16', 'WPC-RAW-B-F16', 'حلق فلات بدون فرزة من الخلف', 'Flat frame — no back rebate', '16 سم × 250 سم', '16 cm × 250 cm', 24.5],
+            ['frame.svg', 'wpc-raw-bare-frame-10', 'WPC-RAW-B-F10', 'حلق WPC عضم', 'WPC raw frame', '10 سم × 250 سم', '10 cm × 250 cm', 22],
+            ['decor-jumbo.svg', 'wpc-raw-bare-dec-j260', 'WPC-RAW-B-DJ260', 'ديكور جامبو', 'Jumbo decor', '10 × 7 × 260 سم', '10 × 7 × 260 cm', 14],
+            ['decor-jumbo.svg', 'wpc-raw-bare-dec-j350', 'WPC-RAW-B-DJ350', 'ديكور جامبو', 'Jumbo decor', '10 × 7 × 350 سم', '10 × 7 × 350 cm', 18],
+            ['decor-normal.svg', 'wpc-raw-bare-dec-n260', 'WPC-RAW-B-DN260', 'ديكور عادي', 'Standard decor', '10 × 3 × 260 سم', '10 × 3 × 260 cm', 12],
+            ['decor-normal.svg', 'wpc-raw-bare-dec-n350', 'WPC-RAW-B-DN350', 'ديكور عادي', 'Standard decor', '10 × 3 × 350 سم', '10 × 3 × 350 cm', 16],
+            ['decor-flat.svg', 'wpc-raw-bare-dec-f8260', 'WPC-RAW-B-DF8260', 'ديكور فلات', 'Flat decor', '10 × 8 × 260 سم', '10 × 8 × 260 cm', 14],
+            ['decor-flat.svg', 'wpc-raw-bare-dec-f6260', 'WPC-RAW-B-DF6260', 'ديكور فلات', 'Flat decor', '6 × 8 × 260 سم', '6 × 8 × 260 cm', 18],
+            ['decor-flat.svg', 'wpc-raw-bare-dec-f3260', 'WPC-RAW-B-DF3260', 'ديكور فلات', 'Flat decor', '10 × 3 × 260 سم', '10 × 3 × 260 cm', 12],
+            ['u-profile.svg', 'wpc-raw-bare-u-45', 'WPC-RAW-B-U45', 'يو shape', 'U-shape profile', '4.5 ملم × 250 سم', '4.5 mm × 250 cm', 30],
+            ['u-profile.svg', 'wpc-raw-bare-u-6', 'WPC-RAW-B-U6', 'يو shape', 'U-shape profile', '6 سم × 250 سم', '6 cm × 250 cm', 38],
+            ['u-profile.svg', 'wpc-raw-bare-u-t', 'WPC-RAW-B-UT', 'يو U-T', 'U-T profile', '1.5 سم × 250 سم', '1.5 cm × 250 cm', 22],
+            ['edge-band.svg', 'wpc-raw-bare-edge', 'WPC-RAW-B-EDGE', 'شريط ايدج باند', 'Edge band tape', 'لفة / متر', 'Roll / meter', 3],
+            ['pvc-sheet.svg', 'wpc-raw-bare-pvc', 'WPC-RAW-B-PVC', 'PVC SHEET', 'PVC sheet', 'لوح PVC', 'PVC sheet', 6],
+            ['mdf-sheet.svg', 'wpc-raw-bare-mdf', 'WPC-RAW-B-MDF', 'ام دى اف 5 ملى', 'MDF 5mm', '120 × 240 سم', '120 × 240 cm', 65]
         ];
+
+        const WPC_RAW_CLAD_ROWS = [
+            ['leaf.svg', 'wpc-raw-clad-leaf-90', 'WPC-RAW-C-L90', 'ضلفة WPC ملبسة', 'Clad WPC leaf', '90 × 4.5 × 230 سم', '90 × 4.5 × 230 cm', 195],
+            ['leaf.svg', 'wpc-raw-clad-leaf-105', 'WPC-RAW-C-L105', 'ضلفة WPC ملبسة', 'Clad WPC leaf', '105 × 4.5 × 230 سم', '105 × 4.5 × 230 cm', 210],
+            ['leaf.svg', 'wpc-raw-clad-leaf-80', 'WPC-RAW-C-L80', 'ضلفة WPC ملبسة', 'Clad WPC leaf', '80 × 3.5 × 230 سم', '80 × 3.5 × 230 cm', 160],
+            ['leaf.svg', 'wpc-raw-clad-leaf-100', 'WPC-RAW-C-L100', 'ضلفة WPC ملبسة', 'Clad WPC leaf', '100 × 3.5 × 230 سم', '100 × 3.5 × 230 cm', 180],
+            ['slice.svg', 'wpc-raw-clad-slice-25', 'WPC-RAW-C-SL25', 'شريحة slice ملبسة', 'Clad slice', '25 × 251 سم', '25 × 251 cm', 75],
+            ['frame.svg', 'wpc-raw-clad-frame-21', 'WPC-RAW-C-F21', 'حلق فلات ملبس بدون فرزة من الخلف', 'Clad flat frame — no back rebate', '21 سم × 250 سم', '21 cm × 250 cm', 55],
+            ['frame.svg', 'wpc-raw-clad-frame-16', 'WPC-RAW-C-F16', 'حلق فلات ملبس بدون فرزة من الخلف', 'Clad flat frame — no back rebate', '16 سم × 250 سم', '16 cm × 250 cm', 50],
+            ['frame.svg', 'wpc-raw-clad-frame-10', 'WPC-RAW-C-F10', 'حلق WPC ملبس', 'Clad WPC frame', '10 سم × 250 سم', '10 cm × 250 cm', 45],
+            ['decor-jumbo.svg', 'wpc-raw-clad-dec-j260', 'WPC-RAW-C-DJ260', 'ديكور جامبو ملبس', 'Clad jumbo decor', '10 × 7 × 260 سم', '10 × 7 × 260 cm', 25],
+            ['decor-jumbo.svg', 'wpc-raw-clad-dec-j350', 'WPC-RAW-C-DJ350', 'ديكور جامبو ملبس', 'Clad jumbo decor', '10 × 7 × 350 سم', '10 × 7 × 350 cm', 32],
+            ['decor-normal.svg', 'wpc-raw-clad-dec-n260', 'WPC-RAW-C-DN260', 'ديكور عادي ملبس', 'Clad standard decor', '10 × 3 × 260 سم', '10 × 3 × 260 cm', 22],
+            ['decor-normal.svg', 'wpc-raw-clad-dec-n350', 'WPC-RAW-C-DN350', 'ديكور عادي ملبس', 'Clad standard decor', '10 × 3 × 350 سم', '10 × 3 × 350 cm', 30],
+            ['decor-flat.svg', 'wpc-raw-clad-dec-f8260', 'WPC-RAW-C-DF8260', 'ديكور فلات ملبس', 'Clad flat decor', '10 × 8 × 260 سم', '10 × 8 × 260 cm', 25],
+            ['decor-flat.svg', 'wpc-raw-clad-dec-f6260', 'WPC-RAW-C-DF6260', 'ديكور فلات ملبس', 'Clad flat decor', '6 × 8 × 260 سم', '6 × 8 × 260 cm', 32],
+            ['decor-flat.svg', 'wpc-raw-clad-dec-f3260', 'WPC-RAW-C-DF3260', 'ديكور فلات ملبس', 'Clad flat decor', '10 × 3 × 260 سم', '10 × 3 × 260 cm', 22],
+            ['u-profile.svg', 'wpc-raw-clad-u-45', 'WPC-RAW-C-U45', 'يو shape ملبس', 'Clad U-shape', '4.5 ملم × 250 سم', '4.5 mm × 250 cm', 39],
+            ['u-profile.svg', 'wpc-raw-clad-u-6', 'WPC-RAW-C-U6', 'يو shape ملبس', 'Clad U-shape', '6 سم × 250 سم', '6 cm × 250 cm', 52],
+            ['u-profile.svg', 'wpc-raw-clad-u-t', 'WPC-RAW-C-UT', 'يو U-T ملبس', 'Clad U-T profile', '1.5 سم × 250 سم', '1.5 cm × 250 cm', 32],
+            ['edge-band.svg', 'wpc-raw-clad-edge', 'WPC-RAW-C-EDGE', 'شريط ايدج باند', 'Edge band tape', 'لفة / متر', 'Roll / meter', 3],
+            ['pvc-sheet.svg', 'wpc-raw-clad-pvc', 'WPC-RAW-C-PVC', 'PVC SHEET', 'PVC sheet', 'لوح PVC', 'PVC sheet', 6],
+            ['mdf-sheet.svg', 'wpc-raw-clad-mdf', 'WPC-RAW-C-MDF', 'ام دى اف 5 ملى', 'MDF 5mm', '120 × 240 سم', '120 × 240 cm', 80]
+        ];
+
+        const DEFAULT_WPC_RAW_BARE_VARIANTS = WPC_RAW_BARE_ROWS.map(function(r) {
+            return buildWpcRawVariant('wpc-raw-bare', WPC_RAW_BARE_IMG + r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7]);
+        });
+
+        const DEFAULT_WPC_RAW_CLAD_VARIANTS = WPC_RAW_CLAD_ROWS.map(function(r) {
+            return buildWpcRawVariant('wpc-raw-clad', WPC_RAW_CLAD_IMG + r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7]);
+        });
+
+        const WPC_RAW_CATALOG_ALL_VARIANTS = DEFAULT_WPC_RAW_BARE_VARIANTS.concat(DEFAULT_WPC_RAW_CLAD_VARIANTS);
 
         const DEFAULT_WPC_READY_VARIANTS = [];
 
@@ -2559,6 +2664,12 @@
                 const hasSupply = vars.some(function(v) { return v && v.subCategoryId === 'wpc-ready-supply'; });
                 return hasInstall && hasSupply;
             }
+            if (product.id === 'prod-wpc-raw') {
+                const vars = product.variants || [];
+                const hasBare = vars.some(function(v) { return v && v.subCategoryId === 'wpc-raw-bare'; });
+                const hasClad = vars.some(function(v) { return v && v.subCategoryId === 'wpc-raw-clad'; });
+                return hasBare && hasClad;
+            }
             return false;
         }
 
@@ -2566,6 +2677,9 @@
             if (!product) return;
             if (product.id === 'prod-wpc' && typeof seedWpcReadyCatalog === 'function') {
                 seedWpcReadyCatalog();
+            }
+            if (product.id === 'prod-wpc-raw' && typeof seedWpcRawCatalog === 'function') {
+                seedWpcRawCatalog();
             }
         }
 
@@ -2577,6 +2691,10 @@
             if (!sub && product.id === 'prod-wpc') {
                 if (subCategoryId === 'wpc-ready-install') sub = WPC_READY_INSTALL_SUBCATEGORY;
                 if (subCategoryId === 'wpc-ready-supply') sub = WPC_READY_SUPPLY_SUBCATEGORY;
+            }
+            if (!sub && product.id === 'prod-wpc-raw') {
+                if (subCategoryId === 'wpc-raw-bare') sub = WPC_RAW_BARE_SUBCATEGORY;
+                if (subCategoryId === 'wpc-raw-clad') sub = WPC_RAW_CLAD_SUBCATEGORY;
             }
             return sub || null;
         }
@@ -2743,6 +2861,52 @@
                 '</header>' +
                 subDesc +
                 '<div class="nebras-store-sku-grid">' + cards + '</div></section>';
+        }
+
+        function seedWpcRawCatalog() {
+            const raw = (siteProducts || []).find(function(p) { return p && p.id === 'prod-wpc-raw'; });
+            if (!raw) return 0;
+            if (!Array.isArray(raw.subCategories)) raw.subCategories = [];
+            [WPC_RAW_BARE_SUBCATEGORY, WPC_RAW_CLAD_SUBCATEGORY].forEach(function(subDef) {
+                if (!raw.subCategories.some(function(s) { return s && s.id === subDef.id; })) {
+                    raw.subCategories.push(Object.assign({}, subDef));
+                } else {
+                    raw.subCategories.forEach(function(s) {
+                        if (s && s.id === subDef.id) {
+                            s.labelAr = subDef.labelAr;
+                            s.labelEn = subDef.labelEn;
+                            s.shortLabelAr = subDef.shortLabelAr;
+                            s.shortLabelEn = subDef.shortLabelEn;
+                            s.descAr = subDef.descAr;
+                            s.descEn = subDef.descEn;
+                            s.sortOrder = subDef.sortOrder;
+                        }
+                    });
+                }
+            });
+            raw.subCategories.sort(function(a, b) { return (a.sortOrder || 0) - (b.sortOrder || 0); });
+            if (!Array.isArray(raw.variants)) raw.variants = [];
+            let merged = 0;
+            WPC_RAW_CATALOG_ALL_VARIANTS.forEach(function(def) {
+                const payload = Object.assign({}, def);
+                const idx = raw.variants.findIndex(function(v) {
+                    return v && (v.sku === payload.sku || v.id === payload.id);
+                });
+                if (idx >= 0) {
+                    raw.variants[idx] = Object.assign({}, raw.variants[idx], payload);
+                } else {
+                    raw.variants.push(payload);
+                }
+                merged++;
+            });
+            if (!systemSettings || typeof systemSettings !== 'object') {
+                systemSettings = Object.assign({}, DEFAULT_SYSTEM_SETTINGS);
+            }
+            systemSettings.wpcRawCatalogVersion = WPC_RAW_CATALOG_VERSION;
+            if (merged > 0 && typeof syncSalesPriceListFromProductMaster === 'function') {
+                try { syncSalesPriceListFromProductMaster(); } catch (seedSyncErr) { /* ignore */ }
+            }
+            return merged;
         }
 
         function seedWpcReadyCatalog() {
@@ -3566,9 +3730,10 @@
             }
             const raw = siteProducts.find(function(p) { return p.id === 'prod-wpc-raw'; });
             if (raw) {
-                if (!raw.variants || !raw.variants.length) raw.variants = cloneVariants(DEFAULT_WPC_RAW_VARIANTS);
+                if (!raw.variants || !raw.variants.length) raw.variants = [];
                 raw.action = 'shop';
                 raw.shopEnabled = true;
+                seedWpcRawCatalog();
             }
             const alu = siteProducts.find(function(p) { return p.id === 'prod-aluminum'; });
             if (alu) {

@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 140" role="img">
+  <defs>
+    <linearGradient id="core" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#b8c4d0"/><stop offset="100%" stop-color="#7a8a9a"/>
+    </linearGradient>
+    <filter id="sh"><feDropShadow dx="4" dy="6" stdDeviation="5" flood-opacity="0.25"/></filter>
+  </defs>
+  <rect width="200" height="140" fill="#eef2f7"/>
+  <rect x="12" y="12" width="76" height="18" rx="9" fill="#0284c7" opacity="0.92"/>
+  <text x="50" y="25" text-anchor="middle" font-family="Segoe UI,Tahoma,sans-serif" font-size="10" font-weight="700" fill="#fff">ملبس</text>
+  <g filter="url(#sh)">
+    <path d="M58 44 L142 44 L142 100 L58 100 Z" fill="none" stroke="#d4a574" stroke-width="10"/>
+    <path d="M64 50 L136 50 L136 94 L64 94 Z" fill="none" stroke="url(#core)" stroke-width="14" stroke-linejoin="round"/>
+  </g>
+  <text x="100" y="128" text-anchor="middle" font-family="Segoe UI,Tahoma,sans-serif" font-size="11" fill="#475569">يو بروفايل</text>
+</svg>

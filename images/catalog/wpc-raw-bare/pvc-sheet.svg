@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 160" role="img">
+  <defs>
+    <linearGradient id="core" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#c8ccd4"/><stop offset="100%" stop-color="#9aa0a8"/>
+    </linearGradient>
+    <filter id="sh"><feDropShadow dx="4" dy="6" stdDeviation="5" flood-opacity="0.25"/></filter>
+  </defs>
+  <rect width="200" height="160" fill="#eef2f7"/>
+  <rect x="12" y="12" width="76" height="18" rx="9" fill="#047857" opacity="0.92"/>
+  <text x="50" y="25" text-anchor="middle" font-family="Segoe UI,Tahoma,sans-serif" font-size="10" font-weight="700" fill="#fff">عضم</text>
+  <g filter="url(#sh)">
+    <rect x="40" y="40" width="120" height="100" rx="4" fill="rgba(200,225,245,0.75)" stroke="#5b8fb9" stroke-width="2"/>
+    <line x1="52" y1="52" x2="148" y2="128" stroke="rgba(255,255,255,0.5)" stroke-width="2"/>
+    <line x1="148" y1="52" x2="52" y2="128" stroke="rgba(255,255,255,0.35)" stroke-width="2"/>
+  </g>
+  <text x="100" y="152" text-anchor="middle" font-family="Segoe UI,Tahoma,sans-serif" font-size="11" fill="#475569">PVC SHEET</text>
+</svg>
