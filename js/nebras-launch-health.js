@@ -5,6 +5,8 @@
 (function(global) {
     'use strict';
 
+    let launchHealthRunning = false;
+
     function isHqAdmin() {
         try {
             return typeof global.isMainGovernanceAdmin === 'function' && global.isMainGovernanceAdmin(global.currentAdmin);
@@ -12,7 +14,10 @@
     }
 
     function verifyNebrasLaunchHealth() {
+        if (launchHealthRunning) return [];
+        launchHealthRunning = true;
         const issues = [];
+        try {
         const dash = document.getElementById('admin-dashboard');
         if (!dash || !dash.classList.contains('show') || !isHqAdmin()) return issues;
 
@@ -22,6 +27,7 @@
                 global.resetDashboardRolePresentation();
             }
             if (typeof global.repairDashboardTilesIntegrity === 'function') global.repairDashboardTilesIntegrity();
+            if (typeof global.forceRestoreHqDashboardTilesFromDefaults === 'function') global.forceRestoreHqDashboardTilesFromDefaults();
             if (typeof global.renderDashboardTiles === 'function') global.renderDashboardTiles();
         }
 
@@ -32,9 +38,7 @@
             if (typeof global.resetDashboardRolePresentation === 'function') global.resetDashboardRolePresentation();
             if (typeof global.repairDashboardTilesIntegrity === 'function') global.repairDashboardTilesIntegrity();
             if (typeof global.forceRestoreHqDashboardTilesFromDefaults === 'function') global.forceRestoreHqDashboardTilesFromDefaults();
-            if (typeof global.refreshAdminDashboardAfterGovernanceSync === 'function') {
-                global.refreshAdminDashboardAfterGovernanceSync();
-            } else if (typeof global.renderDashboardTiles === 'function') {
+            if (typeof global.renderDashboardTiles === 'function') {
                 global.renderDashboardTiles();
             }
         }
@@ -51,6 +55,9 @@
             console.warn('[Nebras Launch]', issues.join(' · '));
         }
         return issues;
+        } finally {
+            launchHealthRunning = false;
+        }
     }
 
     global.verifyNebrasLaunchHealth = verifyNebrasLaunchHealth;

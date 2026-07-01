@@ -3987,6 +3987,29 @@
             return (list || []).map(function(v) { return Object.assign({}, v); });
         }
 
+        /** يمنع اختفاء المتجر إذا السحابة/التخزين رجّع catalog فارغاً */
+        function ensureMinimumLiveSiteCatalog() {
+            siteProducts = Array.isArray(siteProducts) ? siteProducts : [];
+            DEFAULT_SITE_PRODUCTS.forEach(function(def) {
+                if (!def || !def.id) return;
+                if (siteProducts.some(function(p) { return p && p.id === def.id; })) return;
+                const copy = Object.assign({}, def);
+                if (def.variants) copy.variants = cloneVariants(def.variants);
+                siteProducts.push(copy);
+            });
+            SHOP_CATALOG_PRODUCT_IDS.forEach(function(pid) {
+                const p = siteProducts.find(function(x) { return x && x.id === pid; });
+                if (!p) return;
+                const def = DEFAULT_SITE_PRODUCTS.find(function(d) { return d.id === pid; });
+                if ((!Array.isArray(p.variants) || !p.variants.length) && def && def.variants) {
+                    p.variants = cloneVariants(def.variants);
+                }
+                p.shopEnabled = p.shopEnabled !== false;
+                p.visible = p.visible !== false;
+                if (!p.action || p.action === 'overlay') p.action = 'shop';
+            });
+        }
+
         function migrateLegacyCatalogProducts() {
             const pvcIdx = siteProducts.findIndex(function(p) { return p.id === 'prod-pvc'; });
             if (pvcIdx >= 0 && !siteProducts.some(function(p) { return p.id === 'prod-wpc-raw'; })) {
@@ -6160,7 +6183,6 @@
     }
 
     function ensurePrimaryGovernanceAccounts() {
-        if (typeof finalizePlatformDataAfterLoad === 'function') finalizePlatformDataAfterLoad();
         if (!adminUsers.some(function(u) { return String(u.username || '').toUpperCase() === IMMUTABLE_PRIMARY_ADMIN_USERNAME; })) {
             adminUsers.unshift({
                 id: IMMUTABLE_PRIMARY_ADMIN_ID,
@@ -18234,9 +18256,14 @@
             dashboardTiles.sort(function(a, b) { return (a.sortOrder || 0) - (b.sortOrder || 0); });
         }
 
+        let nebrasDashboardRefreshInFlight = false;
+
         /** إعادة بناء الداشبورد بعد مزامنة السحابة — يمنع اختفاء الأيقونات */
-        function refreshAdminDashboardAfterGovernanceSync() {
-            if (!currentAdmin) return;
+        function refreshAdminDashboardAfterGovernanceSync(options) {
+            options = options || {};
+            if (!currentAdmin || nebrasDashboardRefreshInFlight) return;
+            nebrasDashboardRefreshInFlight = true;
+            try {
             refreshCurrentAdminFromStore();
             resetDashboardRolePresentation();
             repairDashboardTilesIntegrity();
@@ -18264,9 +18291,11 @@
             if (typeof renderAdminAnalyticsPanel === 'function' && canManage('audit')) {
                 try { renderAdminAnalyticsPanel(); } catch (dashAnErr) { console.warn('refreshAdminDashboard analytics:', dashAnErr); }
             }
-            if (typeof scheduleNebrasLaunchHealth === 'function') scheduleNebrasLaunchHealth(250);
-            if (isMainGovernanceAdmin(currentAdmin)) {
-                try { document.dispatchEvent(new CustomEvent('nebras-dashboard-ready')); } catch (dashEvtErr) { /* ignore */ }
+            if (options.scheduleHealth !== false && typeof scheduleNebrasLaunchHealth === 'function') {
+                scheduleNebrasLaunchHealth(250);
+            }
+            } finally {
+                nebrasDashboardRefreshInFlight = false;
             }
         }
 
@@ -27559,7 +27588,10 @@
             if (!skipBusinessSeeds) ensureBuiltinErpData();
             if (!skipBusinessSeeds) ensureErpOperationsData();
             if (!skipBusinessSeeds) ensureBuiltinSiteCatalog();
-            else if (typeof migrateLegacyCatalogProducts === 'function') migrateLegacyCatalogProducts();
+            else {
+                ensureMinimumLiveSiteCatalog();
+                if (typeof migrateLegacyCatalogProducts === 'function') migrateLegacyCatalogProducts();
+            }
             ensurePrimaryRecoveryEmail();
             if (!Array.isArray(siteCertifications)) siteCertifications = [];
             if (typeof repairShowroomGallerySections === 'function' && repairShowroomGallerySections()) {
@@ -27610,9 +27642,9 @@
                 }
             });
             enforceProductionGovernanceCleanState();
-            if (currentAdmin && typeof refreshAdminDashboardAfterGovernanceSync === 'function') {
-                try { refreshAdminDashboardAfterGovernanceSync(); } catch (dashRefreshErr) {
-                    console.warn('Post-load dashboard refresh:', dashRefreshErr);
+            if (options.refreshDashboardUi === true && currentAdmin && typeof refreshAdminDashboardAfterGovernanceSync === 'function') {
+                try { refreshAdminDashboardAfterGovernanceSync({ scheduleHealth: false }); } catch (dashRefreshErr) {
+                    console.warn('Post-hydrate dashboard refresh:', dashRefreshErr);
                 }
             }
         }
@@ -27689,7 +27721,7 @@
                 skipInit: true
             }).then(function(ok) {
                 if (currentAdmin && typeof refreshAdminDashboardAfterGovernanceSync === 'function') {
-                    refreshAdminDashboardAfterGovernanceSync();
+                    refreshAdminDashboardAfterGovernanceSync({ scheduleHealth: true });
                 } else if (currentAdmin && typeof renderDashboardCommandShell === 'function') {
                     renderDashboardCommandShell(currentAdmin);
                 }
@@ -27749,7 +27781,7 @@
             options = options || {};
             if (!NEBRAS_SERVER_FIRST_MODE || !supabaseClient) return false;
             const ok = await loadFromNebrasCloud();
-            finalizePlatformDataAfterLoad({ skipBuiltinSeeds: ok });
+            finalizePlatformDataAfterLoad({ skipBuiltinSeeds: ok, refreshDashboardUi: true });
             ensureSiteChromeDefaults();
             if (typeof repairStoreHubCatalogBindings === 'function') repairStoreHubCatalogBindings();
             if (typeof refreshPublicSiteFromGovernance === 'function') refreshPublicSiteFromGovernance();
