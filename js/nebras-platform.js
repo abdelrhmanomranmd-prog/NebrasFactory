@@ -2688,7 +2688,6 @@
             const rollIdx = catalogIndex != null && !isNaN(catalogIndex) ? catalogIndex : 0;
             const roll = colors[rollIdx] || colors[0];
             if (!roll) return;
-            const baseSrc = img.getAttribute('data-base-src') || img.getAttribute('src') || '';
             if (baseSrc && img.getAttribute('src') !== baseSrc) img.src = baseSrc;
             img.style.filter = buildWpcStoreRollCssFilter(roll.hex);
             img.setAttribute('data-composed-roll', String(rollIdx));
