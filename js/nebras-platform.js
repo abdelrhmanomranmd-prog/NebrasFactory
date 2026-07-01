@@ -2698,9 +2698,9 @@
         }
 
         function buildWpcStoreSkuDoorMediaHtml(baseImg, label, fullSrc, ui) {
-            return '<div class="nebras-store-sku-media nebras-store-sku-media--wpc-door nebras-store-sku-media--vector">' +
+            return '<div class="nebras-store-sku-media nebras-store-sku-media--wpc-door nebras-store-sku-media--vector nebras-store-sku-media--has-image">' +
                 '<div class="nebras-store-sku-door-stack">' +
-                '<img class="nebras-store-sku-img nebras-store-sku-img--wpc" src="' + escapeHtmlAttr(baseImg) + '"' +
+                '<img class="nebras-store-sku-img nebras-store-sku-img--wpc nebras-clickable-media" src="' + escapeHtmlAttr(baseImg) + '"' +
                 ' data-base-src="' + escapeHtmlAttr(baseImg) + '" data-full-src="' + escapeHtmlAttr(fullSrc || baseImg) + '"' +
                 ' alt="' + escapeHtmlAttr(label) + '" loading="lazy" decoding="async"' +
                 ' title="' + escapeHtmlAttr(ui.lightboxOpenHint || 'اضغط للتكبير') + '"></div></div>';
@@ -4515,7 +4515,7 @@
             const mediaClass = 'nebras-store-sku-media' +
                 (isWpcReady ? ' nebras-store-sku-media--wpc-door' : '') +
                 (isWpcReady || isVectorImg ? ' nebras-store-sku-media--vector' : '');
-            const imgClass = 'nebras-store-sku-img' + (isWpcReady ? ' nebras-store-sku-img--wpc' : ' nebras-clickable-media');
+            const imgClass = 'nebras-store-sku-img nebras-clickable-media' + (isWpcReady ? ' nebras-store-sku-img--wpc' : '');
             const awaitingLabel = ui.storeSkuAwaitingImage || 'الصورة من لوحة إدارة المحتوى';
             const media = isWpcReady && !baseImg
                 ? '<div class="nebras-store-sku-media nebras-store-sku-media--wpc-door nebras-store-sku-media--awaiting-image"><span class="nebras-store-sku-awaiting-image"><i class="fas fa-camera"></i> ' + escapeHtmlAttr(awaitingLabel) + '</span></div>'
@@ -9032,6 +9032,27 @@
             return msg;
         }
 
+        /** رسالة واتساب مختصرة عند إرسال PDF — التفاصيل داخل الملف وليس نصاً طويلاً */
+        function buildQuotePdfWhatsAppShortMessage(entry, ui, lang) {
+            if (!entry) return '';
+            const isEn = lang === 'en';
+            const isZh = lang === 'zh';
+            const companyName = isEn ? 'Nebras Plastic Factory Company' : (isZh ? 'Nebras 塑料工厂公司' : 'شركة مصنع نبراس للبلاستيك');
+            let msg = isEn
+                ? '📄 Nebras Price Quotation — PDF (A4)\n'
+                : (isZh ? '📄 Nebras 报价单 PDF (A4)\n' : '📄 عرض سعر PDF — مستند A4\n');
+            msg += '🏭 ' + companyName + '\n';
+            msg += (isEn ? 'Quote No: ' : (isZh ? '报价编号: ' : 'رقم العرض: ')) + (entry.quoteNo || '—') + '\n';
+            msg += (isEn ? 'Customer: ' : (isZh ? '客户: ' : 'العميل: ')) + (entry.customerName || '—') + '\n';
+            if (entry.totalIncVat > 0) {
+                msg += (isEn ? 'Total (inc VAT): ' : (isZh ? '总计(含税): ' : 'الإجمالي شامل الضريبة: ')) + formatSar(entry.totalIncVat) + '\n';
+            }
+            msg += isEn
+                ? '\nFull product table and totals are in the PDF file — please attach it.'
+                : (isZh ? '\n完整明细见 PDF 附件。' : '\nجدول المنتجات والإجماليات في ملف PDF — أرفقيه من المرفقات.');
+            return msg;
+        }
+
         function buildCartOrderWhatsAppMessage(entry, ui, lang) {
             if (!entry) return '';
             const isEn = lang === 'en';
@@ -9095,13 +9116,25 @@
             const channels = Array.isArray(channel) ? channel : (channel ? [channel] : []);
             if (!channels.length) return [];
             const ui = siteText[currentLang || 'ar'] || siteText.ar;
-            let fullMessage = message || '';
+            const lang = options.lang || currentLang || 'ar';
             const pdfCloudUrl = options.pdfCloudUrl || options.imageCloudUrl || '';
             const pdfBlob = options.pdfBlob || null;
             const fileName = options.fileName || 'nebras-quote-a4.pdf';
             const mimeType = options.mimeType || (pdfBlob && pdfBlob.type) || 'application/pdf';
+            const hasPdfDelivery = !!(pdfBlob || pdfCloudUrl);
+            const entry = options.entry || null;
+            let fullMessage = hasPdfDelivery && entry
+                ? buildQuotePdfWhatsAppShortMessage(entry, ui, lang)
+                : (message || '');
             if (pdfCloudUrl) {
                 fullMessage += '\n\n📄 ' + (options.pdfLinkLabel || ui.quotePdfLinkLabel || ui.quoteImageLinkLabel || 'عرض السعر PDF (A4):') + '\n' + pdfCloudUrl;
+            }
+            if (pdfBlob) {
+                triggerQuoteFileDownload(pdfBlob, fileName);
+                await new Promise(function(resolve) { setTimeout(resolve, 800); });
+            } else if (options.imageDataUrl) {
+                triggerQuoteFileDownload(options.imageDataUrl, (fileName || 'nebras-quote-a4').replace(/\.pdf$/i, '') + '.png');
+                await new Promise(function(resolve) { setTimeout(resolve, 500); });
             }
             if (pdfBlob && typeof navigator.share === 'function') {
                 const shared = await tryShareQuoteDocument(fullMessage, pdfBlob, fileName, mimeType);
@@ -9109,11 +9142,6 @@
             }
             if (pdfBlob) {
                 fullMessage += '\n\n📎 ' + (ui.quotePdfAttachHint || 'تم تنزيل PDF على جهازك — أرفقيه من «المرفقات» في واتساب لإرسال عرض السعر بصيغة PDF.');
-                triggerQuoteFileDownload(pdfBlob, fileName);
-                await new Promise(function(resolve) { setTimeout(resolve, 700); });
-            } else if (options.imageDataUrl) {
-                triggerQuoteFileDownload(options.imageDataUrl, (fileName || 'nebras-quote-a4').replace(/\.pdf$/i, '') + '.png');
-                await new Promise(function(resolve) { setTimeout(resolve, 500); });
             }
             const sameNumber = normalizeSaPhoneE164(systemSettings.mainSalesPhone) === normalizeSaPhoneE164(systemSettings.customerServicePhone);
             const toOpen = channels.filter(function(ch, idx, arr) {
@@ -9627,13 +9655,14 @@
                 alert('تعذّر حفظ الطلب — جرّبي صورة أصغر للحوالة أو أعدي المحاولة.');
                 return;
             }
-            const msg = buildQuoteA4WhatsAppMessage(entry, ui, currentLang);
-            const waChannels = await deliverQuoteViaWhatsApp(msg, channels, {
+            const waChannels = await deliverQuoteViaWhatsApp('', channels, {
                 pdfBlob: pdfBlob,
                 pdfCloudUrl: pdfCloudUrl,
                 fileName: pdfFileName,
                 pdfLinkLabel: ui.quotePdfLinkLabel,
-                mimeType: 'application/pdf'
+                mimeType: 'application/pdf',
+                entry: entry,
+                lang: currentLang
             });
             entry.notifyChannels = waChannels;
             entry.notifiedSalesPhone = channels.indexOf('sales') >= 0 ? (systemSettings.mainSalesPhone || '') : '';

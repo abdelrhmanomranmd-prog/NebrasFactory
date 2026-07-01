@@ -1605,6 +1605,11 @@ body.nebras-mobile-bar-active.admin-session .nebras-mobile-commerce-bar {
     backface-visibility: hidden;
 }
 
+.nebras-store-sku-media--has-image img.nebras-clickable-media,
+.nebras-store-sku-media:not(.nebras-store-sku-media--empty):not(.nebras-store-sku-media--awaiting-image) img.nebras-clickable-media {
+    cursor: zoom-in;
+}
+
 .nebras-store-sku-card--wpc-ready:hover .nebras-store-sku-media--wpc-door img {
     transform: none;
 }
