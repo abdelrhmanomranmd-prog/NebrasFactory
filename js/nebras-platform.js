@@ -18184,7 +18184,7 @@
                 if (t.visible === false) return false;
                 return DEFAULT_DASHBOARD_TILES.some(function(d) { return d.id === t.id && d.visible !== false; });
             }).length;
-            if (builtinVisible < 10) {
+            if (builtinVisible < 10 || (isMainGovernanceAdmin() && builtinVisible < 18)) {
                 dashboardTiles.forEach(function(t) {
                     const def = DEFAULT_DASHBOARD_TILES.find(function(d) { return d.id === t.id; });
                     if (def) {
@@ -18196,6 +18196,78 @@
                 });
             }
             ensureDashboardGovernanceHandlers();
+        }
+
+        function refreshCurrentAdminFromStore() {
+            if (!currentAdmin) return null;
+            const key = currentAdmin.id || currentAdmin.username;
+            if (!key) return currentAdmin;
+            const fresh = (adminUsers || []).find(function(u) {
+                return u && (u.id === currentAdmin.id || String(u.username || '').toUpperCase() === String(currentAdmin.username || '').toUpperCase());
+            });
+            if (fresh) currentAdmin = fresh;
+            if (isMainGovernanceAdmin(currentAdmin)) {
+                currentAdmin.isPrimary = true;
+                currentAdmin.role = 'superadmin';
+                currentAdmin.permissions = null;
+            }
+            return currentAdmin;
+        }
+
+        function forceRestoreHqDashboardTilesFromDefaults() {
+            if (!isMainGovernanceAdmin()) return;
+            DEFAULT_DASHBOARD_TILES.forEach(function(def) {
+                let tile = dashboardTiles.find(function(t) { return t.id === def.id; });
+                if (!tile) {
+                    dashboardTiles.push(Object.assign({}, def));
+                    return;
+                }
+                if (def.visible !== false) tile.visible = true;
+                tile.handler = def.handler || tile.handler;
+                tile.zone = def.zone || tile.zone;
+                tile.iconClass = def.iconClass || tile.iconClass;
+                tile.dashGroup = def.dashGroup || tile.dashGroup;
+                if (tile.sortOrder == null) tile.sortOrder = def.sortOrder;
+                if (def.permission) tile.permission = def.permission;
+                if (def.superadminOnly != null) tile.superadminOnly = def.superadminOnly;
+            });
+            dashboardTiles.sort(function(a, b) { return (a.sortOrder || 0) - (b.sortOrder || 0); });
+        }
+
+        /** إعادة بناء الداشبورد بعد مزامنة السحابة — يمنع اختفاء الأيقونات */
+        function refreshAdminDashboardAfterGovernanceSync() {
+            if (!currentAdmin) return;
+            refreshCurrentAdminFromStore();
+            resetDashboardRolePresentation();
+            repairDashboardTilesIntegrity();
+            if (isMainGovernanceAdmin(currentAdmin)) forceRestoreHqDashboardTilesFromDefaults();
+            syncAdminSessionClass();
+            if (typeof isStrictHrUser === 'function' && isStrictHrUser(currentAdmin)) {
+                if (typeof applyHrStrictDashboardGovernance === 'function') applyHrStrictDashboardGovernance(currentAdmin);
+                if (typeof renderDashboardTiles === 'function') renderDashboardTiles();
+                return;
+            }
+            if (typeof applyLegalOnlyDashboard === 'function') applyLegalOnlyDashboard(currentAdmin);
+            if (typeof isStrictLegalUser === 'function' && isStrictLegalUser(currentAdmin)) {
+                if (typeof renderDashboardTiles === 'function') renderDashboardTiles();
+                return;
+            }
+            renderDashboardCommandShell(currentAdmin);
+            applyRoleDashboardScope(currentAdmin);
+            renderPlatformHubPanel();
+            if (typeof renderNebrasEmpireHubPanel === 'function') renderNebrasEmpireHubPanel();
+            renderErpHubPanel();
+            renderDashboardTiles();
+            renderCompanyLegalBars();
+            renderDashboardOfficialHub();
+            renderDashboardChannelsStatus();
+            if (typeof renderAdminAnalyticsPanel === 'function' && canManage('audit')) {
+                try { renderAdminAnalyticsPanel(); } catch (dashAnErr) { console.warn('refreshAdminDashboard analytics:', dashAnErr); }
+            }
+            if (typeof scheduleNebrasLaunchHealth === 'function') scheduleNebrasLaunchHealth(250);
+            if (isMainGovernanceAdmin(currentAdmin)) {
+                try { document.dispatchEvent(new CustomEvent('nebras-dashboard-ready')); } catch (dashEvtErr) { /* ignore */ }
+            }
         }
 
         function applyRoleDashboardScope(user) {
@@ -27538,6 +27610,11 @@
                 }
             });
             enforceProductionGovernanceCleanState();
+            if (currentAdmin && typeof refreshAdminDashboardAfterGovernanceSync === 'function') {
+                try { refreshAdminDashboardAfterGovernanceSync(); } catch (dashRefreshErr) {
+                    console.warn('Post-load dashboard refresh:', dashRefreshErr);
+                }
+            }
         }
 
         async function pullPublicSiteGovernanceFromCloud(options) {
@@ -27611,7 +27688,9 @@
                 background: true,
                 skipInit: true
             }).then(function(ok) {
-                if (currentAdmin && typeof renderDashboardCommandShell === 'function') {
+                if (currentAdmin && typeof refreshAdminDashboardAfterGovernanceSync === 'function') {
+                    refreshAdminDashboardAfterGovernanceSync();
+                } else if (currentAdmin && typeof renderDashboardCommandShell === 'function') {
                     renderDashboardCommandShell(currentAdmin);
                 }
                 if (typeof window.renderHrPlatformPanelSafe === 'function') {
@@ -27656,6 +27735,10 @@
             if (typeof shouldRejectStaleCloudPull === 'function' && shouldRejectStaleCloudPull(storeKey, cloudUpdatedAt, payload)) return;
             applyNebrasCloudRow(storeKey, payload, cloudUpdatedAt);
             try { persistLocalGovernanceKeys(); } catch (e) { /* ignore */ }
+            if (storeKey === 'dashboard_tiles' && currentAdmin && typeof refreshAdminDashboardAfterGovernanceSync === 'function') {
+                refreshAdminDashboardAfterGovernanceSync();
+                return;
+            }
             if (currentAdmin && typeof renderDashboardCommandShell === 'function') {
                 renderDashboardCommandShell(currentAdmin);
             }
@@ -31458,6 +31541,9 @@
         window.resetDashboardRoleGovernance = resetDashboardRolePresentation;
         window.repairDashboardTilesIntegrity = repairDashboardTilesIntegrity;
         window.renderDashboardTiles = renderDashboardTiles;
+        window.refreshAdminDashboardAfterGovernanceSync = refreshAdminDashboardAfterGovernanceSync;
+        window.forceRestoreHqDashboardTilesFromDefaults = forceRestoreHqDashboardTilesFromDefaults;
+        window.refreshCurrentAdminFromStore = refreshCurrentAdminFromStore;
         if (typeof window.verifyNebrasLaunchHealth !== 'function') {
             window.verifyNebrasLaunchHealth = function() {
                 const issues = [];

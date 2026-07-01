@@ -29,8 +29,14 @@
         const visible = quick ? quick.querySelectorAll('.dashboard-tile-card').length : 0;
         if (visible < 8) {
             issues.push('أيقونات الداشبورد: ' + visible);
+            if (typeof global.resetDashboardRolePresentation === 'function') global.resetDashboardRolePresentation();
             if (typeof global.repairDashboardTilesIntegrity === 'function') global.repairDashboardTilesIntegrity();
-            if (typeof global.renderDashboardTiles === 'function') global.renderDashboardTiles();
+            if (typeof global.forceRestoreHqDashboardTilesFromDefaults === 'function') global.forceRestoreHqDashboardTilesFromDefaults();
+            if (typeof global.refreshAdminDashboardAfterGovernanceSync === 'function') {
+                global.refreshAdminDashboardAfterGovernanceSync();
+            } else if (typeof global.renderDashboardTiles === 'function') {
+                global.renderDashboardTiles();
+            }
         }
 
         const testIcon = document.createElement('i');
