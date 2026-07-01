@@ -1,7 +1,7 @@
 /* صيغة عرض السعر الرسمية — مطابقة لمرجع PDF (م صالح - جده - 935) */
 
 .quote-a4--nebras-official {
-    padding: 9mm 11mm 10mm;
+    padding: 0 11mm 10mm;
     font-family: 'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif;
     font-size: 10.5px;
     line-height: 1.45;
@@ -23,7 +23,20 @@
     height: 100%;
 }
 
-/* شريط الرأس الرسمي — مطابق لصفحات 2–4 (خلفية كحلية + شعار + بيانات) */
+/* رأس الصفحة 1 — نفس صورة صفحات 2–4 (مقصوصة من القالب الثابت) */
+.quote-official-page1-header-wrap {
+    margin: 0 -11mm 8px;
+    line-height: 0;
+}
+
+.quote-official-page1-header {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 0;
+}
+
+/* شريط الرأس HTML — احتياط */
 .quote-official-branded-band {
     display: flex;
     align-items: center;

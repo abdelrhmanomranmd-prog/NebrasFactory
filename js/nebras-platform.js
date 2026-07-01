@@ -685,7 +685,8 @@
             termsCustomEn: '',
             staticPage2Url: 'documents/quote-a4-static-page2.png',
             staticPage3Url: 'documents/quote-a4-static-page3.png',
-            staticPage4Url: 'documents/quote-a4-static-page4.png'
+            staticPage4Url: 'documents/quote-a4-static-page4.png',
+            page1HeaderUrl: 'documents/quote-a4-official-header.png'
         };
 
         const storeCatalogFilterState = {};
@@ -2464,7 +2465,7 @@
             sortOrder: 2
         };
 
-        const WPC_RAW_CATALOG_VERSION = 3;
+        const WPC_RAW_CATALOG_VERSION = 4;
         const WPC_RAW_BARE_IMG = 'images/catalog/wpc-raw-bare/';
         const WPC_RAW_CLAD_IMG = 'images/catalog/wpc-raw-clad/';
 
@@ -2536,11 +2537,11 @@
         ];
 
         const DEFAULT_WPC_RAW_BARE_VARIANTS = WPC_RAW_BARE_ROWS.map(function(r) {
-            return buildWpcRawVariant('wpc-raw-bare', WPC_RAW_BARE_IMG + r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7]);
+            return buildWpcRawVariant('wpc-raw-bare', '', r[1], r[2], r[3], r[4], r[5], r[6], r[7]);
         });
 
         const DEFAULT_WPC_RAW_CLAD_VARIANTS = WPC_RAW_CLAD_ROWS.map(function(r) {
-            return buildWpcRawVariant('wpc-raw-clad', WPC_RAW_CLAD_IMG + r[0], r[1], r[2], r[3], r[4], r[5], r[6], r[7]);
+            return buildWpcRawVariant('wpc-raw-clad', '', r[1], r[2], r[3], r[4], r[5], r[6], r[7]);
         });
 
         const WPC_RAW_CATALOG_ALL_VARIANTS = DEFAULT_WPC_RAW_BARE_VARIANTS.concat(DEFAULT_WPC_RAW_CLAD_VARIANTS);
@@ -2569,7 +2570,7 @@
             sortOrder: 2
         };
 
-        const WPC_READY_CATALOG_VERSION = 5;
+        const WPC_READY_CATALOG_VERSION = 6;
         const WPC_READY_INSTALL_IMG = 'images/catalog/wpc-ready-install/';
         const WPC_READY_SUPPLY_IMG = 'images/catalog/wpc-ready-supply/';
 
@@ -2577,9 +2578,46 @@
             return !!(product && product.id === 'prod-wpc');
         }
 
+        function isAdminManagedProductImage(imagePath) {
+            const p = String(imagePath || '').trim();
+            if (!p) return false;
+            if (/^(https?:|data:|blob:)/i.test(p)) return true;
+            if (/supabase\.co/i.test(p)) return true;
+            return false;
+        }
+
+        function stripBuiltinStoreCatalogImages() {
+            const shopIds = ['prod-wpc', 'prod-wpc-raw', 'prod-aluminum', 'prod-other'];
+            let cleared = 0;
+            shopIds.forEach(function(pid) {
+                const product = (siteProducts || []).find(function(p) { return p && p.id === pid; });
+                if (!product || !Array.isArray(product.variants)) return;
+                product.variants.forEach(function(v) {
+                    if (!v || !v.image) return;
+                    if (!isAdminManagedProductImage(v.image)) {
+                        v.image = '';
+                        cleared++;
+                    }
+                });
+            });
+            return cleared;
+        }
+
+        function ensureStoreCatalogAdminImagesOnly() {
+            if (!systemSettings || typeof systemSettings !== 'object') {
+                systemSettings = Object.assign({}, DEFAULT_SYSTEM_SETTINGS);
+            }
+            if (Number(systemSettings.storeCatalogAdminImagesOnlyVersion) >= 2) return 0;
+            const cleared = stripBuiltinStoreCatalogImages();
+            systemSettings.storeCatalogAdminImagesOnlyVersion = 2;
+            if (cleared > 0) markCatalogSeedNeedsCloudSync();
+            return cleared;
+        }
+
         function getWpcStoreSkuBaseImage(variant) {
-            if (!variant || !variant.image) return '';
-            return String(variant.image).trim();
+            if (!variant) return '';
+            const img = String(variant.image || '').trim();
+            return isAdminManagedProductImage(img) ? img : '';
         }
 
         function resolveWpcReadyCatalogImage(variant) {
@@ -2637,6 +2675,15 @@
             const stack = card.querySelector('.nebras-store-sku-door-stack');
             const img = stack ? stack.querySelector('img') : card.querySelector('.nebras-store-sku-media img');
             if (!img) return;
+            const baseSrc = img.getAttribute('data-base-src') || img.getAttribute('src') || '';
+            if (!baseSrc) {
+                img.style.filter = '';
+                if (stack) {
+                    stack.classList.remove('has-door-roll-tint');
+                    stack.style.removeProperty('--door-roll-tint');
+                }
+                return;
+            }
             const colors = getNebrasColorCatalog();
             const rollIdx = catalogIndex != null && !isNaN(catalogIndex) ? catalogIndex : 0;
             const roll = colors[rollIdx] || colors[0];
@@ -2717,6 +2764,9 @@
                 const productId = card.getAttribute('data-product-id');
                 const variantIndex = parseInt(card.getAttribute('data-variant-index'), 10);
                 if (!productId || isNaN(variantIndex)) return;
+                const product = siteProducts.find(function(p) { return p.id === productId; });
+                const variant = product && (product.variants || [])[variantIndex];
+                if (!variant || !getWpcStoreSkuBaseImage(variant)) return;
                 const rollIdx = parseInt(card.getAttribute('data-selected-roll-index') || '0', 10);
                 refreshWpcStoreSkuPreview(card, productId, variantIndex, rollIdx);
             });
@@ -3124,13 +3174,16 @@
             let merged = 0;
             WPC_RAW_CATALOG_ALL_VARIANTS.forEach(function(def) {
                 const payload = Object.assign({}, def);
-                payload.image = resolveWpcRawCatalogImage(def);
+                delete payload.image;
                 const idx = raw.variants.findIndex(function(v) {
                     return v && (v.sku === payload.sku || v.id === payload.id);
                 });
                 if (idx >= 0) {
+                    const prevImg = raw.variants[idx].image || '';
                     raw.variants[idx] = Object.assign({}, raw.variants[idx], payload);
+                    raw.variants[idx].image = isAdminManagedProductImage(prevImg) ? prevImg : '';
                 } else {
+                    payload.image = '';
                     raw.variants.push(payload);
                 }
                 merged++;
@@ -3157,13 +3210,16 @@
             let merged = 0;
             WPC_READY_CATALOG_ALL_VARIANTS.forEach(function(def) {
                 const payload = Object.assign({}, def);
-                payload.image = resolveWpcReadyCatalogImage(def);
+                delete payload.image;
                 const idx = wpc.variants.findIndex(function(v) {
                     return v && (v.sku === payload.sku || v.id === payload.id);
                 });
                 if (idx >= 0) {
+                    const prevImg = wpc.variants[idx].image || '';
                     wpc.variants[idx] = Object.assign({}, wpc.variants[idx], payload);
+                    wpc.variants[idx].image = isAdminManagedProductImage(prevImg) ? prevImg : '';
                 } else {
+                    payload.image = '';
                     wpc.variants.push(payload);
                 }
                 merged++;
@@ -3173,7 +3229,7 @@
             }
             systemSettings.wpcReadyCatalogVersion = WPC_READY_CATALOG_VERSION;
             systemSettings.wpcReadyInstallCatalogVersion = WPC_READY_CATALOG_VERSION;
-            systemSettings.wpcCatalogProductImagesVersion = 2;
+            systemSettings.wpcCatalogProductImagesVersion = 3;
             if (merged > 0) {
                 markCatalogSeedNeedsCloudSync();
                 if (typeof syncSalesPriceListFromProductMaster === 'function') {
@@ -3189,14 +3245,14 @@
 
         /** أصناف الألومنيوم — شكل/نوع + مقاس + لون (تُدار بالكامل من الإدارة) */
         const DEFAULT_ALUMINUM_VARIANTS = [
-            { id: 'alu-prof-6m', image: 'images/aluminum-background.webp', colorAr: 'فضي', colorEn: 'Silver', sizeAr: '6 م — بروفيل', sizeEn: '6 m profile', typeAr: 'بروفيل', typeEn: 'Profile', price: 0, sku: 'ALU-PROF-6M' },
-            { id: 'alu-sheet-122', image: 'images/aluminum-background.webp', colorAr: 'أبيض', colorEn: 'White', sizeAr: '122 × 244 سم', sizeEn: '122×244 cm', typeAr: 'صفائح', typeEn: 'Sheet', price: 0, sku: 'ALU-SHT-122' },
-            { id: 'alu-angle-40', image: 'images/aluminum-background.webp', colorAr: 'طبيعي', colorEn: 'Natural', sizeAr: '40 × 40 مم', sizeEn: '40×40 mm', typeAr: 'زاوية', typeEn: 'Angle', price: 0, sku: 'ALU-ANG-40' }
+            { id: 'alu-prof-6m', image: '', colorAr: 'فضي', colorEn: 'Silver', sizeAr: '6 م — بروفيل', sizeEn: '6 m profile', typeAr: 'بروفيل', typeEn: 'Profile', price: 0, sku: 'ALU-PROF-6M' },
+            { id: 'alu-sheet-122', image: '', colorAr: 'أبيض', colorEn: 'White', sizeAr: '122 × 244 سم', sizeEn: '122×244 cm', typeAr: 'صفائح', typeEn: 'Sheet', price: 0, sku: 'ALU-SHT-122' },
+            { id: 'alu-angle-40', image: '', colorAr: 'طبيعي', colorEn: 'Natural', sizeAr: '40 × 40 مم', sizeEn: '40×40 mm', typeAr: 'زاوية', typeEn: 'Angle', price: 0, sku: 'ALU-ANG-40' }
         ];
 
         const DEFAULT_OTHER_VARIANTS = [
-            { id: 'other-sol-1', image: 'images/background-other-products.jpeg', colorAr: 'متعدد', colorEn: 'Various', sizeAr: 'حسب الطلب', sizeEn: 'On request', typeAr: 'حلول إضافية', typeEn: 'Additional solution', price: 0, sku: 'OTH-001' },
-            { id: 'other-sol-2', image: 'images/background-other-products.jpeg', colorAr: 'مخصص', colorEn: 'Custom', sizeAr: 'حسب المشروع', sizeEn: 'Per project', typeAr: 'منتج مخصص', typeEn: 'Custom product', price: 0, sku: 'OTH-002' }
+            { id: 'other-sol-1', image: '', colorAr: 'متعدد', colorEn: 'Various', sizeAr: 'حسب الطلب', sizeEn: 'On request', typeAr: 'حلول إضافية', typeEn: 'Additional solution', price: 0, sku: 'OTH-001' },
+            { id: 'other-sol-2', image: '', colorAr: 'مخصص', colorEn: 'Custom', sizeAr: 'حسب المشروع', sizeEn: 'Per project', typeAr: 'منتج مخصص', typeEn: 'Custom product', price: 0, sku: 'OTH-002' }
         ];
 
         const DEFAULT_SITE_PRODUCTS = [
@@ -3991,6 +4047,7 @@
                     p.shopEnabled = true;
                 }
             });
+            ensureStoreCatalogAdminImagesOnly();
         }
 
         function clearDemoCatalogVariants() {
@@ -4441,9 +4498,12 @@
             const isEn = lang === 'en';
             const pid = String(product.id).replace(/'/g, "\\'");
             const isWpcReady = productSupportsWpcRollColorPicker(product);
-            const baseImg = isWpcReady ? getWpcStoreSkuBaseImage(v) : resolveDisplayMediaUrl(v.image || '');
+            const rawImg = String(v.image || '').trim();
+            const baseImg = isWpcReady
+                ? getWpcStoreSkuBaseImage(v)
+                : (isAdminManagedProductImage(rawImg) ? resolveDisplayMediaUrl(rawImg) : '');
             const img = baseImg;
-            const fullSrc = isWpcReady ? baseImg : mediaUrlForLightbox(v.image || '');
+            const fullSrc = isWpcReady ? baseImg : (isAdminManagedProductImage(rawImg) ? mediaUrlForLightbox(rawImg) : '');
             const isVectorImg = !isWpcReady && /\.svg(\?|$)/i.test(String(baseImg || ''));
             const color = isEn ? (v.colorEn || v.colorAr) : (v.colorAr || v.colorEn);
             const size = isEn ? (v.sizeEn || v.sizeAr) : (v.sizeAr || v.sizeEn);
@@ -4456,11 +4516,14 @@
                 (isWpcReady ? ' nebras-store-sku-media--wpc-door' : '') +
                 (isWpcReady || isVectorImg ? ' nebras-store-sku-media--vector' : '');
             const imgClass = 'nebras-store-sku-img' + (isWpcReady ? ' nebras-store-sku-img--wpc' : ' nebras-clickable-media');
-            const media = img
+            const awaitingLabel = ui.storeSkuAwaitingImage || 'الصورة من لوحة إدارة المحتوى';
+            const media = isWpcReady && !baseImg
+                ? '<div class="nebras-store-sku-media nebras-store-sku-media--wpc-door nebras-store-sku-media--awaiting-image"><span class="nebras-store-sku-awaiting-image"><i class="fas fa-camera"></i> ' + escapeHtmlAttr(awaitingLabel) + '</span></div>'
+                : (img
                 ? (isWpcReady
                     ? buildWpcStoreSkuDoorMediaHtml(baseImg, label, fullSrc, ui)
                     : ('<div class="' + mediaClass + '"><img class="' + imgClass + '" src="' + escapeHtmlAttr(img) + '" data-base-src="' + escapeHtmlAttr(baseImg) + '" data-full-src="' + escapeHtmlAttr(fullSrc || img) + '" alt="' + escapeHtmlAttr(label) + '" loading="lazy" decoding="async" title="' + escapeHtmlAttr(ui.lightboxOpenHint || 'اضغط للتكبير') + '"></div>'))
-                : '<div class="nebras-store-sku-media nebras-store-sku-media--empty"><i class="fas fa-box-open"></i></div>';
+                : '<div class="nebras-store-sku-media nebras-store-sku-media--empty"><i class="fas fa-box-open"></i><span class="nebras-store-sku-awaiting-image">' + escapeHtmlAttr(awaitingLabel) + '</span></div>');
             const cardAttrs = isWpcReady
                 ? (' class="nebras-store-sku-card nebras-store-sku-card--wpc-ready' + (compact ? ' nebras-store-sku-card--compact' : '') + '" data-product-id="' + escapeHtmlAttr(product.id) + '" data-variant-index="' + idx + '" data-selected-roll-index="0"')
                 : (' class="nebras-store-sku-card' + (compact ? ' nebras-store-sku-card--compact' : '') + '"');
@@ -9314,6 +9377,13 @@
                             link.setAttribute('data-nebras-cairo', '1');
                             clonedDoc.head.appendChild(link);
                         }
+                        if (clonedDoc.head && !clonedDoc.querySelector('link[data-nebras-quote-a4]')) {
+                            const qCss = clonedDoc.createElement('link');
+                            qCss.rel = 'stylesheet';
+                            qCss.href = 'css/19-quote-official-a4.css';
+                            qCss.setAttribute('data-nebras-quote-a4', '1');
+                            clonedDoc.head.appendChild(qCss);
+                        }
                     }
                 });
                 return canvas.toDataURL('image/png', 0.92);
@@ -10227,9 +10297,11 @@
             if (!q.staticPage2Url) q.staticPage2Url = DEFAULT_QUOTE_A4_SETTINGS.staticPage2Url;
             if (!q.staticPage3Url) q.staticPage3Url = DEFAULT_QUOTE_A4_SETTINGS.staticPage3Url;
             if (!q.staticPage4Url) q.staticPage4Url = DEFAULT_QUOTE_A4_SETTINGS.staticPage4Url;
+            if (!q.page1HeaderUrl) q.page1HeaderUrl = DEFAULT_QUOTE_A4_SETTINGS.page1HeaderUrl;
             q.staticPage2Url = normalizeQuoteAssetPath(q.staticPage2Url);
             q.staticPage3Url = normalizeQuoteAssetPath(q.staticPage3Url);
             q.staticPage4Url = normalizeQuoteAssetPath(q.staticPage4Url);
+            q.page1HeaderUrl = normalizeQuoteAssetPath(q.page1HeaderUrl);
             return q;
         }
 
@@ -10305,18 +10377,15 @@
             return '<img class="' + className + '" src="' + escapeHtmlAttr(logoUrl) + '" data-src-list="' + listAttr + '" data-src-idx="0" decoding="sync" onerror="siteLogoImgFallback(this)" alt="' + escapeHtmlAttr(altText || '') + '">';
         }
 
+        function getQuoteOfficialPage1HeaderUrl() {
+            const q = getQuoteA4Settings();
+            return q.page1HeaderUrl || DEFAULT_QUOTE_A4_SETTINGS.page1HeaderUrl || 'documents/quote-a4-official-header.png';
+        }
+
         function buildQuoteOfficialBrandedBandHtml(logoUrl, factoryEmail) {
-            const vat = escapeHtmlAttr(systemSettings.taxNumber || '312765384700003');
-            const cr = escapeHtmlAttr(systemSettings.commercialRegister || '1128185177');
-            const email = escapeHtmlAttr(factoryEmail || 'nebrasfactory@hotmail.com');
-            const logoHtml = buildQuoteLogoImgHtml('quote-official-branded-band-logo', logoUrl, 'شركة مصنع نبراس للبلاستيك');
-            return '<header class="quote-official-branded-band" role="banner">' +
-                '<div class="quote-official-branded-band-meta">VAT ' + vat + '<br>C.R ' + cr + '<br>' + email + '</div>' +
-                '<div class="quote-official-branded-band-brand">' +
-                '<div class="quote-official-branded-band-titles">' +
-                '<strong>شركة مصنع نبراس للبلاستيك</strong>' +
-                '<span>NEBRAS PLASTIC FACTORY COMPANY</span></div>' +
-                logoHtml + '</div></header>';
+            const headerUrl = normalizeQuoteAssetPath(getQuoteOfficialPage1HeaderUrl());
+            return '<header class="quote-official-page1-header-wrap" role="banner">' +
+                '<img class="quote-official-page1-header" src="' + escapeHtmlAttr(headerUrl) + '" alt="شركة مصنع نبراس للبلاستيك" decoding="sync" crossorigin="anonymous"></header>';
         }
 
         function buildQuoteHeaderLogoStripHtml(logoUrl, logoAlt, lang) {
@@ -10698,7 +10767,6 @@
             doc.innerHTML =
                 '<div class="quote-a4-inner">' +
                 buildQuoteOfficialBrandedBandHtml(resolvedLogo, factoryEmail) +
-                '<div class="quote-official-divider" aria-hidden="true"></div>' +
                 customerRibbon +
                 '<table class="quote-official-meta-table"><tbody>' +
                 buildQuoteOfficialMetaRow('Quotation Number', 'رقم عرض السعر', displayNo) +
