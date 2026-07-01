@@ -23,6 +23,71 @@
     height: 100%;
 }
 
+/* شريط الرأس الرسمي — مطابق لصفحات 2–4 (خلفية كحلية + شعار + بيانات) */
+.quote-official-branded-band {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin: -9mm -11mm 8px;
+    padding: 10px 11mm 11px;
+    background: linear-gradient(180deg, #0a1628 0%, #0d1f38 100%);
+    color: #fff;
+    border-bottom: 3px solid #17a8a0;
+}
+
+.quote-official-branded-band-meta {
+    font-size: 9px;
+    font-weight: 700;
+    line-height: 1.65;
+    text-align: start;
+    flex: 0 0 auto;
+    letter-spacing: 0.02em;
+}
+
+.quote-official-branded-band-brand {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.quote-official-branded-band-titles {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    text-align: end;
+}
+
+.quote-official-branded-band-titles strong {
+    font-size: 11.5px;
+    font-weight: 800;
+    line-height: 1.35;
+    letter-spacing: 0.01em;
+}
+
+.quote-official-branded-band-titles span {
+    font-size: 7.5px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.92;
+}
+
+.quote-official-branded-band-logo {
+    display: block;
+    flex: 0 0 auto;
+    max-height: 52px;
+    max-width: 72px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
+}
+
 .quote-official-header {
     display: flex;
     align-items: flex-start;
@@ -45,7 +110,8 @@
     text-align: end;
 }
 
-.quote-official-header-logo img {
+.quote-official-header-logo img,
+.quote-official-logo {
     display: inline-block;
     max-height: 58px;
     max-width: 220px;

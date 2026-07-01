@@ -2448,7 +2448,7 @@
             sortOrder: 2
         };
 
-        const WPC_RAW_CATALOG_VERSION = 2;
+        const WPC_RAW_CATALOG_VERSION = 3;
         const WPC_RAW_BARE_IMG = 'images/catalog/wpc-raw-bare/';
         const WPC_RAW_CLAD_IMG = 'images/catalog/wpc-raw-clad/';
 
@@ -2553,101 +2553,108 @@
             sortOrder: 2
         };
 
-        const WPC_READY_CATALOG_VERSION = 4;
+        const WPC_READY_CATALOG_VERSION = 5;
         const WPC_READY_INSTALL_IMG = 'images/catalog/wpc-ready-install/';
         const WPC_READY_SUPPLY_IMG = 'images/catalog/wpc-ready-supply/';
 
-        /** صور حقيقية من معرض نبراس — أبواب وتركيبات فعلية */
-        const NEBRAS_REAL_DOOR_PHOTOS = {
-            d01: 'images/profile-2026/doors/doors-01.jpg',
-            d02: 'images/profile-2026/doors/doors-02.jpg',
-            d03: 'images/profile-2026/doors/doors-03.jpg',
-            d04: 'images/profile-2026/doors/doors-04.jpg',
-            d05: 'images/profile-2026/doors/doors-05.jpg',
-            d06: 'images/profile-2026/doors/doors-06.jpg',
-            d07: 'images/profile-2026/doors/doors-07.jpg',
-            d08: 'images/profile-2026/doors/doors-08.jpg',
-            d09: 'images/profile-2026/doors/doors-09.jpg',
-            d10: 'images/profile-2026/doors/doors-10.jpg',
-            d11: 'images/profile-2026/doors/doors-11.jpg',
-            d12: 'images/profile-2026/doors/doors-12.jpg',
-            g05: 'images/profile-2026/gallery-extra/gallery-extra-05.jpg',
-            g10: 'images/profile-2026/gallery-extra/gallery-extra-10.jpg',
-            g20: 'images/profile-2026/gallery-extra/gallery-extra-20.jpg',
-            g30: 'images/profile-2026/gallery-extra/gallery-extra-30.jpg',
-            c01: 'images/profile-2026/cnc/cnc-01.jpg',
-            c02: 'images/profile-2026/cnc/cnc-02.jpg'
-        };
+        function productSupportsWpcRollColorPicker(product) {
+            return !!(product && product.id === 'prod-wpc');
+        }
 
-        const WPC_READY_INSTALL_REAL_PHOTOS = {
-            'flat-plain': NEBRAS_REAL_DOOR_PHOTOS.g05,
-            'flat-steel': NEBRAS_REAL_DOOR_PHOTOS.d08,
-            'flat-glass': NEBRAS_REAL_DOOR_PHOTOS.g20,
-            'flat-classic': NEBRAS_REAL_DOOR_PHOTOS.d01,
-            'u-plain': NEBRAS_REAL_DOOR_PHOTOS.g10,
-            'u-classic': NEBRAS_REAL_DOOR_PHOTOS.d06,
-            'u-steel': NEBRAS_REAL_DOOR_PHOTOS.d08,
-            'u60-plain': NEBRAS_REAL_DOOR_PHOTOS.d06,
-            'u60-steel': NEBRAS_REAL_DOOR_PHOTOS.d08,
-            'u60-classic': NEBRAS_REAL_DOOR_PHOTOS.d01,
-            'u60-glass': NEBRAS_REAL_DOOR_PHOTOS.g20,
-            'lib-plain': NEBRAS_REAL_DOOR_PHOTOS.g10,
-            'lib-steel': NEBRAS_REAL_DOOR_PHOTOS.d08,
-            'lib-glass': NEBRAS_REAL_DOOR_PHOTOS.g20,
-            'lib-classic': NEBRAS_REAL_DOOR_PHOTOS.d01,
-            'leaf-quarter-flat': NEBRAS_REAL_DOOR_PHOTOS.g05,
-            'leaf-quarter-u': NEBRAS_REAL_DOOR_PHOTOS.d06,
-            'leaf-quarter-lib': NEBRAS_REAL_DOOR_PHOTOS.g10,
-            'sliding-flat': NEBRAS_REAL_DOOR_PHOTOS.g20,
-            'sliding-u': NEBRAS_REAL_DOOR_PHOTOS.g20,
-            'sliding-lib': NEBRAS_REAL_DOOR_PHOTOS.g20
-        };
-
-        const WPC_READY_SUPPLY_REAL_PHOTOS = Object.assign({}, WPC_READY_INSTALL_REAL_PHOTOS);
-
-        const WPC_RAW_BARE_REAL_PHOTOS = {
-            leaf: NEBRAS_REAL_DOOR_PHOTOS.g05,
-            frame: NEBRAS_REAL_DOOR_PHOTOS.d01,
-            slice: NEBRAS_REAL_DOOR_PHOTOS.g30,
-            'decor-jumbo': NEBRAS_REAL_DOOR_PHOTOS.d01,
-            'decor-normal': NEBRAS_REAL_DOOR_PHOTOS.g05,
-            'decor-flat': NEBRAS_REAL_DOOR_PHOTOS.g05,
-            'u-profile': NEBRAS_REAL_DOOR_PHOTOS.g30,
-            'edge-band': NEBRAS_REAL_DOOR_PHOTOS.g30,
-            'pvc-sheet': NEBRAS_REAL_DOOR_PHOTOS.g20,
-            'mdf-sheet': NEBRAS_REAL_DOOR_PHOTOS.g30
-        };
-
-        const WPC_RAW_CLAD_REAL_PHOTOS = {
-            leaf: NEBRAS_REAL_DOOR_PHOTOS.d06,
-            frame: NEBRAS_REAL_DOOR_PHOTOS.d06,
-            slice: NEBRAS_REAL_DOOR_PHOTOS.d08,
-            'decor-jumbo': NEBRAS_REAL_DOOR_PHOTOS.c01,
-            'decor-normal': NEBRAS_REAL_DOOR_PHOTOS.g10,
-            'decor-flat': NEBRAS_REAL_DOOR_PHOTOS.d08,
-            'u-profile': NEBRAS_REAL_DOOR_PHOTOS.d08,
-            'edge-band': NEBRAS_REAL_DOOR_PHOTOS.g30,
-            'pvc-sheet': NEBRAS_REAL_DOOR_PHOTOS.g20,
-            'mdf-sheet': NEBRAS_REAL_DOOR_PHOTOS.g30
-        };
-
-        function catalogImageFileKey(imagePath) {
-            if (!imagePath) return '';
-            const file = String(imagePath).split('?')[0].split('/').pop() || '';
-            return file.replace(/\.(svg|jpg|jpeg|png|webp|avif)$/i, '');
+        function getWpcStoreSkuBaseImage(variant) {
+            if (!variant || !variant.image) return '';
+            return String(variant.image).trim();
         }
 
         function resolveWpcReadyCatalogImage(variant) {
-            if (!variant || !variant.image) return '';
-            const key = catalogImageFileKey(variant.image);
-            return WPC_READY_INSTALL_REAL_PHOTOS[key] || variant.image;
+            return getWpcStoreSkuBaseImage(variant);
         }
 
         function resolveWpcRawCatalogImage(variant) {
             if (!variant || !variant.image) return '';
-            const key = catalogImageFileKey(variant.image);
-            const map = variant.subCategoryId === 'wpc-raw-clad' ? WPC_RAW_CLAD_REAL_PHOTOS : WPC_RAW_BARE_REAL_PHOTOS;
-            return map[key] || variant.image;
+            return String(variant.image).trim();
+        }
+
+        function buildWpcStoreRollPickerHtml(productId, variantIndex, lang, ui) {
+            const colors = getNebrasColorCatalog();
+            const label = ui.wpcStoreRollPickerLabel || 'اختر لون الرولّة — كتالوج ألوان نبراس';
+            const safePid = String(productId).replace(/'/g, "\\'");
+            const swatches = colors.map(function(item, idx) {
+                const code = String(item.code || getRollCatalogCode(item.nebCode || getNebrasRollCodeByIndex(idx))).trim();
+                const rollName = getLocalizedDoorCatalogLabel(item, lang);
+                const catIdx = item.catalogIndex != null ? item.catalogIndex : idx;
+                const tex = resolveDoorRollTextureUrl(item.textureUrl || getRollSwatchImageUrl(catIdx));
+                const active = idx === 0 ? ' is-active' : '';
+                const chip = tex
+                    ? '<img src="' + escapeHtmlAttr(tex) + '" alt="" loading="lazy" decoding="async">'
+                    : ('<span class="nebras-store-roll-swatch-fallback" style="background-color:' + escapeHtmlAttr(item.hex || '#ccc') + '"></span>');
+                return '<button type="button" class="nebras-store-roll-swatch' + active + '" data-catalog-index="' + catIdx + '"' +
+                    ' data-door-code="' + escapeHtmlAttr(code) + '" data-door-hex="' + escapeHtmlAttr(item.hex || '#ccc') + '"' +
+                    ' data-roll-name="' + escapeHtmlAttr(rollName) + '" data-roll-texture="' + escapeHtmlAttr(tex) + '"' +
+                    ' onclick="event.stopPropagation();pickWpcStoreSkuRoll(\'' + safePid + '\',' + variantIndex + ',' + catIdx + ')"' +
+                    ' title="' + escapeHtmlAttr(code + ' — ' + rollName) + '" aria-label="' + escapeHtmlAttr(code + ' ' + rollName) + '">' +
+                    chip + '<span class="nebras-store-roll-swatch-code">' + escapeHtmlAttr(code) + '</span></button>';
+            }).join('');
+            const first = colors[0];
+            const firstCode = first ? (first.code || getRollCatalogCode(first.nebCode || 1)) : 'N-1';
+            const firstName = first ? getLocalizedDoorCatalogLabel(first, lang) : '';
+            return '<div class="nebras-store-roll-picker" data-wpc-roll-picker="' + escapeHtmlAttr(productId + '-' + variantIndex) + '">' +
+                '<p class="nebras-store-roll-picker-label"><i class="fas fa-palette"></i> ' + escapeHtmlAttr(label) + '</p>' +
+                '<div class="nebras-store-roll-swatches" role="listbox" aria-label="' + escapeHtmlAttr(label) + '">' + swatches + '</div>' +
+                '<p class="nebras-store-roll-picker-active" data-roll-active-label>' + escapeHtmlAttr(firstCode + ' — ' + firstName) + '</p></div>';
+        }
+
+        function refreshWpcStoreSkuPreview(card, productId, variantIndex, catalogIndex) {
+            const product = siteProducts.find(function(p) { return p.id === productId; });
+            const variant = product && (product.variants || [])[variantIndex];
+            if (!variant || !card) return;
+            const img = card.querySelector('.nebras-store-sku-media img');
+            if (!img) return;
+            const baseSrc = getWpcStoreSkuBaseImage(variant);
+            const colors = getNebrasColorCatalog();
+            const rollIdx = catalogIndex != null && !isNaN(catalogIndex) ? catalogIndex : 0;
+            const roll = colors[rollIdx] || colors[0];
+            if (!roll || !baseSrc) return;
+            const tex = resolveDoorRollTextureUrl(roll.textureUrl || getRollSwatchImageUrl(roll.catalogIndex != null ? roll.catalogIndex : rollIdx));
+            img.classList.add('nebras-store-sku-img--composing');
+            composeDoorPhotoWithRoll(baseSrc, tex, roll.hex, roll.catalogIndex != null ? roll.catalogIndex : rollIdx).then(function(dataUrl) {
+                img.classList.remove('nebras-store-sku-img--composing');
+                if (!dataUrl) return;
+                img.src = dataUrl;
+                img.setAttribute('data-full-src', dataUrl);
+                img.setAttribute('data-composed-roll', String(rollIdx));
+            }).catch(function() {
+                img.classList.remove('nebras-store-sku-img--composing');
+            });
+        }
+
+        function pickWpcStoreSkuRoll(productId, variantIndex, catalogIndex) {
+            const card = document.querySelector('.nebras-store-sku-card[data-product-id="' + productId + '"][data-variant-index="' + variantIndex + '"]');
+            if (!card) return;
+            card.querySelectorAll('.nebras-store-roll-swatch').forEach(function(btn) {
+                const idx = parseInt(btn.getAttribute('data-catalog-index'), 10);
+                btn.classList.toggle('is-active', idx === catalogIndex);
+            });
+            const activeBtn = card.querySelector('.nebras-store-roll-swatch[data-catalog-index="' + catalogIndex + '"]');
+            const activeLabel = card.querySelector('[data-roll-active-label]');
+            if (activeBtn && activeLabel) {
+                const code = activeBtn.getAttribute('data-door-code') || '';
+                const name = activeBtn.getAttribute('data-roll-name') || '';
+                activeLabel.textContent = code + ' — ' + name;
+            }
+            card.setAttribute('data-selected-roll-index', String(catalogIndex));
+            refreshWpcStoreSkuPreview(card, productId, variantIndex, catalogIndex);
+        }
+
+        function initWpcStoreSkuRollPickers(root) {
+            root = root || document;
+            root.querySelectorAll('.nebras-store-sku-card--wpc-ready').forEach(function(card) {
+                const productId = card.getAttribute('data-product-id');
+                const variantIndex = parseInt(card.getAttribute('data-variant-index'), 10);
+                if (!productId || isNaN(variantIndex)) return;
+                const rollIdx = parseInt(card.getAttribute('data-selected-roll-index') || '0', 10);
+                refreshWpcStoreSkuPreview(card, productId, variantIndex, rollIdx);
+            });
         }
 
         function wpcReadyCatalogPriceExVat(baseTablePrice) {
@@ -2956,9 +2963,51 @@
                 '<div class="nebras-store-sku-grid">' + cards + '</div></section>';
         }
 
-        function seedWpcRawCatalog() {
-            const raw = (siteProducts || []).find(function(p) { return p && p.id === 'prod-wpc-raw'; });
-            if (!raw) return 0;
+        function getWpcReadyCatalogStoredVersion() {
+            if (!systemSettings || typeof systemSettings !== 'object') return 0;
+            return Number(systemSettings.wpcReadyCatalogVersion) || 0;
+        }
+
+        function shouldSeedWpcReadyCatalog() {
+            return getWpcReadyCatalogStoredVersion() < WPC_READY_CATALOG_VERSION;
+        }
+
+        function getWpcRawCatalogStoredVersion() {
+            if (!systemSettings || typeof systemSettings !== 'object') return 0;
+            return Number(systemSettings.wpcRawCatalogVersion) || 0;
+        }
+
+        function shouldSeedWpcRawCatalog() {
+            return getWpcRawCatalogStoredVersion() < WPC_RAW_CATALOG_VERSION;
+        }
+
+        function markCatalogSeedNeedsCloudSync() {
+            if (!systemSettings || typeof systemSettings !== 'object') {
+                systemSettings = Object.assign({}, DEFAULT_SYSTEM_SETTINGS);
+            }
+            systemSettings.catalogSeedPendingCloudSync = true;
+            if (typeof persistLocalGovernanceKeys === 'function') persistLocalGovernanceKeys();
+        }
+
+        async function flushCatalogSeedCloudSyncIfPending() {
+            if (!systemSettings || !systemSettings.catalogSeedPendingCloudSync) return false;
+            if (typeof persistNebrasCriticalStores !== 'function') return false;
+            const hasSession = (typeof getNebrasSecureToken === 'function' && getNebrasSecureToken()) || !!currentAdmin;
+            if (!hasSession) return false;
+            const ok = await persistNebrasCriticalStores(['site_products', 'system_settings', 'sales_price_list'], {
+                silent: true,
+                promptReauth: false,
+                showToast: false
+            });
+            if (ok) {
+                systemSettings.catalogSeedPendingCloudSync = false;
+                if (typeof persistLocalGovernanceKeys === 'function') persistLocalGovernanceKeys();
+            }
+            return ok;
+        }
+
+        function ensureWpcRawSubCategoryDefs(raw) {
+            if (!raw) return;
             if (!Array.isArray(raw.subCategories)) raw.subCategories = [];
             [WPC_RAW_BARE_SUBCATEGORY, WPC_RAW_CLAD_SUBCATEGORY].forEach(function(subDef) {
                 if (!raw.subCategories.some(function(s) { return s && s.id === subDef.id; })) {
@@ -2978,6 +3027,34 @@
                 }
             });
             raw.subCategories.sort(function(a, b) { return (a.sortOrder || 0) - (b.sortOrder || 0); });
+        }
+
+        function ensureWpcReadySubCategoryDefs(wpc) {
+            if (!wpc) return;
+            if (!Array.isArray(wpc.subCategories)) wpc.subCategories = [];
+            [WPC_READY_INSTALL_SUBCATEGORY, WPC_READY_SUPPLY_SUBCATEGORY].forEach(function(subDef) {
+                if (!wpc.subCategories.some(function(s) { return s && s.id === subDef.id; })) {
+                    wpc.subCategories.push(Object.assign({}, subDef));
+                } else {
+                    wpc.subCategories.forEach(function(s) {
+                        if (s && s.id === subDef.id) {
+                            s.labelAr = subDef.labelAr;
+                            s.labelEn = subDef.labelEn;
+                            s.descAr = subDef.descAr;
+                            s.descEn = subDef.descEn;
+                            s.sortOrder = subDef.sortOrder;
+                        }
+                    });
+                }
+            });
+            wpc.subCategories.sort(function(a, b) { return (a.sortOrder || 0) - (b.sortOrder || 0); });
+        }
+
+        function seedWpcRawCatalog(force) {
+            const raw = (siteProducts || []).find(function(p) { return p && p.id === 'prod-wpc-raw'; });
+            if (!raw) return 0;
+            ensureWpcRawSubCategoryDefs(raw);
+            if (!force && !shouldSeedWpcRawCatalog()) return 0;
             if (!Array.isArray(raw.variants)) raw.variants = [];
             let merged = 0;
             WPC_RAW_CATALOG_ALL_VARIANTS.forEach(function(def) {
@@ -2997,32 +3074,20 @@
                 systemSettings = Object.assign({}, DEFAULT_SYSTEM_SETTINGS);
             }
             systemSettings.wpcRawCatalogVersion = WPC_RAW_CATALOG_VERSION;
-            if (merged > 0 && typeof syncSalesPriceListFromProductMaster === 'function') {
-                try { syncSalesPriceListFromProductMaster(); } catch (seedSyncErr) { /* ignore */ }
+            if (merged > 0) {
+                markCatalogSeedNeedsCloudSync();
+                if (typeof syncSalesPriceListFromProductMaster === 'function') {
+                    try { syncSalesPriceListFromProductMaster(); } catch (seedSyncErr) { /* ignore */ }
+                }
             }
             return merged;
         }
 
-        function seedWpcReadyCatalog() {
+        function seedWpcReadyCatalog(force) {
             const wpc = (siteProducts || []).find(function(p) { return p && p.id === 'prod-wpc'; });
             if (!wpc) return 0;
-            if (!Array.isArray(wpc.subCategories)) wpc.subCategories = [];
-            [WPC_READY_INSTALL_SUBCATEGORY, WPC_READY_SUPPLY_SUBCATEGORY].forEach(function(subDef) {
-                if (!wpc.subCategories.some(function(s) { return s && s.id === subDef.id; })) {
-                    wpc.subCategories.push(Object.assign({}, subDef));
-                } else {
-                    wpc.subCategories.forEach(function(s) {
-                        if (s && s.id === subDef.id) {
-                            s.labelAr = subDef.labelAr;
-                            s.labelEn = subDef.labelEn;
-                            s.descAr = subDef.descAr;
-                            s.descEn = subDef.descEn;
-                            s.sortOrder = subDef.sortOrder;
-                        }
-                    });
-                }
-            });
-            wpc.subCategories.sort(function(a, b) { return (a.sortOrder || 0) - (b.sortOrder || 0); });
+            ensureWpcReadySubCategoryDefs(wpc);
+            if (!force && !shouldSeedWpcReadyCatalog()) return 0;
             if (!Array.isArray(wpc.variants)) wpc.variants = [];
             let merged = 0;
             WPC_READY_CATALOG_ALL_VARIANTS.forEach(function(def) {
@@ -3043,9 +3108,12 @@
             }
             systemSettings.wpcReadyCatalogVersion = WPC_READY_CATALOG_VERSION;
             systemSettings.wpcReadyInstallCatalogVersion = WPC_READY_CATALOG_VERSION;
-            systemSettings.wpcCatalogRealPhotosVersion = 1;
-            if (merged > 0 && typeof syncSalesPriceListFromProductMaster === 'function') {
-                try { syncSalesPriceListFromProductMaster(); } catch (seedSyncErr) { /* ignore */ }
+            systemSettings.wpcCatalogProductImagesVersion = 2;
+            if (merged > 0) {
+                markCatalogSeedNeedsCloudSync();
+                if (typeof syncSalesPriceListFromProductMaster === 'function') {
+                    try { syncSalesPriceListFromProductMaster(); } catch (seedSyncErr) { /* ignore */ }
+                }
             }
             return merged;
         }
@@ -4307,8 +4375,10 @@
         function buildVariantSkuCardHtml(product, v, idx, lang, shopable, ui, compact) {
             const isEn = lang === 'en';
             const pid = String(product.id).replace(/'/g, "\\'");
-            const img = resolveDisplayMediaUrl(v.image || '');
-            const fullSrc = mediaUrlForLightbox(v.image || '');
+            const isWpcReady = productSupportsWpcRollColorPicker(product);
+            const baseImg = isWpcReady ? getWpcStoreSkuBaseImage(v) : resolveDisplayMediaUrl(v.image || '');
+            const img = baseImg;
+            const fullSrc = isWpcReady ? baseImg : mediaUrlForLightbox(v.image || '');
             const color = isEn ? (v.colorEn || v.colorAr) : (v.colorAr || v.colorEn);
             const size = isEn ? (v.sizeEn || v.sizeAr) : (v.sizeAr || v.sizeEn);
             const type = isEn ? (v.typeEn || v.typeAr) : (v.typeAr || v.typeEn);
@@ -4316,11 +4386,16 @@
             const addBtn = shopable
                 ? '<button type="button" class="nebras-store-sku-add-btn' + (compact ? ' nebras-store-sku-add-btn--icon' : '') + '" onclick="event.stopPropagation();addVariantIndexToCart(\'' + pid + '\',' + idx + ',1)"' + (compact ? ' title="' + escapeHtmlAttr(ui.addVariantToCart || 'أضف للسلة') + '" aria-label="' + escapeHtmlAttr(ui.addVariantToCart || 'أضف للسلة') + '"' : '') + '><i class="fas fa-cart-plus"></i>' + (compact ? '' : (' ' + escapeHtmlAttr(ui.addVariantToCart || 'أضف للسلة'))) + '</button>'
                 : (productHasShop(product) && !compact ? '<span class="nebras-store-sku-preview-only">' + escapeHtmlAttr(ui.variantPreviewOnly || 'للمعاينة') + '</span>' : '');
+            const mediaClass = 'nebras-store-sku-media' + (isWpcReady ? ' nebras-store-sku-media--wpc-door' : '');
+            const imgClass = 'nebras-store-sku-img' + (isWpcReady ? ' nebras-store-sku-img--wpc' : ' nebras-clickable-media');
             const media = img
-                ? '<div class="nebras-store-sku-media"><img class="nebras-clickable-media" src="' + escapeHtmlAttr(img) + '" data-full-src="' + escapeHtmlAttr(fullSrc || img) + '" alt="' + escapeHtmlAttr(label) + '" loading="lazy" decoding="async" title="' + escapeHtmlAttr(ui.lightboxOpenHint || 'اضغط للتكبير') + '"></div>'
+                ? '<div class="' + mediaClass + '"><img class="' + imgClass + '" src="' + escapeHtmlAttr(img) + '" data-base-src="' + escapeHtmlAttr(baseImg) + '" data-full-src="' + escapeHtmlAttr(fullSrc || img) + '" alt="' + escapeHtmlAttr(label) + '" loading="lazy" decoding="async" title="' + escapeHtmlAttr(ui.lightboxOpenHint || 'اضغط للتكبير') + '"></div>'
                 : '<div class="nebras-store-sku-media nebras-store-sku-media--empty"><i class="fas fa-box-open"></i></div>';
+            const cardAttrs = isWpcReady
+                ? (' class="nebras-store-sku-card nebras-store-sku-card--wpc-ready' + (compact ? ' nebras-store-sku-card--compact' : '') + '" data-product-id="' + escapeHtmlAttr(product.id) + '" data-variant-index="' + idx + '" data-selected-roll-index="0"')
+                : (' class="nebras-store-sku-card' + (compact ? ' nebras-store-sku-card--compact' : '') + '"');
             if (compact) {
-                return '<article class="nebras-store-sku-card nebras-store-sku-card--compact" title="' + escapeHtmlAttr(label) + '">' + media +
+                return '<article' + cardAttrs + ' title="' + escapeHtmlAttr(label) + '">' + media +
                     '<div class="nebras-store-sku-body nebras-store-sku-body--compact">' +
                     '<div class="nebras-store-sku-price">' + formatVariantPriceBlock(v.price, lang) + '</div>' +
                     addBtn +
@@ -4329,11 +4404,13 @@
             const specs = [];
             if (type) specs.push('<li><span>' + escapeHtmlAttr(ui.variantTypeLabel || 'النوع') + '</span><strong>' + escapeHtmlAttr(type) + '</strong></li>');
             if (size) specs.push('<li><span>' + escapeHtmlAttr(ui.variantSizeLabel || 'المقاس') + '</span><strong>' + escapeHtmlAttr(size) + '</strong></li>');
-            if (color) specs.push('<li><span>' + escapeHtmlAttr(ui.variantColorLabel || 'اللون') + '</span><strong>' + escapeHtmlAttr(color) + '</strong></li>');
-            return '<article class="nebras-store-sku-card">' + media +
+            if (color && !isWpcReady) specs.push('<li><span>' + escapeHtmlAttr(ui.variantColorLabel || 'اللون') + '</span><strong>' + escapeHtmlAttr(color) + '</strong></li>');
+            const rollPicker = isWpcReady ? buildWpcStoreRollPickerHtml(product.id, idx, lang, ui) : '';
+            return '<article' + cardAttrs + '>' + media +
                 '<div class="nebras-store-sku-body">' +
                 '<strong class="nebras-store-sku-name">' + escapeHtmlAttr(label) + '</strong>' +
                 (specs.length ? '<ul class="nebras-store-sku-specs">' + specs.join('') + '</ul>' : '') +
+                rollPicker +
                 '<div class="nebras-store-sku-price">' + formatVariantPriceBlock(v.price, lang) + '</div>' +
                 addBtn +
                 '</div></article>';
@@ -7007,12 +7084,26 @@
             const lineId = productId + '-' + (variant.id || variantIndex);
             const existing = nebrasCart.find(function(l) { return l.lineId === lineId; });
             const unitPriceEx = Number(variant.price) || 0;
+            let rollColorLabel = '';
+            let rollCode = '';
+            let rollCatalogIndex = null;
+            if (productSupportsWpcRollColorPicker(product)) {
+                const card = document.querySelector('.nebras-store-sku-card[data-product-id="' + productId + '"][data-variant-index="' + variantIndex + '"]');
+                const rollIdx = card ? parseInt(card.getAttribute('data-selected-roll-index') || '0', 10) : 0;
+                const colors = getNebrasColorCatalog();
+                const roll = colors[rollIdx] || colors[0];
+                if (roll) {
+                    rollCatalogIndex = roll.catalogIndex != null ? roll.catalogIndex : rollIdx;
+                    rollCode = roll.code || getRollCatalogCode(roll.nebCode || getNebrasRollCodeByIndex(rollIdx));
+                    rollColorLabel = rollCode + ' — ' + getLocalizedDoorCatalogLabel(roll, lang);
+                }
+            }
             const payload = {
                 lineId: lineId,
                 productId: productId,
                 variantId: variant.id || String(variantIndex),
                 productTitle: getLocalizedCatalogField(product, 'title', lang),
-                color: lang === 'en' ? (variant.colorEn || variant.colorAr) : (variant.colorAr || variant.colorEn),
+                color: rollColorLabel || (lang === 'en' ? (variant.colorEn || variant.colorAr) : (variant.colorAr || variant.colorEn)),
                 size: lang === 'en' ? (variant.sizeEn || variant.sizeAr) : (variant.sizeAr || variant.sizeEn),
                 type: lang === 'en' ? (variant.typeEn || variant.typeAr) : (variant.typeAr || variant.typeEn),
                 image: normalizeMediaPath(variant.image || (product.album || [])[0] || ''),
@@ -7020,7 +7111,9 @@
                 unitPrice: unitPriceEx,
                 unitPriceExVat: unitPriceEx,
                 vatRate: getNebrasVatRate(),
-                qty: quantity
+                qty: quantity,
+                rollCode: rollCode || '',
+                rollCatalogIndex: rollCatalogIndex
             };
             if (existing) {
                 existing.qty += quantity;
@@ -10142,6 +10235,20 @@
             return '<img class="' + className + '" src="' + escapeHtmlAttr(logoUrl) + '" data-src-list="' + listAttr + '" data-src-idx="0" decoding="sync" onerror="siteLogoImgFallback(this)" alt="' + escapeHtmlAttr(altText || '') + '">';
         }
 
+        function buildQuoteOfficialBrandedBandHtml(logoUrl, factoryEmail) {
+            const vat = escapeHtmlAttr(systemSettings.taxNumber || '312765384700003');
+            const cr = escapeHtmlAttr(systemSettings.commercialRegister || '1128185177');
+            const email = escapeHtmlAttr(factoryEmail || 'nebrasfactory@hotmail.com');
+            const logoHtml = buildQuoteLogoImgHtml('quote-official-branded-band-logo', logoUrl, 'شركة مصنع نبراس للبلاستيك');
+            return '<header class="quote-official-branded-band" role="banner">' +
+                '<div class="quote-official-branded-band-meta">VAT ' + vat + '<br>C.R ' + cr + '<br>' + email + '</div>' +
+                '<div class="quote-official-branded-band-brand">' +
+                '<div class="quote-official-branded-band-titles">' +
+                '<strong>شركة مصنع نبراس للبلاستيك</strong>' +
+                '<span>NEBRAS PLASTIC FACTORY COMPANY</span></div>' +
+                logoHtml + '</div></header>';
+        }
+
         function buildQuoteHeaderLogoStripHtml(logoUrl, logoAlt, lang) {
             const isEn = lang === 'en';
             const isZh = lang === 'zh';
@@ -10516,17 +10623,11 @@
             const factoryAddr = systemSettings.companyAddressAr || 'القصيم - صناعية عنيزة - إمتداد طريق الزلفي';
             const salesPhone = systemSettings.mainSalesPhone || '0555092383';
             const servicePhone = systemSettings.customerServicePhone || '0579394158';
-            const logoHtml = buildQuoteLogoImgHtml('quote-official-logo', resolvedLogo, 'شركة مصنع نبراس للبلاستيك');
             doc.className = 'quote-a4 quote-a4--nebras-official';
             doc.removeAttribute('style');
             doc.innerHTML =
                 '<div class="quote-a4-inner">' +
-                '<header class="quote-official-header">' +
-                '<div class="quote-official-header-meta">VAT ' + escapeHtmlAttr(systemSettings.taxNumber || '312765384700003') + '<br>' +
-                'C.R ' + escapeHtmlAttr(systemSettings.commercialRegister || '1128185177') + '<br>' +
-                escapeHtmlAttr(factoryEmail) + '</div>' +
-                '<div class="quote-official-header-logo">' + logoHtml + '</div>' +
-                '</header>' +
+                buildQuoteOfficialBrandedBandHtml(resolvedLogo, factoryEmail) +
                 '<div class="quote-official-divider" aria-hidden="true"></div>' +
                 customerRibbon +
                 '<table class="quote-official-meta-table"><tbody>' +
@@ -17171,6 +17272,9 @@
                     }
                 }
                 if (typeof scrollToAdminDashboard === 'function') scrollToAdminDashboard();
+                setTimeout(function() {
+                    if (typeof flushCatalogSeedCloudSyncIfPending === 'function') flushCatalogSeedCloudSyncIfPending();
+                }, 3500);
                 try {
                     if (typeof isStrictHrUser === 'function' && isStrictHrUser(user)) {
                         setLanguage(currentLang || 'ar', { light: true, skipCatalog: true });
@@ -25318,6 +25422,7 @@
             }
             applyWorkspaceTranslations();
             wireClickableMediaIn(main);
+            initWpcStoreSkuRollPickers(main);
             if (main.querySelector('.nebras-bank-workspace, .bank-accounts-showcase')) {
                 hydrateBankAccountMedia(main);
             }
@@ -27230,6 +27335,9 @@
                 syncSalesPriceListFromProductMaster();
                 syncDoorDesignerCatalogFromProductMaster();
             }
+            setTimeout(function() {
+                if (typeof flushCatalogSeedCloudSyncIfPending === 'function') flushCatalogSeedCloudSyncIfPending();
+            }, 2500);
             adminUsers = (Array.isArray(adminUsers) ? adminUsers : []).map(function(user, index) {
                 return typeof normalizeAdminUserRecord === 'function'
                     ? normalizeAdminUserRecord(user, index)
@@ -30882,6 +30990,8 @@
         window.openProductShop = openProductShop;
         window.openStoreSubCategoryHub = openStoreSubCategoryHub;
         window.openStoreSubCategory = openStoreSubCategory;
+        window.pickWpcStoreSkuRoll = pickWpcStoreSkuRoll;
+        window.initWpcStoreSkuRollPickers = initWpcStoreSkuRollPickers;
         window.openProductFromWorkspaceHub = openProductFromWorkspaceHub;
         window.openCustomerComplaints = openCustomerComplaints;
         window.openBankAccountCard = openBankAccountCard;
