@@ -4514,7 +4514,8 @@
                 : (productHasShop(product) && !compact ? '<span class="nebras-store-sku-preview-only">' + escapeHtmlAttr(ui.variantPreviewOnly || 'للمعاينة') + '</span>' : '');
             const mediaClass = 'nebras-store-sku-media' +
                 (isWpcReady ? ' nebras-store-sku-media--wpc-door' : '') +
-                (isWpcReady || isVectorImg ? ' nebras-store-sku-media--vector' : '');
+                (isWpcReady || isVectorImg ? ' nebras-store-sku-media--vector' : '') +
+                (img ? ' nebras-store-sku-media--has-image' : '');
             const imgClass = 'nebras-store-sku-img nebras-clickable-media' + (isWpcReady ? ' nebras-store-sku-img--wpc' : '');
             const awaitingLabel = ui.storeSkuAwaitingImage || 'الصورة من لوحة إدارة المحتوى';
             const media = isWpcReady && !baseImg
@@ -9436,15 +9437,14 @@
                     file = new File([blob], fileName || 'nebras-quote-a4.png', { type: mimeType || blob.type || 'image/png' });
                 }
                 if (!file) return false;
-                const payload = { text: text || '', title: fileName || 'Nebras Quote A4' };
-                if (navigator.canShare && navigator.canShare({ files: [file] })) {
-                    payload.files = [file];
-                } else if (!navigator.canShare) {
-                    payload.files = [file];
-                } else {
-                    return false;
+                const shortText = String(text || '').trim().slice(0, 280);
+                const filePayload = { files: [file], title: fileName || 'Nebras Quote A4' };
+                if (navigator.canShare && navigator.canShare(filePayload)) {
+                    await navigator.share(shortText ? Object.assign({ text: shortText }, filePayload) : filePayload);
+                    return true;
                 }
-                await navigator.share(payload);
+                if (navigator.canShare && !navigator.canShare({ files: [file] })) return false;
+                await navigator.share(shortText ? { text: shortText, files: [file], title: filePayload.title } : filePayload);
                 return true;
             } catch (shareErr) {
                 return false;
@@ -21367,7 +21367,8 @@
             '.workspace-product-tile img',
             '.icon-inner-product-media img',
             '.icon-inner-products-grid img',
-            '.cph-gallery-strip img'
+            '.cph-gallery-strip img',
+            '.nebras-store-sku-media img'
         ].join(',');
 
         function showNebrasLightboxMedia(url) {
@@ -21464,7 +21465,8 @@
             const gallery = el.closest(
                 '.workspace-gallery, .icon-overlay-gallery, .nebras-cert-grid, .icon-inner-product-detail, ' +
                 '.workspace-about-gallery-list, .icon-overlay-variants-grid, .showroom-gallery-grid, ' +
-                '.cph-gallery-strip, .nebras-partners-stage, .cart-drawer, .product-shop-modal, .icon-inner-products-grid'
+                '.cph-gallery-strip, .nebras-partners-stage, .cart-drawer, .product-shop-modal, .icon-inner-products-grid, ' +
+                '.nebras-store-sku-grid, .nebras-store-subcategory-products, .nebras-store-product-page'
             );
             let urls = [src];
             if (gallery && el.tagName === 'IMG') {
@@ -21484,6 +21486,9 @@
             const alt = ui.lightboxImageAlt || 'صورة';
             scope.querySelectorAll(CLICKABLE_MEDIA_IMG_SELECTOR).forEach(function(img) {
                 if (img.closest('.nav-bar, .menu-toggle, .lang-toggle, .card-icon, .visitor-lane-head i')) return;
+                if (img.closest('.nebras-store-sku-media--awaiting-image, .nebras-store-sku-media--empty')) return;
+                const src = (img.getAttribute('src') || '').trim();
+                if (!src || src.indexOf('data:image/svg') === 0) return;
                 img.classList.add('nebras-clickable-media');
                 img.setAttribute('role', 'button');
                 if (!img.hasAttribute('tabindex')) img.tabIndex = 0;
@@ -21498,7 +21503,8 @@
             document.body.addEventListener('click', function(e) {
                 const img = e.target;
                 if (!img || img.tagName !== 'IMG' || !img.classList.contains('nebras-clickable-media')) return;
-                if (img.closest('button, .variant-add-btn')) return;
+                if (img.closest('button, .variant-add-btn, .nebras-store-sku-add-btn, .nebras-store-roll-swatch')) return;
+                if (img.closest('.nebras-store-sku-media--awaiting-image, .nebras-store-sku-media--empty')) return;
                     e.preventDefault();
                     e.stopPropagation();
                     openNebrasMediaLightboxFromEl(img);

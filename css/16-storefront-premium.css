@@ -1610,6 +1610,36 @@ body.nebras-mobile-bar-active.admin-session .nebras-mobile-commerce-bar {
     cursor: zoom-in;
 }
 
+.nebras-store-sku-media--has-image {
+    position: relative;
+}
+
+.nebras-store-sku-media--has-image::after {
+    content: '\f00e';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    background: rgba(13, 40, 64, 0.72);
+    color: #fff;
+    font-size: 0.72rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.nebras-store-sku-card:hover .nebras-store-sku-media--has-image::after,
+.nebras-store-sku-media--has-image:focus-within::after {
+    opacity: 1;
+}
+
 .nebras-store-sku-card--wpc-ready:hover .nebras-store-sku-media--wpc-door img {
     transform: none;
 }
