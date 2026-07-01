@@ -1470,6 +1470,13 @@ body.nebras-mobile-bar-active.admin-session .nebras-mobile-commerce-bar {
     background: #f1f5f9;
 }
 
+.nebras-store-sku-grid--section .nebras-store-sku-media--vector img,
+.nebras-store-sku-grid--section .nebras-store-sku-media--wpc-door img {
+    object-fit: contain !important;
+    padding: 10px !important;
+    background: linear-gradient(180deg, #eef2f7 0%, #e2e8f0 100%);
+}
+
 .nebras-store-subhub-card--premium .nebras-store-subhub-card-media img {
     object-fit: cover;
     padding: 0;
@@ -1548,26 +1555,58 @@ body.nebras-mobile-bar-active.admin-session .nebras-mobile-commerce-bar {
     }
 }
 
-/* WPC جاهز — معاينة الباب + اختيار لون الرولّة */
-.nebras-store-sku-media--wpc-door {
+/* WPC جاهز — معاينة الباب + اختيار لون الرولّة (بدون raster — حادّة) */
+.nebras-store-sku-media--wpc-door,
+.nebras-store-sku-media--vector {
     aspect-ratio: 3 / 4;
     background: linear-gradient(180deg, #eef2f7 0%, #e2e8f0 100%);
+}
+
+.nebras-store-sku-media--vector:not(.nebras-store-sku-media--wpc-door) {
+    cursor: zoom-in;
+}
+
+.nebras-store-sku-media--wpc-door {
     cursor: default;
 }
 
-.nebras-store-sku-media--wpc-door img.nebras-store-sku-img--wpc {
+.nebras-store-sku-door-stack {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    isolation: isolate;
+}
+
+.nebras-store-sku-door-stack.has-door-roll-tint::after {
+    content: '';
+    position: absolute;
+    left: 17%;
+    top: 6%;
+    width: 66%;
+    height: 86%;
+    z-index: 2;
+    border-radius: 3px;
+    background-color: var(--door-roll-tint, #b8bcc4);
+    mix-blend-mode: color;
+    opacity: var(--door-roll-tint-opacity, 0.72);
+    pointer-events: none;
+}
+
+.nebras-store-sku-media--wpc-door img.nebras-store-sku-img--wpc,
+.nebras-store-sku-media--vector img {
     object-fit: contain;
     padding: 10px;
     transform: none !important;
+    image-rendering: auto;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
 }
 
 .nebras-store-sku-card--wpc-ready:hover .nebras-store-sku-media--wpc-door img {
     transform: none;
-}
-
-.nebras-store-sku-img--composing {
-    opacity: 0.72;
-    filter: saturate(0.85);
 }
 
 .nebras-store-roll-picker {
@@ -1609,12 +1648,30 @@ body.nebras-mobile-bar-active.admin-session .nebras-mobile-commerce-bar {
 }
 
 .nebras-store-roll-swatch img,
-.nebras-store-roll-swatch-fallback {
+.nebras-store-roll-swatch-fallback,
+.nebras-store-roll-swatch-chip {
     width: 100%;
     aspect-ratio: 1;
     border-radius: 5px;
-    object-fit: cover;
     display: block;
+}
+
+.nebras-store-roll-swatch-chip {
+    position: relative;
+    overflow: hidden;
+    background-color: var(--swatch-hex, #ccc);
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+}
+
+.nebras-store-roll-swatch-chip img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.55;
+    mix-blend-mode: multiply;
+    image-rendering: auto;
 }
 
 .nebras-store-roll-swatch-code {

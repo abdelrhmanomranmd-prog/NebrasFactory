@@ -927,7 +927,7 @@
         }
 
         const DOOR_PHOTO_PRESET_ROOT = 'images/doors/presets/';
-        const DOOR_PHOTO_PRESET_CACHE = '27';
+        const DOOR_PHOTO_PRESET_CACHE = '28';
         /** صور أبواب المصنع الحقيقية في المعاينة — SVG احتياطي عند غياب الصورة */
         const DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS = true;
         let doorDesignerPreviewRaf = 0;
@@ -1117,12 +1117,18 @@
                 const w = base.naturalWidth || base.width;
                 const h = base.naturalHeight || base.height;
                 if (!w || !h) return null;
+                const dpr = Math.min(typeof window !== 'undefined' && window.devicePixelRatio ? window.devicePixelRatio : 1, 2);
+                const outW = Math.round(w * dpr);
+                const outH = Math.round(h * dpr);
                 function bake(roll) {
                     try {
                         const canvas = document.createElement('canvas');
-                        canvas.width = w;
-                        canvas.height = h;
+                        canvas.width = outW;
+                        canvas.height = outH;
                         const ctx = canvas.getContext('2d');
+                        ctx.scale(dpr, dpr);
+                        ctx.imageSmoothingEnabled = true;
+                        ctx.imageSmoothingQuality = 'high';
                         ctx.drawImage(base, 0, 0, w, h);
                         ctx.globalCompositeOperation = 'saturation';
                         ctx.fillStyle = 'rgba(128,128,128,' + profile.saturationGray + ')';
@@ -1130,11 +1136,21 @@
                         if (roll) {
                             ctx.globalCompositeOperation = 'multiply';
                             ctx.globalAlpha = profile.multiplyAlpha;
-                            ctx.drawImage(roll, 0, 0, w, h);
+                            const rw = roll.naturalWidth || roll.width || 256;
+                            const rh = roll.naturalHeight || roll.height || 256;
+                            for (let ty = 0; ty < h; ty += rh) {
+                                for (let tx = 0; tx < w; tx += rw) {
+                                    ctx.drawImage(roll, tx, ty, rw, rh);
+                                }
+                            }
                             ctx.globalAlpha = 1;
                             ctx.globalCompositeOperation = 'color';
                             ctx.globalAlpha = profile.colorAlpha;
-                            ctx.drawImage(roll, 0, 0, w, h);
+                            for (let ty = 0; ty < h; ty += rh) {
+                                for (let tx = 0; tx < w; tx += rw) {
+                                    ctx.drawImage(roll, tx, ty, rw, rh);
+                                }
+                            }
                             ctx.globalAlpha = 1;
                         }
                         if (hexFallback) {
@@ -2575,6 +2591,74 @@
             return String(variant.image).trim();
         }
 
+        function buildWpcStoreRollCssFilter(hex) {
+            const raw = String(hex || '#b8bcc4').trim();
+            let r = 184, g = 188, b = 196;
+            const m = raw.match(/^#?([0-9a-f]{6})$/i);
+            if (m) {
+                const n = parseInt(m[1], 16);
+                r = (n >> 16) & 255;
+                g = (n >> 8) & 255;
+                b = n & 255;
+            }
+            const rn = r / 255, gn = g / 255, bn = b / 255;
+            const max = Math.max(rn, gn, bn), min = Math.min(rn, gn, bn);
+            let h = 0, s = 0;
+            const l = (max + min) / 2;
+            if (max !== min) {
+                const d = max - min;
+                s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                if (max === rn) h = ((gn - bn) / d + (gn < bn ? 6 : 0)) * 60;
+                else if (max === gn) h = ((bn - rn) / d + 2) * 60;
+                else h = ((rn - gn) / d + 4) * 60;
+            }
+            const hueRotate = Math.round(h - 28);
+            const saturate = Math.max(0.42, Math.min(1.35, s * 1.15 + 0.38));
+            const brightness = Math.max(0.78, Math.min(1.14, l * 0.55 + 0.62));
+            const profile = getRollBlendProfile(raw);
+            return 'saturate(' + saturate.toFixed(2) + ') hue-rotate(' + hueRotate + 'deg) brightness(' + brightness.toFixed(2) + ') contrast(' + profile.baseContrast.toFixed(2) + ')';
+        }
+
+        function buildWpcStoreRollStateFromCatalog(roll, catalogIndex) {
+            const idx = catalogIndex != null && !isNaN(catalogIndex) ? catalogIndex : 0;
+            const hex = roll ? (roll.hex || '#b8bcc4') : '#b8bcc4';
+            const tex = roll ? resolveDoorRollTextureUrl(roll.textureUrl || getRollSwatchImageUrl(roll.catalogIndex != null ? roll.catalogIndex : idx)) : '';
+            return {
+                hex: hex,
+                isRoll: true,
+                catalogIndex: roll && roll.catalogIndex != null ? roll.catalogIndex : idx,
+                swatchUrl: tex,
+                profile: getRollBlendProfile(hex)
+            };
+        }
+
+        function applyWpcStoreSkuRollTint(card, catalogIndex) {
+            if (!card) return;
+            const stack = card.querySelector('.nebras-store-sku-door-stack');
+            const img = stack ? stack.querySelector('img') : card.querySelector('.nebras-store-sku-media img');
+            if (!img) return;
+            const colors = getNebrasColorCatalog();
+            const rollIdx = catalogIndex != null && !isNaN(catalogIndex) ? catalogIndex : 0;
+            const roll = colors[rollIdx] || colors[0];
+            if (!roll) return;
+            const baseSrc = img.getAttribute('data-base-src') || img.getAttribute('src') || '';
+            if (baseSrc && img.getAttribute('src') !== baseSrc) img.src = baseSrc;
+            img.style.filter = buildWpcStoreRollCssFilter(roll.hex);
+            img.setAttribute('data-composed-roll', String(rollIdx));
+            if (stack) {
+                applyDoorRollTintToElements(stack, buildWpcStoreRollStateFromCatalog(roll, rollIdx));
+            }
+        }
+
+        function buildWpcStoreSkuDoorMediaHtml(baseImg, label, fullSrc, ui) {
+            return '<div class="nebras-store-sku-media nebras-store-sku-media--wpc-door nebras-store-sku-media--vector">' +
+                '<div class="nebras-store-sku-door-stack">' +
+                '<img class="nebras-store-sku-img nebras-store-sku-img--wpc" src="' + escapeHtmlAttr(baseImg) + '"' +
+                ' data-base-src="' + escapeHtmlAttr(baseImg) + '" data-full-src="' + escapeHtmlAttr(fullSrc || baseImg) + '"' +
+                ' alt="' + escapeHtmlAttr(label) + '" loading="lazy" decoding="async"' +
+                ' title="' + escapeHtmlAttr(ui.lightboxOpenHint || 'اضغط للتكبير') + '"></div></div>';
+        }
+
         function buildWpcStoreRollPickerHtml(productId, variantIndex, lang, ui) {
             const colors = getNebrasColorCatalog();
             const label = ui.wpcStoreRollPickerLabel || 'اختر لون الرولّة — كتالوج ألوان نبراس';
@@ -2586,7 +2670,7 @@
                 const tex = resolveDoorRollTextureUrl(item.textureUrl || getRollSwatchImageUrl(catIdx));
                 const active = idx === 0 ? ' is-active' : '';
                 const chip = tex
-                    ? '<img src="' + escapeHtmlAttr(tex) + '" alt="" loading="lazy" decoding="async">'
+                    ? '<span class="nebras-store-roll-swatch-chip" style="--swatch-hex:' + escapeHtmlAttr(item.hex || '#ccc') + '"><img src="' + escapeHtmlAttr(tex) + '" alt="" loading="lazy" decoding="async"></span>'
                     : ('<span class="nebras-store-roll-swatch-fallback" style="background-color:' + escapeHtmlAttr(item.hex || '#ccc') + '"></span>');
                 return '<button type="button" class="nebras-store-roll-swatch' + active + '" data-catalog-index="' + catIdx + '"' +
                     ' data-door-code="' + escapeHtmlAttr(code) + '" data-door-hex="' + escapeHtmlAttr(item.hex || '#ccc') + '"' +
@@ -2605,27 +2689,8 @@
         }
 
         function refreshWpcStoreSkuPreview(card, productId, variantIndex, catalogIndex) {
-            const product = siteProducts.find(function(p) { return p.id === productId; });
-            const variant = product && (product.variants || [])[variantIndex];
-            if (!variant || !card) return;
-            const img = card.querySelector('.nebras-store-sku-media img');
-            if (!img) return;
-            const baseSrc = getWpcStoreSkuBaseImage(variant);
-            const colors = getNebrasColorCatalog();
-            const rollIdx = catalogIndex != null && !isNaN(catalogIndex) ? catalogIndex : 0;
-            const roll = colors[rollIdx] || colors[0];
-            if (!roll || !baseSrc) return;
-            const tex = resolveDoorRollTextureUrl(roll.textureUrl || getRollSwatchImageUrl(roll.catalogIndex != null ? roll.catalogIndex : rollIdx));
-            img.classList.add('nebras-store-sku-img--composing');
-            composeDoorPhotoWithRoll(baseSrc, tex, roll.hex, roll.catalogIndex != null ? roll.catalogIndex : rollIdx).then(function(dataUrl) {
-                img.classList.remove('nebras-store-sku-img--composing');
-                if (!dataUrl) return;
-                img.src = dataUrl;
-                img.setAttribute('data-full-src', dataUrl);
-                img.setAttribute('data-composed-roll', String(rollIdx));
-            }).catch(function() {
-                img.classList.remove('nebras-store-sku-img--composing');
-            });
+            if (!card) return;
+            applyWpcStoreSkuRollTint(card, catalogIndex);
         }
 
         function pickWpcStoreSkuRoll(productId, variantIndex, catalogIndex) {
@@ -4379,6 +4444,7 @@
             const baseImg = isWpcReady ? getWpcStoreSkuBaseImage(v) : resolveDisplayMediaUrl(v.image || '');
             const img = baseImg;
             const fullSrc = isWpcReady ? baseImg : mediaUrlForLightbox(v.image || '');
+            const isVectorImg = !isWpcReady && /\.svg(\?|$)/i.test(String(baseImg || ''));
             const color = isEn ? (v.colorEn || v.colorAr) : (v.colorAr || v.colorEn);
             const size = isEn ? (v.sizeEn || v.sizeAr) : (v.sizeAr || v.sizeEn);
             const type = isEn ? (v.typeEn || v.typeAr) : (v.typeAr || v.typeEn);
@@ -4386,10 +4452,14 @@
             const addBtn = shopable
                 ? '<button type="button" class="nebras-store-sku-add-btn' + (compact ? ' nebras-store-sku-add-btn--icon' : '') + '" onclick="event.stopPropagation();addVariantIndexToCart(\'' + pid + '\',' + idx + ',1)"' + (compact ? ' title="' + escapeHtmlAttr(ui.addVariantToCart || 'أضف للسلة') + '" aria-label="' + escapeHtmlAttr(ui.addVariantToCart || 'أضف للسلة') + '"' : '') + '><i class="fas fa-cart-plus"></i>' + (compact ? '' : (' ' + escapeHtmlAttr(ui.addVariantToCart || 'أضف للسلة'))) + '</button>'
                 : (productHasShop(product) && !compact ? '<span class="nebras-store-sku-preview-only">' + escapeHtmlAttr(ui.variantPreviewOnly || 'للمعاينة') + '</span>' : '');
-            const mediaClass = 'nebras-store-sku-media' + (isWpcReady ? ' nebras-store-sku-media--wpc-door' : '');
+            const mediaClass = 'nebras-store-sku-media' +
+                (isWpcReady ? ' nebras-store-sku-media--wpc-door' : '') +
+                (isWpcReady || isVectorImg ? ' nebras-store-sku-media--vector' : '');
             const imgClass = 'nebras-store-sku-img' + (isWpcReady ? ' nebras-store-sku-img--wpc' : ' nebras-clickable-media');
             const media = img
-                ? '<div class="' + mediaClass + '"><img class="' + imgClass + '" src="' + escapeHtmlAttr(img) + '" data-base-src="' + escapeHtmlAttr(baseImg) + '" data-full-src="' + escapeHtmlAttr(fullSrc || img) + '" alt="' + escapeHtmlAttr(label) + '" loading="lazy" decoding="async" title="' + escapeHtmlAttr(ui.lightboxOpenHint || 'اضغط للتكبير') + '"></div>'
+                ? (isWpcReady
+                    ? buildWpcStoreSkuDoorMediaHtml(baseImg, label, fullSrc, ui)
+                    : ('<div class="' + mediaClass + '"><img class="' + imgClass + '" src="' + escapeHtmlAttr(img) + '" data-base-src="' + escapeHtmlAttr(baseImg) + '" data-full-src="' + escapeHtmlAttr(fullSrc || img) + '" alt="' + escapeHtmlAttr(label) + '" loading="lazy" decoding="async" title="' + escapeHtmlAttr(ui.lightboxOpenHint || 'اضغط للتكبير') + '"></div>'))
                 : '<div class="nebras-store-sku-media nebras-store-sku-media--empty"><i class="fas fa-box-open"></i></div>';
             const cardAttrs = isWpcReady
                 ? (' class="nebras-store-sku-card nebras-store-sku-card--wpc-ready' + (compact ? ' nebras-store-sku-card--compact' : '') + '" data-product-id="' + escapeHtmlAttr(product.id) + '" data-variant-index="' + idx + '" data-selected-roll-index="0"')
