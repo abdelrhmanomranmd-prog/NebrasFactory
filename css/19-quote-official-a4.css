@@ -1,7 +1,8 @@
 /* صيغة عرض السعر الرسمية — مطابقة لمرجع PDF (م صالح - جده - 935) */
 
-.quote-a4--nebras-official {
+.quote-a4.quote-a4--nebras-official {
     padding: 0 11mm 10mm;
+    overflow: visible;
     font-family: 'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif;
     font-size: 10.5px;
     line-height: 1.45;
@@ -23,27 +24,15 @@
     height: 100%;
 }
 
-/* رأس الصفحة 1 — نفس صورة صفحات 2–4 (مقصوصة من القالب الثابت) */
-.quote-official-page1-header-wrap {
-    margin: 0 -11mm 8px;
-    line-height: 0;
-}
-
-.quote-official-page1-header {
-    display: block;
-    width: 100%;
-    height: auto;
-    border: 0;
-}
-
-/* شريط الرأس HTML — احتياط */
+/* شريط الرأس الكحلي — الصفحة 1 (HTML ثابت — مطابق لصفحات 2–4) */
 .quote-official-branded-band {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 14px;
-    margin: -9mm -11mm 8px;
+    margin: 0 -11mm 8px;
     padding: 10px 11mm 11px;
+    flex-shrink: 0;
     background: linear-gradient(180deg, #0a1628 0%, #0d1f38 100%);
     color: #fff;
     border-bottom: 3px solid #17a8a0;
@@ -100,6 +89,25 @@
     object-fit: contain;
     filter: brightness(0) invert(1);
 }
+
+.quote-a4-health-status {
+    margin-top: 10px;
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 11px;
+    line-height: 1.55;
+    white-space: pre-wrap;
+    direction: rtl;
+    background: #f4f8fb;
+    border: 1px solid #c8d4dc;
+    color: #1a365d;
+}
+
+.quote-a4-health-status--ok { border-color: #17a8a0; background: #f0faf9; }
+.quote-a4-health-status--warn { border-color: #e8b84a; background: #fffbf0; }
+.quote-a4-health-status--busy { border-color: #9bb4c8; color: #556; }
+
+.quote-a4-health-status:not([hidden]) { display: block; }
 
 .quote-official-header {
     display: flex;

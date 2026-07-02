@@ -5398,6 +5398,7 @@
             }
             updateCartBadge();
             updateSalesQuoteFab();
+            if (typeof refreshQuotePreviewLive === 'function') refreshQuotePreviewLive();
         }
 
         function renderCartEnterpriseChrome(lang, ui) {
@@ -9437,6 +9438,11 @@
                             cloned.style.fontFamily = "'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif";
                             cloned.style.direction = 'rtl';
                             cloned.style.unicodeBidi = 'plaintext';
+                            cloned.style.overflow = 'visible';
+                        }
+                        injectQuoteOfficialA4CriticalStyles(clonedDoc);
+                        if (cloned) {
+                            ensureQuoteOfficialPage1Header(cloned, getQuoteA4LogoUrl(), 'nebrasfactory@hotmail.com');
                         }
                         if (clonedDoc.head && !clonedDoc.querySelector('link[data-nebras-cairo]')) {
                             const link = clonedDoc.createElement('link');
@@ -9446,9 +9452,10 @@
                             clonedDoc.head.appendChild(link);
                         }
                         if (clonedDoc.head && !clonedDoc.querySelector('link[data-nebras-quote-a4]')) {
+                            const deployVer = (document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws177';
                             const qCss = clonedDoc.createElement('link');
                             qCss.rel = 'stylesheet';
-                            qCss.href = 'css/19-quote-official-a4.css';
+                            qCss.href = 'css/19-quote-official-a4.css?v=' + deployVer;
                             qCss.setAttribute('data-nebras-quote-a4', '1');
                             clonedDoc.head.appendChild(qCss);
                         }
@@ -10450,10 +10457,159 @@
             return q.page1HeaderUrl || DEFAULT_QUOTE_A4_SETTINGS.page1HeaderUrl || 'documents/quote-a4-official-header.png';
         }
 
+        function calcQuoteLineTotals(line) {
+            const unit = Number(line && (line.unitPrice != null ? line.unitPrice : (line.unitPriceExVat != null ? line.unitPriceExVat : line.price))) || 0;
+            const qty = Math.max(1, Number(line && line.qty) || 1);
+            const lineEx = unit * qty;
+            const vatRate = getNebrasVatRate();
+            const lineVat = lineEx * vatRate;
+            return { unit: unit, qty: qty, lineEx: lineEx, lineVat: lineVat, lineInc: lineEx + lineVat };
+        }
+
+        function nebrasQuotePage1HeaderFallback(imgEl) {
+            if (!imgEl) return;
+            imgEl.style.display = 'none';
+            const wrap = imgEl.closest('.quote-official-page1-header-wrap');
+            const fb = wrap && wrap.querySelector('.quote-official-branded-band--fallback');
+            if (fb) {
+                fb.hidden = false;
+                fb.removeAttribute('aria-hidden');
+            }
+        }
+
+        function buildQuoteOfficialBrandedBandHtmlInner(logoUrl, factoryEmail) {
+            const vat = escapeHtmlAttr(systemSettings.taxNumber || '312765384700003');
+            const cr = escapeHtmlAttr(systemSettings.commercialRegister || '1128185177');
+            const email = escapeHtmlAttr(factoryEmail || 'nebrasfactory@hotmail.com');
+            const logoHtml = buildQuoteLogoImgHtml('quote-official-branded-band-logo', logoUrl, 'شركة مصنع نبراس للبلاستيك');
+            return '<div class="quote-official-branded-band-meta">VAT ' + vat + '<br>C.R ' + cr + '<br>' + email + '</div>' +
+                '<div class="quote-official-branded-band-brand">' +
+                '<div class="quote-official-branded-band-titles">' +
+                '<strong>شركة مصنع نبراس للبلاستيك</strong>' +
+                '<span>NEBRAS PLASTIC FACTORY COMPANY</span></div>' +
+                logoHtml + '</div>';
+        }
+
         function buildQuoteOfficialBrandedBandHtml(logoUrl, factoryEmail) {
-            const headerUrl = normalizeQuoteAssetPath(getQuoteOfficialPage1HeaderUrl());
-            return '<header class="quote-official-page1-header-wrap" role="banner">' +
-                '<img class="quote-official-page1-header" src="' + escapeHtmlAttr(headerUrl) + '" alt="شركة مصنع نبراس للبلاستيك" decoding="sync" crossorigin="anonymous"></header>';
+            return '<header class="quote-official-branded-band" role="banner">' +
+                buildQuoteOfficialBrandedBandHtmlInner(logoUrl, factoryEmail) +
+                '</header>';
+        }
+
+        function ensureQuoteOfficialPage1Header(doc, logoUrl, factoryEmail) {
+            if (!doc) return;
+            injectQuoteOfficialA4CriticalStyles(doc.ownerDocument || document);
+            let band = doc.querySelector('.quote-official-branded-band');
+            if (band && band.offsetHeight >= 12) {
+                const bg = window.getComputedStyle(band).backgroundColor || '';
+                if (bg && bg !== 'transparent' && bg !== 'rgba(0, 0, 0, 0)') return;
+            }
+            const inner = doc.querySelector('.quote-a4-inner');
+            if (!inner) return;
+            const html = buildQuoteOfficialBrandedBandHtml(logoUrl, factoryEmail);
+            const legacyWrap = doc.querySelector('.quote-official-page1-header-wrap');
+            if (legacyWrap) legacyWrap.remove();
+            if (band) band.remove();
+            inner.insertAdjacentHTML('afterbegin', html);
+        }
+
+        function injectQuoteOfficialA4CriticalStyles(targetDoc) {
+            if (!targetDoc || targetDoc.querySelector('style[data-nebras-quote-a4-critical]')) return;
+            const style = targetDoc.createElement('style');
+            style.setAttribute('data-nebras-quote-a4-critical', '1');
+            style.textContent =
+                '.quote-official-branded-band{display:flex!important;align-items:center;justify-content:space-between;gap:14px;' +
+                'margin:0 -11mm 8px;padding:10px 11mm 11px;background:linear-gradient(180deg,#0a1628 0%,#0d1f38 100%)!important;' +
+                'color:#fff!important;border-bottom:3px solid #17a8a0!important;box-sizing:border-box;}' +
+                '.quote-official-branded-band-meta{font-size:9px;font-weight:700;line-height:1.65;text-align:start;flex:0 0 auto;}' +
+                '.quote-official-branded-band-brand{display:flex;align-items:center;justify-content:flex-end;gap:12px;flex:1 1 auto;}' +
+                '.quote-official-branded-band-titles{display:flex;flex-direction:column;align-items:flex-end;gap:2px;text-align:end;}' +
+                '.quote-official-branded-band-titles strong{font-size:11.5px;font-weight:800;line-height:1.35;}' +
+                '.quote-official-branded-band-titles span{font-size:7.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.92;}' +
+                '.quote-official-branded-band-logo{display:block;max-height:52px;max-width:72px;object-fit:contain;filter:brightness(0) invert(1);}';
+            (targetDoc.head || targetDoc.documentElement).appendChild(style);
+        }
+
+        async function verifyQuoteA4AssetsHealth() {
+            const deploy = (document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws179';
+            const q = getQuoteA4Settings();
+            const paths = [
+                'css/19-quote-official-a4.css?v=' + deploy,
+                q.staticPage2Url,
+                q.staticPage3Url,
+                q.staticPage4Url
+            ].map(function(p) { return normalizeQuoteAssetPath(p); }).filter(Boolean);
+            const unique = paths.filter(function(p, i, a) { return a.indexOf(p) === i; });
+            const assets = [];
+            for (let i = 0; i < unique.length; i++) {
+                const rel = unique[i];
+                const url = resolveQuoteAssetUrl(rel);
+                let ok = false;
+                let status = 0;
+                try {
+                    const res = await fetch(url, { method: 'HEAD', credentials: 'omit', cache: 'no-store' });
+                    status = res.status;
+                    ok = res.ok;
+                } catch (probeErr) {
+                    ok = false;
+                }
+                assets.push({ path: rel, url: url, ok: ok, status: status });
+            }
+            const cssLoaded = !!document.querySelector('link[href*="19-quote-official-a4"]');
+            const persist = typeof verifyNebrasPersistHealth === 'function' ? verifyNebrasPersistHealth() : { ok: true, issues: [] };
+            const report = {
+                ok: cssLoaded && assets.every(function(a) { return a.ok; }) && persist.ok,
+                cssLoaded: cssLoaded,
+                assets: assets,
+                storage: persist,
+                deploy: deploy,
+                page1HeaderMode: 'html-branded-band',
+                checkedAt: new Date().toISOString()
+            };
+            if (!cssLoaded) report.ok = false;
+            try { sessionStorage.setItem('nebrasQuoteA4Health', JSON.stringify(report)); } catch (e) { /* ignore */ }
+            return report;
+        }
+
+        async function runQuoteA4HealthCheckForAdmin() {
+            const statusEl = document.getElementById('quote-a4-health-status');
+            if (statusEl) {
+                statusEl.textContent = 'جاري فحص عرض السعر والتخزين…';
+                statusEl.className = 'quote-a4-health-status quote-a4-health-status--busy';
+            }
+            const report = await verifyQuoteA4AssetsHealth();
+            const doc = document.getElementById('quote-a4-document');
+            if (doc) ensureQuoteOfficialPage1Header(doc, getQuoteA4LogoUrl(), 'nebrasfactory@hotmail.com');
+            const bandOk = !!(doc && doc.querySelector('.quote-official-branded-band') &&
+                doc.querySelector('.quote-official-branded-band').offsetHeight >= 12);
+            report.page1HeaderVisible = bandOk;
+            if (!bandOk) report.ok = false;
+            const lines = [];
+            lines.push('الإصدار: ' + (report.deploy || '—'));
+            lines.push('CSS عرض السعر: ' + (report.cssLoaded ? '✓' : '✗'));
+            lines.push('شريط الصفحة 1: ' + (bandOk ? '✓ ظاهر' : '✗ غير ظاهر'));
+            (report.assets || []).forEach(function(a) {
+                lines.push((a.ok ? '✓' : '✗') + ' ' + (a.path || a.url));
+            });
+            if (report.storage && report.storage.issues && report.storage.issues.length) {
+                report.storage.issues.forEach(function(issue) { lines.push('⚠ ' + issue); });
+            } else if (report.storage && report.storage.ok) {
+                lines.push('✓ التخزين المحلي سليم');
+            }
+            const cloudHint = currentAdmin
+                ? 'التعديلات تُحفظ في السحابة عبر «حفظ الإعدادات» — بدون تعديل كود'
+                : 'سجّلي دخول الإدارة لحفظ التعديلات في السحابة';
+            lines.push(cloudHint);
+            const text = lines.join('\n');
+            if (statusEl) {
+                statusEl.hidden = false;
+                statusEl.textContent = text;
+                statusEl.className = 'quote-a4-health-status ' + (report.ok ? 'quote-a4-health-status--ok' : 'quote-a4-health-status--warn');
+            }
+            if (typeof showNebrasAdminToast === 'function') {
+                showNebrasAdminToast(report.ok ? '✓ عرض السعر والتخزين سليم' : '⚠ راجعي تقرير صحة عرض السعر', report.ok ? 'ok' : 'warn');
+            }
+            return report;
         }
 
         function buildQuoteHeaderLogoStripHtml(logoUrl, logoAlt, lang) {
@@ -10801,12 +10957,8 @@
                 '<div class="quote-a4-customer-ribbon"><strong>عميل: ' + escapeHtmlAttr(cust.customerName || '—') + '</strong> · ' +
                 escapeHtmlAttr(cust.phone || '') + ' · ' + itemCount + ' صنف · ' +
                 (cartTotals.totalInc > 0 ? formatSar(cartTotals.totalInc) + ' شامل الضريبة' : 'عند الطلب') + '</div>';
-            const vatRate = getNebrasVatRate();
             const rows = nebrasCart.map(function(line) {
-                const unit = Number(line.unitPrice) || 0;
-                const qty = Number(line.qty) || 1;
-                const lineEx = unit * qty;
-                const lineVat = lineEx * vatRate;
+                const calc = calcQuoteLineTotals(line);
                 const specs = [line.color, line.size, line.type].filter(Boolean).join(' / ');
                 const descEn = escapeHtmlAttr(line.productTitle || '');
                 const descAr = escapeHtmlAttr(specs || line.productTitle || '');
@@ -10815,12 +10967,12 @@
                     '<td class="quote-official-desc"><span class="quote-official-desc-en">' + descEn + '</span>' +
                     (descAr ? '<span class="quote-official-desc-ar">' + descAr + '</span>' : '') + descExtra + '</td>' +
                     '<td class="quote-official-num">piece</td>' +
-                    '<td class="quote-official-num">' + qty + '</td>' +
-                    '<td class="quote-official-num">' + (unit > 0 ? formatQuotePlainNumber(unit) : '—') + '</td>' +
+                    '<td class="quote-official-num">' + calc.qty + '</td>' +
+                    '<td class="quote-official-num">' + (calc.unit > 0 ? formatQuotePlainNumber(calc.unit) : '—') + '</td>' +
                     '<td class="quote-official-num">0</td>' +
                     '<td class="quote-official-num">' + pct + '</td>' +
-                    '<td class="quote-official-num">' + (lineVat > 0 ? formatQuotePlainNumber(lineVat) : '—') + '</td>' +
-                    '<td class="quote-official-num">' + (lineEx > 0 ? formatQuotePlainNumber(lineEx) : '—') + '</td>' +
+                    '<td class="quote-official-num">' + (calc.lineVat > 0 ? formatQuotePlainNumber(calc.lineVat) : '—') + '</td>' +
+                    '<td class="quote-official-num quote-official-line-total">' + (calc.lineEx > 0 ? formatQuotePlainNumber(calc.lineEx) : '—') + '</td>' +
                     '</tr>';
             }).join('');
             const totalWords = cartTotals.totalInc > 0
@@ -10873,8 +11025,14 @@
             closeCartDrawer();
             updateSalesQuoteFab();
             requestAnimationFrame(function() {
+                injectQuoteOfficialA4CriticalStyles(document);
+                ensureQuoteOfficialPage1Header(doc, resolvedLogo, factoryEmail);
                 syncQuoteA4MobilePreviewScale();
-                waitForQuoteDocumentImages(doc, 2500).then(syncQuoteA4MobilePreviewScale);
+                waitForQuoteDocumentImages(doc, 2500).then(function() {
+                    ensureQuoteOfficialPage1Header(doc, resolvedLogo, factoryEmail);
+                    syncQuoteA4MobilePreviewScale();
+                });
+                verifyQuoteA4AssetsHealth().catch(function() { /* ignore */ });
             });
         }
 
@@ -27971,6 +28129,7 @@
         let nebrasCloudPushSilent = false;
         let nebrasCloudLastToastAt = 0;
         let nebrasCloudLastErrorToastAt = 0;
+        let nebrasCloudLastSensitiveWarnAt = 0;
 
         function maybeCloudSaveToast(ok) {
             if (typeof window !== 'undefined' && window.NEBRAS_ODOO_QUIET_UI) return;
@@ -28026,29 +28185,40 @@
                     }
                 }
                 if (sensitiveRows.length) {
-                    if (typeof ensureNebrasCloudSessionReady === 'function') {
-                        try { await ensureNebrasCloudSessionReady({ promptReauth: false }); } catch (reAuthErr) { /* ignore */ }
-                    } else if (typeof getNebrasSecureToken === 'function' && !getNebrasSecureToken() &&
-                        typeof establishNebrasSecureSession === 'function' && currentAdmin && nebrasLastLoginPassword) {
-                        try {
-                            await establishNebrasSecureSession(currentAdmin.username, nebrasLastLoginPassword);
-                        } catch (reAuthErr2) { /* ignore */ }
-                    }
-                    if (typeof persistGovernanceBatch === 'function' && typeof getNebrasSecureToken === 'function' && getNebrasSecureToken()) {
-                        const batchResult = await persistGovernanceBatch(sensitiveRows, { promptReauth: false });
-                        okSensitive = !!(batchResult && batchResult.ok);
-                        if (!okSensitive && typeof secureCloudPush === 'function') {
+                    const hasSecureToken = typeof getNebrasSecureToken === 'function' && getNebrasSecureToken();
+                    const needsSensitivePush = !!(currentAdmin || hasSecureToken);
+                    if (!needsSensitivePush) {
+                        okSensitive = true;
+                    } else {
+                        if (typeof ensureNebrasCloudSessionReady === 'function') {
+                            try { await ensureNebrasCloudSessionReady({ promptReauth: false }); } catch (reAuthErr) { /* ignore */ }
+                        } else if (!hasSecureToken &&
+                            typeof establishNebrasSecureSession === 'function' && currentAdmin && nebrasLastLoginPassword) {
+                            try {
+                                await establishNebrasSecureSession(currentAdmin.username, nebrasLastLoginPassword);
+                            } catch (reAuthErr2) { /* ignore */ }
+                        }
+                        const tokenReady = typeof getNebrasSecureToken === 'function' && getNebrasSecureToken();
+                        if (typeof persistGovernanceBatch === 'function' && tokenReady) {
+                            const batchResult = await persistGovernanceBatch(sensitiveRows, { promptReauth: false });
+                            okSensitive = !!(batchResult && batchResult.ok);
+                            if (!okSensitive && typeof secureCloudPush === 'function') {
+                                const sensResult = await secureCloudPush(sensitiveRows);
+                                okSensitive = !!(sensResult && sensResult.ok);
+                            }
+                        } else if (typeof secureCloudPush === 'function' && tokenReady) {
                             const sensResult = await secureCloudPush(sensitiveRows);
                             okSensitive = !!(sensResult && sensResult.ok);
+                        } else if (currentAdmin) {
+                            okSensitive = false;
                         }
-                    } else if (typeof secureCloudPush === 'function' && typeof getNebrasSecureToken === 'function' && getNebrasSecureToken()) {
-                        const sensResult = await secureCloudPush(sensitiveRows);
-                        okSensitive = !!(sensResult && sensResult.ok);
-                    } else if (currentAdmin) {
-                        okSensitive = false;
                     }
                     if (!okSensitive) {
-                        console.warn('Nebras sensitive cloud save failed');
+                        if (needsSensitivePush && !silent && currentAdmin &&
+                            Date.now() - nebrasCloudLastSensitiveWarnAt > 60000) {
+                            nebrasCloudLastSensitiveWarnAt = Date.now();
+                            console.warn('Nebras sensitive cloud save failed');
+                        }
                         if (typeof markSensitiveCloudPending === 'function') markSensitiveCloudPending();
                     } else if (typeof clearSensitiveCloudPending === 'function') {
                         clearSensitiveCloudPending();
@@ -28062,7 +28232,9 @@
                     }
                     return false;
                 }
-                if (sensitiveRows.length && !okSensitive) {
+                const needsSensitiveResult = sensitiveRows.length && (currentAdmin ||
+                    (typeof getNebrasSecureToken === 'function' && getNebrasSecureToken()));
+                if (needsSensitiveResult && !okSensitive) {
                     if (currentAdmin && !silent && typeof showNebrasAdminToast === 'function' &&
                         Date.now() - nebrasCloudLastErrorToastAt > 60000) {
                         nebrasCloudLastErrorToastAt = Date.now();
@@ -31217,6 +31389,9 @@
         window.getAnalyticsGovernanceCounts = getAnalyticsGovernanceCounts;
         window.viewSalesQuoteDocument = viewSalesQuoteDocument;
         window.submitQuoteA4Pdf = submitQuoteA4Pdf;
+        window.nebrasQuotePage1HeaderFallback = nebrasQuotePage1HeaderFallback;
+        window.verifyQuoteA4AssetsHealth = verifyQuoteA4AssetsHealth;
+        window.runQuoteA4HealthCheckForAdmin = runQuoteA4HealthCheckForAdmin;
         window.downloadQuoteA4Pdf = downloadQuoteA4Pdf;
         window.submitCartOrQuote = submitCartOrQuote;
         window.confirmAndOpenQuote = confirmAndOpenQuote;
