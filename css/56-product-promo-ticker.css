@@ -177,13 +177,17 @@
     font-family: inherit;
 }
 
+.rep-quote-item-picker:focus-within .rep-quote-item-results:not([hidden]) {
+    display: block;
+}
+
 .rep-quote-item-results {
     position: absolute;
     z-index: 40;
     top: calc(100% + 4px);
     right: 0;
     left: 0;
-    max-height: 220px;
+    max-height: 260px;
     overflow-y: auto;
     background: #fff;
     border: 1px solid rgba(13, 40, 64, 0.15);

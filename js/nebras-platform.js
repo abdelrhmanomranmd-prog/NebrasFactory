@@ -5251,10 +5251,12 @@
             const vatRate = getNebrasVatRate();
             const vatAmount = totalInc - subtotalEx;
             const discountTotal = Math.max(0, listSubtotalEx - subtotalEx);
+            const discountPct = listSubtotalEx > 0 ? Math.round((discountTotal / listSubtotalEx) * 100) : 0;
             return {
                 subtotalEx: subtotalEx,
                 listSubtotalEx: listSubtotalEx,
                 discountTotal: discountTotal,
+                discountPct: discountPct,
                 vatRate: vatRate,
                 vatAmount: vatAmount,
                 totalInc: totalInc
@@ -10526,6 +10528,16 @@
             };
         }
 
+        function nebrasQuotePage1HeaderLoaded(imgEl) {
+            if (!imgEl || !imgEl.naturalWidth) return;
+            const wrap = imgEl.closest('.quote-official-fixed-header-wrap') || imgEl.closest('.quote-official-page1-header-wrap');
+            const fb = wrap && wrap.querySelector('.quote-official-branded-band--fallback');
+            if (fb) {
+                fb.hidden = true;
+                fb.setAttribute('aria-hidden', 'true');
+            }
+        }
+
         function nebrasQuotePage1HeaderFallback(imgEl) {
             if (!imgEl) return;
             const q = getQuoteA4Settings();
@@ -10578,7 +10590,7 @@
         function buildQuoteOfficialFixedHeaderHtml(logoUrl, factoryEmail) {
             const headerUrl = normalizeQuoteAssetPath(getQuoteOfficialPage1HeaderUrl());
             return '<header class="quote-official-fixed-header-wrap" role="banner">' +
-                '<img class="quote-official-fixed-header" src="' + escapeHtmlAttr(headerUrl) + '" alt="' + escapeHtmlAttr(NEBRAS_BRAND_PRIMARY_AR) + '" decoding="sync" crossorigin="anonymous" onerror="nebrasQuotePage1HeaderFallback(this)">' +
+                '<img class="quote-official-fixed-header" src="' + escapeHtmlAttr(headerUrl) + '" alt="' + escapeHtmlAttr(NEBRAS_BRAND_PRIMARY_AR) + '" decoding="sync" crossorigin="anonymous" onload="nebrasQuotePage1HeaderLoaded(this)" onerror="nebrasQuotePage1HeaderFallback(this)">' +
                 '<div class="quote-official-branded-band quote-official-branded-band--fallback" hidden aria-hidden="true">' +
                 buildQuoteOfficialBrandedBandHtmlInner(logoUrl, factoryEmail) +
                 '</div></header>';
@@ -10620,6 +10632,7 @@
                 '.quote-official-fixed-header{display:block;width:100%;height:auto;border:0;max-width:none;}' +
                 '.quote-official-fixed-header--static-crop{display:block;width:100%;height:88px;object-fit:cover;object-position:top center;border:0;}' +
                 '.quote-official-branded-band--fallback{line-height:normal;}' +
+                '.quote-official-branded-band--fallback[hidden],.quote-official-branded-band--fallback[aria-hidden="true"]{display:none!important;visibility:hidden!important;height:0!important;overflow:hidden!important;margin:0!important;padding:0!important;border:0!important;}' +
                 '.quote-official-branded-band{display:flex!important;align-items:center;justify-content:space-between;gap:14px;' +
                 'margin:0 -11mm 8px;padding:10px 11mm 11px;background:linear-gradient(180deg,#0a1628 0%,#0d1f38 100%)!important;' +
                 'color:#fff!important;border-bottom:3px solid #17a8a0!important;box-sizing:border-box;}' +
@@ -11068,7 +11081,6 @@
                 '<td class="quote-official-num">piece</td>' +
                 '<td class="quote-official-num">' + calc.qty + '</td>' +
                 '<td class="quote-official-num">' + (calc.unit > 0 ? formatQuotePlainNumber(calc.unit) : '—') + '</td>' +
-                '<td class="quote-official-num">' + (calc.discountAmt > 0 ? formatQuotePlainNumber(calc.discountAmt) : '0') + '</td>' +
                 '<td class="quote-official-num">' + pct + '</td>' +
                 '<td class="quote-official-num">' + (calc.lineVat > 0 ? formatQuotePlainNumber(calc.lineVat) : '—') + '</td>' +
                 '<td class="quote-official-num quote-official-line-total">' + (calc.lineEx > 0 ? formatQuotePlainNumber(calc.lineEx) : '—') + '</td>' +
@@ -11081,7 +11093,7 @@
             }).join('');
             return '<table class="quote-official-items-table"><thead><tr>' +
                 '<th>البيان<br>Description</th><th>الوحدة<br>Unit</th><th>الكمية<br>Qty</th>' +
-                '<th>السعر<br>Price</th><th>الخصم<br>Discount</th><th>الضريبة<br>%Tax</th>' +
+                '<th>السعر<br>Price</th><th>الضريبة<br>%Tax</th>' +
                 '<th>مبلغ الضريبة<br>Tax Amt</th><th>المجموع<br>Total</th>' +
                 '</tr></thead><tbody>' + rows + '</tbody></table>';
         }
@@ -11152,11 +11164,18 @@
         }
 
         function buildQuoteOfficialBottomBlockHtml(totalWords, cartTotals) {
+            const discountRow = cartTotals.discountTotal > 0
+                ? buildQuoteOfficialTotalsRow(
+                    'Discount ' + (cartTotals.discountPct || 0) + '%',
+                    'خصم ' + (cartTotals.discountPct || 0) + '%',
+                    formatQuotePlainNumber(cartTotals.discountTotal)
+                )
+                : '';
             return '<div class="quote-official-bottom">' +
                 '<div class="quote-official-words-box"><p>' + escapeHtmlAttr(totalWords) + '</p></div>' +
                 '<table class="quote-official-totals-table"><tbody>' +
                 buildQuoteOfficialTotalsRow('Subtotal', 'المجموع', cartTotals.listSubtotalEx > 0 ? formatQuotePlainNumber(cartTotals.listSubtotalEx) : (cartTotals.subtotalEx > 0 ? formatQuotePlainNumber(cartTotals.subtotalEx) : '—')) +
-                buildQuoteOfficialTotalsRow('Discount', 'الخصم', cartTotals.discountTotal > 0 ? formatQuotePlainNumber(cartTotals.discountTotal) : '0') +
+                discountRow +
                 buildQuoteOfficialTotalsRow('Total Before Tax', 'الاجمالي قبل الضريبة', cartTotals.subtotalEx > 0 ? formatQuotePlainNumber(cartTotals.subtotalEx) : '—') +
                 buildQuoteOfficialTotalsRow('Total Vat', 'مجموع الضريبة', cartTotals.vatAmount > 0 ? formatQuotePlainNumber(cartTotals.vatAmount) : '—') +
                 buildQuoteOfficialTotalsRow('Total', 'الإجمالي', cartTotals.totalInc > 0 ? formatQuotePlainNumber(cartTotals.totalInc) : '—', true) +
@@ -16912,10 +16931,6 @@
             const list = getEffectiveSalesPriceList(currentAdmin);
             function renderResults() {
                 const filtered = filterRepQuotePriceList(search.value, list);
-                if (!String(search.value || '').trim()) {
-                    results.hidden = true;
-                    return;
-                }
                 results.innerHTML = filtered.length
                     ? filtered.map(function(it) {
                         return '<button type="button" class="rep-quote-item-opt" data-id="' + escapeHtmlAttr(it.id) + '">' +
@@ -16926,6 +16941,7 @@
             }
             search.oninput = renderResults;
             search.onfocus = renderResults;
+            search.onclick = renderResults;
             results.onclick = function(ev) {
                 const btn = ev.target.closest('.rep-quote-item-opt[data-id]');
                 if (!btn) return;
@@ -17053,14 +17069,14 @@
                     ? '<p class="wpc-quote-banner"><i class="fas fa-door-closed"></i> عرض سعر WPC — الأصناف والأسعار من مركز المنتجات (أبواب جاهزة وعضم)</p>'
                     : '');
             host.innerHTML = deptBanner +
-                '<p class="rep-quote-manual-hint"><i class="fas fa-pen"></i> ابحثي عن الصنف بالكتابة (مثال: حلق) — ثم عدّلي السعر أو الخصم لهذا العميل فقط دون تغيير القائمة الرسمية.</p>' +
+                '<p class="rep-quote-manual-hint"><i class="fas fa-pen"></i> اختاري الصنف من القائمة المنسدلة أو اكتبي للتصفية (مثال: حلق) — ثم عدّلي السعر أو الخصم لهذا العميل فقط دون تغيير القائمة الرسمية.</p>' +
                 '<div class="erp-form-grid">' +
                     '<label class="nebras-field"><span>اسم العميل</span><input type="text" id="rq-customer" value="' + escapeHtmlAttr(repQuoteDraft.customerName) + '" placeholder="اسم العميل"></label>' +
                     '<label class="nebras-field"><span>الجوال</span><input type="text" id="rq-phone" value="' + escapeHtmlAttr(repQuoteDraft.phone) + '" placeholder="05..."></label>' +
                 '</div>' +
                 '<div class="erp-form-grid erp-form-grid--line rep-quote-add-line">' +
-                    '<label class="nebras-field nebras-field--wide rep-quote-item-picker"><span>الصنف — اكتب للبحث</span>' +
-                        '<input type="search" id="rq-item-search" placeholder="مثال: حلق · باب · WPC" autocomplete="off">' +
+                    '<label class="nebras-field nebras-field--wide rep-quote-item-picker"><span>الصنف — اختر أو اكتب للتصفية</span>' +
+                        '<input type="search" id="rq-item-search" placeholder="القائمة مفتوحة — اكتبي للتصفية" autocomplete="off">' +
                         '<input type="hidden" id="rq-item" value="">' +
                         '<div id="rq-item-results" class="rep-quote-item-results" hidden></div>' +
                     '</label>' +
@@ -31974,6 +31990,7 @@
         window.viewSalesQuoteDocument = viewSalesQuoteDocument;
         window.submitQuoteA4Pdf = submitQuoteA4Pdf;
         window.nebrasQuotePage1HeaderFallback = nebrasQuotePage1HeaderFallback;
+        window.nebrasQuotePage1HeaderLoaded = nebrasQuotePage1HeaderLoaded;
         window.verifyQuoteA4AssetsHealth = verifyQuoteA4AssetsHealth;
         window.runQuoteA4HealthCheckForAdmin = runQuoteA4HealthCheckForAdmin;
         window.downloadQuoteA4Pdf = downloadQuoteA4Pdf;

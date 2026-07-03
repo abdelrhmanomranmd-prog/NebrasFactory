@@ -76,6 +76,17 @@
     line-height: normal;
 }
 
+.quote-official-branded-band--fallback[hidden],
+.quote-official-branded-band--fallback[aria-hidden="true"] {
+    display: none !important;
+    visibility: hidden !important;
+    height: 0 !important;
+    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+}
+
 /* شريط الرأس HTML — احتياط عند فشل تحميل الصورة الثابتة */
 .quote-official-branded-band {
     display: flex;
