@@ -17975,7 +17975,7 @@
             }
 
             if (user) {
-                if (!apiAuthenticated && typeof establishNebrasSecureSession === 'function') {
+                if (typeof establishNebrasSecureSession === 'function') {
                     try {
                         const sessOk = await establishNebrasSecureSession(username, password);
                         if (sessOk) apiAuthenticated = true;
@@ -26836,6 +26836,13 @@
 
         async function persistAdminUsersToCloud(options) {
             options = options || {};
+            if (typeof ensureNebrasCloudSessionForSave === 'function') {
+                let sessionOk = await ensureNebrasCloudSessionForSave({ promptReauth: false });
+                if (!sessionOk) {
+                    sessionOk = await ensureNebrasCloudSessionForSave({ promptReauth: true });
+                }
+                if (!sessionOk) return false;
+            }
             let cloudOk = false;
             if (typeof persistNebrasCriticalStores === 'function') {
                 cloudOk = await persistNebrasCriticalStores(['admin_users'], {
@@ -28157,8 +28164,8 @@
             if (!isMainGovernanceAdmin() || !currentAdmin) {
                 return { ok: false, pushed: false, reason: 'not_hq' };
             }
-            if (typeof ensureNebrasCloudSessionReady === 'function') {
-                let sessionOk = await ensureNebrasCloudSessionReady({ promptReauth: options.promptReauth !== false });
+            if (typeof ensureNebrasCloudSessionForSave === 'function') {
+                let sessionOk = await ensureNebrasCloudSessionForSave({ promptReauth: options.promptReauth !== false });
                 if (!sessionOk && nebrasLastLoginPassword && typeof establishNebrasSecureSession === 'function') {
                     sessionOk = await establishNebrasSecureSession(currentAdmin.username, nebrasLastLoginPassword);
                 }
@@ -28502,7 +28509,22 @@
             }
             if (isMainGovernanceAdmin() && currentAdmin) {
                 try {
-                    const recon = await reconcileHqBusinessDataToCloud({ showToast: true, promptReauth: false });
+                    await ensureNebrasCloudSessionForSave({ promptReauth: false });
+                    let recon = await reconcileHqBusinessDataToCloud({ showToast: false, promptReauth: false });
+                    if (recon.pushed && !recon.ok) {
+                        await ensureNebrasCloudSessionForSave({ promptReauth: true });
+                        if (recon.keys && recon.keys.length && typeof persistNebrasCriticalStores === 'function') {
+                            const keysOk = await persistNebrasCriticalStores(recon.keys, {
+                                showToast: false,
+                                promptReauth: false
+                            });
+                            if (keysOk) recon = Object.assign({}, recon, { ok: true });
+                        }
+                        if (!recon.ok && typeof pushToNebrasCloud === 'function') {
+                            const fullOk = await pushToNebrasCloud();
+                            if (fullOk) recon = Object.assign({}, recon, { ok: true });
+                        }
+                    }
                     if (recon.pushed && recon.ok && typeof showNebrasAdminToast === 'function') {
                         showNebrasAdminToast('✓ تم رفع بياناتك للسحابة — متاحة لكل الفروع والأجهزة', 'ok');
                     } else if (recon.pushed && !recon.ok && typeof showNebrasAdminToast === 'function') {
@@ -28664,6 +28686,23 @@
             }
         }
 
+        async function ensureNebrasCloudSessionForSave(options) {
+            options = options || {};
+            if (typeof ensureNebrasCloudSessionReady === 'function') {
+                const ready = await ensureNebrasCloudSessionReady({ promptReauth: false });
+                if (ready) return true;
+            }
+            if (currentAdmin && nebrasLastLoginPassword && typeof establishNebrasSecureSession === 'function') {
+                try {
+                    if (await establishNebrasSecureSession(currentAdmin.username, nebrasLastLoginPassword)) return true;
+                } catch (reAuthErr) { /* ignore */ }
+            }
+            if (options.promptReauth !== false && typeof ensureNebrasCloudSessionReady === 'function') {
+                return await ensureNebrasCloudSessionReady({ promptReauth: true });
+            }
+            return false;
+        }
+
         async function pushToNebrasCloudCore() {
             if (nebrasCloudHydrateInProgress && !nebrasHydrateAllowCloudPush) return false;
             const silent = !!nebrasCloudPushSilent;
@@ -28709,14 +28748,7 @@
                     if (!needsSensitivePush) {
                         okSensitive = true;
                     } else {
-                        if (typeof ensureNebrasCloudSessionReady === 'function') {
-                            try { await ensureNebrasCloudSessionReady({ promptReauth: false }); } catch (reAuthErr) { /* ignore */ }
-                        } else if (!hasSecureToken &&
-                            typeof establishNebrasSecureSession === 'function' && currentAdmin && nebrasLastLoginPassword) {
-                            try {
-                                await establishNebrasSecureSession(currentAdmin.username, nebrasLastLoginPassword);
-                            } catch (reAuthErr2) { /* ignore */ }
-                        }
+                        await ensureNebrasCloudSessionForSave({ promptReauth: false });
                         const tokenReady = typeof getNebrasSecureToken === 'function' && getNebrasSecureToken();
                         if (typeof persistGovernanceBatch === 'function' && tokenReady) {
                             const batchResult = await persistGovernanceBatch(sensitiveRows, { promptReauth: false });
@@ -28836,10 +28868,11 @@
             options = options || {};
             if (nebrasCloudHydrateInProgress && !nebrasHydrateAllowCloudPush) return false;
             if (!Array.isArray(storeKeys) || !storeKeys.length) return false;
-            if (typeof ensureNebrasCloudSessionReady === 'function') {
-                const sessionOk = await ensureNebrasCloudSessionReady({
-                    promptReauth: options.promptReauth !== false
-                });
+            if (typeof ensureNebrasCloudSessionForSave === 'function') {
+                let sessionOk = await ensureNebrasCloudSessionForSave({ promptReauth: options.promptReauth !== false });
+                if (!sessionOk && options.promptReauth !== false) {
+                    sessionOk = await ensureNebrasCloudSessionForSave({ promptReauth: true });
+                }
                 if (!sessionOk) {
                     if (options.showToast && typeof showNebrasAdminToast === 'function') {
                         showNebrasAdminToast('⚠️ لا جلسة سحابة — أعيدي تسجيل الدخول ثم احفظي مرة أخرى', 'error');
@@ -29011,6 +29044,11 @@
                     options.skipCloud = true;
                     options.silentCloudFail = true;
                 }
+            }
+            if (!options.skipCloud && currentAdmin && typeof ensureNebrasCloudSessionForSave === 'function') {
+                ensureNebrasCloudSessionForSave({ promptReauth: false }).catch(function(sessErr) {
+                    console.warn('Pre-save cloud session:', sessErr);
+                });
             }
             if (!options.skipCloud) {
                 if (currentAdmin) {
