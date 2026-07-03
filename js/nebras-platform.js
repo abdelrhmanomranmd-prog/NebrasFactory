@@ -8970,28 +8970,29 @@
 
         function syncQuoteA4MobilePreviewScale() {
             const stage = document.getElementById('quote-a4-preview-stage');
-            const doc = document.getElementById('quote-a4-document');
-            if (!stage || !doc) return;
+            const stack = document.getElementById('quote-a4-document');
+            if (!stage || !stack) return;
             if (!isQuotePreviewOpen()) {
-                doc.style.transform = '';
-                doc.style.transformOrigin = '';
+                stack.style.transform = '';
+                stack.style.transformOrigin = '';
                 stage.style.height = '';
                 stage.classList.remove('quote-a4-preview-stage--scaled');
                 return;
             }
             const pad = 24;
             const avail = Math.min(window.innerWidth || 360, stage.clientWidth || window.innerWidth) - pad;
-            const docW = doc.offsetWidth || doc.scrollWidth;
+            const firstPage = stack.querySelector('.quote-a4--nebras-official') || stack;
+            const docW = firstPage.offsetWidth || firstPage.scrollWidth;
             if (!docW) return;
             const scale = Math.min(1, avail / docW);
             if (scale < 0.995) {
-                doc.style.transform = 'scale(' + scale + ')';
-                doc.style.transformOrigin = 'top center';
-                stage.style.height = Math.ceil((doc.offsetHeight || doc.scrollHeight) * scale + 12) + 'px';
+                stack.style.transform = 'scale(' + scale + ')';
+                stack.style.transformOrigin = 'top center';
+                stage.style.height = Math.ceil((stack.offsetHeight || stack.scrollHeight) * scale + 12) + 'px';
                 stage.classList.add('quote-a4-preview-stage--scaled');
             } else {
-                doc.style.transform = '';
-                doc.style.transformOrigin = '';
+                stack.style.transform = '';
+                stack.style.transformOrigin = '';
                 stage.style.height = '';
                 stage.classList.remove('quote-a4-preview-stage--scaled');
             }
@@ -9291,26 +9292,32 @@
         }
 
         async function captureQuoteA4AsPdfBlob() {
-            const pngDataUrl = await captureQuoteA4AsPngDataUrl();
-            if (!pngDataUrl) return null;
+            const dynamicPages = getQuoteOfficialDynamicPages();
+            if (!dynamicPages.length) return null;
             try {
                 const jsPDF = await loadJsPdfLib();
                 if (!jsPDF) return null;
                 const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
                 const pageW = pdf.internal.pageSize.getWidth();
                 const pageH = pdf.internal.pageSize.getHeight();
-                const imgDims = await getDataUrlImageSize(pngDataUrl);
                 const qSettings = getQuoteA4Settings();
                 const margin = (qSettings.layout || 'nebras-official') === 'nebras-official' ? 0 : 6;
                 const maxW = pageW - margin * 2;
                 const maxH = pageH - margin * 2;
                 const pxToMm = 0.264583;
-                let imgW = imgDims.w * pxToMm;
-                let imgH = imgDims.h * pxToMm;
-                const ratio = Math.min(maxW / imgW, maxH / imgH, 1);
-                imgW *= ratio;
-                imgH *= ratio;
-                pdf.addImage(pngDataUrl, 'PNG', (pageW - imgW) / 2, margin, imgW, imgH);
+                for (let pi = 0; pi < dynamicPages.length; pi++) {
+                    await waitForQuoteDocumentImages(dynamicPages[pi]);
+                    const pngDataUrl = await captureQuoteA4ElementAsPngDataUrl(dynamicPages[pi]);
+                    if (!pngDataUrl) continue;
+                    const imgDims = await getDataUrlImageSize(pngDataUrl);
+                    let imgW = imgDims.w * pxToMm;
+                    let imgH = imgDims.h * pxToMm;
+                    const ratio = Math.min(maxW / imgW, maxH / imgH, 1);
+                    imgW *= ratio;
+                    imgH *= ratio;
+                    if (pi > 0) pdf.addPage();
+                    pdf.addImage(pngDataUrl, 'PNG', (pageW - imgW) / 2, margin, imgW, imgH);
+                }
                 const q = qSettings;
                 const page2 = await fetchAssetAsDataUrlForPdf(q.staticPage2Url);
                 const page3 = await fetchAssetAsDataUrlForPdf(q.staticPage3Url);
@@ -9409,31 +9416,30 @@
             ]);
         }
 
-        async function captureQuoteA4AsPngDataUrl() {
-            const doc = document.getElementById('quote-a4-document');
-            if (!doc || !doc.innerHTML.trim()) return '';
-            await waitForQuoteDocumentImages(doc);
-            const prevTransform = doc.style.transform;
-            const prevOrigin = doc.style.transformOrigin;
-            doc.style.transform = 'none';
-            doc.style.transformOrigin = '';
+        async function captureQuoteA4ElementAsPngDataUrl(pageEl) {
+            if (!pageEl || !pageEl.innerHTML.trim()) return '';
+            await waitForQuoteDocumentImages(pageEl);
+            const prevTransform = pageEl.style.transform;
+            const prevOrigin = pageEl.style.transformOrigin;
+            pageEl.style.transform = 'none';
+            pageEl.style.transformOrigin = '';
             try {
                 const html2canvas = await loadHtml2CanvasLib();
                 if (document.fonts && document.fonts.ready) {
                     try { await document.fonts.ready; } catch (fontWaitErr) { /* ignore */ }
                 }
-                const canvas = await html2canvas(doc, {
+                const canvas = await html2canvas(pageEl, {
                     scale: getQuoteCaptureScale(),
                     useCORS: true,
                     allowTaint: true,
                     backgroundColor: '#ffffff',
                     logging: false,
-                    width: doc.scrollWidth,
-                    height: doc.scrollHeight,
-                    windowWidth: doc.scrollWidth,
-                    windowHeight: doc.scrollHeight,
+                    width: pageEl.scrollWidth,
+                    height: pageEl.scrollHeight,
+                    windowWidth: pageEl.scrollWidth,
+                    windowHeight: pageEl.scrollHeight,
                     onclone: function(clonedDoc) {
-                        const cloned = clonedDoc.getElementById(doc.id) || clonedDoc.querySelector('.quote-a4');
+                        const cloned = clonedDoc.getElementById(pageEl.id) || clonedDoc.querySelector('[data-quote-dynamic-page="' + pageEl.getAttribute('data-quote-dynamic-page') + '"]') || clonedDoc.querySelector('.quote-a4');
                         if (cloned) {
                             cloned.style.fontFamily = "'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif";
                             cloned.style.direction = 'rtl';
@@ -9452,7 +9458,7 @@
                             clonedDoc.head.appendChild(link);
                         }
                         if (clonedDoc.head && !clonedDoc.querySelector('link[data-nebras-quote-a4]')) {
-                            const deployVer = (document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws177';
+                            const deployVer = (document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws180';
                             const qCss = clonedDoc.createElement('link');
                             qCss.rel = 'stylesheet';
                             qCss.href = 'css/19-quote-official-a4.css?v=' + deployVer;
@@ -9466,10 +9472,18 @@
                 console.warn('Quote A4 capture failed:', capErr);
                 return '';
             } finally {
-                doc.style.transform = prevTransform;
-                doc.style.transformOrigin = prevOrigin;
-                syncQuoteA4MobilePreviewScale();
+                pageEl.style.transform = prevTransform;
+                pageEl.style.transformOrigin = prevOrigin;
             }
+        }
+
+        async function captureQuoteA4AsPngDataUrl() {
+            const pages = getQuoteOfficialDynamicPages();
+            const first = pages[0] || document.getElementById('quote-a4-document');
+            if (!first) return '';
+            const url = await captureQuoteA4ElementAsPngDataUrl(first.classList && first.classList.contains('quote-a4--nebras-official') ? first : first.querySelector('.quote-a4--nebras-official') || first);
+            syncQuoteA4MobilePreviewScale();
+            return url;
         }
 
         async function tryShareQuoteDocument(text, fileOrDataUrl, fileName, mimeType) {
@@ -10579,15 +10593,22 @@
             }
             const report = await verifyQuoteA4AssetsHealth();
             const doc = document.getElementById('quote-a4-document');
-            if (doc) ensureQuoteOfficialPage1Header(doc, getQuoteA4LogoUrl(), 'nebrasfactory@hotmail.com');
-            const bandOk = !!(doc && doc.querySelector('.quote-official-branded-band') &&
-                doc.querySelector('.quote-official-branded-band').offsetHeight >= 12);
+            if (doc) ensureAllQuoteOfficialPageHeaders(doc, getQuoteA4LogoUrl(), 'nebrasfactory@hotmail.com');
+            const pages = getQuoteOfficialDynamicPages();
+            const bandOk = pages.length > 0 && pages.every(function(page) {
+                const band = page.querySelector('.quote-official-branded-band');
+                return band && band.offsetHeight >= 12;
+            });
             report.page1HeaderVisible = bandOk;
+            report.dynamicPageCount = pages.length;
             if (!bandOk) report.ok = false;
             const lines = [];
             lines.push('الإصدار: ' + (report.deploy || '—'));
             lines.push('CSS عرض السعر: ' + (report.cssLoaded ? '✓' : '✗'));
             lines.push('شريط الصفحة 1: ' + (bandOk ? '✓ ظاهر' : '✗ غير ظاهر'));
+            if (report.dynamicPageCount > 1) {
+                lines.push('صفحات المنتجات الديناميكية: ' + report.dynamicPageCount);
+            }
             (report.assets || []).forEach(function(a) {
                 lines.push((a.ok ? '✓' : '✗') + ' ' + (a.path || a.url));
             });
@@ -10939,6 +10960,153 @@
                 '<td class="quote-official-totals-ar">' + escapeHtmlAttr(arLabel) + '</td></tr>';
         }
 
+        const QUOTE_OFFICIAL_PAGINATION = {
+            firstPageMaxRows: 7,
+            middlePageMaxRows: 13,
+            lastPageMaxRows: 8,
+            singlePageMaxRows: 5
+        };
+
+        function buildQuoteOfficialItemRowHtml(line, pct) {
+            const calc = calcQuoteLineTotals(line);
+            const specs = [line.color, line.size, line.type].filter(Boolean).join(' / ');
+            const descEn = escapeHtmlAttr(line.productTitle || '');
+            const descAr = escapeHtmlAttr(specs || line.productTitle || '');
+            const descExtra = line.note ? '<span class="quote-official-desc-ar">' + escapeHtmlAttr(line.note) + '</span>' : '';
+            return '<tr>' +
+                '<td class="quote-official-desc"><span class="quote-official-desc-en">' + descEn + '</span>' +
+                (descAr ? '<span class="quote-official-desc-ar">' + descAr + '</span>' : '') + descExtra + '</td>' +
+                '<td class="quote-official-num">piece</td>' +
+                '<td class="quote-official-num">' + calc.qty + '</td>' +
+                '<td class="quote-official-num">' + (calc.unit > 0 ? formatQuotePlainNumber(calc.unit) : '—') + '</td>' +
+                '<td class="quote-official-num">0</td>' +
+                '<td class="quote-official-num">' + pct + '</td>' +
+                '<td class="quote-official-num">' + (calc.lineVat > 0 ? formatQuotePlainNumber(calc.lineVat) : '—') + '</td>' +
+                '<td class="quote-official-num quote-official-line-total">' + (calc.lineEx > 0 ? formatQuotePlainNumber(calc.lineEx) : '—') + '</td>' +
+                '</tr>';
+        }
+
+        function buildQuoteOfficialItemsTableHtml(lines, pct) {
+            const rows = (lines || []).map(function(line) {
+                return buildQuoteOfficialItemRowHtml(line, pct);
+            }).join('');
+            return '<table class="quote-official-items-table"><thead><tr>' +
+                '<th>البيان<br>Description</th><th>الوحدة<br>Unit</th><th>الكمية<br>Qty</th>' +
+                '<th>السعر<br>Price</th><th>الخصم<br>Discount</th><th>الضريبة<br>%Tax</th>' +
+                '<th>مبلغ الضريبة<br>Tax Amt</th><th>المجموع<br>Total</th>' +
+                '</tr></thead><tbody>' + rows + '</tbody></table>';
+        }
+
+        function paginateOfficialQuoteLines(lines) {
+            lines = lines || [];
+            const cfg = QUOTE_OFFICIAL_PAGINATION;
+            if (!lines.length) {
+                return [{ pageIndex: 0, lines: [], showMeta: true, showFooter: true, showRibbon: true }];
+            }
+            if (lines.length <= cfg.singlePageMaxRows) {
+                return [{ pageIndex: 0, lines: lines, showMeta: true, showFooter: true, showRibbon: true }];
+            }
+            const pages = [];
+            let cursor = 0;
+            pages.push({
+                pageIndex: 0,
+                lines: lines.slice(0, cfg.firstPageMaxRows),
+                showMeta: true,
+                showFooter: false,
+                showRibbon: true
+            });
+            cursor = cfg.firstPageMaxRows;
+            while (lines.length - cursor > cfg.lastPageMaxRows) {
+                let take = Math.min(cfg.middlePageMaxRows, lines.length - cursor - cfg.lastPageMaxRows);
+                if (take <= 0) take = cfg.middlePageMaxRows;
+                pages.push({
+                    pageIndex: pages.length,
+                    lines: lines.slice(cursor, cursor + take),
+                    showMeta: false,
+                    showFooter: false,
+                    showRibbon: false
+                });
+                cursor += take;
+            }
+            pages.push({
+                pageIndex: pages.length,
+                lines: lines.slice(cursor),
+                showMeta: false,
+                showFooter: true,
+                showRibbon: false
+            });
+            return pages;
+        }
+
+        function buildQuoteOfficialMetaTableHtml(cust, displayNo, creationDate, validTill, customerDisplay) {
+            return '<table class="quote-official-meta-table"><tbody>' +
+                buildQuoteOfficialMetaRow('Quotation Number', 'رقم عرض السعر', displayNo) +
+                buildQuoteOfficialMetaRow('Creation Date', 'تاريخ الإنشاء', creationDate) +
+                buildQuoteOfficialMetaRow('Valid Till', 'صالح حتى', validTill) +
+                buildQuoteOfficialMetaRow('Customer Code', 'رقم العميل', cust.customerCode || '') +
+                buildQuoteOfficialMetaRow('Customer Name', 'اسم العميل', customerDisplay) +
+                buildQuoteOfficialMetaRow('Customer Address', 'عنوان العميل', cust.address || '') +
+                buildQuoteOfficialMetaRow('Vat No', 'الرقم الضريبي للعميل', cust.vatNo || '') +
+                '</tbody></table>';
+        }
+
+        function buildQuoteOfficialFooterBlockHtml(salesPhone, servicePhone, factoryAddr) {
+            return '<div class="quote-official-divider" aria-hidden="true"></div>' +
+                '<footer class="quote-official-footer"><div class="quote-official-footer-grid">' +
+                '<div class="quote-official-footer-sales"><strong>للتواصل - إدارة المبيعات</strong>' +
+                '<span class="quote-official-footer-phones">0115048763 - 920033382</span><br>' +
+                '<span class="quote-official-footer-phones">' + escapeHtmlAttr(salesPhone) + ' - 0536694464</span><br>' +
+                '<span class="quote-official-footer-phones">خدمة المبيعات: ' + escapeHtmlAttr(servicePhone) + '</span></div>' +
+                '<div class="quote-official-footer-address">' + escapeHtmlAttr(factoryAddr) +
+                '<span class="quote-official-web">WWW.NIBRAS-FACTORY.COM</span></div>' +
+                '</div></footer>';
+        }
+
+        function buildQuoteOfficialBottomBlockHtml(totalWords, cartTotals) {
+            return '<div class="quote-official-bottom">' +
+                '<div class="quote-official-words-box"><p>' + escapeHtmlAttr(totalWords) + '</p></div>' +
+                '<table class="quote-official-totals-table"><tbody>' +
+                buildQuoteOfficialTotalsRow('Subtotal', 'المجموع', cartTotals.subtotalEx > 0 ? formatQuotePlainNumber(cartTotals.subtotalEx) : '—') +
+                buildQuoteOfficialTotalsRow('Discount', 'الخصم', '0') +
+                buildQuoteOfficialTotalsRow('Total Before Tax', 'الاجمالي قبل الضريبة', cartTotals.subtotalEx > 0 ? formatQuotePlainNumber(cartTotals.subtotalEx) : '—') +
+                buildQuoteOfficialTotalsRow('Total Vat', 'مجموع الضريبة', cartTotals.vatAmount > 0 ? formatQuotePlainNumber(cartTotals.vatAmount) : '—') +
+                buildQuoteOfficialTotalsRow('Total', 'الإجمالي', cartTotals.totalInc > 0 ? formatQuotePlainNumber(cartTotals.totalInc) : '—', true) +
+                '</tbody></table></div>';
+        }
+
+        function buildQuoteOfficialDynamicPageInner(spec, ctx) {
+            let html = buildQuoteOfficialBrandedBandHtml(ctx.resolvedLogo, ctx.factoryEmail);
+            if (spec.showRibbon && ctx.customerRibbon) {
+                html += ctx.customerRibbon;
+            } else if (!spec.showMeta && ctx.totalDynamicPages > 1) {
+                html += '<div class="quote-official-page-continue">تابع — صفحة ' + (spec.pageIndex + 1) + ' من ' + ctx.totalDynamicPages + '</div>';
+            }
+            if (spec.showMeta) {
+                html += buildQuoteOfficialMetaTableHtml(ctx.cust, ctx.displayNo, ctx.creationDate, ctx.validTill, ctx.customerDisplay);
+            }
+            html += buildQuoteOfficialItemsTableHtml(spec.lines, ctx.pct);
+            if (spec.showFooter) {
+                html += buildQuoteOfficialBottomBlockHtml(ctx.totalWords, ctx.cartTotals);
+                html += buildQuoteOfficialFooterBlockHtml(ctx.salesPhone, ctx.servicePhone, ctx.factoryAddr);
+            }
+            return html;
+        }
+
+        function ensureAllQuoteOfficialPageHeaders(stackEl, logoUrl, factoryEmail) {
+            if (!stackEl) return;
+            injectQuoteOfficialA4CriticalStyles(document);
+            const pages = stackEl.querySelectorAll('.quote-a4--nebras-official');
+            pages.forEach(function(page) {
+                ensureQuoteOfficialPage1Header(page, logoUrl, factoryEmail);
+            });
+        }
+
+        function getQuoteOfficialDynamicPages() {
+            const stack = document.getElementById('quote-a4-document');
+            if (!stack) return [];
+            return Array.prototype.slice.call(stack.querySelectorAll('.quote-a4--nebras-official'));
+        }
+
         function renderQuoteOfficialA4Document(doc, overlay, logoUrl) {
             const lang = currentLang || 'ar';
             const q = getQuoteA4Settings();
@@ -10957,24 +11125,6 @@
                 '<div class="quote-a4-customer-ribbon"><strong>عميل: ' + escapeHtmlAttr(cust.customerName || '—') + '</strong> · ' +
                 escapeHtmlAttr(cust.phone || '') + ' · ' + itemCount + ' صنف · ' +
                 (cartTotals.totalInc > 0 ? formatSar(cartTotals.totalInc) + ' شامل الضريبة' : 'عند الطلب') + '</div>';
-            const rows = nebrasCart.map(function(line) {
-                const calc = calcQuoteLineTotals(line);
-                const specs = [line.color, line.size, line.type].filter(Boolean).join(' / ');
-                const descEn = escapeHtmlAttr(line.productTitle || '');
-                const descAr = escapeHtmlAttr(specs || line.productTitle || '');
-                const descExtra = line.note ? '<span class="quote-official-desc-ar">' + escapeHtmlAttr(line.note) + '</span>' : '';
-                return '<tr>' +
-                    '<td class="quote-official-desc"><span class="quote-official-desc-en">' + descEn + '</span>' +
-                    (descAr ? '<span class="quote-official-desc-ar">' + descAr + '</span>' : '') + descExtra + '</td>' +
-                    '<td class="quote-official-num">piece</td>' +
-                    '<td class="quote-official-num">' + calc.qty + '</td>' +
-                    '<td class="quote-official-num">' + (calc.unit > 0 ? formatQuotePlainNumber(calc.unit) : '—') + '</td>' +
-                    '<td class="quote-official-num">0</td>' +
-                    '<td class="quote-official-num">' + pct + '</td>' +
-                    '<td class="quote-official-num">' + (calc.lineVat > 0 ? formatQuotePlainNumber(calc.lineVat) : '—') + '</td>' +
-                    '<td class="quote-official-num quote-official-line-total">' + (calc.lineEx > 0 ? formatQuotePlainNumber(calc.lineEx) : '—') + '</td>' +
-                    '</tr>';
-            }).join('');
             const totalWords = cartTotals.totalInc > 0
                 ? 'الإجمالي العام: فقط ' + formatAmountInArabicWords(cartTotals.totalInc) + ' لا غير'
                 : 'الإجمالي العام: عند الطلب';
@@ -10982,54 +11132,42 @@
             const factoryAddr = systemSettings.companyAddressAr || 'القصيم - صناعية عنيزة - إمتداد طريق الزلفي';
             const salesPhone = systemSettings.mainSalesPhone || '0555092383';
             const servicePhone = systemSettings.customerServicePhone || '0579394158';
-            doc.className = 'quote-a4 quote-a4--nebras-official';
+            const pageSpecs = paginateOfficialQuoteLines(nebrasCart);
+            const totalDynamicPages = pageSpecs.length;
+            const pageCtx = {
+                resolvedLogo: resolvedLogo,
+                factoryEmail: factoryEmail,
+                factoryAddr: factoryAddr,
+                salesPhone: salesPhone,
+                servicePhone: servicePhone,
+                customerRibbon: customerRibbon,
+                cust: cust,
+                displayNo: displayNo,
+                creationDate: creationDate,
+                validTill: validTill,
+                customerDisplay: customerDisplay,
+                pct: pct,
+                totalWords: totalWords,
+                cartTotals: cartTotals,
+                totalDynamicPages: totalDynamicPages
+            };
+            doc.className = 'quote-a4-document-stack';
             doc.removeAttribute('style');
-            doc.innerHTML =
-                '<div class="quote-a4-inner">' +
-                buildQuoteOfficialBrandedBandHtml(resolvedLogo, factoryEmail) +
-                customerRibbon +
-                '<table class="quote-official-meta-table"><tbody>' +
-                buildQuoteOfficialMetaRow('Quotation Number', 'رقم عرض السعر', displayNo) +
-                buildQuoteOfficialMetaRow('Creation Date', 'تاريخ الإنشاء', creationDate) +
-                buildQuoteOfficialMetaRow('Valid Till', 'صالح حتى', validTill) +
-                buildQuoteOfficialMetaRow('Customer Code', 'رقم العميل', cust.customerCode || '') +
-                buildQuoteOfficialMetaRow('Customer Name', 'اسم العميل', customerDisplay) +
-                buildQuoteOfficialMetaRow('Customer Address', 'عنوان العميل', cust.address || '') +
-                buildQuoteOfficialMetaRow('Vat No', 'الرقم الضريبي للعميل', cust.vatNo || '') +
-                '</tbody></table>' +
-                '<table class="quote-official-items-table"><thead><tr>' +
-                '<th>البيان<br>Description</th><th>الوحدة<br>Unit</th><th>الكمية<br>Qty</th>' +
-                '<th>السعر<br>Price</th><th>الخصم<br>Discount</th><th>الضريبة<br>%Tax</th>' +
-                '<th>مبلغ الضريبة<br>Tax Amt</th><th>المجموع<br>Total</th>' +
-                '</tr></thead><tbody>' + rows + '</tbody></table>' +
-                '<div class="quote-official-bottom">' +
-                '<div class="quote-official-words-box"><p>' + escapeHtmlAttr(totalWords) + '</p></div>' +
-                '<table class="quote-official-totals-table"><tbody>' +
-                buildQuoteOfficialTotalsRow('Subtotal', 'المجموع', cartTotals.subtotalEx > 0 ? formatQuotePlainNumber(cartTotals.subtotalEx) : '—') +
-                buildQuoteOfficialTotalsRow('Discount', 'الخصم', '0') +
-                buildQuoteOfficialTotalsRow('Total Before Tax', 'الاجمالي قبل الضريبة', cartTotals.subtotalEx > 0 ? formatQuotePlainNumber(cartTotals.subtotalEx) : '—') +
-                buildQuoteOfficialTotalsRow('Total Vat', 'مجموع الضريبة', cartTotals.vatAmount > 0 ? formatQuotePlainNumber(cartTotals.vatAmount) : '—') +
-                buildQuoteOfficialTotalsRow('Total', 'الإجمالي', cartTotals.totalInc > 0 ? formatQuotePlainNumber(cartTotals.totalInc) : '—', true) +
-                '</tbody></table></div>' +
-                '<div class="quote-official-divider" aria-hidden="true"></div>' +
-                '<footer class="quote-official-footer"><div class="quote-official-footer-grid">' +
-                '<div class="quote-official-footer-sales"><strong>للتواصل - إدارة المبيعات</strong>' +
-                '<span class="quote-official-footer-phones">0115048763 - 920033382</span><br>' +
-                '<span class="quote-official-footer-phones">' + escapeHtmlAttr(salesPhone) + ' - 0536694464</span><br>' +
-                '<span class="quote-official-footer-phones">خدمة المبيعات: ' + escapeHtmlAttr(servicePhone) + '</span></div>' +
-                '<div class="quote-official-footer-address">' + escapeHtmlAttr(factoryAddr) +
-                '<span class="quote-official-web">WWW.NIBRAS-FACTORY.COM</span></div>' +
-                '</div></footer></div>';
+            doc.innerHTML = pageSpecs.map(function(spec, pi) {
+                const inner = buildQuoteOfficialDynamicPageInner(spec, pageCtx);
+                return '<div class="quote-a4 quote-a4--nebras-official" data-quote-dynamic-page="' + (pi + 1) + '" id="quote-a4-dynamic-page-' + (pi + 1) + '">' +
+                    '<div class="quote-a4-inner">' + inner + '</div></div>';
+            }).join('');
             overlay.classList.add('show');
             syncPlatformInteractionLayers();
             closeCartDrawer();
             updateSalesQuoteFab();
             requestAnimationFrame(function() {
                 injectQuoteOfficialA4CriticalStyles(document);
-                ensureQuoteOfficialPage1Header(doc, resolvedLogo, factoryEmail);
+                ensureAllQuoteOfficialPageHeaders(doc, resolvedLogo, factoryEmail);
                 syncQuoteA4MobilePreviewScale();
                 waitForQuoteDocumentImages(doc, 2500).then(function() {
-                    ensureQuoteOfficialPage1Header(doc, resolvedLogo, factoryEmail);
+                    ensureAllQuoteOfficialPageHeaders(doc, resolvedLogo, factoryEmail);
                     syncQuoteA4MobilePreviewScale();
                 });
                 verifyQuoteA4AssetsHealth().catch(function() { /* ignore */ });

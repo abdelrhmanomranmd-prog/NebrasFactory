@@ -1,3 +1,27 @@
+/* حزمة صفحات عرض السعر الديناميكية (منتجات متعددة الصفحات) */
+.quote-a4-document-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 18px;
+    width: 100%;
+}
+
+.quote-a4-document-stack > .quote-a4.quote-a4--nebras-official {
+    margin-bottom: 0;
+}
+
+.quote-official-page-continue {
+    font-size: 9px;
+    font-weight: 700;
+    color: #1a365d;
+    text-align: center;
+    margin: 0 0 8px;
+    padding: 5px 10px;
+    background: #f0f5f9;
+    border-radius: 4px;
+}
+
 /* صيغة عرض السعر الرسمية — مطابقة لمرجع PDF (م صالح - جده - 935) */
 
 .quote-a4.quote-a4--nebras-official {
@@ -341,6 +365,16 @@
 }
 
 @media print {
+    .quote-a4-document-stack {
+        gap: 0;
+    }
+
+    .quote-a4-document-stack .quote-a4.quote-a4--nebras-official {
+        page-break-after: always;
+        margin-bottom: 0;
+        box-shadow: none;
+    }
+
     .quote-a4--nebras-official {
         height: 297mm;
         min-height: 297mm;

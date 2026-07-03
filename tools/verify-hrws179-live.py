@@ -34,7 +34,7 @@ def main():
         ("injectQuoteOfficialA4CriticalStyles", "injectQuoteOfficialA4CriticalStyles" in js),
         ("verifyQuoteA4AssetsHealth", "verifyQuoteA4AssetsHealth" in js),
         ("calcQuoteLineTotals", "calcQuoteLineTotals" in js),
-        ("runQuoteA4HealthCheckForAdmin", "runQuoteA4HealthCheckForAdmin" in js),
+            ("paginateOfficialQuoteLines", "paginateOfficialQuoteLines" in js),
     ]
     for label, ok in checks:
         print(label + ":", "OK" if ok else "MISSING")
@@ -58,8 +58,8 @@ def main():
         except Exception as e:
             print(asset, "ERR", e)
 
-    if deploy_v == "hrws179":
-        print("\nLIVE STATUS: hrws179 deployed OK")
+    if deploy_v == "hrws179" or deploy_v == "hrws180":
+        print("\nLIVE STATUS:", deploy_v, "deployed OK")
         return 0
     print("\nLIVE STATUS: still on", deploy_v, "— upload index.html + js/nebras-platform.js + css/19-quote-official-a4.css")
     return 1
