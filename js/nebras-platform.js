@@ -2593,7 +2593,7 @@
             sortOrder: 2
         };
 
-        const WPC_READY_CATALOG_VERSION = 6;
+        const WPC_READY_CATALOG_VERSION = 7;
         const WPC_READY_INSTALL_IMG = 'images/catalog/wpc-ready-install/';
         const WPC_READY_SUPPLY_IMG = 'images/catalog/wpc-ready-supply/';
 
@@ -2797,7 +2797,7 @@
         function wpcReadyCatalogPriceExVat(baseTablePrice) {
             const n = parseFloat(baseTablePrice);
             const base = isNaN(n) ? 0 : n;
-            return Math.round(base * 1.05 * 100) / 100;
+            return Math.round(base * 100) / 100;
         }
 
         /** @deprecated use wpcReadyCatalogPriceExVat */
@@ -2805,7 +2805,7 @@
             return wpcReadyCatalogPriceExVat(baseTablePrice);
         }
 
-        /** أبواب WPC جاهزة للتركيب — جدول توريد وتركيب شامل اكسسوارات (+5% على الأسعار المعتمدة) */
+        /** أبواب WPC جاهزة للتركيب — جدول توريد وتركيب شامل اكسسوارات */
         const DEFAULT_WPC_READY_INSTALL_VARIANTS = [
             { id: 'wpc-rdy-flat-45-std', sku: 'WPC-RDY-FLAT-45-STD', subCategoryId: 'wpc-ready-install', image: WPC_READY_INSTALL_IMG + 'flat-plain.svg', typeAr: 'باب فلات عادي مع شريط — 45ملم', typeEn: 'Flat plain with strip — 45mm', sizeAr: 'ارتفاع 236 سم · عرض حتى 115 سم', sizeEn: 'H 236 cm · W up to 115 cm', colorAr: 'شامل الاكسسوار', colorEn: 'Accessories included', price: wpcReadyInstallPriceExVat(750), inStock: true },
             { id: 'wpc-rdy-flat-45-net110', sku: 'WPC-RDY-FLAT-45-N110', subCategoryId: 'wpc-ready-install', image: WPC_READY_INSTALL_IMG + 'flat-plain.svg', typeAr: 'باب فلات عادي مع شريط — 45ملم نت 110', typeEn: 'Flat plain with strip — 45mm net 110', sizeAr: 'ارتفاع 236 سم · عرض حتى 120 سم', sizeEn: 'H 236 cm · W up to 120 cm', colorAr: 'شامل الاكسسوار', colorEn: 'Accessories included', price: wpcReadyInstallPriceExVat(820), inStock: true },
@@ -2831,7 +2831,7 @@
             { id: 'wpc-rdy-slide-lib', sku: 'WPC-RDY-SLD-LIB', subCategoryId: 'wpc-ready-install', image: WPC_READY_INSTALL_IMG + 'sliding-lib.svg', typeAr: 'باب سحب Lib — قياسي', typeEn: 'Sliding Lib door — standard', sizeAr: 'ارتفاع 236 سم · عرض حتى 115 سم', sizeEn: 'H 236 cm · W up to 115 cm', colorAr: 'شامل الاكسسوار', colorEn: 'Accessories included', price: wpcReadyCatalogPriceExVat(1250), inStock: true }
         ];
 
-        /** أبواب WPC توريد فقط — استلام المصنع بدون اكسسوارات (+5%) */
+        /** أبواب WPC توريد فقط — استلام المصنع بدون اكسسوارات */
         const DEFAULT_WPC_READY_SUPPLY_VARIANTS = [
             { id: 'wpc-sup-flat-45-std', sku: 'WPC-SUP-FLAT-45-STD', subCategoryId: 'wpc-ready-supply', image: WPC_READY_SUPPLY_IMG + 'flat-plain.svg', typeAr: 'باب فلات سادة مع شريط — 45ملم قياسي', typeEn: 'Flat plain with strip — 45mm standard', sizeAr: 'ارتفاع 236 سم · عرض حتى 115 سم', sizeEn: 'H 236 cm · W up to 115 cm', colorAr: 'بدون اكسسوار — استلام المصنع', colorEn: 'No accessories — factory pickup', price: wpcReadyCatalogPriceExVat(530), inStock: true },
             { id: 'wpc-sup-flat-45-n110', sku: 'WPC-SUP-FLAT-45-N110', subCategoryId: 'wpc-ready-supply', image: WPC_READY_SUPPLY_IMG + 'flat-plain.svg', typeAr: 'باب فلات سادة مع شريط — 45ملم صافي 110', typeEn: 'Flat plain with strip — 45mm net 110', sizeAr: 'ارتفاع 236 سم · عرض حتى 120 سم', sizeEn: 'H 236 cm · W up to 120 cm', colorAr: 'بدون اكسسوار — استلام المصنع', colorEn: 'No accessories — factory pickup', price: wpcReadyCatalogPriceExVat(599), inStock: true },
