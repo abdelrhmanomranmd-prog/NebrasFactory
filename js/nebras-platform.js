@@ -16895,9 +16895,25 @@
             }
         }
 
+        function formatRepQuoteItemName(it) {
+            if (!it) return '';
+            return String(it.productAr || '').trim();
+        }
+
         function formatRepQuoteItemLabel(it) {
             if (!it) return '';
-            return String(it.productAr || '') + ' ' + String(it.color || '') + ' ' + String(it.size || '') + ' — ' + formatSar(it.basePrice);
+            const name = formatRepQuoteItemName(it);
+            const price = formatSar(it.basePrice);
+            return name ? (name + ' — ' + price) : price;
+        }
+
+        function buildRepQuoteItemOptionHtml(it) {
+            const name = formatRepQuoteItemName(it);
+            const price = formatSar(it.basePrice);
+            return '<button type="button" class="rep-quote-item-opt" data-id="' + escapeHtmlAttr(it.id) + '">' +
+                '<span class="rep-quote-item-opt-name">' + escapeHtmlAttr(name) + '</span>' +
+                '<span class="rep-quote-item-opt-price">' + escapeHtmlAttr(price) + '</span>' +
+                '</button>';
         }
 
         function filterRepQuotePriceList(query, list) {
@@ -16933,8 +16949,7 @@
                 const filtered = filterRepQuotePriceList(search.value, list);
                 results.innerHTML = filtered.length
                     ? filtered.map(function(it) {
-                        return '<button type="button" class="rep-quote-item-opt" data-id="' + escapeHtmlAttr(it.id) + '">' +
-                            escapeHtmlAttr(formatRepQuoteItemLabel(it)) + '</button>';
+                        return buildRepQuoteItemOptionHtml(it);
                     }).join('')
                     : '<p class="erp-empty">لا نتائج — جرّبي كلمة أخرى</p>';
                 results.hidden = false;

@@ -197,7 +197,10 @@
 }
 
 .rep-quote-item-opt {
-    display: block;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
     width: 100%;
     text-align: start;
     padding: 10px 12px;
@@ -206,7 +209,27 @@
     border-radius: 8px;
     cursor: pointer;
     font-family: inherit;
+    line-height: 1.45;
+}
+
+.rep-quote-item-opt-name {
+    flex: 1 1 auto;
+    min-width: 0;
     font-size: 0.86rem;
+    font-weight: 700;
+    color: #0d2840;
+}
+
+.rep-quote-item-opt-price {
+    flex: 0 0 auto;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #0a5a8c;
+    white-space: nowrap;
+}
+
+.rep-quote-item-opt small {
+    display: none !important;
 }
 
 .rep-quote-item-opt:hover,
