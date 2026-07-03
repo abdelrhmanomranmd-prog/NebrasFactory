@@ -6,7 +6,7 @@
     'use strict';
 
     const REALTIME_ENABLED = true;
-    const REALTIME_SHADOW_LOG = true;
+    const REALTIME_SHADOW_LOG = false;
     let realtimeChannel = null;
     let lastRealtimeAt = 0;
 

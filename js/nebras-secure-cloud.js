@@ -362,30 +362,38 @@
         if (!sessionOk) return { ok: false, error: 'no_session' };
         const token = getSecureToken();
         if (!token) return { ok: false, error: 'no_token' };
+        const chunkSize = 2;
+        const saved = [];
         try {
-            const res = await fetch(apiBase() + '/api/nebras-governance-persist', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    Authorization: 'Bearer ' + token
-                },
-                body: JSON.stringify({ action: 'batch', rows: rows }),
-                keepalive: !!options.keepalive
-            });
-            const data = await res.json().catch(function() { return {}; });
-            if (!res.ok || !data.ok) {
-                return {
-                    ok: false,
-                    error: data.error || 'batch_failed',
-                    detail: data.detail || '',
-                    status: res.status,
-                    saved: data.saved || []
-                };
+            for (let i = 0; i < rows.length; i += chunkSize) {
+                const chunk = rows.slice(i, i + chunkSize);
+                const res = await fetch(apiBase() + '/api/nebras-governance-persist', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Authorization: 'Bearer ' + token
+                    },
+                    body: JSON.stringify({ action: 'batch', rows: chunk }),
+                    keepalive: !!options.keepalive
+                });
+                const data = await res.json().catch(function() { return {}; });
+                if (!res.ok || !data.ok) {
+                    return {
+                        ok: false,
+                        error: data.error || 'batch_failed',
+                        detail: data.detail || '',
+                        status: res.status,
+                        saved: saved
+                    };
+                }
+                (data.keys || chunk.map(function(r) { return r.store_key; })).forEach(function(k) {
+                    if (k && saved.indexOf(k) < 0) saved.push(k);
+                });
             }
-            return data;
+            return { ok: true, count: saved.length, keys: saved };
         } catch (e) {
             console.warn('persistGovernanceBatch failed:', e);
-            return { ok: false, error: 'network_error' };
+            return { ok: false, error: 'network_error', saved: saved };
         }
     }
 

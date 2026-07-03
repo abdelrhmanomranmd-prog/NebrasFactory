@@ -80,9 +80,36 @@ body.customer-portal-open { overflow: hidden; }
 }
 
 #customer-portal-body {
-    max-width: 960px;
+    max-width: 1180px;
     margin: 0 auto;
     padding: 20px 16px 40px;
+}
+
+/* تخطيط: فروع يسار · محتوى · لوحة عروض يمين */
+.cp-dashboard-shell {
+    display: grid;
+    grid-template-columns: 1fr minmax(248px, 292px);
+    grid-template-areas:
+        "branches branches"
+        "main promo";
+    gap: 14px 16px;
+    direction: ltr;
+}
+.cp-branches-rail {
+    grid-area: branches;
+    direction: rtl;
+}
+.cp-dashboard-main {
+    grid-area: main;
+    direction: rtl;
+    min-width: 0;
+}
+.cp-promo-board {
+    grid-area: promo;
+    direction: rtl;
+    align-self: start;
+    position: sticky;
+    top: 12px;
 }
 
 /* معاينة أبواب + شركاء — نفس حركة الموقع */
@@ -168,6 +195,172 @@ body.customer-portal-open { overflow: hidden; }
 .cp-action-btn--sales { background: linear-gradient(145deg, #0d2840, #1a5276); }
 .cp-action-btn--rep { background: linear-gradient(145deg, #16a085, #0e6655); }
 .cp-action-btn--pdf { background: linear-gradient(145deg, #8e44ad, #6c3483); }
+.cp-action-btn--store { background: linear-gradient(145deg, #e67e22, #d35400); }
+
+/* فروع مصغّرة — صف أفقي */
+.cp-branches-rail__title {
+    margin: 0 0 8px;
+    font-size: 0.78rem;
+    font-weight: 800;
+    color: #1a5276;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.cp-branches-scroll {
+    display: flex;
+    flex-wrap: nowrap;
+    gap: 10px;
+    overflow-x: auto;
+    padding-bottom: 6px;
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+}
+.cp-branches-scroll::-webkit-scrollbar { height: 5px; }
+.cp-branches-scroll::-webkit-scrollbar-thumb { background: #b8cfe0; border-radius: 999px; }
+.cp-branch-chip {
+    flex: 0 0 auto;
+    scroll-snap-align: start;
+    width: clamp(108px, 14vw, 132px);
+    border: 1px solid #dce6f0;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 6px 18px rgba(13, 40, 64, 0.08);
+    cursor: pointer;
+    font-family: inherit;
+    text-align: right;
+    padding: 0;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.cp-branch-chip:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 24px rgba(13, 40, 64, 0.14);
+}
+.cp-branch-chip__img {
+    height: 52px;
+    background: linear-gradient(135deg, #0d2840, #155e94);
+    background-size: cover;
+    background-position: center;
+}
+.cp-branch-chip__body { padding: 8px 10px 10px; }
+.cp-branch-chip__city {
+    display: block;
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: #0d2840;
+    line-height: 1.25;
+    margin-bottom: 4px;
+}
+.cp-branch-chip__phone {
+    display: block;
+    font-size: 0.66rem;
+    color: #2980b9;
+    direction: ltr;
+    text-align: center;
+}
+
+/* لوحة عروض يمين */
+.cp-promo-board__inner {
+    background: linear-gradient(165deg, #0d2840 0%, #134e6a 45%, #1a6fa8 100%);
+    border-radius: 18px;
+    padding: 14px 14px 16px;
+    color: #fff;
+    border: 1px solid rgba(0, 168, 255, 0.35);
+    box-shadow: 0 14px 36px rgba(13, 40, 64, 0.22);
+}
+.cp-promo-board__badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(231, 76, 60, 0.92);
+    color: #fff;
+    font-size: 0.7rem;
+    font-weight: 800;
+    padding: 4px 10px;
+    border-radius: 999px;
+    margin-bottom: 10px;
+}
+.cp-promo-board__title {
+    margin: 0 0 6px;
+    font-size: 1rem;
+    font-weight: 800;
+    line-height: 1.35;
+}
+.cp-promo-board__sub {
+    margin: 0 0 12px;
+    font-size: 0.76rem;
+    opacity: 0.92;
+    line-height: 1.5;
+}
+.cp-promo-offer {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    border-radius: 12px;
+    padding: 10px 11px;
+    margin-bottom: 8px;
+}
+.cp-promo-offer strong {
+    display: block;
+    font-size: 0.82rem;
+    margin-bottom: 3px;
+}
+.cp-promo-offer span {
+    font-size: 0.72rem;
+    opacity: 0.9;
+    line-height: 1.45;
+}
+.cp-promo-offer--highlight {
+    background: linear-gradient(135deg, rgba(201, 162, 39, 0.35), rgba(230, 126, 34, 0.28));
+    border-color: rgba(201, 162, 39, 0.55);
+}
+.cp-promo-price-pill {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 6px;
+    margin: 4px 0 0;
+    font-size: 0.78rem;
+}
+.cp-promo-price-pill s { opacity: 0.65; font-size: 0.72rem; }
+.cp-promo-price-pill em {
+    font-style: normal;
+    font-weight: 800;
+    color: #f9e79f;
+}
+.cp-promo-board__cta {
+    width: 100%;
+    margin-top: 10px;
+    border: none;
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 800;
+    cursor: pointer;
+    color: #0d2840;
+    background: linear-gradient(135deg, #f9e79f, #f5b041);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+}
+.cp-promo-board__cta:hover { filter: brightness(1.05); }
+.cp-promo-ticker {
+    margin-top: 10px;
+    font-size: 0.68rem;
+    opacity: 0.85;
+    border-top: 1px dashed rgba(255, 255, 255, 0.25);
+    padding-top: 8px;
+    line-height: 1.45;
+}
+
+@media (max-width: 900px) {
+    .cp-dashboard-shell {
+        grid-template-columns: 1fr;
+        grid-template-areas:
+            "branches"
+            "promo"
+            "main";
+    }
+    .cp-promo-board { position: static; }
+}
 .cp-action-btn[disabled] { opacity: 0.65; cursor: wait; }
 
 .cp-stats {

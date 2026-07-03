@@ -1181,7 +1181,7 @@
                 '<label class="nebras-field"><span>المسمى الوظيفي</span><input id="he-job" value="' + esc(e.jobTitle || '') + '"></label>' +
                 '<label class="nebras-field"><span>الوردية</span><select id="he-shift">' +
                     Object.keys(typeof HR_SHIFTS !== 'undefined' ? HR_SHIFTS : { admin: { label: 'إداري' } }).map(function(k) {
-                        return '<option value="' + k + '"' + ((e.shiftId || 'admin') === k ? ' selected' : '') + '>' + ((HR_SHIFTS[k] || {}).label || k) + '</option>';
+                        return '<option value="' + k + '"' + (normalizeHrShiftId(e.shiftId) === k ? ' selected' : '') + '>' + ((HR_SHIFTS[k] || {}).label || k) + '</option>';
                     }).join('') +
                 '</select></label>' +
                 '<label class="nebras-field"><span>خط الإنتاج</span><select id="he-line">' +
@@ -1282,7 +1282,7 @@
             departmentKey: hrField('he-dept-key'),
             department: (typeof HR_FACTORY_DEPTS !== 'undefined' && HR_FACTORY_DEPTS[hrField('he-dept-key')]) ? HR_FACTORY_DEPTS[hrField('he-dept-key')] : hrField('he-dept-key'),
             jobTitle: hrField('he-job'),
-            shiftId: hrField('he-shift') || 'admin',
+            shiftId: normalizeHrShiftId(hrField('he-shift') || 'morning'),
             productionLine: hrField('he-line') || '',
             skillLevel: hrField('he-skill') || 'operator',
             probationEnd: hrField('he-probation'),
@@ -3210,11 +3210,16 @@
     };
 
     const HR_SHIFTS = {
-        morning: { label: 'صباحية (6–14)', start: '06:00', end: '14:00', stdHours: 8 },
-        evening: { label: 'مسائية (14–22)', start: '14:00', end: '22:00', stdHours: 8 },
-        night: { label: 'ليلية (22–6)', start: '22:00', end: '06:00', stdHours: 8 },
-        admin: { label: 'إداري (8–17)', start: '08:00', end: '17:00', stdHours: 8 }
+        morning: { label: 'صباحية (7ص – 7م)', start: '07:00', end: '19:00', stdHours: 12 },
+        evening: { label: 'مسائية (7م – 7ص)', start: '19:00', end: '07:00', stdHours: 12 }
     };
+
+    function normalizeHrShiftId(shiftId) {
+        const s = String(shiftId || '').trim();
+        if (s === 'night' || s === 'evening') return 'evening';
+        if (s === 'admin' || s === 'morning' || !s) return 'morning';
+        return HR_SHIFTS[s] ? s : 'morning';
+    }
 
     const HR_PROD_LINES = {
         wpc_press: 'كبس WPC',
@@ -3277,8 +3282,8 @@
     }
 
     function getEmployeeShiftId(emp) {
-        if (!emp) return 'admin';
-        return emp.shiftId || 'admin';
+        if (!emp) return 'morning';
+        return normalizeHrShiftId(emp.shiftId);
     }
 
     function getTodayShiftRoster(date) {
@@ -3296,7 +3301,8 @@
                 });
                 if (hit) e.departmentKey = hit;
             }
-            if (!e.shiftId) e.shiftId = (e.departmentKey === 'admin' || e.departmentKey === 'sales') ? 'admin' : 'morning';
+            if (!e.shiftId) e.shiftId = 'morning';
+            else e.shiftId = normalizeHrShiftId(e.shiftId);
             if (!e.skillLevel) e.skillLevel = e.employmentType === 'daily' ? 'operator' : 'skilled';
         });
         if (hrEmployees.length < 6) return;
@@ -3319,7 +3325,7 @@
                 id: 'emp-hq-007', employeeNo: 'NEB-007', nameAr: 'فهد العنزي', nameEn: 'Fahad Al-Anzi',
                 nationalId: '7*********', nationality: 'سعودي', branchId: 'hq', departmentKey: 'installation',
                 department: 'التركيب والميداني', jobTitle: 'مشرف فرق تركيب', employmentType: 'fulltime', status: 'active',
-                shiftId: 'admin', productionLine: 'installation', skillLevel: 'supervisor',
+                shiftId: 'morning', productionLine: 'installation', skillLevel: 'supervisor',
                 joinDate: '2019-11-01', phone: '0500000007', salary: 11000, housingAllowance: 1500, createdAt: today, updatedAt: today
             },
             {
@@ -3334,7 +3340,7 @@
             if (!hrEmployees.some(function(e) { return e.id === x.id; })) hrEmployees.push(x);
         });
         if (!hrShiftRoster.length) {
-            ['morning', 'evening', 'admin'].forEach(function(sh, i) {
+            ['morning', 'evening'].forEach(function(sh, i) {
                 hrEmployees.filter(function(e) { return e.status === 'active' && getEmployeeShiftId(e) === sh; }).slice(0, 4).forEach(function(e, j) {
                     hrShiftRoster.push({
                         id: 'sr-' + sh + '-' + j,

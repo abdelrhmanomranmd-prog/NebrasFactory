@@ -26539,6 +26539,9 @@
             }
             const el = document.getElementById(sectionId);
             if (el) {
+                if (document.activeElement && el.contains(document.activeElement)) {
+                    try { document.activeElement.blur(); } catch (blurErr) { /* ignore */ }
+                }
                 el.classList.remove('show');
                 el.setAttribute('aria-hidden', 'true');
             }
