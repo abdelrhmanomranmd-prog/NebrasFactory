@@ -80,31 +80,147 @@ body.customer-portal-open { overflow: hidden; }
 }
 
 #customer-portal-body {
-    max-width: 1180px;
+    max-width: 1100px;
     margin: 0 auto;
     padding: 20px 16px 40px;
 }
 
-/* تخطيط: محتوى رئيسي (يسار) · عمود الفروع + عروض حصرية (يمين) */
+/* تخطيط لوحة العميل — عمود رئيسي + شريط جانبي */
 .cp-dashboard-shell {
     display: grid;
-    grid-template-columns: 1fr minmax(258px, 300px);
-    gap: 14px 16px;
-    direction: ltr;
+    grid-template-columns: 1fr minmax(220px, 280px);
+    gap: 16px;
+    align-items: start;
 }
-.cp-dashboard-main {
-    direction: rtl;
-    min-width: 0;
-}
-.cp-dashboard-aside {
-    direction: rtl;
+.cp-dashboard-main { min-width: 0; }
+.cp-dashboard-sidebar {
     display: flex;
     flex-direction: column;
     gap: 14px;
-    align-self: start;
     position: sticky;
     top: 12px;
 }
+
+.cp-sidebar-card {
+    background: linear-gradient(165deg, #0d2840 0%, #134e6a 55%, #155e94 100%);
+    border-radius: 18px;
+    padding: 16px 14px;
+    color: #fff;
+    border: 1px solid rgba(0, 168, 255, 0.28);
+    box-shadow: 0 10px 28px rgba(13, 40, 64, 0.2);
+}
+.cp-sidebar-card--promo {
+    background: linear-gradient(165deg, #0a1e32 0%, #0d2840 50%, #1a5276 100%);
+    border-color: rgba(201, 162, 39, 0.35);
+}
+.cp-sidebar-card--branches {
+    background: linear-gradient(165deg, #0d2840 0%, #123a5c 100%);
+}
+.cp-sidebar-card h3 {
+    margin: 0 0 6px;
+    font-size: 0.92rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.cp-sidebar-sub {
+    margin: 0 0 10px;
+    font-size: 0.72rem;
+    opacity: 0.85;
+    line-height: 1.45;
+}
+.cp-promo-list {
+    list-style: none;
+    margin: 0 0 12px;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.cp-promo-list li {
+    font-size: 0.76rem;
+    line-height: 1.4;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    opacity: 0.92;
+}
+.cp-promo-list li i { color: #f0c040; margin-top: 2px; flex-shrink: 0; }
+.cp-promo-cta {
+    width: 100%;
+    border: none;
+    border-radius: 12px;
+    padding: 10px 12px;
+    font-family: inherit;
+    font-size: 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    color: #0d2840;
+    background: linear-gradient(135deg, #f0c040, #d4af37);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+.cp-promo-cta:hover { filter: brightness(1.05); }
+
+.cp-branch-rail {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: min(52vh, 420px);
+    overflow-y: auto;
+    padding-left: 2px;
+}
+.cp-branch-rail-item {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 12px;
+    padding: 10px 10px 8px;
+}
+.cp-branch-rail-item strong {
+    display: block;
+    font-size: 0.78rem;
+    margin-bottom: 4px;
+}
+.cp-branch-rail-item strong i { color: #5dade2; margin-left: 4px; }
+.cp-branch-rail-phone {
+    display: block;
+    font-size: 0.72rem;
+    color: #a8d8f0;
+    text-decoration: none;
+    margin-bottom: 6px;
+}
+.cp-branch-rail-actions {
+    display: flex;
+    gap: 6px;
+}
+.cp-branch-rail-btn {
+    flex: 1;
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border-radius: 8px;
+    padding: 5px 8px;
+    font-size: 0.72rem;
+    cursor: pointer;
+    font-family: inherit;
+}
+.cp-branch-rail-btn:hover { background: rgba(255, 255, 255, 0.2); }
+
+/* شكاوى العميل — فوق لوحة العميل */
+body.customer-portal-open #complaint-overlay.show,
+#complaint-overlay.show {
+    z-index: 12600 !important;
+}
+
+.cp-action-btn--store { background: linear-gradient(145deg, #e67e22, #d35400); }
+
+body.customer-portal-open #branches,
+body.customer-portal-open #nebras-storefront > #branches {
+    display: none !important;
+}
+
 
 /* معاينة أبواب + شركاء — نفس حركة الموقع */
 .cp-hero-strip {
@@ -189,219 +305,6 @@ body.customer-portal-open { overflow: hidden; }
 .cp-action-btn--sales { background: linear-gradient(145deg, #0d2840, #1a5276); }
 .cp-action-btn--rep { background: linear-gradient(145deg, #16a085, #0e6655); }
 .cp-action-btn--pdf { background: linear-gradient(145deg, #8e44ad, #6c3483); }
-.cp-action-btn--store { background: linear-gradient(145deg, #e67e22, #d35400); }
-
-/* عمود فروع نبراس المصغّر — نفس أسلوب branch-card الرئيسي */
-.cp-branches-column {
-    background: linear-gradient(165deg, #f4f9fd 0%, #eaf1f8 100%);
-    border: 1px solid rgba(21, 94, 148, 0.18);
-    border-radius: 18px;
-    padding: 14px 14px 16px;
-    box-shadow: 0 10px 26px rgba(13, 40, 64, 0.1);
-}
-.cp-branches-column__title {
-    margin: 0 0 4px;
-    font-size: 0.9rem;
-    font-weight: 800;
-    color: #0d2840;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-.cp-branches-column__sub {
-    margin: 0 0 12px;
-    font-size: 0.72rem;
-    color: #5d6d7e;
-    line-height: 1.45;
-}
-.cp-branches-column__list {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-.cp-branch-mini {
-    position: relative;
-    overflow: hidden;
-    border-radius: 14px;
-    padding: 12px 12px 10px;
-    min-height: 108px;
-    color: #ffffff;
-    background: linear-gradient(135deg, rgba(12, 66, 110, 0.86), rgba(8, 40, 67, 0.92));
-    background-size: cover;
-    background-position: center;
-    box-shadow: 0 8px 22px rgba(13, 40, 64, 0.18);
-    border: 1px solid rgba(0, 168, 255, 0.25);
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-.cp-branch-mini:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 14px 30px rgba(13, 40, 64, 0.24);
-}
-.cp-branch-mini__overlay {
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(0deg, rgba(0, 0, 0, 0.62), rgba(0, 0, 0, 0.18));
-    z-index: 0;
-    pointer-events: none;
-}
-.cp-branch-mini__city {
-    position: relative;
-    z-index: 1;
-    margin: 0 0 4px;
-    font-size: 0.82rem;
-    font-weight: 800;
-    line-height: 1.3;
-    display: flex;
-    align-items: center;
-    gap: 5px;
-}
-.cp-branch-mini__phone {
-    position: relative;
-    z-index: 1;
-    margin: 0 0 8px;
-    font-size: 0.74rem;
-    color: rgba(255, 255, 255, 0.92);
-    direction: ltr;
-    text-align: right;
-}
-.cp-branch-mini__actions {
-    position: relative;
-    z-index: 1;
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-}
-.cp-branch-mini__actions a {
-    text-decoration: none;
-    background: rgba(0, 168, 255, 0.9);
-    color: #07243c;
-    padding: 5px 9px;
-    border-radius: 8px;
-    font-size: 0.72rem;
-    font-weight: 800;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    transition: background 0.15s ease;
-}
-.cp-branch-mini__actions a:hover {
-    background: rgba(0, 200, 255, 1);
-}
-.cp-branch-mini__actions a i { font-size: 0.7rem; }
-
-/* لوحة عروض يمين */
-.cp-promo-board__inner {
-    background: linear-gradient(165deg, #0d2840 0%, #134e6a 45%, #1a6fa8 100%);
-    border-radius: 18px;
-    padding: 14px 14px 16px;
-    color: #fff;
-    border: 1px solid rgba(0, 168, 255, 0.35);
-    box-shadow: 0 14px 36px rgba(13, 40, 64, 0.22);
-}
-.cp-promo-board__badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    background: rgba(231, 76, 60, 0.92);
-    color: #fff;
-    font-size: 0.7rem;
-    font-weight: 800;
-    padding: 4px 10px;
-    border-radius: 999px;
-    margin-bottom: 10px;
-}
-.cp-promo-board__title {
-    margin: 0 0 6px;
-    font-size: 1rem;
-    font-weight: 800;
-    line-height: 1.35;
-}
-.cp-promo-board__sub {
-    margin: 0 0 12px;
-    font-size: 0.76rem;
-    opacity: 0.92;
-    line-height: 1.5;
-}
-.cp-promo-offer {
-    background: rgba(255, 255, 255, 0.1);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    border-radius: 12px;
-    padding: 10px 11px;
-    margin-bottom: 8px;
-}
-.cp-promo-offer strong {
-    display: block;
-    font-size: 0.82rem;
-    margin-bottom: 3px;
-}
-.cp-promo-offer span {
-    font-size: 0.72rem;
-    opacity: 0.9;
-    line-height: 1.45;
-}
-.cp-promo-offer--highlight {
-    background: linear-gradient(135deg, rgba(201, 162, 39, 0.35), rgba(230, 126, 34, 0.28));
-    border-color: rgba(201, 162, 39, 0.55);
-}
-.cp-promo-price-pill {
-    display: inline-flex;
-    align-items: baseline;
-    gap: 6px;
-    margin: 4px 0 0;
-    font-size: 0.78rem;
-}
-.cp-promo-price-pill s { opacity: 0.65; font-size: 0.72rem; }
-.cp-promo-price-pill em {
-    font-style: normal;
-    font-weight: 800;
-    color: #f9e79f;
-}
-.cp-promo-board__cta {
-    width: 100%;
-    margin-top: 10px;
-    border: none;
-    border-radius: 12px;
-    padding: 10px 12px;
-    font-family: inherit;
-    font-size: 0.8rem;
-    font-weight: 800;
-    cursor: pointer;
-    color: #0d2840;
-    background: linear-gradient(135deg, #f9e79f, #f5b041);
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
-}
-.cp-promo-board__cta:hover { filter: brightness(1.05); }
-.cp-promo-ticker {
-    margin-top: 10px;
-    font-size: 0.68rem;
-    opacity: 0.85;
-    border-top: 1px dashed rgba(255, 255, 255, 0.25);
-    padding-top: 8px;
-    line-height: 1.45;
-}
-
-@media (max-width: 900px) {
-    .cp-dashboard-shell {
-        grid-template-columns: 1fr;
-    }
-    .cp-dashboard-aside {
-        position: static;
-        order: -1;
-    }
-}
-
-/* أثناء ظهور نوافذ منبثقة فوق البوابة (شكاوى/تنبيهات) — أخفض z-index للبوابة */
-.customer-portal-app.cp-below-overlay {
-    z-index: 1500;
-}
-
-/* تأكيد ظهور نوافذ الشكاوى/التنبيهات فوق البوابة دائماً */
-.admin-overlay.nebras-overlay-above-portal.show {
-    z-index: 12500 !important;
-}
 .cp-action-btn[disabled] { opacity: 0.65; cursor: wait; }
 
 .cp-stats {
@@ -595,4 +498,7 @@ body.customer-portal-open { overflow: hidden; }
 @media (max-width: 520px) {
     .cp-quick-actions { grid-template-columns: repeat(2, 1fr); }
     .cp-hero-strip { grid-template-columns: 1fr 1fr; }
+    .cp-dashboard-shell { grid-template-columns: 1fr; }
+    .cp-dashboard-sidebar { position: static; }
+    .cp-branch-rail { max-height: none; }
 }

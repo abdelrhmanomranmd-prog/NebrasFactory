@@ -526,139 +526,73 @@
         };
     }
 
-    function getCpSettingsSnapshot() {
-        try {
-            const raw = localStorage.getItem('nebrasSystemSettings');
-            if (raw) return JSON.parse(raw);
-        } catch (e) { /* ignore */ }
-        try { return global.systemSettings || {}; } catch (e2) { return {}; }
-    }
-
-    function getCpBranchesList() {
-        let branches = [];
-        try {
-            if (typeof global.branchesData !== 'undefined' && Array.isArray(global.branchesData)) {
-                branches = global.branchesData;
-            } else {
-                const raw = localStorage.getItem('nebrasBranches');
-                if (raw) branches = JSON.parse(raw);
-            }
-        } catch (e) { branches = []; }
-        return (branches || []).filter(function(b) { return b && b.city; });
-    }
-
-    function getCpWpcDoorPriceSample() {
-        let products = [];
-        try {
-            const raw = localStorage.getItem('nebrasSiteProducts');
-            if (raw) products = JSON.parse(raw);
-        } catch (e) { products = []; }
-        let minPrice = null;
-        (products || []).forEach(function(p) {
-            if (!p || p.visible === false) return;
-            const cat = String(p.categoryId || p.subCategoryId || '').toLowerCase();
-            const name = String(p.nameAr || p.name || '').toLowerCase();
-            if (cat.indexOf('wpc') < 0 && name.indexOf('wpc') < 0 && name.indexOf('باب') < 0) return;
-            (p.variants || []).forEach(function(v) {
-                const pr = Number(v && v.price);
-                if (pr > 0 && (minPrice === null || pr < minPrice)) minPrice = pr;
-            });
-            if (!p.variants || !p.variants.length) {
-                const pr = Number(p.price);
-                if (pr > 0 && (minPrice === null || pr < minPrice)) minPrice = pr;
-            }
-        });
-        return minPrice;
-    }
-
-    function getCpPortalDiscountPct() {
-        const settings = getCpSettingsSnapshot();
-        const minPct = Number(settings.quoteDiscountMinPct);
-        const maxFromSettings = Number.isFinite(minPct) ? Math.max(0, 100 - minPct) : 30;
-        return Math.min(5, maxFromSettings > 0 ? maxFromSettings : 5);
-    }
-
-    function getCpActivePromoCampaigns() {
-        const settings = getCpSettingsSnapshot();
-        const today = new Date().toISOString().slice(0, 10);
-        return (settings.productPromoCampaigns || []).filter(function(c) {
-            if (!c || c.enabled === false) return false;
-            if (c.startDate && String(c.startDate) > today) return false;
-            if (c.endDate && String(c.endDate) < today) return false;
-            return (c.productIds && c.productIds.length) || String(c.labelAr || c.labelEn || '').trim();
-        });
-    }
-
-    function normalizeCpBranchImage(path) {
-        if (!path) return '';
-        const p = String(path).trim();
-        if (/^https?:\/\//i.test(p)) return p;
-        return p.replace(/^\.\//, '');
-    }
-
-    function buildCpBranchesColumnHtml() {
-        const branches = getCpBranchesList();
-        if (!branches.length) {
-            return '<aside class="cp-branches-column" aria-label="فروع نبراس"><h3 class="cp-branches-column__title"><i class="fas fa-map-marker-alt"></i> فروع نبراس</h3><p class="cp-empty">فروع نبراس — تواصلي مع المبيعات.</p></aside>';
-        }
-        const cards = branches.map(function(b) {
-            const city = String(b.city || b.cityAr || 'فرع').trim();
+    function buildCpBranchesRailHtml() {
+        if (typeof global.ensureBuiltinBranches === 'function') global.ensureBuiltinBranches();
+        const branches = (typeof global.getNebrasBranchesForEmpire === 'function'
+            ? global.getNebrasBranchesForEmpire()
+            : (typeof global.branchesData !== 'undefined' ? global.branchesData : [])) || [];
+        const list = branches.filter(function(b) { return b && (b.city || b.cityAr); });
+        if (!list.length) return '';
+        const items = list.map(function(b) {
+            const name = b.city || b.cityAr || '—';
             const phone = String(b.salesPhone || '').trim();
-            const img = normalizeCpBranchImage(b.image);
-            const imgStyle = img ? ' style="background-image:url(\'' + esc(img).replace(/'/g, '%27') + '\')"' : '';
-            const phoneAttr = esc(phone).replace(/'/g, '');
-            const telHref = phone ? ('tel:' + phone) : '#';
-            return '<article class="cp-branch-mini"' + imgStyle + ' data-branch-id="' + esc(String(b.id || '')) + '">' +
-                '<div class="cp-branch-mini__overlay"></div>' +
-                '<h4 class="cp-branch-mini__city"><i class="fas fa-map-marker-alt"></i> ' + esc(city) + '</h4>' +
-                (phone ? '<p class="cp-branch-mini__phone" dir="ltr">' + esc(phone) + '</p>' : '') +
-                '<div class="cp-branch-mini__actions">' +
-                    '<a href="' + esc(telHref) + '" onclick="event.stopPropagation(); cpDialBranchPhone(\'' + phoneAttr + '\'); return false;"><i class="fas fa-phone-alt"></i> اتصال</a>' +
-                    (phone ? '<a href="#" onclick="event.preventDefault(); event.stopPropagation(); cpBranchSmartRoute(' + Number(b.id || 0) + ');"><i class="fas fa-route"></i> الأقرب</a>' : '') +
-                '</div>' +
-            '</article>';
+            const bid = Number(b.id);
+            return '<article class="cp-branch-rail-item" data-branch-id="' + bid + '">' +
+                '<strong><i class="fas fa-map-marker-alt"></i> ' + esc(name) + '</strong>' +
+                (phone ? '<a class="cp-branch-rail-phone" href="tel:' + esc(phone) + '" dir="ltr">' + esc(phone) + '</a>' : '') +
+                '<div class="cp-branch-rail-actions">' +
+                    (phone ? '<button type="button" class="cp-branch-rail-btn" onclick="cpBranchDial(' + bid + ')" title="اتصال مباشر"><i class="fas fa-phone"></i></button>' : '') +
+                    '<button type="button" class="cp-branch-rail-btn" onclick="cpBranchSmartRoute(' + bid + ')" title="تحويل ذكي"><i class="fas fa-route"></i></button>' +
+                '</div></article>';
         }).join('');
-        return '<aside class="cp-branches-column" aria-label="فروع نبراس في المملكة">' +
-            '<h3 class="cp-branches-column__title"><i class="fas fa-store-alt"></i> فروع نبراس — اتصال مباشر</h3>' +
-            '<p class="cp-branches-column__sub">اختاري فرعاً للاتصال المباشر بالمبيعات.</p>' +
-            '<div class="cp-branches-column__list">' + cards + '</div>' +
-        '</aside>';
+        return '<section class="cp-sidebar-card cp-sidebar-card--branches" aria-label="فروع نبراس في المملكة">' +
+            '<h3><i class="fas fa-map-marked-alt"></i> فروع نبراس</h3>' +
+            '<p class="cp-sidebar-sub">تواصلي مع أقرب فرع — أرقام المبيعات محدّثة تلقائياً</p>' +
+            '<div class="cp-branch-rail">' + items + '</div>' +
+        '</section>';
     }
 
-    function buildCpPromoBoardHtml(portalUser) {
-        const discountPct = getCpPortalDiscountPct();
-        const basePrice = getCpWpcDoorPriceSample();
-        const discounted = basePrice ? Math.round(basePrice * (1 - discountPct / 100)) : null;
-        const campaigns = getCpActivePromoCampaigns();
-        const campaignHtml = campaigns.slice(0, 3).map(function(c) {
-            const label = String(c.labelAr || c.labelEn || 'عرض محدود').trim();
-            const note = String(c.noteAr || c.noteEn || c.descriptionAr || '').trim();
-            return '<article class="cp-promo-offer cp-promo-offer--highlight">' +
-                '<strong><i class="fas fa-bolt"></i> ' + esc(label) + '</strong>' +
-                (note ? '<span>' + esc(note) + '</span>' : '') +
-            '</article>';
-        }).join('');
-        const priceHtml = basePrice
-            ? '<div class="cp-promo-price-pill"><s>' + formatMoney(basePrice) + '</s><em>' + formatMoney(discounted) + '</em><span>شامل ضريبة حسب العرض</span></div>'
-            : '<span>أسعار أبواب WPC — اطلبي عرضاً مخصصاً</span>';
-        const rep = resolveCpRepContact(portalUser);
-        return '<aside class="cp-promo-board" aria-label="عروض وخصومات نبراس">' +
-            '<div class="cp-promo-board__inner">' +
-                '<span class="cp-promo-board__badge"><i class="fas fa-fire"></i> عروض حصرية للعملاء</span>' +
-                '<h3 class="cp-promo-board__title">أبواب WPC — خصم ' + discountPct + '% للعملاء المسجّلين</h3>' +
-                '<p class="cp-promo-board__sub">أسعار المصنع مباشرة · ضمان 10 سنوات · مقاومة للماء 100%</p>' +
-                '<article class="cp-promo-offer cp-promo-offer--highlight">' +
-                    '<strong><i class="fas fa-door-open"></i> أبواب WPC جاهزة</strong>' + priceHtml +
-                '</article>' +
-                '<article class="cp-promo-offer"><strong><i class="fas fa-layer-group"></i> خصم كميات</strong>' +
-                    '<span>مقاولون · شركات إنشائية · معارض — خصم تصاعدي حسب حجم الطلب والتكرار.</span></article>' +
-                '<article class="cp-promo-offer"><strong><i class="fas fa-building"></i> شركات ومشاريع</strong>' +
-                    '<span>عروض مشاريع NHC · SASO · توريد + تركيب · شروط دفع مرنة للعملاء المعتمدين.</span></article>' +
-                campaignHtml +
-                '<button type="button" class="cp-promo-board__cta" onclick="cpOpenStore()"><i class="fas fa-store"></i> استكشفي المتجر والأسعار</button>' +
-                '<p class="cp-promo-ticker"><i class="fas fa-headset"></i> مندوبك: ' + esc(rep.name || 'المبيعات') +
-                    (rep.phone ? ' · ' + esc(rep.phone) : '') + '</p>' +
-            '</div></aside>';
+    function buildCpPromoRailHtml() {
+        return '<section class="cp-sidebar-card cp-sidebar-card--promo" aria-label="عروض حصرية للعملاء">' +
+            '<h3><i class="fas fa-tags"></i> عروض حصرية للعملاء</h3>' +
+            '<ul class="cp-promo-list">' +
+                '<li><i class="fas fa-percent"></i> خصم لعملاء الحساب المسجّل</li>' +
+                '<li><i class="fas fa-door-open"></i> أبواب WPC جاهزة بأسعار المصنع</li>' +
+                '<li><i class="fas fa-boxes-stacked"></i> خصم كميات للشركات والمقاولين</li>' +
+                '<li><i class="fas fa-building"></i> عروض مشاريع ومجمعات سكنية</li>' +
+            '</ul>' +
+            '<button type="button" class="cp-promo-cta" onclick="cpOpenStoreFromPortal()"><i class="fas fa-store"></i> استكشف المتجر والأسعار</button>' +
+        '</section>';
+    }
+
+    function cpBranchDial(branchId) {
+        const branches = (typeof global.getNebrasBranchesForEmpire === 'function'
+            ? global.getNebrasBranchesForEmpire() : []) || [];
+        const b = branches.find(function(x) { return Number(x.id) === Number(branchId); });
+        const phone = b && b.salesPhone ? String(b.salesPhone).trim() : '';
+        if (!phone) { alert('لا يوجد رقم مبيعات لهذا الفرع.'); return; }
+        if (typeof global.dialNumber === 'function') global.dialNumber(phone);
+        else window.location.href = 'tel:' + phone;
+    }
+
+    function cpBranchSmartRoute(branchId) {
+        const branches = (typeof global.getNebrasBranchesForEmpire === 'function'
+            ? global.getNebrasBranchesForEmpire() : []) || [];
+        const b = branches.find(function(x) { return Number(x.id) === Number(branchId); });
+        if (!b) return;
+        const city = b.city || b.cityAr || '';
+        const phone = b.salesPhone || (typeof global.getNearestSalesNumber === 'function'
+            ? (global.getNearestSalesNumber(city).phone || '') : '');
+        if (!phone) { alert('لا يوجد رقم تحويل لهذا الفرع.'); return; }
+        alert('تحويل ذكي — ' + city + '\n' + phone);
+        if (typeof global.dialNumber === 'function') global.dialNumber(phone);
+        else window.location.href = 'tel:' + phone;
+    }
+
+    function cpOpenStoreFromPortal() {
+        if (typeof global.openNebrasWorkspace === 'function') {
+            global.openNebrasWorkspace({ pillar: 'store', view: 'catalog-all' });
+        }
     }
 
     function buildCpShowcasesHtml() {
@@ -684,8 +618,8 @@
         const repPhone = rep.phone || phones.sales;
         const repLabel = rep.name ? ('المندوب: ' + rep.name) : 'مندوب المبيعات';
         return '<section class="cp-quick-actions" aria-label="خدمات العميل">' +
-            '<button type="button" class="cp-action-btn cp-action-btn--store" onclick="cpOpenStore()"><i class="fas fa-store"></i><span>المتجر</span><small>كتالوج WPC كامل</small></button>' +
-            '<button type="button" class="cp-action-btn cp-action-btn--complaint" onclick="cpOpenComplaints()"><i class="fas fa-comment-dots"></i><span>الشكاوى</span></button>' +
+            '<button type="button" class="cp-action-btn cp-action-btn--store" onclick="cpOpenStoreFromPortal()"><i class="fas fa-store"></i><span>المتجر</span><small>كتالوج المنتجات</small></button>' +
+            '<button type="button" class="cp-action-btn cp-action-btn--complaint" onclick="cpOpenComplaints()"><i class="fas fa-comment-dots"></i><span>الشكاوى</span><small>تقديم شكوى للإدارة</small></button>' +
             '<button type="button" class="cp-action-btn cp-action-btn--service" onclick="cpDialCustomerService()"><i class="fas fa-headset"></i><span>خدمة العملاء</span><small>' + esc(phones.customerService) + '</small></button>' +
             '<button type="button" class="cp-action-btn cp-action-btn--sales" onclick="cpDialSalesManager()"><i class="fas fa-user-tie"></i><span>مدير المبيعات</span><small>' + esc(phones.sales) + '</small></button>' +
             '<button type="button" class="cp-action-btn cp-action-btn--rep" onclick="cpDialAssignedRep()"><i class="fas fa-id-badge"></i><span>' + esc(repLabel) + '</span><small>' + esc(repPhone || '—') + '</small></button>' +
@@ -701,7 +635,6 @@
         if (doorAside && doorAside.dataset.cpDoorWired !== '1') {
             doorAside.dataset.cpDoorWired = '1';
             function openDesigner() {
-                cpHidePortalApp();
                 if (typeof global.openNebrasWorkspace === 'function') {
                     global.openNebrasWorkspace({ pillar: 'store', view: 'door-designer' });
                 }
@@ -711,103 +644,28 @@
                 if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDesigner(); }
             });
         }
-        const partnersCard = document.querySelector('.cp-showcase-card--partners');
-        if (partnersCard && partnersCard.dataset.cpPartnersWired !== '1') {
-            partnersCard.dataset.cpPartnersWired = '1';
-            partnersCard.style.cursor = 'pointer';
-            partnersCard.setAttribute('role', 'button');
-            partnersCard.setAttribute('tabindex', '0');
-            function openPartners() { cpOpenPartnersSection(); }
-            partnersCard.addEventListener('click', openPartners);
-            partnersCard.addEventListener('keydown', function(e) {
-                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPartners(); }
-            });
-        }
-    }
-
-    function cpHidePortalApp() {
-        const app = document.getElementById('customer-portal-app');
-        if (app) {
-            app.classList.remove('show');
-            app.hidden = true;
-            app.setAttribute('aria-hidden', 'true');
-        }
-        document.body.classList.remove('customer-portal-open');
-        if (typeof global.hidePlatformLayer === 'function') {
-            global.hidePlatformLayer('customer-portal-app');
-        } else if (typeof global.syncPlatformInteractionLayers === 'function') {
-            global.syncPlatformInteractionLayers();
-        }
-    }
-
-    function cpOpenStore() {
-        cpHidePortalApp();
-        if (typeof global.openNebrasWorkspace === 'function') {
-            global.openNebrasWorkspace({ pillar: 'store', view: 'catalog-all' });
-            return;
-        }
-        const products = document.getElementById('products');
-        if (products) {
-            products.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-    }
-
-    function cpOpenPartnersSection() {
-        cpHidePortalApp();
-        const sec = document.getElementById('nebras-partners-section');
-        if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-
-    function cpDialBranchPhone(phone) {
-        const p = String(phone || '').trim();
-        if (!p) { alert('رقم الفرع غير متوفر.'); return; }
-        if (typeof global.dialNumber === 'function') global.dialNumber(p);
-        else window.location.href = 'tel:' + p;
-    }
-
-    function cpBranchSmartRoute(branchId) {
-        const branches = getCpBranchesList();
-        const b = branches.find(function(x) { return String(x.id) === String(branchId); });
-        const phone = b && b.salesPhone ? String(b.salesPhone).trim() : '';
-        if (!phone) { alert('لا يوجد رقم مبيعات لهذا الفرع بعد.'); return; }
-        cpDialBranchPhone(phone);
     }
 
     function cpOpenComplaints() {
         const u = currentPortalCustomer;
-        cpBringPortalBelowOverlays(true);
         if (typeof global.openCustomerComplaints === 'function') {
             global.openCustomerComplaints();
-            const overlay = document.getElementById('complaint-overlay');
-            if (overlay) {
-                overlay.classList.add('nebras-overlay-above-portal');
-                overlay.setAttribute('aria-hidden', 'false');
-            }
-            if (u) {
-                setTimeout(function() {
-                    const nameEl = document.getElementById('complaint-customer-name');
-                    const phoneEl = document.getElementById('complaint-customer-phone');
-                    if (nameEl && !nameEl.value) nameEl.value = u.displayName || u.username || '';
-                    if (phoneEl && !phoneEl.value) phoneEl.value = u.phone || '';
-                }, 60);
-            }
-            return;
-        }
-        alert('خدمة الشكاوى — تواصلي مع خدمة العملاء.');
-    }
-
-    function cpBringPortalBelowOverlays(below) {
-        const app = document.getElementById('customer-portal-app');
-        if (!app) return;
-        if (below) {
-            app.classList.add('cp-below-overlay');
+        } else if (typeof global.revealPlatformLayer === 'function') {
+            global.revealPlatformLayer('complaint-overlay');
         } else {
-            app.classList.remove('cp-below-overlay');
+            const ov = document.getElementById('complaint-overlay');
+            if (ov) { ov.classList.add('show'); ov.setAttribute('aria-hidden', 'false'); }
         }
-    }
-
-    function cpRestorePortalAfterOverlay() {
-        cpBringPortalBelowOverlays(false);
+        if (u) {
+            setTimeout(function() {
+                const nameEl = document.getElementById('complaint-customer-name');
+                const phoneEl = document.getElementById('complaint-customer-phone');
+                const branchEl = document.getElementById('complaint-customer-branch');
+                if (nameEl && !nameEl.value) nameEl.value = u.displayName || u.username || '';
+                if (phoneEl && !phoneEl.value) phoneEl.value = u.phone || '';
+                if (branchEl && !branchEl.value) branchEl.value = u.branchCity || '';
+            }, 80);
+        }
     }
 
     function cpDialCustomerService() {
@@ -1039,24 +897,24 @@
                 }).join('') + '</div>' : '<p class="cp-empty">لا حوالات مسجّلة — ارفع إيصال الحوالة عند الدفع من السلة.</p>') +
             '</section>'
             : '';
-        const mainContent =
-            (typeof global.renderCustomerJourneyAlertsHtml === 'function' ? global.renderCustomerJourneyAlertsHtml(u) : '') +
-            buildCpShowcasesHtml() +
-            buildCpQuickActionsHtml(u) +
-            '<div class="cp-stats">' +
-                '<article class="cp-stat"><strong>' + d.totalQuotes + '</strong><span>عروض أسعار</span></article>' +
-                '<article class="cp-stat"><strong>' + d.preparing.length + '</strong><span>قيد التجهيز</span></article>' +
-                '<article class="cp-stat"><strong>' + d.delivered.length + '</strong><span>مُستلَمة</span></article>' +
-                '<article class="cp-stat cp-stat--tier cp-stat--' + tierMeta.tier + '"><strong>' + esc(tierLabel[tierMeta.tier] || '') + '</strong><span>تصنيفك</span></article>' +
-            '</div>' +
-            journeyHtml + quotesHtml + ordersHtml + transfersHtml;
         host.innerHTML =
+            (typeof global.renderCustomerJourneyAlertsHtml === 'function' ? global.renderCustomerJourneyAlertsHtml(u) : '') +
             '<div class="cp-dashboard-shell">' +
-                '<div class="cp-dashboard-main">' + mainContent + '</div>' +
-                '<div class="cp-dashboard-aside">' +
-                    buildCpBranchesColumnHtml() +
-                    buildCpPromoBoardHtml(u) +
+                '<div class="cp-dashboard-main">' +
+                    buildCpShowcasesHtml() +
+                    buildCpQuickActionsHtml(u) +
+                    '<div class="cp-stats">' +
+                        '<article class="cp-stat"><strong>' + d.totalQuotes + '</strong><span>عروض أسعار</span></article>' +
+                        '<article class="cp-stat"><strong>' + d.preparing.length + '</strong><span>قيد التجهيز</span></article>' +
+                        '<article class="cp-stat"><strong>' + d.delivered.length + '</strong><span>مُستلَمة</span></article>' +
+                        '<article class="cp-stat cp-stat--tier cp-stat--' + tierMeta.tier + '"><strong>' + esc(tierLabel[tierMeta.tier] || '') + '</strong><span>تصنيفك</span></article>' +
+                    '</div>' +
+                    journeyHtml + quotesHtml + ordersHtml + transfersHtml +
                 '</div>' +
+                '<aside class="cp-dashboard-sidebar">' +
+                    buildCpPromoRailHtml() +
+                    buildCpBranchesRailHtml() +
+                '</aside>' +
             '</div>';
         wireCpPortalShowcases();
         if (typeof global.markJourneysReadyViewed === 'function') global.markJourneysReadyViewed(u);
@@ -1485,6 +1343,11 @@
     global.canCreateCustomerPortalUser = canCreateCustomerPortalUser;
     global.canManageCustomerPortalUsers = canManageCustomerPortalUsers;
     global.getCustomerPortalUsers = function() { loadCpData(); return customerPortalUsers; };
+    global.refreshCustomerPortalDashboard = renderCustomerPortalDashboard;
+    global.cpOpenComplaints = cpOpenComplaints;
+    global.cpBranchDial = cpBranchDial;
+    global.cpBranchSmartRoute = cpBranchSmartRoute;
+    global.cpOpenStoreFromPortal = cpOpenStoreFromPortal;
 
     function findCustomerPortalUserByPhone(phone) {
         loadCpData();
@@ -1506,13 +1369,6 @@
     global.cpDialCustomerService = cpDialCustomerService;
     global.cpDialSalesManager = cpDialSalesManager;
     global.cpDialAssignedRep = cpDialAssignedRep;
-    global.cpOpenStore = cpOpenStore;
-    global.cpOpenPartnersSection = cpOpenPartnersSection;
-    global.cpDialBranchPhone = cpDialBranchPhone;
-    global.cpBranchSmartRoute = cpBranchSmartRoute;
-    global.cpBringPortalBelowOverlays = cpBringPortalBelowOverlays;
-    global.cpRestorePortalAfterOverlay = cpRestorePortalAfterOverlay;
-    global.renderCustomerPortalDashboard = renderCustomerPortalDashboard;
     global.resolveCpRepContact = resolveCpRepContact;
     global.entryBelongsToPortalCustomer = entryBelongsToPortalCustomer;
 

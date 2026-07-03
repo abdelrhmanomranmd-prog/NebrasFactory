@@ -19620,26 +19620,13 @@
         }
 
         function closeComplaintOverlay() {
-            const ov = document.getElementById('complaint-overlay');
-            if (ov) {
-                ov.classList.remove('show');
-                ov.classList.remove('nebras-overlay-above-portal');
-                try { ov.setAttribute('aria-hidden', 'true'); } catch (e) { /* ignore */ }
-            }
-            const numEl = document.getElementById('complaint-number');
-            if (numEl) numEl.value = '';
-            const nameEl = document.getElementById('complaint-customer-name');
-            if (nameEl) nameEl.value = '';
-            const phoneEl = document.getElementById('complaint-customer-phone');
-            if (phoneEl) phoneEl.value = '';
-            const branchEl = document.getElementById('complaint-customer-branch');
-            if (branchEl) branchEl.value = '';
-            const descEl = document.getElementById('complaint-description');
-            if (descEl) descEl.value = '';
-            const statusEl = document.getElementById('complaint-status-message');
-            if (statusEl) statusEl.textContent = '';
-            if (typeof cpRestorePortalAfterOverlay === 'function') cpRestorePortalAfterOverlay();
-            if (typeof syncPlatformInteractionLayers === 'function') syncPlatformInteractionLayers();
+            document.getElementById('complaint-overlay').classList.remove('show');
+            document.getElementById('complaint-number').value = '';
+            document.getElementById('complaint-customer-name').value = '';
+            document.getElementById('complaint-customer-phone').value = '';
+            document.getElementById('complaint-customer-branch').value = '';
+            document.getElementById('complaint-description').value = '';
+            document.getElementById('complaint-status-message').textContent = '';
         }
 
         function dialNumber(phoneNumber) {
@@ -27500,6 +27487,10 @@
             if (!grid) return;
             grid.innerHTML = buildBranchCardsHtml(currentLang || 'ar');
             hydrateBranchCardImages(grid);
+            if (typeof window.refreshCustomerPortalDashboard === 'function') {
+                const cpApp = document.getElementById('customer-portal-app');
+                if (cpApp && cpApp.classList.contains('show')) window.refreshCustomerPortalDashboard();
+            }
         }
 
         function displayBranchesAdmin() {
@@ -27636,10 +27627,6 @@
             saveContentData();
             addAuditLog(editorMode === 'edit' ? 'تعديل فرع' : 'إضافة فرع', normalized.city + ' — ' + normalized.salesPhone);
             if (typeof refreshProcurementPanels === 'function') refreshProcurementPanels();
-            const _cpApp = document.getElementById('customer-portal-app');
-            if (_cpApp && _cpApp.classList.contains('show') && typeof window.renderCustomerPortalDashboard === 'function') {
-                try { window.renderCustomerPortalDashboard(); } catch (e) { /* ignore */ }
-            }
             if (editorMode !== 'edit' && isMainGovernanceAdmin()) {
                 const msg = 'تم إنشاء فرع «' + normalized.city + '». الخطوة التالية: أضيفي مدير فرع ومندوبي مبيعات من «إدارة الفرع» أو إدارة المستخدمين.';
                 if (typeof showNebrasAdminToast === 'function') showNebrasAdminToast(msg, 'ok');

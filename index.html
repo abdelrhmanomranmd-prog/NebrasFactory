@@ -555,19 +555,24 @@
 
     <div class="admin-overlay" id="complaint-overlay">
         <div class="admin-modal">
-            <h2 id="complaint-inquiry-title">استفسار عن الشكوى</h2>
-            <p id="complaint-inquiry-text">أدخل رقم الشكوى لمعرفة الحالة الحالية.</p>
+            <h2 id="complaint-inquiry-title">تقديم شكوى / استفسار</h2>
+            <p id="complaint-inquiry-text">أدخلي بياناتك وتفاصيل الشكوى — تصل مباشرة لقسم الشكاوى في الإدارة.</p>
+            <form id="complaint-form" class="complaint-form" autocomplete="on" onsubmit="event.preventDefault(); submitComplaint();">
+            <input type="text" name="username" autocomplete="username" aria-hidden="true" tabindex="-1" style="position:absolute;opacity:0;height:0;width:0;pointer-events:none;">
             <div class="complaint-form-grid">
-                <input class="full-width" id="complaint-customer-name" type="text" placeholder="اسم العميل">
-                <input id="complaint-customer-phone" type="text" placeholder="رقم الهاتف">
-                <input id="complaint-customer-branch" type="text" placeholder="الفرع">
-                <textarea class="full-width" id="complaint-description" rows="3" placeholder="تفاصيل الشكوى"></textarea>
+                <input class="full-width" id="complaint-customer-name" name="name" type="text" placeholder="اسم العميل" autocomplete="name">
+                <input id="complaint-customer-phone" name="tel" type="tel" placeholder="رقم الهاتف" autocomplete="tel">
+                <input id="complaint-customer-branch" name="branch" type="text" placeholder="الفرع">
+                <textarea class="full-width" id="complaint-description" name="description" rows="3" placeholder="تفاصيل الشكوى"></textarea>
             </div>
-            <button class="primary" onclick="submitComplaint()">إرسال شكوى جديدة</button>
-            <input id="complaint-number" type="text" placeholder="رقم الشكوى">
+            <button type="submit" class="primary">إرسال شكوى جديدة</button>
+            </form>
+            <form id="complaint-status-form" class="complaint-form" autocomplete="off" onsubmit="event.preventDefault(); checkComplaintStatus();">
+            <input id="complaint-number" name="complaint-no" type="text" placeholder="رقم الشكوى للاستعلام">
             <p class="status" id="complaint-status-message"></p>
-            <button class="primary" onclick="checkComplaintStatus()">استعلام</button>
-            <button class="secondary" onclick="closeComplaintOverlay()">إلغاء</button>
+            <button type="submit" class="primary">استعلام عن حالة الشكوى</button>
+            <button type="button" class="secondary" onclick="closeComplaintOverlay()">إغلاق</button>
+            </form>
         </div>
     </div>
 
@@ -2172,4 +2177,5 @@
 
 </body>
 </html>
+
 
