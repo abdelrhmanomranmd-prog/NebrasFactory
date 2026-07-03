@@ -48,7 +48,26 @@
     height: 100%;
 }
 
-/* شريط الرأس الكحلي — الصفحة 1 (HTML ثابت — مطابق لصفحات 2–4) */
+/* رأس ثابت (صورة) — مطابق لرأس صفحات الشروط 2–4 — في كل صفحة ديناميكية */
+.quote-official-fixed-header-wrap {
+    margin: 0 -11mm 8px;
+    line-height: 0;
+    flex-shrink: 0;
+}
+
+.quote-official-fixed-header {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 0;
+    max-width: none;
+}
+
+.quote-official-branded-band--fallback {
+    line-height: normal;
+}
+
+/* شريط الرأس HTML — احتياط عند فشل تحميل الصورة الثابتة */
 .quote-official-branded-band {
     display: flex;
     align-items: center;

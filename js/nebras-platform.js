@@ -10483,7 +10483,7 @@
         function nebrasQuotePage1HeaderFallback(imgEl) {
             if (!imgEl) return;
             imgEl.style.display = 'none';
-            const wrap = imgEl.closest('.quote-official-page1-header-wrap');
+            const wrap = imgEl.closest('.quote-official-fixed-header-wrap') || imgEl.closest('.quote-official-page1-header-wrap');
             const fb = wrap && wrap.querySelector('.quote-official-branded-band--fallback');
             if (fb) {
                 fb.hidden = false;
@@ -10510,20 +10510,40 @@
                 '</header>';
         }
 
+        /** رأس ثابت (صورة) — مطابق لرأس صفحات الشروط 2–4 — يُكرَّر في كل صفحة ديناميكية */
+        function buildQuoteOfficialFixedHeaderHtml(logoUrl, factoryEmail) {
+            const headerUrl = normalizeQuoteAssetPath(getQuoteOfficialPage1HeaderUrl());
+            return '<header class="quote-official-fixed-header-wrap" role="banner">' +
+                '<img class="quote-official-fixed-header" src="' + escapeHtmlAttr(headerUrl) + '" alt="شركة مصنع نبراس للبلاستيك" decoding="sync" crossorigin="anonymous" onerror="nebrasQuotePage1HeaderFallback(this)">' +
+                '<div class="quote-official-branded-band quote-official-branded-band--fallback" hidden aria-hidden="true">' +
+                buildQuoteOfficialBrandedBandHtmlInner(logoUrl, factoryEmail) +
+                '</div></header>';
+        }
+
+        function quoteOfficialPageHeaderVisible(pageEl) {
+            if (!pageEl) return false;
+            const img = pageEl.querySelector('.quote-official-fixed-header');
+            if (img && img.offsetHeight >= 12 && img.naturalWidth > 0) return true;
+            const band = pageEl.querySelector('.quote-official-branded-band:not(.quote-official-branded-band--fallback)');
+            if (band && !band.hidden && band.offsetHeight >= 12) {
+                const bg = window.getComputedStyle(band).backgroundColor || '';
+                return bg && bg !== 'transparent' && bg !== 'rgba(0, 0, 0, 0)';
+            }
+            return false;
+        }
+
         function ensureQuoteOfficialPage1Header(doc, logoUrl, factoryEmail) {
             if (!doc) return;
             injectQuoteOfficialA4CriticalStyles(doc.ownerDocument || document);
-            let band = doc.querySelector('.quote-official-branded-band');
-            if (band && band.offsetHeight >= 12) {
-                const bg = window.getComputedStyle(band).backgroundColor || '';
-                if (bg && bg !== 'transparent' && bg !== 'rgba(0, 0, 0, 0)') return;
-            }
+            if (quoteOfficialPageHeaderVisible(doc)) return;
             const inner = doc.querySelector('.quote-a4-inner');
             if (!inner) return;
-            const html = buildQuoteOfficialBrandedBandHtml(logoUrl, factoryEmail);
-            const legacyWrap = doc.querySelector('.quote-official-page1-header-wrap');
-            if (legacyWrap) legacyWrap.remove();
-            if (band) band.remove();
+            const html = buildQuoteOfficialFixedHeaderHtml(logoUrl, factoryEmail);
+            const oldWrap = doc.querySelector('.quote-official-fixed-header-wrap, .quote-official-page1-header-wrap');
+            if (oldWrap) oldWrap.remove();
+            Array.prototype.slice.call(inner.children).forEach(function(ch) {
+                if (ch.classList && ch.classList.contains('quote-official-branded-band')) ch.remove();
+            });
             inner.insertAdjacentHTML('afterbegin', html);
         }
 
@@ -10532,6 +10552,9 @@
             const style = targetDoc.createElement('style');
             style.setAttribute('data-nebras-quote-a4-critical', '1');
             style.textContent =
+                '.quote-official-fixed-header-wrap{margin:0 -11mm 8px;line-height:0;flex-shrink:0;}' +
+                '.quote-official-fixed-header{display:block;width:100%;height:auto;border:0;max-width:none;}' +
+                '.quote-official-branded-band--fallback{line-height:normal;}' +
                 '.quote-official-branded-band{display:flex!important;align-items:center;justify-content:space-between;gap:14px;' +
                 'margin:0 -11mm 8px;padding:10px 11mm 11px;background:linear-gradient(180deg,#0a1628 0%,#0d1f38 100%)!important;' +
                 'color:#fff!important;border-bottom:3px solid #17a8a0!important;box-sizing:border-box;}' +
@@ -10549,6 +10572,7 @@
             const q = getQuoteA4Settings();
             const paths = [
                 'css/19-quote-official-a4.css?v=' + deploy,
+                q.page1HeaderUrl,
                 q.staticPage2Url,
                 q.staticPage3Url,
                 q.staticPage4Url
@@ -10577,7 +10601,7 @@
                 assets: assets,
                 storage: persist,
                 deploy: deploy,
-                page1HeaderMode: 'html-branded-band',
+                page1HeaderMode: 'fixed-png-header',
                 checkedAt: new Date().toISOString()
             };
             if (!cssLoaded) report.ok = false;
@@ -10596,16 +10620,16 @@
             if (doc) ensureAllQuoteOfficialPageHeaders(doc, getQuoteA4LogoUrl(), 'nebrasfactory@hotmail.com');
             const pages = getQuoteOfficialDynamicPages();
             const bandOk = pages.length > 0 && pages.every(function(page) {
-                const band = page.querySelector('.quote-official-branded-band');
-                return band && band.offsetHeight >= 12;
+                return quoteOfficialPageHeaderVisible(page);
             });
             report.page1HeaderVisible = bandOk;
+            report.fixedHeaderOnAllPages = bandOk;
             report.dynamicPageCount = pages.length;
             if (!bandOk) report.ok = false;
             const lines = [];
             lines.push('الإصدار: ' + (report.deploy || '—'));
             lines.push('CSS عرض السعر: ' + (report.cssLoaded ? '✓' : '✗'));
-            lines.push('شريط الصفحة 1: ' + (bandOk ? '✓ ظاهر' : '✗ غير ظاهر'));
+            lines.push('رأس ثابت (كل الصفحات): ' + (bandOk ? '✓ ظاهر' : '✗ غير ظاهر'));
             if (report.dynamicPageCount > 1) {
                 lines.push('صفحات المنتجات الديناميكية: ' + report.dynamicPageCount);
             }
@@ -11075,7 +11099,7 @@
         }
 
         function buildQuoteOfficialDynamicPageInner(spec, ctx) {
-            let html = buildQuoteOfficialBrandedBandHtml(ctx.resolvedLogo, ctx.factoryEmail);
+            let html = buildQuoteOfficialFixedHeaderHtml(ctx.resolvedLogo, ctx.factoryEmail);
             if (spec.showRibbon && ctx.customerRibbon) {
                 html += ctx.customerRibbon;
             } else if (!spec.showMeta && ctx.totalDynamicPages > 1) {
@@ -21456,6 +21480,21 @@
             addAuditLog('استعادة مقاسات الضلفة', '4 مقاسات قياسية');
         }
 
+        async function pickQuoteOfficialHeaderFromSettings() {
+            if (!requireMainGovernanceAdmin('تعديل رأس عرض السعر الثابت للإدارة الرئيسية فقط.')) return;
+            const q = getQuoteA4Settings();
+            const url = await pickMediaPath({
+                label: 'رأس صفحات عرض السعر (ثابت — مثل صفحات الشروط)',
+                defaultValue: q.page1HeaderUrl || DEFAULT_QUOTE_A4_SETTINGS.page1HeaderUrl || ''
+            });
+            if (!url) return;
+            q.page1HeaderUrl = url;
+            const input = document.getElementById('setting-quote-a4-fixed-header');
+            if (input) input.value = url;
+            saveContentData();
+            addAuditLog('تعديل رأس عرض السعر الثابت', url);
+        }
+
         async function pickQuoteA4StaticPageFromSettings(pageNo) {
             if (!requireMainGovernanceAdmin('تعديل صيغة عرض السعر A4 للإدارة الرئيسية فقط.')) return;
             const q = getQuoteA4Settings();
@@ -24556,6 +24595,8 @@
             if (qStatic2) qStatic2.value = q.staticPage2Url || '';
             if (qStatic3) qStatic3.value = q.staticPage3Url || '';
             if (qStatic4) qStatic4.value = q.staticPage4Url || '';
+            const qFixedHeader = document.getElementById('setting-quote-a4-fixed-header');
+            if (qFixedHeader) qFixedHeader.value = q.page1HeaderUrl || DEFAULT_QUOTE_A4_SETTINGS.page1HeaderUrl || '';
             const quoteBlock = document.getElementById('quote-a4-settings-block');
             if (quoteBlock) quoteBlock.hidden = !isMainGovernanceAdmin(currentAdmin);
             renderHeroSlideshowAdminList();
@@ -24682,6 +24723,8 @@
                 if (qStatic2El) q.staticPage2Url = qStatic2El.value.trim();
                 if (qStatic3El) q.staticPage3Url = qStatic3El.value.trim();
                 if (qStatic4El) q.staticPage4Url = qStatic4El.value.trim();
+                const qFixedHeaderEl = document.getElementById('setting-quote-a4-fixed-header');
+                if (qFixedHeaderEl) q.page1HeaderUrl = qFixedHeaderEl.value.trim();
                 systemSettings.quoteA4 = q;
                 ensureQuoteA4Settings();
             }
@@ -31695,6 +31738,7 @@
         window.openSystemSettingsForOccasion = openSystemSettingsForOccasion;
         window.pickQuoteA4LogoFromSettings = pickQuoteA4LogoFromSettings;
         window.pickQuoteA4StaticPageFromSettings = pickQuoteA4StaticPageFromSettings;
+        window.pickQuoteOfficialHeaderFromSettings = pickQuoteOfficialHeaderFromSettings;
         window.previewQuoteA4TemplateFromSettings = previewQuoteA4TemplateFromSettings;
         window.addHeroSlideshowSlideFromSettings = addHeroSlideshowSlideFromSettings;
         window.removeHeroSlideshowSlide = removeHeroSlideshowSlide;

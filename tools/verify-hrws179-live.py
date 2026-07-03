@@ -25,7 +25,7 @@ def main():
     deploy_v = deploy.group(1) if deploy else "?"
     print("deploy:", deploy_v)
     print("quote css linked:", "19-quote-official-a4" in html)
-    print("hrws179 in index:", "hrws179" in html)
+    print("hrws181 in index:", "hrws181" in html)
 
     js, _ = fetch("/js/nebras-platform.js", cache_bust=True)
     checks = [
@@ -34,7 +34,9 @@ def main():
         ("injectQuoteOfficialA4CriticalStyles", "injectQuoteOfficialA4CriticalStyles" in js),
         ("verifyQuoteA4AssetsHealth", "verifyQuoteA4AssetsHealth" in js),
         ("calcQuoteLineTotals", "calcQuoteLineTotals" in js),
-            ("paginateOfficialQuoteLines", "paginateOfficialQuoteLines" in js),
+        ("runQuoteA4HealthCheckForAdmin", "runQuoteA4HealthCheckForAdmin" in js),
+        ("buildQuoteOfficialFixedHeaderHtml", "buildQuoteOfficialFixedHeaderHtml" in js),
+        ("quoteOfficialPageHeaderVisible", "quoteOfficialPageHeaderVisible" in js),
     ]
     for label, ok in checks:
         print(label + ":", "OK" if ok else "MISSING")
@@ -58,7 +60,7 @@ def main():
         except Exception as e:
             print(asset, "ERR", e)
 
-    if deploy_v == "hrws179" or deploy_v == "hrws180":
+    if deploy_v == "hrws179" or deploy_v == "hrws180" or deploy_v == "hrws181":
         print("\nLIVE STATUS:", deploy_v, "deployed OK")
         return 0
     print("\nLIVE STATUS: still on", deploy_v, "— upload index.html + js/nebras-platform.js + css/19-quote-official-a4.css")
