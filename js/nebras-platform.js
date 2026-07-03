@@ -1,4 +1,4 @@
-        const SUPABASE_URL = 'https://oedldllrjavofpeaputz.supabase.co';
+﻿        const SUPABASE_URL = 'https://oedldllrjavofpeaputz.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_bt6rlHxu_pjc1xpkKEWOcg_HZ43JMR0';
         let supabaseClient = null;
         try {
@@ -3458,6 +3458,7 @@
             openErpAccounting: function() { openErpAccounting(); },
             openSalesPriceList: function() { openSalesPriceList(); },
             openRepQuoteBuilder: function() { openRepQuoteBuilder(); },
+            openRepMyQuotes: function() { openRepMyQuotes(); },
             openErpOrders: function() { openErpOrders(); },
             openErpWarehouseTransfers: function() { openErpWarehouseTransfers(); },
             openErpProcurement: function() { openErpProcurement(); },
@@ -5237,17 +5238,23 @@
         function calcCartTotals(lines) {
             const items = lines || nebrasCart || [];
             let subtotalEx = 0;
+            let listSubtotalEx = 0;
             let totalInc = 0;
             items.forEach(function(l) {
-                const unit = Number(l.unitPrice) || 0;
+                const unit = Number(l.unitPrice != null ? l.unitPrice : l.price) || 0;
+                const listUnit = Number(l.listPrice) || unit;
                 const qty = Number(l.qty) || 1;
                 subtotalEx += unit * qty;
+                listSubtotalEx += listUnit * qty;
                 totalInc += priceIncVat(unit) * qty;
             });
             const vatRate = getNebrasVatRate();
             const vatAmount = totalInc - subtotalEx;
+            const discountTotal = Math.max(0, listSubtotalEx - subtotalEx);
             return {
                 subtotalEx: subtotalEx,
+                listSubtotalEx: listSubtotalEx,
+                discountTotal: discountTotal,
                 vatRate: vatRate,
                 vatAmount: vatAmount,
                 totalInc: totalInc
@@ -10498,15 +10505,47 @@
 
         function calcQuoteLineTotals(line) {
             const unit = Number(line && (line.unitPrice != null ? line.unitPrice : (line.unitPriceExVat != null ? line.unitPriceExVat : line.price))) || 0;
+            const listUnit = Number(line && line.listPrice) || unit;
             const qty = Math.max(1, Number(line && line.qty) || 1);
             const lineEx = unit * qty;
+            const listEx = listUnit * qty;
+            const discountAmt = listEx > lineEx ? listEx - lineEx : 0;
+            const discountPct = listUnit > 0 && unit < listUnit ? Math.round((1 - unit / listUnit) * 100) : 0;
             const vatRate = getNebrasVatRate();
             const lineVat = lineEx * vatRate;
-            return { unit: unit, qty: qty, lineEx: lineEx, lineVat: lineVat, lineInc: lineEx + lineVat };
+            return {
+                unit: unit,
+                listUnit: listUnit,
+                qty: qty,
+                lineEx: lineEx,
+                listEx: listEx,
+                discountAmt: discountAmt,
+                discountPct: discountPct,
+                lineVat: lineVat,
+                lineInc: lineEx + lineVat
+            };
         }
 
         function nebrasQuotePage1HeaderFallback(imgEl) {
             if (!imgEl) return;
+            const q = getQuoteA4Settings();
+            const staticHeader = normalizeQuoteAssetPath(q.staticPage2Url || DEFAULT_QUOTE_A4_SETTINGS.staticPage2Url);
+            if (staticHeader && !imgEl.dataset.nebrasStaticHeaderTried) {
+                imgEl.dataset.nebrasStaticHeaderTried = '1';
+                imgEl.classList.add('quote-official-fixed-header--static-crop');
+                imgEl.style.display = 'block';
+                imgEl.src = resolveQuoteAssetUrl(staticHeader);
+                imgEl.onerror = function() {
+                    imgEl.style.display = 'none';
+                    const wrap = imgEl.closest('.quote-official-fixed-header-wrap') || imgEl.closest('.quote-official-page1-header-wrap');
+                    const fb = wrap && wrap.querySelector('.quote-official-branded-band--fallback');
+                    if (fb) {
+                        fb.hidden = false;
+                        fb.removeAttribute('aria-hidden');
+                    }
+                };
+                return;
+            }
             imgEl.style.display = 'none';
             const wrap = imgEl.closest('.quote-official-fixed-header-wrap') || imgEl.closest('.quote-official-page1-header-wrap');
             const fb = wrap && wrap.querySelector('.quote-official-branded-band--fallback');
@@ -10579,6 +10618,7 @@
             style.textContent =
                 '.quote-official-fixed-header-wrap{margin:0 -11mm 8px;line-height:0;flex-shrink:0;}' +
                 '.quote-official-fixed-header{display:block;width:100%;height:auto;border:0;max-width:none;}' +
+                '.quote-official-fixed-header--static-crop{display:block;width:100%;height:88px;object-fit:cover;object-position:top center;border:0;}' +
                 '.quote-official-branded-band--fallback{line-height:normal;}' +
                 '.quote-official-branded-band{display:flex!important;align-items:center;justify-content:space-between;gap:14px;' +
                 'margin:0 -11mm 8px;padding:10px 11mm 11px;background:linear-gradient(180deg,#0a1628 0%,#0d1f38 100%)!important;' +
@@ -11028,7 +11068,7 @@
                 '<td class="quote-official-num">piece</td>' +
                 '<td class="quote-official-num">' + calc.qty + '</td>' +
                 '<td class="quote-official-num">' + (calc.unit > 0 ? formatQuotePlainNumber(calc.unit) : '—') + '</td>' +
-                '<td class="quote-official-num">0</td>' +
+                '<td class="quote-official-num">' + (calc.discountAmt > 0 ? formatQuotePlainNumber(calc.discountAmt) : '0') + '</td>' +
                 '<td class="quote-official-num">' + pct + '</td>' +
                 '<td class="quote-official-num">' + (calc.lineVat > 0 ? formatQuotePlainNumber(calc.lineVat) : '—') + '</td>' +
                 '<td class="quote-official-num quote-official-line-total">' + (calc.lineEx > 0 ? formatQuotePlainNumber(calc.lineEx) : '—') + '</td>' +
@@ -11115,8 +11155,8 @@
             return '<div class="quote-official-bottom">' +
                 '<div class="quote-official-words-box"><p>' + escapeHtmlAttr(totalWords) + '</p></div>' +
                 '<table class="quote-official-totals-table"><tbody>' +
-                buildQuoteOfficialTotalsRow('Subtotal', 'المجموع', cartTotals.subtotalEx > 0 ? formatQuotePlainNumber(cartTotals.subtotalEx) : '—') +
-                buildQuoteOfficialTotalsRow('Discount', 'الخصم', '0') +
+                buildQuoteOfficialTotalsRow('Subtotal', 'المجموع', cartTotals.listSubtotalEx > 0 ? formatQuotePlainNumber(cartTotals.listSubtotalEx) : (cartTotals.subtotalEx > 0 ? formatQuotePlainNumber(cartTotals.subtotalEx) : '—')) +
+                buildQuoteOfficialTotalsRow('Discount', 'الخصم', cartTotals.discountTotal > 0 ? formatQuotePlainNumber(cartTotals.discountTotal) : '0') +
                 buildQuoteOfficialTotalsRow('Total Before Tax', 'الاجمالي قبل الضريبة', cartTotals.subtotalEx > 0 ? formatQuotePlainNumber(cartTotals.subtotalEx) : '—') +
                 buildQuoteOfficialTotalsRow('Total Vat', 'مجموع الضريبة', cartTotals.vatAmount > 0 ? formatQuotePlainNumber(cartTotals.vatAmount) : '—') +
                 buildQuoteOfficialTotalsRow('Total', 'الإجمالي', cartTotals.totalInc > 0 ? formatQuotePlainNumber(cartTotals.totalInc) : '—', true) +
@@ -11405,13 +11445,16 @@
 
         function salesEntryToCartLines(entry) {
             return (entry && entry.lines ? entry.lines : []).map(function(l) {
+                const unitPrice = Number(l.unitPrice) || Number(l.price) || 0;
+                const listPrice = Number(l.listPrice) || unitPrice;
                 return {
                     productTitle: l.productTitle || l.productAr || l.productId || 'صنف',
                     color: l.color || '',
                     size: l.size || '',
                     type: l.type || '',
                     qty: Number(l.qty) || 1,
-                    unitPrice: Number(l.unitPrice) || Number(l.price) || 0,
+                    unitPrice: unitPrice,
+                    listPrice: listPrice,
                     note: l.note || ''
                 };
             });
@@ -11461,10 +11504,16 @@
         }
 
         async function resolveSalesQuoteEntry(entryId) {
-            let entry = loadSalesQuotesInbox().find(function(e) { return e.id === entryId; });
+            const key = String(entryId || '').trim();
+            if (!key) return null;
+            function matchEntry(e) {
+                if (!e) return false;
+                return String(e.id) === key || String(e.quoteNo || '') === key || String(e.cloudId || '') === key;
+            }
+            let entry = loadSalesQuotesInbox().find(matchEntry);
             if (!entry) {
                 const cloudInbox = await fetchSalesQuotesFromCloud();
-                entry = cloudInbox.find(function(e) { return e.id === entryId; });
+                entry = cloudInbox.find(matchEntry);
             }
             return entry || null;
         }
@@ -11638,7 +11687,8 @@
                         productTitle: ln.productAr,
                         qty: ln.qty,
                         price: ln.price,
-                        unitPrice: ln.price
+                        unitPrice: ln.price,
+                        listPrice: erpNum(ln.listPrice) || erpNum(ln.price)
                     };
                 }),
                 subtotalExVat: subtotal,
@@ -16826,6 +16876,81 @@
             }
         }
 
+        function formatRepQuoteItemLabel(it) {
+            if (!it) return '';
+            return String(it.productAr || '') + ' ' + String(it.color || '') + ' ' + String(it.size || '') + ' — ' + formatSar(it.basePrice);
+        }
+
+        function filterRepQuotePriceList(query, list) {
+            list = list || [];
+            const q = String(query || '').trim().toLowerCase().replace(/\s+/g, ' ');
+            if (!q) return list.slice(0, 40);
+            const tokens = q.split(' ').filter(Boolean);
+            return list.filter(function(it) {
+                const hay = [it.productAr, it.color, it.size, it.id].join(' ').toLowerCase();
+                return tokens.every(function(tok) { return hay.indexOf(tok) >= 0; });
+            }).slice(0, 30);
+        }
+
+        function pickRepQuoteItem(id) {
+            const search = document.getElementById('rq-item-search');
+            const hidden = document.getElementById('rq-item');
+            const results = document.getElementById('rq-item-results');
+            const it = getEffectiveSalesPriceList(currentAdmin).find(function(x) { return x.id === id; });
+            if (!it) return;
+            if (hidden) hidden.value = id;
+            if (search) search.value = formatRepQuoteItemLabel(it);
+            if (results) results.hidden = true;
+            syncRepQuotePriceFromItem();
+        }
+
+        function wireRepQuoteItemPicker() {
+            const search = document.getElementById('rq-item-search');
+            const results = document.getElementById('rq-item-results');
+            const hidden = document.getElementById('rq-item');
+            if (!search || !results) return;
+            const list = getEffectiveSalesPriceList(currentAdmin);
+            function renderResults() {
+                const filtered = filterRepQuotePriceList(search.value, list);
+                if (!String(search.value || '').trim()) {
+                    results.hidden = true;
+                    return;
+                }
+                results.innerHTML = filtered.length
+                    ? filtered.map(function(it) {
+                        return '<button type="button" class="rep-quote-item-opt" data-id="' + escapeHtmlAttr(it.id) + '">' +
+                            escapeHtmlAttr(formatRepQuoteItemLabel(it)) + '</button>';
+                    }).join('')
+                    : '<p class="erp-empty">لا نتائج — جرّبي كلمة أخرى</p>';
+                results.hidden = false;
+            }
+            search.oninput = renderResults;
+            search.onfocus = renderResults;
+            results.onclick = function(ev) {
+                const btn = ev.target.closest('.rep-quote-item-opt[data-id]');
+                if (!btn) return;
+                ev.preventDefault();
+                pickRepQuoteItem(btn.getAttribute('data-id'));
+            };
+            if (hidden && hidden.value) {
+                const sel = list.find(function(x) { return x.id === hidden.value; });
+                if (sel) search.value = formatRepQuoteItemLabel(sel);
+            }
+            if (!document.body.dataset.repItemPickerDocBound) {
+                document.body.dataset.repItemPickerDocBound = '1';
+                document.addEventListener('click', function(ev) {
+                    const panel = document.getElementById('rq-item-results');
+                    if (panel && !ev.target.closest('.rep-quote-item-picker')) panel.hidden = true;
+                });
+            }
+        }
+
+        function wireRepQuoteBuilderInputs() {
+            wireRepQuoteItemPicker();
+            const discBtn = document.getElementById('rq-apply-discount-btn');
+            if (discBtn) discBtn.onclick = applyRepQuoteDiscountPct;
+        }
+
         function applyRepQuoteDiscountPct() {
             const pct = erpNum(fieldVal('rq-discount-pct'));
             const id = fieldVal('rq-item');
@@ -16835,16 +16960,6 @@
             const discounted = Math.round(erpNum(it.basePrice) * (100 - pct) / 100);
             const floor = getQuotePriceFloor(it, currentAdmin);
             priceEl.value = String(Math.max(floor, discounted));
-        }
-
-        function wireRepQuoteBuilderInputs() {
-            const itemSel = document.getElementById('rq-item');
-            if (itemSel) {
-                itemSel.onchange = syncRepQuotePriceFromItem;
-                syncRepQuotePriceFromItem();
-            }
-            const discBtn = document.getElementById('rq-apply-discount-btn');
-            if (discBtn) discBtn.onclick = applyRepQuoteDiscountPct;
         }
 
         function openAluminumQuoteBuilder() {
@@ -16865,7 +16980,8 @@
             openRepQuoteBuilder();
         }
 
-        function openRepQuoteBuilder() {
+        function openRepQuoteBuilder(options) {
+            options = options || {};
             if (!canBuildSalesQuotes()) {
                 alert('صلاحية عروض الأسعار مطلوبة.');
                 return;
@@ -16874,9 +16990,17 @@
             if (!getEffectiveSalesPriceList(currentAdmin).length) {
                 alert('لا توجد قائمة أسعار — الإدارة الرئيسية تحددها من مركز المنتجات والأسعار.');
             }
-            repQuoteDraft = { customerName: '', phone: '', lines: [] };
+            if (!options.preserveDraft) {
+                repQuoteDraft = { customerName: '', phone: '', lines: [] };
+            }
             renderRepQuoteBuilder();
             revealPlatformLayer('rep-quote-builder');
+            if (options.scrollToLibrary) {
+                setTimeout(function() {
+                    const lib = document.querySelector('.rep-quotes-library');
+                    if (lib) lib.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 300);
+            }
         }
 
         function renderRepQuoteBuilder() {
@@ -16897,57 +17021,60 @@
                         : 'ورقة 1 ديناميكية · 2–4 ثابتة (شروط وعقد نبراس) — يُرسَل لصندوق المبيعات');
             }
             ensureErpOperationsData();
-            const priceList = getEffectiveSalesPriceList(currentAdmin);
-            const opts = priceList.map(function(it) {
-                return '<option value="' + it.id + '">' + escapeHtmlAttr(it.productAr + ' ' + (it.color || '') + ' ' + (it.size || '')) + ' — ' + formatSar(it.basePrice) + '</option>';
-            }).join('');
+            const canEditPrice = canApplyQuoteManualDiscount(currentAdmin);
             const linesHtml = repQuoteDraft.lines.length
                 ? repQuoteDraft.lines.map(function(ln, i) {
                     const listP = erpNum(ln.listPrice);
                     const discPct = listP > 0 && erpNum(ln.price) < listP
                         ? Math.round((1 - erpNum(ln.price) / listP) * 100) : 0;
                     const discTag = discPct > 0
-                        ? ' <span class="rep-quote-line-discount">خصم ' + discPct + '%</span>' : '';
-                    const manualTag = ln.manualOverride
-                        ? ' <span class="rep-quote-line-manual">سعر يدوي</span>' : '';
-                    const priceEdit = canApplyQuoteManualDiscount(currentAdmin)
-                        ? '<label class="rep-quote-line-price-edit"><span>سعر يدوي</span><input type="number" min="0" step="any" value="' + erpNum(ln.price) + '" onchange="updateRepQuoteLinePrice(' + i + ', this.value)"></label>'
-                        : '';
-                    return '<article class="erp-row">' +
-                        '<div class="erp-row-main"><strong>' + escapeHtmlAttr(ln.productAr) + '</strong>' +
-                            '<small>' + erpNum(ln.qty) + ' × ' + formatSar(ln.price) +
-                            (listP > erpNum(ln.price) ? ' <s>' + formatSar(listP) + '</s>' : '') +
-                            discTag + manualTag + '</small>' + priceEdit + '</div>' +
-                        '<div class="erp-row-qty">' + formatSar(erpNum(ln.qty) * erpNum(ln.price)) + '</div>' +
+                        ? '<span class="rep-quote-line-discount">خصم ' + discPct + '%</span>' : '';
+                    const priceField = canEditPrice
+                        ? '<label class="rep-quote-line-field"><span>سعر</span><input type="number" min="0" step="any" value="' + erpNum(ln.price) + '" onchange="updateRepQuoteLinePrice(' + i + ', this.value)"></label>'
+                        : '<span class="rep-quote-line-field rep-quote-line-field--readonly">' + formatSar(ln.price) + '</span>';
+                    return '<article class="erp-row erp-row--quote-compact">' +
+                        '<div class="erp-row-product"><strong>' + escapeHtmlAttr(ln.productAr) + '</strong>' +
+                            (listP > erpNum(ln.price) ? '<small><s>' + formatSar(listP) + '</s> ' + discTag + '</small>' : '') +
+                        '</div>' +
+                        '<label class="rep-quote-line-field"><span>كمية</span><input type="number" min="1" step="1" value="' + erpNum(ln.qty) + '" onchange="updateRepQuoteLineQty(' + i + ', this.value)"></label>' +
+                        priceField +
+                        '<div class="erp-row-line-total">' + formatSar(erpNum(ln.qty) * erpNum(ln.price)) + '</div>' +
                         '<button type="button" class="erp-row-del" onclick="removeRepQuoteLine(' + i + ')" aria-label="حذف"><i class="fas fa-trash"></i></button>' +
                     '</article>';
                   }).join('')
                 : '<p class="erp-empty">أضف أصنافاً للعرض من القائمة المعتمدة.</p>';
             const subtotal = repQuoteDraft.lines.reduce(function(s, ln) { return s + erpNum(ln.qty) * erpNum(ln.price); }, 0);
-            const vat = subtotal * 0.15;
+            const listSubtotal = repQuoteDraft.lines.reduce(function(s, ln) { return s + erpNum(ln.qty) * erpNum(ln.listPrice || ln.price); }, 0);
+            const discountTotal = Math.max(0, listSubtotal - subtotal);
+            const vat = subtotal * getNebrasVatRate();
             const deptBanner = isAluQuote
                 ? '<p class="aluminum-quote-banner"><i class="fas fa-industry"></i> عرض سعر ألومنيوم — الأصناف والأسعار من مركز المنتجات (قسم ALU)</p>'
                 : (isWpcQuote
                     ? '<p class="wpc-quote-banner"><i class="fas fa-door-closed"></i> عرض سعر WPC — الأصناف والأسعار من مركز المنتجات (أبواب جاهزة وعضم)</p>'
                     : '');
             host.innerHTML = deptBanner +
-                '<p class="rep-quote-manual-hint"><i class="fas fa-pen"></i> اختاري الصنف من القائمة (لون · مقاس) — ثم عدّلي السعر يدوياً لخصم هذا العميل فقط دون تغيير القائمة الرسمية.</p>' +
+                '<p class="rep-quote-manual-hint"><i class="fas fa-pen"></i> ابحثي عن الصنف بالكتابة (مثال: حلق) — ثم عدّلي السعر أو الخصم لهذا العميل فقط دون تغيير القائمة الرسمية.</p>' +
                 '<div class="erp-form-grid">' +
                     '<label class="nebras-field"><span>اسم العميل</span><input type="text" id="rq-customer" value="' + escapeHtmlAttr(repQuoteDraft.customerName) + '" placeholder="اسم العميل"></label>' +
                     '<label class="nebras-field"><span>الجوال</span><input type="text" id="rq-phone" value="' + escapeHtmlAttr(repQuoteDraft.phone) + '" placeholder="05..."></label>' +
                 '</div>' +
-                '<div class="erp-form-grid erp-form-grid--line">' +
-                    '<label class="nebras-field nebras-field--wide"><span>الصنف من القائمة المعتمدة</span><select id="rq-item">' + (opts || '<option value="">لا أصناف</option>') + '</select></label>' +
+                '<div class="erp-form-grid erp-form-grid--line rep-quote-add-line">' +
+                    '<label class="nebras-field nebras-field--wide rep-quote-item-picker"><span>الصنف — اكتب للبحث</span>' +
+                        '<input type="search" id="rq-item-search" placeholder="مثال: حلق · باب · WPC" autocomplete="off">' +
+                        '<input type="hidden" id="rq-item" value="">' +
+                        '<div id="rq-item-results" class="rep-quote-item-results" hidden></div>' +
+                    '</label>' +
                     '<label class="nebras-field"><span>الكمية</span><input type="number" id="rq-qty" min="1" step="1" value="1"></label>' +
                     '<label class="nebras-field"><span>السعر (يدوي)</span><input type="number" id="rq-price" min="0" step="any" placeholder="سعر القائمة"><small class="rep-quote-price-hint" id="rq-price-hint"></small></label>' +
                     '<label class="nebras-field"><span>خصم % سريع</span><input type="number" id="rq-discount-pct" min="1" max="99" step="1" placeholder="مثال: 15"></label>' +
                     '<div class="erp-form-actions">' +
                         '<button type="button" class="nebras-users-btn" id="rq-apply-discount-btn"><i class="fas fa-percent"></i> تطبيق الخصم</button>' +
-                        '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="addRepQuoteLine()"><i class="fas fa-plus"></i> إضافة صنف</button>' +
+                        '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="addRepQuoteLine()"><i class="fas fa-plus"></i> إضافة</button>' +
                     '</div>' +
                 '</div>' +
-                '<div class="erp-quote-lines">' + linesHtml + '</div>' +
+                '<div class="erp-quote-lines erp-quote-lines--compact">' + linesHtml + '</div>' +
                 '<div class="erp-quote-totals">' +
+                    (discountTotal > 0 ? '<div class="erp-quote-discount"><span>إجمالي الخصم</span><strong>- ' + formatSar(discountTotal) + '</strong></div>' : '') +
                     '<div><span>الإجمالي قبل الضريبة</span><strong>' + formatSar(subtotal) + '</strong></div>' +
                     '<div><span>ضريبة 15%</span><strong>' + formatSar(vat) + '</strong></div>' +
                     '<div class="erp-quote-grand"><span>الإجمالي شامل الضريبة</span><strong>' + formatSar(subtotal + vat) + '</strong></div>' +
@@ -16962,6 +17089,7 @@
                 '</div>' +
                 (typeof renderRepMyQuotesSection === 'function' ? renderRepMyQuotesSection() : '');
             wireRepQuoteBuilderInputs();
+            ensureRepQuotesLibraryClicks();
         }
 
         function captureRepQuoteHeader() {
@@ -17032,6 +17160,15 @@
             renderRepQuoteBuilder();
         }
 
+        function updateRepQuoteLineQty(lineIndex, rawQty) {
+            captureRepQuoteHeader();
+            const ln = repQuoteDraft.lines[lineIndex];
+            if (!ln) return;
+            const qty = Math.max(1, erpNum(rawQty) || 1);
+            ln.qty = qty;
+            renderRepQuoteBuilder();
+        }
+
         async function saveRepQuote() {
             if (!canBuildSalesQuotes()) {
                 alert('صلاحية عروض الأسعار مطلوبة.');
@@ -17041,6 +17178,8 @@
             if (!customer) { alert('يرجى إدخال اسم العميل.'); return; }
             if (!repQuoteDraft.lines.length) { alert('أضف صنفاً واحداً على الأقل.'); return; }
             const subtotal = repQuoteDraft.lines.reduce(function(s, ln) { return s + erpNum(ln.qty) * erpNum(ln.price); }, 0);
+            const listSubtotal = repQuoteDraft.lines.reduce(function(s, ln) { return s + erpNum(ln.qty) * erpNum(ln.listPrice || ln.price); }, 0);
+            const discountTotal = Math.max(0, listSubtotal - subtotal);
             const vat = subtotal * getNebrasVatRate();
             const issued = (typeof issueNextQuoteNumber === 'function') ? issueNextQuoteNumber() : { quoteNo: 'REP-' + Date.now() };
             const quoteNo = issued.quoteNo || issued;
@@ -17052,6 +17191,9 @@
                 customerName: customer,
                 phone: fieldVal('rq-phone') || repQuoteDraft.phone,
                 lines: repQuoteDraft.lines.slice(),
+                listSubtotalExVat: listSubtotal,
+                discountTotal: discountTotal,
+                discountPct: listSubtotal > 0 ? Math.round((discountTotal / listSubtotal) * 100) : 0,
                 subtotalExVat: subtotal,
                 vatAmount: vat,
                 totalIncVat: subtotal + vat,
@@ -17663,10 +17805,47 @@
             });
         }
 
+        function bindNavPortalAndAdminLinks() {
+            function onNavCustomerPortal(event) {
+                event.preventDefault();
+                if (typeof closeMobileNav === 'function') closeMobileNav();
+                if (typeof window.openCustomerPortalLogin === 'function') window.openCustomerPortalLogin(event);
+            }
+            function onNavAdmin(event) {
+                event.preventDefault();
+                openAdminPanel(event);
+            }
+            const cpNav = document.getElementById('nav-customer-portal');
+            const adminNav = document.getElementById('nav-admin');
+            if (cpNav && cpNav.dataset.nebrasNavBound !== '1') {
+                cpNav.dataset.nebrasNavBound = '1';
+                cpNav.addEventListener('click', onNavCustomerPortal);
+            }
+            if (adminNav && adminNav.dataset.nebrasNavBound !== '1') {
+                adminNav.dataset.nebrasNavBound = '1';
+                adminNav.addEventListener('click', onNavAdmin);
+            }
+        }
+
         function bindPlatformUniversalClicks() {
             if (document.body.dataset.nebrasClickBridge === '1') return;
             document.body.dataset.nebrasClickBridge = '1';
             document.addEventListener('click', function(ev) {
+                const navLink = ev.target.closest('#nav-menu a[id]');
+                if (navLink && !ev.defaultPrevented) {
+                    const navId = navLink.id;
+                    if (navId === 'nav-customer-portal') {
+                        ev.preventDefault();
+                        if (typeof closeMobileNav === 'function') closeMobileNav();
+                        if (typeof window.openCustomerPortalLogin === 'function') window.openCustomerPortalLogin(ev);
+                        return;
+                    }
+                    if (navId === 'nav-admin') {
+                        ev.preventDefault();
+                        openAdminPanel(ev);
+                        return;
+                    }
+                }
                 if (ev.defaultPrevented) return;
                 const shopBtn = ev.target.closest('.card-shop-btn');
                 if (shopBtn) return;
@@ -18545,6 +18724,7 @@
                     return '<button type="button" class="dashboard-quick-action" onclick="' + escapeHtmlAttr(a.handler) + '()"><i class="' + escapeHtmlAttr(a.icon) + '"></i> ' + escapeHtmlAttr(a.label) + '</button>';
                 }).join('');
             }
+            if (typeof renderRepDashboardCustomers === 'function') renderRepDashboardCustomers(user);
         }
 
         const DASHBOARD_NAV_BUTTON_IDS = [
@@ -18890,23 +19070,54 @@
             return '<div class="rep-quotes-library"><h4><i class="fas fa-folder-open"></i> عروضي المحفوظة</h4><p class="erp-empty">لا عروض محفوظة بعد — أنشئ عرضاً واحفظه أو نزّل PDF.</p></div>';
         }
         const rows = history.slice(0, 30).map(function(e) {
-            const key = String(e.id).replace(/'/g, "\\'");
+            const key = String(e.id).replace(/"/g, '&quot;');
             const when = typeof formatNebrasDateTime === 'function' ? formatNebrasDateTime(e.at, currentLang) : (e.at || '');
             const total = typeof formatSar === 'function' ? formatSar(e.totalIncVat || e.total || 0) : String(e.totalIncVat || e.total || 0);
-            return '<tr><td><strong>' + escapeHtmlAttr(e.quoteNo || '—') + '</strong></td>' +
+            const disc = erpNum(e.discountTotal) > 0
+                ? ' <span class="rep-quote-line-discount">خصم ' + formatSar(e.discountTotal) + '</span>' : '';
+            return '<tr class="rep-quotes-row" data-rep-quote-id="' + escapeHtmlAttr(e.id) + '" tabindex="0" role="button">' +
+                '<td><strong>' + escapeHtmlAttr(e.quoteNo || '—') + '</strong></td>' +
                 '<td>' + escapeHtmlAttr(e.customerName || '—') + '</td>' +
                 '<td>' + escapeHtmlAttr(when) + '</td>' +
-                '<td>' + escapeHtmlAttr(total) + '</td>' +
+                '<td>' + escapeHtmlAttr(total) + disc + '</td>' +
                 '<td class="rep-quotes-actions">' +
-                    '<button type="button" class="erp-tag erp-tag--action" onclick="previewRepQuoteEntryA4(\'' + key + '\')"><i class="fas fa-eye"></i></button>' +
-                    '<button type="button" class="erp-tag erp-tag--action" onclick="downloadRepQuoteEntryPdf(\'' + key + '\')"><i class="fas fa-file-pdf"></i></button>' +
+                    '<button type="button" class="erp-tag erp-tag--action" data-rep-quote-preview="' + escapeHtmlAttr(e.id) + '"><i class="fas fa-eye"></i> معاينة</button>' +
+                    '<button type="button" class="erp-tag erp-tag--action" data-rep-quote-download="' + escapeHtmlAttr(e.id) + '"><i class="fas fa-file-pdf"></i></button>' +
                 '</td></tr>';
         }).join('');
         return '<div class="rep-quotes-library">' +
             '<h4><i class="fas fa-folder-open"></i> عروضي المحفوظة <span class="rep-quotes-count">' + history.length + '</span></h4>' +
+            '<p class="rep-quotes-hint">اضغط على الصف أو «معاينة» لفتح العرض — ثم PDF 4 صفحات.</p>' +
             '<div class="hr-leave-table-wrap"><table class="hr-leave-table rep-quotes-table"><thead><tr>' +
             '<th>رقم العرض</th><th>العميل</th><th>التاريخ</th><th>الإجمالي</th><th>إجراء</th>' +
             '</tr></thead><tbody>' + rows + '</tbody></table></div></div>';
+    }
+
+    function ensureRepQuotesLibraryClicks() {
+        if (document.body.dataset.repQuotesLibBound === '1') return;
+        document.body.dataset.repQuotesLibBound = '1';
+        document.addEventListener('click', function(ev) {
+            const previewBtn = ev.target.closest('[data-rep-quote-preview]');
+            if (previewBtn) {
+                ev.preventDefault();
+                const id = previewBtn.getAttribute('data-rep-quote-preview');
+                if (id && typeof previewRepQuoteEntryA4 === 'function') previewRepQuoteEntryA4(id);
+                return;
+            }
+            const dlBtn = ev.target.closest('[data-rep-quote-download]');
+            if (dlBtn) {
+                ev.preventDefault();
+                const id = dlBtn.getAttribute('data-rep-quote-download');
+                if (id && typeof downloadRepQuoteEntryPdf === 'function') downloadRepQuoteEntryPdf(id);
+                return;
+            }
+            const row = ev.target.closest('.rep-quotes-row[data-rep-quote-id]');
+            if (row && !ev.target.closest('button')) {
+                ev.preventDefault();
+                const rid = row.getAttribute('data-rep-quote-id');
+                if (rid && typeof previewRepQuoteEntryA4 === 'function') previewRepQuoteEntryA4(rid);
+            }
+        });
     }
 
     async function previewRepQuoteEntryA4(entryId) {
@@ -18948,11 +19159,53 @@
 
     function openRepMyQuotes() {
         if (!requirePermission('quotes')) return;
-        openRepQuoteBuilder();
-        setTimeout(function() {
-            const lib = document.querySelector('.rep-quotes-library');
-            if (lib) lib.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 300);
+        openRepQuoteBuilder({ preserveDraft: true, scrollToLibrary: true });
+    }
+
+    function getRepAssignedCustomers(admin) {
+        admin = admin || currentAdmin;
+        if (!admin) return [];
+        let users = [];
+        if (typeof window.getCustomerPortalUsers === 'function') {
+            try { users = window.getCustomerPortalUsers() || []; } catch (e) { users = []; }
+        }
+        const repId = String(admin.id || '');
+        const repUser = String(admin.username || '').toLowerCase();
+        return users.filter(function(u) {
+            if (!u || u.isActive === false) return false;
+            if (String(u.assignedRepId || '') === repId) return true;
+            if (String(u.assignedRepUsername || '').toLowerCase() === repUser) return true;
+            if (!u.assignedRepId && !u.assignedRepUsername && String(u.createdBy || '').toLowerCase() === repUser) return true;
+            return false;
+        });
+    }
+
+    function renderRepDashboardCustomers(user) {
+        let el = document.getElementById('rep-dashboard-customers');
+        const anchor = document.getElementById('dashboard-quick-actions');
+        if (!anchor || !user || user.role !== 'sales_rep') {
+            if (el) el.remove();
+            return;
+        }
+        if (!el) {
+            el = document.createElement('section');
+            el.id = 'rep-dashboard-customers';
+            el.className = 'rep-dashboard-customers dashboard-section';
+            anchor.parentNode.insertBefore(el, anchor.nextSibling);
+        }
+        const customers = getRepAssignedCustomers(user);
+        const rows = customers.length
+            ? customers.slice(0, 12).map(function(c) {
+                const phone = String(c.phone || '').trim();
+                return '<article class="rep-customer-chip">' +
+                    '<strong>' + escapeHtmlAttr(c.displayName || c.username || '—') + '</strong>' +
+                    '<small>' + escapeHtmlAttr(c.username || '') + (phone ? ' · ' + escapeHtmlAttr(phone) : '') + '</small>' +
+                    (phone ? '<a class="erp-tag erp-tag--action" href="tel:' + escapeHtmlAttr(phone) + '"><i class="fas fa-phone"></i></a>' : '') +
+                '</article>';
+            }).join('')
+            : '<p class="erp-empty">لا عملاء مرتبطون بعد — أنشئ حساب عميل من «حساب عميل».</p>';
+        el.innerHTML = '<h3 class="rep-dashboard-customers-title"><i class="fas fa-users"></i> عملائي (' + customers.length + ')</h3>' +
+            '<div class="rep-dashboard-customers-grid">' + rows + '</div>';
     }
 
     function loadQuoteRegistryForCloud() {
@@ -29445,6 +29698,7 @@
             bindNebrasHrPlatformGlobals();
             clearStuckInteractionBlockers();
             bindStorefrontCommerceClicks();
+            bindNavPortalAndAdminLinks();
         });
 
         document.addEventListener('visibilitychange', function() {
@@ -29457,6 +29711,7 @@
             initPlatformInteractionLayerGuard();
             bindScmGovernanceClicks();
             bindPlatformUniversalClicks();
+            if (typeof ensureRepQuotesLibraryClicks === 'function') ensureRepQuotesLibraryClicks();
             bindNebrasHrPlatformGlobals();
             enforceAdminDashboardGate();
             if (typeof ensureAdminPanelExitChrome === 'function') ensureAdminPanelExitChrome();
@@ -29572,6 +29827,7 @@
                     openNebrasWorkspace({ pillar: 'platform', view: 'branches' });
                 });
             }
+            bindNavPortalAndAdminLinks();
 
             document.querySelectorAll('#nav-menu a').forEach(function(link) {
                 link.addEventListener('click', function() {
@@ -31952,6 +32208,7 @@
         window.deleteProductPromoCampaign = deleteProductPromoCampaign;
         window.removeRepQuoteLine = removeRepQuoteLine;
         window.updateRepQuoteLinePrice = updateRepQuoteLinePrice;
+        window.updateRepQuoteLineQty = updateRepQuoteLineQty;
         window.saveRepQuote = saveRepQuote;
         window.openErpOrders = openErpOrders;
         window.addErpOrder = addErpOrder;

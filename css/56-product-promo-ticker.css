@@ -165,6 +165,186 @@
     border: 1px solid rgba(13, 40, 64, 0.2);
 }
 
+.rep-quote-item-picker {
+    position: relative;
+}
+
+.rep-quote-item-picker input[type="search"] {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(13, 40, 64, 0.2);
+    font-family: inherit;
+}
+
+.rep-quote-item-results {
+    position: absolute;
+    z-index: 40;
+    top: calc(100% + 4px);
+    right: 0;
+    left: 0;
+    max-height: 220px;
+    overflow-y: auto;
+    background: #fff;
+    border: 1px solid rgba(13, 40, 64, 0.15);
+    border-radius: 12px;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+    padding: 6px;
+}
+
+.rep-quote-item-opt {
+    display: block;
+    width: 100%;
+    text-align: start;
+    padding: 10px 12px;
+    border: 0;
+    background: transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.86rem;
+}
+
+.rep-quote-item-opt:hover,
+.rep-quote-item-opt:focus {
+    background: rgba(0, 168, 255, 0.1);
+}
+
+.erp-quote-lines--compact {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.erp-row--quote-compact {
+    display: grid;
+    grid-template-columns: minmax(120px, 1fr) 72px 96px 88px 36px;
+    gap: 8px;
+    align-items: center;
+    padding: 8px 10px;
+}
+
+.erp-row--quote-compact .erp-row-product {
+    min-width: 0;
+}
+
+.erp-row--quote-compact .erp-row-product strong {
+    display: block;
+    font-size: 0.84rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.erp-row--quote-compact .erp-row-product small {
+    font-size: 0.72rem;
+}
+
+.rep-quote-line-field {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 0.68rem;
+    color: #6a7888;
+}
+
+.rep-quote-line-field input {
+    width: 100%;
+    padding: 5px 6px;
+    border-radius: 8px;
+    border: 1px solid rgba(13, 40, 64, 0.18);
+    font-size: 0.82rem;
+}
+
+.rep-quote-line-field--readonly {
+    font-size: 0.82rem;
+    font-weight: 700;
+    color: #0d2840;
+}
+
+.erp-row-line-total {
+    font-size: 0.82rem;
+    font-weight: 800;
+    color: #0d2840;
+    text-align: end;
+}
+
+.erp-quote-discount {
+    color: #c0392b;
+}
+
+.rep-quotes-hint {
+    margin: 0 0 10px;
+    font-size: 0.8rem;
+    color: #5a6b7d;
+}
+
+.rep-quotes-row {
+    cursor: pointer;
+}
+
+.rep-quotes-row:hover {
+    background: rgba(0, 168, 255, 0.06);
+}
+
+.rep-dashboard-customers {
+    margin: 12px 0 20px;
+    padding: 16px 18px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.rep-dashboard-customers-title {
+    margin: 0 0 12px;
+    font-size: 1rem;
+    color: #fff;
+}
+
+.rep-dashboard-customers-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.rep-customer-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.92);
+    color: #0d2840;
+    min-width: 160px;
+}
+
+.rep-customer-chip strong {
+    display: block;
+    font-size: 0.86rem;
+}
+
+.rep-customer-chip small {
+    display: block;
+    font-size: 0.72rem;
+    color: #5a6b7d;
+}
+
+@media (max-width: 720px) {
+    .erp-row--quote-compact {
+        grid-template-columns: 1fr 1fr;
+        grid-template-areas:
+            "product product"
+            "qty price"
+            "total del";
+    }
+    .erp-row--quote-compact .erp-row-product { grid-area: product; }
+    .erp-row--quote-compact .rep-quote-line-field:nth-of-type(1) { grid-area: qty; }
+    .erp-row--quote-compact .rep-quote-line-field:nth-of-type(2),
+    .erp-row--quote-compact .rep-quote-line-field--readonly { grid-area: price; }
+    .erp-row--quote-compact .erp-row-line-total { grid-area: total; }
+    .erp-row--quote-compact .erp-row-del { grid-area: del; justify-self: end; }
+}
+
 .product-promo-admin-list {
     display: flex;
     flex-direction: column;

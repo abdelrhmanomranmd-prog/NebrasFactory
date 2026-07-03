@@ -216,6 +216,18 @@ body.customer-portal-open { overflow: hidden; }
 .cp-row strong { color: #0d2840; font-size: 0.88rem; }
 .cp-row span { color: #2980b9; font-size: 0.82rem; text-align: left; }
 .cp-row small { grid-column: 1 / -1; color: #718096; font-size: 0.76rem; }
+
+.cp-discount-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: rgba(192, 57, 43, 0.12);
+    color: #c0392b;
+    font-size: 0.74rem;
+    font-weight: 800;
+}
 .cp-empty { color: #718096; font-size: 0.85rem; margin: 0; }
 .cp-subtabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; }
 .cp-subtab {

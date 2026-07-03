@@ -366,20 +366,34 @@
 
     /* ---------- تسجيل دخول العميل ---------- */
     function openCustomerPortalLogin(ev) {
-        if (ev) ev.preventDefault();
+        if (ev && ev.preventDefault) ev.preventDefault();
+        if (typeof global.closeMobileNav === 'function') global.closeMobileNav();
         if (currentPortalCustomer) {
             showCustomerPortalApp();
             return;
         }
-        const el = document.getElementById('customer-portal-overlay');
-        if (el) el.classList.add('show');
-        if (typeof syncPlatformInteractionLayers === 'function') syncPlatformInteractionLayers();
+        if (typeof global.revealPlatformLayer === 'function') {
+            global.revealPlatformLayer('customer-portal-overlay');
+        } else {
+            const el = document.getElementById('customer-portal-overlay');
+            if (el) {
+                el.classList.add('show');
+                el.removeAttribute('hidden');
+                el.setAttribute('aria-hidden', 'false');
+            }
+            if (typeof global.syncPlatformInteractionLayers === 'function') global.syncPlatformInteractionLayers();
+        }
+        if (typeof global.clearStuckInteractionBlockers === 'function') global.clearStuckInteractionBlockers();
     }
 
     function closeCustomerPortalLogin() {
-        const el = document.getElementById('customer-portal-overlay');
-        if (el) el.classList.remove('show');
-        if (typeof syncPlatformInteractionLayers === 'function') syncPlatformInteractionLayers();
+        if (typeof global.hidePlatformLayer === 'function') {
+            global.hidePlatformLayer('customer-portal-overlay');
+        } else {
+            const el = document.getElementById('customer-portal-overlay');
+            if (el) el.classList.remove('show');
+            if (typeof global.syncPlatformInteractionLayers === 'function') global.syncPlatformInteractionLayers();
+        }
     }
 
     function loginCustomerPortal() {
@@ -456,10 +470,21 @@
 
     function showCustomerPortalApp() {
         if (!currentPortalCustomer) return;
+        if (typeof global.closeMobileNav === 'function') global.closeMobileNav();
         document.body.classList.add('customer-portal-open');
+        const loginOv = document.getElementById('customer-portal-overlay');
+        if (loginOv) loginOv.classList.remove('show');
         const app = document.getElementById('customer-portal-app');
-        if (app) { app.hidden = false; app.classList.add('show'); }
-        if (typeof syncPlatformInteractionLayers === 'function') syncPlatformInteractionLayers();
+        if (app) {
+            app.hidden = false;
+            app.classList.add('show');
+        }
+        if (typeof global.revealPlatformLayer === 'function') {
+            global.revealPlatformLayer('customer-portal-app');
+        } else if (typeof global.syncPlatformInteractionLayers === 'function') {
+            global.syncPlatformInteractionLayers();
+        }
+        if (typeof global.clearStuckInteractionBlockers === 'function') global.clearStuckInteractionBlockers();
         renderCustomerPortalDashboard();
     }
 
@@ -723,6 +748,26 @@
         return access.indexOf(key) >= 0;
     }
 
+    function quoteDiscountSummary(q) {
+        if (!q) return null;
+        const num = function(v) { return Number(v) || 0; };
+        if (num(q.discountTotal) > 0) {
+            return { amount: num(q.discountTotal), pct: num(q.discountPct) || 0 };
+        }
+        const lines = q.lines || [];
+        let listTotal = 0;
+        let netTotal = 0;
+        lines.forEach(function(l) {
+            const qty = Number(l.qty) || 1;
+            const price = Number(l.price != null ? l.price : l.unitPrice) || 0;
+            const list = Number(l.listPrice) || price;
+            listTotal += list * qty;
+            netTotal += price * qty;
+        });
+        if (listTotal <= netTotal) return null;
+        return { amount: listTotal - netTotal, pct: Math.round(((listTotal - netTotal) / listTotal) * 100) };
+    }
+
     function renderCustomerPortalDashboard() {
         const host = document.getElementById('customer-portal-body');
         const head = document.getElementById('customer-portal-head');
@@ -748,8 +793,13 @@
         const quotesHtml = cpHasPortalAccess(u, 'quotes')
             ? '<section class="cp-panel"><h3><i class="fas fa-file-invoice"></i> عروض الأسعار</h3>' +
                 (d.quotes.length ? '<div class="cp-list">' + d.quotes.slice(0, 20).map(function(q) {
+                    const disc = quoteDiscountSummary(q);
+                    const discHtml = disc
+                        ? '<span class="cp-discount-badge"><i class="fas fa-tag"></i> خصم ' + disc.pct + '% · ' + formatMoney(disc.amount) + '</span>'
+                        : '';
                     return '<article class="cp-row"><strong>' + esc(q.quoteNo || q.id || '—') + '</strong>' +
                         '<span>' + formatMoney(q.totalIncVat || q.total || 0) + '</span>' +
+                        discHtml +
                         '<small>' + esc(q.status || 'جديد') + (q.convertedToOrder ? ' · طلب OMS' : '') + '</small></article>';
                 }).join('') + '</div>' : '<p class="cp-empty">لا عروض مسجّلة بعد — تواصلي مع مبيعات نبراس.</p>') +
             '</section>'
