@@ -85,6 +85,91 @@ body.customer-portal-open { overflow: hidden; }
     padding: 20px 16px 40px;
 }
 
+/* معاينة أبواب + شركاء — نفس حركة الموقع */
+.cp-hero-strip {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 14px;
+    margin-bottom: 16px;
+}
+.cp-showcase-card {
+    background: linear-gradient(165deg, #0a1e32 0%, #0d2840 55%, #123a5c 100%);
+    border-radius: 18px;
+    padding: 12px 12px 14px;
+    border: 1px solid rgba(0, 168, 255, 0.25);
+    box-shadow: 0 12px 32px rgba(13, 40, 64, 0.22);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    min-height: 168px;
+}
+.cp-showcase-card--partners {
+    background: linear-gradient(165deg, #0d2840 0%, #134e4a 100%);
+    border-color: rgba(46, 204, 113, 0.35);
+}
+.cp-showcase-card--doors { cursor: pointer; }
+.cp-showcase-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 14px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    background: rgba(255, 255, 255, 0.08);
+}
+.cp-showcase-chip--doors { border-color: rgba(0, 168, 255, 0.5); }
+.cp-showcase-chip--partners { border-color: rgba(46, 204, 113, 0.55); background: rgba(39, 174, 96, 0.2); }
+.cp-showcase-frame {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+.cp-showcase-frame .nebras-mini-showcase {
+    --mini-showcase-w: clamp(78px, 22vw, 96px);
+    --mini-showcase-h: clamp(118px, 30vw, 142px);
+}
+
+/* أزرار خدمة العميل */
+.cp-quick-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 10px;
+    margin-bottom: 18px;
+}
+.cp-action-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    min-height: 88px;
+    padding: 12px 10px;
+    border: none;
+    border-radius: 14px;
+    font-family: inherit;
+    cursor: pointer;
+    color: #fff;
+    background: linear-gradient(145deg, #155e94, #0d2840);
+    box-shadow: 0 8px 20px rgba(13, 40, 64, 0.18);
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.cp-action-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(13, 40, 64, 0.24); }
+.cp-action-btn i { font-size: 1.15rem; }
+.cp-action-btn span { font-size: 0.8rem; font-weight: 700; text-align: center; line-height: 1.3; }
+.cp-action-btn small { font-size: 0.68rem; opacity: 0.88; direction: ltr; }
+.cp-action-btn--complaint { background: linear-gradient(145deg, #c0392b, #922b21); }
+.cp-action-btn--service { background: linear-gradient(145deg, #1a6fa8, #0d4a6e); }
+.cp-action-btn--sales { background: linear-gradient(145deg, #0d2840, #1a5276); }
+.cp-action-btn--rep { background: linear-gradient(145deg, #16a085, #0e6655); }
+.cp-action-btn--pdf { background: linear-gradient(145deg, #8e44ad, #6c3483); }
+.cp-action-btn[disabled] { opacity: 0.65; cursor: wait; }
+
 .cp-stats {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
@@ -153,6 +238,47 @@ body.customer-portal-open { overflow: hidden; }
 }
 .cp-loyalty-table th { font-size: 0.78rem; }
 
+/* كشف حساب PDF */
+.cp-statement-pdf-mount {
+    position: fixed;
+    left: -9999px;
+    top: 0;
+    width: 794px;
+    pointer-events: none;
+    opacity: 0;
+}
+.cp-statement-pdf-doc {
+    width: 794px;
+    padding: 28px 32px;
+    background: #fff;
+    color: #0d2840;
+    font-family: 'Cairo', 'Segoe UI', Tahoma, Arial, sans-serif;
+}
+.cp-statement-head {
+    border-bottom: 4px solid #0d2840;
+    padding-bottom: 14px;
+    margin-bottom: 16px;
+}
+.cp-statement-brand strong { display: block; font-size: 1.15rem; color: #0d2840; }
+.cp-statement-brand span { font-size: 0.82rem; color: #5d6d7e; }
+.cp-statement-head h2 { margin: 10px 0 4px; font-size: 1.05rem; }
+.cp-statement-meta { margin-bottom: 14px; font-size: 0.88rem; }
+.cp-statement-section { margin-bottom: 14px; }
+.cp-statement-section h3 { font-size: 0.92rem; margin: 0 0 8px; color: #1a5276; }
+.cp-statement-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+.cp-statement-table th,
+.cp-statement-table td { border: 1px solid #dce6f0; padding: 6px 8px; text-align: right; }
+.cp-statement-table th { background: #e8f2fa; }
+.cp-statement-empty { color: #718096; font-size: 0.82rem; }
+.cp-statement-foot {
+    margin-top: 18px;
+    padding-top: 10px;
+    border-top: 1px solid #dce6f0;
+    font-size: 0.75rem;
+    color: #718096;
+    text-align: center;
+}
+
 /* لوحات إدارة بوابة العملاء — تمرير وظهور المحرر */
 #customer-portal-governance .nebras-erp-modal,
 #customer-loyalty-analytics .nebras-erp-modal {
@@ -197,56 +323,30 @@ body.customer-portal-open { overflow: hidden; }
     border: 1px solid #c5dff0;
     border-radius: 12px;
     padding: 14px 16px;
-    background: linear-gradient(180deg, #f4faff 0%, #fff 100%);
+    margin-top: 8px;
+    grid-column: 1 / -1;
 }
-
-.cp-portal-access-title {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-weight: 700;
-    color: #0a4d8c;
-    margin-bottom: 6px;
-}
-
-.cp-portal-access-hint {
-    margin: 0 0 12px;
+.cp-portal-access-block legend {
     font-size: 0.82rem;
-    color: #5a6a7a;
-    line-height: 1.45;
+    font-weight: 700;
+    color: #1a5276;
+    padding: 0 6px;
 }
-
 .cp-portal-access-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 10px;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 8px;
+    margin-top: 8px;
 }
-
-.cp-portal-access-item {
-    align-items: flex-start;
-    padding: 10px 12px;
-    border: 1px solid #d8e8f4;
-    border-radius: 10px;
-    background: #fff;
-}
-
-.cp-portal-access-item-text {
+.cp-portal-access-grid label {
     display: flex;
-    flex-direction: column;
-    gap: 2px;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    cursor: pointer;
 }
 
-.cp-portal-access-item-text strong {
-    font-size: 0.86rem;
-    color: #123;
-}
-
-.cp-portal-access-item-text small {
-    font-size: 0.74rem;
-    color: #6a7888;
-    line-height: 1.35;
-}
-
-@media (max-width: 600px) {
-    .cp-logout-btn { position: static; margin-top: 12px; }
+@media (max-width: 520px) {
+    .cp-quick-actions { grid-template-columns: repeat(2, 1fr); }
+    .cp-hero-strip { grid-template-columns: 1fr 1fr; }
 }

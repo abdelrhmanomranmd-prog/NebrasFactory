@@ -1,4 +1,4 @@
-﻿        const SUPABASE_URL = 'https://oedldllrjavofpeaputz.supabase.co';
+        const SUPABASE_URL = 'https://oedldllrjavofpeaputz.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_bt6rlHxu_pjc1xpkKEWOcg_HZ43JMR0';
         let supabaseClient = null;
         try {
@@ -29,6 +29,29 @@
         const IMMUTABLE_PRIMARY_ADMIN_USERNAME = 'NEBRASFACTORY';
         const PRIMARY_RECOVERY_EMAIL = 'abdelrhmanomranmd@gmail.com';
         const NEBRAS_LINKTREE_URL = 'https://linktr.ee/abdelrhmanomranmd';
+        /** الاسم الرئيسي للعملاء — أبواب WPC أولاً */
+        const NEBRAS_BRAND_PRIMARY_AR = 'شركة مصنع نبراس لأبواب الـ WPC';
+        const NEBRAS_BRAND_LEGAL_AR = 'شركة مصنع نبراس للبلاستيك';
+        const NEBRAS_BRAND_SUBLINE_AR = 'مصنع بلاستيك سعودي — متخصصون في أبواب WPC';
+        const NEBRAS_BRAND_PRIMARY_EN = 'Nebras WPC Doors Factory Company';
+        const NEBRAS_BRAND_LEGAL_EN = 'Nebras Plastic Factory Company';
+        const NEBRAS_BRAND_SUBLINE_EN = 'Saudi plastic factory — WPC door specialists';
+
+        function getNebrasBrandPrimary(lang) {
+            const l = lang || (typeof currentLang !== 'undefined' ? currentLang : 'ar') || 'ar';
+            return l === 'en' ? NEBRAS_BRAND_PRIMARY_EN : (l === 'zh' ? 'Nebras WPC 门工厂' : NEBRAS_BRAND_PRIMARY_AR);
+        }
+        function getNebrasBrandLegal(lang) {
+            const l = lang || (typeof currentLang !== 'undefined' ? currentLang : 'ar') || 'ar';
+            return l === 'en' ? NEBRAS_BRAND_LEGAL_EN : (l === 'zh' ? 'Nebras 塑料工厂' : NEBRAS_BRAND_LEGAL_AR);
+        }
+        function getNebrasBrandSubline(lang) {
+            const l = lang || (typeof currentLang !== 'undefined' ? currentLang : 'ar') || 'ar';
+            return l === 'en' ? NEBRAS_BRAND_SUBLINE_EN : NEBRAS_BRAND_SUBLINE_AR;
+        }
+        window.getNebrasBrandPrimary = getNebrasBrandPrimary;
+        window.getNebrasBrandLegal = getNebrasBrandLegal;
+        window.getNebrasBrandSubline = getNebrasBrandSubline;
         /** المرحلة 1 — السحابة مصدر الحقيقة عند دخول الإدارة */
         const NEBRAS_SERVER_FIRST_MODE = true;
         /** إنتاج حي — بدون بذور تجريبية؛ الإدارة تضيف كل البيانات */
@@ -168,7 +191,7 @@
             hr: 'الموارد البشرية',
             legal: 'الشؤون القانونية',
             customerPortal: 'بوابة العملاء — حسابات العملاء',
-            createCustomerUser: 'إنشاء حساب عميل (مندوب)',
+            createCustomerUser: 'إنشاء حساب عميل (إدارة · مدير مبيعات · مندوب)',
             orderJourney: 'مسار نبراس — متابعة الطلب',
             storeCatalog: 'المتجر الإلكتروني — رفع المنتجات'
         };
@@ -194,7 +217,7 @@
             hr: { icon: 'fas fa-people-roof', descAr: 'منصة HR — موظفون وعمال وسيارات وإجازات لكل الفروع' },
             legal: { icon: 'fas fa-scale-balanced', descAr: 'منصة Legal — عقود وقضايا وامتثال وPDPL لنبراس والشركات الشريكة' },
             customerPortal: { icon: 'fas fa-user-circle', descAr: 'إنشاء حسابات بوابة العميل — لوحة خاصة لكل عميل' },
-            createCustomerUser: { icon: 'fas fa-user-plus', descAr: 'مندوب المبيعات — إنشاء حساب عميل (اسم مستخدم وكلمة سر)' },
+            createCustomerUser: { icon: 'fas fa-user-plus', descAr: 'إنشاء حساب عميل — الإدارة · مدير المبيعات · مندوب المبيعات' },
             orderJourney: { icon: 'fas fa-route', descAr: 'مسار الطلب — إنتاج · ورشة · مستودع · تأكيد مالي · جاهز للاستلام' },
             storeCatalog: { icon: 'fas fa-store', descAr: 'رفع وتحديث منتجات المتجر — مقاس · نوع · سعر · صورة — ديناميكي' }
         };
@@ -671,8 +694,8 @@
             watermarkScale: 78,
             accentColor: '#0d2840',
             goldAccent: '#c9a227',
-            taglineAr: 'شركة مصنع نبراس للبلاستيك — أبواب WPC · بلاستيك · حلول صناعية',
-            taglineEn: 'Nebras Plastic Factory — WPC Doors · Plastic · Industrial Solutions',
+            taglineAr: NEBRAS_BRAND_PRIMARY_AR + ' — ' + NEBRAS_BRAND_SUBLINE_AR,
+            taglineEn: NEBRAS_BRAND_PRIMARY_EN + ' — ' + NEBRAS_BRAND_SUBLINE_EN,
             headerBandAr: 'جودة سعودية · تصنيع محلي · خدمة ما بعد البيع',
             headerBandEn: 'Saudi Quality · Local Manufacturing · After-sales Service',
             footerNoteAr: 'عرض سعر استرشادي — التأكيد النهائي عبر فريق مبيعات مصنع نبراس.',
@@ -2406,7 +2429,7 @@
                 titleAr: 'من نحن — مصنع نبراس',
                 titleEn: 'About Nebras Factory',
                 titleZh: '关于 Nebras 工厂',
-                summaryAr: 'نحن شركة مصنع نبراس للبلاستيك، نقدم حلولاً متكاملة للصناعة والمقاولات بشفافية وجودة سعودية أصيلة.',
+                summaryAr: 'نحن ' + NEBRAS_BRAND_PRIMARY_AR + ' — ' + NEBRAS_BRAND_SUBLINE_AR + ' بشفافية وجودة سعودية أصيلة.',
                 summaryEn: 'Nebras Plastic Factory delivers integrated industrial solutions with Saudi quality.',
                 summaryZh: 'Nebras 塑料工厂提供一体化工业解决方案。',
                 bodyAr: 'مصنع نبراس للبلاستيك من القصيم — عنيزة. نصنع أبواب WPC، حلول بلاستيكية، وألومنيوم لعملائنا في المملكة.\n\n• خبرة صناعية وتوريد موثوق\n• جودة ومعايير سعودية\n• فريق مبيعات وخدمة عملاء على مدار الطلب',
@@ -3289,7 +3312,7 @@
             { id: 'dash-audit', zone: 'quick', dashGroup: 'command', sortOrder: 5, iconClass: 'fas fa-clipboard-check', titleAr: 'سجل العمليات', titleEn: 'Audit Log', textAr: 'تتبع كل إجراء إداري.', textEn: 'Track admin actions.', handler: 'openAuditLog', permission: 'audit', visible: true },
             { id: 'dash-sales', zone: 'quick', dashGroup: 'command', sortOrder: 6, iconClass: 'fas fa-chart-line', titleAr: 'المبيعات', titleEn: 'Sales', textAr: 'عروض الأسعار الواردة والمبيعات.', textEn: 'Quotes and sales.', handler: 'openSalesManagement', permission: 'sales', visible: true },
             { id: 'dash-customer-portal', zone: 'quick', dashGroup: 'command', sortOrder: 1.02, iconClass: 'fas fa-user-circle', titleAr: 'حسابات بوابة العملاء', titleEn: 'Customer Portal Accounts', textAr: 'إنشاء عملاء · مسار العروض · الطلبات · الحوالات · رحلة الطلب.', textEn: 'Portal users and customer journey paths.', cssClass: 'dashboard-tile-card--customer-portal', handler: 'openCustomerPortalGovernance', permission: 'customerPortal', visible: true },
-            { id: 'dash-create-customer-portal', zone: 'quick', dashGroup: 'command', sortOrder: 1.025, iconClass: 'fas fa-user-plus', titleAr: 'إنشاء حساب عميل', titleEn: 'New Customer Account', textAr: 'إضافة عميل جديد لبوابة نبراس — تحديد مساره في البوابة.', textEn: 'Quick portal signup with journey paths.', cssClass: 'dashboard-tile-card--create-customer', handler: 'openCpUserEditorNew', permission: 'customerPortal', visible: true },
+            { id: 'dash-create-customer-portal', zone: 'quick', dashGroup: 'command', sortOrder: 1.025, iconClass: 'fas fa-user-plus', titleAr: 'إنشاء حساب عميل', titleEn: 'New Customer Account', textAr: 'إضافة عميل جديد لبوابة نبراس — الإدارة · مدير المبيعات · المندوب.', textEn: 'Quick portal signup with journey paths.', cssClass: 'dashboard-tile-card--create-customer', handler: 'openCpUserEditorNew', permission: 'createCustomerUser', visible: true },
             { id: 'dash-crm', zone: 'quick', dashGroup: 'command', sortOrder: 6.5, iconClass: 'fas fa-handshake', titleAr: 'نبراس CRM', titleEn: 'Nebras CRM', textAr: 'قاعدة عملاء · Pipeline · فرص · استيراد Leads.', textEn: 'Customers, pipeline, opportunities.', handler: 'openCrmPlatform', permission: 'customerService', visible: true },
             { id: 'dash-cs', zone: 'quick', dashGroup: 'command', sortOrder: 7, iconClass: 'fas fa-headset', titleAr: 'خدمة العملاء', titleEn: 'Customer Service', textAr: 'استفسارات وردود العملاء.', textEn: 'Customer care.', handler: 'openCustomerServiceManagement', permission: 'customerService', visible: true },
             { id: 'dash-complaints', zone: 'quick', dashGroup: 'command', sortOrder: 8, iconClass: 'fas fa-exclamation-triangle', titleAr: 'الشكاوى', titleEn: 'Complaints', textAr: 'متابعة وحل الشكاوى.', textEn: 'Complaint resolution.', handler: 'openComplaintsManagement', permission: 'complaints', visible: true },
@@ -4365,7 +4388,7 @@
         function onDashboardTileClick(tileId) {
             const tile = dashboardTiles.find(function(t) { return t.id === tileId; });
             if (!tile) return;
-            if (tile.permission && !canManage(tile.permission)) {
+            if (tile.permission && !dashboardTilePassesPermission(tile, currentAdmin)) {
                 alert('ليس لديك صلاحية فتح هذا القسم.');
                 return;
             }
@@ -6942,8 +6965,8 @@
             const org = {
                 '@type': 'Organization',
                 '@id': base + '/#organization',
-                name: 'شركة مصنع نبراس للبلاستيك',
-                alternateName: ['مصنع نبراس للبلاستيك', 'منصة نبراس', 'Nebras Plastic Factory'],
+                name: NEBRAS_BRAND_PRIMARY_AR,
+                alternateName: [NEBRAS_BRAND_LEGAL_AR, 'مصنع نبراس للبلاستيك', 'منصة نبراس', NEBRAS_BRAND_PRIMARY_EN],
                 url: siteUrl,
                 logo: { '@type': 'ImageObject', url: base + '/images/logo-nebras-mark.png', width: 127, height: 129 },
                 image: base + '/images/profile-2026/hero-cover.jpg',
@@ -9013,7 +9036,8 @@
             const now = new Date(entry.at || Date.now());
             const dateStr = formatNebrasDateTime(now, lang, { dateStyle: 'long', timeStyle: 'short' });
             const pct = getNebrasVatPercentLabel();
-            const companyName = isEn ? 'Nebras Plastic Factory Company' : (isZh ? 'Nebras 塑料工厂公司' : 'شركة مصنع نبراس للبلاستيك');
+            const companyName = isEn ? NEBRAS_BRAND_PRIMARY_EN : (isZh ? 'Nebras WPC 门工厂' : NEBRAS_BRAND_PRIMARY_AR);
+            const companyLegal = isEn ? NEBRAS_BRAND_LEGAL_EN : (isZh ? 'Nebras 塑料工厂' : NEBRAS_BRAND_LEGAL_AR);
             const divider = '━━━━━━━━━━━━━━━━━━━━━━━━';
             const thin = '────────────────────────';
             let msg = divider + '\n';
@@ -9079,7 +9103,8 @@
             if (!entry) return '';
             const isEn = lang === 'en';
             const isZh = lang === 'zh';
-            const companyName = isEn ? 'Nebras Plastic Factory Company' : (isZh ? 'Nebras 塑料工厂公司' : 'شركة مصنع نبراس للبلاستيك');
+            const companyName = isEn ? NEBRAS_BRAND_PRIMARY_EN : (isZh ? 'Nebras WPC 门工厂' : NEBRAS_BRAND_PRIMARY_AR);
+            const companyLegal = isEn ? NEBRAS_BRAND_LEGAL_EN : (isZh ? 'Nebras 塑料工厂' : NEBRAS_BRAND_LEGAL_AR);
             let msg = isEn
                 ? '📄 Nebras Price Quotation — PDF (A4)\n'
                 : (isZh ? '📄 Nebras 报价单 PDF (A4)\n' : '📄 عرض سعر PDF — مستند A4\n');
@@ -10420,7 +10445,7 @@
                 return '<section class="quote-terms-block quote-terms-block--custom">' +
                     '<h3 class="quote-terms-title">شروط وأحكام عرض السعر</h3>' +
                     '<div class="quote-terms-custom">' + quoteCustomTermsHtml(q.termsCustomAr) + '</div></section>' +
-                    '<p class="quote-copyright-line">© كل الحقوق محفوظة لشركة مصنع نبراس للبلاستيك ' + year + '</p>';
+                    '<p class="quote-copyright-line">© كل الحقوق محفوظة لـ' + NEBRAS_BRAND_LEGAL_AR + ' ' + year + '</p>';
             }
             if (lang === 'en') {
                 return '<section class="quote-terms-block">' +
@@ -10495,12 +10520,12 @@
             const vat = escapeHtmlAttr(systemSettings.taxNumber || '312765384700003');
             const cr = escapeHtmlAttr(systemSettings.commercialRegister || '1128185177');
             const email = escapeHtmlAttr(factoryEmail || 'nebrasfactory@hotmail.com');
-            const logoHtml = buildQuoteLogoImgHtml('quote-official-branded-band-logo', logoUrl, 'شركة مصنع نبراس للبلاستيك');
+            const logoHtml = buildQuoteLogoImgHtml('quote-official-branded-band-logo', logoUrl, NEBRAS_BRAND_PRIMARY_AR);
             return '<div class="quote-official-branded-band-meta">VAT ' + vat + '<br>C.R ' + cr + '<br>' + email + '</div>' +
                 '<div class="quote-official-branded-band-brand">' +
                 '<div class="quote-official-branded-band-titles">' +
-                '<strong>شركة مصنع نبراس للبلاستيك</strong>' +
-                '<span>NEBRAS PLASTIC FACTORY COMPANY</span></div>' +
+                '<strong>' + escapeHtmlAttr(NEBRAS_BRAND_PRIMARY_AR) + '</strong>' +
+                '<span>' + escapeHtmlAttr(NEBRAS_BRAND_LEGAL_AR) + '</span></div>' +
                 logoHtml + '</div>';
         }
 
@@ -10514,7 +10539,7 @@
         function buildQuoteOfficialFixedHeaderHtml(logoUrl, factoryEmail) {
             const headerUrl = normalizeQuoteAssetPath(getQuoteOfficialPage1HeaderUrl());
             return '<header class="quote-official-fixed-header-wrap" role="banner">' +
-                '<img class="quote-official-fixed-header" src="' + escapeHtmlAttr(headerUrl) + '" alt="شركة مصنع نبراس للبلاستيك" decoding="sync" crossorigin="anonymous" onerror="nebrasQuotePage1HeaderFallback(this)">' +
+                '<img class="quote-official-fixed-header" src="' + escapeHtmlAttr(headerUrl) + '" alt="' + escapeHtmlAttr(NEBRAS_BRAND_PRIMARY_AR) + '" decoding="sync" crossorigin="anonymous" onerror="nebrasQuotePage1HeaderFallback(this)">' +
                 '<div class="quote-official-branded-band quote-official-branded-band--fallback" hidden aria-hidden="true">' +
                 buildQuoteOfficialBrandedBandHtmlInner(logoUrl, factoryEmail) +
                 '</div></header>';
@@ -10663,7 +10688,7 @@
             const q = getQuoteA4Settings();
             const tagline = isEn
                 ? (q.taglineEn || 'Nebras Plastic Factory Company')
-                : (isZh ? 'Nebras 塑料工厂' : (q.taglineAr || 'شركة مصنع نبراس للبلاستيك'));
+                : (isZh ? 'Nebras 塑料工厂' : (q.taglineAr || NEBRAS_BRAND_PRIMARY_AR));
             const band = isEn ? (q.headerBandEn || '') : (isZh ? '' : (q.headerBandAr || ''));
             const heroLogo = buildQuoteLogoImgHtml('quote-hero-logo', logoUrl, logoAlt);
             let html = '<div class="quote-header-logo-strip" role="banner">' + heroLogo +
@@ -11216,7 +11241,8 @@
         function buildQuoteFactoryCardHtml(logoUrl, logoAlt, lang) {
             const isEn = lang === 'en';
             const isZh = lang === 'zh';
-            const companyName = isEn ? 'Nebras Plastic Factory Company' : (isZh ? 'Nebras 塑料工厂公司' : 'شركة مصنع نبراس للبلاستيك');
+            const companyName = isEn ? NEBRAS_BRAND_PRIMARY_EN : (isZh ? 'Nebras WPC 门工厂' : NEBRAS_BRAND_PRIMARY_AR);
+            const companyLegal = isEn ? NEBRAS_BRAND_LEGAL_EN : (isZh ? 'Nebras 塑料工厂' : NEBRAS_BRAND_LEGAL_AR);
             const addr = isEn
                 ? (systemSettings.companyAddressEn || systemSettings.companyAddressAr || '')
                 : (systemSettings.companyAddressAr || systemSettings.companyAddressEn || '');
@@ -11283,14 +11309,15 @@
             const cartTotals = calcCartTotals();
             const ui = siteText[lang] || siteText.ar;
             const cust = readCheckoutFormToProfile();
-            const logoAlt = ui.quoteLogoAlt || 'شعار شركة مصنع نبراس للبلاستيك';
+            const logoAlt = ui.quoteLogoAlt || ('شعار ' + NEBRAS_BRAND_PRIMARY_AR);
             const addr = isEn
                 ? (systemSettings.companyAddressEn || systemSettings.companyAddressAr || '')
                 : (systemSettings.companyAddressAr || systemSettings.companyAddressEn || '');
             const doorDesignBlock = buildQuoteDoorDesignBlockHtml(nebrasCart, lang);
             const watermarkImg = buildQuoteLogoImgHtml('quote-watermark-logo', resolvedLogo, '');
             const termsBlock = getQuoteTermsHtml(lang);
-            const companyName = isEn ? 'Nebras Plastic Factory Company' : (isZh ? 'Nebras 塑料工厂公司' : 'شركة مصنع نبراس للبلاستيك');
+            const companyName = isEn ? NEBRAS_BRAND_PRIMARY_EN : (isZh ? 'Nebras WPC 门工厂' : NEBRAS_BRAND_PRIMARY_AR);
+            const companyLegal = isEn ? NEBRAS_BRAND_LEGAL_EN : (isZh ? 'Nebras 塑料工厂' : NEBRAS_BRAND_LEGAL_AR);
             const headerLogoStrip = buildQuoteHeaderLogoStripHtml(resolvedLogo, logoAlt, lang);
             const footerNote = isEn ? (q.footerNoteEn || q.footerNoteAr) : (q.footerNoteAr || q.footerNoteEn);
             const wmStyle = 'opacity:' + q.watermarkOpacity + ';width:' + q.watermarkScale + '%;max-height:' + q.watermarkScale + '%';
@@ -11906,6 +11933,25 @@
 
         function refreshHeaderDoorShowcase() {
             fillDoorMiniShowcase('header-door-showcase');
+        }
+
+        function fillPartnersMiniShowcase(rootId) {
+            const root = document.getElementById(rootId);
+            if (!root) return;
+            const urls = getVisibleSitePartners().map(function(p) { return p.logoUrl; }).filter(Boolean);
+            if (!urls.length) {
+                root.innerHTML = '';
+                root.hidden = true;
+                return;
+            }
+            root.hidden = false;
+            root.style.setProperty('--cycle-duration', (urls.length * 3) + 's');
+            root.innerHTML = buildMiniShowcaseInnerHtml(urls, 'partners');
+        }
+
+        function refreshCustomerPortalShowcases() {
+            fillDoorMiniShowcase('cp-door-showcase');
+            fillPartnersMiniShowcase('cp-partners-showcase');
         }
 
         function refreshTopPartnersMiniShowcase() {
@@ -12633,7 +12679,7 @@
                 if (t.branchCommandOnly && !canAccessBranchCommandCenter()) return false;
                 if (t.id === 'dash-wpc-dept' && !canManage('production') && !isMainGovernanceAdmin()) return false;
                 if (t.id === 'dash-wpc-dept' && isAluminumDepartmentAdmin(currentAdmin)) return false;
-                if (t.permission && currentAdmin && !canManage(t.permission)) return false;
+                if (t.permission && currentAdmin && !dashboardTilePassesPermission(t, currentAdmin)) return false;
                 return true;
             });
             if (typeof isHrDepartmentAdmin === 'function' && isHrDepartmentAdmin(currentAdmin)) {
@@ -17428,6 +17474,22 @@
             return allowed.indexOf(permissionKey) >= 0;
         }
 
+        function dashboardTilePassesPermission(tile, admin) {
+            if (!tile || !tile.permission) return true;
+            admin = admin || currentAdmin;
+            if (!admin) return false;
+            if (isMainGovernanceAdmin(admin)) return true;
+            const perm = String(tile.permission || '');
+            if (perm === 'createCustomerUser' || tile.id === 'dash-create-customer-portal') {
+                return typeof window.canCreateCustomerPortalUser === 'function' && window.canCreateCustomerPortalUser(admin);
+            }
+            if (perm === 'customerPortal' || tile.id === 'dash-customer-portal') {
+                if (typeof window.canManageCustomerPortalUsers === 'function' && window.canManageCustomerPortalUsers(admin)) return true;
+                if (typeof window.canCreateCustomerPortalUser === 'function' && window.canCreateCustomerPortalUser(admin)) return true;
+            }
+            return canManage(perm, admin);
+        }
+
         const NEBRAS_PLATFORM_LAYER_SEL = '.admin-section, .admin-overlay, .cart-drawer-overlay, .product-shop-overlay, .quote-print-overlay, .customer-portal-overlay, .customer-portal-app, .sales-quote-detail-overlay, .nebras-callback-overlay, .nebras-color-overlay, .nebras-media-lightbox, #nebras-brand-intro, #nebras-workspace, #admin-dashboard';
 
         function syncPlatformInteractionLayers() {
@@ -18003,7 +18065,7 @@
                 { roles: ['sales_manager', 'branch_manager'], icon: 'fas fa-inbox', label: 'عروض الفرع', handler: 'openSalesManagement', perm: 'sales' },
                 { roles: ['sales_manager', 'branch_manager'], icon: 'fas fa-user-group', label: 'مندوبي الفرع', handler: 'openBranchTeamManagement', perm: null },
                 { roles: ['sales_rep'], icon: 'fas fa-folder-open', label: 'عروضي المحفوظة', handler: 'openRepMyQuotes', perm: 'quotes' },
-                { roles: ['sales_rep'], icon: 'fas fa-user-plus', label: 'حساب عميل', handler: 'openCpUserEditorForRep', perm: 'createCustomerUser' },
+                { roles: ['sales_rep', 'superadmin', 'manager', 'sales_manager', 'branch_manager'], icon: 'fas fa-user-plus', label: 'حساب عميل', handler: 'openCpUserEditorNew', perm: 'createCustomerUser' },
                 { roles: ['sales_rep'], icon: 'fas fa-route', label: 'مسارات عملائي', handler: 'openRepCustomerJourneys', perm: null },
                 { roles: ['sales_rep'], icon: 'fas fa-shield-halved', label: 'أمان حسابي', handler: 'openAccountSecurity', perm: null },
                 { roles: ['sales_manager', 'branch_manager', 'production_manager', 'warehouse_manager', 'accountant', 'accounting_manager', 'manager'], icon: 'fas fa-route', label: 'مسار نبراس', handler: 'openOrderJourneyOps', perm: 'orderJourney' },
@@ -18033,8 +18095,10 @@
                 if (item.handler === 'openHrPlatform' && typeof canAccessHrPlatform === 'function' && !canAccessHrPlatform()) return;
                 if (item.handler === 'openLegalPlatform' && typeof canAccessLegalPlatform === 'function' && !canAccessLegalPlatform()) return;
                 if (item.handler === 'openAccountingPlatform' && typeof canAccessAccountingPlatform === 'function' && !canAccessAccountingPlatform()) return;
-                if ((item.handler === 'openCustomerPortalGovernance' || item.handler === 'openCustomerLoyaltyAnalytics') &&
-                    typeof canManageCustomerPortalUsers === 'function' && !canManageCustomerPortalUsers()) return;
+                if (item.handler === 'openCpUserEditorNew' || item.handler === 'openCpUserEditorForRep') {
+                    if (typeof window.canCreateCustomerPortalUser === 'function' && !window.canCreateCustomerPortalUser(currentAdmin)) return;
+                } else if ((item.handler === 'openCustomerPortalGovernance' || item.handler === 'openCustomerLoyaltyAnalytics') &&
+                    typeof window.canManageCustomerPortalUsers === 'function' && !window.canManageCustomerPortalUsers(currentAdmin)) return;
                 if (item.handler === 'openAccountSecurity' && typeof isHrDepartmentAdmin === 'function' && isHrDepartmentAdmin(currentAdmin)) { /* مسموح */ }
                 else if (item.roles && item.roles.indexOf('hr') >= 0 && item.roles.length === 1 && item.handler !== 'openHrPlatform' && item.handler !== 'openAccountSecurity') return;
                 else if (item.roles && item.roles.indexOf('legal') >= 0 && item.roles.length === 1 && item.handler !== 'openLegalPlatform' && item.handler !== 'openAccountSecurity') return;
@@ -18256,7 +18320,7 @@
             host.innerHTML =
                 '<div class="dashboard-governance-pillars-head">' +
                     '<div><h3><i class="fas fa-crown"></i> إمبراطورية نبراس — حوكمة المنصة</h3>' +
-                    '<p>شركة مصنع نبراس للبلاستيك — أبواب WPC · إدارة رئيسية · أقسام · فروع</p></div>' +
+                    '<p>' + NEBRAS_BRAND_PRIMARY_AR + ' — أبواب WPC · إدارة رئيسية · أقسام · فروع</p></div>' +
                     (canRunDashboardHandler('openNebrasEmpireHub', user)
                         ? '<button type="button" class="gov-pillar-btn gov-pillar-btn--primary" onclick="openNebrasEmpireHub()"><i class="fas fa-crown"></i> مركز القيادة</button>'
                         : '') +
@@ -19051,7 +19115,8 @@
             lastSeenAt: user && user.lastSeenAt ? user.lastSeenAt : '',
             createdAt: user && user.createdAt ? user.createdAt : now,
             updatedAt: user && user.updatedAt ? user.updatedAt : now,
-            createdBy: user && user.createdBy ? user.createdBy : ''
+            createdBy: user && user.createdBy ? user.createdBy : '',
+            phone: user && user.phone ? String(user.phone).trim() : ''
         };
     }
 
@@ -19175,6 +19240,9 @@
             const branchTag = String(user.assignedBranchCity || '').trim()
                 ? '<span class="nebras-user-branch"><i class="fas fa-store"></i> فرع ' + escapeHtmlAttr(user.assignedBranchCity) + '</span>'
                 : '<span class="nebras-user-branch nebras-user-branch--all"><i class="fas fa-globe"></i> كل الفروع</span>';
+            const phoneTag = String(user.phone || '').trim()
+                ? '<span class="nebras-user-branch"><i class="fas fa-phone"></i> ' + escapeHtmlAttr(user.phone) + '</span>'
+                : '';
             const statusRow = '<div class="nebras-user-status-row">' +
                 (user.isActive === false
                     ? '<span class="gov-user-badge gov-user-badge--off"><i class="fas fa-ban"></i> معطّل</span>'
@@ -19201,7 +19269,7 @@
                 '</header>' +
                 statusRow +
                 '<div class="nebras-user-role"><i class="' + (def.icon || 'fas fa-user') + '"></i> ' + escapeHtmlAttr(def.labelAr || user.role || '') + '</div>' +
-                branchTag +
+                branchTag + phoneTag +
                 '<div class="nebras-user-perms">' + permChips + '</div>' +
                 '<footer class="nebras-user-card-foot">' + actions + '</footer>' +
             '</article>';
@@ -21718,7 +21786,7 @@
             if (tagline) tagline.textContent = text.introTagline || text.heroTaglineShort || '';
             if (skip) skip.textContent = text.introSkip || text.introEnter || 'Enter';
             if (titleEl) {
-                const name = String(text.introBrandName || 'شركة مصنع نبراس للبلاستيك').replace(/<[^>]+>/g, '').trim();
+                const name = String(text.introBrandName || NEBRAS_BRAND_PRIMARY_AR).replace(/<[^>]+>/g, '').trim();
                 titleEl.textContent = name;
                 titleEl.setAttribute('lang', text.lang || currentLang || 'ar');
             }
@@ -26307,7 +26375,8 @@
                 hrScopeDepartmentKey: user ? (user.hrScopeDepartmentKey || '') : '',
                 legalScopeCompanyId: user ? (user.legalScopeCompanyId || '') : '',
                 hrScopeCompanyId: user ? (user.hrScopeCompanyId || '') : '',
-                permissions: user ? getUserEffectivePermissions(user) : (rolePermissions[defaultRole] || []).slice()
+                permissions: user ? getUserEffectivePermissions(user) : (rolePermissions[defaultRole] || []).slice(),
+                phone: user ? (user.phone || '') : ''
             };
             renderUserEditorForm();
             const editor = document.getElementById('nebras-user-editor');
@@ -26351,6 +26420,9 @@
                         '<label class="nebras-field"><span>كلمة المرور</span><input type="password" id="ue-password" value="' + escapeHtmlAttr(st.password) + '" ' + (st.isPrimary ? 'disabled' : '') + ' placeholder="' + (st.isEdit && !st.isPrimary ? 'اتركي فارغاً للإبقاء على الحالية' : '••••••') + '" autocomplete="new-password"></label>' +
                         '<label class="nebras-field"><span>الدور الوظيفي</span><select id="ue-role" onchange="onUserEditorRoleChange(this.value)" ' + (st.isPrimary ? 'disabled' : '') + '>' + roleOptions + '</select></label>' +
                         '<label class="nebras-field nebras-field--wide"><span>الفرع المخصّص</span><select id="ue-branch" onchange="onUserEditorBranchChange(this.value)" ' + (st.isPrimary ? 'disabled' : '') + '>' + branchOptions + '</select>' + branchHint + '</label>' +
+                        ((st.role === 'sales_rep' || st.role === 'sales_manager') && !st.isPrimary
+                            ? '<label class="nebras-field"><span>جوال المندوب / المبيعات</span><input type="tel" id="ue-phone" value="' + escapeHtmlAttr(st.phone || '') + '" placeholder="05xxxxxxxx"></label>'
+                            : '') +
                     '</div>' +
                     (st.role === 'hr' && !st.isPrimary ? (function() {
                         const branchOpts = ['<option value="">— كل الفروع —</option><option value="hq"' + (st.hrScopeBranchId === 'hq' ? ' selected' : '') + '>المقر الرئيسي — القصيم</option>']
@@ -26408,8 +26480,10 @@
 
         function onUserEditorRoleChange(role) {
             if (!nebrasUserEditorState) return;
+            const prevPhone = nebrasUserEditorState.phone || '';
             nebrasUserEditorState.role = role;
             nebrasUserEditorState.permissions = (rolePermissions[role] || []).slice();
+            nebrasUserEditorState.phone = prevPhone;
             const def = getRoleDefinition(role);
             if (def && def.branchScoped && !nebrasUserEditorState.assignedBranchCity) {
                 const cities = getBranchCityOptions();
@@ -26536,6 +26610,7 @@
             const idEl = document.getElementById('ue-id');
             const userEl = document.getElementById('ue-username');
             const passEl = document.getElementById('ue-password');
+            const phoneEl = document.getElementById('ue-phone');
             const id = st.isPrimary ? st.id : String((idEl && idEl.value) || '').trim();
             const username = String((userEl && userEl.value) || '').trim();
             const rawPassword = st.isPrimary ? st.password : String((passEl && passEl.value) || '').trim();
@@ -26573,6 +26648,11 @@
                 return String(u.username || '').toUpperCase() === username.toUpperCase() && i !== st.index;
             });
             if (dupName) { alert('اسم المستخدم مستخدم مسبقاً.'); return; }
+            const phoneVal = phoneEl ? String(phoneEl.value || '').trim() : String(st.phone || '').trim();
+            if (!st.isPrimary && st.role === 'sales_rep' && !phoneVal) {
+                alert('يرجى إدخال جوال مندوب المبيعات — يظهر للعميل في بوابته.');
+                return;
+            }
             if (st.isEdit) {
                 const existing = adminUsers[st.index] || {};
                 adminUsers[st.index] = Object.assign({}, existing, {
@@ -26587,6 +26667,7 @@
                     hrScopeDepartmentKey: st.isPrimary || st.role !== 'hr' ? '' : (st.hrScopeDepartmentKey || ''),
                     hrScopeCompanyId: st.isPrimary || st.role !== 'hr' ? '' : (st.hrScopeCompanyId || ''),
                     legalScopeCompanyId: st.isPrimary || st.role !== 'legal' ? '' : (st.legalScopeCompanyId || ''),
+                    phone: st.isPrimary ? '' : phoneVal,
                     isPrimary: !!st.isPrimary,
                     isActive: existing.isActive !== false,
                     updatedAt: new Date().toISOString()
@@ -26603,6 +26684,7 @@
                     hrScopeDepartmentKey: st.role === 'hr' ? (st.hrScopeDepartmentKey || '') : '',
                     hrScopeCompanyId: st.role === 'hr' ? (st.hrScopeCompanyId || '') : '',
                     legalScopeCompanyId: st.role === 'legal' ? (st.legalScopeCompanyId || '') : '',
+                    phone: phoneVal,
                     isPrimary: false, isActive: true,
                     createdAt: nowIso, updatedAt: nowIso,
                     createdBy: currentAdmin ? currentAdmin.username : ''
@@ -26648,6 +26730,9 @@
                 const branchTag = String(user.assignedBranchCity || '').trim()
                     ? '<span class="nebras-user-branch"><i class="fas fa-store"></i> فرع ' + escapeHtmlAttr(user.assignedBranchCity) + '</span>'
                     : '<span class="nebras-user-branch nebras-user-branch--all"><i class="fas fa-globe"></i> كل الفروع</span>';
+                const phoneTag = String(user.phone || '').trim()
+                    ? '<span class="nebras-user-branch"><i class="fas fa-phone"></i> ' + escapeHtmlAttr(user.phone) + '</span>'
+                    : '';
                 const lockedPrimary = isImmutablePrimaryAdmin(user);
                 let actions = '<button class="nebras-user-act" onclick="editUser(' + index + ')"><i class="fas fa-pen"></i> تعديل</button>';
                 if (!lockedPrimary) {
@@ -26660,7 +26745,7 @@
                         (user.isPrimary ? '<span class="nebras-user-primary"><i class="fas fa-crown"></i> رئيسي</span>' : '') +
                     '</header>' +
                     '<div class="nebras-user-role"><i class="' + (def.icon || 'fas fa-user') + '"></i> ' + escapeHtmlAttr(def.labelAr || user.role || '') + '</div>' +
-                    branchTag +
+                    branchTag + phoneTag +
                     '<div class="nebras-user-perms">' + permChips + '</div>' +
                     '<footer class="nebras-user-card-foot">' + actions + '</footer>' +
                 '</article>';
@@ -29563,24 +29648,24 @@
                     sales: '<i class="fas fa-phone-alt"></i> المبيعات',
                     customer: '<i class="fas fa-headset"></i> خدمة العملاء'
                 },
-                heroTitle: '<i class="fas fa-star"></i> شركة مصنع نبراس للبلاستيك',
-                heroText: 'من قلب المملكة العربية السعودية، نقدم حلولاً بلاستيكية عالمية بمعايير وجودة عالية.',
-                pageTitle: 'مصنع نبراس للبلاستيك | منصة نبراس الرسمية — أبواب WPC',
-                pageDescription: 'شركة مصنع نبراس للبلاستيك — شركة سعودية متخصصة في تصنيع وتركيب أبواب WPC عالية الجودة. صمّم بابك، اطلب عرض سعر، واكتشف منتجاتنا من القصيم إلى كل المملكة.',
+                heroTitle: '<i class="fas fa-star"></i> ' + NEBRAS_BRAND_PRIMARY_AR,
+                heroText: 'من قلب القصيم نصنع أبواب WPC فاخرة بمعايير عالمية — خلفيتنا الصناعية في البلاستيك، وشغفنا أبوابك.',
+                pageTitle: NEBRAS_BRAND_PRIMARY_AR + ' | منصة نبراس الرسمية — أبواب WPC',
+                pageDescription: NEBRAS_BRAND_PRIMARY_AR + ' — متخصصون في تصنيع وتركيب أبواب WPC عالية الجودة. ' + NEBRAS_BRAND_SUBLINE_AR + ' صمّم بابك، اطلب عرض سعر، واكتشف منتجاتنا من القصيم إلى كل المملكة.',
                 introEyebrow: 'المملكة العربية السعودية',
-                introBrandName: 'شركة مصنع نبراس للبلاستيك',
-                introTagline: 'أبواب WPC فاخرة — حلول متكاملة بالجودة والأناقة',
+                introBrandName: NEBRAS_BRAND_PRIMARY_AR,
+                introTagline: NEBRAS_BRAND_SUBLINE_AR,
                 introSkip: 'دخول المنصة',
                 introWelcomeTap: 'اضغطي في أي مكان للاستماع للترحيب الصوتي',
-                heroEyebrow: 'مصنع نبراس للبلاستيك',
+                heroEyebrow: 'أبواب WPC · مصنع سعودي',
                 heroHeadline: 'أبواب WPC الفاخرة',
                 heroDynamicHeadlines: [
-                    'شركة مصنع نبراس للبلاستيك',
+                    NEBRAS_BRAND_PRIMARY_AR,
                     'لصناعة أبواب الـ WPC',
                     'مصنع سعودي وطني'
                 ],
                 heroSlideHeadlines: [
-                    'شركة مصنع نبراس للبلاستيك',
+                    NEBRAS_BRAND_PRIMARY_AR,
                     'لصناعة أبواب الـ WPC — جمال يتخطى الزمن',
                     'تشكيلة واسعة لأبواب الـ WPC — أبواب زجاجية بتصاميم راقية',
                     'ألوان وتشطيبات متعددة — اختَر بابك بثقة من نبراس',
@@ -29683,7 +29768,7 @@
                 lightboxPrevAria: 'الصورة السابقة',
                 lightboxNextAria: 'الصورة التالية',
                 aboutTitle1: 'من نحن',
-                aboutText1: 'نحن شركة مصنع نبراس للبلاستيك، نقدم حلولاً متكاملة للصناعة والمقاولات بشفافية وجودة سعودية أصيلة. هدفنا تطوير منتجات مبتكرة وتوفير تجربة سلسة لكل عميل وزائر.',
+                aboutText1: 'نحن ' + NEBRAS_BRAND_PRIMARY_AR + '، نقدم حلولاً متكاملة لأبواب WPC والمقاولات بشفافية وجودة سعودية أصيلة. ' + NEBRAS_BRAND_LEGAL_AR + ' — هدفنا تطوير منتجات مبتكرة وتوفير تجربة سلسة لكل عميل.',
                 aboutTitle2: 'نحو التميّز في صناعة الأبواب',
                 aboutText2: 'نسعى لتوسيع حضورنا الصناعي وتقديم تجربة رقمية احترافية، مع التزام عميق بالجودة والشراكة مع عملائنا داخل المملكة وخارجها.',
                 serviceTitle1: 'خدمات التصنيع',
@@ -31785,6 +31870,11 @@
         window.setLanguage = setLanguage;
         window.applyOccasionTheme = applyOccasionTheme;
         window.renderPartnersMarquees = renderPartnersMarquees;
+        window.refreshCustomerPortalShowcases = refreshCustomerPortalShowcases;
+        window.loadHtml2CanvasLib = loadHtml2CanvasLib;
+        window.loadJsPdfLib = loadJsPdfLib;
+        window.getDataUrlImageSize = getDataUrlImageSize;
+        window.openCustomerComplaints = openCustomerComplaints;
         window.saveContentData = saveContentData;
         window.refreshPublicSiteFromGovernance = refreshPublicSiteFromGovernance;
         window.viewSalesQuoteEntry = viewSalesQuoteEntry;

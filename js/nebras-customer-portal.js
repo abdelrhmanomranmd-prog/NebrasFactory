@@ -214,7 +214,7 @@
         user = resolveCpAdminUser(user);
         if (!user) return false;
         if (typeof isMainGovernanceAdmin === 'function' && isMainGovernanceAdmin(user)) return true;
-        if (user.role === 'manager' || user.role === 'sales_manager' || user.role === 'branch_manager') return true;
+        if (user.role === 'superadmin' || user.role === 'manager' || user.role === 'sales_manager' || user.role === 'branch_manager') return true;
         if (typeof canManage === 'function' && canManage('customerPortal', user)) return true;
         return false;
     }
@@ -474,6 +474,255 @@
         return access.indexOf(key) >= 0;
     }
 
+    function resolveCpRepContact(portalUser) {
+        if (!portalUser) return { name: '', phone: '', username: '' };
+        let users = [];
+        try { users = global.adminUsers || []; } catch (e) { /* ignore */ }
+        let rep = null;
+        if (portalUser.assignedRepId) {
+            rep = users.find(function(r) { return r && String(r.id) === String(portalUser.assignedRepId); });
+        }
+        if (!rep && portalUser.assignedRepUsername) {
+            const un = String(portalUser.assignedRepUsername).toLowerCase();
+            rep = users.find(function(r) { return r && String(r.username || '').toLowerCase() === un; });
+        }
+        const phone = String(portalUser.assignedRepPhone || (rep && rep.phone) || '').trim();
+        const username = portalUser.assignedRepUsername || (rep && rep.username) || '';
+        const name = (rep && (rep.displayName || rep.username)) || username || 'مندوب المبيعات';
+        return { rep: rep, name: name, phone: phone, username: username };
+    }
+
+    function getCpSystemPhones() {
+        let settings = {};
+        try { settings = global.systemSettings || (typeof systemSettings !== 'undefined' ? systemSettings : {}); } catch (e) { /* ignore */ }
+        return {
+            sales: String(settings.mainSalesPhone || '0555092383').trim(),
+            customerService: String(settings.customerServicePhone || '0579394158').trim()
+        };
+    }
+
+    function buildCpShowcasesHtml() {
+        return '<section class="cp-hero-strip" aria-label="نبراس — صمّم بابك وشركاؤنا">' +
+            '<div class="cp-showcase-card cp-showcase-card--doors" id="cp-door-aside" role="button" tabindex="0" aria-label="صمّم بابك">' +
+                '<span class="cp-showcase-chip cp-showcase-chip--doors"><i class="fas fa-pencil-ruler"></i> صمّم بابك</span>' +
+                '<div class="cp-showcase-frame">' +
+                    '<div class="nebras-mini-showcase nebras-mini-showcase--doors nebras-mini-showcase--hero nebras-mini-showcase--interactive" id="cp-door-showcase"></div>' +
+                '</div>' +
+            '</div>' +
+            '<div class="cp-showcase-card cp-showcase-card--partners" aria-label="شركاؤنا">' +
+                '<span class="cp-showcase-chip cp-showcase-chip--partners"><i class="fas fa-handshake"></i> شركاؤنا</span>' +
+                '<div class="cp-showcase-frame">' +
+                    '<div class="nebras-mini-showcase nebras-mini-showcase--partners" id="cp-partners-showcase"></div>' +
+                '</div>' +
+            '</div>' +
+        '</section>';
+    }
+
+    function buildCpQuickActionsHtml(portalUser) {
+        const phones = getCpSystemPhones();
+        const rep = resolveCpRepContact(portalUser);
+        const repPhone = rep.phone || phones.sales;
+        const repLabel = rep.name ? ('المندوب: ' + rep.name) : 'مندوب المبيعات';
+        return '<section class="cp-quick-actions" aria-label="خدمات العميل">' +
+            '<button type="button" class="cp-action-btn cp-action-btn--complaint" onclick="cpOpenComplaints()"><i class="fas fa-comment-dots"></i><span>الشكاوى</span></button>' +
+            '<button type="button" class="cp-action-btn cp-action-btn--service" onclick="cpDialCustomerService()"><i class="fas fa-headset"></i><span>خدمة العملاء</span><small>' + esc(phones.customerService) + '</small></button>' +
+            '<button type="button" class="cp-action-btn cp-action-btn--sales" onclick="cpDialSalesManager()"><i class="fas fa-user-tie"></i><span>مدير المبيعات</span><small>' + esc(phones.sales) + '</small></button>' +
+            '<button type="button" class="cp-action-btn cp-action-btn--rep" onclick="cpDialAssignedRep()"><i class="fas fa-id-badge"></i><span>' + esc(repLabel) + '</span><small>' + esc(repPhone || '—') + '</small></button>' +
+            '<button type="button" class="cp-action-btn cp-action-btn--pdf" onclick="exportCustomerStatementPdf()"><i class="fas fa-file-pdf"></i><span>كشف حساب PDF</span><small>تقرير نبراس الرسمي</small></button>' +
+        '</section>';
+    }
+
+    function wireCpPortalShowcases() {
+        if (typeof global.refreshCustomerPortalShowcases === 'function') {
+            global.refreshCustomerPortalShowcases();
+        }
+        const doorAside = document.getElementById('cp-door-aside');
+        if (doorAside && doorAside.dataset.cpDoorWired !== '1') {
+            doorAside.dataset.cpDoorWired = '1';
+            function openDesigner() {
+                if (typeof global.openNebrasWorkspace === 'function') {
+                    global.openNebrasWorkspace({ pillar: 'store', view: 'door-designer' });
+                }
+            }
+            doorAside.addEventListener('click', openDesigner);
+            doorAside.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openDesigner(); }
+            });
+        }
+    }
+
+    function cpOpenComplaints() {
+        const u = currentPortalCustomer;
+        if (typeof global.openCustomerComplaints === 'function') {
+            global.openCustomerComplaints();
+            if (u) {
+                setTimeout(function() {
+                    const nameEl = document.getElementById('complaint-customer-name');
+                    const phoneEl = document.getElementById('complaint-customer-phone');
+                    if (nameEl && !nameEl.value) nameEl.value = u.displayName || u.username || '';
+                    if (phoneEl && !phoneEl.value) phoneEl.value = u.phone || '';
+                }, 60);
+            }
+            return;
+        }
+        alert('خدمة الشكاوى — تواصلي مع خدمة العملاء.');
+    }
+
+    function cpDialCustomerService() {
+        const p = getCpSystemPhones().customerService;
+        if (typeof global.dialNumber === 'function') global.dialNumber(p);
+        else window.location.href = 'tel:' + p;
+    }
+
+    function cpDialSalesManager() {
+        const p = getCpSystemPhones().sales;
+        if (typeof global.dialNumber === 'function') global.dialNumber(p);
+        else window.location.href = 'tel:' + p;
+    }
+
+    function cpDialAssignedRep() {
+        const rep = resolveCpRepContact(currentPortalCustomer);
+        const p = rep.phone || getCpSystemPhones().sales;
+        if (!p) { alert('لم يُحدَّد رقم المندوب بعد — تواصلي مع المبيعات.'); return; }
+        if (typeof global.dialNumber === 'function') global.dialNumber(p);
+        else window.location.href = 'tel:' + p;
+    }
+
+    function buildCustomerStatementReport(portalUser) {
+        const d = collectPortalCustomerData(portalUser);
+        let totalQuotes = 0;
+        let totalOrders = 0;
+        let totalTransfers = 0;
+        d.quotes.forEach(function(q) { totalQuotes += Number(q.totalIncVat || q.total || 0); });
+        d.orders.forEach(function(o) { totalOrders += Number(o.amount || o.total || 0); });
+        d.transfers.forEach(function(t) { totalTransfers += Number(t.amount || 0); });
+        const brandPrimary = typeof global.getNebrasBrandPrimary === 'function' ? global.getNebrasBrandPrimary('ar') : 'شركة مصنع نبراس لأبواب الـ WPC';
+        const brandLegal = typeof global.getNebrasBrandLegal === 'function' ? global.getNebrasBrandLegal('ar') : 'شركة مصنع نبراس للبلاستيك';
+        const rep = resolveCpRepContact(portalUser);
+        const generatedAt = typeof global.formatNebrasDateTime === 'function'
+            ? global.formatNebrasDateTime(Date.now(), 'ar')
+            : new Date().toLocaleString('ar-SA');
+        const quoteRows = d.quotes.slice(0, 25).map(function(q) {
+            return [q.quoteNo || q.id || '—', formatMoney(q.totalIncVat || q.total || 0), String(q.status || 'جديد')];
+        });
+        const orderRows = d.orders.slice(0, 25).map(function(o) {
+            return [o.orderNo || o.id || '—', String(o.status || 'pending'), formatMoney(o.amount || o.total || 0)];
+        });
+        const transferRows = d.transfers.slice(0, 25).map(function(t) {
+            return [t.date || '—', formatMoney(t.amount || 0), t.bankAr || t.bank || '—'];
+        });
+        return {
+            brandPrimary: brandPrimary,
+            brandLegal: brandLegal,
+            generatedAt: generatedAt,
+            customerName: portalUser.displayName || portalUser.username || '—',
+            customerPhone: portalUser.phone || '—',
+            repName: rep.name || '—',
+            repPhone: rep.phone || '—',
+            summary: [
+                ['عروض أسعار', String(d.totalQuotes), formatMoney(totalQuotes)],
+                ['طلبات', String(d.totalOrders), formatMoney(totalOrders)],
+                ['حوالات بنكية', String(d.totalTransfers), formatMoney(totalTransfers)],
+                ['إجمالي تعاملات', '—', formatMoney(totalQuotes + totalOrders + totalTransfers)]
+            ],
+            quoteRows: quoteRows,
+            orderRows: orderRows,
+            transferRows: transferRows
+        };
+    }
+
+    function buildCustomerStatementHtml(report) {
+        function tableSection(title, headers, rows) {
+            if (!rows.length) return '<section class="cp-statement-section"><h3>' + esc(title) + '</h3><p class="cp-statement-empty">لا سجلات.</p></section>';
+            const head = '<tr>' + headers.map(function(h) { return '<th>' + esc(h) + '</th>'; }).join('') + '</tr>';
+            const body = rows.map(function(row) {
+                return '<tr>' + row.map(function(c) { return '<td>' + esc(c) + '</td>'; }).join('') + '</tr>';
+            }).join('');
+            return '<section class="cp-statement-section"><h3>' + esc(title) + '</h3><table class="cp-statement-table"><thead>' + head + '</thead><tbody>' + body + '</tbody></table></section>';
+        }
+        const summaryRows = report.summary.map(function(r) {
+            return '<tr><td>' + esc(r[0]) + '</td><td>' + esc(r[1]) + '</td><td><strong>' + esc(r[2]) + '</strong></td></tr>';
+        }).join('');
+        return '<div id="cp-statement-pdf-doc" class="cp-statement-pdf-doc" dir="rtl">' +
+            '<header class="cp-statement-head">' +
+                '<div class="cp-statement-brand">' +
+                    '<strong>' + esc(report.brandPrimary) + '</strong>' +
+                    '<span>' + esc(report.brandLegal) + '</span>' +
+                '</div>' +
+                '<h2>كشف حساب العميل</h2>' +
+                '<p>تاريخ التقرير: ' + esc(report.generatedAt) + '</p>' +
+            '</header>' +
+            '<section class="cp-statement-meta">' +
+                '<p><strong>العميل:</strong> ' + esc(report.customerName) + ' — ' + esc(report.customerPhone) + '</p>' +
+                '<p><strong>المندوب:</strong> ' + esc(report.repName) + (report.repPhone ? ' — ' + esc(report.repPhone) : '') + '</p>' +
+            '</section>' +
+            '<section class="cp-statement-section"><h3>ملخص الحساب</h3><table class="cp-statement-table"><tbody>' + summaryRows + '</tbody></table></section>' +
+            tableSection('عروض الأسعار', ['رقم العرض', 'المبلغ', 'الحالة'], report.quoteRows) +
+            tableSection('الطلبات', ['رقم الطلب', 'الحالة', 'المبلغ'], report.orderRows) +
+            tableSection('الحوالات البنكية', ['التاريخ', 'المبلغ', 'البنك'], report.transferRows) +
+            '<footer class="cp-statement-foot">© ' + esc(report.brandLegal) + ' — كشف حساب استرشادي للعميل</footer>' +
+        '</div>';
+    }
+
+    async function exportCustomerStatementPdf() {
+        if (!currentPortalCustomer) return;
+        const btn = document.querySelector('.cp-action-btn--pdf');
+        if (btn) { btn.disabled = true; btn.setAttribute('aria-busy', 'true'); }
+        let mount = document.getElementById('cp-statement-pdf-mount');
+        if (!mount) {
+            mount = document.createElement('div');
+            mount.id = 'cp-statement-pdf-mount';
+            mount.className = 'cp-statement-pdf-mount';
+            mount.setAttribute('aria-hidden', 'true');
+            document.body.appendChild(mount);
+        }
+        try {
+            const report = buildCustomerStatementReport(currentPortalCustomer);
+            mount.innerHTML = buildCustomerStatementHtml(report);
+            const doc = document.getElementById('cp-statement-pdf-doc');
+            if (!doc) throw new Error('statement-doc-missing');
+            if (document.fonts && document.fonts.ready) {
+                try { await document.fonts.ready; } catch (e) { /* ignore */ }
+            }
+            const loadCanvas = typeof global.loadHtml2CanvasLib === 'function' ? global.loadHtml2CanvasLib : null;
+            const loadPdf = typeof global.loadJsPdfLib === 'function' ? global.loadJsPdfLib : null;
+            if (!loadCanvas || !loadPdf) throw new Error('pdf-lib-missing');
+            const html2canvas = await loadCanvas();
+            const jsPDF = await loadPdf();
+            const canvas = await html2canvas(doc, {
+                scale: 2, useCORS: true, allowTaint: true, backgroundColor: '#ffffff', logging: false,
+                width: doc.scrollWidth, height: doc.scrollHeight
+            });
+            const dataUrl = canvas.toDataURL('image/png');
+            const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4', compress: true });
+            const pageW = pdf.internal.pageSize.getWidth();
+            const pageH = pdf.internal.pageSize.getHeight();
+            const imgDims = typeof global.getDataUrlImageSize === 'function'
+                ? await global.getDataUrlImageSize(dataUrl)
+                : { w: canvas.width, h: canvas.height };
+            const pxToMm = 0.264583;
+            let imgW = imgDims.w * pxToMm;
+            let imgH = imgDims.h * pxToMm;
+            const ratio = Math.min(pageW / imgW, pageH / imgH, 1);
+            imgW *= ratio;
+            imgH *= ratio;
+            pdf.addImage(dataUrl, 'PNG', (pageW - imgW) / 2, 0, imgW, imgH);
+            const stamp = 'nebras-statement-' + String(currentPortalCustomer.username || 'customer') + '-' + new Date().toISOString().slice(0, 10) + '.pdf';
+            pdf.save(stamp);
+        } catch (err) {
+            console.warn('Customer statement PDF failed:', err);
+            alert('تعذّر إنشاء كشف الحساب — حاولي مرة أخرى بعد تحديث الصفحة.');
+        } finally {
+            if (mount) mount.innerHTML = '';
+            if (btn) { btn.disabled = false; btn.removeAttribute('aria-busy'); }
+        }
+    }
+
+        const access = (user && Array.isArray(user.portalAccess) && user.portalAccess.length)
+            ? user.portalAccess : CP_DEFAULT_ACCESS;
+        return access.indexOf(key) >= 0;
+    }
+
     function renderCustomerPortalDashboard() {
         const host = document.getElementById('customer-portal-body');
         const head = document.getElementById('customer-portal-head');
@@ -530,6 +779,8 @@
             : '';
         host.innerHTML =
             (typeof global.renderCustomerJourneyAlertsHtml === 'function' ? global.renderCustomerJourneyAlertsHtml(u) : '') +
+            buildCpShowcasesHtml() +
+            buildCpQuickActionsHtml(u) +
             '<div class="cp-stats">' +
                 '<article class="cp-stat"><strong>' + d.totalQuotes + '</strong><span>عروض أسعار</span></article>' +
                 '<article class="cp-stat"><strong>' + d.preparing.length + '</strong><span>قيد التجهيز</span></article>' +
@@ -537,6 +788,7 @@
                 '<article class="cp-stat cp-stat--tier cp-stat--' + tierMeta.tier + '"><strong>' + esc(tierLabel[tierMeta.tier] || '') + '</strong><span>تصنيفك</span></article>' +
             '</div>' +
             journeyHtml + quotesHtml + ordersHtml + transfersHtml;
+        wireCpPortalShowcases();
         if (typeof global.markJourneysReadyViewed === 'function') global.markJourneysReadyViewed(u);
     }
 
@@ -674,7 +926,8 @@
                 reps.map(function(r) {
                     const sel = (user && String(user.assignedRepId) === String(r.id)) ||
                         (user && String(user.assignedRepUsername || '').toLowerCase() === String(r.username || '').toLowerCase()) ? ' selected' : '';
-                    return '<option value="' + escAttr(r.id) + '"' + (sel ? ' selected' : '') + '>' + esc(r.displayName || r.username) + '</option>';
+                    const phoneHint = r.phone ? (' — ' + r.phone) : '';
+                    return '<option value="' + escAttr(r.id) + '"' + (sel ? ' selected' : '') + '>' + esc(r.displayName || r.username) + esc(phoneHint) + '</option>';
                 }).join('') + '</select></label>';
         }
         host.innerHTML =
@@ -752,6 +1005,7 @@
         if (admin && admin.role === 'sales_rep') {
             payload.assignedRepId = admin.id;
             payload.assignedRepUsername = admin.username;
+            payload.assignedRepPhone = String(admin.phone || '').trim();
         } else if (repId) {
             let repUser = null;
             try {
@@ -760,6 +1014,7 @@
             if (repUser) {
                 payload.assignedRepId = repUser.id;
                 payload.assignedRepUsername = repUser.username;
+                payload.assignedRepPhone = String(repUser.phone || '').trim();
             }
         }
         if (password) payload.password = hashPw(password);
@@ -976,6 +1231,12 @@
     global.setCustomerPortalUsersFromCloud = setCustomerPortalUsersFromCloud;
     global.setCustomerPortalAuditFromCloud = setCustomerPortalAuditFromCloud;
     global.collectPortalCustomerData = collectPortalCustomerData;
+    global.exportCustomerStatementPdf = exportCustomerStatementPdf;
+    global.cpOpenComplaints = cpOpenComplaints;
+    global.cpDialCustomerService = cpDialCustomerService;
+    global.cpDialSalesManager = cpDialSalesManager;
+    global.cpDialAssignedRep = cpDialAssignedRep;
+    global.resolveCpRepContact = resolveCpRepContact;
     global.entryBelongsToPortalCustomer = entryBelongsToPortalCustomer;
 
 })(typeof window !== 'undefined' ? window : globalThis);
