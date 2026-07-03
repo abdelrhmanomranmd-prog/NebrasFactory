@@ -85,28 +85,22 @@ body.customer-portal-open { overflow: hidden; }
     padding: 20px 16px 40px;
 }
 
-/* تخطيط: فروع يسار · محتوى · لوحة عروض يمين */
+/* تخطيط: محتوى رئيسي (يسار) · عمود الفروع + عروض حصرية (يمين) */
 .cp-dashboard-shell {
     display: grid;
-    grid-template-columns: 1fr minmax(248px, 292px);
-    grid-template-areas:
-        "branches branches"
-        "main promo";
+    grid-template-columns: 1fr minmax(258px, 300px);
     gap: 14px 16px;
     direction: ltr;
 }
-.cp-branches-rail {
-    grid-area: branches;
-    direction: rtl;
-}
 .cp-dashboard-main {
-    grid-area: main;
     direction: rtl;
     min-width: 0;
 }
-.cp-promo-board {
-    grid-area: promo;
+.cp-dashboard-aside {
     direction: rtl;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
     align-self: start;
     position: sticky;
     top: 12px;
@@ -197,68 +191,106 @@ body.customer-portal-open { overflow: hidden; }
 .cp-action-btn--pdf { background: linear-gradient(145deg, #8e44ad, #6c3483); }
 .cp-action-btn--store { background: linear-gradient(145deg, #e67e22, #d35400); }
 
-/* فروع مصغّرة — صف أفقي */
-.cp-branches-rail__title {
-    margin: 0 0 8px;
-    font-size: 0.78rem;
+/* عمود فروع نبراس المصغّر — نفس أسلوب branch-card الرئيسي */
+.cp-branches-column {
+    background: linear-gradient(165deg, #f4f9fd 0%, #eaf1f8 100%);
+    border: 1px solid rgba(21, 94, 148, 0.18);
+    border-radius: 18px;
+    padding: 14px 14px 16px;
+    box-shadow: 0 10px 26px rgba(13, 40, 64, 0.1);
+}
+.cp-branches-column__title {
+    margin: 0 0 4px;
+    font-size: 0.9rem;
     font-weight: 800;
-    color: #1a5276;
+    color: #0d2840;
     display: flex;
     align-items: center;
     gap: 6px;
 }
-.cp-branches-scroll {
+.cp-branches-column__sub {
+    margin: 0 0 12px;
+    font-size: 0.72rem;
+    color: #5d6d7e;
+    line-height: 1.45;
+}
+.cp-branches-column__list {
     display: flex;
-    flex-wrap: nowrap;
+    flex-direction: column;
     gap: 10px;
-    overflow-x: auto;
-    padding-bottom: 6px;
-    scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
 }
-.cp-branches-scroll::-webkit-scrollbar { height: 5px; }
-.cp-branches-scroll::-webkit-scrollbar-thumb { background: #b8cfe0; border-radius: 999px; }
-.cp-branch-chip {
-    flex: 0 0 auto;
-    scroll-snap-align: start;
-    width: clamp(108px, 14vw, 132px);
-    border: 1px solid #dce6f0;
-    border-radius: 14px;
+.cp-branch-mini {
+    position: relative;
     overflow: hidden;
-    background: #fff;
-    box-shadow: 0 6px 18px rgba(13, 40, 64, 0.08);
-    cursor: pointer;
-    font-family: inherit;
-    text-align: right;
-    padding: 0;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-}
-.cp-branch-chip:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 24px rgba(13, 40, 64, 0.14);
-}
-.cp-branch-chip__img {
-    height: 52px;
-    background: linear-gradient(135deg, #0d2840, #155e94);
+    border-radius: 14px;
+    padding: 12px 12px 10px;
+    min-height: 108px;
+    color: #ffffff;
+    background: linear-gradient(135deg, rgba(12, 66, 110, 0.86), rgba(8, 40, 67, 0.92));
     background-size: cover;
     background-position: center;
+    box-shadow: 0 8px 22px rgba(13, 40, 64, 0.18);
+    border: 1px solid rgba(0, 168, 255, 0.25);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
-.cp-branch-chip__body { padding: 8px 10px 10px; }
-.cp-branch-chip__city {
-    display: block;
+.cp-branch-mini:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 14px 30px rgba(13, 40, 64, 0.24);
+}
+.cp-branch-mini__overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(0deg, rgba(0, 0, 0, 0.62), rgba(0, 0, 0, 0.18));
+    z-index: 0;
+    pointer-events: none;
+}
+.cp-branch-mini__city {
+    position: relative;
+    z-index: 1;
+    margin: 0 0 4px;
+    font-size: 0.82rem;
+    font-weight: 800;
+    line-height: 1.3;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+.cp-branch-mini__phone {
+    position: relative;
+    z-index: 1;
+    margin: 0 0 8px;
+    font-size: 0.74rem;
+    color: rgba(255, 255, 255, 0.92);
+    direction: ltr;
+    text-align: right;
+}
+.cp-branch-mini__actions {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+.cp-branch-mini__actions a {
+    text-decoration: none;
+    background: rgba(0, 168, 255, 0.9);
+    color: #07243c;
+    padding: 5px 9px;
+    border-radius: 8px;
     font-size: 0.72rem;
     font-weight: 800;
-    color: #0d2840;
-    line-height: 1.25;
-    margin-bottom: 4px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: background 0.15s ease;
 }
-.cp-branch-chip__phone {
-    display: block;
-    font-size: 0.66rem;
-    color: #2980b9;
-    direction: ltr;
-    text-align: center;
+.cp-branch-mini__actions a:hover {
+    background: rgba(0, 200, 255, 1);
 }
+.cp-branch-mini__actions a i { font-size: 0.7rem; }
 
 /* لوحة عروض يمين */
 .cp-promo-board__inner {
@@ -354,12 +386,21 @@ body.customer-portal-open { overflow: hidden; }
 @media (max-width: 900px) {
     .cp-dashboard-shell {
         grid-template-columns: 1fr;
-        grid-template-areas:
-            "branches"
-            "promo"
-            "main";
     }
-    .cp-promo-board { position: static; }
+    .cp-dashboard-aside {
+        position: static;
+        order: -1;
+    }
+}
+
+/* أثناء ظهور نوافذ منبثقة فوق البوابة (شكاوى/تنبيهات) — أخفض z-index للبوابة */
+.customer-portal-app.cp-below-overlay {
+    z-index: 1500;
+}
+
+/* تأكيد ظهور نوافذ الشكاوى/التنبيهات فوق البوابة دائماً */
+.admin-overlay.nebras-overlay-above-portal.show {
+    z-index: 12500 !important;
 }
 .cp-action-btn[disabled] { opacity: 0.65; cursor: wait; }
 

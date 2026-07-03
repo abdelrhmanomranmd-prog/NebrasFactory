@@ -596,26 +596,33 @@
         return p.replace(/^\.\//, '');
     }
 
-    function buildCpBranchesRailHtml() {
+    function buildCpBranchesColumnHtml() {
         const branches = getCpBranchesList();
         if (!branches.length) {
-            return '<section class="cp-branches-rail" aria-label="فروع نبراس"><p class="cp-empty">فروع نبراس — تواصلي مع المبيعات.</p></section>';
+            return '<aside class="cp-branches-column" aria-label="فروع نبراس"><h3 class="cp-branches-column__title"><i class="fas fa-map-marker-alt"></i> فروع نبراس</h3><p class="cp-empty">فروع نبراس — تواصلي مع المبيعات.</p></aside>';
         }
-        const chips = branches.map(function(b) {
+        const cards = branches.map(function(b) {
             const city = String(b.city || b.cityAr || 'فرع').trim();
             const phone = String(b.salesPhone || '').trim();
             const img = normalizeCpBranchImage(b.image);
             const imgStyle = img ? ' style="background-image:url(\'' + esc(img).replace(/'/g, '%27') + '\')"' : '';
-            return '<button type="button" class="cp-branch-chip" onclick="cpDialBranchPhone(\'' + esc(phone).replace(/'/g, '') + '\')" title="' + esc(city) + '">' +
-                '<div class="cp-branch-chip__img"' + imgStyle + '></div>' +
-                '<div class="cp-branch-chip__body">' +
-                    '<span class="cp-branch-chip__city"><i class="fas fa-map-marker-alt"></i> ' + esc(city) + '</span>' +
-                    '<span class="cp-branch-chip__phone">' + esc(phone || '—') + '</span>' +
-                '</div></button>';
+            const phoneAttr = esc(phone).replace(/'/g, '');
+            const telHref = phone ? ('tel:' + phone) : '#';
+            return '<article class="cp-branch-mini"' + imgStyle + ' data-branch-id="' + esc(String(b.id || '')) + '">' +
+                '<div class="cp-branch-mini__overlay"></div>' +
+                '<h4 class="cp-branch-mini__city"><i class="fas fa-map-marker-alt"></i> ' + esc(city) + '</h4>' +
+                (phone ? '<p class="cp-branch-mini__phone" dir="ltr">' + esc(phone) + '</p>' : '') +
+                '<div class="cp-branch-mini__actions">' +
+                    '<a href="' + esc(telHref) + '" onclick="event.stopPropagation(); cpDialBranchPhone(\'' + phoneAttr + '\'); return false;"><i class="fas fa-phone-alt"></i> اتصال</a>' +
+                    (phone ? '<a href="#" onclick="event.preventDefault(); event.stopPropagation(); cpBranchSmartRoute(' + Number(b.id || 0) + ');"><i class="fas fa-route"></i> الأقرب</a>' : '') +
+                '</div>' +
+            '</article>';
         }).join('');
-        return '<section class="cp-branches-rail" aria-label="فروع نبراس في المملكة">' +
-            '<h3 class="cp-branches-rail__title"><i class="fas fa-store-alt"></i> فروع نبراس — اتصال مباشر</h3>' +
-            '<div class="cp-branches-scroll">' + chips + '</div></section>';
+        return '<aside class="cp-branches-column" aria-label="فروع نبراس في المملكة">' +
+            '<h3 class="cp-branches-column__title"><i class="fas fa-store-alt"></i> فروع نبراس — اتصال مباشر</h3>' +
+            '<p class="cp-branches-column__sub">اختاري فرعاً للاتصال المباشر بالمبيعات.</p>' +
+            '<div class="cp-branches-column__list">' + cards + '</div>' +
+        '</aside>';
     }
 
     function buildCpPromoBoardHtml(portalUser) {
@@ -758,10 +765,24 @@
         else window.location.href = 'tel:' + p;
     }
 
+    function cpBranchSmartRoute(branchId) {
+        const branches = getCpBranchesList();
+        const b = branches.find(function(x) { return String(x.id) === String(branchId); });
+        const phone = b && b.salesPhone ? String(b.salesPhone).trim() : '';
+        if (!phone) { alert('لا يوجد رقم مبيعات لهذا الفرع بعد.'); return; }
+        cpDialBranchPhone(phone);
+    }
+
     function cpOpenComplaints() {
         const u = currentPortalCustomer;
+        cpBringPortalBelowOverlays(true);
         if (typeof global.openCustomerComplaints === 'function') {
             global.openCustomerComplaints();
+            const overlay = document.getElementById('complaint-overlay');
+            if (overlay) {
+                overlay.classList.add('nebras-overlay-above-portal');
+                overlay.setAttribute('aria-hidden', 'false');
+            }
             if (u) {
                 setTimeout(function() {
                     const nameEl = document.getElementById('complaint-customer-name');
@@ -773,6 +794,20 @@
             return;
         }
         alert('خدمة الشكاوى — تواصلي مع خدمة العملاء.');
+    }
+
+    function cpBringPortalBelowOverlays(below) {
+        const app = document.getElementById('customer-portal-app');
+        if (!app) return;
+        if (below) {
+            app.classList.add('cp-below-overlay');
+        } else {
+            app.classList.remove('cp-below-overlay');
+        }
+    }
+
+    function cpRestorePortalAfterOverlay() {
+        cpBringPortalBelowOverlays(false);
     }
 
     function cpDialCustomerService() {
@@ -1017,9 +1052,11 @@
             journeyHtml + quotesHtml + ordersHtml + transfersHtml;
         host.innerHTML =
             '<div class="cp-dashboard-shell">' +
-                buildCpBranchesRailHtml() +
                 '<div class="cp-dashboard-main">' + mainContent + '</div>' +
-                buildCpPromoBoardHtml(u) +
+                '<div class="cp-dashboard-aside">' +
+                    buildCpBranchesColumnHtml() +
+                    buildCpPromoBoardHtml(u) +
+                '</div>' +
             '</div>';
         wireCpPortalShowcases();
         if (typeof global.markJourneysReadyViewed === 'function') global.markJourneysReadyViewed(u);
@@ -1472,6 +1509,10 @@
     global.cpOpenStore = cpOpenStore;
     global.cpOpenPartnersSection = cpOpenPartnersSection;
     global.cpDialBranchPhone = cpDialBranchPhone;
+    global.cpBranchSmartRoute = cpBranchSmartRoute;
+    global.cpBringPortalBelowOverlays = cpBringPortalBelowOverlays;
+    global.cpRestorePortalAfterOverlay = cpRestorePortalAfterOverlay;
+    global.renderCustomerPortalDashboard = renderCustomerPortalDashboard;
     global.resolveCpRepContact = resolveCpRepContact;
     global.entryBelongsToPortalCustomer = entryBelongsToPortalCustomer;
 
