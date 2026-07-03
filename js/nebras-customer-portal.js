@@ -743,11 +743,6 @@
         }
     }
 
-        const access = (user && Array.isArray(user.portalAccess) && user.portalAccess.length)
-            ? user.portalAccess : CP_DEFAULT_ACCESS;
-        return access.indexOf(key) >= 0;
-    }
-
     function quoteDiscountSummary(q) {
         if (!q) return null;
         const num = function(v) { return Number(v) || 0; };
