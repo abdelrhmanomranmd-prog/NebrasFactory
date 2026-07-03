@@ -1180,8 +1180,8 @@
                 '</select></label>' +
                 '<label class="nebras-field"><span>المسمى الوظيفي</span><input id="he-job" value="' + esc(e.jobTitle || '') + '"></label>' +
                 '<label class="nebras-field"><span>الوردية</span><select id="he-shift">' +
-                    Object.keys(typeof HR_SHIFTS !== 'undefined' ? HR_SHIFTS : { admin: { label: 'إداري' } }).map(function(k) {
-                        return '<option value="' + k + '"' + (normalizeHrShiftId(e.shiftId) === k ? ' selected' : '') + '>' + ((HR_SHIFTS[k] || {}).label || k) + '</option>';
+                    Object.keys(HR_SHIFTS).map(function(k) {
+                        return '<option value="' + k + '"' + (normalizeHrShiftId(e.shiftId) === k ? ' selected' : '') + '>' + HR_SHIFTS[k].label + '</option>';
                     }).join('') +
                 '</select></label>' +
                 '<label class="nebras-field"><span>خط الإنتاج</span><select id="he-line">' +
@@ -1282,7 +1282,7 @@
             departmentKey: hrField('he-dept-key'),
             department: (typeof HR_FACTORY_DEPTS !== 'undefined' && HR_FACTORY_DEPTS[hrField('he-dept-key')]) ? HR_FACTORY_DEPTS[hrField('he-dept-key')] : hrField('he-dept-key'),
             jobTitle: hrField('he-job'),
-            shiftId: normalizeHrShiftId(hrField('he-shift') || 'morning'),
+            shiftId: normalizeHrShiftId(hrField('he-shift')),
             productionLine: hrField('he-line') || '',
             skillLevel: hrField('he-skill') || 'operator',
             probationEnd: hrField('he-probation'),
@@ -3210,15 +3210,15 @@
     };
 
     const HR_SHIFTS = {
-        morning: { label: 'صباحية (7ص – 7م)', start: '07:00', end: '19:00', stdHours: 12 },
-        evening: { label: 'مسائية (7م – 7ص)', start: '19:00', end: '07:00', stdHours: 12 }
+        day: { label: 'الوردية النهارية (7ص–7م)', start: '07:00', end: '19:00', stdHours: 12 },
+        night: { label: 'الوردية الليلية (7م–7ص)', start: '19:00', end: '07:00', stdHours: 12 }
     };
-
-    function normalizeHrShiftId(shiftId) {
-        const s = String(shiftId || '').trim();
-        if (s === 'night' || s === 'evening') return 'evening';
-        if (s === 'admin' || s === 'morning' || !s) return 'morning';
-        return HR_SHIFTS[s] ? s : 'morning';
+    const HR_SHIFT_LEGACY_MAP = { morning: 'day', evening: 'day', admin: 'day', night: 'night' };
+    function normalizeHrShiftId(id) {
+        const k = String(id || '').trim();
+        if (HR_SHIFTS[k]) return k;
+        if (HR_SHIFT_LEGACY_MAP[k]) return HR_SHIFT_LEGACY_MAP[k];
+        return 'day';
     }
 
     const HR_PROD_LINES = {
@@ -3282,7 +3282,7 @@
     }
 
     function getEmployeeShiftId(emp) {
-        if (!emp) return 'morning';
+        if (!emp) return 'day';
         return normalizeHrShiftId(emp.shiftId);
     }
 
@@ -3301,8 +3301,7 @@
                 });
                 if (hit) e.departmentKey = hit;
             }
-            if (!e.shiftId) e.shiftId = 'morning';
-            else e.shiftId = normalizeHrShiftId(e.shiftId);
+            e.shiftId = normalizeHrShiftId(e.shiftId);
             if (!e.skillLevel) e.skillLevel = e.employmentType === 'daily' ? 'operator' : 'skilled';
         });
         if (hrEmployees.length < 6) return;
@@ -3311,28 +3310,28 @@
                 id: 'emp-hq-005', employeeNo: 'NEB-005', nameAr: 'سعد فهد الدوسري', nameEn: 'Saad Al-Dosari',
                 nationalId: '5*********', nationality: 'سعودي', branchId: 'hq', departmentKey: 'production_wpc',
                 department: 'إنتاج WPC', jobTitle: 'مشغّل خط كبس WPC', employmentType: 'fulltime', status: 'active',
-                shiftId: 'morning', productionLine: 'wpc_press', skillLevel: 'skilled',
+                shiftId: 'day', productionLine: 'wpc_press', skillLevel: 'skilled',
                 joinDate: '2022-04-01', phone: '0500000005', salary: 7500, transportAllowance: 600, createdAt: today, updatedAt: today
             },
             {
                 id: 'emp-hq-006', employeeNo: 'NEB-006', nameAr: 'راجيش كومار', nameEn: 'Rajesh Kumar',
                 nationalId: '6*********', nationality: 'هندي', branchId: 'hq', departmentKey: 'quality',
                 department: 'الجودة والفحص', jobTitle: 'مفتش جودة أبواب', employmentType: 'fulltime', status: 'active',
-                shiftId: 'evening', productionLine: 'qc_final', skillLevel: 'skilled',
+                shiftId: 'night', productionLine: 'qc_final', skillLevel: 'skilled',
                 joinDate: '2021-09-15', phone: '0500000006', salary: 6800, createdAt: today, updatedAt: today
             },
             {
                 id: 'emp-hq-007', employeeNo: 'NEB-007', nameAr: 'فهد العنزي', nameEn: 'Fahad Al-Anzi',
                 nationalId: '7*********', nationality: 'سعودي', branchId: 'hq', departmentKey: 'installation',
                 department: 'التركيب والميداني', jobTitle: 'مشرف فرق تركيب', employmentType: 'fulltime', status: 'active',
-                shiftId: 'morning', productionLine: 'installation', skillLevel: 'supervisor',
+                shiftId: 'day', productionLine: 'installation', skillLevel: 'supervisor',
                 joinDate: '2019-11-01', phone: '0500000007', salary: 11000, housingAllowance: 1500, createdAt: today, updatedAt: today
             },
             {
                 id: 'emp-hq-008', employeeNo: 'NEB-008', nameAr: 'يوسف إبراهيم', nameEn: 'Youssef Ibrahim',
                 nationalId: '8*********', nationality: 'مصري', branchId: 'hq', departmentKey: 'warehouse',
                 department: 'المستودع واللوجستيات', jobTitle: 'أمين مستودع', employmentType: 'fulltime', status: 'active',
-                shiftId: 'morning', productionLine: 'packing', skillLevel: 'operator',
+                shiftId: 'day', productionLine: 'packing', skillLevel: 'operator',
                 joinDate: '2020-02-20', phone: '0500000008', salary: 5500, createdAt: today, updatedAt: today
             }
         ];
@@ -3340,8 +3339,8 @@
             if (!hrEmployees.some(function(e) { return e.id === x.id; })) hrEmployees.push(x);
         });
         if (!hrShiftRoster.length) {
-            ['morning', 'evening'].forEach(function(sh, i) {
-                hrEmployees.filter(function(e) { return e.status === 'active' && getEmployeeShiftId(e) === sh; }).slice(0, 4).forEach(function(e, j) {
+            ['day', 'night'].forEach(function(sh) {
+                hrEmployees.filter(function(e) { return e.status === 'active' && getEmployeeShiftId(e) === sh; }).slice(0, 6).forEach(function(e, j) {
                     hrShiftRoster.push({
                         id: 'sr-' + sh + '-' + j,
                         date: today,
@@ -3503,7 +3502,7 @@
             employeeId: emp.id,
             employeeNo: emp.employeeNo,
             employeeName: emp.nameAr,
-            shiftId: hrField('hsr-shift') || emp.shiftId || 'morning',
+            shiftId: normalizeHrShiftId(hrField('hsr-shift') || emp.shiftId),
             productionLine: hrField('hsr-line') || emp.productionLine || '',
             branchId: emp.branchId || 'hq',
             status: 'scheduled',

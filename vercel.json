@@ -53,11 +53,16 @@
       "maxDuration": 60,
       "memory": 1024
     },
+    "api/nebras-visitor-intake.js": {
+      "maxDuration": 15
+    },
     "api/nebras-governance-persist.js": {
-      "maxDuration": 60
+      "maxDuration": 60,
+      "memory": 1024
     },
     "api/nebras-cloud.js": {
-      "maxDuration": 60
+      "maxDuration": 60,
+      "memory": 1024
     },
     "api/**/*.js": {
       "maxDuration": 30

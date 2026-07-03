@@ -17680,10 +17680,14 @@
                     return;
                 }
                 if (!open || (isDashboard && !document.body.classList.contains('admin-session'))) {
+                    if (typeof blurFocusedDescendant === 'function') blurFocusedDescendant(el);
                     el.style.pointerEvents = 'none';
                     el.style.display = 'none';
                     if (isWorkspace) el.style.visibility = 'hidden';
-                    if (!isWorkspace) el.setAttribute('aria-hidden', 'true');
+                    if (!isWorkspace) {
+                        el.setAttribute('aria-hidden', 'true');
+                        try { el.setAttribute('inert', ''); } catch (e) { /* ignore */ }
+                    }
                 } else {
                     el.style.pointerEvents = 'auto';
                     if (el.classList.contains('quote-print-overlay')) el.style.display = 'block';
@@ -17693,6 +17697,7 @@
                     } else if (isDashboard || (cpApp && el === cpApp)) el.style.display = '';
                     else el.style.display = 'flex';
                     el.setAttribute('aria-hidden', 'false');
+                    el.removeAttribute('inert');
                 }
             });
         }
@@ -17701,12 +17706,25 @@
             syncPlatformInteractionLayers();
         }
 
+        function blurFocusedDescendant(el) {
+            try {
+                const active = document.activeElement;
+                if (active && el && el.contains && el.contains(active) && active !== document.body) {
+                    if (typeof active.blur === 'function') active.blur();
+                    if (document.body && typeof document.body.focus === 'function') {
+                        try { document.body.focus({ preventScroll: true }); } catch (e) { /* ignore */ }
+                    }
+                }
+            } catch (e) { /* ignore */ }
+        }
+
         function revealPlatformLayer(id) {
             if (typeof closeNebrasWorkspace === 'function') closeNebrasWorkspace();
             const el = typeof id === 'string' ? document.getElementById(id) : id;
             if (!el) return;
             el.classList.add('show');
             el.removeAttribute('hidden');
+            el.removeAttribute('inert');
             el.setAttribute('aria-hidden', 'false');
             syncPlatformInteractionLayers();
         }
@@ -17714,8 +17732,10 @@
         function hidePlatformLayer(id) {
             const el = typeof id === 'string' ? document.getElementById(id) : id;
             if (!el) return;
+            blurFocusedDescendant(el);
             el.classList.remove('show');
             el.setAttribute('aria-hidden', 'true');
+            try { el.setAttribute('inert', ''); } catch (e) { /* ignore */ }
             syncPlatformInteractionLayers();
         }
 
@@ -20273,22 +20293,22 @@
             if (!host) return;
             host.hidden = false;
             host.innerHTML =
-                '<div class="nebras-editor-card">' +
+                '<form class="nebras-editor-card" autocomplete="on" onsubmit="event.preventDefault(); saveBranchRepFromEditor();">' +
                     '<div class="nebras-editor-bar" style="--role-accent:#2aa9c9">' +
                         '<span class="nebras-editor-role-icon"><i class="fas fa-user-headset"></i></span>' +
                         '<div><h3>' + (isEdit ? 'تعديل مندوب' : 'مندوب مبيعات جديد') + '</h3><p>فرع ' + escapeHtmlAttr(branchCity) + ' — صلاحيات مندوب مبيعات فقط</p></div>' +
                         '<button type="button" class="nebras-editor-x" onclick="cancelBranchRepEditor()" aria-label="إلغاء"><i class="fas fa-xmark"></i></button>' +
                     '</div>' +
                     '<div class="nebras-editor-grid">' +
-                        '<label class="nebras-field"><span>معرّف المندوب</span><input type="text" id="bre-id" value="' + escapeHtmlAttr(branchRepEditorState.id) + '"></label>' +
-                        '<label class="nebras-field"><span>اسم المستخدم</span><input type="text" id="bre-username" value="' + escapeHtmlAttr(branchRepEditorState.username) + '"></label>' +
-                        '<label class="nebras-field"><span>كلمة المرور</span><input type="password" id="bre-password" value="" placeholder="' + (isEdit ? 'اتركي فارغاً للإبقاء على الحالية' : 'كلمة مرور الدخول') + '" autocomplete="new-password"></label>' +
+                        '<label class="nebras-field"><span>معرّف المندوب</span><input type="text" id="bre-id" value="' + escapeHtmlAttr(branchRepEditorState.id) + '" autocomplete="off"></label>' +
+                        '<label class="nebras-field"><span>اسم المستخدم</span><input type="text" id="bre-username" name="username" value="' + escapeHtmlAttr(branchRepEditorState.username) + '" autocomplete="username"></label>' +
+                        '<label class="nebras-field"><span>كلمة المرور</span><input type="password" id="bre-password" name="new-password" value="" placeholder="' + (isEdit ? 'اتركي فارغاً للإبقاء على الحالية' : 'كلمة مرور الدخول') + '" autocomplete="new-password"></label>' +
                         '<label class="nebras-field"><span>الفرع</span><input type="text" value="' + escapeHtmlAttr(branchCity) + '" readonly></label>' +
                     '</div>' +
                     '<div class="nebras-editor-footer">' +
-                        '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="saveBranchRepFromEditor()"><i class="fas fa-floppy-disk"></i> حفظ</button>' +
+                        '<button type="submit" class="nebras-users-btn nebras-users-btn--primary"><i class="fas fa-floppy-disk"></i> حفظ</button>' +
                         '<button type="button" class="nebras-users-btn" onclick="cancelBranchRepEditor()">إلغاء</button>' +
-                    '</div></div>';
+                    '</div></form>';
             host.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
@@ -26539,9 +26559,6 @@
             }
             const el = document.getElementById(sectionId);
             if (el) {
-                if (document.activeElement && el.contains(document.activeElement)) {
-                    try { document.activeElement.blur(); } catch (blurErr) { /* ignore */ }
-                }
                 el.classList.remove('show');
                 el.setAttribute('aria-hidden', 'true');
             }
@@ -26664,16 +26681,16 @@
                 : '';
             host.hidden = false;
             host.innerHTML =
-                '<div class="nebras-editor-card">' +
+                '<form class="nebras-editor-card" autocomplete="on" onsubmit="event.preventDefault(); saveUserFromEditor();">' +
                     '<div class="nebras-editor-bar" style="--role-accent:' + (roleDef.accent || '#0a4d8c') + '">' +
                         '<span class="nebras-editor-role-icon"><i class="' + (roleDef.icon || 'fas fa-user') + '"></i></span>' +
                         '<div><h3>' + (st.isEdit ? 'تعديل مستخدم' : 'مستخدم جديد') + '</h3><p>' + (roleDef.descAr || '') + '</p></div>' +
                         '<button type="button" class="nebras-editor-x" onclick="cancelUserEditor()" aria-label="إلغاء"><i class="fas fa-xmark"></i></button>' +
                     '</div>' +
                     '<div class="nebras-editor-grid">' +
-                        '<label class="nebras-field"><span>معرّف الموظف</span><input type="text" id="ue-id" value="' + escapeHtmlAttr(st.id) + '" ' + (st.isPrimary ? 'disabled' : '') + ' placeholder="EMP-102"></label>' +
-                        '<label class="nebras-field"><span>اسم المستخدم (للدخول)</span><input type="text" id="ue-username" value="' + escapeHtmlAttr(st.username) + '" placeholder="sales.riyadh"></label>' +
-                        '<label class="nebras-field"><span>كلمة المرور</span><input type="password" id="ue-password" value="' + escapeHtmlAttr(st.password) + '" ' + (st.isPrimary ? 'disabled' : '') + ' placeholder="' + (st.isEdit && !st.isPrimary ? 'اتركي فارغاً للإبقاء على الحالية' : '••••••') + '" autocomplete="new-password"></label>' +
+                        '<label class="nebras-field"><span>معرّف الموظف</span><input type="text" id="ue-id" value="' + escapeHtmlAttr(st.id) + '" ' + (st.isPrimary ? 'disabled' : '') + ' placeholder="EMP-102" autocomplete="off"></label>' +
+                        '<label class="nebras-field"><span>اسم المستخدم (للدخول)</span><input type="text" id="ue-username" name="username" value="' + escapeHtmlAttr(st.username) + '" placeholder="sales.riyadh" autocomplete="username"></label>' +
+                        '<label class="nebras-field"><span>كلمة المرور</span><input type="password" id="ue-password" name="new-password" value="' + escapeHtmlAttr(st.password) + '" ' + (st.isPrimary ? 'disabled' : '') + ' placeholder="' + (st.isEdit && !st.isPrimary ? 'اتركي فارغاً للإبقاء على الحالية' : '••••••') + '" autocomplete="new-password"></label>' +
                         '<label class="nebras-field"><span>الدور الوظيفي</span><select id="ue-role" onchange="onUserEditorRoleChange(this.value)" ' + (st.isPrimary ? 'disabled' : '') + '>' + roleOptions + '</select></label>' +
                         '<label class="nebras-field nebras-field--wide"><span>الفرع المخصّص</span><select id="ue-branch" onchange="onUserEditorBranchChange(this.value)" ' + (st.isPrimary ? 'disabled' : '') + '>' + branchOptions + '</select>' + branchHint + '</label>' +
                         ((st.role === 'sales_rep' || st.role === 'sales_manager') && !st.isPrimary
@@ -26728,10 +26745,10 @@
                                 '<button type="button" onclick="setAllUserEditorPerms(false)"><i class="fas fa-broom"></i> مسح</button>' +
                             '</div></div><div class="nebras-perm-groups">' + permCards + '</div>') +
                     '<div class="nebras-editor-footer">' +
-                        '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="saveUserFromEditor()"><i class="fas fa-floppy-disk"></i> حفظ المستخدم</button>' +
+                        '<button type="submit" class="nebras-users-btn nebras-users-btn--primary"><i class="fas fa-floppy-disk"></i> حفظ المستخدم</button>' +
                         '<button type="button" class="nebras-users-btn" onclick="cancelUserEditor()">إلغاء</button>' +
                     '</div>' +
-                '</div>';
+                '</form>';
         }
 
         function onUserEditorRoleChange(role) {

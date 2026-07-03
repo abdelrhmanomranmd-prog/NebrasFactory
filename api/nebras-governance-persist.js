@@ -104,22 +104,89 @@ async function handlePersist(body, sess) {
 async function handleBatch(body, sess) {
     const rows = Array.isArray(body.rows) ? body.rows : [];
     if (!rows.length) return { code: 400, data: { ok: false, error: 'rows_required' } };
-    let total = 0;
-    const saved = [];
+    const cfg = sec.supabaseServiceConfig();
+    if (!cfg.url || !cfg.key) {
+        return {
+            code: 503,
+            data: {
+                ok: false,
+                error: cfg.invalidKey === 'non_ascii_service_key' ? 'invalid_service_key_encoding' : 'service_unavailable',
+                hint: 'SUPABASE_SERVICE_ROLE_KEY'
+            }
+        };
+    }
+    const prepared = [];
+    const skipped = [];
     for (let i = 0; i < rows.length; i++) {
         const row = rows[i];
         if (!row || !row.store_key || row.payload === undefined) continue;
-        const result = await persistOne(row.store_key, row.payload, sess);
-        if (!result.ok) {
+        const storeKey = String(row.store_key).trim();
+        if (!isStoreKeyAllowed(storeKey, sess)) {
+            skipped.push({ store_key: storeKey, reason: 'forbidden_for_role' });
+            continue;
+        }
+        let finalPayload = row.payload;
+        try {
+            if (storeKey === 'admin_users' && !sec.isHqSession(sess)) {
+                const currentUsers = await sec.loadAdminUsers();
+                const merged = sec.mergeBranchTeamAdminUsers(sess, finalPayload, currentUsers);
+                if (!merged) { skipped.push({ store_key: storeKey, reason: 'forbidden_branch_scope' }); continue; }
+                finalPayload = merged;
+            } else if (!sec.isHqSession(sess) && sec.storeKeyIsBranchFilterable(storeKey) && Array.isArray(finalPayload)) {
+                const serverRow = await sec.fetchStoreRow(cfg.url, cfg.key, storeKey);
+                const serverPayload = serverRow && Array.isArray(serverRow.payload) ? serverRow.payload : [];
+                const merged = sec.mergeBranchScopedStorePayload(storeKey, finalPayload, serverPayload, sess);
+                if (merged === null) { skipped.push({ store_key: storeKey, reason: 'forbidden_branch_scope' }); continue; }
+                finalPayload = merged;
+            }
+        } catch (mergeErr) {
+            skipped.push({ store_key: storeKey, reason: 'merge_error' });
+            continue;
+        }
+        let size = 0;
+        try { size = JSON.stringify(finalPayload).length; } catch (e) {
+            skipped.push({ store_key: storeKey, reason: 'invalid_payload' });
+            continue;
+        }
+        if (size > 6 * 1024 * 1024) {
+            skipped.push({ store_key: storeKey, reason: 'payload_too_large' });
+            continue;
+        }
+        prepared.push({ store_key: storeKey, payload: finalPayload, updated_at: new Date().toISOString() });
+    }
+    if (!prepared.length) {
+        return { code: 200, data: { ok: true, count: 0, keys: [], skipped: skipped, by: sess.username } };
+    }
+    const CHUNK = 20;
+    const savedKeys = [];
+    for (let i = 0; i < prepared.length; i += CHUNK) {
+        const chunk = prepared.slice(i, i + CHUNK);
+        const upsert = await sec.upsertStoreRows(cfg.url, cfg.key, chunk);
+        if (!upsert || !upsert.ok) {
             return {
-                code: result.error === 'forbidden_for_role' ? 403 : 500,
-                data: Object.assign({ ok: false, batch_index: i, saved: saved }, result)
+                code: 500,
+                data: {
+                    ok: false,
+                    error: 'upsert_failed',
+                    saved: savedKeys,
+                    skipped: skipped,
+                    status: upsert && upsert.status,
+                    detail: (upsert && (upsert.detail || upsert.error)) || ''
+                }
             };
         }
-        total += 1;
-        saved.push(row.store_key);
+        chunk.forEach(function(r) { savedKeys.push(r.store_key); });
     }
-    return { code: 200, data: { ok: true, count: total, keys: saved, by: sess.username } };
+    return {
+        code: 200,
+        data: {
+            ok: true,
+            count: savedKeys.length,
+            keys: savedKeys,
+            skipped: skipped,
+            by: sess.username
+        }
+    };
 }
 
 module.exports = async function handler(req, res) {

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
@@ -1768,9 +1768,10 @@
                 <section class="nebras-erp-form account-security-card" id="account-security-direct-panel">
                     <h3 class="nebras-erp-subhead"><i class="fas fa-key"></i> تغيير مباشر (موظفو الإدارة)</h3>
                     <form id="account-security-direct-form" autocomplete="on" onsubmit="event.preventDefault(); submitAccountSecurityDirect();">
+                    <input type="text" id="sec-current-username" name="username" autocomplete="username" aria-hidden="true" tabindex="-1" style="position:absolute;opacity:0;height:0;width:0;pointer-events:none;">
                     <div class="settings-form-grid">
                         <label class="nebras-field"><span>كلمة المرور الحالية</span><input type="password" id="sec-old-password" name="current-password" autocomplete="current-password"></label>
-                        <label class="nebras-field"><span>اسم المستخدم الجديد</span><input type="text" id="sec-new-username" name="username" autocomplete="username"></label>
+                        <label class="nebras-field"><span>اسم المستخدم الجديد</span><input type="text" id="sec-new-username" name="new-username" autocomplete="username"></label>
                         <label class="nebras-field"><span>كلمة المرور الجديدة</span><input type="password" id="sec-new-password" name="new-password" autocomplete="new-password"></label>
                         <label class="nebras-field"><span>تأكيد كلمة المرور</span><input type="password" id="sec-new-password-confirm" name="new-password-confirm" autocomplete="new-password"></label>
                     </div>
@@ -1782,9 +1783,10 @@
                 <section class="nebras-erp-form account-security-card" id="account-security-email-panel">
                     <h3 class="nebras-erp-subhead"><i class="fas fa-envelope"></i> عبر Gmail المعتمد</h3>
                     <form id="account-security-email-form" autocomplete="on" onsubmit="event.preventDefault(); submitAccountSecurityEmailRecovery();">
+                    <input type="text" id="sec-email-username" name="username" autocomplete="username" aria-hidden="true" tabindex="-1" style="position:absolute;opacity:0;height:0;width:0;pointer-events:none;">
                     <div class="settings-form-grid">
-                        <label class="nebras-field nebras-field--wide"><span>إيميل الإدارة الرئيسية</span><input type="email" id="sec-recovery-email" readonly dir="ltr"></label>
-                        <label class="nebras-field"><span>رمز التحقق</span><input type="text" id="sec-recovery-code" inputmode="numeric" placeholder="6 أرقام" dir="ltr"></label>
+                        <label class="nebras-field nebras-field--wide"><span>إيميل الإدارة الرئيسية</span><input type="email" id="sec-recovery-email" name="email" readonly autocomplete="email" dir="ltr"></label>
+                        <label class="nebras-field"><span>رمز التحقق</span><input type="text" id="sec-recovery-code" name="one-time-code" inputmode="numeric" autocomplete="one-time-code" placeholder="6 أرقام" dir="ltr"></label>
                         <label class="nebras-field"><span>كلمة المرور الجديدة</span><input type="password" id="sec-email-new-password" name="new-password" autocomplete="new-password"></label>
                     </div>
                     <div class="erp-form-actions">
@@ -2170,3 +2172,4 @@
 
 </body>
 </html>
+
