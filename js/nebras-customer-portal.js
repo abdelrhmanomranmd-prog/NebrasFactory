@@ -29,6 +29,45 @@
         return String(t || '').trim().toLowerCase().replace(/\s+/g, ' ');
     }
 
+    function readCpSessionRaw() {
+        try {
+            const raw = localStorage.getItem(CP_SESSION_KEY);
+            if (!raw) return null;
+            const sess = JSON.parse(raw);
+            return sess && sess.id ? sess : null;
+        } catch (e) { return null; }
+    }
+
+    function buildCpSessionSnapshot(user) {
+        if (!user) return null;
+        return {
+            id: user.id,
+            username: user.username,
+            displayName: user.displayName || user.username,
+            phone: user.phone,
+            portalAccess: user.portalAccess,
+            assignedRepId: user.assignedRepId,
+            assignedRepUsername: user.assignedRepUsername,
+            assignedRepPhone: user.assignedRepPhone,
+            isActive: user.isActive !== false
+        };
+    }
+
+    function persistCpSession(patch) {
+        if (!currentPortalCustomer) return;
+        const prev = readCpSessionRaw() || {};
+        const sess = Object.assign({
+            id: currentPortalCustomer.id,
+            username: currentPortalCustomer.username,
+            at: Date.now(),
+            view: 'dashboard',
+            snapshot: buildCpSessionSnapshot(currentPortalCustomer)
+        }, prev, patch || {});
+        sess.id = currentPortalCustomer.id;
+        if (!sess.snapshot) sess.snapshot = buildCpSessionSnapshot(currentPortalCustomer);
+        try { localStorage.setItem(CP_SESSION_KEY, JSON.stringify(sess)); } catch (e) { /* ignore */ }
+    }
+
     function hashPw(pw) {
         if (typeof global.storeNebrasPasswordValue === 'function') return global.storeNebrasPasswordValue(pw);
         return String(pw || '');
@@ -437,7 +476,7 @@
             }
             user.lastLoginAt = new Date().toISOString();
             currentPortalCustomer = user;
-            try { localStorage.setItem(CP_SESSION_KEY, JSON.stringify({ id: user.id, at: Date.now() })); } catch (e) { /* ignore */ }
+            persistCpSession({ view: 'dashboard', username: user.username, snapshot: buildCpSessionSnapshot(user) });
             saveCpData();
             cpAudit('دخول عميل', user.username);
             closeCustomerPortalLogin();
@@ -458,16 +497,60 @@
         if (name) cpAudit('خروج عميل', name);
     }
 
-    function restoreCustomerPortalSession() {
+    async function restoreCustomerPortalSession() {
         loadCpData();
-        try {
-            const raw = localStorage.getItem(CP_SESSION_KEY);
-            if (!raw) return;
-            const sess = JSON.parse(raw);
-            if (!sess || !sess.id) return;
-            const user = customerPortalUsers.find(function(u) { return u.id === sess.id && u.isActive !== false; });
-            if (user) currentPortalCustomer = user;
-        } catch (e) { /* ignore */ }
+        const sess = readCpSessionRaw();
+        if (!sess) return false;
+        let user = customerPortalUsers.find(function(u) {
+            return String(u.id) === String(sess.id) && u.isActive !== false;
+        });
+        if (!user && sess.username) {
+            user = customerPortalUsers.find(function(u) {
+                return u && u.isActive !== false &&
+                    String(u.username || '').toLowerCase() === String(sess.username).toLowerCase();
+            });
+        }
+        if (!user && sess.snapshot && sess.snapshot.id) {
+            user = Object.assign({}, sess.snapshot);
+            const idx = customerPortalUsers.findIndex(function(u) {
+                return String(u.id) === String(user.id);
+            });
+            if (idx >= 0) {
+                customerPortalUsers[idx] = Object.assign({}, customerPortalUsers[idx], user);
+                user = customerPortalUsers[idx];
+            } else {
+                customerPortalUsers.push(user);
+            }
+            saveCpData();
+        }
+        if (!user && typeof hydrateCpUsersFromCloud === 'function') {
+            try { await hydrateCpUsersFromCloud(); } catch (e) { /* ignore */ }
+            user = customerPortalUsers.find(function(u) {
+                return String(u.id) === String(sess.id) && u.isActive !== false;
+            });
+        }
+        if (user) {
+            currentPortalCustomer = user;
+            return true;
+        }
+        return false;
+    }
+
+    async function resumeCustomerPortalAfterBootstrap() {
+        const restored = await restoreCustomerPortalSession();
+        if (!restored || !currentPortalCustomer) return false;
+        const sess = readCpSessionRaw() || { view: 'dashboard' };
+        const view = sess.view || 'dashboard';
+        if (view === 'main-site') return false;
+        if (typeof global.dismissBrandIntro === 'function') {
+            try { global.dismissBrandIntro(); } catch (e) { /* ignore */ }
+        }
+        if (view === 'store') {
+            cpOpenStoreFromPortal();
+            return true;
+        }
+        showCustomerPortalApp();
+        return true;
     }
 
     function showCustomerPortalApp() {
@@ -744,6 +827,7 @@
         document.body.classList.remove('customer-portal-store-active');
         cpRemoveStoreBackFab();
         if (!currentPortalCustomer) return;
+        persistCpSession({ view: 'dashboard' });
         document.body.classList.add('customer-portal-open');
         const app = document.getElementById('customer-portal-app');
         if (app) {
@@ -769,6 +853,7 @@
             app.setAttribute('aria-hidden', 'true');
         }
         document.body.classList.remove('customer-portal-open');
+        persistCpSession({ view: 'main-site' });
         if (typeof global.syncPlatformInteractionLayers === 'function') global.syncPlatformInteractionLayers();
         try {
             if (window.location.hash) history.replaceState({}, '', window.location.pathname + window.location.search);
@@ -811,6 +896,7 @@
 
     function cpOpenStoreFromPortal() {
         if (!currentPortalCustomer) return;
+        persistCpSession({ view: 'store' });
         document.body.classList.add('customer-portal-store-active');
         const app = document.getElementById('customer-portal-app');
         if (app) {
@@ -1692,8 +1778,6 @@
     }
 
     function initCustomerPortal() {
-        restoreCustomerPortalSession();
-        if (currentPortalCustomer) showCustomerPortalApp();
         if (!global.__cpWorkspaceCloseHooked && typeof global.closeNebrasWorkspace === 'function') {
             global.__cpWorkspaceCloseHooked = true;
             const origClose = global.closeNebrasWorkspace;
@@ -1739,6 +1823,11 @@
     global.cpViewQuote = cpViewQuote;
     global.cpCloseQuoteDetail = cpCloseQuoteDetail;
     global.cpPreviewCustomerQuoteA4 = cpPreviewCustomerQuoteA4;
+    global.resumeCustomerPortalAfterBootstrap = resumeCustomerPortalAfterBootstrap;
+    global.hasActiveCustomerPortalSession = function() {
+        return !!currentPortalCustomer || !!readCpSessionRaw();
+    };
+    global.getNebrasCurrentPortalCustomer = function() { return currentPortalCustomer; };
 
     function findCustomerPortalUserByPhone(phone) {
         loadCpData();

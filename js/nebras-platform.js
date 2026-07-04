@@ -2334,6 +2334,7 @@
         let systemSettings = Object.assign({}, DEFAULT_SYSTEM_SETTINGS);
         let currentAdmin = null;
         let nebrasLastLoginPassword = null;
+        const ADMIN_UI_SESSION_KEY = 'nebrasAdminUiSession';
         let currentLang = 'ar';
         let auditLogs = [];
         let dynamicContentBlocks = {};
@@ -18064,6 +18065,7 @@
                 }
                 currentAdmin = user;
                 nebrasLastLoginPassword = password;
+                persistAdminUiSession(user);
                 if (typeof syncAdminSessionClass === 'function') syncAdminSessionClass();
                 if (typeof initNebrasCloudSafety === 'function') {
                     try { initNebrasCloudSafety(); } catch (csErr) { console.warn('Cloud safety init:', csErr); }
@@ -19064,6 +19066,7 @@
             if (typeof stopNebrasCloudSafety === 'function') stopNebrasCloudSafety();
             if (typeof stopNebrasRealtimeSync === 'function') stopNebrasRealtimeSync();
             if (typeof clearNebrasSecureSession === 'function') clearNebrasSecureSession();
+            clearAdminUiSession();
             if (typeof stopNebrasCloudAutoSync === 'function') stopNebrasCloudAutoSync();
             if (dashboardClockTimer) {
                 clearInterval(dashboardClockTimer);
@@ -29697,6 +29700,89 @@
 
         let nebrasIntroSiteOpened = false;
 
+        function persistAdminUiSession(user) {
+            if (!user) return;
+            try {
+                localStorage.setItem(ADMIN_UI_SESSION_KEY, JSON.stringify({
+                    userId: user.id,
+                    username: user.username,
+                    at: Date.now()
+                }));
+            } catch (e) { /* ignore */ }
+        }
+
+        function clearAdminUiSession() {
+            try { localStorage.removeItem(ADMIN_UI_SESSION_KEY); } catch (e) { /* ignore */ }
+        }
+
+        function shouldSkipPublicWorkspaceRestore() {
+            if (currentAdmin) return true;
+            if (document.body.classList.contains('customer-portal-open')) return true;
+            if (document.body.classList.contains('customer-portal-store-active')) return true;
+            return false;
+        }
+
+        function restorePublicWorkspaceIfNoUserSession() {
+            if (shouldSkipPublicWorkspaceRestore()) return;
+            restoreWorkspaceFromHashIfNeeded();
+        }
+
+        async function restoreAdminSessionFromPersist() {
+            if (currentAdmin) return true;
+            if (typeof hasNebrasSecureSession !== 'function' || !hasNebrasSecureSession()) return false;
+            if (typeof verifyNebrasSecureSession !== 'function') return false;
+            const verified = await verifyNebrasSecureSession();
+            if (!verified || !verified.ok || !verified.session) {
+                if (typeof clearNebrasSecureSession === 'function') clearNebrasSecureSession();
+                clearAdminUiSession();
+                return false;
+            }
+            const sess = verified.session;
+            let user = adminUsers.find(function(u) {
+                return (sess.sub && String(u.id) === String(sess.sub)) ||
+                    (sess.username && String(u.username || '').toUpperCase() === String(sess.username).toUpperCase());
+            });
+            if (!user || user.isActive === false) {
+                if (typeof clearNebrasSecureSession === 'function') clearNebrasSecureSession();
+                clearAdminUiSession();
+                return false;
+            }
+            if (isMainGovernanceAdmin(user)) {
+                user.isPrimary = true;
+                user.role = 'superadmin';
+                user.permissions = null;
+            }
+            currentAdmin = user;
+            if (typeof syncAdminSessionClass === 'function') syncAdminSessionClass();
+            if (typeof initNebrasCloudSafety === 'function') {
+                try { initNebrasCloudSafety(); } catch (csErr) { console.warn('Cloud safety init:', csErr); }
+            }
+            if (typeof startNebrasRealtimeSync === 'function') {
+                try { startNebrasRealtimeSync(); } catch (rtErr) { console.warn('Realtime shadow:', rtErr); }
+            }
+            if (typeof startAdminPresenceHeartbeat === 'function') startAdminPresenceHeartbeat(user);
+            if (typeof dismissBrandIntro === 'function') dismissBrandIntro();
+            showAdminDashboard(user);
+            if (NEBRAS_SERVER_FIRST_MODE && supabaseClient && typeof scheduleHydrateGovernanceAfterLogin === 'function') {
+                scheduleHydrateGovernanceAfterLogin();
+            } else if (typeof startNebrasCloudAutoSync === 'function') {
+                startNebrasCloudAutoSync();
+            }
+            return true;
+        }
+
+        async function restoreNebrasUserSessionsAfterBootstrap() {
+            try {
+                if (await restoreAdminSessionFromPersist()) return 'admin';
+                if (typeof window.resumeCustomerPortalAfterBootstrap === 'function') {
+                    if (await window.resumeCustomerPortalAfterBootstrap()) return 'customer-portal';
+                }
+            } catch (sessErr) {
+                console.warn('restoreNebrasUserSessionsAfterBootstrap:', sessErr);
+            }
+            return null;
+        }
+
         function completeIntroAndOpenSite() {
             if (nebrasIntroSiteOpened) return;
             nebrasIntroSiteOpened = true;
@@ -29723,7 +29809,7 @@
             });
             clearStuckInteractionBlockers();
             bindStorefrontCommerceClicks();
-            restoreWorkspaceFromHashIfNeeded();
+            restorePublicWorkspaceIfNoUserSession();
         }
 
         async function bootstrapNebrasPlatform() {
@@ -29763,31 +29849,45 @@
             } finally {
                 initNebrasSiteMediaSystem();
                 document.body.classList.add('nebras-ready');
-                maybeShowBrandIntro();
                 const introActive = shouldDeferHeavySiteRender();
-                try {
-                    setLanguage(currentLang || 'ar', { light: introActive });
-                } catch (langErr) {
-                    console.warn('setLanguage error:', langErr);
-                }
-                if (!introActive) {
-                    initStorefrontExperience();
-                    syncNebrasCloudInBackgroundDeferred();
-                    startNebrasPublicSiteCloudRefresh();
-                    pullPublicSiteGovernanceFromCloud({ silent: true }).finally(function() {
-                        if (typeof forceRecoverPublicSiteUi === 'function') forceRecoverPublicSiteUi();
-                        revealSiteAfterIntro();
-                    });
-                    restoreWorkspaceFromHashIfNeeded();
-                }
-                setTimeout(function() {
-                    const lanes = document.getElementById('visitor-icons-lanes');
-                    const hasIcons = lanes && lanes.querySelector('.visitor-icon-card, .visitor-lane');
-                    if (!hasIcons && typeof forceRecoverPublicSiteUi === 'function') forceRecoverPublicSiteUi();
-                    if (document.body.classList.contains('nebras-intro-active') && typeof dismissBrandIntro === 'function') {
-                        dismissBrandIntro();
+                const runPostBootstrapUi = function(sessionRestored) {
+                    maybeShowBrandIntro();
+                    try {
+                        setLanguage(currentLang || 'ar', { light: introActive && !sessionRestored });
+                    } catch (langErr) {
+                        console.warn('setLanguage error:', langErr);
                     }
-                }, introActive ? 6000 : 1500);
+                    if (!introActive || sessionRestored) {
+                        if (sessionRestored && typeof dismissBrandIntro === 'function') dismissBrandIntro();
+                        if (!sessionRestored) {
+                            initStorefrontExperience();
+                            syncNebrasCloudInBackgroundDeferred();
+                            startNebrasPublicSiteCloudRefresh();
+                            pullPublicSiteGovernanceFromCloud({ silent: true }).finally(function() {
+                                if (typeof forceRecoverPublicSiteUi === 'function') forceRecoverPublicSiteUi();
+                                revealSiteAfterIntro();
+                            });
+                            restorePublicWorkspaceIfNoUserSession();
+                        } else {
+                            syncMobileCommerceBar();
+                            clearStuckInteractionBlockers();
+                        }
+                    }
+                    setTimeout(function() {
+                        const lanes = document.getElementById('visitor-icons-lanes');
+                        const hasIcons = lanes && lanes.querySelector('.visitor-icon-card, .visitor-lane');
+                        if (!hasIcons && !sessionRestored && typeof forceRecoverPublicSiteUi === 'function') forceRecoverPublicSiteUi();
+                        if (document.body.classList.contains('nebras-intro-active') && typeof dismissBrandIntro === 'function') {
+                            if (sessionRestored) dismissBrandIntro();
+                        }
+                    }, introActive && !sessionRestored ? 6000 : 1500);
+                };
+                restoreNebrasUserSessionsAfterBootstrap().then(function(restored) {
+                    runPostBootstrapUi(!!restored);
+                }).catch(function(sessBootErr) {
+                    console.warn('Session bootstrap restore:', sessBootErr);
+                    runPostBootstrapUi(false);
+                });
             }
         }
 

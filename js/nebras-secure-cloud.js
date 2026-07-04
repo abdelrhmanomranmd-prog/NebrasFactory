@@ -293,6 +293,23 @@
         return !!(r && r.ok && r.token);
     }
 
+    async function verifySecureSession() {
+        const token = getSecureToken();
+        if (!token) return { ok: false };
+        try {
+            const res = await fetch(apiBase() + '/api/nebras-auth?action=verify', {
+                method: 'GET',
+                headers: { Authorization: 'Bearer ' + token }
+            });
+            const data = await res.json().catch(function() { return {}; });
+            if (!res.ok || !data.ok || !data.session) return { ok: false };
+            return { ok: true, session: data.session };
+        } catch (e) {
+            console.warn('verifySecureSession failed:', e);
+            return { ok: false };
+        }
+    }
+
     async function ensureNebrasCloudSessionReady(options) {
         options = options || {};
         if (getSecureToken()) return true;
@@ -475,6 +492,7 @@
     global.getNebrasSecureToken = getSecureToken;
     global.clearNebrasSecureSession = clearSecureSession;
     global.establishNebrasSecureSession = establishSecureSession;
+    global.verifyNebrasSecureSession = verifySecureSession;
     global.secureApiLogin = secureApiLogin;
     global.hasNebrasSecureSession = hasSecureSession;
     global.secureCloudPull = secureCloudPull;
