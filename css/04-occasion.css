@@ -2291,12 +2291,15 @@ body[data-occasion-theme] .nebras-occasion-promo-inner {
     position: fixed;
     inset: 0;
     z-index: 12050;
-    display: flex;
+    display: none;
     align-items: center;
     justify-content: center;
     padding: 16px;
     background: rgba(8, 20, 32, 0.72);
     backdrop-filter: blur(4px);
+}
+.sales-quote-door-overlay.show {
+    display: flex;
 }
 
 .sales-quote-door-modal {

@@ -12,6 +12,8 @@
 .customer-portal-overlay:not(.show),
 .customer-portal-app:not(.show),
 .sales-quote-detail-overlay:not(.show),
+.sales-quote-door-overlay:not(.show),
+.cp-quote-detail-overlay:not(.show),
 .nebras-callback-overlay:not(.is-open),
 .nebras-color-overlay.is-hidden,
 .nebras-media-lightbox[hidden],
@@ -53,6 +55,8 @@ body:not(.nebras-workspace-active) #nebras-workspace {
 .product-shop-overlay.show,
 .customer-portal-overlay.show,
 .sales-quote-detail-overlay.show,
+.sales-quote-door-overlay.show,
+.cp-quote-detail-overlay.show,
 .nebras-callback-overlay.is-open {
     display: flex !important;
     pointer-events: auto !important;

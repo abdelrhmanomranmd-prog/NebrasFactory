@@ -10282,6 +10282,7 @@
         function closeSalesQuoteDoorDesign() {
             const overlay = document.getElementById('sales-quote-door-overlay');
             if (overlay) overlay.classList.remove('show');
+            syncPlatformInteractionLayers();
         }
 
         async function viewSalesQuoteReceipt(entryId) {
@@ -17665,7 +17666,7 @@
             return canManage(perm, admin);
         }
 
-        const NEBRAS_PLATFORM_LAYER_SEL = '.admin-section, .admin-overlay, .cart-drawer-overlay, .product-shop-overlay, .quote-print-overlay, .customer-portal-overlay, .customer-portal-app, .sales-quote-detail-overlay, .nebras-callback-overlay, .nebras-color-overlay, .nebras-media-lightbox, #nebras-brand-intro, #nebras-workspace, #admin-dashboard';
+        const NEBRAS_PLATFORM_LAYER_SEL = '.admin-section, .admin-overlay, .cart-drawer-overlay, .product-shop-overlay, .quote-print-overlay, .customer-portal-overlay, .customer-portal-app, .sales-quote-detail-overlay, .sales-quote-door-overlay, .cp-quote-detail-overlay, .nebras-callback-overlay, .nebras-color-overlay, .nebras-media-lightbox, #nebras-brand-intro, #nebras-workspace, #admin-dashboard';
 
         function syncPlatformInteractionLayers() {
             const intro = document.getElementById('nebras-brand-intro');
@@ -17690,7 +17691,8 @@
             const hasOpenLayer = !!document.querySelector(
                 '.admin-section.show, .admin-overlay.show, .cart-drawer-overlay.show, .product-shop-overlay.show, ' +
                 '.quote-print-overlay.show, .customer-portal-overlay.show, .customer-portal-app.show, ' +
-                '.sales-quote-detail-overlay.show, .nebras-callback-overlay.is-open, .nebras-media-lightbox:not([hidden])'
+                '.sales-quote-detail-overlay.show, .sales-quote-door-overlay.show, .cp-quote-detail-overlay.show, ' +
+                '.nebras-callback-overlay.is-open, .nebras-media-lightbox:not([hidden])'
             ) || workspaceActive;
             if (!introOpen && !workspaceActive && !hasOpenLayer) {
                 document.body.style.overflow = '';
