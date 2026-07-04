@@ -526,6 +526,151 @@
         };
     }
 
+    function getCpSettingsSnapshot() {
+        try { return global.systemSettings || (typeof systemSettings !== 'undefined' ? systemSettings : {}); } catch (e) { return {}; }
+    }
+
+    function getCpWpcDoorPriceSample() {
+        let products = [];
+        try {
+            products = global.siteProducts || [];
+            if (!products.length) {
+                const raw = localStorage.getItem('nebrasSiteProducts');
+                if (raw) products = JSON.parse(raw);
+            }
+        } catch (e) { products = []; }
+        let minPrice = null;
+        (products || []).forEach(function(p) {
+            if (!p || p.visible === false) return;
+            const isWpc = p.id === 'prod-wpc' || p.id === 'prod-wpc-raw' ||
+                String(p.titleAr || '').indexOf('WPC') >= 0 || String(p.titleAr || '').indexOf('أبواب') >= 0;
+            if (!isWpc) return;
+            (p.variants || []).forEach(function(v) {
+                const pr = Number(v && v.price);
+                if (pr > 0 && (minPrice === null || pr < minPrice)) minPrice = pr;
+            });
+        });
+        return minPrice;
+    }
+
+    function getCpPortalDiscountPct(portalUser) {
+        if (portalUser) {
+            const tier = computeCustomerLoyaltyScore(portalUser).tier;
+            if (tier === 'vip') return 10;
+            if (tier === 'trusted') return 7;
+            if (tier === 'active') return 5;
+        }
+        const settings = getCpSettingsSnapshot();
+        const minPct = Number(settings.quoteDiscountMinPct);
+        const maxFromSettings = Number.isFinite(minPct) ? Math.max(0, 100 - minPct) : 30;
+        return Math.min(5, maxFromSettings > 0 ? maxFromSettings : 5);
+    }
+
+    function getCpActivePromoCampaigns() {
+        const settings = getCpSettingsSnapshot();
+        const today = new Date().toISOString().slice(0, 10);
+        return (settings.productPromoCampaigns || []).filter(function(c) {
+            if (!c || c.enabled === false) return false;
+            if (c.startDate && String(c.startDate) > today) return false;
+            if (c.endDate && String(c.endDate) < today) return false;
+            return (c.productIds && c.productIds.length) || String(c.labelAr || c.labelEn || '').trim();
+        });
+    }
+
+    function cpQuoteStatusLabel(status) {
+        const map = {
+            new: 'جديد', reviewed: 'قيد المراجعة', sent: 'مُرسَل', accepted: 'مقبول',
+            sold: 'تم البيع', archived: 'أرشيف', finalized: 'منفّذ', pending: 'بانتظار الرد'
+        };
+        const key = String(status || 'new').toLowerCase();
+        return map[key] || String(status || 'جديد');
+    }
+
+    function cpOrderStatusLabel(status) {
+        const map = {
+            pending: 'قيد الانتظار', confirmed: 'مؤكد', production: 'قيد الإنتاج',
+            delivered: 'مُستلَم', cancelled: 'ملغي'
+        };
+        const key = String(status || 'pending').toLowerCase();
+        return map[key] || String(status || 'قيد الانتظار');
+    }
+
+    function buildCpPromoBoardHtml(portalUser) {
+        const discountPct = getCpPortalDiscountPct(portalUser);
+        const basePrice = getCpWpcDoorPriceSample();
+        const discounted = basePrice ? Math.round(basePrice * (1 - discountPct / 100) * 100) / 100 : null;
+        const campaigns = getCpActivePromoCampaigns();
+        const campaignHtml = campaigns.slice(0, 3).map(function(c) {
+            const label = String(c.labelAr || c.labelEn || 'عرض محدود').trim();
+            const note = String(c.noteAr || c.noteEn || c.descriptionAr || '').trim();
+            return '<article class="cp-promo-offer cp-promo-offer--highlight">' +
+                '<strong><i class="fas fa-bolt"></i> ' + esc(label) + '</strong>' +
+                (note ? '<span>' + esc(note) + '</span>' : '') +
+            '</article>';
+        }).join('');
+        const priceHtml = basePrice
+            ? '<div class="cp-promo-price-pill"><s>' + formatMoney(basePrice) + '</s><em>' + formatMoney(discounted) + '</em><span>قبل الضريبة · حسب عرضك</span></div>'
+            : '<span>أسعار أبواب WPC — اطلبي عرضاً مخصصاً</span>';
+        const rep = resolveCpRepContact(portalUser);
+        const tier = portalUser ? computeCustomerLoyaltyScore(portalUser).tier : 'new';
+        return '<section class="cp-promo-board" aria-label="لوحة الخصومات والعروض">' +
+            '<div class="cp-promo-board__glow" aria-hidden="true"></div>' +
+            '<div class="cp-promo-board__inner">' +
+                '<div class="cp-promo-board__head">' +
+                    '<span class="cp-promo-board__badge"><i class="fas fa-fire"></i> عروض حصرية للعملاء</span>' +
+                    '<span class="cp-promo-board__tier cp-promo-board__tier--' + esc(tier) + '">خصمولاء ' + discountPct + '%</span>' +
+                '</div>' +
+                '<h3 class="cp-promo-board__title">أبواب WPC — أسعار المصنع مباشرة لحسابك</h3>' +
+                '<p class="cp-promo-board__sub">ضمان 10 سنوات · مقاومة للماء 100% · توريد وتركيب · خصم كميات للمقاولين</p>' +
+                '<div class="cp-promo-board__grid">' +
+                    '<article class="cp-promo-offer cp-promo-offer--hero">' +
+                        '<strong><i class="fas fa-door-open"></i> أبواب WPC جاهزة</strong>' + priceHtml +
+                    '</article>' +
+                    '<article class="cp-promo-offer"><strong><i class="fas fa-layer-group"></i> خصم كميات</strong>' +
+                        '<span>مقاولون · شركات · معارض — خصم تصاعدي حسب حجم الطلب.</span></article>' +
+                    '<article class="cp-promo-offer"><strong><i class="fas fa-building"></i> مشاريع ومجمعات</strong>' +
+                        '<span>عروض NHC · SASO · توريد + تركيب · شروط دفع مرنة.</span></article>' +
+                    campaignHtml +
+                '</div>' +
+                '<div class="cp-promo-board__foot">' +
+                    '<button type="button" class="cp-promo-board__cta" onclick="cpOpenStoreFromPortal()"><i class="fas fa-store"></i> استكشفي المتجر والأسعار</button>' +
+                    '<p class="cp-promo-ticker"><i class="fas fa-headset"></i> مندوبك: ' + esc(rep.name || 'المبيعات') +
+                        (rep.phone ? ' · ' + esc(rep.phone) : '') + '</p>' +
+                '</div>' +
+            '</div></section>';
+    }
+
+    function buildCpWelcomeStripHtml(portalUser, tierMeta, d) {
+        const tierLabel = { vip: 'عميل VIP ★', trusted: 'عميل موثوق', active: 'عميل نشط', new: 'عميل جديد' };
+        const disc = getCpPortalDiscountPct(portalUser);
+        const rep = resolveCpRepContact(portalUser);
+        return '<section class="cp-welcome-strip">' +
+            '<div class="cp-welcome-strip__badge cp-welcome-strip__badge--' + esc(tierMeta.tier) + '">' +
+                '<i class="fas fa-shield-heart"></i> ' + esc(tierLabel[tierMeta.tier] || '') +
+            '</div>' +
+            '<div class="cp-welcome-strip__copy">' +
+                '<strong>مرحباً بك في نبراس</strong>' +
+                '<span>' + d.totalQuotes + ' عرض · ' + d.orders.length + ' طلب · خصمولاء حتى ' + disc + '%</span>' +
+            '</div>' +
+            (rep.phone
+                ? '<button type="button" class="cp-welcome-strip__rep" onclick="cpDialAssignedRep()"><i class="fas fa-user-tie"></i> ' + esc(rep.name || 'المندوب') + '</button>'
+                : '') +
+        '</section>';
+    }
+
+    function buildCpRepSidebarCardHtml(portalUser) {
+        const rep = resolveCpRepContact(portalUser);
+        const phones = getCpSystemPhones();
+        return '<section class="cp-sidebar-card cp-sidebar-card--rep" aria-label="فريق نبراس لخدمتك">' +
+            '<h3><i class="fas fa-headset"></i> فريقك في نبراس</h3>' +
+            '<div class="cp-rep-card">' +
+                '<div class="cp-rep-card__row"><i class="fas fa-user-tie"></i><div><strong>المندوب</strong><span>' + esc(rep.name || 'يُحدَّد قريباً') + '</span></div></div>' +
+                (rep.phone ? '<button type="button" class="cp-rep-card__btn" onclick="cpDialAssignedRep()"><i class="fas fa-phone"></i> ' + esc(rep.phone) + '</button>' : '') +
+                '<div class="cp-rep-card__row"><i class="fas fa-user-shield"></i><div><strong>مدير المبيعات</strong><span dir="ltr">' + esc(phones.sales) + '</span></div></div>' +
+                '<button type="button" class="cp-rep-card__btn cp-rep-card__btn--ghost" onclick="cpDialSalesManager()"><i class="fas fa-phone-volume"></i> اتصال</button>' +
+            '</div></section>';
+    }
+
     function buildCpBranchesRailHtml() {
         if (typeof global.ensureBuiltinBranches === 'function') global.ensureBuiltinBranches();
         const branches = (typeof global.getNebrasBranchesForEmpire === 'function'
@@ -818,6 +963,134 @@
         }
     }
 
+    async function cpResolveCustomerQuote(entryId) {
+        const u = currentPortalCustomer;
+        if (!u || !entryId) return null;
+        const key = String(entryId).trim();
+        function matchEntry(e) {
+            if (!e) return false;
+            return String(e.id) === key || String(e.quoteNo || '') === key || String(e.cloudId || '') === key;
+        }
+        let entry = null;
+        try {
+            const inbox = typeof loadSalesQuotesInbox === 'function' ? (loadSalesQuotesInbox() || []) : [];
+            entry = inbox.find(matchEntry);
+        } catch (e) { /* ignore */ }
+        if (!entry && typeof global.fetchSalesQuotesFromCloud === 'function') {
+            try {
+                const cloud = await global.fetchSalesQuotesFromCloud();
+                entry = (cloud || []).find(matchEntry);
+            } catch (e) { /* ignore */ }
+        }
+        if (!entry || !entryBelongsToPortalCustomer(entry, u)) return null;
+        return entry;
+    }
+
+    function ensureCpQuoteDetailOverlay() {
+        let overlay = document.getElementById('cp-quote-detail-overlay');
+        if (overlay) return overlay;
+        overlay = document.createElement('div');
+        overlay.id = 'cp-quote-detail-overlay';
+        overlay.className = 'cp-quote-detail-overlay';
+        overlay.setAttribute('aria-hidden', 'true');
+        overlay.innerHTML = '<div class="cp-quote-detail-modal" role="dialog" aria-modal="true" aria-labelledby="cp-quote-detail-title">' +
+            '<button type="button" class="cp-quote-detail-close" onclick="cpCloseQuoteDetail()" aria-label="إغلاق">&times;</button>' +
+            '<div id="cp-quote-detail-body"></div></div>';
+        document.body.appendChild(overlay);
+        overlay.addEventListener('click', function(ev) {
+            if (ev.target === overlay) cpCloseQuoteDetail();
+        });
+        return overlay;
+    }
+
+    function buildCpQuoteLineHtml(line) {
+        const qty = Number(line.qty) || 1;
+        const price = Number(line.price != null ? line.price : line.unitPrice) || 0;
+        const list = Number(line.listPrice) || price;
+        const title = line.productAr || line.productTitle || line.productId || 'صنف';
+        const specs = [line.color, line.size, line.type].filter(Boolean).join(' · ');
+        const disc = list > price ? '<span class="cp-quote-line-disc">خصم ' + Math.round((1 - price / list) * 100) + '%</span>' : '';
+        return '<li class="cp-quote-line">' +
+            '<div class="cp-quote-line__main"><strong>' + esc(title) + '</strong>' +
+            (specs ? '<small>' + esc(specs) + '</small>' : '') + '</div>' +
+            '<div class="cp-quote-line__nums"><span>×' + qty + '</span><em>' + formatMoney(price * qty) + '</em>' + disc + '</div>' +
+        '</li>';
+    }
+
+    async function cpViewQuote(entryId) {
+        const entry = await cpResolveCustomerQuote(entryId);
+        if (!entry) { alert('العرض غير متاح أو لا يخص حسابك.'); return; }
+        const overlay = ensureCpQuoteDetailOverlay();
+        const body = document.getElementById('cp-quote-detail-body');
+        if (!body) return;
+        const disc = quoteDiscountSummary(entry);
+        const discBlock = disc
+            ? '<div class="cp-quote-detail-disc"><i class="fas fa-tag"></i> خصم ' + disc.pct + '% · ' + formatMoney(disc.amount) + '</div>'
+            : '';
+        const lines = (entry.lines || []).map(buildCpQuoteLineHtml).join('');
+        const pdfUrl = entry.quoteDocumentPdfUrl || entry.quoteDocumentCloudUrl || entry.quoteDocumentDataUrl || '';
+        const docBlock = pdfUrl
+            ? '<a class="cp-quote-detail-pdf" href="' + escAttr(pdfUrl) + '" target="_blank" rel="noopener"><i class="fas fa-file-pdf"></i> تحميل عرض السعر PDF</a>'
+            : '';
+        const entryKey = escAttr(String(entry.id || entry.quoteNo || ''));
+        body.innerHTML =
+            '<header class="cp-quote-detail-head">' +
+                '<span class="cp-quote-detail-kicker"><i class="fas fa-file-invoice"></i> عرض سعر رسمي</span>' +
+                '<h3 id="cp-quote-detail-title">' + esc(entry.quoteNo || entry.id || '—') + '</h3>' +
+                '<p class="cp-quote-detail-meta">' + esc(cpQuoteStatusLabel(entry.status)) +
+                    (entry.convertedToOrder ? ' · مُحوَّل لطلب' : '') + '</p>' +
+            '</header>' +
+            discBlock +
+            '<div class="cp-quote-detail-totals">' +
+                '<div><span>قبل الضريبة</span><strong>' + formatMoney(entry.subtotalExVat || entry.subtotal || 0) + '</strong></div>' +
+                '<div><span>شامل الضريبة</span><strong class="cp-quote-detail-grand">' + formatMoney(entry.totalIncVat || entry.total || 0) + '</strong></div>' +
+            '</div>' +
+            (lines ? '<ul class="cp-quote-detail-lines">' + lines + '</ul>' : '<p class="cp-empty">لا أصناف مسجّلة في هذا العرض.</p>') +
+            '<div class="cp-quote-detail-actions">' +
+                '<button type="button" class="cp-quote-detail-btn cp-quote-detail-btn--primary" onclick="cpPreviewCustomerQuoteA4(\'' + entryKey.replace(/'/g, "\\'") + '\')"><i class="fas fa-eye"></i> معاينة A4 احترافية</button>' +
+                docBlock +
+                '<button type="button" class="cp-quote-detail-btn" onclick="cpDialAssignedRep()"><i class="fas fa-phone"></i> تواصلي مع المندوب</button>' +
+            '</div>';
+        overlay.classList.add('show');
+        overlay.setAttribute('aria-hidden', 'false');
+        if (typeof global.syncPlatformInteractionLayers === 'function') global.syncPlatformInteractionLayers();
+    }
+
+    function cpCloseQuoteDetail() {
+        const overlay = document.getElementById('cp-quote-detail-overlay');
+        if (overlay) {
+            overlay.classList.remove('show');
+            overlay.setAttribute('aria-hidden', 'true');
+        }
+        if (typeof global.syncPlatformInteractionLayers === 'function') global.syncPlatformInteractionLayers();
+    }
+
+    async function cpPreviewCustomerQuoteA4(entryId) {
+        const entry = await cpResolveCustomerQuote(entryId);
+        if (!entry) return;
+        if (typeof global.openSalesQuoteA4Preview === 'function') {
+            global.openSalesQuoteA4Preview(entry, { allowEmpty: true, customerPortal: true });
+            return;
+        }
+        const pdfUrl = entry.quoteDocumentPdfUrl || entry.quoteDocumentCloudUrl || entry.quoteDocumentDataUrl || '';
+        if (pdfUrl) window.open(pdfUrl, '_blank', 'noopener,noreferrer');
+        else alert('معاينة A4 غير متاحة حالياً — تواصلي مع المبيعات.');
+    }
+
+    function wireCpQuoteRowClicks() {
+        const host = document.getElementById('customer-portal-body');
+        if (!host) return;
+        host.querySelectorAll('.cp-row--clickable[data-cp-quote-id]').forEach(function(row) {
+            if (row.dataset.cpQuoteWired === '1') return;
+            row.dataset.cpQuoteWired = '1';
+            function openQuote() { cpViewQuote(row.getAttribute('data-cp-quote-id')); }
+            row.addEventListener('click', openQuote);
+            row.addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openQuote(); }
+            });
+        });
+    }
+
     function quoteDiscountSummary(q) {
         if (!q) return null;
         const num = function(v) { return Number(v) || 0; };
@@ -845,10 +1118,12 @@
         const u = currentPortalCustomer;
         const d = collectPortalCustomerData(u);
         if (head) {
-            head.innerHTML = '<div class="cp-head-inner">' +
-                '<span class="cp-head-pill"><i class="fas fa-user-circle"></i> حساب العميل</span>' +
-                '<h2>مرحباً، ' + esc(u.displayName || u.username) + '</h2>' +
-                '<p>لوحتك الخاصة — عروضك · طلباتك · حوالاتك فقط</p>' +
+            head.innerHTML = '<div class="cp-head-inner cp-head-inner--premium">' +
+                '<div class="cp-head-brand">' +
+                    '<span class="cp-head-pill"><i class="fas fa-user-circle"></i> حساب العميل</span>' +
+                    '<h2>مرحباً، ' + esc(u.displayName || u.username) + '</h2>' +
+                    '<p>لوحتك الخاصة — عروضك · طلباتك · حوالاتك · خصوماتك</p>' +
+                '</div>' +
                 '<button type="button" class="cp-logout-btn" onclick="logoutCustomerPortal()"><i class="fas fa-right-from-bracket"></i> خروج</button></div>';
         }
         const tierMeta = computeCustomerLoyaltyScore(u);
@@ -861,16 +1136,21 @@
             '</section>'
             : '';
         const quotesHtml = cpHasPortalAccess(u, 'quotes')
-            ? '<section class="cp-panel"><h3><i class="fas fa-file-invoice"></i> عروض الأسعار</h3>' +
+            ? '<section class="cp-panel cp-panel--quotes"><div class="cp-panel-head"><h3><i class="fas fa-file-invoice"></i> عروض الأسعار</h3>' +
+                (d.quotesPending && d.quotesPending.length
+                    ? '<span class="cp-panel-badge">' + d.quotesPending.length + ' بانتظار الرد</span>' : '') +
+                '</div>' +
                 (d.quotes.length ? '<div class="cp-list">' + d.quotes.slice(0, 20).map(function(q) {
                     const disc = quoteDiscountSummary(q);
                     const discHtml = disc
                         ? '<span class="cp-discount-badge"><i class="fas fa-tag"></i> خصم ' + disc.pct + '% · ' + formatMoney(disc.amount) + '</span>'
                         : '';
-                    return '<article class="cp-row"><strong>' + esc(q.quoteNo || q.id || '—') + '</strong>' +
-                        '<span>' + formatMoney(q.totalIncVat || q.total || 0) + '</span>' +
-                        discHtml +
-                        '<small>' + esc(q.status || 'جديد') + (q.convertedToOrder ? ' · طلب OMS' : '') + '</small></article>';
+                    const qKey = escAttr(String(q.id || q.quoteNo || ''));
+                    return '<article class="cp-row cp-row--clickable" role="button" tabindex="0" data-cp-quote-id="' + qKey + '" title="اضغطي لعرض التفاصيل">' +
+                        '<div class="cp-row__lead"><strong>' + esc(q.quoteNo || q.id || '—') + '</strong>' +
+                        '<small>' + esc(cpQuoteStatusLabel(q.status)) + (q.convertedToOrder ? ' · طلب OMS' : '') + '</small></div>' +
+                        '<div class="cp-row__trail"><span class="cp-row__amount">' + formatMoney(q.totalIncVat || q.total || 0) + '</span>' +
+                        discHtml + '<i class="fas fa-chevron-left cp-row__chev" aria-hidden="true"></i></div></article>';
                 }).join('') + '</div>' : '<p class="cp-empty">لا عروض مسجّلة بعد — تواصلي مع مبيعات نبراس.</p>') +
             '</section>'
             : '';
@@ -882,9 +1162,9 @@
                     '<span class="cp-subtab">تحتاج طلب: ' + d.quotesNeedOrder.length + '</span>' +
                 '</div>' +
                 (d.orders.length ? '<div class="cp-list">' + d.orders.slice(0, 20).map(function(o) {
-                    return '<article class="cp-row"><strong>' + esc(o.orderNo || o.id) + '</strong>' +
-                        '<span>' + esc(o.status || 'pending') + '</span>' +
-                        '<small>' + esc(o.product || o.branch || '') + '</small></article>';
+                    return '<article class="cp-row"><div class="cp-row__lead"><strong>' + esc(o.orderNo || o.id) + '</strong>' +
+                        '<small>' + esc(o.product || o.branch || '') + '</small></div>' +
+                        '<span class="cp-row__status">' + esc(cpOrderStatusLabel(o.status)) + '</span></article>';
                 }).join('') + '</div>' : '<p class="cp-empty">لا طلبات بعد.</p>') +
             '</section>'
             : '';
@@ -901,9 +1181,11 @@
             (typeof global.renderCustomerJourneyAlertsHtml === 'function' ? global.renderCustomerJourneyAlertsHtml(u) : '') +
             '<div class="cp-dashboard-shell">' +
                 '<div class="cp-dashboard-main">' +
+                    buildCpWelcomeStripHtml(u, tierMeta, d) +
+                    buildCpPromoBoardHtml(u) +
                     buildCpShowcasesHtml() +
                     buildCpQuickActionsHtml(u) +
-                    '<div class="cp-stats">' +
+                    '<div class="cp-stats cp-stats--premium">' +
                         '<article class="cp-stat"><strong>' + d.totalQuotes + '</strong><span>عروض أسعار</span></article>' +
                         '<article class="cp-stat"><strong>' + d.preparing.length + '</strong><span>قيد التجهيز</span></article>' +
                         '<article class="cp-stat"><strong>' + d.delivered.length + '</strong><span>مُستلَمة</span></article>' +
@@ -912,11 +1194,12 @@
                     journeyHtml + quotesHtml + ordersHtml + transfersHtml +
                 '</div>' +
                 '<aside class="cp-dashboard-sidebar">' +
-                    buildCpPromoRailHtml() +
+                    buildCpRepSidebarCardHtml(u) +
                     buildCpBranchesRailHtml() +
                 '</aside>' +
             '</div>';
         wireCpPortalShowcases();
+        wireCpQuoteRowClicks();
         if (typeof global.markJourneysReadyViewed === 'function') global.markJourneysReadyViewed(u);
     }
 
@@ -1348,6 +1631,9 @@
     global.cpBranchDial = cpBranchDial;
     global.cpBranchSmartRoute = cpBranchSmartRoute;
     global.cpOpenStoreFromPortal = cpOpenStoreFromPortal;
+    global.cpViewQuote = cpViewQuote;
+    global.cpCloseQuoteDetail = cpCloseQuoteDetail;
+    global.cpPreviewCustomerQuoteA4 = cpPreviewCustomerQuoteA4;
 
     function findCustomerPortalUserByPhone(phone) {
         loadCpData();

@@ -11546,10 +11546,12 @@
 
         function openSalesQuoteA4Preview(entry, options) {
             options = options || {};
-            if (!options.repAccess && !canAccessQuoteDocumentOps()) {
-                if (!requirePermission('sales', 'معاينة عرض السعر تتطلب صلاحية المبيعات.')) return;
-            } else if (!canAccessQuoteDocumentOps()) {
-                if (!requirePermission('quotes', 'صلاحية عروض الأسعار مطلوبة.')) return;
+            if (!options.customerPortal) {
+                if (!options.repAccess && !canAccessQuoteDocumentOps()) {
+                    if (!requirePermission('sales', 'معاينة عرض السعر تتطلب صلاحية المبيعات.')) return;
+                } else if (!canAccessQuoteDocumentOps()) {
+                    if (!requirePermission('quotes', 'صلاحية عروض الأسعار مطلوبة.')) return;
+                }
             }
             const overlay = document.getElementById('quote-print-overlay');
             const doc = document.getElementById('quote-a4-document');
@@ -32244,6 +32246,7 @@
         window.openSalesManagement = openSalesManagement;
         window.previewSalesQuoteA4Empty = previewSalesQuoteA4Empty;
         window.previewSalesQuoteA4 = previewSalesQuoteA4;
+        window.openSalesQuoteA4Preview = openSalesQuoteA4Preview;
         window.downloadSalesQuoteA4Pdf = downloadSalesQuoteA4Pdf;
         window.previewRepQuoteA4 = previewRepQuoteA4;
         window.isStrictSalesRep = isStrictSalesRep;
