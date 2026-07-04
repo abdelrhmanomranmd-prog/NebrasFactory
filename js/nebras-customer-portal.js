@@ -549,6 +549,7 @@
             cpAudit('دخول عميل', user.username);
             closeCustomerPortalLogin();
             showCustomerPortalApp();
+            if (typeof global.refreshNebrasAppTabBar === 'function') global.refreshNebrasAppTabBar();
         })();
     }
 
@@ -563,6 +564,7 @@
         if (typeof global.closeNebrasWorkspace === 'function') global.closeNebrasWorkspace();
         if (typeof syncPlatformInteractionLayers === 'function') syncPlatformInteractionLayers();
         if (name) cpAudit('خروج عميل', name);
+        if (typeof global.refreshNebrasAppTabBar === 'function') global.refreshNebrasAppTabBar();
     }
 
     async function restoreCustomerPortalSession() {

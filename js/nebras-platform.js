@@ -18989,6 +18989,7 @@
             applyOccasionTheme();
             syncAdminSessionClass();
             renderDashboardCommandShell(user);
+            if (typeof window.refreshNebrasAppTabBar === 'function') window.refreshNebrasAppTabBar();
             if (typeof renderNebrasLiveCloudRibbon === 'function') renderNebrasLiveCloudRibbon('idle');
             applyRoleDashboardScope(user);
             if (typeof applyHrStrictDashboardGovernance === 'function') applyHrStrictDashboardGovernance(user);
@@ -19076,6 +19077,7 @@
             nebrasLastLoginPassword = null;
             document.getElementById('admin-dashboard').classList.remove('show');
             syncAdminSessionClass();
+            if (typeof window.refreshNebrasAppTabBar === 'function') window.refreshNebrasAppTabBar();
             setLanguage(currentLang || 'ar');
             updateSalesQuoteFab();
             return false;
@@ -22126,6 +22128,10 @@
         }
 
         function syncMobileCommerceBar() {
+            if (document.body.classList.contains('nebras-native-app')) {
+                document.body.classList.remove('nebras-mobile-bar-active');
+                return;
+            }
             const mobile = window.matchMedia('(max-width: 768px)').matches;
             const show = mobile && !nebrasWorkspaceState.active && !currentAdmin;
             document.body.classList.toggle('nebras-mobile-bar-active', show);
@@ -29884,6 +29890,7 @@
                 };
                 restoreNebrasUserSessionsAfterBootstrap().then(function(restored) {
                     runPostBootstrapUi(!!restored);
+                    if (typeof window.refreshNebrasAppTabBar === 'function') window.refreshNebrasAppTabBar();
                 }).catch(function(sessBootErr) {
                     console.warn('Session bootstrap restore:', sessBootErr);
                     runPostBootstrapUi(false);

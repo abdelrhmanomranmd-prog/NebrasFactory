@@ -1,0 +1,113 @@
+/* نبراس — شريط تطبيق الجوال (عملاء · مناديب · مدير مبيعات) */
+
+html.nebras-app-root {
+    --nebras-app-tab-h: calc(62px + env(safe-area-inset-bottom, 0px));
+}
+
+body.nebras-native-app {
+    padding-bottom: var(--nebras-app-tab-h);
+}
+
+body.nebras-native-app.nebras-mobile-bar-active {
+    padding-bottom: var(--nebras-app-tab-h);
+}
+
+body.nebras-native-app .nebras-mobile-commerce-bar {
+    display: none !important;
+}
+
+body.nebras-native-app #nebras-brand-intro.nebras-intro-active {
+    display: none !important;
+}
+
+body.nebras-native-app.customer-portal-open,
+body.nebras-native-app.customer-portal-store-active {
+    padding-bottom: var(--nebras-app-tab-h);
+}
+
+.nebras-app-tabbar {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 12500;
+    display: flex;
+    align-items: stretch;
+    justify-content: space-around;
+    gap: 2px;
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
+    background: linear-gradient(180deg, rgba(6, 46, 68, 0.97) 0%, rgba(4, 28, 42, 0.99) 100%);
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    box-shadow: 0 -8px 28px rgba(0, 0, 0, 0.28);
+    backdrop-filter: blur(12px);
+}
+
+.nebras-app-tabbar[hidden] {
+    display: none !important;
+}
+
+.nebras-app-tab {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 6px 4px;
+    border: none;
+    border-radius: 12px;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 0.62rem;
+    font-weight: 800;
+    line-height: 1.15;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s, transform 0.12s;
+}
+
+.nebras-app-tab i {
+    font-size: 1.05rem;
+}
+
+.nebras-app-tab.is-active {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.nebras-app-tab--primary {
+    color: #062e44;
+    background: linear-gradient(145deg, #7dd3fc 0%, #38bdf8 55%, #0ea5e9 100%);
+    box-shadow: 0 4px 14px rgba(14, 165, 233, 0.35);
+}
+
+.nebras-app-tab--primary.is-active,
+.nebras-app-tab--primary:hover {
+    color: #042a3d;
+    background: linear-gradient(145deg, #bae6fd 0%, #7dd3fc 100%);
+}
+
+.nebras-app-tab:active {
+    transform: scale(0.96);
+}
+
+body.nebras-native-app #nebras-workspace {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+body.nebras-native-app .customer-portal-app {
+    padding-bottom: var(--nebras-app-tab-h);
+}
+
+body.nebras-native-app .cp-store-back-fab {
+    bottom: calc(var(--nebras-app-tab-h) + 12px);
+}
+
+@media (min-width: 1024px) {
+    body.nebras-native-app .nebras-app-tabbar {
+        max-width: 520px;
+        left: 50%;
+        transform: translateX(-50%);
+        border-radius: 18px 18px 0 0;
+    }
+}

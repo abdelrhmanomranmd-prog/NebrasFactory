@@ -1,0 +1,27 @@
+{
+  "appId": "com.nebrasplasticcompany.app",
+  "appName": "نبراس",
+  "webDir": "www",
+  "server": {
+    "url": "https://www.nebrasplasticcompany.com/?app=1",
+    "cleartext": false,
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": false
+  },
+  "ios": {
+    "contentInset": "automatic"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchAutoHide": true,
+      "backgroundColor": "#062e44",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#062e44"
+    }
+  }
+}
