@@ -448,10 +448,12 @@
     function logoutCustomerPortal() {
         const name = currentPortalCustomer ? currentPortalCustomer.username : '';
         currentPortalCustomer = null;
+        document.body.classList.remove('customer-portal-open', 'customer-portal-store-active');
+        cpRemoveStoreBackFab();
         try { localStorage.removeItem(CP_SESSION_KEY); } catch (e) { /* ignore */ }
         const app = document.getElementById('customer-portal-app');
         if (app) { app.hidden = true; app.classList.remove('show'); }
-        document.body.classList.remove('customer-portal-open');
+        if (typeof global.closeNebrasWorkspace === 'function') global.closeNebrasWorkspace();
         if (typeof syncPlatformInteractionLayers === 'function') syncPlatformInteractionLayers();
         if (name) cpAudit('خروج عميل', name);
     }
@@ -734,10 +736,96 @@
         else window.location.href = 'tel:' + phone;
     }
 
+    function cpReturnToPortalDashboard() {
+        if (typeof global.closeNebrasWorkspace === 'function' && document.body.classList.contains('nebras-workspace-active')) {
+            document.body.classList.remove('customer-portal-store-active');
+            global.closeNebrasWorkspace();
+        }
+        document.body.classList.remove('customer-portal-store-active');
+        cpRemoveStoreBackFab();
+        if (!currentPortalCustomer) return;
+        document.body.classList.add('customer-portal-open');
+        const app = document.getElementById('customer-portal-app');
+        if (app) {
+            app.hidden = false;
+            app.classList.add('show');
+            app.setAttribute('aria-hidden', 'false');
+        }
+        if (typeof global.syncPlatformInteractionLayers === 'function') global.syncPlatformInteractionLayers();
+        renderCustomerPortalDashboard();
+        const body = document.getElementById('customer-portal-body');
+        if (body) body.scrollTop = 0;
+        window.scrollTo(0, 0);
+    }
+
+    function cpGoToMainSite() {
+        document.body.classList.remove('customer-portal-store-active');
+        cpRemoveStoreBackFab();
+        if (typeof global.closeNebrasWorkspace === 'function') global.closeNebrasWorkspace();
+        const app = document.getElementById('customer-portal-app');
+        if (app) {
+            app.hidden = true;
+            app.classList.remove('show');
+            app.setAttribute('aria-hidden', 'true');
+        }
+        document.body.classList.remove('customer-portal-open');
+        if (typeof global.syncPlatformInteractionLayers === 'function') global.syncPlatformInteractionLayers();
+        try {
+            if (window.location.hash) history.replaceState({}, '', window.location.pathname + window.location.search);
+        } catch (e) { /* ignore */ }
+        const home = document.getElementById('nav-home');
+        if (home) home.click();
+        else {
+            const hero = document.getElementById('hero');
+            if (hero) hero.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            else window.scrollTo(0, 0);
+        }
+    }
+
+    function cpEnsureStoreBackFab() {
+        let fab = document.getElementById('cp-store-back-fab');
+        if (!fab) {
+            fab = document.createElement('button');
+            fab.type = 'button';
+            fab.id = 'cp-store-back-fab';
+            fab.className = 'cp-store-back-fab';
+            fab.setAttribute('aria-label', 'العودة للوحة حسابي');
+            fab.innerHTML = '<i class="fas fa-gauge-high" aria-hidden="true"></i><span>لوحتي</span>';
+            fab.addEventListener('click', function(ev) {
+                if (ev) ev.preventDefault();
+                cpReturnToPortalDashboard();
+            });
+            document.body.appendChild(fab);
+        }
+        fab.hidden = false;
+        fab.classList.add('show');
+    }
+
+    function cpRemoveStoreBackFab() {
+        const fab = document.getElementById('cp-store-back-fab');
+        if (fab) {
+            fab.classList.remove('show');
+            fab.hidden = true;
+        }
+    }
+
     function cpOpenStoreFromPortal() {
+        if (!currentPortalCustomer) return;
+        document.body.classList.add('customer-portal-store-active');
+        const app = document.getElementById('customer-portal-app');
+        if (app) {
+            app.classList.remove('show');
+            app.hidden = true;
+            app.setAttribute('aria-hidden', 'true');
+        }
+        document.body.classList.remove('customer-portal-open');
         if (typeof global.openNebrasWorkspace === 'function') {
             global.openNebrasWorkspace({ pillar: 'store', view: 'catalog-all' });
+        } else if (typeof global.openProductShop === 'function') {
+            global.openProductShop();
         }
+        cpEnsureStoreBackFab();
+        if (typeof global.syncPlatformInteractionLayers === 'function') global.syncPlatformInteractionLayers();
     }
 
     function buildCpShowcasesHtml() {
@@ -762,9 +850,8 @@
         const rep = resolveCpRepContact(portalUser);
         const repPhone = rep.phone || phones.sales;
         const repLabel = rep.name ? ('المندوب: ' + rep.name) : 'مندوب المبيعات';
-        return '<section class="cp-quick-actions" aria-label="خدمات العميل">' +
-            '<button type="button" class="cp-action-btn cp-action-btn--store" onclick="cpOpenStoreFromPortal()"><i class="fas fa-store"></i><span>المتجر</span><small>كتالوج المنتجات</small></button>' +
-            '<button type="button" class="cp-action-btn cp-action-btn--complaint" onclick="cpOpenComplaints()"><i class="fas fa-comment-dots"></i><span>الشكاوى</span><small>تقديم شكوى للإدارة</small></button>' +
+        return '<section class="cp-quick-actions cp-quick-actions--compact" aria-label="خدمات العميل">' +
+            '<button type="button" class="cp-action-btn cp-action-btn--complaint" onclick="cpOpenComplaints()"><i class="fas fa-comment-dots"></i><span>الشكاوى</span><small>تقديم شكوى</small></button>' +
             '<button type="button" class="cp-action-btn cp-action-btn--service" onclick="cpDialCustomerService()"><i class="fas fa-headset"></i><span>خدمة العملاء</span><small>' + esc(phones.customerService) + '</small></button>' +
             '<button type="button" class="cp-action-btn cp-action-btn--sales" onclick="cpDialSalesManager()"><i class="fas fa-user-tie"></i><span>مدير المبيعات</span><small>' + esc(phones.sales) + '</small></button>' +
             '<button type="button" class="cp-action-btn cp-action-btn--rep" onclick="cpDialAssignedRep()"><i class="fas fa-id-badge"></i><span>' + esc(repLabel) + '</span><small>' + esc(repPhone || '—') + '</small></button>' +
@@ -1124,6 +1211,11 @@
                     '<h2>مرحباً، ' + esc(u.displayName || u.username) + '</h2>' +
                     '<p>لوحتك الخاصة — عروضك · طلباتك · حوالاتك · خصوماتك</p>' +
                 '</div>' +
+                '<nav class="cp-head-nav" aria-label="تنقل حساب العميل">' +
+                    '<button type="button" class="cp-head-nav__btn cp-head-nav__btn--active" onclick="cpReturnToPortalDashboard()"><i class="fas fa-gauge-high"></i><span>لوحتي</span></button>' +
+                    '<button type="button" class="cp-head-nav__btn" onclick="cpGoToMainSite()"><i class="fas fa-home"></i><span>الرئيسية</span></button>' +
+                    '<button type="button" class="cp-head-nav__btn" onclick="cpOpenStoreFromPortal()"><i class="fas fa-store"></i><span>المتجر</span></button>' +
+                '</nav>' +
                 '<button type="button" class="cp-logout-btn" onclick="logoutCustomerPortal()"><i class="fas fa-right-from-bracket"></i> خروج</button></div>';
         }
         const tierMeta = computeCustomerLoyaltyScore(u);
@@ -1182,23 +1274,23 @@
             '<div class="cp-dashboard-shell">' +
                 '<div class="cp-dashboard-main">' +
                     buildCpWelcomeStripHtml(u, tierMeta, d) +
-                    buildCpPromoBoardHtml(u) +
-                    buildCpShowcasesHtml() +
-                    buildCpQuickActionsHtml(u) +
-                    '<div class="cp-stats cp-stats--premium">' +
+                    '<div class="cp-stats cp-stats--premium cp-stats--top">' +
                         '<article class="cp-stat"><strong>' + d.totalQuotes + '</strong><span>عروض أسعار</span></article>' +
                         '<article class="cp-stat"><strong>' + d.preparing.length + '</strong><span>قيد التجهيز</span></article>' +
                         '<article class="cp-stat"><strong>' + d.delivered.length + '</strong><span>مُستلَمة</span></article>' +
                         '<article class="cp-stat cp-stat--tier cp-stat--' + tierMeta.tier + '"><strong>' + esc(tierLabel[tierMeta.tier] || '') + '</strong><span>تصنيفك</span></article>' +
                     '</div>' +
-                    journeyHtml + quotesHtml + ordersHtml + transfersHtml +
+                    buildCpPromoBoardHtml(u) +
+                    buildCpQuickActionsHtml(u) +
+                    '<div class="cp-panels-grid">' +
+                        journeyHtml + quotesHtml + ordersHtml + transfersHtml +
+                    '</div>' +
                 '</div>' +
                 '<aside class="cp-dashboard-sidebar">' +
                     buildCpRepSidebarCardHtml(u) +
                     buildCpBranchesRailHtml() +
                 '</aside>' +
             '</div>';
-        wireCpPortalShowcases();
         wireCpQuoteRowClicks();
         if (typeof global.markJourneysReadyViewed === 'function') global.markJourneysReadyViewed(u);
     }
@@ -1602,6 +1694,17 @@
     function initCustomerPortal() {
         restoreCustomerPortalSession();
         if (currentPortalCustomer) showCustomerPortalApp();
+        if (!global.__cpWorkspaceCloseHooked && typeof global.closeNebrasWorkspace === 'function') {
+            global.__cpWorkspaceCloseHooked = true;
+            const origClose = global.closeNebrasWorkspace;
+            global.closeNebrasWorkspace = function() {
+                const restore = document.body.classList.contains('customer-portal-store-active');
+                origClose.apply(this, arguments);
+                if (restore && currentPortalCustomer) {
+                    setTimeout(function() { cpReturnToPortalDashboard(); }, 0);
+                }
+            };
+        }
     }
 
     if (document.readyState === 'loading') {
@@ -1631,6 +1734,8 @@
     global.cpBranchDial = cpBranchDial;
     global.cpBranchSmartRoute = cpBranchSmartRoute;
     global.cpOpenStoreFromPortal = cpOpenStoreFromPortal;
+    global.cpReturnToPortalDashboard = cpReturnToPortalDashboard;
+    global.cpGoToMainSite = cpGoToMainSite;
     global.cpViewQuote = cpViewQuote;
     global.cpCloseQuoteDetail = cpCloseQuoteDetail;
     global.cpPreviewCustomerQuoteA4 = cpPreviewCustomerQuoteA4;

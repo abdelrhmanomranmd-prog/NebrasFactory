@@ -41,11 +41,42 @@
     inset: 0;
     z-index: 11500;
     background: linear-gradient(160deg, #f4f8fc 0%, #e8f0f8 100%);
+    overflow-x: hidden;
     overflow-y: auto;
     display: none;
+    -webkit-overflow-scrolling: touch;
 }
 .customer-portal-app.show { display: block; }
-body.customer-portal-open { overflow: hidden; }
+body.customer-portal-open {
+    overflow: hidden;
+}
+/* إخفاء عناصر الموقع تحت لوحة العميل — منع الشريط السفلي والبكسلة */
+body.customer-portal-open #nebras-storefront,
+body.customer-portal-open .nebras-mobile-commerce-bar,
+body.customer-portal-open .cart-fab,
+body.customer-portal-open .fab-send-channel-group,
+body.customer-portal-open .fab-send-transfer-receipt,
+body.customer-portal-open .nebras-callback-fab,
+body.customer-portal-open #nebras-partners-section,
+body.customer-portal-open #site-celebration-overlay,
+body.customer-portal-open footer,
+body.customer-portal-open .nebras-partners-section {
+    display: none !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+}
+/* المتجر من لوحة العميل — فوق اللوحة مع زر عودة */
+body.customer-portal-store-active #nebras-workspace {
+    z-index: 13000 !important;
+}
+body.customer-portal-store-active .customer-portal-app {
+    visibility: hidden;
+    pointer-events: none;
+}
+body.customer-portal-store-active .cart-fab,
+body.customer-portal-store-active .nebras-mobile-commerce-bar {
+    display: none !important;
+}
 
 #customer-portal-head {
     background: linear-gradient(135deg, #071828 0%, #0d2840 45%, #155e94 100%);
@@ -96,11 +127,84 @@ body.customer-portal-open { overflow: hidden; }
     font-size: 0.8rem;
 }
 
+.cp-head-nav {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    position: relative;
+    z-index: 1;
+}
+.cp-head-nav__btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    background: rgba(255, 255, 255, 0.1);
+    color: #fff;
+    border-radius: 999px;
+    padding: 7px 14px;
+    font-family: inherit;
+    font-size: 0.76rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.15s ease;
+}
+.cp-head-nav__btn:hover { background: rgba(255, 255, 255, 0.22); transform: translateY(-1px); }
+.cp-head-nav__btn--active {
+    background: rgba(255, 255, 255, 0.95);
+    color: #0d2840;
+    border-color: transparent;
+}
+.cp-head-nav__btn span { white-space: nowrap; }
+
 #customer-portal-body {
     max-width: 1100px;
     margin: 0 auto;
-    padding: 20px 16px 40px;
+    padding: 20px 16px 48px;
 }
+
+/* شبكة اللوحات — منظمة 2×2 */
+.cp-panels-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+.cp-panels-grid .cp-panel {
+    margin-bottom: 0;
+    min-height: 180px;
+    display: flex;
+    flex-direction: column;
+}
+.cp-panels-grid .cp-panel .cp-list {
+    flex: 1;
+    overflow-y: auto;
+    max-height: 280px;
+}
+.cp-stats--top { margin-bottom: 14px; }
+
+/* زر العودة للوحة من المتجر */
+.cp-store-back-fab {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    z-index: 13100;
+    display: none;
+    align-items: center;
+    gap: 8px;
+    border: none;
+    border-radius: 999px;
+    padding: 12px 18px;
+    font-family: inherit;
+    font-size: 0.85rem;
+    font-weight: 800;
+    color: #fff;
+    cursor: pointer;
+    background: linear-gradient(135deg, #155e94, #0d2840);
+    box-shadow: 0 12px 32px rgba(13, 40, 64, 0.35);
+}
+.cp-store-back-fab.show { display: inline-flex; }
+[dir="ltr"] .cp-store-back-fab { left: auto; right: 20px; }
 
 /* تخطيط لوحة العميل — عمود رئيسي + شريط جانبي */
 .cp-dashboard-shell {
@@ -348,6 +452,24 @@ body.customer-portal-open #nebras-storefront > #branches {
     border-radius: 16px;
     padding: 16px 18px;
     margin-bottom: 14px;
+    box-shadow: 0 4px 16px rgba(13, 40, 64, 0.04);
+}
+.cp-panel-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+.cp-panel-head h3 { margin: 0; }
+.cp-panel-badge {
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: #c0392b;
+    background: rgba(192, 57, 43, 0.1);
+    padding: 4px 10px;
+    border-radius: 999px;
+    white-space: nowrap;
 }
 .cp-panel h3 {
     margin: 0 0 12px;
@@ -514,12 +636,15 @@ body.customer-portal-open #nebras-storefront > #branches {
 
 @media (max-width: 520px) {
     .cp-quick-actions { grid-template-columns: repeat(2, 1fr); }
-    .cp-hero-strip { grid-template-columns: 1fr 1fr; }
+    .cp-panels-grid { grid-template-columns: 1fr; }
     .cp-dashboard-shell { grid-template-columns: 1fr; }
     .cp-dashboard-sidebar { position: static; }
     .cp-branch-rail { max-height: none; }
     .cp-promo-board__grid { grid-template-columns: 1fr; }
-    .cp-head-inner--premium { flex-direction: column; }
+    .cp-head-inner--premium { flex-direction: column; align-items: stretch; }
+    .cp-head-nav { justify-content: center; }
+    .cp-head-nav__btn span { display: none; }
+    .cp-head-nav__btn { padding: 9px 12px; }
 }
 
 /* لوحة الخصومات الديناميكية */
