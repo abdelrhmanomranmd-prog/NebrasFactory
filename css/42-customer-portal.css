@@ -515,6 +515,87 @@ body.customer-portal-open #nebras-storefront > #branches {
 }
 
 .cp-gov-card { --role-accent: #1a6fa8; }
+
+/* نوع حساب العميل — مؤسسة / نقدي شخصي */
+.cp-customer-type-fieldset {
+    grid-column: 1 / -1;
+    margin: 0;
+    padding: 12px 14px;
+    border: 1px solid #d4e4f2;
+    border-radius: 12px;
+    background: linear-gradient(180deg, #f8fbfe 0%, #fff 100%);
+}
+.cp-customer-type-fieldset legend {
+    font-size: 0.82rem;
+    font-weight: 800;
+    color: #1a5276;
+    padding: 0 6px;
+}
+.cp-customer-type-options {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 6px;
+}
+.cp-customer-type-option {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border: 2px solid #d4e4f2;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: #2d3748;
+    background: #fff;
+    transition: border-color 0.15s, background 0.15s;
+}
+.cp-customer-type-option input { accent-color: #1a6fa8; }
+.cp-customer-type-option.is-active {
+    border-color: #1a6fa8;
+    background: #e8f4fc;
+    color: #1a5276;
+}
+.cp-customer-type-option span i { margin-left: 6px; color: #1a6fa8; }
+.cp-customer-type-hint {
+    grid-column: 1 / -1;
+    margin: 0;
+    font-size: 0.8rem;
+    color: #4a5568;
+    line-height: 1.5;
+}
+.cp-editor-business-fields {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+}
+.cp-editor-business-fields[hidden] { display: none !important; }
+.cp-req { color: #c0392b; font-style: normal; font-weight: 800; }
+.cp-customer-type-badge {
+    font-size: 0.68rem;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 999px;
+    white-space: nowrap;
+}
+.cp-customer-type-badge--business {
+    background: rgba(26, 111, 168, 0.12);
+    color: #1a5276;
+}
+.cp-customer-type-badge--cash {
+    background: rgba(39, 174, 96, 0.12);
+    color: #1e7e45;
+}
+.cp-gov-card .nebras-user-card-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+.cp-gov-card .nebras-user-card-head > div { flex: 1 1 auto; }
+
 .cp-loyalty-hint {
     background: #fff8e6;
     border: 1px solid #f0d78c;

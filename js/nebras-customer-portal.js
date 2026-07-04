@@ -49,6 +49,9 @@
             assignedRepId: user.assignedRepId,
             assignedRepUsername: user.assignedRepUsername,
             assignedRepPhone: user.assignedRepPhone,
+            customerType: user.customerType,
+            commercialRegistration: user.commercialRegistration,
+            taxId: user.taxId,
             isActive: user.isActive !== false
         };
     }
@@ -93,6 +96,71 @@
     }
 
     const CP_DEFAULT_ACCESS = ['quotes', 'orders', 'transfers', 'journeys'];
+    const CP_CUSTOMER_TYPE_BUSINESS = 'business';
+    const CP_CUSTOMER_TYPE_CASH = 'cash';
+
+    function resolveCpCustomerType(user) {
+        if (!user) return CP_CUSTOMER_TYPE_BUSINESS;
+        if (user.customerType === CP_CUSTOMER_TYPE_CASH || user.customerType === CP_CUSTOMER_TYPE_BUSINESS) {
+            return user.customerType;
+        }
+        if (user.commercialRegistration || user.taxId) return CP_CUSTOMER_TYPE_BUSINESS;
+        return CP_CUSTOMER_TYPE_CASH;
+    }
+
+    function getCpCustomerTypeLabel(type) {
+        return type === CP_CUSTOMER_TYPE_CASH ? 'نقدي شخصي' : 'مؤسسة';
+    }
+
+    function getCpEditorSelectedType() {
+        const checked = document.querySelector('input[name="cp-e-type"]:checked');
+        return checked && checked.value === CP_CUSTOMER_TYPE_CASH ? CP_CUSTOMER_TYPE_CASH : CP_CUSTOMER_TYPE_BUSINESS;
+    }
+
+    function syncCpEditorCustomerTypeFields() {
+        const type = getCpEditorSelectedType();
+        const bizBlock = document.getElementById('cp-e-business-fields');
+        const hint = document.getElementById('cp-e-type-hint');
+        const displayLabel = document.querySelector('#cp-e-display-label span');
+        document.querySelectorAll('.cp-customer-type-option').forEach(function(lab) {
+            const inp = lab.querySelector('input[name="cp-e-type"]');
+            lab.classList.toggle('is-active', !!(inp && inp.checked));
+        });
+        if (bizBlock) bizBlock.hidden = type !== CP_CUSTOMER_TYPE_BUSINESS;
+        if (hint) {
+            hint.textContent = type === CP_CUSTOMER_TYPE_BUSINESS
+                ? 'مؤسسة: السجل التجاري والرقم الضريبي والجوال مطلوبة لربط الفواتير الرسمية.'
+                : 'عميل نقدي شخصي: يكفي رقم الجوال لربط العروض والطلبات — بدون سجل تجاري أو ضريبي.';
+        }
+        if (displayLabel) {
+            displayLabel.textContent = type === CP_CUSTOMER_TYPE_BUSINESS ? 'اسم المؤسسة / الشركة' : 'اسم العميل';
+        }
+    }
+
+    function buildCpCustomerTypeEditorHtml(user, pre) {
+        pre = pre || {};
+        const type = user ? resolveCpCustomerType(user) : (pre.customerType || CP_CUSTOMER_TYPE_BUSINESS);
+        const isBusiness = type === CP_CUSTOMER_TYPE_BUSINESS;
+        return '<fieldset class="cp-customer-type-fieldset">' +
+            '<legend>نوع الحساب</legend>' +
+            '<div class="cp-customer-type-options">' +
+            '<label class="cp-customer-type-option' + (isBusiness ? ' is-active' : '') + '">' +
+            '<input type="radio" name="cp-e-type" value="business"' + (isBusiness ? ' checked' : '') + ' onchange="syncCpEditorCustomerTypeFields()">' +
+            '<span><i class="fas fa-building" aria-hidden="true"></i> مؤسسة</span></label>' +
+            '<label class="cp-customer-type-option' + (!isBusiness ? ' is-active' : '') + '">' +
+            '<input type="radio" name="cp-e-type" value="cash"' + (!isBusiness ? ' checked' : '') + ' onchange="syncCpEditorCustomerTypeFields()">' +
+            '<span><i class="fas fa-user" aria-hidden="true"></i> عميل نقدي (شخصي)</span></label>' +
+            '</div></fieldset>' +
+            '<p id="cp-e-type-hint" class="cp-customer-type-hint">' + (isBusiness
+                ? 'مؤسسة: السجل التجاري والرقم الضريبي والجوال مطلوبة لربط الفواتير الرسمية.'
+                : 'عميل نقدي شخصي: يكفي رقم الجوال لربط العروض والطلبات — بدون سجل تجاري أو ضريبي.') + '</p>' +
+            '<div id="cp-e-business-fields" class="cp-editor-business-fields"' + (isBusiness ? '' : ' hidden') + '>' +
+            '<label class="nebras-field"><span>رقم السجل التجاري <em class="cp-req">*</em></span>' +
+            '<input id="cp-e-cr" value="' + escAttr(user ? user.commercialRegistration : '') + '" placeholder="مثال: 1010xxxxxx" inputmode="numeric" autocomplete="off"></label>' +
+            '<label class="nebras-field"><span>الرقم الضريبي (البطاقة الضريبية) <em class="cp-req">*</em></span>' +
+            '<input id="cp-e-tax" value="' + escAttr(user ? user.taxId : '') + '" placeholder="3xxxxxxxxxx0003" inputmode="numeric" autocomplete="off"></label>' +
+            '</div>';
+    }
 
     function readCpPortalAccessFromEditor(user) {
         const base = (user && Array.isArray(user.portalAccess) && user.portalAccess.length)
@@ -1444,11 +1512,17 @@
         list.innerHTML = users.map(function(u, idx) {
             const globalIdx = customerPortalUsers.indexOf(u);
             const loyalty = computeCustomerLoyaltyScore(u);
+            const ctype = resolveCpCustomerType(u);
             return '<article class="nebras-user-card cp-gov-card">' +
                 '<header class="nebras-user-card-head">' +
                     '<span class="nebras-user-avatar"><i class="fas fa-user-circle"></i></span>' +
                     '<div><strong>' + esc(u.displayName || u.username) + '</strong><small>' + esc(u.username) + '</small></div>' +
+                    '<span class="cp-customer-type-badge cp-customer-type-badge--' + ctype + '">' + esc(getCpCustomerTypeLabel(ctype)) + '</span>' +
                 '</header>' +
+                (ctype === CP_CUSTOMER_TYPE_BUSINESS && (u.commercialRegistration || u.taxId)
+                    ? '<span class="nebras-user-branch"><i class="fas fa-building"></i> سجل: ' + esc(u.commercialRegistration || '—') + ' · ضريبي: ' + esc(u.taxId || '—') + '</span>'
+                    : '') +
+                (u.phone ? '<span class="nebras-user-branch"><i class="fas fa-mobile-screen"></i> ' + esc(u.phone) + '</span>' : '') +
                 '<span class="nebras-user-branch"><i class="fas fa-chart-line"></i> ' + loyalty.data.totalQuotes + ' عروض · ' + loyalty.data.totalOrders + ' طلبات · ' + esc(loyalty.tier) + '</span>' +
                 (u.assignedRepUsername ? '<span class="nebras-user-branch"><i class="fas fa-user-tie"></i> مندوب: ' + esc(u.assignedRepUsername) + '</span>' : '') +
                 (Array.isArray(u.portalAccess) && u.portalAccess.length < 4
@@ -1528,11 +1602,12 @@
                     '<button type="button" class="nebras-editor-x" onclick="cancelCpUserEditor()"><i class="fas fa-xmark"></i></button>' +
                 '</div>' +
                 '<div class="nebras-editor-grid">' +
-                    '<label class="nebras-field"><span>اسم العرض</span><input id="cp-e-display" value="' + escAttr(user ? user.displayName : (pre.displayName || '')) + '"></label>' +
+                    buildCpCustomerTypeEditorHtml(user, pre) +
+                    '<label class="nebras-field" id="cp-e-display-label"><span>' + (resolveCpCustomerType(user || pre) === CP_CUSTOMER_TYPE_CASH ? 'اسم العميل' : 'اسم المؤسسة / الشركة') + '</span><input id="cp-e-display" value="' + escAttr(user ? user.displayName : (pre.displayName || '')) + '"></label>' +
                     '<label class="nebras-field"><span>اسم المستخدم</span><input id="cp-e-username" value="' + escAttr(user ? user.username : (pre.username || '')) + '"></label>' +
                     '<label class="nebras-field"><span>كلمة المرور</span><input id="cp-e-password" type="text" value="" placeholder="' + (isEdit ? 'اتركها فارغة للإبقاء' : 'مطلوبة') + '"></label>' +
-                    '<label class="nebras-field"><span>الجوال (لربط العروض)</span><input id="cp-e-phone" value="' + escAttr(user ? user.phone : (pre.phone || '')) + '"></label>' +
-                    '<label class="nebras-field"><span>البريد</span><input id="cp-e-email" type="email" value="' + escAttr(user ? user.email : '') + '"></label>' +
+                    '<label class="nebras-field"><span>الجوال <em class="cp-req">*</em></span><input id="cp-e-phone" value="' + escAttr(user ? user.phone : (pre.phone || '')) + '" inputmode="tel" placeholder="05xxxxxxxx"></label>' +
+                    '<label class="nebras-field"><span>البريد (اختياري)</span><input id="cp-e-email" type="email" value="' + escAttr(user ? user.email : '') + '"></label>' +
                     '<label class="nebras-field"><span>ربط CRM</span><select id="cp-e-crm">' + crmSelect + '</select></label>' +
                     repSelect +
                     buildCpAccessFieldsHtml(user) +
@@ -1543,6 +1618,7 @@
                     '<button type="button" class="nebras-users-btn" onclick="cancelCpUserEditor()">إلغاء</button>' +
                 '</div></div>';
         requestAnimationFrame(function() {
+            syncCpEditorCustomerTypeFields();
             host.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             const modal = host.closest('.admin-modal');
             if (modal) modal.scrollTop = Math.max(0, host.offsetTop - 72);
@@ -1562,14 +1638,29 @@
             return;
         }
         const displayName = String((document.getElementById('cp-e-display') || {}).value || '').trim();
-        const username = String((document.getElementById('cp-e-username') || {}).value || '').trim();
+        let username = String((document.getElementById('cp-e-username') || {}).value || '').trim();
         const password = String((document.getElementById('cp-e-password') || {}).value || '').trim();
         const phone = String((document.getElementById('cp-e-phone') || {}).value || '').trim();
         const email = String((document.getElementById('cp-e-email') || {}).value || '').trim();
+        const customerType = getCpEditorSelectedType();
+        const commercialRegistration = String((document.getElementById('cp-e-cr') || {}).value || '').trim();
+        const taxId = String((document.getElementById('cp-e-tax') || {}).value || '').trim();
         const crmCustomerId = String((document.getElementById('cp-e-crm') || {}).value || '').trim();
         const repEl = document.getElementById('cp-e-rep');
         const repId = repEl ? String(repEl.value || '').trim() : '';
+        const phoneNorm = normPhone(phone);
+        if (!phoneNorm || phoneNorm.length < 9) {
+            alert('رقم الجوال مطلوب لربط العروض والطلبات.');
+            return;
+        }
+        if (customerType === CP_CUSTOMER_TYPE_CASH && !username) {
+            username = 'c' + phoneNorm.slice(-8);
+        }
         if (!displayName || !username) { alert('الاسم واسم المستخدم مطلوبان.'); return; }
+        if (customerType === CP_CUSTOMER_TYPE_BUSINESS) {
+            if (!commercialRegistration) { alert('رقم السجل التجاري مطلوب لحسابات المؤسسات.'); return; }
+            if (!taxId) { alert('الرقم الضريبي (البطاقة الضريبية) مطلوب لحسابات المؤسسات.'); return; }
+        }
         if (!cpEditorState.isEdit && !password) { alert('كلمة المرور مطلوبة للحساب الجديد.'); return; }
         const dup = customerPortalUsers.some(function(u, i) {
             return String(u.username).toLowerCase() === username.toLowerCase() && i !== cpEditorState.index;
@@ -1583,6 +1674,9 @@
             displayName: displayName,
             phone: phone,
             email: email,
+            customerType: customerType,
+            commercialRegistration: customerType === CP_CUSTOMER_TYPE_BUSINESS ? commercialRegistration : '',
+            taxId: customerType === CP_CUSTOMER_TYPE_BUSINESS ? taxId : '',
             crmCustomerId: crmCustomerId || null,
             branchId: cpEditorState.branchId,
             branchCity: cpEditorState.branchCity,
@@ -1679,6 +1773,7 @@
         openCpUserEditorForRep();
         setTimeout(function() {
             openCpUserEditor(undefined, {
+                customerType: CP_CUSTOMER_TYPE_CASH,
                 displayName: customerName || '',
                 phone: phone || '',
                 username: phone ? ('c' + String(phone).replace(/\D/g, '').slice(-8)) : ''
@@ -1797,6 +1892,8 @@
         setTimeout(initCustomerPortal, 0);
     }
 
+    global.syncCpEditorCustomerTypeFields = syncCpEditorCustomerTypeFields;
+    global.resolveCpCustomerType = resolveCpCustomerType;
     global.openCustomerPortalLogin = openCustomerPortalLogin;
     global.closeCustomerPortalLogin = closeCustomerPortalLogin;
     global.loginCustomerPortal = loginCustomerPortal;
