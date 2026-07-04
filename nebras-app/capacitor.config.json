@@ -5,10 +5,17 @@
   "server": {
     "url": "https://www.nebrasplasticcompany.com/?app=1",
     "cleartext": false,
-    "androidScheme": "https"
+    "androidScheme": "https",
+    "allowNavigation": [
+      "www.nebrasplasticcompany.com",
+      "nebrasplasticcompany.com",
+      "*.nebrasplasticcompany.com"
+    ]
   },
   "android": {
-    "allowMixedContent": false
+    "allowMixedContent": false,
+    "backgroundColor": "#062e44",
+    "minWebViewVersion": 60
   },
   "ios": {
     "contentInset": "automatic"
