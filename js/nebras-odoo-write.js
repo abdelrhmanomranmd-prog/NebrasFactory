@@ -9,8 +9,8 @@
     'use strict';
 
     global.NEBRAS_ODOO_WRITE_MODE = true;
-    /** إظهار نتيجة الحفظ الحي بوضوح — لا نخفي فشل السحابة */
-    global.NEBRAS_ODOO_QUIET_UI = false;
+    /** مثل Accmaa: صمت عند النجاح — تنبيه فقط عند فشل حقيقي */
+    global.NEBRAS_ODOO_QUIET_UI = true;
 
     const SYNC_CURSOR_KEY = 'nebrasOdooSyncCursor';
     const DELTA_INTERVAL_MS = 12000;

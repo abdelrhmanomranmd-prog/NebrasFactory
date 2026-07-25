@@ -5904,7 +5904,10 @@
         if (!currentAdmin) return;
         const toastType = type || 'info';
         const msgStr = String(msg || '');
-        if (toastType === 'ok' && /السحابة|سحابياً|سحابي/.test(msgStr)) {
+        const quiet = !!(typeof window !== 'undefined' && window.NEBRAS_ODOO_QUIET_UI);
+        if (quiet && toastType === 'ok') return;
+        if (quiet && toastType === 'warn' && /تخزين محلي|محلي فقط|لم يُؤكَّد|انتظار/.test(msgStr)) return;
+        if (toastType === 'ok' && /السحابة|سحابياً|سحابي|السيرفر الحي/.test(msgStr)) {
             const now = Date.now();
             if (now - _nebrasCloudToastLastOkAt < NEBRAS_CLOUD_TOAST_OK_COOLDOWN_MS) return;
             _nebrasCloudToastLastOkAt = now;
@@ -13647,21 +13650,32 @@
             }
             const msgLabel = label ? String(label) : 'البيانات';
             const requireCloud = options.requireCloud !== false && !!currentAdmin;
+            const quiet = !!(typeof window !== 'undefined' && window.NEBRAS_ODOO_QUIET_UI);
+            const wantToast = options.showToast === true || (options.showToast !== false && !quiet);
             if (cloudOk) {
-                renderNebrasLiveCloudRibbon('ok', '✓ ' + msgLabel + ' — على السيرفر الحي');
+                if (quiet) {
+                    renderNebrasLiveCloudRibbon('idle');
+                    if (typeof renderNebrasCloudStatusOrb === 'function') {
+                        renderNebrasCloudStatusOrb('idle', 'متصل بالسيرفر');
+                    }
+                } else {
+                    renderNebrasLiveCloudRibbon('ok', '✓ ' + msgLabel + ' — على السيرفر الحي');
+                }
                 if (typeof refreshPublicSiteFromGovernance === 'function') refreshPublicSiteFromGovernance();
-                if (options.showToast !== false && typeof showNebrasAdminToast === 'function') {
+                if (wantToast && typeof showNebrasAdminToast === 'function') {
                     showNebrasAdminToast('✓ ' + msgLabel + ' — تم الحفظ على السيرفر الحي فوراً', 'ok');
                 }
             } else if (localOk) {
-                renderNebrasLiveCloudRibbon('warn', '⚠️ ' + msgLabel + ' — محلي فقط — لم يُنشر');
-                if (typeof showNebrasAdminToast === 'function') {
-                    showNebrasAdminToast('⚠️ ' + msgLabel + ' محفوظ محلياً فقط — لم يصل للسيرفر الحي. أعيدي المحاولة بعد تسجيل الدخول', 'error');
+                renderNebrasLiveCloudRibbon(quiet ? 'idle' : 'warn', quiet ? '' : ('⚠️ ' + msgLabel + ' — محلي فقط'));
+                if (!quiet && typeof showNebrasAdminToast === 'function') {
+                    showNebrasAdminToast('⚠️ ' + msgLabel + ' محفوظ محلياً فقط — أعيدي المحاولة', 'error');
+                } else if (quiet) {
+                    console.warn('[Nebras Live]', msgLabel, 'local-only — cloud not confirmed');
                 }
             } else {
                 renderNebrasLiveCloudRibbon('error', '✗ تعذّر حفظ ' + msgLabel);
                 if (typeof showNebrasAdminToast === 'function') {
-                    showNebrasAdminToast('✗ فشل حفظ ' + msgLabel, 'error');
+                    showNebrasAdminToast('✗ فشل حفظ ' + msgLabel + ' — تحققي من الاتصال', 'error');
                 }
             }
             if (typeof renderGovernanceStatusPanel === 'function') renderGovernanceStatusPanel();
@@ -13679,9 +13693,10 @@
             }
             scmPersistInFlight = true;
             const keys = options.storeKeys || SCM_CONTENT_CLOUD_KEYS;
+            const quiet = !!(typeof window !== 'undefined' && window.NEBRAS_ODOO_QUIET_UI);
             const result = await persistNebrasLiveNow(label, {
                 storeKeys: keys,
-                showToast: options.showToast !== false,
+                showToast: options.showToast === true ? true : (quiet ? false : options.showToast !== false),
                 promptReauth: options.promptReauth !== false,
                 requireCloud: true,
                 skipLocal: false
