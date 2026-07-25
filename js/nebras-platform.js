@@ -56,7 +56,7 @@
         const NEBRAS_SERVER_FIRST_MODE = true;
         /** إنتاج حي — بدون بذور تجريبية؛ الإدارة تضيف كل البيانات */
         const NEBRAS_PRODUCTION_LIVE_MODE = true;
-        const NEBRAS_CLIENT_RESET_TOKEN = 'prod-live-3';
+        const NEBRAS_CLIENT_RESET_TOKEN = 'prod-live-4';
         window.NEBRAS_PRODUCTION_LIVE_MODE = NEBRAS_PRODUCTION_LIVE_MODE;
 
         function shouldSeedBusinessDemoData() {
@@ -13646,19 +13646,30 @@
                 }
             }
             const msgLabel = label ? String(label) : 'البيانات';
+            const requireCloud = options.requireCloud !== false && !!currentAdmin;
             if (cloudOk) {
-                renderNebrasLiveCloudRibbon('ok', '✓ ' + msgLabel + ' — مؤكَّد في السحابة');
+                renderNebrasLiveCloudRibbon('ok', '✓ ' + msgLabel + ' — على السيرفر الحي');
                 if (typeof refreshPublicSiteFromGovernance === 'function') refreshPublicSiteFromGovernance();
-                if (options.showToast && typeof showNebrasAdminToast === 'function') {
-                    showNebrasAdminToast('✓ ' + msgLabel + ' — محفوظ سحابياً ومستمر', 'ok');
+                if (options.showToast !== false && typeof showNebrasAdminToast === 'function') {
+                    showNebrasAdminToast('✓ ' + msgLabel + ' — تم الحفظ على السيرفر الحي فوراً', 'ok');
                 }
             } else if (localOk) {
-                renderNebrasLiveCloudRibbon('warn', '⚠️ ' + msgLabel + ' — محلي فقط');
+                renderNebrasLiveCloudRibbon('warn', '⚠️ ' + msgLabel + ' — محلي فقط — لم يُنشر');
+                if (typeof showNebrasAdminToast === 'function') {
+                    showNebrasAdminToast('⚠️ ' + msgLabel + ' محفوظ محلياً فقط — لم يصل للسيرفر الحي. أعيدي المحاولة بعد تسجيل الدخول', 'error');
+                }
             } else {
                 renderNebrasLiveCloudRibbon('error', '✗ تعذّر حفظ ' + msgLabel);
+                if (typeof showNebrasAdminToast === 'function') {
+                    showNebrasAdminToast('✗ فشل حفظ ' + msgLabel, 'error');
+                }
             }
             if (typeof renderGovernanceStatusPanel === 'function') renderGovernanceStatusPanel();
-            return { ok: cloudOk || localOk, cloudOk: cloudOk, localOk: localOk };
+            return {
+                ok: requireCloud ? cloudOk : (cloudOk || localOk),
+                cloudOk: cloudOk,
+                localOk: localOk
+            };
         }
 
         async function persistScmContentHonest(label, options) {
@@ -13672,6 +13683,7 @@
                 storeKeys: keys,
                 showToast: options.showToast !== false,
                 promptReauth: options.promptReauth !== false,
+                requireCloud: true,
                 skipLocal: false
             });
             if (typeof refreshPublicSiteFromGovernance === 'function') refreshPublicSiteFromGovernance();
@@ -28444,7 +28456,7 @@
                     await pullPublicSiteGovernanceFromCloud({ silent: true });
                 } catch (tickErr) { /* ignore */ }
             }
-            nebrasPublicSiteCloudRefreshTimer = setInterval(tick, 20000);
+            nebrasPublicSiteCloudRefreshTimer = setInterval(tick, 8000);
             document.addEventListener('visibilitychange', function() {
                 if (document.visibilityState === 'visible') tick();
             });

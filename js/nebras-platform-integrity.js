@@ -17,7 +17,13 @@
     const LOCAL_MUTATION_KEY = 'nebrasLocalCloudMutationAt';
     const SENSITIVE_PENDING_KEY = 'nebrasSensitiveCloudPending';
     const GOV_REVISION_KEY = 'nebrasGovernanceRevision';
-    const MUTATION_GRACE_MS = 86400000;
+    /** مهلة قصيرة فقط — بعد نجاح الرفع تُمسح العلامة؛ لا نمنع السحابة لساعات */
+    const MUTATION_GRACE_MS = 120000;
+    const PUBLIC_LIVE_PULL_KEYS = [
+        'site_products', 'visitor_icons', 'dashboard_tiles', 'site_custom_sections',
+        'about_pages', 'system_settings', 'branches', 'site_partners', 'site_certifications',
+        'showroom_gallery', 'visitor_analytics', 'sales_price_list'
+    ];
     const LOCAL_STORAGE_STORE_MAP = {
         admin_users: 'nebrasAdminUsers',
         site_products: 'nebrasSiteProducts',
@@ -32,12 +38,21 @@
         customer_portal_users: 'nebrasCustomerPortalUsers',
         crm_customers: 'nebrasCrmCustomers',
         sales_data: 'nebrasSalesData',
-        system_settings: 'nebrasSystemSettings'
+        system_settings: 'nebrasSystemSettings',
+        about_pages: 'nebrasAboutPages',
+        site_partners: 'nebrasSitePartners',
+        site_certifications: 'nebrasSiteCertifications',
+        showroom_gallery: 'nebrasShowroomGallery',
+        site_custom_sections: 'nebrasCustomSections',
+        sales_price_list: 'nebrasSalesPriceList'
     };
     const PRODUCTION_RESET_TOKEN_KEY = 'nebrasProductionResetToken';
-    const PRODUCTION_RESET_TOKEN_VALUE = 'prod-live-3';
+    const PRODUCTION_RESET_TOKEN_VALUE = 'prod-live-4';
     const PRODUCTION_LOCAL_PURGE_KEYS = [
         'nebrasAdminUsers', 'nebrasSiteProducts', 'nebrasDashboardTiles',
+        'nebrasVisitorIcons', 'nebrasBranches', 'nebrasSystemSettings',
+        'nebrasAboutPages', 'nebrasSitePartners', 'nebrasSiteCertifications',
+        'nebrasShowroomGallery', 'nebrasCustomSections',
         'nebrasHrEmployees', 'nebrasHrVehicles', 'nebrasHrLeave', 'nebrasHrVehicleTracking',
         'nebrasHrAttendance', 'nebrasHrDocuments', 'nebrasHrPayroll', 'nebrasHrCompanies',
         'nebrasHrNotifications', 'nebrasHrNotifSettings', 'nebrasHrEmailQueue', 'nebrasHrShiftRoster',
@@ -47,9 +62,12 @@
         'nebrasErpPurchases', 'nebrasSalesData', 'nebrasSalesPriceList', 'nebrasCustomerPortalUsers',
         'nebrasCustomerPortalAudit', 'nebrasComplaints', 'nebrasAuditLogs', 'nebrasCallbackLeads',
         'nebrasSalesQuotesInbox', 'nebrasCustomerService', 'nebrasCloudSnapshots',
+        'nebrasLocalCloudMutationAt', 'nebrasSensitiveCloudPending', 'nebrasOdooSyncCursor'
     ];
     const PRODUCTION_BUSINESS_PULL_KEYS = [
-        'site_products', 'hr_employees', 'hr_vehicles', 'hr_leave', 'hr_vehicle_tracking',
+        'site_products', 'visitor_icons', 'dashboard_tiles', 'branches', 'system_settings',
+        'about_pages', 'site_partners', 'site_certifications', 'showroom_gallery', 'site_custom_sections',
+        'hr_employees', 'hr_vehicles', 'hr_leave', 'hr_vehicle_tracking',
         'hr_attendance', 'hr_documents', 'hr_payroll', 'hr_companies', 'crm_customers',
         'crm_opportunities', 'erp_inventory', 'erp_orders', 'erp_production', 'erp_procurement',
         'erp_purchases', 'sales_quotes_inbox', 'customer_order_journeys', 'customer_portal_users',
@@ -212,28 +230,46 @@
         return localAt > 0 && (Date.now() - localAt) < MUTATION_GRACE_MS;
     }
 
-    /** لا نقبل سحابة أقل من المحلي — يحمي حتى بعد مسح علامات المزامنة بالخطأ */
+    function isPublicLivePullKey(storeKey) {
+        if (PUBLIC_LIVE_PULL_KEYS.indexOf(storeKey) >= 0) return true;
+        try {
+            if (global.NEBRAS_PUBLIC_STORE_KEYS && global.NEBRAS_PUBLIC_STORE_KEYS.indexOf(storeKey) >= 0) return true;
+        } catch (e) { /* ignore */ }
+        return false;
+    }
+
+    /** السحابة أولاً للمفاتيح العامة — لا نرفض تحديثاً حياً بسبب كاش محلي أكبر */
     function shouldRejectRegressiveCloudPull(storeKey, payload) {
+        const cloudSize = payloadSize(payload);
+        if (isPublicLivePullKey(storeKey)) {
+            if (cloudSize > 0) return false;
+            return !hasLocalCloudMutation(storeKey) ? false : true;
+        }
         if (global.NEBRAS_PRODUCTION_LIVE_MODE && PRODUCTION_BUSINESS_PULL_KEYS.indexOf(storeKey) >= 0) {
-            const cloudSize = payloadSize(payload);
             if (cloudSize === 0 && !hasLocalCloudMutation(storeKey)) return false;
         }
         if (CRITICAL_STORE_KEYS.indexOf(storeKey) < 0) return false;
         const localSize = getNebrasPersistedPayloadSize(storeKey);
-        const cloudSize = payloadSize(payload);
         if (localSize > 0 && cloudSize === 0) return true;
+        if (cloudSize > 0 && localSize > cloudSize && !hasLocalCloudMutation(storeKey)) return false;
         if (localSize > cloudSize) return true;
         return false;
     }
 
-    /** لا نستبدل بيانات محلية أحدث بسحابة قديمة أو فارغة */
+    /** لا نستبدل بيانات محلية أحدث بسحابة قديمة أو فارغة — للمفاتيح العامة نثق بالسحابة إن وُجدت */
     function shouldRejectStaleCloudPull(storeKey, cloudUpdatedAt, payload) {
         loadIntegrityData();
+        const size = payloadSize(payload);
+        if (isPublicLivePullKey(storeKey) && size > 0) {
+            const localAt = Number(localCloudMutations[storeKey] || 0);
+            const cloudAt = cloudUpdatedAt ? new Date(cloudUpdatedAt).getTime() : 0;
+            if (localAt && cloudAt && localAt > cloudAt && (Date.now() - localAt) < MUTATION_GRACE_MS) return true;
+            return false;
+        }
         if (shouldRejectRegressiveCloudPull(storeKey, payload)) return true;
         const localAt = Number(localCloudMutations[storeKey] || 0);
         if (!localAt) return false;
         const cloudAt = cloudUpdatedAt ? new Date(cloudUpdatedAt).getTime() : 0;
-        const size = payloadSize(payload);
         if (size === 0 && (Date.now() - localAt) < MUTATION_GRACE_MS) return true;
         if (localAt > cloudAt && (Date.now() - localAt) < MUTATION_GRACE_MS) return true;
         return false;

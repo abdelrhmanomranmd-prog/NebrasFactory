@@ -9,7 +9,8 @@
     'use strict';
 
     global.NEBRAS_ODOO_WRITE_MODE = true;
-    global.NEBRAS_ODOO_QUIET_UI = true;
+    /** إظهار نتيجة الحفظ الحي بوضوح — لا نخفي فشل السحابة */
+    global.NEBRAS_ODOO_QUIET_UI = false;
 
     const SYNC_CURSOR_KEY = 'nebrasOdooSyncCursor';
     const DELTA_INTERVAL_MS = 12000;
@@ -17,7 +18,7 @@
     const ODOO_WRITE_KEYS = [
         'admin_users', 'branches', 'system_settings', 'complaints', 'audit_logs', 'analytics_governance',
         'sales_quotes_inbox', 'sales_data', 'sales_price_list', 'quote_registry', 'callback_leads',
-        'customer_service', 'customer_portal_users', 'customer_order_journeys',
+        'customer_service', 'customer_portal_users', 'customer_portal_audit', 'customer_order_journeys',
         'erp_inventory', 'erp_orders', 'erp_production', 'erp_procurement', 'erp_purchases',
         'erp_transfers', 'erp_stock_transfers', 'procurement_custom_depts',
         'hr_employees', 'hr_vehicles', 'hr_leave', 'hr_vehicle_tracking', 'hr_attendance',
@@ -26,7 +27,8 @@
         'hr_shift_roster', 'hr_dept_activity',
         'crm_customers', 'crm_opportunities', 'crm_activities', 'crm_audit',
         'legal_contracts', 'legal_rentals', 'legal_cases', 'legal_compliance', 'legal_policies',
-        'site_products'
+        'site_products', 'visitor_icons', 'showroom_gallery', 'site_partners',
+        'about_pages', 'dashboard_tiles', 'site_certifications', 'site_custom_sections'
     ];
 
     const ODOO_HR_KEYS = [
@@ -57,7 +59,8 @@
         'complaints': ['complaints'],
         'hr': ODOO_HR_KEYS,
         'governance': ['admin_users', 'branches', 'system_settings', 'audit_logs'],
-        'content': ['site_products', 'showroom_gallery', 'visitor_icons', 'dashboard_tiles'],
+        'content': ['site_products', 'showroom_gallery', 'visitor_icons', 'dashboard_tiles',
+            'site_partners', 'about_pages', 'site_certifications', 'site_custom_sections'],
         'accounting': ['erp_purchases', 'sales_data', 'erp_orders']
     };
 
