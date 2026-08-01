@@ -1254,3 +1254,55 @@ body.alu-platform-open #admin-dashboard {
         justify-content: flex-start;
     }
 }
+
+/* رسم يدوي + صور القطاعات */
+.alu-freehand-box {
+    margin: 0.75rem 0 1rem;
+    padding: 0.95rem 1rem;
+    border-radius: 14px;
+    background: linear-gradient(180deg, #ffffff, #f0f7ff);
+    border: 1px solid rgba(56, 189, 248, 0.35);
+    box-shadow: 0 8px 22px rgba(21, 94, 148, 0.08);
+}
+
+.alu-freehand-box h5 {
+    margin: 0 0 0.35rem;
+    color: var(--alu-navy, #0d2840);
+    font-size: 0.98rem;
+}
+
+.alu-fh-preview {
+    margin-top: 0.75rem;
+}
+
+.alu-part-thumb {
+    width: 48px;
+    height: 48px;
+    object-fit: contain;
+    border-radius: 8px;
+    border: 1px solid var(--alu-border, rgba(13, 40, 64, 0.1));
+    background: #fff;
+    display: block;
+}
+
+.alu-part-thumb--lg {
+    width: 140px;
+    height: 100px;
+    margin-top: 0.45rem;
+}
+
+.alu-part-thumb--empty {
+    display: grid;
+    place-items: center;
+    color: var(--alu-muted, #5a6b7a);
+    font-size: 0.9rem;
+    background: #f4f9fd;
+}
+
+.alu-part-img-cell {
+    width: 56px;
+}
+
+.alu-part-image-preview {
+    margin-top: 0.35rem;
+}

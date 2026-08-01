@@ -100,7 +100,8 @@
         door_hinged: { nameAr: 'باب مفصلي', family: 'hinged', leaves: 1 },
         door_sliding: { nameAr: 'باب سحاب', family: 'sliding', leaves: 2 },
         facade_panel: { nameAr: 'وحدة واجهة — باي واحد', family: 'facade', leaves: 1 },
-        facade_bay: { nameAr: 'واجهة — شبكة بايات (أعمدة×صفوف)', family: 'facade', leaves: 1 }
+        facade_bay: { nameAr: 'واجهة — شبكة بايات (أعمدة×صفوف)', family: 'facade', leaves: 1 },
+        freehand: { nameAr: 'رسم يدوي حر', family: 'hinged', leaves: 1, freehand: true }
     };
 
     const PART_ROLES = {
@@ -542,8 +543,50 @@
      * الأطوال بالمليمتر — أي خطأ هنا = هدر/خسارة مباشرة
      * لا تعيين صامت لقطاع خاطئ: إن نقص الدور يُسجَّل تحذير
      */
+
+    /**
+     * يوحّد الأشكال الجاهزة + الرسم اليدوي الحر إلى عائلة/ضلف/باب/ثابت
+     * الرسم اليدوي يمرّ بنفس محرك التخصيمات تماماً
+     */
+    function resolveItemShape(item) {
+        item = item || {};
+        const base = READY_SHAPES[item.shape] || READY_SHAPES.sliding2;
+        if (item.shape !== 'freehand') {
+            return {
+                key: item.shape,
+                nameAr: base.nameAr,
+                family: base.family,
+                leaves: Math.max(1, base.leaves || 1),
+                isDoor: item.shape === 'door_hinged' || item.shape === 'door_sliding',
+                isFixed: item.shape === 'fixed',
+                isSlidingDoor: item.shape === 'door_sliding',
+                bayCols: Math.max(1, Math.round(aluNum(item.bayCols) || 1)),
+                bayRows: Math.max(1, Math.round(aluNum(item.bayRows) || 1))
+            };
+        }
+        const fh = item.freehand || {};
+        const family = fh.family || 'hinged';
+        const kind = fh.kind || 'window';
+        let leaves = Math.max(1, Math.min(6, Math.round(aluNum(fh.leaves) || 1)));
+        if (kind === 'fixed') leaves = 1;
+        if (family === 'facade') leaves = 1;
+        const famAr = family === 'sliding' ? 'سحاب' : family === 'facade' ? 'واجهة' : 'مفصلي';
+        const kindAr = kind === 'door' ? 'باب' : kind === 'fixed' ? 'ثابت' : 'شباك';
+        return {
+            key: 'freehand',
+            nameAr: 'رسم يدوي — ' + famAr + ' · ' + kindAr + (family !== 'facade' && kind !== 'fixed' ? (' ×' + leaves) : ''),
+            family: family,
+            leaves: leaves,
+            isDoor: kind === 'door',
+            isFixed: kind === 'fixed',
+            isSlidingDoor: family === 'sliding' && kind === 'door',
+            bayCols: Math.max(1, Math.round(aluNum(fh.bayCols) || item.bayCols || 1)),
+            bayRows: Math.max(1, Math.round(aluNum(fh.bayRows) || item.bayRows || 1))
+        };
+    }
+
     function buildShapeCuts(item, itemIndex) {
-        const shape = READY_SHAPES[item.shape] || READY_SHAPES.sliding2;
+        const shape = resolveItemShape(item);
         const found = findSystem(item.profileSystemId, shape.family);
         const sys = found.system;
         const warnings = [];
@@ -564,8 +607,8 @@
         const beadInset = aluNum(d.beadInsetMm) || 8;
         const cuts = [];
         const idx = itemIndex + 1;
-        const cols = Math.max(1, Math.round(aluNum(item.bayCols) || 1));
-        const rows = Math.max(1, Math.round(aluNum(item.bayRows) || 1));
+        const cols = shape.bayCols || Math.max(1, Math.round(aluNum(item.bayCols) || 1));
+        const rows = shape.bayRows || Math.max(1, Math.round(aluNum(item.bayRows) || 1));
 
         function push(role, labelAr, lengthMm, pieceQty, axisTag) {
             const len = aluRound(Math.max(1, lengthMm + miterExtra), 1);
@@ -620,15 +663,15 @@
         if (shape.family === 'sliding') {
             const sashW = (W / leaves) + aluNum(d.sashOverlapMm) - aluNum(d.splitBetweenSashesMm);
             const sashH = H - aluNum(d.sashDeductH);
-            const mullDed = (item.shape === 'door_sliding' && aluNum(d.sashFromFloorMm) > 0)
+            const mullDed = (shape.isSlidingDoor && aluNum(d.sashFromFloorMm) > 0)
                 ? aluNum(d.mullionDeductWithHeel) : aluNum(d.mullionDeductFull);
-            push('mullion', 'مرد / عمود التقاء', H - mullDed, Math.max(1, leaves - 1), 'H');
+            push('mullion', 'مرد / عمود التقاء', H - mullDed, Math.max(0, leaves - 1), 'H');
             push('sash', 'ضرفة — أفقي', sashW, leaves * 2, 'W');
             push('sash', 'ضرفة — رأسي', sashH, leaves * 2, 'H');
             if (aluNum(sys.tracksCount) >= 1) {
                 push('knife', 'سكينة', W, Math.max(1, aluNum(sys.tracksCount)), 'W');
             }
-            if (item.shape === 'door_sliding') {
+            if (shape.isSlidingDoor || shape.isDoor) {
                 push('threshold', 'عتبة', W, 1, 'W');
             }
             const sashPart = partForRole(sys, 'sash');
@@ -636,23 +679,37 @@
                 push('bead', 'باكيت أفقي', Math.max(1, sashW - beadInset), leaves * 2, 'W');
                 push('bead', 'باكيت رأسي', Math.max(1, sashH - beadInset), leaves * 2, 'H');
             }
-        } else if (item.shape === 'fixed') {
+        } else if (shape.isFixed) {
             push('bead', 'باكيت ثابت أفقي', Math.max(1, W - aluNum(d.glassFixedDeductW)), 2, 'W');
             push('bead', 'باكيت ثابت رأسي', Math.max(1, H - aluNum(d.glassFixedDeductH)), 2, 'H');
         } else {
-            /* مفصلي / قلاب / باب مفصلي */
-            const heel = (item.shape === 'door_hinged') ? aluNum(d.sashFromFloorMm) : 0;
-            const sashW = W - aluNum(d.sashDeductW);
-            const sashH = H - aluNum(d.sashDeductH) - heel;
-            push('sash', 'ضرفة — أفقي', sashW, 2, 'W');
-            push('sash', 'ضرفة — رأسي', sashH, 2, 'H');
-            if (item.shape === 'door_hinged') {
-                push('threshold', 'عتبة', W, 1, 'W');
-            }
-            const sashPart = partForRole(sys, 'sash');
-            if (!sashPart || !sashPart.withPackage) {
-                push('bead', 'باكيت أفقي', Math.max(1, sashW - beadInset), 2, 'W');
-                push('bead', 'باكيت رأسي', Math.max(1, sashH - beadInset), 2, 'H');
+            /* مفصلي / قلاب / باب / رسم يدوي متعدد الضلف */
+            const heel = shape.isDoor ? aluNum(d.sashFromFloorMm) : 0;
+            if (leaves > 1) {
+                const leafW = W / leaves;
+                const sashW = Math.max(1, leafW - aluNum(d.sashDeductW));
+                const sashH = H - aluNum(d.sashDeductH) - heel;
+                const mullDed = heel > 0 ? aluNum(d.mullionDeductWithHeel) : aluNum(d.mullionDeductFull);
+                push('mullion', 'مرد بين الضلف', H - mullDed, Math.max(0, leaves - 1), 'H');
+                push('sash', 'ضرفة — أفقي', sashW, leaves * 2, 'W');
+                push('sash', 'ضرفة — رأسي', sashH, leaves * 2, 'H');
+                if (shape.isDoor) push('threshold', 'عتبة', W, 1, 'W');
+                const sashPart = partForRole(sys, 'sash');
+                if (!sashPart || !sashPart.withPackage) {
+                    push('bead', 'باكيت أفقي', Math.max(1, sashW - beadInset), leaves * 2, 'W');
+                    push('bead', 'باكيت رأسي', Math.max(1, sashH - beadInset), leaves * 2, 'H');
+                }
+            } else {
+                const sashW = W - aluNum(d.sashDeductW);
+                const sashH = H - aluNum(d.sashDeductH) - heel;
+                push('sash', 'ضرفة — أفقي', sashW, 2, 'W');
+                push('sash', 'ضرفة — رأسي', sashH, 2, 'H');
+                if (shape.isDoor) push('threshold', 'عتبة', W, 1, 'W');
+                const sashPart = partForRole(sys, 'sash');
+                if (!sashPart || !sashPart.withPackage) {
+                    push('bead', 'باكيت أفقي', Math.max(1, sashW - beadInset), 2, 'W');
+                    push('bead', 'باكيت رأسي', Math.max(1, sashH - beadInset), 2, 'H');
+                }
             }
         }
         return { cuts: cuts, warnings: warnings };
@@ -674,7 +731,7 @@
     }
 
     function buildItemGlass(item) {
-        const shape = READY_SHAPES[item.shape] || READY_SHAPES.sliding2;
+        const shape = resolveItemShape(item);
         const found = findSystem(item.profileSystemId, shape.family);
         const sys = found.system;
         const d = dOf(sys);
@@ -682,8 +739,8 @@
         const H = aluNum(item.heightMm);
         const qty = Math.max(1, Math.round(aluNum(item.qty) || 1));
         const leaves = Math.max(1, shape.leaves || 1);
-        const cols = Math.max(1, Math.round(aluNum(item.bayCols) || 1));
-        const rows = Math.max(1, Math.round(aluNum(item.bayRows) || 1));
+        const cols = shape.bayCols || Math.max(1, Math.round(aluNum(item.bayCols) || 1));
+        const rows = shape.bayRows || Math.max(1, Math.round(aluNum(item.bayRows) || 1));
         let gW = 0;
         let gH = 0;
         let panels = qty;
@@ -694,23 +751,29 @@
             gW = Math.max(0, aluRound(cellW - aluNum(d.glassFixedDeductW), 1));
             gH = Math.max(0, aluRound(cellH - aluNum(d.glassFixedDeductH), 1));
             panels = cols * rows * qty;
-        } else if (item.shape === 'fixed') {
+        } else if (shape.isFixed) {
             gW = Math.max(0, aluRound(W - aluNum(d.glassFixedDeductW), 1));
             gH = Math.max(0, aluRound(H - aluNum(d.glassFixedDeductH), 1));
             panels = qty;
         } else if (shape.family === 'sliding') {
-            /* زجاج السحاب من مقاس الضرفة لا من تقسيم العرض الخام فقط */
             const sashW = (W / leaves) + aluNum(d.sashOverlapMm) - aluNum(d.splitBetweenSashesMm);
             const sashH = H - aluNum(d.sashDeductH);
             gW = Math.max(0, aluRound(sashW - aluNum(d.glassSashDeductW), 1));
             gH = Math.max(0, aluRound(sashH - aluNum(d.glassSashDeductH), 1));
             panels = leaves * qty;
         } else {
-            const heel = (item.shape === 'door_hinged') ? aluNum(d.sashFromFloorMm) : 0;
-            const sashW = W - aluNum(d.sashDeductW);
-            const sashH = H - aluNum(d.sashDeductH) - heel;
-            gW = Math.max(0, aluRound(sashW - aluNum(d.glassSashDeductW), 1));
-            gH = Math.max(0, aluRound(sashH - aluNum(d.glassSashDeductH), 1));
+            const heel = shape.isDoor ? aluNum(d.sashFromFloorMm) : 0;
+            if (leaves > 1) {
+                const sashW = (W / leaves) - aluNum(d.sashDeductW);
+                const sashH = H - aluNum(d.sashDeductH) - heel;
+                gW = Math.max(0, aluRound(sashW - aluNum(d.glassSashDeductW), 1));
+                gH = Math.max(0, aluRound(sashH - aluNum(d.glassSashDeductH), 1));
+            } else {
+                const sashW = W - aluNum(d.sashDeductW);
+                const sashH = H - aluNum(d.sashDeductH) - heel;
+                gW = Math.max(0, aluRound(sashW - aluNum(d.glassSashDeductW), 1));
+                gH = Math.max(0, aluRound(sashH - aluNum(d.glassSashDeductH), 1));
+            }
             panels = leaves * qty;
         }
 
@@ -731,7 +794,7 @@
         const W = aluNum(item.widthMm);
         const H = aluNum(item.heightMm);
         const qty = Math.max(1, Math.round(aluNum(item.qty) || 1));
-        const shape = READY_SHAPES[item.shape] || READY_SHAPES.sliding2;
+        const shape = resolveItemShape(item);
         const found = findSystem(item.profileSystemId, shape.family);
         const d = dOf(found.system);
         const deduct = item.wireFixed === 'none' ? aluNum(d.wireMovingDeduct) : aluNum(d.wireFixedDeduct);
@@ -804,13 +867,13 @@
     }
 
     function buildItemAccessories(item, priceMode) {
-        const shape = READY_SHAPES[item.shape] || READY_SHAPES.sliding2;
+        const shape = resolveItemShape(item);
         const mode = priceMode || aluSettings.priceModeDefault || 'purchase';
         return aluAccessories.filter(function (a) {
             if (a.active === false) return false;
             if (a.familyOnly && a.familyOnly !== shape.family) return false;
             const scope = a.applyScope || 'all';
-            if (scope === 'sash' && (shape.family === 'fixed' || shape.family === 'facade')) return false;
+            if (scope === 'sash' && (shape.isFixed || shape.family === 'facade')) return false;
             return true;
         }).map(function (a) {
             const q = calcAccessoryQty(a, item, shape);
@@ -1304,7 +1367,7 @@
     function explainEstimateFormulas(est) {
         const items = (est && (est.items || est.openings)) || [];
         return items.map(function (item, i) {
-            const shape = READY_SHAPES[item.shape] || READY_SHAPES.sliding2;
+            const shape = resolveItemShape(item);
             const found = findSystem(item.profileSystemId, shape.family);
             const sys = found.system;
             const d = dOf(sys);
@@ -1805,10 +1868,10 @@
         opts = opts || {};
         const Wmm = Math.max(100, aluNum(item.widthMm) || 1200);
         const Hmm = Math.max(100, aluNum(item.heightMm) || 1400);
-        const shape = READY_SHAPES[item.shape] || READY_SHAPES.sliding2;
+        const shape = resolveItemShape(item);
         const leaves = Math.max(1, shape.leaves || 1);
-        const cols = Math.max(1, Math.round(aluNum(item.bayCols) || 1));
-        const rows = Math.max(1, Math.round(aluNum(item.bayRows) || 1));
+        const cols = shape.bayCols || Math.max(1, Math.round(aluNum(item.bayCols) || 1));
+        const rows = shape.bayRows || Math.max(1, Math.round(aluNum(item.bayRows) || 1));
         const viewW = opts.viewW || 360;
         const viewH = opts.viewH || 320;
         const margin = 48;
@@ -1897,8 +1960,29 @@
                 inner += '<text x="' + (ox + fw / 2) + '" y="' + (oy + fh / 2 + 4) + '" text-anchor="middle" font-size="10" fill="' + accent + '" font-weight="700">زجاج ' + gW + '×' + gH + ' ×' + leaves + '</text>';
             }
         } else {
-            const isFixed = item.shape === 'fixed';
-            const heel = (item.shape === 'door_hinged') ? Math.max(6, fh * 0.06) : 0;
+            const isFixed = !!shape.isFixed;
+            const heel = shape.isDoor ? Math.max(6, fh * 0.06) : 0;
+            if (!isFixed && leaves > 1) {
+                const leafW = iw / leaves;
+                for (let i = 0; i < leaves; i++) {
+                    const lx = ix + leafW * i;
+                    inner += '<rect x="' + lx + '" y="' + iy + '" width="' + leafW + '" height="' + Math.max(1, ih - heel) + '" fill="none" stroke="' + navy + '" stroke-width="1.5"/>';
+                    const gx = lx + sashT;
+                    const gy = iy + sashT;
+                    const gw = Math.max(1, leafW - sashT * 2);
+                    const gh = Math.max(1, ih - heel - sashT * 2);
+                    inner += '<rect x="' + gx + '" y="' + gy + '" width="' + gw + '" height="' + gh + '" fill="' + glassFill + '" stroke="' + sky + '" stroke-width="0.9"/>';
+                    if (i > 0) {
+                        inner += '<line x1="' + lx + '" y1="' + iy + '" x2="' + lx + '" y2="' + (iy + ih - heel) + '" stroke="' + accent + '" stroke-width="2.4"/>';
+                    }
+                }
+                if (heel > 0) {
+                    inner += '<rect x="' + ix + '" y="' + (iy + ih - heel) + '" width="' + iw + '" height="' + heel + '" fill="' + navy + '" opacity="0.35"/>';
+                }
+                if (gW && gH) {
+                    inner += '<text x="' + (ox + fw / 2) + '" y="' + (oy + (ih - heel) / 2 + oy * 0.2) + '" text-anchor="middle" font-size="10" fill="' + accent + '" font-weight="700">زجاج ' + gW + '×' + gH + ' ×' + leaves + '</text>';
+                }
+            } else {
             const sx = ix + (isFixed ? 0 : sashT * 0.35);
             const sy = iy + (isFixed ? 0 : sashT * 0.35);
             const sw = iw - (isFixed ? 0 : sashT * 0.7);
@@ -1927,6 +2011,7 @@
             }
             if (gW && gH) {
                 inner += '<text x="' + (ox + fw / 2) + '" y="' + (oy + fh / 2) + '" text-anchor="middle" font-size="10" fill="' + accent + '" font-weight="700">زجاج ' + gW + '×' + gH + '</text>';
+            }
             }
         }
 
@@ -2013,7 +2098,7 @@
         }).join('');
 
         const itemsHtml = (d.items || []).map(function (it, i) {
-            const sh = READY_SHAPES[it.shape] || {};
+            const sh = resolveItemShape(it);
             const bay = (sh.family === 'facade')
                 ? (' · بايات ' + Math.max(1, aluNum(it.bayCols) || 1) + '×' + Math.max(1, aluNum(it.bayRows) || 1))
                 : '';
@@ -2058,13 +2143,29 @@
             '<div class="alu-cut-subcard"><h5>إضافة بند من الأشكال الجاهزة</h5>' +
             '<input type="hidden" id="alu-op-edit-idx" value="">' +
             '<div class="erp-form-grid">' +
-            '<label class="nebras-field"><span>الشكل</span><select id="alu-op-shape" onchange="toggleAluBayFields()">' + shapeOpts + '</select></label>' +
+            '<label class="nebras-field"><span>الشكل</span><select id="alu-op-shape" onchange="toggleAluBayFields();refreshAluFreehandPreview()">' + shapeOpts + '</select></label>' +
             '<label class="nebras-field"><span>نظام القطاع</span><select id="alu-op-sys">' + sysOpts + '</select></label>' +
-            '<label class="nebras-field"><span>العرض مم</span><input type="number" id="alu-op-w" min="200" placeholder="1200"></label>' +
-            '<label class="nebras-field"><span>الارتفاع مم</span><input type="number" id="alu-op-h" min="200" placeholder="1400"></label>' +
+            '<label class="nebras-field"><span>العرض مم</span><input type="number" id="alu-op-w" min="200" placeholder="1200" oninput="refreshAluFreehandPreview()"></label>' +
+            '<label class="nebras-field"><span>الارتفاع مم</span><input type="number" id="alu-op-h" min="200" placeholder="1400" oninput="refreshAluFreehandPreview()"></label>' +
             '<label class="nebras-field"><span>الكمية</span><input type="number" id="alu-op-qty" min="1" value="1"></label>' +
-            '<label class="nebras-field alu-bay-only" style="display:none"><span>أعمدة باي</span><input type="number" id="alu-op-cols" min="1" value="1"></label>' +
-            '<label class="nebras-field alu-bay-only" style="display:none"><span>صفوف باي</span><input type="number" id="alu-op-rows" min="1" value="1"></label>' +
+            '<label class="nebras-field alu-bay-only" style="display:none"><span>أعمدة باي</span><input type="number" id="alu-op-cols" min="1" value="1" oninput="refreshAluFreehandPreview()"></label>' +
+            '<label class="nebras-field alu-bay-only" style="display:none"><span>صفوف باي</span><input type="number" id="alu-op-rows" min="1" value="1" oninput="refreshAluFreehandPreview()"></label>' +
+            '</div>' +
+            '<div class="alu-freehand-box alu-fh-only" id="alu-fh-box" style="display:none">' +
+            '<h5><i class="fas fa-pen-ruler"></i> مصمم الرسم اليدوي الحر</h5>' +
+            '<p class="alu-cut-note">صمّم الفتحة كما تريد: عائلة · نوع · عدد الضلف — الرسم والتخصيم يتحدّثان فوراً من اختياراتك.</p>' +
+            '<div class="erp-form-grid">' +
+            '<label class="nebras-field"><span>العائلة</span><select id="alu-fh-family" onchange="refreshAluFreehandPreview()">' +
+            '<option value="hinged">مفصلي</option><option value="sliding">سحاب</option><option value="facade">واجهة</option></select></label>' +
+            '<label class="nebras-field"><span>النوع</span><select id="alu-fh-kind" onchange="refreshAluFreehandPreview()">' +
+            '<option value="window">شباك</option><option value="door">باب</option><option value="fixed">ثابت</option></select></label>' +
+            '<label class="nebras-field"><span>عدد الضلف</span><input type="number" id="alu-fh-leaves" min="1" max="6" value="1" oninput="refreshAluFreehandPreview()"></label>' +
+            '<label class="nebras-field alu-fh-facade"><span>أعمدة الشبكة</span><input type="number" id="alu-fh-cols" min="1" value="2" oninput="refreshAluFreehandPreview()"></label>' +
+            '<label class="nebras-field alu-fh-facade"><span>صفوف الشبكة</span><input type="number" id="alu-fh-rows" min="1" value="2" oninput="refreshAluFreehandPreview()"></label>' +
+            '</div>' +
+            '<div id="alu-fh-preview" class="alu-fh-preview"></div>' +
+            '</div>' +
+            '<div class="erp-form-grid">' +
             '<label class="nebras-field"><span>وصف / موقع</span><input type="text" id="alu-op-label" placeholder="شباك غرفة 1"></label>' +
             '<label class="nebras-field"><span>كود موقع</span><input type="text" id="alu-op-loc" placeholder="A-01"></label>' +
             '<label class="nebras-field"><span>ارتفاع مقبض مم</span><input type="number" id="alu-op-handle" value="50"></label>' +
@@ -2111,9 +2212,13 @@
 
     function toggleAluBayFields() {
         const shape = aluField('alu-op-shape');
-        const show = shape === 'facade_panel' || shape === 'facade_bay';
+        const showBay = shape === 'facade_panel' || shape === 'facade_bay';
+        const showFh = shape === 'freehand';
         document.querySelectorAll('.alu-bay-only').forEach(function (el) {
-            el.style.display = show ? '' : 'none';
+            el.style.display = showBay ? '' : 'none';
+        });
+        document.querySelectorAll('.alu-fh-only').forEach(function (el) {
+            el.style.display = showFh ? '' : 'none';
         });
         if (shape === 'facade_panel') {
             const c = document.getElementById('alu-op-cols');
@@ -2121,26 +2226,79 @@
             if (c && !c.value) c.value = '1';
             if (r && !r.value) r.value = '1';
         }
-        /* اقتراح نظام بنفس العائلة */
-        const fam = (READY_SHAPES[shape] || {}).family;
+        let fam = (READY_SHAPES[shape] || {}).family;
+        if (showFh) fam = aluField('alu-fh-family') || 'hinged';
         if (fam) {
             const match = aluSystems.find(function (s) { return s.active !== false && s.family === fam; });
             const sel = document.getElementById('alu-op-sys');
             if (match && sel) sel.value = match.id;
         }
+        const fhFacade = (aluField('alu-fh-family') || '') === 'facade';
+        document.querySelectorAll('.alu-fh-facade').forEach(function (el) {
+            el.style.display = (showFh && fhFacade) ? '' : 'none';
+        });
+    }
+
+    function readAluFreehandFromForm() {
+        return {
+            family: aluField('alu-fh-family') || 'hinged',
+            kind: aluField('alu-fh-kind') || 'window',
+            leaves: Math.max(1, Math.min(6, Math.round(aluNum(aluField('alu-fh-leaves')) || 1))),
+            bayCols: Math.max(1, Math.round(aluNum(aluField('alu-fh-cols')) || 1)),
+            bayRows: Math.max(1, Math.round(aluNum(aluField('alu-fh-rows')) || 1))
+        };
+    }
+
+    function refreshAluFreehandPreview() {
+        toggleAluBayFields();
+        const box = document.getElementById('alu-fh-preview');
+        if (!box) return;
+        if (aluField('alu-op-shape') !== 'freehand') {
+            box.innerHTML = '';
+            return;
+        }
+        const draft = {
+            shape: 'freehand',
+            freehand: readAluFreehandFromForm(),
+            widthMm: aluNum(aluField('alu-op-w')) || 1200,
+            heightMm: aluNum(aluField('alu-op-h')) || 1400,
+            qty: 1,
+            profileSystemId: aluField('alu-op-sys') || (aluSystems[0] || {}).id,
+            glassId: aluField('alu-op-glass') || (aluGlass[0] || {}).id,
+            labelAr: aluField('alu-op-label') || 'معاينة رسم يدوي',
+            handleHeightMm: aluNum(aluField('alu-op-handle')) || 50
+        };
+        if (draft.freehand.family === 'facade') {
+            draft.bayCols = draft.freehand.bayCols;
+            draft.bayRows = draft.freehand.bayRows;
+        }
+        const meta = resolveItemShape(draft);
+        box.innerHTML = '<div class="alu-elev-card">' + aluDrawElevationSvg(draft, { viewW: 340, viewH: 280 }) +
+            '</div><p class="alu-cut-note">معاينة: ' + aluEsc(meta.nameAr) + ' · زجاج ناتج من التخصيمات يُحسب عند الإضافة.</p>';
     }
 
     function readAluItemFromForm() {
         const shape = aluField('alu-op-shape') || 'sliding2';
+        const freehand = shape === 'freehand' ? readAluFreehandFromForm() : null;
+        let bayCols = Math.max(1, Math.round(aluNum(aluField('alu-op-cols')) || 1));
+        let bayRows = Math.max(1, Math.round(aluNum(aluField('alu-op-rows')) || 1));
+        if (freehand && freehand.family === 'facade') {
+            bayCols = freehand.bayCols;
+            bayRows = freehand.bayRows;
+        }
+        const labelDefault = freehand
+            ? resolveItemShape({ shape: 'freehand', freehand: freehand }).nameAr
+            : ((READY_SHAPES[shape] || {}).nameAr || 'بند');
         return {
             shape: shape,
+            freehand: freehand,
             profileSystemId: aluField('alu-op-sys') || (aluSystems[0] || {}).id,
             widthMm: aluNum(aluField('alu-op-w')),
             heightMm: aluNum(aluField('alu-op-h')),
             qty: Math.max(1, Math.round(aluNum(aluField('alu-op-qty')) || 1)),
-            bayCols: Math.max(1, Math.round(aluNum(aluField('alu-op-cols')) || 1)),
-            bayRows: Math.max(1, Math.round(aluNum(aluField('alu-op-rows')) || 1)),
-            labelAr: aluField('alu-op-label') || (READY_SHAPES[shape] || {}).nameAr || 'بند',
+            bayCols: bayCols,
+            bayRows: bayRows,
+            labelAr: aluField('alu-op-label') || labelDefault,
             locationCode: aluField('alu-op-loc'),
             handleHeightMm: aluNum(aluField('alu-op-handle')) || 50,
             glassId: aluField('alu-op-glass'),
@@ -2209,7 +2367,15 @@
         set('alu-op-wire', it.wireId || '');
         set('alu-op-haswire', it.hasWire ? '1' : '0');
         set('alu-op-wirefix', it.wireFixed || 'none');
+        if (it.freehand) {
+            set('alu-fh-family', it.freehand.family || 'hinged');
+            set('alu-fh-kind', it.freehand.kind || 'window');
+            set('alu-fh-leaves', it.freehand.leaves || 1);
+            set('alu-fh-cols', it.freehand.bayCols || it.bayCols || 1);
+            set('alu-fh-rows', it.freehand.bayRows || it.bayRows || 1);
+        }
         toggleAluBayFields();
+        refreshAluFreehandPreview();
         const btn = document.getElementById('alu-op-submit');
         if (btn) btn.innerHTML = '<i class="fas fa-check"></i> تحديث البند';
         const card = document.querySelector('.alu-cut-subcard');
@@ -2527,7 +2693,7 @@
         const milling = (est && (est.items || []) || []).map(function (it, i) {
             const handle = aluNum(it.handleHeightMm) || 50;
             return '<tr><td>' + aluEsc(it.labelAr || ('بند ' + (i + 1))) + '</td><td>' + it.widthMm + '×' + it.heightMm +
-                '</td><td>' + handle + '</td><td>' + aluEsc((READY_SHAPES[it.shape] || {}).nameAr || '') + '</td>' +
+                '</td><td>' + handle + '</td><td>' + aluEsc(resolveItemShape(it).nameAr || '') + '</td>' +
                 '<td>مقبض على ' + handle + ' مم من الأسفل · موقع ' + aluEsc(it.locationCode || '—') + '</td></tr>';
         }).join('') || '<tr><td colspan="5">—</td></tr>';
 
@@ -2709,7 +2875,11 @@
         const parts = (sys.parts || []).filter(function (p) { return p.role === aluSystemsPartRole && p.active !== false; });
         const rows = parts.map(function (p, i) {
             const idx = (sys.parts || []).indexOf(p);
+            const thumb = p.imageDataUrl
+                ? '<img class="alu-part-thumb" src="' + p.imageDataUrl.replace(/"/g, '') + '" alt="' + aluEsc(p.nameAr) + '"/>'
+                : '<span class="alu-part-thumb alu-part-thumb--empty"><i class="fas fa-image"></i></span>';
             return '<tr>' +
+                '<td class="alu-part-img-cell">' + thumb + '</td>' +
                 '<td>' + aluEsc(p.nameAr) + '</td>' +
                 '<td>' + aluEsc(p.sku) + '</td>' +
                 '<td>' + aluNum(p.thicknessMm) + '</td>' +
@@ -2720,7 +2890,7 @@
                 '<td>' + (p.withPackage ? 'نعم' : 'لا') + '</td>' +
                 '<td><button type="button" class="erp-tag" onclick="removeAluPart(' + idx + ')">حذف</button></td>' +
                 '</tr>';
-        }).join('') || '<tr><td colspan="9">لا قطاعات في «' + aluEsc(PART_ROLES[aluSystemsPartRole]) + '» — أضف من النموذج بالأسفل (مثل Ecotal).</td></tr>';
+        }).join('') || '<tr><td colspan="10">لا قطاعات في «' + aluEsc(PART_ROLES[aluSystemsPartRole]) + '» — أضف من النموذج بالأسفل (مثل Ecotal).</td></tr>';
 
         return '<div class="alu-cut-form-card alu-ecotal-head">' +
             '<h4><i class="fas fa-bars-staggered"></i> إعدادات القطاعات — كما في Ecotal / Uptime Window</h4>' +
@@ -2739,7 +2909,7 @@
             '<div class="alu-cut-form-card">' +
             '<div class="alu-role-tabs" role="tablist">' + roleTabs + '</div>' +
             '<div class="alu-table-wrap"><table class="alu-table"><thead><tr>' +
-            '<th>اسم القطاع</th><th>رقم/SKU</th><th>تخانة</th><th>وزن م</th><th>سعر/كغ</th><th>الشفة</th><th>زجاج</th><th>بباكيته</th><th></th>' +
+            '<th>صورة</th><th>اسم القطاع</th><th>رقم/SKU</th><th>تخانة</th><th>وزن م</th><th>سعر/كغ</th><th>الشفة</th><th>زجاج</th><th>بباكيته</th><th></th>' +
             '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
 
             '<h5 style="margin-top:1rem">إضافة قطاع في «' + aluEsc(PART_ROLES[aluSystemsPartRole]) + '»</h5>' +
@@ -2767,6 +2937,10 @@
                 ? '<label class="nebras-field"><span>الضرفة بباكيته؟</span><select id="alu-part-pkgflag"><option value="0">لا — الباكيت يُحسب قطاعاً</option><option value="1">نعم — لا يظهر الباكيت منفرداً</option></select></label>' +
                   '<label class="nebras-field"><span>آخر عود فاضل</span><select id="alu-part-nolast"><option value="1">موقوف للضرفة (موصى)</option><option value="0">مفعّل</option></select></label>'
                 : '<input type="hidden" id="alu-part-pkgflag" value="0"><input type="hidden" id="alu-part-nolast" value="0">') +
+            '<label class="nebras-field nebras-field--wide"><span>صورة مقطع القطاع (من الكتالوج)</span>' +
+            '<input type="file" id="alu-part-image-file" accept="image/*" onchange="aluReadPartImage(this)">' +
+            '<input type="hidden" id="alu-part-image-data" value="">' +
+            '<div id="alu-part-image-preview" class="alu-part-image-preview"></div></label>' +
             '</div>' +
             '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="addAluPart()"><i class="fas fa-plus"></i> حفظ القطاع في «' +
             aluEsc(PART_ROLES[aluSystemsPartRole]) + '»</button>' +
@@ -2843,6 +3017,7 @@
             glassKind: aluField('alu-part-glasskind') || 'any',
             withPackage: aluField('alu-part-pkgflag') === '1',
             disableLastBarRemnant: aluField('alu-part-nolast') === '1' || role === 'sash',
+            imageDataUrl: aluField('alu-part-image-data') || '',
             active: true
         });
         if (role === 'frame' && aluNum(aluField('alu-part-tracks')) > 0) {
@@ -2850,6 +3025,39 @@
         }
         persistAluminumCuttingCloud(['aluminum_systems', 'aluminum_profiles']);
         renderAluminumCuttingPanel();
+    }
+
+
+    function aluReadPartImage(input) {
+        const file = input && input.files && input.files[0];
+        if (!file) return;
+        if (file.size > 3 * 1024 * 1024) {
+            alert('الصورة أكبر من 3MB — اختَر صورة أصغر من الكتالوج.');
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = function () {
+            const img = new Image();
+            img.onload = function () {
+                const maxW = 360;
+                const scale = Math.min(1, maxW / Math.max(1, img.width));
+                const c = document.createElement('canvas');
+                c.width = Math.max(1, Math.round(img.width * scale));
+                c.height = Math.max(1, Math.round(img.height * scale));
+                const ctx = c.getContext('2d');
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(0, 0, c.width, c.height);
+                ctx.drawImage(img, 0, 0, c.width, c.height);
+                const data = c.toDataURL('image/jpeg', 0.74);
+                const hid = document.getElementById('alu-part-image-data');
+                if (hid) hid.value = data;
+                const prev = document.getElementById('alu-part-image-preview');
+                if (prev) prev.innerHTML = '<img class="alu-part-thumb alu-part-thumb--lg" src="' + data + '" alt="معاينة مقطع"/>';
+            };
+            img.onerror = function () { alert('تعذّر قراءة الصورة.'); };
+            img.src = reader.result;
+        };
+        reader.readAsDataURL(file);
     }
 
     function removeAluPart(idx) {
@@ -3208,7 +3416,7 @@
             aluEsc(aluEstimateDraft.customerName) + ' / ' + aluEsc(aluEstimateDraft.projectName) + '</p><table><tr><th>بند</th><th>شكل</th><th>مقاس</th><th>كمية</th><th>زجاج</th></tr>';
         (aluEstimateDraft.items || []).forEach(function (it) {
             const g = buildItemGlass(it);
-            html += '<tr><td>' + aluEsc(it.labelAr) + '</td><td>' + aluEsc((READY_SHAPES[it.shape] || {}).nameAr || '') +
+            html += '<tr><td>' + aluEsc(it.labelAr) + '</td><td>' + aluEsc(resolveItemShape(it).nameAr || '') +
                 '</td><td>' + it.widthMm + '×' + it.heightMm + '</td><td>' + it.qty +
                 '</td><td>' + g.widthMm + '×' + g.heightMm + ' ×' + g.panels + '</td></tr>';
         });
@@ -3254,7 +3462,20 @@
         let html = '<h1>كاتنج ليست — نبراس</h1><p class="meta">' + aluEsc(aluCutDraft.estimateRef || '') +
             ' · قطع ' + r.totalPieces + ' · أعواد ' + r.totalBars + ' · هدر ' + r.wastePct + '%</p>';
         r.plans.forEach(function (pl) {
+            const partImg = (function () {
+                let foundImg = '';
+                aluSystems.forEach(function (s) {
+                    (s.parts || []).forEach(function (p) {
+                        if (p.sku === pl.profileSku && p.imageDataUrl) foundImg = p.imageDataUrl;
+                    });
+                });
+                return foundImg;
+            })();
             html += '<h2>' + aluEsc(pl.profileName) + ' — شراء: ' + aluEsc(pl.purchase.buyLabel) + '</h2>';
+            if (partImg) {
+                html += '<div class="alu-elev-card"><img src="' + partImg.replace(/"/g, '') +
+                    '" alt="" style="max-width:180px;max-height:120px;object-fit:contain"/></div>';
+            }
             pl.plan.groups.forEach(function (g) {
                 html += '<div>× ' + g.count + ' — متبقي ' + g.remain + '</div><div class="bar">';
                 g.sample.pieces.forEach(function (p) {
@@ -3396,6 +3617,9 @@
     global.editAluItem = editAluItem;
     global.clearAluItemForm = clearAluItemForm;
     global.toggleAluBayFields = toggleAluBayFields;
+    global.refreshAluFreehandPreview = refreshAluFreehandPreview;
+    global.aluReadPartImage = aluReadPartImage;
+    global.resolveItemShape = resolveItemShape;
     global.explainAluEstimateFormulas = explainEstimateFormulas;
 
     function runAluminumSelfTest() {
@@ -3463,6 +3687,26 @@
         assert('draw-glass-nest', glassSvg.indexOf('تقطيع زجاج') !== -1 && glassSvg.indexOf(String(glass.widthMm)) !== -1, 'glass nest');
         const pairHtml = aluItemDrawingsHtml(slidingItem, false);
         assert('draw-pair-html', pairHtml.indexOf('alu-draw-pair') !== -1 && pairHtml.indexOf('alu-elev-svg') !== -1, 'pair');
+
+        const fhItem = {
+            shape: 'freehand',
+            freehand: { family: 'sliding', kind: 'window', leaves: 3 },
+            profileSystemId: slideSys.id,
+            widthMm: 2400, heightMm: 1500, qty: 1, glassId: (aluGlass[0] || {}).id
+        };
+        const fhBuilt = shapeCutsWithMeta(fhItem, 0);
+        const fhSash = (fhBuilt.cuts || []).filter(function (c) { return c.role === 'sash'; });
+        assert('freehand-sliding-3', fhSash.length >= 1 && fhSash.some(function (c) { return c.qty >= 6; }), 'sash cuts');
+        const fhElev = aluDrawElevationSvg(fhItem);
+        assert('freehand-draw', fhElev.indexOf('<svg') === 0 && resolveItemShape(fhItem).leaves === 3, 'fh elev');
+        const fhDoor = {
+            shape: 'freehand',
+            freehand: { family: 'hinged', kind: 'door', leaves: 2 },
+            profileSystemId: hingeSys.id,
+            widthMm: 1600, heightMm: 2200, qty: 1, glassId: (aluGlass[0] || {}).id
+        };
+        const fhDoorCuts = shapeCutsWithMeta(fhDoor, 0);
+        assert('freehand-door-threshold', (fhDoorCuts.cuts || []).some(function (c) { return c.role === 'threshold'; }), 'threshold');
 
         report.summary = report.ok ? 'PASS ' + report.checks.length + '/' + report.checks.length : 'FAIL ' + report.fails.length + '/' + report.checks.length;
         return report;
