@@ -1011,82 +1011,160 @@ body.alu-platform-open #admin-dashboard {
     }
 }
 
-/* —— مسار المصنع —— */
-.alu-pipe-strip {
+/* —— مسار المصنع —— (كسر تعارض header العام في 02-header-nav) —— */
+#aluminum-cutting .alu-pipe-strip {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
     gap: 0.55rem;
 }
 
-.alu-pipe-chip {
-    border: 1px solid var(--alu-border, rgba(13, 40, 64, 0.1));
-    background: linear-gradient(180deg, #fff, #f4f9fd);
-    border-radius: 14px;
-    padding: 0.75rem 0.85rem;
+#aluminum-cutting .alu-pipe-chip {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    border: 1px solid rgba(13, 40, 64, 0.1);
+    background: linear-gradient(165deg, #ffffff 0%, #f3f8fd 100%);
+    border-radius: 16px;
+    padding: 0.8rem 0.9rem;
     text-align: start;
     cursor: pointer;
     font: inherit;
-    box-shadow: 0 6px 16px rgba(7, 21, 37, 0.04);
-    transition: transform 0.15s ease, border-color 0.15s ease;
+    color: #0d2840;
+    box-shadow: 0 8px 20px rgba(7, 21, 37, 0.06);
+    transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
 }
 
-.alu-pipe-chip:hover {
+#aluminum-cutting .alu-pipe-chip:hover {
     transform: translateY(-2px);
-    border-color: rgba(56, 189, 248, 0.5);
+    border-color: rgba(56, 189, 248, 0.55);
+    box-shadow: 0 12px 26px rgba(21, 94, 148, 0.14);
 }
 
-.alu-pipe-chip strong {
-    display: block;
-    font-size: 1.35rem;
-    color: var(--alu-navy, #0d2840);
-    line-height: 1;
-}
-
-.alu-pipe-chip span {
-    font-size: 0.78rem;
-    color: var(--alu-muted, #5a6b7a);
-}
-
-.alu-pipe-board {
+#aluminum-cutting .alu-pipe-chip > i {
+    width: 2.35rem;
+    height: 2.35rem;
+    flex: 0 0 auto;
     display: grid;
-    grid-template-columns: repeat(6, minmax(160px, 1fr));
+    place-items: center;
+    border-radius: 12px;
+    font-size: 1rem;
+    color: #fff;
+    background: linear-gradient(145deg, #155e94, #0d2840);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+#aluminum-cutting .alu-pipe-chip-body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.12rem;
+    min-width: 0;
+}
+
+#aluminum-cutting .alu-pipe-chip strong {
+    display: block;
+    font-size: 1.28rem;
+    color: #0d2840;
+    line-height: 1;
+    font-weight: 800;
+}
+
+#aluminum-cutting .alu-pipe-chip em {
+    font-style: normal;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #3d5566;
+    white-space: nowrap;
+}
+
+#aluminum-cutting .alu-pipe-chip--draft > i { background: linear-gradient(145deg, #64748b, #334155); }
+#aluminum-cutting .alu-pipe-chip--approved > i { background: linear-gradient(145deg, #0ea5e9, #155e94); }
+#aluminum-cutting .alu-pipe-chip--cutting > i { background: linear-gradient(145deg, #38bdf8, #0369a1); }
+#aluminum-cutting .alu-pipe-chip--assemble > i { background: linear-gradient(145deg, #c9a227, #8a6d12); }
+#aluminum-cutting .alu-pipe-chip--ready > i { background: linear-gradient(145deg, #22c55e, #15803d); }
+#aluminum-cutting .alu-pipe-chip--done > i { background: linear-gradient(145deg, #14b8a6, #0f766e); }
+
+#aluminum-cutting .alu-pipe-board {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(168px, 1fr));
     gap: 0.65rem;
     overflow-x: auto;
     padding-bottom: 0.35rem;
     margin-bottom: 1rem;
 }
 
-.alu-pipe-col {
-    background: linear-gradient(180deg, #f7fbfe, #eef4f9);
-    border: 1px solid var(--alu-border, rgba(13, 40, 64, 0.1));
-    border-radius: 14px;
+#aluminum-cutting .alu-pipe-col {
+    background: #ffffff;
+    border: 1px solid rgba(13, 40, 64, 0.1);
+    border-radius: 16px;
     min-height: 280px;
     display: flex;
     flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 10px 24px rgba(7, 21, 37, 0.05);
 }
 
-.alu-pipe-col header {
-    padding: 0.7rem 0.8rem;
-    font-weight: 750;
-    font-size: 0.86rem;
-    color: var(--alu-navy, #0d2840);
-    border-bottom: 1px solid var(--alu-border, rgba(13, 40, 64, 0.1));
-    display: flex;
-    align-items: center;
-    gap: 0.35rem;
+/* يمنع أنماط header العامة (داكن + نص داكن = بكسلة) */
+#aluminum-cutting .alu-pipe-col-head,
+#aluminum-cutting .alu-pipe-col header.alu-pipe-col-head {
+    all: unset;
+    display: flex !important;
+    align-items: center !important;
+    gap: 0.45rem !important;
+    padding: 0.75rem 0.8rem !important;
+    font-weight: 750 !important;
+    font-size: 0.86rem !important;
+    color: #f8fafc !important;
+    background: linear-gradient(135deg, #0d2840 0%, #155e94 100%) !important;
+    border: 0 !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+    box-sizing: border-box !important;
+    width: 100% !important;
 }
 
-.alu-pipe-col header i { color: var(--alu-accent, #155e94); }
-.alu-pipe-col header em {
-    margin-inline-start: auto;
-    font-style: normal;
-    background: rgba(56, 189, 248, 0.16);
-    color: var(--alu-navy, #0d2840);
-    border-radius: 999px;
-    padding: 0.1rem 0.45rem;
-    font-size: 0.75rem;
-    font-weight: 800;
+#aluminum-cutting .alu-pipe-col-icon {
+    width: 1.85rem;
+    height: 1.85rem;
+    display: grid;
+    place-items: center;
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    flex: 0 0 auto;
 }
+
+#aluminum-cutting .alu-pipe-col-head i,
+#aluminum-cutting .alu-pipe-col-icon i {
+    color: #ffe9a8 !important;
+    font-size: 0.92rem !important;
+    opacity: 1 !important;
+}
+
+#aluminum-cutting .alu-pipe-col-title {
+    color: #ffffff !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.01em;
+}
+
+#aluminum-cutting .alu-pipe-col-count,
+#aluminum-cutting .alu-pipe-col-head em.alu-pipe-col-count {
+    margin-inline-start: auto !important;
+    font-style: normal !important;
+    background: rgba(255, 255, 255, 0.18) !important;
+    color: #ffffff !important;
+    border: 1px solid rgba(255, 255, 255, 0.28) !important;
+    border-radius: 999px !important;
+    padding: 0.12rem 0.5rem !important;
+    font-size: 0.78rem !important;
+    font-weight: 800 !important;
+    line-height: 1.2 !important;
+}
+
+#aluminum-cutting .alu-pipe-col--draft .alu-pipe-col-head { background: linear-gradient(135deg, #334155, #475569) !important; }
+#aluminum-cutting .alu-pipe-col--approved .alu-pipe-col-head { background: linear-gradient(135deg, #0d2840, #155e94) !important; }
+#aluminum-cutting .alu-pipe-col--cutting .alu-pipe-col-head { background: linear-gradient(135deg, #075985, #0ea5e9) !important; }
+#aluminum-cutting .alu-pipe-col--assemble .alu-pipe-col-head { background: linear-gradient(135deg, #6b5420, #c9a227) !important; }
+#aluminum-cutting .alu-pipe-col--ready .alu-pipe-col-head { background: linear-gradient(135deg, #166534, #22c55e) !important; }
+#aluminum-cutting .alu-pipe-col--done .alu-pipe-col-head { background: linear-gradient(135deg, #0f766e, #14b8a6) !important; }
 
 .alu-pipe-list {
     padding: 0.55rem;
@@ -1193,13 +1271,13 @@ body.alu-platform-open #admin-dashboard {
 }
 
 @media (max-width: 1100px) {
-    .alu-pipe-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    .alu-pipe-board { grid-template-columns: repeat(3, minmax(180px, 1fr)); }
+    #aluminum-cutting .alu-pipe-strip { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    #aluminum-cutting .alu-pipe-board { grid-template-columns: repeat(3, minmax(180px, 1fr)); }
 }
 
 @media (max-width: 720px) {
-    .alu-pipe-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .alu-pipe-board { grid-template-columns: repeat(2, minmax(160px, 1fr)); }
+    #aluminum-cutting .alu-pipe-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    #aluminum-cutting .alu-pipe-board { grid-template-columns: repeat(2, minmax(160px, 1fr)); }
 }
 
 /* —— رسومات الارتفاع والزجاج (محرك نبراس) —— */

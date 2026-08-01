@@ -1801,12 +1801,12 @@
             buckets[key].push(e);
         });
         const cols = [
-            { id: 'draft', title: 'مسودة', icon: 'fa-pen' },
-            { id: 'approved', title: 'معتمدة', icon: 'fa-stamp' },
-            { id: 'cutting', title: 'تقطيع', icon: 'fa-scissors' },
-            { id: 'in_production', title: 'تجميع', icon: 'fa-screwdriver-wrench' },
-            { id: 'ready_install', title: 'جاهز تركيب', icon: 'fa-truck' },
-            { id: 'installed', title: 'تم التركيب', icon: 'fa-circle-check' }
+            { id: 'draft', title: 'مسودة', icon: 'fa-pen', tone: 'draft' },
+            { id: 'approved', title: 'معتمد', icon: 'fa-stamp', tone: 'approved' },
+            { id: 'cutting', title: 'تقطيع', icon: 'fa-scissors', tone: 'cutting' },
+            { id: 'in_production', title: 'تجميع', icon: 'fa-screwdriver-wrench', tone: 'assemble' },
+            { id: 'ready_install', title: 'جاهز تسليم', icon: 'fa-truck', tone: 'ready' },
+            { id: 'installed', title: 'تم التركيب', icon: 'fa-circle-check', tone: 'done' }
         ];
         const board = cols.map(function (col) {
             const cards = (buckets[col.id] || []).slice().reverse().map(function (e) {
@@ -1821,9 +1821,11 @@
                     '<button type="button" class="erp-tag" onclick="advanceAluEstimateStatus(\'' + aluEsc(e.id) + '\')">التالي ←</button>' +
                     '</div></article>';
             }).join('') || '<p class="alu-pipe-empty">فارغ</p>';
-            return '<section class="alu-pipe-col">' +
-                '<header><i class="fas ' + col.icon + '"></i> ' + col.title +
-                ' <em>' + (buckets[col.id] || []).length + '</em></header>' +
+            return '<section class="alu-pipe-col alu-pipe-col--' + col.tone + '">' +
+                '<header class="alu-pipe-col-head">' +
+                '<span class="alu-pipe-col-icon"><i class="fas ' + col.icon + '" aria-hidden="true"></i></span>' +
+                '<span class="alu-pipe-col-title">' + col.title + '</span>' +
+                '<em class="alu-pipe-col-count">' + (buckets[col.id] || []).length + '</em></header>' +
                 '<div class="alu-pipe-list">' + cards + '</div></section>';
         }).join('');
 
@@ -1876,19 +1878,24 @@
         }).join('') || '<p class="erp-empty">لا مقايسات بعد — ابدأ الأولى من هنا.</p>';
 
         const pipeMini = [
-            { id: 'draft', label: 'مسودة' },
-            { id: 'approved', label: 'اعتماد' },
-            { id: 'cutting', label: 'تقطيع' },
-            { id: 'in_production', label: 'تجميع' },
-            { id: 'ready_install', label: 'تركيب' }
+            { id: 'draft', label: 'مسودة', icon: 'fa-pen', tone: 'draft' },
+            { id: 'approved', label: 'معتمد', icon: 'fa-stamp', tone: 'approved' },
+            { id: 'cutting', label: 'تقطيع', icon: 'fa-scissors', tone: 'cutting' },
+            { id: 'in_production', label: 'تجميع', icon: 'fa-screwdriver-wrench', tone: 'assemble' },
+            { id: 'ready_install', label: 'جاهز تسليم', icon: 'fa-truck', tone: 'ready' },
+            { id: 'installed', label: 'تم التركيب', icon: 'fa-circle-check', tone: 'done' }
         ].map(function (p) {
             const n = aluEstimates.filter(function (e) {
                 let s = e.status || 'draft';
                 if (s === 'in_progress') s = 'cutting';
-                if (s === 'done' || s === 'installed') s = 'ready_install';
+                if (s === 'done') s = 'installed';
                 return s === p.id;
             }).length;
-            return '<button type="button" class="alu-pipe-chip" onclick="setAluCutTab(\'production\')"><strong>' + n + '</strong><span>' + p.label + '</span></button>';
+            return '<button type="button" class="alu-pipe-chip alu-pipe-chip--' + p.tone +
+                '" onclick="setAluCutTab(\'production\')">' +
+                '<i class="fas ' + p.icon + '" aria-hidden="true"></i>' +
+                '<span class="alu-pipe-chip-body"><strong>' + n + '</strong><em>' + p.label + '</em></span>' +
+                '</button>';
         }).join('');
 
         return '<div class="alu-command-dash">' +
