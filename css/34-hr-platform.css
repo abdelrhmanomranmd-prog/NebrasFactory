@@ -2,7 +2,8 @@
 #hr-platform.hr-workspace-section.admin-section:not(.show),
 #legal-platform.hr-workspace-section.admin-section:not(.show),
 #crm-platform.hr-workspace-section.admin-section:not(.show),
-#accounting-platform.accounting-workspace-section.admin-section:not(.show) {
+#accounting-platform.accounting-workspace-section.admin-section:not(.show),
+#aluminum-cutting.alu-workspace-section.admin-section:not(.show) {
     display: none !important;
     visibility: hidden !important;
     opacity: 0 !important;
@@ -29,7 +30,8 @@
 
 #legal-platform.hr-workspace-section.admin-section.show,
 #crm-platform.hr-workspace-section.admin-section.show,
-#accounting-platform.accounting-workspace-section.admin-section.show {
+#accounting-platform.accounting-workspace-section.admin-section.show,
+#aluminum-cutting.alu-workspace-section.admin-section.show {
     display: flex !important;
     visibility: visible !important;
     opacity: 1 !important;

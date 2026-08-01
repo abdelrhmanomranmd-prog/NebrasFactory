@@ -17,7 +17,8 @@
 #hr-platform.hr-workspace-section.admin-section:not(.show),
 #legal-platform.legal-workspace-section.admin-section:not(.show),
 #crm-platform.crm-workspace-section.admin-section:not(.show),
-#accounting-platform.accounting-workspace-section.admin-section:not(.show) {
+#accounting-platform.accounting-workspace-section.admin-section:not(.show),
+#aluminum-cutting.alu-workspace-section.admin-section:not(.show) {
     display: none !important;
     visibility: hidden !important;
     pointer-events: none !important;

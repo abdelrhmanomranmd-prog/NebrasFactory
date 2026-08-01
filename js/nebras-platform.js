@@ -3292,8 +3292,8 @@
             { id: 'dash-profile-pdf', zone: 'quick', dashGroup: 'command', sortOrder: 0.5, iconClass: 'fas fa-file-pdf', titleAr: 'تنزيل بروفايل PDF', titleEn: 'Download Profile PDF', textAr: 'تنزيل ملف PDF الرسمي — 24 صفحة A4.', textEn: 'Download official 24-page A4 PDF.', cssClass: 'dashboard-tile-card--profile-2026', backgroundImage: 'images/hero-slide-06-color-catalog.png', handler: 'downloadNebrasProfilePdf', permission: 'content', visible: false },
             { id: 'dash-callback-leads', zone: 'quick', dashGroup: 'command', sortOrder: 55, iconClass: 'fas fa-phone-volume', titleAr: 'نبراس يتصل بك', titleEn: 'Callback Leads', textAr: 'طلبات اتصال الزوار — تظهر في الإدارة الرئيسية والفروع.', textEn: 'Visitor callback requests by branch.', cssClass: 'dashboard-tile-card--callback', backgroundImage: 'images/profile-2026/hero-cover.jpg', handler: 'openCallbackLeadsAdmin', permission: 'audit', visible: true },
             { id: 'dash-product-master', zone: 'quick', dashGroup: 'command', sortOrder: 0.9, iconClass: 'fas fa-database', titleAr: 'مركز المنتجات والأسعار', titleEn: 'Product Master', textAr: 'أسماء · أنواع · مقاسات · أسعار — مصدر النظام الديناميكي.', textEn: 'Names, types, sizes, prices — single source of truth.', handler: 'openProductMasterHub', permission: 'productMaster', superadminOnly: true, visible: true },
+            { id: 'dash-aluminum-cutting', zone: 'quick', dashGroup: 'command', sortOrder: 0.5, iconClass: 'fas fa-scissors', titleAr: 'التخصيمات', titleEn: 'Cutting Pro', textAr: 'منصة تخصيمات الألومنيوم — مقايسات · تقطيع ذكي · ورشة · واجهات.', textEn: 'Aluminum cutting platform — estimates, optimization, shop floor.', handler: 'openAluminumCutting', permission: 'aluminum', visible: true },
             { id: 'dash-aluminum-dept', zone: 'quick', dashGroup: 'command', sortOrder: 1.1, iconClass: 'fas fa-industry', titleAr: 'قسم الألومنيوم', titleEn: 'Aluminum Dept.', textAr: 'مخزون · إنتاج · عروض · طلبات ALU.', textEn: 'Aluminum ops only.', handler: 'openAluminumDepartment', permission: 'aluminum', visible: true },
-            { id: 'dash-aluminum-cutting', zone: 'quick', dashGroup: 'command', sortOrder: 1.11, iconClass: 'fas fa-scissors', titleAr: 'تخصيم قطاعات الألومنيوم', titleEn: 'Aluminum Cutting', textAr: 'قطاعات · مقايسة باب/شباك · تقطيع ذكي · مشتريات · تجميع.', textEn: 'Profiles, estimates, cutting optimization, purchase & assembly.', handler: 'openAluminumCutting', permission: 'aluminum', visible: true },
             { id: 'dash-wpc-dept', zone: 'quick', dashGroup: 'command', sortOrder: 1.08, iconClass: 'fas fa-door-closed', titleAr: 'إنتاج أبواب WPC', titleEn: 'WPC Production', textAr: 'مصنع الأبواب — مخزون · إنتاج · مستودع · عروض WPC.', textEn: 'WPC factory ops.', handler: 'openWpcProductionDepartment', permission: 'production', visible: true },
             { id: 'dash-branch-command', zone: 'quick', dashGroup: 'command', sortOrder: 1.07, iconClass: 'fas fa-store', titleAr: 'لوحة تحكم الفرع', titleEn: 'Branch Command', textAr: 'مبيعات · مندوبون · عروض · طلبات · شكاوى فرعك.', textEn: 'Your branch command center.', handler: 'openBranchCommandCenter', permission: null, branchCommandOnly: true, visible: true },
             { id: 'dash-hq-branch-empire', zone: 'quick', dashGroup: 'command', sortOrder: 1.06, iconClass: 'fas fa-sitemap', titleAr: 'حوكمة الفروع', titleEn: 'Branch Empire', textAr: 'تعيين مديري المبيعات والحسابات · تقارير كل فرع.', textEn: 'Assign branch managers and view branch KPIs.', handler: 'openHqBranchEmpireGovernance', permission: null, superadminOnly: true, visible: true },
@@ -12843,6 +12843,18 @@
             if (typeof isHrDepartmentAdmin === 'function' && isHrDepartmentAdmin(currentAdmin)) {
                 visible = visible.filter(function(t) { return t.id === 'dash-hr-platform'; });
             }
+            if (typeof isStrictAluminumUser === 'function' && isStrictAluminumUser(currentAdmin)) {
+                const aluKeep = {
+                    'dash-aluminum-cutting': true,
+                    'dash-aluminum-dept': true
+                };
+                visible = visible.filter(function(t) { return !!aluKeep[t.id]; });
+                visible.sort(function(a, b) {
+                    if (a.id === 'dash-aluminum-cutting') return -1;
+                    if (b.id === 'dash-aluminum-cutting') return 1;
+                    return (a.sortOrder || 0) - (b.sortOrder || 0);
+                });
+            }
             if (isStoreCatalogOnlyAdmin(currentAdmin)) {
                 visible = visible.filter(function(t) { return t.id === 'dash-store-catalog'; });
             }
@@ -12870,6 +12882,7 @@
                 let premiumClass = '';
                 if (tile.id === 'dash-hq-branch-empire') premiumClass = ' dashboard-tile-card--branch-empire';
                 else if (tile.id === 'dash-branch-command') premiumClass = ' dashboard-tile-card--branch-command';
+                else if (tile.id === 'dash-aluminum-cutting') premiumClass = ' dashboard-tile-card--alu-cutting';
                 return '<button type="button" class="dashboard-tile-card' + zoneClass + extraClass + premiumClass + '" data-tile-id="' + escapeHtmlAttr(tile.id) + '" style="--tile-i:' + index + '" onclick="onDashboardTileClick(\'' + String(tile.id).replace(/'/g, "\\'") + '\')">' +
                     '<span class="dashboard-tile-group-badge ' + groupClass + '">' + escapeHtmlAttr(groupLabel) + '</span>' +
                     '<div class="dashboard-tile-glow" aria-hidden="true"></div>' +
@@ -17793,6 +17806,7 @@
             document.body.classList.toggle('legal-platform-open', !!(document.getElementById('legal-platform') && document.getElementById('legal-platform').classList.contains('show')));
             document.body.classList.toggle('crm-platform-open', !!(document.getElementById('crm-platform') && document.getElementById('crm-platform').classList.contains('show')));
             document.body.classList.toggle('accounting-platform-open', !!(document.getElementById('accounting-platform') && document.getElementById('accounting-platform').classList.contains('show')));
+            document.body.classList.toggle('alu-platform-open', !!(document.getElementById('aluminum-cutting') && document.getElementById('aluminum-cutting').classList.contains('show')));
             const cpApp = document.getElementById('customer-portal-app');
             document.body.classList.toggle('customer-portal-open', !!(cpApp && cpApp.classList.contains('show')));
             const lightbox = document.getElementById('nebras-media-lightbox');
@@ -18305,11 +18319,16 @@
                 hideSections: ['dashboard-company-identity', 'dashboard-partners-block', 'platform-hub-panel', 'dashboard-channels-panel', 'dashboard-occasion-panel', 'dashboard-official-hub']
             },
             aluminum_manager: {
-                greetingAr: 'مركز قسم الألومنيوم — تخصيمات',
-                descAr: 'تخصيم قطاعات · مقايسات باب وشباك · تقطيع ذكي · مخزون · عروض ALU.',
+                greetingAr: 'مركز قسم الألومنيوم',
+                descAr: 'اضغط «التخصيمات» لفتح منصة الإنتاج الكاملة — مقايسات · تقطيع · ورشة.',
                 scrollTo: 'dashboard-actions-grid',
-                openHandler: 'openAluminumCutting',
-                hideSections: ['dashboard-company-identity', 'dashboard-partners-block', 'platform-hub-panel', 'dashboard-channels-panel', 'dashboard-occasion-panel', 'dashboard-official-hub']
+                openHandler: '',
+                hideSections: [
+                    'dashboard-company-identity', 'dashboard-partners-block', 'platform-hub-panel',
+                    'dashboard-channels-panel', 'dashboard-occasion-panel', 'dashboard-official-hub',
+                    'erp-hub-panel', 'dashboard-main-nav', 'dashboard-hub-intro', 'dashboard-secondary-grid',
+                    'dashboard-governance-pillars', 'dashboard-empire-overview-strip'
+                ]
             },
             hr: {
                 greetingAr: 'مركز HR — قسمك وفرعك فقط',
@@ -18392,12 +18411,12 @@
                 { roles: ['superadmin', 'manager'], icon: 'fas fa-chart-bar', label: 'تقارير تنفيذية', handler: 'openExecutiveReports', perm: 'audit' },
                 { roles: ['sales_manager', 'accountant', 'branch_manager'], icon: 'fas fa-chart-bar', label: 'تقرير الفرع', handler: 'openExecutiveReports', perm: 'audit' },
                 { roles: ['superadmin'], icon: 'fas fa-database', label: 'مركز المنتجات', handler: 'openProductMasterHub', perm: null },
-                { roles: ['aluminum_manager'], icon: 'fas fa-scissors', label: 'تخصيمات ALU', handler: 'openAluminumCutting', perm: 'aluminum' },
+                { roles: ['aluminum_manager'], icon: 'fas fa-scissors', label: 'التخصيمات', handler: 'openAluminumCutting', perm: 'aluminum' },
                 { roles: ['aluminum_manager'], icon: 'fas fa-file-signature', label: 'عرض ALU', handler: 'openAluminumQuoteBuilder', perm: 'aluminum' },
                 { roles: ['aluminum_manager'], icon: 'fas fa-tags', label: 'قائمة الأسعار', handler: 'openSalesPriceList', perm: 'aluminum' },
                 { roles: ['store_manager'], icon: 'fas fa-store', label: 'المتجر الإلكتروني', handler: 'openStoreCatalogManager', perm: 'storeCatalog' },
                 { roles: ['aluminum_manager', 'sales_manager', 'branch_manager'], icon: 'fas fa-industry', label: 'قسم الألومنيوم', handler: 'openAluminumDepartment', perm: 'aluminum' },
-                { roles: ['superadmin', 'manager'], icon: 'fas fa-scissors', label: 'تخصيمات الألومنيوم', handler: 'openAluminumCutting', perm: 'aluminum' },
+                { roles: ['superadmin', 'manager'], icon: 'fas fa-scissors', label: 'التخصيمات', handler: 'openAluminumCutting', perm: 'aluminum' },
                 { roles: ['wpc_manager', 'production_manager'], icon: 'fas fa-door-closed', label: 'إنتاج WPC', handler: 'openWpcProductionDepartment', perm: 'production' },
                 { roles: ['branch_manager', 'sales_manager'], icon: 'fas fa-store', label: 'لوحة الفرع', handler: 'openBranchCommandCenter', perm: null },
                 { roles: ['hr'], icon: 'fas fa-people-roof', label: 'منصة الموارد البشرية', handler: 'openHrPlatform', perm: 'hr' },
@@ -18951,6 +18970,18 @@
                 if (!t.iconClass) t.iconClass = def.iconClass;
                 if (!t.dashGroup) t.dashGroup = def.dashGroup;
                 if (t.sortOrder == null) t.sortOrder = def.sortOrder;
+                /* أيقونة التخصيمات — اسم ثابت ومرتب أولاً لمدير الألومنيوم */
+                if (t.id === 'dash-aluminum-cutting') {
+                    t.titleAr = def.titleAr;
+                    t.titleEn = def.titleEn;
+                    t.textAr = def.textAr;
+                    t.textEn = def.textEn;
+                    t.sortOrder = def.sortOrder;
+                    t.iconClass = def.iconClass;
+                    t.handler = def.handler;
+                    t.visible = true;
+                    t.cssClass = 'dashboard-tile-card--alu-cutting';
+                }
             });
             const builtinVisible = dashboardTiles.filter(function(t) {
                 if (t.visible === false) return false;
@@ -19122,9 +19153,9 @@
             }
             if (typeof isStrictAluminumUser === 'function' && isStrictAluminumUser(user)) {
                 startDashboardClock();
+                renderDashboardTiles();
                 applyStaticUiTranslations(siteText[currentLang || 'ar'] || siteText.ar);
-                if (typeof openAluminumCutting === 'function') setTimeout(function() { openAluminumCutting('dashboard'); }, 0);
-                else if (typeof openAluminumDepartment === 'function') setTimeout(function() { openAluminumDepartment(); }, 0);
+                /* يبقى على الداشبورد ليضغط أيقونة «التخصيمات» كتطبيق رئيسي */
                 return;
             }
             startDashboardClock();
@@ -20645,7 +20676,7 @@
                     '<div class="erp-stat"><strong>' + getEffectiveSalesPriceList(currentAdmin).length + '</strong><span>أسعار معتمدة</span></div>';
             }
             const cards = [
-                { icon: 'fas fa-scissors', title: 'تخصيم قطاعات الألومنيوم', desc: 'قطاعات · مقايسة باب/شباك · تقطيع ذكي · مشتريات · تجميع', handler: 'openAluminumCutting', featured: true },
+                { icon: 'fas fa-scissors', title: 'التخصيمات', desc: 'منصة تخصيمات كاملة — مقايسة · تقطيع · ورشة · واجهات', handler: 'openAluminumCutting', featured: true },
                 { icon: 'fas fa-boxes-stacked', title: 'مخزون الألومنيوم', desc: 'SKU وكميات قسم ALU', handler: 'openErpInventory' },
                 { icon: 'fas fa-dolly', title: 'تحويلات المستودع', desc: 'حركة مخزون ALU بين المواقع', handler: 'openErpWarehouseTransfers' },
                 { icon: 'fas fa-industry', title: 'إنتاج الألومنيوم', desc: 'تسجيل الإنتاج اليومي', handler: 'openErpProduction' },
@@ -26660,11 +26691,12 @@
             document.body.classList.remove('legal-platform-open');
             document.body.classList.remove('crm-platform-open');
             document.body.classList.remove('accounting-platform-open');
+            document.body.classList.remove('alu-platform-open');
             syncPlatformInteractionLayers();
         }
 
         function ensureAdminPanelExitChrome() {
-            const workspaceSelfExit = { 'hr-platform': true, 'legal-platform': true, 'crm-platform': true, 'accounting-platform': true };
+            const workspaceSelfExit = { 'hr-platform': true, 'legal-platform': true, 'crm-platform': true, 'accounting-platform': true, 'aluminum-cutting': true };
             document.querySelectorAll('.admin-section[id]').forEach(function(section) {
                 if (workspaceSelfExit[section.id]) return;
                 if (section.querySelector('.nebras-admin-exit-bar')) return;
@@ -26705,6 +26737,10 @@
                 closeAccountingWorkspace();
                 return;
             }
+            if (sectionId === 'aluminum-cutting' && typeof closeAluminumCuttingWorkspace === 'function') {
+                closeAluminumCuttingWorkspace();
+                return;
+            }
             if (sectionId === 'admin-ai-assistant' && typeof closeNebrasAdminAi === 'function') {
                 closeNebrasAdminAi();
                 return;
@@ -26730,6 +26766,7 @@
             if (!document.querySelector('.admin-section.show')) {
                 document.body.classList.remove('hr-platform-open');
                 document.body.classList.remove('legal-platform-open');
+                document.body.classList.remove('alu-platform-open');
             }
             syncPlatformInteractionLayers();
         }

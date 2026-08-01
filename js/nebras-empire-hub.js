@@ -59,6 +59,7 @@
             { roles: ['accountant', 'accounting_manager'], icon: 'fas fa-calculator', label: 'قسم الحسابات', desc: 'تحويلات · مبيعات · PDF', handlers: ['openAccountingPlatform', 'openErpProcurement'] },
             { roles: ['inventory_manager', 'warehouse_manager'], icon: 'fas fa-warehouse', label: 'مخزون ومستودع', desc: 'SKU · جرد · تحويلات', handlers: ['openErpInventory', 'openErpWarehouseTransfers'] },
             { roles: ['production_manager', 'wpc_manager'], icon: 'fas fa-door-closed', label: 'إنتاج WPC', desc: 'مصنع الأبواب — مخزون · إنتاج · عروض', handlers: ['openWpcProductionDepartment'] },
+            { roles: ['aluminum_manager'], icon: 'fas fa-scissors', label: 'التخصيمات', desc: 'منصة تخصيمات الألومنيوم — إنتاج وتركيب', handlers: ['openAluminumCutting'] },
             { roles: ['aluminum_manager'], icon: 'fas fa-industry', label: 'قسم الألومنيوم', desc: 'مخزون · إنتاج · عروض ALU', handlers: ['openAluminumDepartment'] },
             { roles: ['branch_manager'], icon: 'fas fa-store', label: 'لوحة الفرع', desc: 'مبيعات · فريق · طلبات فرعك', handlers: ['openBranchCommandCenter', 'openBranchTeamManagement'] }
         ];

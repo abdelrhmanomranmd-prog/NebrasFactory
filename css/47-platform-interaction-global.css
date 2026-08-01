@@ -155,7 +155,7 @@ body.admin-session #admin-dashboard.show {
 
 /* ── 5) تمرير الصفحة الرئيسية ── */
 html,
-body.nebras-ready:not(.nebras-intro-active):not(.nebras-workspace-active):not(.customer-portal-open):not(.hr-platform-open):not(.legal-platform-open):not(.crm-platform-open):not(.accounting-platform-open):not(.nebras-lightbox-open) {
+body.nebras-ready:not(.nebras-intro-active):not(.nebras-workspace-active):not(.customer-portal-open):not(.hr-platform-open):not(.legal-platform-open):not(.crm-platform-open):not(.accounting-platform-open):not(.alu-platform-open):not(.nebras-lightbox-open) {
     overflow-y: auto !important;
     overflow-x: hidden;
     touch-action: pan-y;

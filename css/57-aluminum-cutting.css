@@ -1,7 +1,107 @@
-/* نبراس — تخصيمات قطاعات الألومنيوم */
+/* نبراس — منصة تخصيمات الألومنيوم (تطبيق بملء الشاشة) */
 
-.nebras-aluminum-cutting-modal {
-    max-width: min(1120px, 96vw);
+#aluminum-cutting.alu-workspace-section.admin-section:not(.show) {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+#aluminum-cutting.alu-workspace-section.admin-section {
+    padding: 0 !important;
+    display: none !important;
+    flex-direction: column !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+    background: #0b1c28 !important;
+    z-index: 10050;
+    pointer-events: none !important;
+}
+
+#aluminum-cutting.alu-workspace-section.admin-section.show {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
+
+#aluminum-cutting .alu-workspace-app {
+    display: flex;
+    flex: 1 1 auto;
+    width: 100%;
+    height: 100%;
+    min-height: 100vh;
+    max-height: 100vh;
+    background: #edf2f6;
+    color: #0d2840;
+    overflow: hidden;
+    pointer-events: auto;
+}
+
+#aluminum-cutting .alu-ws-sidebar {
+    background: linear-gradient(180deg, #0b1c28 0%, #123548 55%, #1a4a5c 100%);
+}
+
+#aluminum-cutting .alu-ws-brand-icon {
+    background: linear-gradient(135deg, #2a6f82, #0d3d56);
+    color: #fff;
+}
+
+#aluminum-cutting .alu-ws-content {
+    flex: 1 1 auto;
+    overflow: auto;
+    padding: 1rem 1.15rem 1.6rem;
+    -webkit-overflow-scrolling: touch;
+}
+
+#aluminum-cutting .alu-ws-panel {
+    max-width: 1280px;
+    margin: 0 auto;
+}
+
+#aluminum-cutting .alu-ws-kpi-strip {
+    margin: 0;
+    border-radius: 0;
+    border-bottom: 1px solid rgba(13, 61, 86, 0.12);
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(8px);
+}
+
+body.alu-platform-open .admin-dashboard-overlay,
+body.alu-platform-open #admin-dashboard {
+    display: none !important;
+}
+
+.dashboard-tile-card--alu-cutting {
+    position: relative;
+    border: 1px solid rgba(42, 111, 130, 0.35) !important;
+    background:
+        radial-gradient(120% 90% at 100% 0%, rgba(42, 111, 130, 0.22), transparent 55%),
+        linear-gradient(160deg, #0d3d56 0%, #1a5568 48%, #2a6f82 100%) !important;
+    color: #f4f8fb !important;
+    min-height: 168px;
+    box-shadow: 0 14px 36px rgba(13, 61, 86, 0.28);
+}
+
+.dashboard-tile-card--alu-cutting h3,
+.dashboard-tile-card--alu-cutting p,
+.dashboard-tile-card--alu-cutting .dashboard-tile-arrow {
+    color: #f4f8fb !important;
+}
+
+.dashboard-tile-card--alu-cutting .dashboard-tile-icon {
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+}
+
+.dashboard-tile-card--alu-cutting .dashboard-tile-group-badge {
+    background: rgba(255, 255, 255, 0.16);
+    color: #e8f4f8;
+}
+
+.dashboard-tile-card--alu-cutting:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 18px 42px rgba(13, 61, 86, 0.38);
 }
 
 .alu-cut-tabs {
@@ -465,13 +565,274 @@
     align-items: center;
 }
 
+/* —— لوحة قيادة التخصيمات —— */
+.alu-command-dash {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1rem;
+}
+
+.alu-command-hero {
+    position: relative;
+    overflow: hidden;
+    border-radius: 18px;
+    min-height: 220px;
+    color: #f5fafc;
+    background: linear-gradient(135deg, #0b1c28 0%, #0d3d56 42%, #1f5f72 100%);
+    box-shadow: 0 16px 40px rgba(11, 28, 40, 0.28);
+}
+
+.alu-command-hero-bg {
+    position: absolute;
+    inset: 0;
+    background:
+        radial-gradient(circle at 12% 20%, rgba(255, 255, 255, 0.12), transparent 40%),
+        radial-gradient(circle at 88% 10%, rgba(120, 200, 220, 0.18), transparent 36%),
+        repeating-linear-gradient(-32deg, transparent 0 14px, rgba(255, 255, 255, 0.03) 14px 15px);
+    pointer-events: none;
+}
+
+.alu-command-hero-inner {
+    position: relative;
+    z-index: 1;
+    padding: 1.5rem 1.6rem 1.35rem;
+    max-width: 760px;
+}
+
+.alu-command-hero h2 {
+    margin: 0.35rem 0 0.55rem;
+    font-size: clamp(1.35rem, 2.4vw, 1.85rem);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+}
+
+.alu-command-hero p {
+    margin: 0 0 1rem;
+    color: rgba(245, 250, 252, 0.88);
+    line-height: 1.65;
+    font-size: 0.95rem;
+}
+
+.alu-dash-metrics {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 0.75rem;
+}
+
+.alu-metric {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.9rem 1rem;
+    border-radius: 14px;
+    background: #fff;
+    border: 1px solid rgba(13, 61, 86, 0.1);
+    box-shadow: 0 6px 18px rgba(13, 61, 86, 0.05);
+}
+
+.alu-metric i {
+    width: 2.2rem;
+    height: 2.2rem;
+    display: grid;
+    place-items: center;
+    border-radius: 10px;
+    background: rgba(13, 61, 86, 0.08);
+    color: #0d3d56;
+}
+
+.alu-metric strong {
+    display: block;
+    font-size: 1.25rem;
+    color: #0d2840;
+    line-height: 1.1;
+}
+
+.alu-metric span {
+    font-size: 0.78rem;
+    color: #5a7184;
+}
+
+.alu-metric--accent {
+    background: linear-gradient(145deg, #0d3d56, #1f5f72);
+    border-color: transparent;
+    color: #fff;
+}
+
+.alu-metric--accent i {
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+}
+
+.alu-metric--accent strong,
+.alu-metric--accent span {
+    color: #fff;
+}
+
+.alu-dash-grid {
+    display: grid;
+    grid-template-columns: 1.35fr 1fr;
+    gap: 0.9rem;
+}
+
+.alu-dash-card {
+    background: #fff;
+    border: 1px solid rgba(13, 61, 86, 0.1);
+    border-radius: 16px;
+    padding: 1rem 1.1rem 1.15rem;
+    box-shadow: 0 8px 22px rgba(13, 61, 86, 0.05);
+}
+
+.alu-dash-card--wide {
+    grid-column: 1 / -1;
+}
+
+.alu-dash-card header h3 {
+    margin: 0 0 0.2rem;
+    font-size: 1.02rem;
+    color: #0d2840;
+}
+
+.alu-dash-card header p {
+    margin: 0 0 0.85rem;
+    color: #5a7184;
+    font-size: 0.84rem;
+}
+
+.alu-dash-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem;
+}
+
+.alu-dash-actions button {
+    text-align: start;
+    border: 1px solid rgba(13, 61, 86, 0.12);
+    background: #f7fafc;
+    border-radius: 12px;
+    padding: 0.75rem 0.8rem;
+    cursor: pointer;
+    transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+    font: inherit;
+    color: inherit;
+}
+
+.alu-dash-actions button:hover {
+    transform: translateY(-1px);
+    border-color: rgba(42, 111, 130, 0.45);
+    background: #eef6f8;
+}
+
+.alu-dash-actions button i {
+    display: block;
+    color: #0d3d56;
+    margin-bottom: 0.35rem;
+}
+
+.alu-dash-actions button span {
+    display: block;
+    font-weight: 700;
+    font-size: 0.88rem;
+}
+
+.alu-dash-actions button small {
+    color: #6a8092;
+    font-size: 0.75rem;
+}
+
+.alu-dash-recent-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    margin-bottom: 0.75rem;
+}
+
+.alu-dash-recent {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 0.15rem 0.75rem;
+    text-align: start;
+    border: 1px solid rgba(13, 61, 86, 0.1);
+    background: #f8fafc;
+    border-radius: 10px;
+    padding: 0.65rem 0.75rem;
+    cursor: pointer;
+    font: inherit;
+    color: inherit;
+}
+
+.alu-dash-recent:hover {
+    border-color: rgba(42, 111, 130, 0.4);
+    background: #eef6f8;
+}
+
+.alu-dash-recent strong {
+    grid-column: 1;
+}
+
+.alu-dash-recent em {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: center;
+    font-style: normal;
+    font-weight: 700;
+    color: #0d3d56;
+    font-size: 0.84rem;
+}
+
+.alu-dash-recent span {
+    grid-column: 1;
+    color: #66788a;
+    font-size: 0.8rem;
+}
+
+@media (max-width: 1100px) {
+    .alu-dash-metrics {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .alu-dash-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 860px) {
+    #aluminum-cutting .alu-workspace-app {
+        flex-direction: column;
+        max-height: none;
+        min-height: 100dvh;
+        overflow: auto;
+    }
+    #aluminum-cutting .alu-ws-sidebar {
+        width: 100%;
+        min-width: 0;
+        max-height: none;
+    }
+    #aluminum-cutting .hr-ws-nav {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.35rem;
+    }
+    #aluminum-cutting .hr-ws-nav-group {
+        display: contents;
+    }
+    #aluminum-cutting .hr-ws-nav-group-label {
+        grid-column: 1 / -1;
+        margin-top: 0.35rem;
+    }
+}
+
 @media (max-width: 720px) {
     .alu-cut-tab {
         flex: 1 1 calc(50% - 0.4rem);
         text-align: center;
     }
 
-    .alu-cut-hero h3 {
+    .alu-cut-hero h3,
+    .alu-command-hero h2 {
         font-size: 1.15rem;
+    }
+
+    .alu-dash-actions {
+        grid-template-columns: 1fr;
     }
 }
