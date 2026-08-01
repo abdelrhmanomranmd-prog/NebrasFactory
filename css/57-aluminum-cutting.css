@@ -354,6 +354,57 @@
     color: #fff !important;
 }
 
+.alu-est-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 0.7rem;
+}
+
+.alu-est-card {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.6rem;
+    align-items: flex-start;
+    padding: 0.9rem 1rem;
+    border-radius: 12px;
+    background: #fff;
+    border: 1px solid rgba(112, 128, 144, 0.2);
+}
+
+.alu-est-card strong {
+    display: block;
+    color: #2c3e50;
+}
+
+.alu-est-card small {
+    display: block;
+    color: #5d6d7e;
+    font-size: 0.78rem;
+    margin-top: 0.15rem;
+}
+
+.alu-parts-list {
+    margin: 0 0 0.75rem;
+    padding: 0 1.1rem;
+    color: #34495e;
+    font-size: 0.86rem;
+    line-height: 1.55;
+}
+
+.nebras-field--wide {
+    display: block;
+    margin: 0.75rem 0;
+}
+
+.nebras-field--wide textarea {
+    width: 100%;
+    min-height: 72px;
+    font: inherit;
+    padding: 0.55rem 0.7rem;
+    border-radius: 8px;
+    border: 1px solid rgba(112, 128, 144, 0.35);
+}
+
 @media (max-width: 720px) {
     .alu-cut-tab {
         flex: 1 1 calc(50% - 0.4rem);

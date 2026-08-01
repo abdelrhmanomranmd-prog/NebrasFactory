@@ -28199,6 +28199,11 @@
             }, set: function(v) {
                 if (typeof setAluminumProfilesFromCloud === 'function') setAluminumProfilesFromCloud(v);
             }},
+            { key: 'aluminum_systems', get: function() {
+                return typeof getAluminumSystems === 'function' ? getAluminumSystems() : [];
+            }, set: function(v) {
+                if (typeof setAluminumSystemsFromCloud === 'function') setAluminumSystemsFromCloud(v);
+            }},
             { key: 'aluminum_estimates', get: function() {
                 return typeof getAluminumEstimates === 'function' ? getAluminumEstimates() : [];
             }, set: function(v) {
@@ -28213,6 +28218,26 @@
                 return typeof getAluminumCutSettings === 'function' ? getAluminumCutSettings() : {};
             }, set: function(v) {
                 if (typeof setAluminumCutSettingsFromCloud === 'function') setAluminumCutSettingsFromCloud(v);
+            }},
+            { key: 'aluminum_accessories', get: function() {
+                return typeof getAluminumAccessories === 'function' ? getAluminumAccessories() : [];
+            }, set: function(v) {
+                if (typeof setAluminumAccessoriesFromCloud === 'function') setAluminumAccessoriesFromCloud(v);
+            }},
+            { key: 'aluminum_glass', get: function() {
+                return typeof getAluminumGlass === 'function' ? getAluminumGlass() : [];
+            }, set: function(v) {
+                if (typeof setAluminumGlassFromCloud === 'function') setAluminumGlassFromCloud(v);
+            }},
+            { key: 'aluminum_wire', get: function() {
+                return typeof getAluminumWire === 'function' ? getAluminumWire() : [];
+            }, set: function(v) {
+                if (typeof setAluminumWireFromCloud === 'function') setAluminumWireFromCloud(v);
+            }},
+            { key: 'aluminum_colors', get: function() {
+                return typeof getAluminumColors === 'function' ? getAluminumColors() : [];
+            }, set: function(v) {
+                if (typeof setAluminumColorsFromCloud === 'function') setAluminumColorsFromCloud(v);
             }},
             { key: 'nebras_cloud_snapshots', get: function() {
                 return typeof getCloudSnapshotsForCloud === 'function' ? getCloudSnapshotsForCloud() : { byKey: {}, updatedAt: null };
@@ -29212,7 +29237,8 @@
             'crm_customers', 'crm_opportunities', 'crm_activities', 'crm_audit',
             'legal_contracts', 'legal_rentals', 'legal_cases', 'legal_compliance', 'legal_policies',
             'legal_correspondence', 'legal_activity', 'legal_notif_settings',
-            'aluminum_profiles', 'aluminum_estimates', 'aluminum_cut_jobs', 'aluminum_cut_settings',
+            'aluminum_profiles', 'aluminum_systems', 'aluminum_estimates', 'aluminum_cut_jobs',
+            'aluminum_cut_settings', 'aluminum_accessories', 'aluminum_glass', 'aluminum_wire', 'aluminum_colors',
             'nebras_cloud_snapshots', 'nebras_platform_integrity'
         ];
 
