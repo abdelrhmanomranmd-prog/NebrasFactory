@@ -16,6 +16,7 @@
     const ALU_COLORS_KEY = 'nebrasAluminumColors';
     const ALU_REMNANTS_KEY = 'nebrasAluminumRemnants';
     const ALU_AUDIT_KEY = 'nebrasAluminumAudit';
+    const ALU_STOCK_KEY = 'nebrasAluminumStock';
 
     const DEFAULT_SETTINGS = {
         stockBarMm: 6500,
@@ -69,6 +70,7 @@
     let aluColors = [];
     let aluRemnants = [];
     let aluAudit = [];
+    let aluStock = [];
     let aluSettings = Object.assign({}, DEFAULT_SETTINGS);
     let aluActiveTab = 'dashboard';
     let aluEstimateDraft = null;
@@ -447,6 +449,7 @@
         aluGlass = loadLocal(ALU_GLASS_KEY, []);
         aluWire = loadLocal(ALU_WIRE_KEY, []);
         aluColors = loadLocal(ALU_COLORS_KEY, []);
+        aluStock = loadLocal(ALU_STOCK_KEY, []) || [];
         aluRemnants = loadLocal(ALU_REMNANTS_KEY, []);
         aluAudit = loadLocal(ALU_AUDIT_KEY, []);
         aluSettings = Object.assign({}, DEFAULT_SETTINGS, loadLocal(ALU_SETTINGS_KEY, {}) || {});
@@ -486,6 +489,7 @@
         saveLocal(ALU_COLORS_KEY, aluColors);
         saveLocal(ALU_REMNANTS_KEY, aluRemnants);
         saveLocal(ALU_AUDIT_KEY, aluAudit.slice(-400));
+        saveLocal(ALU_STOCK_KEY, aluStock);
     }
 
     function aluLog(action, detail) {
@@ -504,7 +508,7 @@
         keys = keys || [
             'aluminum_profiles', 'aluminum_systems', 'aluminum_estimates', 'aluminum_cut_jobs',
             'aluminum_cut_settings', 'aluminum_accessories', 'aluminum_glass', 'aluminum_wire',
-            'aluminum_colors', 'aluminum_remnants', 'aluminum_audit'
+            'aluminum_colors', 'aluminum_remnants', 'aluminum_stock', 'aluminum_audit'
         ];
         if (typeof persistNebrasCriticalStores === 'function') {
             try { return await persistNebrasCriticalStores(keys, { silent: true, showToast: false }); }
@@ -524,6 +528,11 @@
     function getAluminumWire() { return aluWire; }
     function getAluminumColors() { return aluColors; }
     function getAluminumRemnants() { return aluRemnants; }
+    function getAluminumStock() { return aluStock; }
+    function setAluminumStockFromCloud(v) {
+        aluStock = Array.isArray(v) ? v : [];
+        saveLocal(ALU_STOCK_KEY, aluStock);
+    }
     function getAluminumAudit() { return aluAudit; }
 
     function setAluminumProfilesFromCloud(v) { aluProfiles = Array.isArray(v) ? v : []; saveLocal(ALU_PROFILES_KEY, aluProfiles); }
@@ -1548,6 +1557,7 @@
             items: [
                 { id: 'cutting', icon: 'fas fa-scissors', label: 'تقطيع ذكي' },
                 { id: 'audit', icon: 'fas fa-microscope', label: 'تدقيق الدقة' },
+                { id: 'warehouse', icon: 'fas fa-warehouse', label: 'مخزن الأعواد' },
                 { id: 'remnants', icon: 'fas fa-recycle', label: 'بنك الفضلة' },
                 { id: 'shop', icon: 'fas fa-industry', label: 'ورشة العمل' },
                 { id: 'production', icon: 'fas fa-clipboard-check', label: 'مسار المصنع' }
@@ -1678,6 +1688,7 @@
         else if (aluActiveTab === 'materials') body = renderAluMaterials();
         else if (aluActiveTab === 'cutting') body = renderAluCutting();
         else if (aluActiveTab === 'audit') body = renderAluAudit();
+        else if (aluActiveTab === 'warehouse') body = renderAluWarehouse();
         else if (aluActiveTab === 'remnants') body = renderAluRemnants();
         else if (aluActiveTab === 'shop') body = renderAluShop();
         else if (aluActiveTab === 'production') body = renderAluProductionBoard();
@@ -2207,6 +2218,36 @@
                 inner += '<text x="' + (ox + fw / 2) + '" y="' + (oy + fh / 2) + '" text-anchor="middle" font-size="10" fill="' + accent + '" font-weight="700">زجاج ' + gW + '×' + gH + '</text>';
             }
             }
+        }
+
+        /* شبكة جورجيا على الزجاج — مرئية للمهندس في الرسم */
+        if (item.georgianType && item.georgianType !== 'none' && shape.family !== 'facade') {
+            const gtype = item.georgianType;
+            const gx0 = ix + sashT;
+            const gy0 = iy + sashT;
+            const gw0 = Math.max(8, iw - sashT * 2);
+            const gh0 = Math.max(8, ih - sashT * 2);
+            const colsG = gtype === 'victorian' ? 4 : (gtype === 'colonial' ? 3 : 2);
+            const rowsG = gtype === 'victorian' ? 4 : (gtype === 'colonial' ? 3 : 2);
+            if (gtype === 'diamond') {
+                const cx = gx0 + gw0 / 2;
+                const cy = gy0 + gh0 / 2;
+                inner += '<polygon points="' + cx + ',' + gy0 + ' ' + (gx0 + gw0) + ',' + cy + ' ' + cx + ',' + (gy0 + gh0) + ' ' + gx0 + ',' + cy +
+                    '" fill="none" stroke="' + gold + '" stroke-width="1.1" opacity="0.85"/>';
+                inner += '<line x1="' + gx0 + '" y1="' + gy0 + '" x2="' + (gx0 + gw0) + '" y2="' + (gy0 + gh0) + '" stroke="' + gold + '" stroke-width="0.8" opacity="0.55"/>';
+                inner += '<line x1="' + (gx0 + gw0) + '" y1="' + gy0 + '" x2="' + gx0 + '" y2="' + (gy0 + gh0) + '" stroke="' + gold + '" stroke-width="0.8" opacity="0.55"/>';
+            } else {
+                for (let c = 1; c < colsG; c++) {
+                    const x = gx0 + (gw0 / colsG) * c;
+                    inner += '<line x1="' + x + '" y1="' + gy0 + '" x2="' + x + '" y2="' + (gy0 + gh0) + '" stroke="' + gold + '" stroke-width="1" opacity="0.75"/>';
+                }
+                for (let r = 1; r < rowsG; r++) {
+                    const y = gy0 + (gh0 / rowsG) * r;
+                    inner += '<line x1="' + gx0 + '" y1="' + y + '" x2="' + (gx0 + gw0) + '" y2="' + y + '" stroke="' + gold + '" stroke-width="1" opacity="0.75"/>';
+                }
+            }
+            const gName = (GEORGIAN_TYPES[gtype] || {}).nameAr || gtype;
+            inner += '<text x="' + (ox + fw / 2) + '" y="' + (oy + 14) + '" text-anchor="middle" font-size="9" fill="' + gold + '" font-weight="700">جورجيا: ' + aluEsc(gName) + '</text>';
         }
 
         inner += dimH(ox, ox + fw, oy + fh + 18, Wmm + ' مم');
@@ -2820,7 +2861,7 @@
             }
         }
         aluLog('قطع', 'حفظ خطة ' + (aluCutDraft.estimateRef || '') + ' · عود ' + job.stockBarMm + ' · هدر ' + job.wastePct + '%');
-        persistAluminumCuttingCloud(['aluminum_cut_jobs', 'aluminum_remnants', 'aluminum_audit', 'aluminum_estimates', 'aluminum_cut_settings']);
+        persistAluminumCuttingCloud(['aluminum_cut_jobs', 'aluminum_remnants', 'aluminum_audit', 'aluminum_estimates', 'aluminum_cut_settings', 'aluminum_stock']);
         if (typeof showNebrasAdminToast === 'function') showNebrasAdminToast('تم حفظ الخطة · الحالة: قيد التقطيع', 'ok');
         renderAluminumCuttingPanel();
     }
@@ -2861,6 +2902,76 @@
                     aluEsc(a.at) + ' · ' + aluEsc(a.user) + ' — ' + aluEsc(a.detail) + '</small></div></article>';
             }).join('') || '<p class="erp-empty">لا سجل بعد.</p>') +
             '</div></div>';
+    }
+
+
+    function renderAluWarehouse() {
+        const rows = (aluStock || []).map(function (s, i) {
+            return '<tr><td>' + aluEsc(s.sku) + '</td><td>' + aluEsc(s.nameAr || '') +
+                '</td><td>' + aluNum(s.lengthMm) + '</td><td>' + aluNum(s.qty) +
+                '</td><td>' + aluEsc(s.note || '') +
+                '</td><td><button type="button" class="erp-tag" onclick="removeAluStockBar(' + i + ')">حذف</button></td></tr>';
+        }).join('') || '<tr><td colspan="6">لا أعواد في المخزن — أضف رصيداً أدناه.</td></tr>';
+        const totalBars = (aluStock || []).reduce(function (n, s) { return n + Math.max(0, Math.round(aluNum(s.qty) || 0)); }, 0);
+        const totalMm = (aluStock || []).reduce(function (n, s) {
+            return n + Math.max(0, aluNum(s.lengthMm)) * Math.max(0, aluNum(s.qty));
+        }, 0);
+        return '<div class="alu-cut-form-card"><h4><i class="fas fa-warehouse"></i> مخزن أعواد الألومنيوم</h4>' +
+            '<p class="alu-cut-note">رصيد فعلي لكل SKU — عند حفظ خطة التقطيع مع «ربط المخزن» يُخصم تلقائياً. أقوى من الاعتماد على طول عود واحد فقط.</p>' +
+            '<div class="alu-cut-kpis">' +
+            '<div class="alu-cut-kpi"><strong>' + totalBars + '</strong><span>أعواد</span></div>' +
+            '<div class="alu-cut-kpi"><strong>' + aluRound(totalMm / 1000, 1) + '</strong><span>متر طولي</span></div>' +
+            '<div class="alu-cut-kpi"><strong>' + (aluSettings.linkWarehouse ? 'مفعّل' : 'موقوف') + '</strong><span>ربط الخصم</span></div>' +
+            '</div>' +
+            '<div class="erp-form-grid">' +
+            '<label class="nebras-field"><span>SKU</span><input id="alu-st-sku" placeholder="IG-FR-01"></label>' +
+            '<label class="nebras-field"><span>الاسم</span><input id="alu-st-name" placeholder="حلق …"></label>' +
+            '<label class="nebras-field"><span>طول العود مم</span><input type="number" id="alu-st-len" value="' + (aluNum(aluSettings.stockBarMm) || 6500) + '"></label>' +
+            '<label class="nebras-field"><span>الكمية (أعواد)</span><input type="number" id="alu-st-qty" value="10" min="1"></label>' +
+            '<label class="nebras-field"><span>ملاحظة</span><input id="alu-st-note" placeholder="مورد / لون"></label>' +
+            '</div>' +
+            '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="addAluStockBar()"><i class="fas fa-plus"></i> إضافة للمخزن</button>' +
+            '<div class="alu-table-wrap" style="margin-top:.75rem"><table class="alu-table"><thead><tr>' +
+            '<th>SKU</th><th>اسم</th><th>طول</th><th>كمية</th><th>ملاحظة</th><th></th></tr></thead><tbody>' +
+            rows + '</tbody></table></div></div>';
+    }
+
+    function addAluStockBar() {
+        if (!requireAluAccess()) return;
+        const sku = aluField('alu-st-sku');
+        if (!sku) { alert('SKU مطلوب'); return; }
+        const qty = Math.max(1, Math.round(aluNum(aluField('alu-st-qty')) || 1));
+        const lengthMm = aluNum(aluField('alu-st-len')) || aluSettings.stockBarMm || 6500;
+        const found = aluStock.find(function (s) {
+            return String(s.sku).toLowerCase() === String(sku).toLowerCase() && aluNum(s.lengthMm) === lengthMm;
+        });
+        if (found) {
+            found.qty = aluNum(found.qty) + qty;
+            found.nameAr = aluField('alu-st-name') || found.nameAr;
+            found.note = aluField('alu-st-note') || found.note;
+        } else {
+            aluStock.push({
+                id: aluId('stk'),
+                sku: sku.trim(),
+                nameAr: aluField('alu-st-name') || sku,
+                lengthMm: lengthMm,
+                qty: qty,
+                note: aluField('alu-st-note') || '',
+                updatedAt: new Date().toISOString()
+            });
+        }
+        aluLog('مخزن', 'إضافة ' + qty + ' عود · ' + sku);
+        persistAluminumCuttingCloud(['aluminum_stock', 'aluminum_audit']);
+        renderAluminumCuttingPanel();
+        if (typeof showNebrasAdminToast === 'function') showNebrasAdminToast('تم تحديث مخزن الأعواد', 'ok');
+    }
+
+    function removeAluStockBar(i) {
+        if (!aluStock[i]) return;
+        if (!confirm('حذف هذا الرصيد؟')) return;
+        aluStock.splice(i, 1);
+        persistAluminumCuttingCloud(['aluminum_stock']);
+        renderAluminumCuttingPanel();
     }
 
     function renderAluRemnants() {
@@ -2964,6 +3075,7 @@
             '<button type="button" class="nebras-users-btn" onclick="printAluInstallPack()"><i class="fas fa-box-open"></i> تعبئة وتركيب</button>' +
             '<button type="button" class="nebras-users-btn" onclick="exportAluCutCsv()"><i class="fas fa-file-csv"></i> تصدير CSV</button>' +
             '<button type="button" class="nebras-users-btn" onclick="exportAluCutDxf()"><i class="fas fa-drafting-compass"></i> تصدير DXF</button>' +
+            '<button type="button" class="nebras-users-btn" onclick="exportAluCutCnc()"><i class="fas fa-microchip"></i> تصدير CNC/OPT</button>' +
             '</div>' +
             '<div class="erp-form-actions">' +
             '<button type="button" class="nebras-users-btn" onclick="setAluEstimateStatus(\'approved\')">1) اعتماد</button>' +
@@ -3485,6 +3597,34 @@
         if (typeof showNebrasAdminToast === 'function') showNebrasAdminToast('تم تصدير CSV', 'ok');
     }
 
+
+    function exportAluCutCnc() {
+        const result = (aluCutDraft && aluCutDraft.lastResult)
+            || (aluEstimateDraft ? runFullCuttingPlan(computeEstimateTotals(aluEstimateDraft).cuts, {
+                stockBarMm: aluEstimateDraft.stockBarMm, kerfMm: aluEstimateDraft.kerfMm, weightAdjustPct: aluEstimateDraft.weightAdjustPct
+            }) : null);
+        if (!result) { alert('شغّل التقطيع أو افتح مقايسة أولاً.'); return; }
+        const lines = ['[NEBRAS-CNC-OPT]', 'STOCK=' + (result.stockBarMm || ''), 'KERF=' + (result.kerfMm || aluSettings.kerfMm || '')];
+        let n = 1;
+        (result.plans || []).forEach(function (pl) {
+            lines.push('PROFILE=' + (pl.profileSku || '') + '|' + (pl.profileName || ''));
+            (pl.plan.bars || []).forEach(function (b, bi) {
+                (b.pieces || []).forEach(function (p) {
+                    lines.push(['CUT', n, pl.profileSku || '', bi + 1, p.lengthMm || 0, (p.code || ''), (p.labelAr || '').replace(/\|/g, '/')].join('|'));
+                    n++;
+                });
+            });
+        });
+        lines.push('[END]');
+        const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'nebras-cnc-' + ((aluCutDraft && aluCutDraft.estimateRef) || (aluEstimateDraft && aluEstimateDraft.ref) || 'plan') + '.opt';
+        a.click();
+        URL.revokeObjectURL(a.href);
+        if (typeof showNebrasAdminToast === 'function') showNebrasAdminToast('تم تصدير ملف CNC/OPT', 'ok');
+    }
+
     function exportAluCutDxf() {
         const result = (aluCutDraft && aluCutDraft.lastResult)
             || (aluEstimateDraft ? runFullCuttingPlan(computeEstimateTotals(aluEstimateDraft).cuts, {
@@ -3560,15 +3700,28 @@
         if (!aluSettings.warehouseStockMm || typeof aluSettings.warehouseStockMm !== 'object') {
             aluSettings.warehouseStockMm = {};
         }
-        const stock = Number(result.stockBarMm) || Number(aluSettings.stockBarMm) || 6500;
+        const stockLen = Number(result.stockBarMm) || Number(aluSettings.stockBarMm) || 6500;
         (result.plans || []).forEach(function (pl) {
             const sku = pl.profileSku || pl.profileId || '_unknown';
-            const bars = (pl.plan && pl.plan.barCount) || ((pl.plan && pl.plan.bars) ? pl.plan.bars.length : 0);
-            const mm = bars * stock;
+            let need = (pl.plan && pl.plan.barCount) || ((pl.plan && pl.plan.bars) ? pl.plan.bars.length : 0);
+            const mm = need * stockLen;
             aluSettings.warehouseStockMm[sku] = Math.max(0, Number(aluSettings.warehouseStockMm[sku] || 0) - mm);
+            /* خصم من مخزن الأعواد التفصيلي */
+            aluStock.forEach(function (s) {
+                if (need <= 0) return;
+                if (String(s.sku).toLowerCase() !== String(sku).toLowerCase()) return;
+                if (aluNum(s.lengthMm) && Math.abs(aluNum(s.lengthMm) - stockLen) > 1) return;
+                const take = Math.min(need, Math.max(0, Math.round(aluNum(s.qty) || 0)));
+                s.qty = Math.max(0, aluNum(s.qty) - take);
+                need -= take;
+            });
+            if (need > 0) {
+                aluLog('مخزن', 'نقص رصيد ' + sku + ' بمقدار ' + need + ' عود');
+            }
         });
+        aluStock = aluStock.filter(function (s) { return aluNum(s.qty) > 0; });
         const totalBars = Number(result.totalBars) || 0;
-        aluSettings.warehouseStockMm._total = Math.max(0, Number(aluSettings.warehouseStockMm._total || 0) - (totalBars * stock));
+        aluSettings.warehouseStockMm._total = Math.max(0, Number(aluSettings.warehouseStockMm._total || 0) - (totalBars * stockLen));
     }
 
 
@@ -3757,7 +3910,21 @@
             '<label class="nebras-field"><span>الاسم</span><input id="alu-cl-name"></label>' +
             '<label class="nebras-field"><span>زيادة م²</span><input type="number" id="alu-cl-sur" value="0"></label></div>' +
             '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="addAluColor()">إضافة لون</button>' +
-            '<div class="alu-table-wrap"><table class="alu-table"><thead><tr><th>اسم</th><th>زيادة</th></tr></thead><tbody>' + cRows + '</tbody></table></div></div>';
+            '<div class="alu-table-wrap"><table class="alu-table"><thead><tr><th>اسم</th><th>زيادة</th></tr></thead><tbody>' + cRows + '</tbody></table></div></div>' +
+            '<div class="alu-cut-form-card"><h4>كتالوج جورجيا / فواصل / دهان</h4>' +
+            '<p class="alu-cut-note">تُطبَّق من بند المقايسة — الرسوم تظهر على الارتفاع، والأسعار تُحسب في الإجمالي.</p>' +
+            '<div class="alu-table-wrap"><table class="alu-table"><thead><tr><th>جورجيا</th><th>زيادة م²</th></tr></thead><tbody>' +
+            Object.keys(GEORGIAN_TYPES).map(function (k) {
+                return '<tr><td>' + aluEsc(GEORGIAN_TYPES[k].nameAr) + '</td><td>' + aluNum(GEORGIAN_TYPES[k].surchargePerM2) + '</td></tr>';
+            }).join('') + '</tbody></table></div>' +
+            '<div class="alu-table-wrap" style="margin-top:.5rem"><table class="alu-table"><thead><tr><th>فاصل دبل</th><th>زيادة م²</th></tr></thead><tbody>' +
+            Object.keys(SPACER_TYPES).map(function (k) {
+                return '<tr><td>' + aluEsc(SPACER_TYPES[k].nameAr) + '</td><td>' + aluNum(SPACER_TYPES[k].surchargePerM2) + '</td></tr>';
+            }).join('') + '</tbody></table></div>' +
+            '<div class="alu-table-wrap" style="margin-top:.5rem"><table class="alu-table"><thead><tr><th>دهان</th><th>ر.س/كغ</th></tr></thead><tbody>' +
+            Object.keys(PAINT_TYPES).map(function (k) {
+                return '<tr><td>' + aluEsc(PAINT_TYPES[k].nameAr) + '</td><td>' + aluNum(PAINT_TYPES[k].perKg) + '</td></tr>';
+            }).join('') + '</tbody></table></div></div>';
     }
 
     function addAluGlass() {
@@ -4101,6 +4268,11 @@
     global.scanAluBarcode = scanAluBarcode;
     global.exportAluCutCsv = exportAluCutCsv;
     global.exportAluCutDxf = exportAluCutDxf;
+    global.exportAluCutCnc = exportAluCutCnc;
+    global.addAluStockBar = addAluStockBar;
+    global.removeAluStockBar = removeAluStockBar;
+    global.getAluminumStock = getAluminumStock;
+    global.setAluminumStockFromCloud = setAluminumStockFromCloud;
     global.addAluSupplierInvoice = addAluSupplierInvoice;
     global.removeAluSupplierInvoice = removeAluSupplierInvoice;
     global.aluDrawElevationSvg = aluDrawElevationSvg;
@@ -4277,6 +4449,22 @@
         const fakeCut = runFullCuttingPlan(slideBuilt.cuts || [], { stockBarMm: 6500, kerfMm: 10 });
         assert('cut-plan-exportable', !!(fakeCut && fakeCut.plans && fakeCut.plans.length), 'plans');
         assert('helpers-present', typeof editAluPart === 'function' && typeof exportAluCutCsv === 'function' && typeof scanAluBarcode === 'function', 'fns');
+
+
+
+        /* hrws214 — مخزن + جورجيا رسم + CNC */
+        aluStock = [{ id: 't', sku: 'TEST-SKU', nameAr: 't', lengthMm: 6500, qty: 5 }];
+        const fakeWh = { stockBarMm: 6500, totalBars: 2, plans: [{ profileSku: 'TEST-SKU', plan: { barCount: 2, bars: [{ pieces: [{ lengthMm: 1000, code: 'A' }] }] } }] };
+        const prevLink = aluSettings.linkWarehouse;
+        aluSettings.linkWarehouse = true;
+        consumeAluWarehouse(fakeWh);
+        assert('warehouse-stock-debit', aluStock.length === 1 && aluNum(aluStock[0].qty) === 3, 'qty=' + (aluStock[0] && aluStock[0].qty));
+        aluSettings.linkWarehouse = prevLink;
+        aluStock = [];
+        const geoItem = Object.assign({}, slidingItem, { georgianType: 'diamond' });
+        const geoSvg = aluDrawElevationSvg(geoItem);
+        assert('georgian-draw', geoSvg.indexOf('جورجيا') !== -1 && geoSvg.indexOf('polygon') !== -1, 'geo svg');
+        assert('cnc-export-fn', typeof exportAluCutCnc === 'function', 'cnc');
 
 
         report.summary = report.ok ? 'PASS ' + report.checks.length + '/' + report.checks.length : 'FAIL ' + report.fails.length + '/' + report.checks.length;

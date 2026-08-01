@@ -1405,3 +1405,7 @@ body.alu-platform-open #admin-dashboard {
     transition: opacity 0.2s ease;
 }
 
+
+
+/* hrws214 warehouse */
+.alu-cut-form-card .fa-warehouse { color: var(--alu-accent, #155e94); }
