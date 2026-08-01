@@ -1709,9 +1709,9 @@
             '<section class="alu-command-hero">' +
             '<div class="alu-command-hero-bg" aria-hidden="true"></div>' +
             '<div class="alu-command-hero-inner">' +
-            '<p class="alu-cut-kicker"><i class="fas fa-drafting-compass"></i> تخصيمات قطاعات الألومنيوم — نفس أساس Ecotal / Uptime Window</p>' +
-            '<h2>محرك التخصيمات لكل قطاعات الألومنيوم</h2>' +
-            '<p>الهدف من البرنامج كما في دورة الفيديو: تعريف <strong>أي قطاع</strong> من الكتالوج (حلوق · ضرف · باكيتات · مرد…) مع تخصيماته، ثم مقايسة بند بند، ثم تقارير تقطيع ومشتريات وتجميع وعرض سعر — بدون تقييد بنظام واحد.</p>' +
+            '<p class="alu-cut-kicker"><i class="fas fa-drafting-compass"></i> الأداة الأساسية لمدير القسم ومهندس تصميم الألومنيوم</p>' +
+            '<h2>أقوى محرك تخصيمات لقطاعات الألومنيوم</h2>' +
+            '<p>منصة تخصيمات كاملة بنفس أساس Ecotal: عرّف <strong>أي قطاع</strong> من السوق (حلوق · ضرف · باكيتات · مرد…) مع تخصيماته، ثم مقايسة بند بند، ثم تقارير تقطيع ومشتريات وتجميع وعرض سعر — للمفصليات والسحاب والواجهات بدون تقييد بنظام واحد.</p>' +
             '<div class="alu-cut-hero-actions">' +
             '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="setAluCutTab(\'systems\')"><i class="fas fa-bars-staggered"></i> إعدادات القطاعات</button>' +
             '<button type="button" class="nebras-users-btn" onclick="newAluEstimate();setAluCutTab(\'estimate\')"><i class="fas fa-plus"></i> مقايسة جديدة</button>' +
