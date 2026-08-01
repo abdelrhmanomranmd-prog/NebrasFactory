@@ -1307,17 +1307,29 @@ body.alu-platform-open #admin-dashboard {
     margin-top: 0.35rem;
 }
 
-/* hrws212 — بحث مقايسات · شجرة · مخزن · أطقم */
+/* hrws212 — قائمة مقايسات / زجاج متقدم / مسح / تصدير */
 .alu-est-toolbar {
-    margin-bottom: 0.85rem;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 0.65rem 0.85rem;
+    margin: 0.85rem 0 1rem;
+    padding: 0.85rem 1rem;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(13, 40, 64, 0.04), rgba(56, 189, 248, 0.08));
+    border: 1px solid rgba(13, 40, 64, 0.08);
 }
 
-.alu-est-toolbar .erp-form-grid {
-    margin-bottom: 0.35rem;
+.alu-est-search {
+    flex: 1 1 220px;
+    min-width: 180px;
+    margin: 0;
 }
 
-#alu-est-advanced-host {
-    margin-top: 0.5rem;
+.alu-view-toggle {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
 }
 
 .alu-est-tree {
@@ -1325,79 +1337,71 @@ body.alu-platform-open #admin-dashboard {
     gap: 0.55rem;
 }
 
-.alu-tree-cust,
-.alu-tree-proj {
-    border: 1px solid var(--alu-border, rgba(13, 40, 64, 0.12));
+.alu-tree-node {
+    border: 1px solid rgba(13, 40, 64, 0.1);
     border-radius: 12px;
-    background: linear-gradient(180deg, #ffffff, #f5fafc);
-    padding: 0.35rem 0.65rem 0.65rem;
-}
-
-.alu-tree-cust > summary,
-.alu-tree-proj > summary {
-    cursor: pointer;
-    color: var(--alu-navy, #0d2840);
-    font-weight: 700;
-    padding: 0.45rem 0.2rem;
-    list-style: none;
-}
-
-.alu-tree-cust > summary::-webkit-details-marker,
-.alu-tree-proj > summary::-webkit-details-marker {
-    display: none;
-}
-
-.alu-tree-proj {
-    margin: 0.35rem 0 0.15rem 0.55rem;
     background: #fff;
+    padding: 0.35rem 0.65rem 0.55rem;
 }
 
-.alu-tree-proj .alu-est-grid {
-    margin-top: 0.45rem;
-}
-
-#alu-kit-modal {
-    position: sticky;
-    bottom: 0.75rem;
-    z-index: 5;
-    margin-top: 1rem;
-    border: 1px solid rgba(212, 168, 67, 0.45);
-    box-shadow: 0 12px 28px rgba(13, 40, 64, 0.12);
-}
-
-#alu-kit-list {
-    margin: 0.75rem 0;
-    padding: 0;
+.alu-tree-node > summary {
+    cursor: pointer;
     list-style: none;
-    display: grid;
-    gap: 0.35rem;
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    padding: 0.45rem 0.15rem;
+    color: var(--alu-navy, #0d2840);
 }
 
-#alu-kit-list li {
+.alu-tree-node > summary::-webkit-details-marker { display: none; }
+
+.alu-tree-node > summary em {
+    font-style: normal;
+    color: var(--alu-muted, #5a6b7a);
+    font-size: 0.85rem;
+}
+
+.alu-tree-node--project {
+    margin: 0.35rem 0 0.15rem;
+    background: #f7fbff;
+}
+
+.alu-scan-box {
+    margin: 0.85rem 0;
+    padding: 0.85rem 1rem;
+    border-radius: 12px;
+    border: 1px dashed rgba(21, 94, 148, 0.35);
+    background: linear-gradient(180deg, #fff, #f3f9ff);
+}
+
+.alu-scan-log {
+    margin-top: 0.55rem;
+    display: grid;
+    gap: 0.3rem;
+    max-height: 140px;
+    overflow: auto;
+    font-size: 0.88rem;
+}
+
+.alu-scan-hit {
+    color: #0f6b3a;
+    font-weight: 600;
+}
+
+.alu-scan-miss {
+    color: #9b2c2c;
+}
+
+.alu-part-acts {
     display: flex;
     flex-wrap: wrap;
-    align-items: center;
-    gap: 0.45rem;
-    padding: 0.45rem 0.65rem;
-    border-radius: 10px;
-    background: #f4f9fd;
-    border: 1px solid var(--alu-border, rgba(13, 40, 64, 0.1));
-    color: var(--alu-navy, #0d2840);
-    font-size: 0.92rem;
+    gap: 0.3rem;
 }
 
-.alu-c128 {
-    display: block;
-    max-width: 100%;
-    height: auto;
-    margin: 0.2rem 0;
+.alu-dbl-only,
+.alu-georg-only,
+.alu-price-only {
+    transition: opacity 0.2s ease;
 }
 
-#alu-stock-host .alu-table-wrap {
-    margin-top: 0.85rem;
-}
-
-.alu-glass-adv,
-.alu-complete-est-meta {
-    margin-top: 0.55rem;
-}
