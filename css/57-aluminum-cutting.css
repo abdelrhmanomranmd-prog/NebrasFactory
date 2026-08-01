@@ -444,6 +444,27 @@
     border: 1px solid rgba(112, 128, 144, 0.35);
 }
 
+.alu-cut-warn {
+    margin: 0 0 1rem;
+    padding: 0.75rem 1rem;
+    border-radius: 10px;
+    background: rgba(180, 83, 9, 0.1);
+    border: 1px solid rgba(180, 83, 9, 0.35);
+    color: #7c2d12;
+    font-size: 0.9rem;
+}
+
+.alu-cut-warn ul {
+    margin: 0.35rem 0 0;
+    padding-inline-start: 1.2rem;
+}
+
+.erp-row-actions {
+    display: flex;
+    gap: 0.35rem;
+    align-items: center;
+}
+
 @media (max-width: 720px) {
     .alu-cut-tab {
         flex: 1 1 calc(50% - 0.4rem);

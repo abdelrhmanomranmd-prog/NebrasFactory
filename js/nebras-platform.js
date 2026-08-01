@@ -28267,7 +28267,10 @@
         const NEBRAS_MERGE_BY_ID_STORE_KEYS = [
             'admin_users', 'customer_portal_users', 'hr_employees', 'hr_vehicles', 'hr_documents', 'hr_leave',
             'hr_vehicle_tracking', 'hr_attendance', 'crm_customers', 'erp_orders', 'legal_contracts', 'callback_leads',
-            'visitor_icons'
+            'visitor_icons',
+            'aluminum_profiles', 'aluminum_systems', 'aluminum_estimates', 'aluminum_cut_jobs',
+            'aluminum_accessories', 'aluminum_glass', 'aluminum_wire', 'aluminum_colors',
+            'aluminum_remnants', 'aluminum_audit'
         ];
 
         function nebrasChromePayloadIsEmpty(storeKey, payload) {

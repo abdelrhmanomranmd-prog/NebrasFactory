@@ -53,7 +53,9 @@
         wireFixedDeduct: 30,
         sashDeductW: 40,
         sashDeductH: 40,
-        cutAngle: 45
+        cutAngle: 45,
+        miterExtraMm: 0,
+        beadInsetMm: 8
     };
 
     let aluProfiles = [];
@@ -75,12 +77,15 @@
 
     const READY_SHAPES = {
         casement: { nameAr: 'شباك مفصلي', family: 'hinged', leaves: 1 },
+        tilt_turn: { nameAr: 'شباك قلاب /Tilt-Turn', family: 'hinged', leaves: 1 },
         fixed: { nameAr: 'شباك ثابت', family: 'hinged', leaves: 1 },
         sliding2: { nameAr: 'شباك سحاب ضلفتين', family: 'sliding', leaves: 2 },
         sliding3: { nameAr: 'شباك سحاب 3 ضلف', family: 'sliding', leaves: 3 },
         sliding4: { nameAr: 'شباك سحاب 4 ضلف', family: 'sliding', leaves: 4 },
         door_hinged: { nameAr: 'باب مفصلي', family: 'hinged', leaves: 1 },
-        door_sliding: { nameAr: 'باب سحاب', family: 'sliding', leaves: 2 }
+        door_sliding: { nameAr: 'باب سحاب', family: 'sliding', leaves: 2 },
+        facade_panel: { nameAr: 'وحدة واجهة — باي واحد', family: 'facade', leaves: 1 },
+        facade_bay: { nameAr: 'واجهة — شبكة بايات (أعمدة×صفوف)', family: 'facade', leaves: 1 }
     };
 
     const PART_ROLES = {
@@ -156,6 +161,29 @@
         try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* ignore */ }
     }
 
+    function ensureFacadeSystemPresent() {
+        if (aluSystems.some(function (s) { return s.family === 'facade' && s.active !== false; })) return false;
+        aluSystems.push({
+            id: 'sys-facade-cw',
+            nameAr: 'واجهة ستارة Curtain Wall',
+            family: 'facade',
+            cutAngle: 90,
+            tracksCount: 0,
+            deductions: Object.assign({}, DEFAULT_DEDUCTIONS, {
+                mullionDeductFull: 0, sashDeductW: 40, glassFixedDeductW: 50, glassFixedDeductH: 50, cutAngle: 90, miterExtraMm: 0, beadInsetMm: 10
+            }),
+            parts: [
+                { id: 'p-cw-fr', role: 'frame', nameAr: 'إطار محيط واجهة', sku: 'CW-FR-01', thicknessMm: 65, weightKgPerM: 1.85, pricePerKg: 19, withPackage: false, disableLastBarRemnant: false, active: true },
+                { id: 'p-cw-mu', role: 'mullion', nameAr: 'عمود رأسي Mullion', sku: 'CW-MU-01', thicknessMm: 65, weightKgPerM: 2.1, pricePerKg: 19, withPackage: false, disableLastBarRemnant: false, active: true },
+                { id: 'p-cw-tr', role: 'meeting', nameAr: 'عارضة أفقية Transom', sku: 'CW-TR-01', thicknessMm: 65, weightKgPerM: 1.7, pricePerKg: 19, withPackage: false, disableLastBarRemnant: false, active: true },
+                { id: 'p-cw-bar', role: 'bar', nameAr: 'ضغط / Pressure bar', sku: 'CW-PB-01', thicknessMm: 25, weightKgPerM: 0.55, pricePerKg: 19, withPackage: false, disableLastBarRemnant: false, active: true },
+                { id: 'p-cw-bd', role: 'bead', nameAr: 'باكيت خلية', sku: 'CW-BD-01', thicknessMm: 20, weightKgPerM: 0.3, pricePerKg: 19, withPackage: false, disableLastBarRemnant: false, active: true }
+            ],
+            active: true
+        });
+        return true;
+    }
+
     function seedDefaults() {
         if (!aluSystems.length) {
             aluSystems = [
@@ -169,7 +197,8 @@
                     parts: [
                         { id: 'p-fr', role: 'frame', nameAr: 'حلق سوناتا 45', sku: 'SON-FR-45', thicknessMm: 45, weightKgPerM: 0.95, pricePerKg: 18, withPackage: false, disableLastBarRemnant: false, active: true },
                         { id: 'p-sh', role: 'sash', nameAr: 'ضرفة سوناتا 45', sku: 'SON-SH-45', thicknessMm: 45, weightKgPerM: 0.72, pricePerKg: 18, withPackage: false, disableLastBarRemnant: true, active: true },
-                        { id: 'p-bd', role: 'bead', nameAr: 'باكيت سوناتا', sku: 'SON-BD-01', thicknessMm: 20, weightKgPerM: 0.28, pricePerKg: 18, withPackage: false, disableLastBarRemnant: false, active: true }
+                        { id: 'p-bd', role: 'bead', nameAr: 'باكيت سوناتا', sku: 'SON-BD-01', thicknessMm: 20, weightKgPerM: 0.28, pricePerKg: 18, withPackage: false, disableLastBarRemnant: false, active: true },
+                        { id: 'p-th', role: 'threshold', nameAr: 'عتبة باب', sku: 'SON-TH-01', thicknessMm: 45, weightKgPerM: 1.1, pricePerKg: 18, withPackage: false, disableLastBarRemnant: false, active: true }
                     ],
                     active: true
                 },
@@ -184,11 +213,34 @@
                         { id: 'p-sfr', role: 'frame', nameAr: 'حلق سحاب', sku: 'SL-FR-01', thicknessMm: 50, weightKgPerM: 1.05, pricePerKg: 18, withPackage: false, disableLastBarRemnant: false, active: true },
                         { id: 'p-ssh', role: 'sash', nameAr: 'ضرفة سحاب', sku: 'SL-SH-01', thicknessMm: 40, weightKgPerM: 0.78, pricePerKg: 18, withPackage: false, disableLastBarRemnant: true, active: true },
                         { id: 'p-mu', role: 'mullion', nameAr: 'مرد / عمود التقاء', sku: 'SL-MU-01', thicknessMm: 40, weightKgPerM: 0.88, pricePerKg: 18, withPackage: false, disableLastBarRemnant: false, active: true },
-                        { id: 'p-kn', role: 'knife', nameAr: 'سكينة', sku: 'SL-KN-01', thicknessMm: 20, weightKgPerM: 0.45, pricePerKg: 18, withPackage: false, disableLastBarRemnant: false, active: true }
+                        { id: 'p-kn', role: 'knife', nameAr: 'سكينة', sku: 'SL-KN-01', thicknessMm: 20, weightKgPerM: 0.45, pricePerKg: 18, withPackage: false, disableLastBarRemnant: false, active: true },
+                        { id: 'p-sbd', role: 'bead', nameAr: 'باكيت سحاب', sku: 'SL-BD-01', thicknessMm: 20, weightKgPerM: 0.28, pricePerKg: 18, withPackage: false, disableLastBarRemnant: false, active: true },
+                        { id: 'p-sth', role: 'threshold', nameAr: 'عتبة باب سحاب', sku: 'SL-TH-01', thicknessMm: 50, weightKgPerM: 1.15, pricePerKg: 18, withPackage: false, disableLastBarRemnant: false, active: true }
+                    ],
+                    active: true
+                },
+                {
+                    id: 'sys-facade-cw',
+                    nameAr: 'واجهة ستارة Curtain Wall',
+                    family: 'facade',
+                    cutAngle: 90,
+                    tracksCount: 0,
+                    deductions: Object.assign({}, DEFAULT_DEDUCTIONS, {
+                        mullionDeductFull: 0, sashDeductW: 40, glassFixedDeductW: 50, glassFixedDeductH: 50, cutAngle: 90, miterExtraMm: 0, beadInsetMm: 10
+                    }),
+                    parts: [
+                        { id: 'p-cw-fr', role: 'frame', nameAr: 'إطار محيط واجهة', sku: 'CW-FR-01', thicknessMm: 65, weightKgPerM: 1.85, pricePerKg: 19, withPackage: false, disableLastBarRemnant: false, active: true },
+                        { id: 'p-cw-mu', role: 'mullion', nameAr: 'عمود رأسي Mullion', sku: 'CW-MU-01', thicknessMm: 65, weightKgPerM: 2.1, pricePerKg: 19, withPackage: false, disableLastBarRemnant: false, active: true },
+                        { id: 'p-cw-tr', role: 'meeting', nameAr: 'عارضة أفقية Transom', sku: 'CW-TR-01', thicknessMm: 65, weightKgPerM: 1.7, pricePerKg: 19, withPackage: false, disableLastBarRemnant: false, active: true },
+                        { id: 'p-cw-bar', role: 'bar', nameAr: 'ضغط / Pressure bar', sku: 'CW-PB-01', thicknessMm: 25, weightKgPerM: 0.55, pricePerKg: 19, withPackage: false, disableLastBarRemnant: false, active: true },
+                        { id: 'p-cw-bd', role: 'bead', nameAr: 'باكيت خلية', sku: 'CW-BD-01', thicknessMm: 20, weightKgPerM: 0.3, pricePerKg: 19, withPackage: false, disableLastBarRemnant: false, active: true }
                     ],
                     active: true
                 }
             ];
+        }
+        if (ensureFacadeSystemPresent()) {
+            try { saveLocal(ALU_SYSTEMS_KEY, aluSystems); } catch (e) { /* ignore */ }
         }
         if (!aluAccessories.length) {
             aluAccessories = [
@@ -198,7 +250,9 @@
                 { id: 'acc-hinge', code: 'HINGE', nameAr: 'مفصلة', equationType: 'per_leaf', equationValue: 2, purchasePrice: 12, sellPrice: 22, applyScope: 'sash', colorAr: '', familyOnly: 'hinged', active: true },
                 { id: 'acc-roller', code: 'ROLLER', nameAr: 'بكرة سحاب', equationType: 'per_leaf', equationValue: 2, purchasePrice: 10, sellPrice: 16, applyScope: 'sash', colorAr: '', familyOnly: 'sliding', active: true },
                 { id: 'acc-lock', code: 'LOCK', nameAr: 'قفل', equationType: 'per_unit', equationValue: 1, purchasePrice: 35, sellPrice: 55, applyScope: 'all', colorAr: '', active: true },
-                { id: 'acc-rubber', code: 'RUBBER', nameAr: 'كاوتش (م)', equationType: 'per_meter', equationValue: 1, purchasePrice: 3, sellPrice: 5, applyScope: 'all', colorAr: '', active: true }
+                { id: 'acc-rubber', code: 'RUBBER', nameAr: 'كاوتش (م)', equationType: 'per_meter', equationValue: 1, purchasePrice: 3, sellPrice: 5, applyScope: 'all', colorAr: '', active: true },
+                { id: 'acc-bracket', code: 'BRACKET', nameAr: 'زاوية تثبيت واجهة', equationType: 'per_unit', equationValue: 4, purchasePrice: 8, sellPrice: 14, applyScope: 'frame', colorAr: '', familyOnly: 'facade', active: true },
+                { id: 'acc-setting', code: 'SETTING', nameAr: 'وسادة زجاج Setting block', equationType: 'per_unit', equationValue: 4, purchasePrice: 1.2, sellPrice: 2, applyScope: 'all', colorAr: '', familyOnly: 'facade', active: true }
             ];
         }
         if (!aluGlass.length) {
@@ -351,15 +405,30 @@
     function setAluminumRemnantsFromCloud(v) { aluRemnants = Array.isArray(v) ? v : []; saveLocal(ALU_REMNANTS_KEY, aluRemnants); }
     function setAluminumAuditFromCloud(v) { aluAudit = Array.isArray(v) ? v : []; saveLocal(ALU_AUDIT_KEY, aluAudit); }
 
-    function findSystem(id) {
-        return aluSystems.find(function (s) { return s.id === id; }) || aluSystems[0] || null;
+    function findSystem(id, shapeFamily) {
+        const exact = aluSystems.find(function (s) { return s.id === id && s.active !== false; });
+        if (exact) {
+            if (shapeFamily && exact.family && exact.family !== shapeFamily && shapeFamily !== 'facade') {
+                return { system: exact, warning: 'نظام القطاع عائلة مختلفة عن شكل البند (' + exact.family + ' ≠ ' + shapeFamily + ')' };
+            }
+            return { system: exact, warning: '' };
+        }
+        if (shapeFamily) {
+            const byFam = aluSystems.find(function (s) { return s.active !== false && s.family === shapeFamily; });
+            if (byFam) return { system: byFam, warning: 'لم يُعثر على النظام المحدد — استُخدم نظام بنفس العائلة: ' + byFam.nameAr };
+        }
+        return { system: null, warning: 'لا يوجد نظام قطاع صالح لهذا البند' };
     }
+
+    function getSystem(id) {
+        return findSystem(id).system;
+    }
+
     function partForRole(sys, role) {
         if (!sys) return null;
-        return (sys.parts || []).find(function (p) { return p.active !== false && p.role === role; })
-            || (sys.parts || []).find(function (p) { return p.active !== false; })
-            || null;
+        return (sys.parts || []).find(function (p) { return p.active !== false && p.role === role; }) || null;
     }
+
     function dOf(sys) {
         return Object.assign({}, DEFAULT_DEDUCTIONS, (sys && sys.deductions) || {});
     }
@@ -367,27 +436,44 @@
     /**
      * بناء قطع التقطيع من شكل جاهز + تخصيمات النظام
      * الأطوال بالمليمتر — أي خطأ هنا = هدر/خسارة مباشرة
+     * لا تعيين صامت لقطاع خاطئ: إن نقص الدور يُسجَّل تحذير
      */
     function buildShapeCuts(item, itemIndex) {
         const shape = READY_SHAPES[item.shape] || READY_SHAPES.sliding2;
-        const sys = findSystem(item.profileSystemId) || aluSystems.find(function (s) { return s.family === shape.family; }) || aluSystems[0];
+        const found = findSystem(item.profileSystemId, shape.family);
+        const sys = found.system;
+        const warnings = [];
+        if (found.warning) warnings.push(found.warning);
+        if (!sys) {
+            return { cuts: [], warnings: warnings.length ? warnings : ['تعذّر بناء القطع — أضف نظام قطاع أولاً'] };
+        }
+        if (shape.family !== 'facade' && sys.family && sys.family !== shape.family && sys.family !== 'facade') {
+            warnings.push('تحذير: شكل «' + shape.nameAr + '» مع نظام «' + sys.nameAr + '» (' + sys.family + ')');
+        }
         const d = dOf(sys);
         const W = aluNum(item.widthMm);
         const H = aluNum(item.heightMm);
         const qty = Math.max(1, Math.round(aluNum(item.qty) || 1));
         const leaves = Math.max(1, shape.leaves || 1);
-        const angle = aluNum(sys && sys.cutAngle) || aluNum(d.cutAngle) || 45;
+        const angle = aluNum(sys.cutAngle) || aluNum(d.cutAngle) || 45;
+        const miterExtra = angle === 45 ? aluNum(d.miterExtraMm) : 0;
+        const beadInset = aluNum(d.beadInsetMm) || 8;
         const cuts = [];
         const idx = itemIndex + 1;
+        const cols = Math.max(1, Math.round(aluNum(item.bayCols) || 1));
+        const rows = Math.max(1, Math.round(aluNum(item.bayRows) || 1));
 
         function push(role, labelAr, lengthMm, pieceQty, axisTag) {
-            const len = aluRound(Math.max(1, lengthMm), 1);
-            if (len < 1) return;
+            const len = aluRound(Math.max(1, lengthMm + miterExtra), 1);
+            if (len < 1 || pieceQty <= 0) return;
             const part = partForRole(sys, role);
+            if (!part) {
+                warnings.push('ناقص قطاع لدور «' + (PART_ROLES[role] || role) + '» في نظام ' + sys.nameAr);
+            }
             cuts.push({
                 profileId: part ? part.id : '',
-                profileSku: part ? part.sku : role,
-                profileName: part ? part.nameAr : (PART_ROLES[role] || role),
+                profileSku: part ? part.sku : ('MISSING:' + role),
+                profileName: part ? part.nameAr : ('⚠ ' + (PART_ROLES[role] || role)),
                 role: role,
                 labelAr: labelAr,
                 code: (axisTag || 'P') + idx,
@@ -400,34 +486,60 @@
                 disableLastBarRemnant: !!(part && part.disableLastBarRemnant),
                 weightKgPerM: part ? aluNum(part.weightKgPerM) : 0,
                 pricePerKg: part ? aluNum(part.pricePerKg) : 0,
-                withPackage: !!(part && part.withPackage)
+                withPackage: !!(part && part.withPackage),
+                missingPart: !part
             });
         }
 
-        /* حلق دائماً */
+        if (shape.family === 'facade') {
+            /* واجهة: إطار خارجي + أعمدة رأسية + عوارض أفقية + ضغط/كابينج اختياري */
+            push('frame', 'إطار واجهة أفقي', W, 2, 'W');
+            push('frame', 'إطار واجهة رأسي', H, 2, 'H');
+            const mullionLen = H - aluNum(d.mullionDeductFull);
+            const transomLen = W - aluNum(d.sashDeductW);
+            push('mullion', 'عمود واجهة رأسي', mullionLen, Math.max(0, cols - 1), 'H');
+            push('meeting', 'عارضة أفقية / Transom', Math.max(1, transomLen / Math.max(1, cols)), Math.max(0, rows - 1) * cols, 'W');
+            push('bar', 'ضغط / Pressure bar', W, Math.max(1, rows), 'W');
+            if (!partForRole(sys, 'sash') || !partForRole(sys, 'sash').withPackage) {
+                const cellW = W / cols;
+                const cellH = H / rows;
+                push('bead', 'باكيت خلية — أفقي', Math.max(1, cellW - beadInset), cols * rows * 2, 'W');
+                push('bead', 'باكيت خلية — رأسي', Math.max(1, cellH - beadInset), cols * rows * 2, 'H');
+            }
+            return { cuts: cuts, warnings: warnings };
+        }
+
+        /* حلق دائماً لشبابيك/أبواب */
         push('frame', 'حلق أفقي', W, 2, 'W');
         push('frame', 'حلق رأسي', H, 2, 'H');
 
         if (shape.family === 'sliding') {
             const sashW = (W / leaves) + aluNum(d.sashOverlapMm) - aluNum(d.splitBetweenSashesMm);
             const sashH = H - aluNum(d.sashDeductH);
-            push('mullion', 'مرد / عمود التقاء', H - aluNum(d.mullionDeductFull), Math.max(1, leaves - 1), 'H');
+            const mullDed = (item.shape === 'door_sliding' && aluNum(d.sashFromFloorMm) > 0)
+                ? aluNum(d.mullionDeductWithHeel) : aluNum(d.mullionDeductFull);
+            push('mullion', 'مرد / عمود التقاء', H - mullDed, Math.max(1, leaves - 1), 'H');
             push('sash', 'ضرفة — أفقي', sashW, leaves * 2, 'W');
             push('sash', 'ضرفة — رأسي', sashH, leaves * 2, 'H');
-            if (sys && aluNum(sys.tracksCount) >= 1) {
+            if (aluNum(sys.tracksCount) >= 1) {
                 push('knife', 'سكينة', W, Math.max(1, aluNum(sys.tracksCount)), 'W');
             }
-            if (!partForRole(sys, 'sash') || !(partForRole(sys, 'sash').withPackage)) {
-                push('bead', 'باكيت', Math.max(1, sashW - 10), leaves * 2, 'W');
+            if (item.shape === 'door_sliding') {
+                push('threshold', 'عتبة', W, 1, 'W');
+            }
+            const sashPart = partForRole(sys, 'sash');
+            if (!sashPart || !sashPart.withPackage) {
+                push('bead', 'باكيت أفقي', Math.max(1, sashW - beadInset), leaves * 2, 'W');
+                push('bead', 'باكيت رأسي', Math.max(1, sashH - beadInset), leaves * 2, 'H');
             }
         } else if (item.shape === 'fixed') {
-            /* ثابت: حلق فقط + باكيت */
-            push('bead', 'باكيت ثابت', Math.max(1, W - aluNum(d.glassFixedDeductW)), 2, 'W');
+            push('bead', 'باكيت ثابت أفقي', Math.max(1, W - aluNum(d.glassFixedDeductW)), 2, 'W');
             push('bead', 'باكيت ثابت رأسي', Math.max(1, H - aluNum(d.glassFixedDeductH)), 2, 'H');
         } else {
-            /* مفصلي / باب مفصلي */
+            /* مفصلي / قلاب / باب مفصلي */
+            const heel = (item.shape === 'door_hinged') ? aluNum(d.sashFromFloorMm) : 0;
             const sashW = W - aluNum(d.sashDeductW);
-            const sashH = H - aluNum(d.sashDeductH) - (item.shape === 'door_hinged' ? aluNum(d.sashFromFloorMm) : 0);
+            const sashH = H - aluNum(d.sashDeductH) - heel;
             push('sash', 'ضرفة — أفقي', sashW, 2, 'W');
             push('sash', 'ضرفة — رأسي', sashH, 2, 'H');
             if (item.shape === 'door_hinged') {
@@ -435,27 +547,69 @@
             }
             const sashPart = partForRole(sys, 'sash');
             if (!sashPart || !sashPart.withPackage) {
-                push('bead', 'باكيت', Math.max(1, sashW - 8), 2, 'W');
-                push('bead', 'باكيت رأسي', Math.max(1, sashH - 8), 2, 'H');
+                push('bead', 'باكيت أفقي', Math.max(1, sashW - beadInset), 2, 'W');
+                push('bead', 'باكيت رأسي', Math.max(1, sashH - beadInset), 2, 'H');
             }
         }
-        return cuts;
+        return { cuts: cuts, warnings: warnings };
+    }
+
+    function flattenShapeCuts(item, itemIndex) {
+        const built = buildShapeCuts(item, itemIndex);
+        if (Array.isArray(built)) return built; /* توافق قديم */
+        (built.warnings || []).forEach(function (w) {
+            /* تُعرض في التدقيق */
+        });
+        return built.cuts || [];
+    }
+
+    function shapeCutsWithMeta(item, itemIndex) {
+        const built = buildShapeCuts(item, itemIndex);
+        if (Array.isArray(built)) return { cuts: built, warnings: [] };
+        return built;
     }
 
     function buildItemGlass(item) {
         const shape = READY_SHAPES[item.shape] || READY_SHAPES.sliding2;
-        const sys = findSystem(item.profileSystemId);
+        const found = findSystem(item.profileSystemId, shape.family);
+        const sys = found.system;
         const d = dOf(sys);
         const W = aluNum(item.widthMm);
         const H = aluNum(item.heightMm);
         const qty = Math.max(1, Math.round(aluNum(item.qty) || 1));
         const leaves = Math.max(1, shape.leaves || 1);
-        const isFixed = item.shape === 'fixed';
-        const dW = isFixed ? aluNum(d.glassFixedDeductW) : aluNum(d.glassSashDeductW);
-        const dH = isFixed ? aluNum(d.glassFixedDeductH) : aluNum(d.glassSashDeductH);
-        const gW = Math.max(0, aluRound((W - dW) / (shape.family === 'sliding' ? leaves : 1), 1));
-        const gH = Math.max(0, aluRound(H - dH, 1));
-        const panels = (shape.family === 'sliding' ? leaves : 1) * qty;
+        const cols = Math.max(1, Math.round(aluNum(item.bayCols) || 1));
+        const rows = Math.max(1, Math.round(aluNum(item.bayRows) || 1));
+        let gW = 0;
+        let gH = 0;
+        let panels = qty;
+
+        if (shape.family === 'facade') {
+            const cellW = W / cols;
+            const cellH = H / rows;
+            gW = Math.max(0, aluRound(cellW - aluNum(d.glassFixedDeductW), 1));
+            gH = Math.max(0, aluRound(cellH - aluNum(d.glassFixedDeductH), 1));
+            panels = cols * rows * qty;
+        } else if (item.shape === 'fixed') {
+            gW = Math.max(0, aluRound(W - aluNum(d.glassFixedDeductW), 1));
+            gH = Math.max(0, aluRound(H - aluNum(d.glassFixedDeductH), 1));
+            panels = qty;
+        } else if (shape.family === 'sliding') {
+            /* زجاج السحاب من مقاس الضرفة لا من تقسيم العرض الخام فقط */
+            const sashW = (W / leaves) + aluNum(d.sashOverlapMm) - aluNum(d.splitBetweenSashesMm);
+            const sashH = H - aluNum(d.sashDeductH);
+            gW = Math.max(0, aluRound(sashW - aluNum(d.glassSashDeductW), 1));
+            gH = Math.max(0, aluRound(sashH - aluNum(d.glassSashDeductH), 1));
+            panels = leaves * qty;
+        } else {
+            const heel = (item.shape === 'door_hinged') ? aluNum(d.sashFromFloorMm) : 0;
+            const sashW = W - aluNum(d.sashDeductW);
+            const sashH = H - aluNum(d.sashDeductH) - heel;
+            gW = Math.max(0, aluRound(sashW - aluNum(d.glassSashDeductW), 1));
+            gH = Math.max(0, aluRound(sashH - aluNum(d.glassSashDeductH), 1));
+            panels = leaves * qty;
+        }
+
         const areaM2 = aluRound((gW / 1000) * (gH / 1000) * panels, 3);
         const gl = aluGlass.find(function (g) { return g.id === item.glassId; }) || aluGlass[0];
         return {
@@ -463,7 +617,8 @@
             thicknessMm: gl ? aluNum(gl.thicknessMm) : 6,
             pricePerM2: gl ? aluNum(gl.pricePerM2) : 45,
             nameAr: gl ? gl.nameAr : 'زجاج',
-            openingLabel: item.labelAr || ''
+            openingLabel: item.labelAr || '',
+            warning: found.warning || ''
         };
     }
 
@@ -472,8 +627,9 @@
         const W = aluNum(item.widthMm);
         const H = aluNum(item.heightMm);
         const qty = Math.max(1, Math.round(aluNum(item.qty) || 1));
-        const sys = findSystem(item.profileSystemId);
-        const d = dOf(sys);
+        const shape = READY_SHAPES[item.shape] || READY_SHAPES.sliding2;
+        const found = findSystem(item.profileSystemId, shape.family);
+        const d = dOf(found.system);
         const deduct = item.wireFixed === 'none' ? aluNum(d.wireMovingDeduct) : aluNum(d.wireFixedDeduct);
         const wW = Math.max(0, W - deduct);
         const wH = Math.max(0, H - deduct);
@@ -492,14 +648,33 @@
         const H = aluNum(item.heightMm);
         const qty = Math.max(1, Math.round(aluNum(item.qty) || 1));
         const leaves = Math.max(1, shape.leaves || 1);
-        const perimeterCm = 2 * (W + H) / 10;
-        const perimeterM = 2 * (W + H) / 1000;
+        const cols = Math.max(1, Math.round(aluNum(item.bayCols) || 1));
+        const rows = Math.max(1, Math.round(aluNum(item.bayRows) || 1));
+        const scope = acc.applyScope || 'all';
+        /* نطاق التطبيق: إطار خارجي · ضرفة · الكل */
+        let perimeterCm;
+        let perimeterM;
+        if (scope === 'frame') {
+            perimeterCm = 2 * (W + H) / 10;
+            perimeterM = 2 * (W + H) / 1000;
+        } else if (scope === 'sash' && shape.family === 'sliding') {
+            const sashW = W / leaves;
+            const sashH = H;
+            perimeterCm = leaves * 2 * (sashW + sashH) / 10;
+            perimeterM = leaves * 2 * (sashW + sashH) / 1000;
+        } else if (scope === 'sash') {
+            perimeterCm = leaves * 2 * (W + H) / 10;
+            perimeterM = leaves * 2 * (W + H) / 1000;
+        } else {
+            perimeterCm = 2 * (W + H) / 10;
+            perimeterM = 2 * (W + H) / 1000;
+        }
         const val = Math.max(0.001, aluNum(acc.equationValue) || 1);
         let q = 0;
         switch (acc.equationType) {
             case 'per_corner':
-                /* زوايا: حلق 4 + كل ضرفة 4 */
-                q = (4 + leaves * 4) * val * qty;
+                if (shape.family === 'facade') q = (4 + Math.max(0, cols - 1) * 2 + Math.max(0, rows - 1) * 2) * val * qty;
+                else q = (4 + (shape.family === 'fixed' ? 0 : leaves * 4)) * val * qty;
                 break;
             case 'per_perimeter_cm':
                 q = Math.ceil(perimeterCm / val) * qty;
@@ -508,7 +683,9 @@
                 q = aluRound(perimeterM * val * qty, 2);
                 break;
             case 'per_leaf':
-                q = leaves * val * qty;
+                if (shape.family === 'facade') q = cols * rows * val * qty;
+                else if (shape.family === 'fixed' && scope === 'sash') q = 0;
+                else q = leaves * val * qty;
                 break;
             case 'per_unit':
                 q = val * qty;
@@ -528,13 +705,15 @@
         return aluAccessories.filter(function (a) {
             if (a.active === false) return false;
             if (a.familyOnly && a.familyOnly !== shape.family) return false;
+            const scope = a.applyScope || 'all';
+            if (scope === 'sash' && (shape.family === 'fixed' || shape.family === 'facade')) return false;
             return true;
         }).map(function (a) {
             const q = calcAccessoryQty(a, item, shape);
             const unit = mode === 'sell' ? aluNum(a.sellPrice) : aluNum(a.purchasePrice);
             return {
                 id: a.id, code: a.code, nameAr: a.nameAr, colorAr: a.colorAr || '',
-                qty: q, unitPrice: unit, total: aluRound(q * unit, 2)
+                qty: q, unitPrice: unit, total: aluRound(q * unit, 2), applyScope: a.applyScope || 'all'
             };
         }).filter(function (a) { return a.qty > 0; });
     }
@@ -564,9 +743,14 @@
         let wireCost = 0;
         let colorCost = 0;
         let billableM2 = 0;
+        const formulaWarnings = [];
 
         items.forEach(function (item, i) {
-            allCuts = allCuts.concat(buildShapeCuts(item, i));
+            const built = shapeCutsWithMeta(item, i);
+            allCuts = allCuts.concat(built.cuts || []);
+            (built.warnings || []).forEach(function (w) {
+                if (formulaWarnings.indexOf(w) < 0) formulaWarnings.push(w);
+            });
             buildItemAccessories(item, est.priceMode).forEach(function (a) {
                 const found = accessories.find(function (x) { return x.code === a.code && x.colorAr === a.colorAr; });
                 if (found) {
@@ -576,6 +760,7 @@
             });
             const g = buildItemGlass(item);
             glassPanels.push(g);
+            if (g.warning && formulaWarnings.indexOf(g.warning) < 0) formulaWarnings.push(g.warning);
             glassCost += g.areaM2 * g.pricePerM2;
             const wr = buildItemWire(item);
             if (wr) { wireRows.push(wr); wireCost += wr.total; }
@@ -585,6 +770,8 @@
             billableM2 += areaBill;
             if (color) colorCost += areaBill * aluNum(color.surchargePerM2);
         });
+
+        const missingParts = allCuts.filter(function (c) { return c.missingPart; }).length;
 
         const weightAdj = 1 + (aluNum(est.weightAdjustPct) / 100);
         const byProfile = {};
@@ -638,6 +825,8 @@
             barsEstimate: Object.keys(byProfile).reduce(function (s, k) { return s + byProfile[k].barsEst; }, 0),
             profilesCost: aluRound(profilesCost, 2),
             accessoriesCost: aluRound(accCost, 2),
+            formulaWarnings: formulaWarnings,
+            missingParts: missingParts,
             laborCost: laborCost,
             units: units,
             subtotal: subtotal,
@@ -974,14 +1163,16 @@
     }
 
     function commitRemnantsFromPlan(result, meta) {
-        if (!result || !aluSettings.saveRemnantsAfterCut) return;
+        if (!result || !aluSettings.saveRemnantsAfterCut) return false;
+        if (result.remnantsCommitted) return false;
         const remnantMin = aluNum(aluSettings.remnantMinMm) || 200;
+        const jobId = (meta && meta.jobId) || result.commitId || '';
         (result.consumedRemnantIds || []).forEach(function (id) {
             const r = aluRemnants.find(function (x) { return x.id === id; });
             if (r) r.used = true;
         });
         (result.plans || []).forEach(function (pl) {
-            (pl.plan.bars || []).forEach(function (b) {
+            (pl.plan.bars || []).forEach(function (b, barIdx) {
                 if (b.remain >= remnantMin) {
                     aluRemnants.push({
                         id: aluId('rem'),
@@ -991,34 +1182,43 @@
                         role: pl.role,
                         lengthMm: b.remain,
                         fromEstimate: (meta && meta.estimateRef) || '',
+                        fromJobId: jobId,
+                        barIndex: barIdx,
                         createdAt: new Date().toISOString(),
                         used: false
                     });
                 }
             });
         });
+        result.remnantsCommitted = true;
+        result.commitId = jobId || result.commitId || aluId('commit');
         aluRemnants = aluRemnants.filter(function (r) { return !r.used; }).slice(-300);
         persistAluminumCuttingCloud(['aluminum_remnants']);
+        return true;
     }
 
     function explainEstimateFormulas(est) {
         const items = (est && (est.items || est.openings)) || [];
         return items.map(function (item, i) {
-            const sys = findSystem(item.profileSystemId) || aluSystems[0];
+            const shape = READY_SHAPES[item.shape] || READY_SHAPES.sliding2;
+            const found = findSystem(item.profileSystemId, shape.family);
+            const sys = found.system;
             const d = dOf(sys);
-            const cuts = buildShapeCuts(item, i);
+            const built = shapeCutsWithMeta(item, i);
             return {
                 item: item.labelAr || ('بند ' + (i + 1)),
-                system: sys ? sys.nameAr : '',
+                system: sys ? sys.nameAr : '—',
+                warnings: (built.warnings || []).concat(found.warning ? [found.warning] : []),
                 deductions: d,
-                cuts: cuts.map(function (c) {
+                cuts: (built.cuts || []).map(function (c) {
                     return {
                         label: c.labelAr,
                         code: c.code,
                         lengthMm: c.lengthMm,
                         qty: c.qty,
                         role: c.role,
-                        sku: c.profileSku
+                        sku: c.profileSku,
+                        missingPart: !!c.missingPart
                     };
                 }),
                 glass: buildItemGlass(item),
@@ -1106,6 +1306,9 @@
         else if (aluActiveTab === 'settings') body = renderAluSettings();
 
         host.innerHTML = nav + '<div class="alu-cut-panel">' + body + '</div>';
+        if (aluActiveTab === 'estimate') {
+            try { toggleAluBayFields(); } catch (e) { /* ignore */ }
+        }
     }
 
     function renderAluDashboard() {
@@ -1206,18 +1409,31 @@
 
         const itemsHtml = (d.items || []).map(function (it, i) {
             const sh = READY_SHAPES[it.shape] || {};
+            const bay = (sh.family === 'facade')
+                ? (' · بايات ' + Math.max(1, aluNum(it.bayCols) || 1) + '×' + Math.max(1, aluNum(it.bayRows) || 1))
+                : '';
             return '<article class="erp-row"><div class="erp-row-main"><strong>' + aluEsc(it.labelAr || sh.nameAr || 'بند') + '</strong>' +
                 '<small>' + aluEsc(sh.nameAr || '') + ' — ' + aluNum(it.widthMm) + '×' + aluNum(it.heightMm) +
-                ' مم × ' + aluNum(it.qty) +
+                ' مم × ' + aluNum(it.qty) + bay +
                 (aluSettings.showHandleHeight && it.handleHeightMm ? ' · مقبض ' + aluNum(it.handleHeightMm) + ' مم' : '') +
                 (it.locationCode ? ' · موقع ' + aluEsc(it.locationCode) : '') +
                 '</small></div>' +
-                '<button type="button" class="erp-row-del" onclick="removeAluItem(' + i + ')" aria-label="حذف"><i class="fas fa-trash"></i></button></article>';
+                '<div class="erp-row-actions">' +
+                '<button type="button" class="nebras-users-btn" onclick="editAluItem(' + i + ')" aria-label="تعديل"><i class="fas fa-pen"></i></button>' +
+                '<button type="button" class="erp-row-del" onclick="removeAluItem(' + i + ')" aria-label="حذف"><i class="fas fa-trash"></i></button>' +
+                '</div></article>';
         }).join('') || '<p class="erp-empty">أضف بنوداً من الأشكال الجاهزة.</p>';
 
         const totals = computeEstimateTotals(d);
+        const warnHtml = (totals.formulaWarnings && totals.formulaWarnings.length)
+            ? '<div class="alu-cut-warn"><strong>تحذيرات دقة:</strong><ul>' +
+              totals.formulaWarnings.map(function (w) { return '<li>' + aluEsc(w) + '</li>'; }).join('') +
+              '</ul>' + (totals.missingParts ? '<p>قطاعات ناقصة في الأدوار: ' + totals.missingParts + ' قطعة</p>' : '') +
+              '</div>'
+            : '';
         return '<div class="alu-cut-form-card">' +
             '<h4><i class="fas fa-ruler-combined"></i> مقايسة — إضافة بنود</h4>' +
+            warnHtml +
             '<div class="erp-form-grid">' +
             '<label class="nebras-field"><span>مرجع</span><input type="text" id="alu-est-ref" value="' + aluEsc(d.ref) + '"></label>' +
             '<label class="nebras-field"><span>العميل</span><input type="text" id="alu-est-customer" value="' + aluEsc(d.customerName) + '"></label>' +
@@ -1231,12 +1447,15 @@
             '<label class="nebras-field"><span>أجور / وحدة</span><input type="number" id="alu-est-labor" value="' + aluNum(d.laborPerUnit) + '"></label>' +
             '</div>' +
             '<div class="alu-cut-subcard"><h5>إضافة بند من الأشكال الجاهزة</h5>' +
+            '<input type="hidden" id="alu-op-edit-idx" value="">' +
             '<div class="erp-form-grid">' +
-            '<label class="nebras-field"><span>الشكل</span><select id="alu-op-shape">' + shapeOpts + '</select></label>' +
+            '<label class="nebras-field"><span>الشكل</span><select id="alu-op-shape" onchange="toggleAluBayFields()">' + shapeOpts + '</select></label>' +
             '<label class="nebras-field"><span>نظام القطاع</span><select id="alu-op-sys">' + sysOpts + '</select></label>' +
             '<label class="nebras-field"><span>العرض مم</span><input type="number" id="alu-op-w" min="200" placeholder="1200"></label>' +
             '<label class="nebras-field"><span>الارتفاع مم</span><input type="number" id="alu-op-h" min="200" placeholder="1400"></label>' +
             '<label class="nebras-field"><span>الكمية</span><input type="number" id="alu-op-qty" min="1" value="1"></label>' +
+            '<label class="nebras-field alu-bay-only" style="display:none"><span>أعمدة باي</span><input type="number" id="alu-op-cols" min="1" value="1"></label>' +
+            '<label class="nebras-field alu-bay-only" style="display:none"><span>صفوف باي</span><input type="number" id="alu-op-rows" min="1" value="1"></label>' +
             '<label class="nebras-field"><span>وصف / موقع</span><input type="text" id="alu-op-label" placeholder="شباك غرفة 1"></label>' +
             '<label class="nebras-field"><span>كود موقع</span><input type="text" id="alu-op-loc" placeholder="A-01"></label>' +
             '<label class="nebras-field"><span>ارتفاع مقبض مم</span><input type="number" id="alu-op-handle" value="50"></label>' +
@@ -1246,7 +1465,8 @@
             '<label class="nebras-field"><span>مع سلك؟</span><select id="alu-op-haswire"><option value="0">لا</option><option value="1">نعم</option></select></label>' +
             '<label class="nebras-field"><span>سلك ثابت</span><select id="alu-op-wirefix"><option value="none">متحرك</option><option value="top">فوق</option><option value="bottom">تحت</option><option value="both">فوق وتحت</option></select></label>' +
             '</div>' +
-            '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="addAluItem()"><i class="fas fa-plus"></i> إضافة البند</button>' +
+            '<button type="button" class="nebras-users-btn nebras-users-btn--primary" id="alu-op-submit" onclick="addAluItem()"><i class="fas fa-plus"></i> إضافة البند</button>' +
+            '<button type="button" class="nebras-users-btn" onclick="clearAluItemForm()">مسح الحقول</button>' +
             '</div>' +
             '<div class="nebras-erp-list">' + itemsHtml + '</div>' +
             '<div class="alu-cut-totals">' +
@@ -1278,21 +1498,37 @@
         aluEstimateDraft.updatedAt = new Date().toISOString();
     }
 
-    function addAluItem() {
-        if (!aluEstimateDraft) aluEstimateDraft = newEstimateDraft();
-        syncEstimateDraftFields();
-        const W = aluNum(aluField('alu-op-w'));
-        const H = aluNum(aluField('alu-op-h'));
-        if (W < 200 || H < 200) { alert('أدخل عرض وارتفاع صحيحين (مم).'); return; }
+    function toggleAluBayFields() {
+        const shape = aluField('alu-op-shape');
+        const show = shape === 'facade_panel' || shape === 'facade_bay';
+        document.querySelectorAll('.alu-bay-only').forEach(function (el) {
+            el.style.display = show ? '' : 'none';
+        });
+        if (shape === 'facade_panel') {
+            const c = document.getElementById('alu-op-cols');
+            const r = document.getElementById('alu-op-rows');
+            if (c && !c.value) c.value = '1';
+            if (r && !r.value) r.value = '1';
+        }
+        /* اقتراح نظام بنفس العائلة */
+        const fam = (READY_SHAPES[shape] || {}).family;
+        if (fam) {
+            const match = aluSystems.find(function (s) { return s.active !== false && s.family === fam; });
+            const sel = document.getElementById('alu-op-sys');
+            if (match && sel) sel.value = match.id;
+        }
+    }
+
+    function readAluItemFromForm() {
         const shape = aluField('alu-op-shape') || 'sliding2';
-        aluEstimateDraft.items = aluEstimateDraft.items || [];
-        aluEstimateDraft.items.push({
-            id: aluId('op'),
+        return {
             shape: shape,
             profileSystemId: aluField('alu-op-sys') || (aluSystems[0] || {}).id,
-            widthMm: W,
-            heightMm: H,
+            widthMm: aluNum(aluField('alu-op-w')),
+            heightMm: aluNum(aluField('alu-op-h')),
             qty: Math.max(1, Math.round(aluNum(aluField('alu-op-qty')) || 1)),
+            bayCols: Math.max(1, Math.round(aluNum(aluField('alu-op-cols')) || 1)),
+            bayRows: Math.max(1, Math.round(aluNum(aluField('alu-op-rows')) || 1)),
             labelAr: aluField('alu-op-label') || (READY_SHAPES[shape] || {}).nameAr || 'بند',
             locationCode: aluField('alu-op-loc'),
             handleHeightMm: aluNum(aluField('alu-op-handle')) || 50,
@@ -1301,8 +1537,72 @@
             wireId: aluField('alu-op-wire'),
             hasWire: aluField('alu-op-haswire') === '1',
             wireFixed: aluField('alu-op-wirefix') || 'none'
+        };
+    }
+
+    function clearAluItemForm() {
+        ['alu-op-w', 'alu-op-h', 'alu-op-label', 'alu-op-loc', 'alu-op-edit-idx'].forEach(function (id) {
+            const el = document.getElementById(id);
+            if (el) el.value = id === 'alu-op-edit-idx' ? '' : '';
         });
+        const qty = document.getElementById('alu-op-qty');
+        if (qty) qty.value = '1';
+        const btn = document.getElementById('alu-op-submit');
+        if (btn) btn.innerHTML = '<i class="fas fa-plus"></i> إضافة البند';
+        toggleAluBayFields();
+    }
+
+    function addAluItem() {
+        if (!aluEstimateDraft) aluEstimateDraft = newEstimateDraft();
+        syncEstimateDraftFields();
+        const row = readAluItemFromForm();
+        if (row.widthMm < 200 || row.heightMm < 200) { alert('أدخل عرض وارتفاع صحيحين (مم).'); return; }
+        const editIdx = aluField('alu-op-edit-idx');
+        aluEstimateDraft.items = aluEstimateDraft.items || [];
+        if (editIdx !== '' && !isNaN(parseInt(editIdx, 10))) {
+            const i = parseInt(editIdx, 10);
+            if (aluEstimateDraft.items[i]) {
+                row.id = aluEstimateDraft.items[i].id;
+                aluEstimateDraft.items[i] = row;
+            } else {
+                row.id = aluId('op');
+                aluEstimateDraft.items.push(row);
+            }
+        } else {
+            row.id = aluId('op');
+            aluEstimateDraft.items.push(row);
+        }
         renderAluminumCuttingPanel();
+    }
+
+    function editAluItem(i) {
+        if (!aluEstimateDraft || !aluEstimateDraft.items || !aluEstimateDraft.items[i]) return;
+        const it = aluEstimateDraft.items[i];
+        const set = function (id, v) {
+            const el = document.getElementById(id);
+            if (el) el.value = v == null ? '' : String(v);
+        };
+        set('alu-op-edit-idx', i);
+        set('alu-op-shape', it.shape || 'sliding2');
+        set('alu-op-sys', it.profileSystemId || '');
+        set('alu-op-w', it.widthMm);
+        set('alu-op-h', it.heightMm);
+        set('alu-op-qty', it.qty || 1);
+        set('alu-op-cols', it.bayCols || 1);
+        set('alu-op-rows', it.bayRows || 1);
+        set('alu-op-label', it.labelAr || '');
+        set('alu-op-loc', it.locationCode || '');
+        set('alu-op-handle', it.handleHeightMm || 50);
+        set('alu-op-glass', it.glassId || '');
+        set('alu-op-color', it.colorId || '');
+        set('alu-op-wire', it.wireId || '');
+        set('alu-op-haswire', it.hasWire ? '1' : '0');
+        set('alu-op-wirefix', it.wireFixed || 'none');
+        toggleAluBayFields();
+        const btn = document.getElementById('alu-op-submit');
+        if (btn) btn.innerHTML = '<i class="fas fa-check"></i> تحديث البند';
+        const card = document.querySelector('.alu-cut-subcard');
+        if (card && card.scrollIntoView) card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }
 
     function removeAluItem(i) {
@@ -1453,8 +1753,17 @@
 
     function saveAluCutJob() {
         if (!requireAluAccess() || !aluCutDraft || !aluCutDraft.lastResult) return;
+        if (aluCutDraft.savedJobId || aluCutDraft.lastResult.remnantsCommitted) {
+            if (typeof showNebrasAdminToast === 'function') {
+                showNebrasAdminToast('هذه الخطة محفوظة مسبقاً — لن تُضاعَف الفضلة', 'ok');
+            } else {
+                alert('هذه الخطة محفوظة مسبقاً — لن تُضاعَف الفضلة.');
+            }
+            return;
+        }
+        const jobId = aluId('cut');
         const job = {
-            id: aluId('cut'),
+            id: jobId,
             estimateId: aluCutDraft.estimateId,
             estimateRef: aluCutDraft.estimateRef,
             customerName: aluCutDraft.customerName,
@@ -1467,7 +1776,8 @@
             createdAt: new Date().toISOString()
         };
         aluCutJobs.push(job);
-        commitRemnantsFromPlan(aluCutDraft.lastResult, { estimateRef: aluCutDraft.estimateRef });
+        commitRemnantsFromPlan(aluCutDraft.lastResult, { estimateRef: aluCutDraft.estimateRef, jobId: jobId });
+        aluCutDraft.savedJobId = jobId;
         aluLog('قطع', 'حفظ خطة ' + (aluCutDraft.estimateRef || '') + ' · عود ' + job.stockBarMm + ' · هدر ' + job.wastePct + '%');
         persistAluminumCuttingCloud(['aluminum_cut_jobs', 'aluminum_remnants', 'aluminum_audit']);
         if (typeof showNebrasAdminToast === 'function') showNebrasAdminToast('تم حفظ الخطة وإضافة الفضلة لبنك إعادة الاستخدام', 'ok');
@@ -1489,9 +1799,13 @@
             }).join('');
             const d = ex.deductions || {};
             return '<section class="alu-cut-form-card"><h4>' + aluEsc(ex.item) + ' <small>' + aluEsc(ex.system) + '</small></h4>' +
+                ((ex.warnings || []).length
+                    ? '<div class="alu-cut-warn"><ul>' + ex.warnings.map(function (w) { return '<li>' + aluEsc(w) + '</li>'; }).join('') + '</ul></div>'
+                    : '') +
                 '<p class="alu-cut-note">ركوب ضرفة ' + aluNum(d.sashOverlapMm) +
                 ' · تخصيم زجاج ' + aluNum(d.glassSashDeductW) + '×' + aluNum(d.glassSashDeductH) +
-                ' · مرد ' + aluNum(d.mullionDeductFull) + ' · زاوية ' + aluNum(d.cutAngle) + '°</p>' +
+                ' · مرد ' + aluNum(d.mullionDeductFull) + ' · زاوية ' + aluNum(d.cutAngle) + '°' +
+                ' · بدل ميتري ' + aluNum(d.miterExtraMm) + '</p>' +
                 '<div class="alu-table-wrap"><table class="alu-table"><thead><tr><th>رمز</th><th>قطعة</th><th>SKU</th><th>طول مم</th><th>كمية</th><th>دور</th></tr></thead><tbody>' +
                 cutRows + '</tbody></table></div>' +
                 '<p>زجاج: ' + (ex.glass ? (ex.glass.widthMm + '×' + ex.glass.heightMm + ' ×' + ex.glass.panels + ' = ' + ex.glass.areaM2 + ' م²') : '—') +
@@ -1736,7 +2050,7 @@
 
     function addAluPart() {
         if (!requireAluAccess()) return;
-        const sys = findSystem(aluField('alu-part-sys'));
+        const sys = getSystem(aluField('alu-part-sys'));
         if (!sys) return;
         const nameAr = aluField('alu-part-name');
         const sku = aluField('alu-part-sku');
@@ -1764,7 +2078,7 @@
     }
 
     function renderAluDeductions() {
-        const sys = findSystem(aluEditSystemId) || aluSystems[0];
+        const sys = getSystem(aluEditSystemId) || aluSystems[0];
         if (!sys) return '<p class="erp-empty">أضف نظام قطاع أولاً.</p>';
         aluEditSystemId = sys.id;
         const d = dOf(sys);
@@ -1782,7 +2096,9 @@
             ['glassFixedDeductH', 'تخصيم زجاج الثابت — ارتفاع'],
             ['wireMovingDeduct', 'تخصيم السلك المتحرك'],
             ['wireFixedDeduct', 'تخصيم السلك الثابت'],
-            ['cutAngle', 'زاوية القص (45 أو 90)']
+            ['cutAngle', 'زاوية القص (45 أو 90)'],
+            ['miterExtraMm', 'بدل زاوية 45° (مم لكل قطعة)'],
+            ['beadInsetMm', 'تخصيم الباكيت من داخل الضرفة']
         ];
         const sysSelect = '<label class="nebras-field"><span>النظام</span><select id="alu-ded-sys" onchange="editAluSystemDeducts(this.value)">' +
             aluSystems.map(function (s) {
@@ -1798,7 +2114,7 @@
 
     function saveAluDeductions() {
         if (!requireAluAccess()) return;
-        const sys = findSystem(aluField('alu-ded-sys') || aluEditSystemId);
+        const sys = getSystem(aluField('alu-ded-sys') || aluEditSystemId);
         if (!sys) return;
         const keys = Object.keys(DEFAULT_DEDUCTIONS);
         sys.deductions = sys.deductions || {};
@@ -1815,6 +2131,7 @@
         const rows = aluAccessories.map(function (a, i) {
             return '<article class="erp-row"><div class="erp-row-main"><strong>' + aluEsc(a.nameAr) + '</strong>' +
                 '<small>' + aluEsc(a.code) + ' · ' + aluEsc(a.equationType) + '=' + aluNum(a.equationValue) +
+                ' · نطاق ' + aluEsc(a.applyScope || 'all') +
                 ' · شراء ' + aluNum(a.purchasePrice) + ' / بيع ' + aluNum(a.sellPrice) +
                 (a.colorAr ? ' · لون ' + aluEsc(a.colorAr) : '') + '</small></div>' +
                 '<button type="button" class="erp-tag" onclick="editAluAccessory(' + i + ')">تعديل</button></article>';
@@ -1836,7 +2153,8 @@
             '<label class="nebras-field"><span>سعر شراء</span><input type="number" id="alu-acc-buy" step="0.01"></label>' +
             '<label class="nebras-field"><span>سعر بيع</span><input type="number" id="alu-acc-sell" step="0.01"></label>' +
             '<label class="nebras-field"><span>لون</span><input type="text" id="alu-acc-color"></label>' +
-            '<label class="nebras-field"><span>عائلة فقط</span><select id="alu-acc-fam"><option value="">الكل</option><option value="hinged">مفصلي</option><option value="sliding">سحاب</option></select></label>' +
+            '<label class="nebras-field"><span>نطاق التطبيق</span><select id="alu-acc-scope"><option value="all">الكل</option><option value="frame">الإطار فقط</option><option value="sash">الضرفة فقط</option></select></label>' +
+            '<label class="nebras-field"><span>عائلة فقط</span><select id="alu-acc-fam"><option value="">الكل</option><option value="hinged">مفصلي</option><option value="sliding">سحاب</option><option value="facade">واجهة</option></select></label>' +
             '</div>' +
             '<div class="erp-form-actions">' +
             '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="saveAluAccessory()">حفظ</button>' +
@@ -1854,7 +2172,8 @@
                 'alu-acc-id': a.id, 'alu-acc-name': a.nameAr, 'alu-acc-code': a.code,
                 'alu-acc-eq': a.equationType, 'alu-acc-val': a.equationValue,
                 'alu-acc-buy': a.purchasePrice, 'alu-acc-sell': a.sellPrice,
-                'alu-acc-color': a.colorAr || '', 'alu-acc-fam': a.familyOnly || ''
+                'alu-acc-color': a.colorAr || '', 'alu-acc-fam': a.familyOnly || '',
+                'alu-acc-scope': a.applyScope || 'all'
             };
             Object.keys(map).forEach(function (id) {
                 const el = document.getElementById(id);
@@ -1877,7 +2196,7 @@
             sellPrice: aluNum(aluField('alu-acc-sell')),
             colorAr: aluField('alu-acc-color'),
             familyOnly: aluField('alu-acc-fam') || '',
-            applyScope: 'all',
+            applyScope: aluField('alu-acc-scope') || 'all',
             active: true
         };
         const idx = aluAccessories.findIndex(function (a) { return a.id === id; });
@@ -2220,7 +2539,66 @@
     global.printAluMillingReport = printAluMillingReport;
     global.setAluEstimateStatus = setAluEstimateStatus;
     global.saveAluEstimateFinance = saveAluEstimateFinance;
+    global.editAluItem = editAluItem;
+    global.clearAluItemForm = clearAluItemForm;
+    global.toggleAluBayFields = toggleAluBayFields;
     global.explainAluEstimateFormulas = explainEstimateFormulas;
+
+    function runAluminumSelfTest() {
+        seedDefaults();
+        ensureFacadeSystemPresent();
+        const report = { ok: true, checks: [], fails: [] };
+        function assert(name, cond, detail) {
+            const row = { name: name, pass: !!cond, detail: detail || '' };
+            report.checks.push(row);
+            if (!cond) { report.ok = false; report.fails.push(row); }
+        }
+        const slideSys = aluSystems.find(function (s) { return s.family === 'sliding'; });
+        const hingeSys = aluSystems.find(function (s) { return s.family === 'hinged'; });
+        const facadeSys = aluSystems.find(function (s) { return s.family === 'facade'; });
+        assert('seed-systems', !!(slideSys && hingeSys && facadeSys), 'sliding+hinged+facade');
+
+        const slidingItem = {
+            shape: 'sliding2', profileSystemId: slideSys.id,
+            widthMm: 2000, heightMm: 1600, qty: 1, glassId: (aluGlass[0] || {}).id
+        };
+        const slideBuilt = shapeCutsWithMeta(slidingItem, 0);
+        const beads = (slideBuilt.cuts || []).filter(function (c) { return c.role === 'bead'; });
+        const beadVert = beads.filter(function (c) { return /رأسي/.test(c.labelAr); });
+        const beadHorz = beads.filter(function (c) { return /أفقي/.test(c.labelAr); });
+        assert('sliding-beads-hv', beadVert.length >= 1 && beadHorz.length >= 1, 'v=' + beadVert.length + ' h=' + beadHorz.length);
+        assert('no-silent-wrong-sku', !(slideBuilt.cuts || []).some(function (c) { return !c.missingPart && !c.profileId && c.role; }), 'all roles resolved or flagged');
+
+        const glass = buildItemGlass(slidingItem);
+        const d = dOf(slideSys);
+        const expectSashW = (2000 / 2) + aluNum(d.sashOverlapMm) - aluNum(d.splitBetweenSashesMm);
+        const expectGW = aluRound(expectSashW - aluNum(d.glassSashDeductW), 1);
+        assert('sliding-glass-from-sash', Math.abs(glass.widthMm - expectGW) < 0.2, glass.widthMm + ' vs ' + expectGW);
+
+        const facadeItem = {
+            shape: 'facade_bay', profileSystemId: facadeSys.id,
+            widthMm: 6000, heightMm: 3000, qty: 1, bayCols: 3, bayRows: 2, glassId: (aluGlass[0] || {}).id
+        };
+        const facadeBuilt = shapeCutsWithMeta(facadeItem, 0);
+        const mullions = (facadeBuilt.cuts || []).filter(function (c) { return c.role === 'mullion'; });
+        assert('facade-mullions', mullions.length >= 1 && mullions[0].qty === 2, 'cols-1=' + (mullions[0] && mullions[0].qty));
+        const fGlass = buildItemGlass(facadeItem);
+        assert('facade-glass-panels', fGlass.panels === 6, String(fGlass.panels));
+
+        const fake = { remnantsCommitted: false, plans: [{ profileId: 'x', profileSku: 'X', profileName: 'X', role: 'frame', plan: { bars: [{ remain: 500 }] } }], consumedRemnantIds: [] };
+        const before = aluRemnants.length;
+        commitRemnantsFromPlan(fake, { estimateRef: 'SELFTEST', jobId: 'self-1' });
+        const mid = aluRemnants.length;
+        commitRemnantsFromPlan(fake, { estimateRef: 'SELFTEST', jobId: 'self-1' });
+        assert('remnant-idempotent', mid > before && aluRemnants.length === mid, 'before=' + before + ' mid=' + mid + ' after=' + aluRemnants.length);
+        /* تنظيف فضلة الاختبار */
+        aluRemnants = aluRemnants.filter(function (r) { return r.fromJobId !== 'self-1'; });
+
+        report.summary = report.ok ? 'PASS ' + report.checks.length + '/' + report.checks.length : 'FAIL ' + report.fails.length + '/' + report.checks.length;
+        return report;
+    }
+
+    global.__nebrasAluSelfTest = runAluminumSelfTest;
 
     /* توافق أزرار قديمة */
     global.addAluOpening = addAluItem;
