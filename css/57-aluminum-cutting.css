@@ -1306,3 +1306,98 @@ body.alu-platform-open #admin-dashboard {
 .alu-part-image-preview {
     margin-top: 0.35rem;
 }
+
+/* hrws212 — بحث مقايسات · شجرة · مخزن · أطقم */
+.alu-est-toolbar {
+    margin-bottom: 0.85rem;
+}
+
+.alu-est-toolbar .erp-form-grid {
+    margin-bottom: 0.35rem;
+}
+
+#alu-est-advanced-host {
+    margin-top: 0.5rem;
+}
+
+.alu-est-tree {
+    display: grid;
+    gap: 0.55rem;
+}
+
+.alu-tree-cust,
+.alu-tree-proj {
+    border: 1px solid var(--alu-border, rgba(13, 40, 64, 0.12));
+    border-radius: 12px;
+    background: linear-gradient(180deg, #ffffff, #f5fafc);
+    padding: 0.35rem 0.65rem 0.65rem;
+}
+
+.alu-tree-cust > summary,
+.alu-tree-proj > summary {
+    cursor: pointer;
+    color: var(--alu-navy, #0d2840);
+    font-weight: 700;
+    padding: 0.45rem 0.2rem;
+    list-style: none;
+}
+
+.alu-tree-cust > summary::-webkit-details-marker,
+.alu-tree-proj > summary::-webkit-details-marker {
+    display: none;
+}
+
+.alu-tree-proj {
+    margin: 0.35rem 0 0.15rem 0.55rem;
+    background: #fff;
+}
+
+.alu-tree-proj .alu-est-grid {
+    margin-top: 0.45rem;
+}
+
+#alu-kit-modal {
+    position: sticky;
+    bottom: 0.75rem;
+    z-index: 5;
+    margin-top: 1rem;
+    border: 1px solid rgba(212, 168, 67, 0.45);
+    box-shadow: 0 12px 28px rgba(13, 40, 64, 0.12);
+}
+
+#alu-kit-list {
+    margin: 0.75rem 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    gap: 0.35rem;
+}
+
+#alu-kit-list li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.45rem;
+    padding: 0.45rem 0.65rem;
+    border-radius: 10px;
+    background: #f4f9fd;
+    border: 1px solid var(--alu-border, rgba(13, 40, 64, 0.1));
+    color: var(--alu-navy, #0d2840);
+    font-size: 0.92rem;
+}
+
+.alu-c128 {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: 0.2rem 0;
+}
+
+#alu-stock-host .alu-table-wrap {
+    margin-top: 0.85rem;
+}
+
+.alu-glass-adv,
+.alu-complete-est-meta {
+    margin-top: 0.55rem;
+}

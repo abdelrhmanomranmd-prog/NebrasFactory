@@ -28,7 +28,7 @@
         underMeterMode: 'round_to_meter',
         priceModeDefault: 'purchase',
         showHandleHeight: true,
-        linkWarehouse: false,
+        linkWarehouse: true,
         autoCompareStocks: true,
         compareStockLengths: [6000, 6500, 7000],
         useRemnantBank: true,
@@ -101,7 +101,8 @@
         door_sliding: { nameAr: 'باب سحاب', family: 'sliding', leaves: 2 },
         facade_panel: { nameAr: 'وحدة واجهة — باي واحد', family: 'facade', leaves: 1 },
         facade_bay: { nameAr: 'واجهة — شبكة بايات (أعمدة×صفوف)', family: 'facade', leaves: 1 },
-        freehand: { nameAr: 'رسم يدوي حر', family: 'hinged', leaves: 1, freehand: true }
+        freehand: { nameAr: 'رسم يدوي حر', family: 'hinged', leaves: 1, freehand: true },
+        pricing_only: { nameAr: 'بند تسعير فقط', family: 'hinged', leaves: 0, pricingOnly: true }
     };
 
     const PART_ROLES = {
@@ -586,6 +587,9 @@
     }
 
     function buildShapeCuts(item, itemIndex) {
+        if (item.pricingOnly || item.shape === 'pricing_only') {
+            return { cuts: [], warnings: [] };
+        }
         const shape = resolveItemShape(item);
         const found = findSystem(item.profileSystemId, shape.family);
         const sys = found.system;
@@ -778,12 +782,33 @@
         }
 
         const areaM2 = aluRound((gW / 1000) * (gH / 1000) * panels, 3);
-        const gl = aluGlass.find(function (g) { return g.id === item.glassId; }) || aluGlass[0];
+        const gl = aluGlass.find(function (g) { return g.id === (item.glassFrontId || item.glassId); }) || aluGlass[0];
+        const glBack = aluGlass.find(function (g) { return g.id === (item.glassBackId || item.glassId); }) || gl;
+        const isDouble = (item.glassMode === 'double');
+        let pricePerM2 = gl ? aluNum(gl.pricePerM2) : 45;
+        let nameAr = gl ? gl.nameAr : 'زجاج';
+        if (isDouble) {
+            pricePerM2 = aluNum(gl && gl.pricePerM2) + aluNum(glBack && glBack.pricePerM2);
+            nameAr = (gl ? gl.nameAr : 'أمامي') + ' + ' + (glBack ? glBack.nameAr : 'خلفي') +
+                ' · فراغ ' + Math.max(6, aluNum(item.glassSpacerMm) || 12) + 'مم';
+        }
+        /* جورجيا من طبقة الإكمال إن وُجدت على البند */
+        if (item.georgianSurcharge) pricePerM2 += aluNum(item.georgianSurcharge);
+        else if (item.georgianId && typeof globalThis !== 'undefined' && globalThis.getAluminumGeorgian) {
+            const geos = globalThis.getAluminumGeorgian() || [];
+            const geo = geos.find(function (x) { return x.id === item.georgianId; });
+            if (geo) {
+                pricePerM2 += aluNum(geo.surchargePerM2);
+                nameAr += ' · ' + geo.nameAr;
+            }
+        }
         return {
             widthMm: gW, heightMm: gH, panels: panels, areaM2: areaM2,
             thicknessMm: gl ? aluNum(gl.thicknessMm) : 6,
-            pricePerM2: gl ? aluNum(gl.pricePerM2) : 45,
-            nameAr: gl ? gl.nameAr : 'زجاج',
+            pricePerM2: pricePerM2,
+            nameAr: nameAr,
+            layers: isDouble ? 2 : 1,
+            spacerMm: isDouble ? Math.max(6, aluNum(item.glassSpacerMm) || 12) : 0,
             openingLabel: item.labelAr || '',
             warning: found.warning || ''
         };
@@ -869,7 +894,7 @@
     function buildItemAccessories(item, priceMode) {
         const shape = resolveItemShape(item);
         const mode = priceMode || aluSettings.priceModeDefault || 'purchase';
-        return aluAccessories.filter(function (a) {
+        let rows = aluAccessories.filter(function (a) {
             if (a.active === false) return false;
             if (a.familyOnly && a.familyOnly !== shape.family) return false;
             const scope = a.applyScope || 'all';
@@ -880,9 +905,23 @@
             const unit = mode === 'sell' ? aluNum(a.sellPrice) : aluNum(a.purchasePrice);
             return {
                 id: a.id, code: a.code, nameAr: a.nameAr, colorAr: a.colorAr || '',
-                qty: q, unitPrice: unit, total: aluRound(q * unit, 2), applyScope: a.applyScope || 'all'
+                qty: q, unitPrice: unit, total: aluRound(q * unit, 2), applyScope: a.applyScope || 'all',
+                headerAr: a.headerAr || a.nameAr, subHeaderAr: a.subHeaderAr || a.nameAr
             };
         }).filter(function (a) { return a.qty > 0; });
+        if (typeof globalThis !== 'undefined' && typeof globalThis.aluMergePartKitsIntoAccessories === 'function') {
+            rows = globalThis.aluMergePartKitsIntoAccessories(item, rows, mode);
+        }
+        const merged = [];
+        rows.forEach(function (a) {
+            const key = (a.subHeaderAr || a.nameAr) + '|' + (a.colorAr || '');
+            const found = merged.find(function (x) { return (x.subHeaderAr || x.nameAr) + '|' + (x.colorAr || '') === key; });
+            if (found) {
+                found.qty = aluRound(found.qty + a.qty, 2);
+                found.total = aluRound(found.qty * found.unitPrice, 2);
+            } else merged.push(Object.assign({}, a));
+        });
+        return merged;
     }
 
     function billableAreaM2(Wmm, Hmm) {
@@ -913,13 +952,27 @@
         const formulaWarnings = [];
 
         items.forEach(function (item, i) {
+            if (item.pricingOnly || item.shape === 'pricing_only') {
+                const qty = Math.max(1, Math.round(aluNum(item.qty) || 1));
+                const fixed = aluNum(item.fixedPrice) * qty;
+                glassCost += 0;
+                billableM2 += billableAreaM2(item.widthMm, item.heightMm) * qty;
+                accessories.push({
+                    id: 'pricing-' + i, code: 'PRICE', nameAr: item.labelAr || 'بند تسعير',
+                    colorAr: '', qty: qty, unitPrice: aluNum(item.fixedPrice),
+                    total: aluRound(fixed, 2), applyScope: 'pricing'
+                });
+                return;
+            }
             const built = shapeCutsWithMeta(item, i);
             allCuts = allCuts.concat(built.cuts || []);
             (built.warnings || []).forEach(function (w) {
                 if (formulaWarnings.indexOf(w) < 0) formulaWarnings.push(w);
             });
             buildItemAccessories(item, est.priceMode).forEach(function (a) {
-                const found = accessories.find(function (x) { return x.code === a.code && x.colorAr === a.colorAr; });
+                const found = accessories.find(function (x) {
+                    return (x.subHeaderAr || x.code) === (a.subHeaderAr || a.code) && x.colorAr === a.colorAr;
+                });
                 if (found) {
                     found.qty = aluRound(found.qty + a.qty, 2);
                     found.total = aluRound(found.qty * found.unitPrice, 2);
@@ -936,6 +989,11 @@
             const areaBill = billableAreaM2(item.widthMm, item.heightMm) * qty;
             billableM2 += areaBill;
             if (color) colorCost += areaBill * aluNum(color.surchargePerM2);
+            /* دهان على الوزن التقريبي إن وُجد على المقايسة */
+            if (aluNum(est.paintPricePerKg) > 0) {
+                /* يُحسب لاحقاً من أوزان القطاعات عبر surcharge تقريبي على المساحة */
+                colorCost += areaBill * (aluNum(est.paintPricePerKg) * 0.15);
+            }
         });
 
         const missingParts = allCuts.filter(function (c) { return c.missingPart; }).length;
@@ -1400,7 +1458,12 @@
             ref: 'ALU-' + new Date().toISOString().slice(0, 10).replace(/-/g, '') + '-' + String(aluEstimates.length + 1).padStart(3, '0'),
             customerName: '',
             projectName: '',
+            phone: '',
+            deliveryDate: '',
+            paintType: 'none',
+            paintPricePerKg: 0,
             notes: '',
+            supplierInvoices: { aluminum: 0, accessories: 0, glass: 0, supplierName: '', aluminumInvoiceNo: '' },
             priceMode: aluSettings.priceModeDefault || 'purchase',
             stockBarMm: aluSettings.stockBarMm,
             kerfMm: aluSettings.kerfMm,
@@ -2096,6 +2159,13 @@
         const wireOpts = '<option value="">—</option>' + aluWire.map(function (w) {
             return '<option value="' + aluEsc(w.id) + '">' + aluEsc(w.nameAr) + '</option>';
         }).join('');
+        const geos = (typeof globalThis !== 'undefined' && typeof globalThis.getAluminumGeorgian === 'function')
+            ? (globalThis.getAluminumGeorgian() || [])
+            : [];
+        const geoOpts = '<option value="">بدون جورجيا</option>' + geos.map(function (g) {
+            return '<option value="' + aluEsc(g.id) + '">' + aluEsc(g.nameAr) +
+                (g.surchargePerM2 ? ' (+' + aluNum(g.surchargePerM2) + ')' : '') + '</option>';
+        }).join('');
 
         const itemsHtml = (d.items || []).map(function (it, i) {
             const sh = resolveItemShape(it);
@@ -2132,6 +2202,14 @@
             '<label class="nebras-field"><span>مرجع</span><input type="text" id="alu-est-ref" value="' + aluEsc(d.ref) + '"></label>' +
             '<label class="nebras-field"><span>العميل</span><input type="text" id="alu-est-customer" value="' + aluEsc(d.customerName) + '"></label>' +
             '<label class="nebras-field"><span>المشروع</span><input type="text" id="alu-est-project" value="' + aluEsc(d.projectName) + '"></label>' +
+            '<label class="nebras-field"><span>هاتف العميل</span><input type="tel" id="alu-est-phone" value="' + aluEsc(d.phone || '') + '" placeholder="05xxxxxxxx"></label>' +
+            '<label class="nebras-field"><span>تاريخ التسليم</span><input type="date" id="alu-est-delivery" value="' + aluEsc((d.deliveryDate || '').slice(0, 10)) + '"></label>' +
+            '<label class="nebras-field"><span>نوع الدهان</span><select id="alu-est-paint">' +
+            '<option value="none"' + ((d.paintType || 'none') === 'none' ? ' selected' : '') + '>بدون</option>' +
+            '<option value="powder"' + (d.paintType === 'powder' ? ' selected' : '') + '>بوردري</option>' +
+            '<option value="wood"' + (d.paintType === 'wood' ? ' selected' : '') + '>خشامونيوم</option>' +
+            '<option value="anodize"' + (d.paintType === 'anodize' ? ' selected' : '') + '>أنودة</option></select></label>' +
+            '<label class="nebras-field"><span>سعر دهان / كغ</span><input type="number" id="alu-est-paint-price" value="' + aluNum(d.paintPricePerKg) + '" step="0.1"></label>' +
             '<label class="nebras-field"><span>سعر إكسسوار</span><select id="alu-est-pricemode">' +
             '<option value="purchase"' + (d.priceMode !== 'sell' ? ' selected' : '') + '>شراء</option>' +
             '<option value="sell"' + (d.priceMode === 'sell' ? ' selected' : '') + '>بيع</option></select></label>' +
@@ -2174,6 +2252,14 @@
             '<label class="nebras-field"><span>سلك</span><select id="alu-op-wire">' + wireOpts + '</select></label>' +
             '<label class="nebras-field"><span>مع سلك؟</span><select id="alu-op-haswire"><option value="0">لا</option><option value="1">نعم</option></select></label>' +
             '<label class="nebras-field"><span>سلك ثابت</span><select id="alu-op-wirefix"><option value="none">متحرك</option><option value="top">فوق</option><option value="bottom">تحت</option><option value="both">فوق وتحت</option></select></label>' +
+            '<label class="nebras-field"><span>تركيب الزجاج</span><select id="alu-op-glass-mode" onchange="toggleAluGlassModeFields()">' +
+            '<option value="single">سينجل</option><option value="double">دبل (أمامي+خلفي+فراغ)</option></select></label>' +
+            '<label class="nebras-field alu-dbl-only" style="display:none"><span>زجاج أمامي</span><select id="alu-op-glass-front">' + glassOpts + '</select></label>' +
+            '<label class="nebras-field alu-dbl-only" style="display:none"><span>زجاج خلفي</span><select id="alu-op-glass-back">' + glassOpts + '</select></label>' +
+            '<label class="nebras-field alu-dbl-only" style="display:none"><span>فراغ مم</span><input type="number" id="alu-op-spacer" value="12" min="6"></label>' +
+            '<label class="nebras-field"><span>جورجيا</span><select id="alu-op-georgian">' + geoOpts + '</select></label>' +
+            '<label class="nebras-field"><span>بند تسعير فقط؟</span><select id="alu-op-pricing-only"><option value="0">لا — يخصم ويُقطع</option><option value="1">نعم — تسعير بلا تقطيع</option></select></label>' +
+            '<label class="nebras-field"><span>سعر بند ثابت</span><input type="number" id="alu-op-fixed-price" value="0" step="0.01"></label>' +
             '</div>' +
             '<button type="button" class="nebras-users-btn nebras-users-btn--primary" id="alu-op-submit" onclick="addAluItem()"><i class="fas fa-plus"></i> إضافة البند</button>' +
             '<button type="button" class="nebras-users-btn" onclick="clearAluItemForm()">مسح الحقول</button>' +
@@ -2202,12 +2288,23 @@
         aluEstimateDraft.ref = aluField('alu-est-ref') || aluEstimateDraft.ref;
         aluEstimateDraft.customerName = aluField('alu-est-customer');
         aluEstimateDraft.projectName = aluField('alu-est-project');
+        if (document.getElementById('alu-est-phone')) aluEstimateDraft.phone = aluField('alu-est-phone');
+        if (document.getElementById('alu-est-delivery')) aluEstimateDraft.deliveryDate = aluField('alu-est-delivery');
+        if (document.getElementById('alu-est-paint')) aluEstimateDraft.paintType = aluField('alu-est-paint') || 'none';
+        if (document.getElementById('alu-est-paint-price')) aluEstimateDraft.paintPricePerKg = aluNum(aluField('alu-est-paint-price'));
         aluEstimateDraft.priceMode = aluField('alu-est-pricemode') || 'purchase';
         aluEstimateDraft.stockBarMm = aluNum(aluField('alu-est-stock')) || aluSettings.stockBarMm;
         aluEstimateDraft.kerfMm = aluNum(aluField('alu-est-kerf'));
         aluEstimateDraft.weightAdjustPct = aluNum(aluField('alu-est-wadj'));
         aluEstimateDraft.laborPerUnit = aluNum(aluField('alu-est-labor')) || 80;
         aluEstimateDraft.updatedAt = new Date().toISOString();
+    }
+
+    function toggleAluGlassModeFields() {
+        const show = aluField('alu-op-glass-mode') === 'double';
+        document.querySelectorAll('.alu-dbl-only').forEach(function (el) {
+            el.style.display = show ? '' : 'none';
+        });
     }
 
     function toggleAluBayFields() {
@@ -2220,6 +2317,7 @@
         document.querySelectorAll('.alu-fh-only').forEach(function (el) {
             el.style.display = showFh ? '' : 'none';
         });
+        toggleAluGlassModeFields();
         if (shape === 'facade_panel') {
             const c = document.getElementById('alu-op-cols');
             const r = document.getElementById('alu-op-rows');
@@ -2305,7 +2403,14 @@
             colorId: aluField('alu-op-color'),
             wireId: aluField('alu-op-wire'),
             hasWire: aluField('alu-op-haswire') === '1',
-            wireFixed: aluField('alu-op-wirefix') || 'none'
+            wireFixed: aluField('alu-op-wirefix') || 'none',
+            glassMode: aluField('alu-op-glass-mode') || 'single',
+            glassFrontId: aluField('alu-op-glass-front') || aluField('alu-op-glass'),
+            glassBackId: aluField('alu-op-glass-back') || aluField('alu-op-glass'),
+            glassSpacerMm: aluNum(aluField('alu-op-spacer')) || 12,
+            georgianId: aluField('alu-op-georgian') || '',
+            pricingOnly: aluField('alu-op-pricing-only') === '1' || shape === 'pricing_only',
+            fixedPrice: aluNum(aluField('alu-op-fixed-price'))
         };
     }
 
@@ -2367,6 +2472,13 @@
         set('alu-op-wire', it.wireId || '');
         set('alu-op-haswire', it.hasWire ? '1' : '0');
         set('alu-op-wirefix', it.wireFixed || 'none');
+        set('alu-op-glass-mode', it.glassMode || 'single');
+        set('alu-op-glass-front', it.glassFrontId || it.glassId || '');
+        set('alu-op-glass-back', it.glassBackId || it.glassId || '');
+        set('alu-op-spacer', it.glassSpacerMm || 12);
+        set('alu-op-georgian', it.georgianId || '');
+        set('alu-op-pricing-only', it.pricingOnly || it.shape === 'pricing_only' ? '1' : '0');
+        set('alu-op-fixed-price', it.fixedPrice || 0);
         if (it.freehand) {
             set('alu-fh-family', it.freehand.family || 'hinged');
             set('alu-fh-kind', it.freehand.kind || 'window');
@@ -2475,6 +2587,7 @@
             weightAdjustPct: aluCutDraft.weightAdjustPct
         });
         aluCutDraft.lastResult = result;
+        try { global.__aluLastCutResult = result; } catch (e) { /* ignore */ }
 
         const plansHtml = result.plans.map(function (pl) {
             const groupsHtml = pl.plan.groups.map(function (g) {
@@ -3422,7 +3535,7 @@
         });
         html += '</table>';
         (aluEstimateDraft.items || []).forEach(function (it) {
-            html += '<h2>' + aluEsc(it.labelAr || (READY_SHAPES[it.shape] || {}).nameAr || 'بند') + '</h2>' + aluItemDrawingsHtml(it, false);
+            html += '<h2>' + aluEsc(it.labelAr || resolveItemShape(it).nameAr || 'بند') + '</h2>' + aluItemDrawingsHtml(it, false);
         });
         html += '<p>الإجمالي شامل الضريبة: ' + t.total + ' ' + aluSettings.currencyLabel + '</p>';
         openPrintWindow('مقايسة', html);
@@ -3439,7 +3552,7 @@
             '<p class="meta">' + aluEsc(est.ref || '') + ' — ' + aluEsc(est.customerName || '') + ' / ' + aluEsc(est.projectName || '') +
             '</p><p class="meta">كل رسم محسوب من التخصيمات الفعلية للنظام: حلق · ضرفة · زجاج · واجهة — للمقاول والمهندس والورشة.</p>';
         (est.items || []).forEach(function (it, i) {
-            const sh = READY_SHAPES[it.shape] || {};
+            const sh = resolveItemShape(it);
             const g = buildItemGlass(it);
             const cuts = shapeCutsWithMeta(it, i);
             html += '<h2>بند ' + (i + 1) + ' — ' + aluEsc(it.labelAr || sh.nameAr || '') +
@@ -3617,6 +3730,7 @@
     global.editAluItem = editAluItem;
     global.clearAluItemForm = clearAluItemForm;
     global.toggleAluBayFields = toggleAluBayFields;
+    global.toggleAluGlassModeFields = toggleAluGlassModeFields;
     global.refreshAluFreehandPreview = refreshAluFreehandPreview;
     global.aluReadPartImage = aluReadPartImage;
     global.resolveItemShape = resolveItemShape;
@@ -3707,6 +3821,32 @@
         };
         const fhDoorCuts = shapeCutsWithMeta(fhDoor, 0);
         assert('freehand-door-threshold', (fhDoorCuts.cuts || []).some(function (c) { return c.role === 'threshold'; }), 'threshold');
+
+        const dblGlass = buildItemGlass({
+            shape: 'sliding2', profileSystemId: slideSys.id,
+            widthMm: 2000, heightMm: 1400, qty: 1,
+            glassMode: 'double',
+            glassFrontId: (aluGlass[0] || {}).id,
+            glassBackId: (aluGlass[0] || {}).id,
+            glassSpacerMm: 12,
+            glassId: (aluGlass[0] || {}).id
+        });
+        assert('glass-double-layers', dblGlass.layers === 2 && dblGlass.spacerMm === 12 && dblGlass.pricePerM2 > 0, String(dblGlass.layers));
+        const priceOnlyCuts = buildShapeCuts({
+            shape: 'pricing_only', pricingOnly: true,
+            widthMm: 1000, heightMm: 1000, qty: 1, fixedPrice: 250,
+            profileSystemId: slideSys.id
+        });
+        assert('pricing-only-no-cuts', priceOnlyCuts && (priceOnlyCuts.cuts || []).length === 0, String((priceOnlyCuts.cuts || []).length));
+        const priceTot = computeEstimateTotals({
+            items: [{
+                shape: 'pricing_only', pricingOnly: true, widthMm: 1000, heightMm: 1000,
+                qty: 2, fixedPrice: 100, labelAr: 'تركيب'
+            }],
+            priceMode: 'purchase', laborPerUnit: 0, stockBarMm: 6500, kerfMm: 5, weightAdjustPct: 0
+        });
+        assert('pricing-only-totals', priceTot.accessoriesCost >= 200, String(priceTot.accessoriesCost));
+        assert('link-warehouse-default', aluSettings.linkWarehouse !== false, String(aluSettings.linkWarehouse));
 
         report.summary = report.ok ? 'PASS ' + report.checks.length + '/' + report.checks.length : 'FAIL ' + report.fails.length + '/' + report.checks.length;
         return report;

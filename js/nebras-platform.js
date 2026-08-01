@@ -28281,6 +28281,16 @@
             }, set: function(v) {
                 if (typeof setAluminumRemnantsFromCloud === 'function') setAluminumRemnantsFromCloud(v);
             }},
+            { key: 'aluminum_stock', get: function() {
+                return typeof getAluminumStock === 'function' ? getAluminumStock() : [];
+            }, set: function(v) {
+                if (typeof setAluminumStockFromCloud === 'function') setAluminumStockFromCloud(v);
+            }},
+            { key: 'aluminum_georgian', get: function() {
+                return typeof getAluminumGeorgian === 'function' ? getAluminumGeorgian() : [];
+            }, set: function(v) {
+                if (typeof setAluminumGeorgianFromCloud === 'function') setAluminumGeorgianFromCloud(v);
+            }},
             { key: 'aluminum_audit', get: function() {
                 return typeof getAluminumAudit === 'function' ? getAluminumAudit() : [];
             }, set: function(v) {
@@ -28307,7 +28317,7 @@
             'visitor_icons',
             'aluminum_profiles', 'aluminum_systems', 'aluminum_estimates', 'aluminum_cut_jobs',
             'aluminum_accessories', 'aluminum_glass', 'aluminum_wire', 'aluminum_colors',
-            'aluminum_remnants', 'aluminum_audit'
+            'aluminum_remnants', 'aluminum_stock', 'aluminum_georgian', 'aluminum_audit'
         ];
 
         function nebrasChromePayloadIsEmpty(storeKey, payload) {
@@ -29289,7 +29299,7 @@
             'legal_correspondence', 'legal_activity', 'legal_notif_settings',
             'aluminum_profiles', 'aluminum_systems', 'aluminum_estimates', 'aluminum_cut_jobs',
             'aluminum_cut_settings', 'aluminum_accessories', 'aluminum_glass', 'aluminum_wire', 'aluminum_colors',
-            'aluminum_remnants', 'aluminum_audit',
+            'aluminum_remnants', 'aluminum_stock', 'aluminum_georgian', 'aluminum_audit',
             'nebras_cloud_snapshots', 'nebras_platform_integrity'
         ];
 
