@@ -73,6 +73,7 @@
     let aluStock = [];
     let aluSettings = Object.assign({}, DEFAULT_SETTINGS);
     let aluActiveTab = 'dashboard';
+    let aluNavStack = [];
     let aluEstimateDraft = null;
     let aluCutDraft = null;
     let aluDataReady = false;
@@ -1604,14 +1605,64 @@
             el.setAttribute('aria-hidden', 'true');
         }
         document.body.classList.remove('alu-platform-open');
+        aluNavStack = [];
+        /* العودة للداشبورد مع الإبقاء على الجلسة — بدون تسجيل خروج */
+        const admin = typeof currentAdmin !== 'undefined' ? currentAdmin : null;
         const dash = document.getElementById('admin-dashboard');
-        if (dash && typeof currentAdmin !== 'undefined' && currentAdmin) {
+        if (dash && admin) {
             dash.classList.add('show');
             dash.removeAttribute('hidden');
             dash.setAttribute('aria-hidden', 'false');
+            if (typeof revealPlatformLayer === 'function') {
+                try { revealPlatformLayer('admin-dashboard'); } catch (e2) { /* ignore */ }
+            }
+            if (typeof renderDashboardTiles === 'function') {
+                try { renderDashboardTiles(); } catch (e3) { /* ignore */ }
+            }
+            if (typeof renderDashboardCommandShell === 'function') {
+                try { renderDashboardCommandShell(admin); } catch (e4) { /* ignore */ }
+            }
         }
-        if (typeof showNebrasAdminToast === 'function') showNebrasAdminToast('عودة لداشبورد الألومنيوم', 'ok');
+        if (typeof showNebrasAdminToast === 'function') {
+            showNebrasAdminToast('عدتِ للداشبورد — جلستك ما زالت مفتوحة', 'ok');
+        }
         if (typeof syncPlatformInteractionLayers === 'function') syncPlatformInteractionLayers();
+    }
+
+    function updateAluBackButton() {
+        const label = document.getElementById('alu-ws-back-label');
+        const btn = document.getElementById('alu-ws-back-btn');
+        if (!label || !btn) return;
+        let text = 'الداشبورد';
+        let title = 'العودة لداشبورد الإدارة — بدون تسجيل خروج';
+        if (aluNavStack.length) {
+            const prev = aluNavStack[aluNavStack.length - 1];
+            const prevMeta = ALU_NAV_GROUPS.reduce(function (acc, g) { return acc.concat(g.items); }, [])
+                .find(function (t) { return t.id === prev; });
+            text = 'رجوع' + (prevMeta ? (' · ' + prevMeta.label) : '');
+            title = 'رجوع للقائمة السابقة — الجلسة محفوظة';
+        } else if (aluActiveTab !== 'dashboard') {
+            text = 'لوحة التخصيمات';
+            title = 'رجوع للوحة التخصيمات — بدون تسجيل خروج';
+        }
+        label.textContent = text;
+        btn.setAttribute('title', title);
+        btn.setAttribute('aria-label', title);
+    }
+
+    function goBackAluminumCutting() {
+        if (aluNavStack.length) {
+            const prev = aluNavStack.pop();
+            aluActiveTab = prev || 'dashboard';
+            renderAluminumCuttingPanel();
+            return;
+        }
+        if (aluActiveTab !== 'dashboard') {
+            aluActiveTab = 'dashboard';
+            renderAluminumCuttingPanel();
+            return;
+        }
+        closeAluminumCuttingWorkspace();
     }
 
     function paintAluWorkspaceChrome() {
@@ -1658,7 +1709,9 @@
     function openAluminumCutting(tab) {
         if (!requireAluAccess()) return;
         if (!aluDataReady) hydrateAluminumCuttingLocal();
+        aluNavStack = [];
         if (tab) aluActiveTab = tab;
+        else if (!aluActiveTab) aluActiveTab = 'dashboard';
         if (!showAluminumCuttingShell()) return;
         renderAluminumCuttingPanel();
         if (typeof odooReadThroughPanel === 'function') {
@@ -1666,8 +1719,14 @@
         }
     }
 
-    function setAluTab(tab) {
-        aluActiveTab = tab || 'dashboard';
+    function setAluTab(tab, opts) {
+        opts = opts || {};
+        const next = tab || 'dashboard';
+        if (!opts.replace && aluActiveTab && aluActiveTab !== next) {
+            aluNavStack.push(aluActiveTab);
+            if (aluNavStack.length > 24) aluNavStack.shift();
+        }
+        aluActiveTab = next;
         renderAluminumCuttingPanel();
     }
 
@@ -1699,6 +1758,7 @@
         if (aluActiveTab === 'estimate') {
             try { toggleAluBayFields(); } catch (e) { /* ignore */ }
         }
+        updateAluBackButton();
     }
 
     const ALU_STATUS = {
@@ -4236,6 +4296,7 @@
 
     global.openAluminumCutting = openAluminumCutting;
     global.closeAluminumCuttingWorkspace = closeAluminumCuttingWorkspace;
+    global.goBackAluminumCutting = goBackAluminumCutting;
     global.showAluminumCuttingShell = showAluminumCuttingShell;
     global.setAluCutTab = setAluTab;
     global.newAluEstimate = newAluEstimate;

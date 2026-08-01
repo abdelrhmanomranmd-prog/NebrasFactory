@@ -93,25 +93,63 @@
 }
 
 #aluminum-cutting .alu-ws-topbar {
-    background: rgba(255, 255, 255, 0.92);
-    border-bottom: 1px solid var(--alu-border);
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    padding: 12px 16px !important;
+    background: #ffffff !important;
+    color: #0d2840 !important;
+    border-bottom: 1px solid rgba(13, 40, 64, 0.1) !important;
+    position: relative !important;
+    z-index: 2 !important;
     backdrop-filter: blur(10px);
 }
 
-#aluminum-cutting .alu-ws-topbar .hr-ws-brand strong,
+#aluminum-cutting .alu-ws-topbar .hr-ws-brand strong {
+    color: #0d2840 !important;
+}
+
+#aluminum-cutting .alu-ws-back,
 #aluminum-cutting .alu-ws-topbar .hr-ws-back {
-    color: var(--alu-navy);
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 0.4rem !important;
+    border: 1px solid rgba(21, 94, 148, 0.28) !important;
+    background: linear-gradient(180deg, #f0f9ff, #e0f2fe) !important;
+    color: #0d2840 !important;
+    border-radius: 999px !important;
+    padding: 0.5rem 0.95rem !important;
+    font-size: 0.84rem !important;
+    font-weight: 800 !important;
+    cursor: pointer !important;
+    white-space: nowrap !important;
+    box-shadow: 0 4px 12px rgba(21, 94, 148, 0.1);
+}
+
+#aluminum-cutting .alu-ws-back:hover,
+#aluminum-cutting .alu-ws-topbar .hr-ws-back:hover {
+    background: linear-gradient(180deg, #e0f2fe, #bae6fd) !important;
+    border-color: rgba(14, 165, 233, 0.55) !important;
+}
+
+#aluminum-cutting .alu-ws-back i {
+    color: #155e94 !important;
 }
 
 #aluminum-cutting .alu-ws-topbar .hr-ws-brand small {
-    color: var(--alu-muted);
+    color: #5a6b7a !important;
 }
 
 #aluminum-cutting .alu-ws-topbar .hr-ws-user-pill {
     background: linear-gradient(135deg, rgba(201, 162, 39, 0.18), rgba(56, 189, 248, 0.12));
-    color: var(--alu-navy);
+    color: #0d2840 !important;
     border: 1px solid rgba(201, 162, 39, 0.28);
     font-weight: 700;
+}
+
+#aluminum-cutting .alu-ws-topbar .hr-ws-close {
+    color: #4a5a6a !important;
+    background: #fff !important;
 }
 
 #aluminum-cutting .alu-ws-content {
