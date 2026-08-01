@@ -74,6 +74,21 @@
     let aluCutDraft = null;
     let aluDataReady = false;
     let aluEditSystemId = null;
+    let aluSystemsPartRole = 'frame';
+
+    const PART_ROLE_ORDER = ['frame', 'bar', 'sash', 'bead', 'meeting', 'mullion', 'box', 'flat', 'threshold', 'cladding', 'knife', 'wireFrame'];
+
+    const LIP_TYPES = {
+        none: 'بدون شفة',
+        with_bar: 'ببار منه فيه',
+        attachable: 'بيركب له بار'
+    };
+
+    const GLASS_KINDS = {
+        any: 'غير محدد',
+        single: 'سينجل',
+        double: 'دبل'
+    };
 
     const READY_SHAPES = {
         casement: { nameAr: 'شباك مفصلي', family: 'hinged', leaves: 1 },
@@ -92,8 +107,8 @@
         frame: 'حلوق',
         bar: 'بارات',
         sash: 'ضرف',
-        bead: 'باكيت',
-        meeting: 'سقاس',
+        bead: 'باكيتات',
+        meeting: 'سقاسات',
         mullion: 'مرد',
         box: 'علب',
         flat: 'فلتات',
@@ -184,6 +199,92 @@
         return true;
     }
 
+    function ensureMarketCatalogPresent() {
+        const catalog = [
+            {
+                id: 'sys-ig-mass',
+                nameAr: 'آي جي ماس IG Mass',
+                family: 'hinged',
+                cutAngle: 45,
+                tracksCount: 0,
+                deductions: Object.assign({}, DEFAULT_DEDUCTIONS),
+                parts: [
+                    { id: 'ig-fr', role: 'frame', nameAr: 'حلق آي جي ماس', sku: 'IG-FR-01', thicknessMm: 45, weightKgPerM: 0.98, pricePerKg: 18, lipType: 'with_bar', lipThicknessMm: 20, withPackage: false, glassKind: 'any', disableLastBarRemnant: false, active: true },
+                    { id: 'ig-sh', role: 'sash', nameAr: 'ضرفة آي جي ماس', sku: 'IG-SH-01', thicknessMm: 45, weightKgPerM: 0.74, pricePerKg: 18, withPackage: false, glassKind: 'any', disableLastBarRemnant: true, active: true },
+                    { id: 'ig-bd', role: 'bead', nameAr: 'باكيت آي جي', sku: 'IG-BD-01', thicknessMm: 18, weightKgPerM: 0.26, pricePerKg: 18, glassKind: 'any', withPackage: false, disableLastBarRemnant: false, active: true }
+                ],
+                active: true
+            },
+            {
+                id: 'sys-alsaad',
+                nameAr: 'السعد — مفصلي',
+                family: 'hinged',
+                cutAngle: 45,
+                tracksCount: 0,
+                deductions: Object.assign({}, DEFAULT_DEDUCTIONS),
+                parts: [
+                    { id: 'as-fr', role: 'frame', nameAr: 'حلق السعد', sku: 'AS-FR-01', thicknessMm: 45, weightKgPerM: 1.0, pricePerKg: 18, lipType: 'attachable', lipThicknessMm: 18, withPackage: false, glassKind: 'any', disableLastBarRemnant: false, active: true },
+                    { id: 'as-sh', role: 'sash', nameAr: 'ضرفة السعد', sku: 'AS-SH-01', thicknessMm: 45, weightKgPerM: 0.76, pricePerKg: 18, withPackage: false, glassKind: 'any', disableLastBarRemnant: true, active: true },
+                    { id: 'as-bd', role: 'bead', nameAr: 'باكيت السعد', sku: 'AS-BD-01', thicknessMm: 18, weightKgPerM: 0.27, pricePerKg: 18, glassKind: 'any', withPackage: false, disableLastBarRemnant: false, active: true }
+                ],
+                active: true
+            },
+            {
+                id: 'sys-rock-samba',
+                nameAr: 'روك سامبا — سحاب',
+                family: 'sliding',
+                cutAngle: 45,
+                tracksCount: 2,
+                deductions: Object.assign({}, DEFAULT_DEDUCTIONS, { sashOverlapMm: 30, mullionDeductFull: 42 }),
+                parts: [
+                    { id: 'rs-fr', role: 'frame', nameAr: 'حلق روك سامبا', sku: 'RS-FR-01', thicknessMm: 55, weightKgPerM: 1.15, pricePerKg: 18.5, lipType: 'none', tracksCount: 2, withPackage: false, glassKind: 'any', disableLastBarRemnant: false, active: true },
+                    { id: 'rs-sh', role: 'sash', nameAr: 'ضرفة روك سامبا', sku: 'RS-SH-01', thicknessMm: 40, weightKgPerM: 0.82, pricePerKg: 18.5, withPackage: false, glassKind: 'any', disableLastBarRemnant: true, active: true },
+                    { id: 'rs-mu', role: 'mullion', nameAr: 'مرد روك سامبا', sku: 'RS-MU-01', thicknessMm: 40, weightKgPerM: 0.9, pricePerKg: 18.5, withPackage: false, disableLastBarRemnant: false, active: true },
+                    { id: 'rs-kn', role: 'knife', nameAr: 'سكينة روك', sku: 'RS-KN-01', thicknessMm: 20, weightKgPerM: 0.48, pricePerKg: 18.5, withPackage: false, disableLastBarRemnant: false, active: true },
+                    { id: 'rs-bd', role: 'bead', nameAr: 'باكيت روك', sku: 'RS-BD-01', thicknessMm: 18, weightKgPerM: 0.28, pricePerKg: 18.5, glassKind: 'any', withPackage: false, disableLastBarRemnant: false, active: true }
+                ],
+                active: true
+            },
+            {
+                id: 'sys-volcano',
+                nameAr: 'فولكانو',
+                family: 'hinged',
+                cutAngle: 45,
+                tracksCount: 0,
+                deductions: Object.assign({}, DEFAULT_DEDUCTIONS),
+                parts: [
+                    { id: 'vo-fr', role: 'frame', nameAr: 'حلق فولكانو', sku: 'VO-FR-01', thicknessMm: 45, weightKgPerM: 0.97, pricePerKg: 18, lipType: 'with_bar', lipThicknessMm: 20, withPackage: false, glassKind: 'any', disableLastBarRemnant: false, active: true },
+                    { id: 'vo-sh', role: 'sash', nameAr: 'ضرفة فولكانو', sku: 'VO-SH-01', thicknessMm: 45, weightKgPerM: 0.73, pricePerKg: 18, withPackage: false, glassKind: 'any', disableLastBarRemnant: true, active: true },
+                    { id: 'vo-bd', role: 'bead', nameAr: 'باكيت فولكانو', sku: 'VO-BD-01', thicknessMm: 18, weightKgPerM: 0.26, pricePerKg: 18, glassKind: 'any', withPackage: false, disableLastBarRemnant: false, active: true }
+                ],
+                active: true
+            },
+            {
+                id: 'sys-alumil',
+                nameAr: 'ألوميل Alumil',
+                family: 'sliding',
+                cutAngle: 45,
+                tracksCount: 2,
+                deductions: Object.assign({}, DEFAULT_DEDUCTIONS, { sashOverlapMm: 32 }),
+                parts: [
+                    { id: 'al-fr', role: 'frame', nameAr: 'حلق ألوميل', sku: 'AL-FR-01', thicknessMm: 60, weightKgPerM: 1.25, pricePerKg: 20, lipType: 'none', tracksCount: 2, withPackage: false, glassKind: 'any', disableLastBarRemnant: false, active: true },
+                    { id: 'al-sh', role: 'sash', nameAr: 'ضرفة ألوميل', sku: 'AL-SH-01', thicknessMm: 42, weightKgPerM: 0.88, pricePerKg: 20, withPackage: false, glassKind: 'any', disableLastBarRemnant: true, active: true },
+                    { id: 'al-mu', role: 'mullion', nameAr: 'مرد ألوميل', sku: 'AL-MU-01', thicknessMm: 42, weightKgPerM: 0.95, pricePerKg: 20, withPackage: false, disableLastBarRemnant: false, active: true },
+                    { id: 'al-bd', role: 'bead', nameAr: 'باكيت ألوميل', sku: 'AL-BD-01', thicknessMm: 20, weightKgPerM: 0.3, pricePerKg: 20, glassKind: 'any', withPackage: false, disableLastBarRemnant: false, active: true }
+                ],
+                active: true
+            }
+        ];
+        let added = 0;
+        catalog.forEach(function (sys) {
+            if (!aluSystems.some(function (s) { return s.id === sys.id; })) {
+                aluSystems.push(sys);
+                added++;
+            }
+        });
+        return added > 0;
+    }
+
     function seedDefaults() {
         if (!aluSystems.length) {
             aluSystems = [
@@ -240,6 +341,9 @@
             ];
         }
         if (ensureFacadeSystemPresent()) {
+            try { saveLocal(ALU_SYSTEMS_KEY, aluSystems); } catch (e) { /* ignore */ }
+        }
+        if (ensureMarketCatalogPresent()) {
             try { saveLocal(ALU_SYSTEMS_KEY, aluSystems); } catch (e) { /* ignore */ }
         }
         if (!aluAccessories.length) {
@@ -1258,9 +1362,9 @@
         {
             label: 'الهندسة',
             items: [
-                { id: 'systems', icon: 'fas fa-bars-staggered', label: 'أنظمة القطاعات' },
+                { id: 'systems', icon: 'fas fa-bars-staggered', label: 'إعدادات القطاعات' },
                 { id: 'deductions', icon: 'fas fa-sliders', label: 'التخصيمات' },
-                { id: 'accessories', icon: 'fas fa-puzzle-piece', label: 'إكسسوارات' },
+                { id: 'accessories', icon: 'fas fa-puzzle-piece', label: 'إكسسوارات ومعادلات' },
                 { id: 'materials', icon: 'fas fa-layer-group', label: 'زجاج / سلك / ألوان' }
             ]
         },
@@ -1605,14 +1709,14 @@
             '<section class="alu-command-hero">' +
             '<div class="alu-command-hero-bg" aria-hidden="true"></div>' +
             '<div class="alu-command-hero-inner">' +
-            '<p class="alu-cut-kicker"><i class="fas fa-industry"></i> نبراس ALU Pro · عمود قسم الألومنيوم</p>' +
-            '<h2>منصة التخصيمات — مصنع · إنتاج · تركيب</h2>' +
-            '<p>هنا يُدار أغلب إنتاج الألومنيوم: مقايسة هندسية دقيقة → تقطيع بأقل هدر → ورشة باستيكات وباركود → تعبئة وتركيب في الموقع.</p>' +
+            '<p class="alu-cut-kicker"><i class="fas fa-drafting-compass"></i> تخصيمات قطاعات الألومنيوم — نفس أساس Ecotal / Uptime Window</p>' +
+            '<h2>محرك التخصيمات لكل قطاعات الألومنيوم</h2>' +
+            '<p>الهدف من البرنامج كما في دورة الفيديو: تعريف <strong>أي قطاع</strong> من الكتالوج (حلوق · ضرف · باكيتات · مرد…) مع تخصيماته، ثم مقايسة بند بند، ثم تقارير تقطيع ومشتريات وتجميع وعرض سعر — بدون تقييد بنظام واحد.</p>' +
             '<div class="alu-cut-hero-actions">' +
-            '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="newAluEstimate();setAluCutTab(\'estimate\')"><i class="fas fa-plus"></i> مقايسة جديدة</button>' +
-            '<button type="button" class="nebras-users-btn" onclick="setAluCutTab(\'production\')"><i class="fas fa-clipboard-check"></i> مسار المصنع</button>' +
-            '<button type="button" class="nebras-users-btn" onclick="setAluCutTab(\'cutting\')"><i class="fas fa-scissors"></i> تقطيع ذكي</button>' +
-            '<button type="button" class="nebras-users-btn" onclick="setAluCutTab(\'shop\')"><i class="fas fa-tags"></i> استيكر الورشة</button>' +
+            '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="setAluCutTab(\'systems\')"><i class="fas fa-bars-staggered"></i> إعدادات القطاعات</button>' +
+            '<button type="button" class="nebras-users-btn" onclick="newAluEstimate();setAluCutTab(\'estimate\')"><i class="fas fa-plus"></i> مقايسة جديدة</button>' +
+            '<button type="button" class="nebras-users-btn" onclick="setAluCutTab(\'deductions\')"><i class="fas fa-sliders"></i> التخصيمات</button>' +
+            '<button type="button" class="nebras-users-btn" onclick="setAluCutTab(\'reports\')"><i class="fas fa-file-lines"></i> التقارير</button>' +
             '</div></div></section>' +
 
             '<div class="alu-pipe-strip">' + pipeMini + '</div>' +
@@ -1630,14 +1734,14 @@
 
             '<div class="alu-dash-grid">' +
             '<section class="alu-dash-card">' +
-            '<header><h3><i class="fas fa-bolt"></i> مسارات العمل اليومية</h3><p>مدير · مهندس تصميم · عامل قص · تركيب</p></header>' +
+            '<header><h3><i class="fas fa-bolt"></i> سير عمل التخصيمات (كالفيديو)</h3><p>إعدادات القطاعات → مقايسة → تقطيع → تقارير</p></header>' +
             '<div class="alu-dash-actions">' +
-            '<button type="button" onclick="setAluCutTab(\'estimate\')"><i class="fas fa-ruler-combined"></i><span>هندسة مقايسة</span><small>باب · شباك · واجهة</small></button>' +
-            '<button type="button" onclick="setAluCutTab(\'audit\')"><i class="fas fa-microscope"></i><span>تدقيق قبل القص</span><small>صفر خطأ في المعدن</small></button>' +
-            '<button type="button" onclick="setAluCutTab(\'cutting\')"><i class="fas fa-scissors"></i><span>محرك التقطيع</span><small>مقارنة أعواد · أقل هدر</small></button>' +
-            '<button type="button" onclick="setAluCutTab(\'shop\')"><i class="fas fa-industry"></i><span>ورشة الإنتاج</span><small>باركود · تفريز · مراحل</small></button>' +
-            '<button type="button" onclick="setAluCutTab(\'production\')"><i class="fas fa-clipboard-check"></i><span>مسار المصنع</span><small>من المسودة للتركيب</small></button>' +
-            '<button type="button" onclick="printAluInstallPack()"><i class="fas fa-box-open"></i><span>تعبئة وتركيب</span><small>قائمة موقع كاملة</small></button>' +
+            '<button type="button" onclick="setAluCutTab(\'systems\')"><i class="fas fa-bars-staggered"></i><span>1) إعدادات القطاعات</span><small>حلوق · ضرف · باكيت · مرد — أي كتالوج</small></button>' +
+            '<button type="button" onclick="setAluCutTab(\'deductions\')"><i class="fas fa-sliders"></i><span>2) التخصيمات</span><small>ركوب · زجاج · مرد · سلك</small></button>' +
+            '<button type="button" onclick="setAluCutTab(\'accessories\')"><i class="fas fa-puzzle-piece"></i><span>3) إكسسوارات ومعادلات</span><small>كورنر · مقبض · كاوتش</small></button>' +
+            '<button type="button" onclick="setAluCutTab(\'estimate\')"><i class="fas fa-ruler-combined"></i><span>4) مقايسة وبنود</span><small>أشكال جاهزة · أي نظام قطاع</small></button>' +
+            '<button type="button" onclick="setAluCutTab(\'cutting\')"><i class="fas fa-scissors"></i><span>5) تقرير التقطيع</span><small>أعواد · أقل هدر</small></button>' +
+            '<button type="button" onclick="setAluCutTab(\'reports\')"><i class="fas fa-file-invoice"></i><span>6) مشتريات · تجميع · عرض سعر</span><small>كما في دروس التقارير</small></button>' +
             '</div></section>' +
 
             '<section class="alu-dash-card">' +
@@ -1647,17 +1751,17 @@
             '</section>' +
 
             '<section class="alu-dash-card alu-dash-card--wide">' +
-            '<header><h3><i class="fas fa-shield-halved"></i> اعتماد الإنتاج والتركيب</h3><p>كل رقم هنا يؤثر مباشرة على شراء المعدن وهدر الورشة ودقة التركيب في الموقع</p></header>' +
+            '<header><h3><i class="fas fa-shield-halved"></i> هدف التخصيمات</h3><p>من كتالوج القطاع → أرقام تخصيم دقيقة → قص بدون هدر → شراء وتجميع وتركيب</p></header>' +
             '<div class="alu-pro-badge-row">' +
-            '<span class="alu-pro-badge">شبابيك · أبواب · واجهات</span>' +
-            '<span class="alu-pro-badge">مسار مصنع 6 مراحل</span>' +
-            '<span class="alu-pro-badge">استيكر + باركود</span>' +
-            '<span class="alu-pro-badge">قائمة قص للعامل</span>' +
-            '<span class="alu-pro-badge">تعبئة وتركيب</span>' +
-            '<span class="alu-pro-badge">بنك فضلة حي</span>' +
-            '<span class="alu-pro-badge">أنظمة واجهات: ' + facadeSys + '</span>' +
+            '<span class="alu-pro-badge">أي نظام قطاع من السوق</span>' +
+            '<span class="alu-pro-badge">حلوق · ضرف · باكيتات · مرد</span>' +
+            '<span class="alu-pro-badge">تخصيمات قابلة للتعديل</span>' +
+            '<span class="alu-pro-badge">مفصلي · سحاب · واجهات</span>' +
+            '<span class="alu-pro-badge">تقطيع أعواد</span>' +
+            '<span class="alu-pro-badge">مشتريات · تجميع · عرض سعر</span>' +
+            '<span class="alu-pro-badge">أنظمة محمّلة: ' + aluSystems.length + '</span>' +
             '</div>' +
-            '<p class="alu-cut-note"><i class="fas fa-circle-check"></i> هذه المنصة هي عمود قسم الألومنيوم — النتائج تُعتمد قبل القص وقبل الخروج للتركيب.</p>' +
+            '<p class="alu-cut-note"><i class="fas fa-circle-check"></i> ليس برنامجاً لقطاعات محددة فقط — أضف سوناتا / آي جي ماس / السعد / روك / فولكانو / ألوميل أو أي كتالوج جديد بنفس أسلوب الفيديو.</p>' +
             '</section>' +
             '</div></div>';
     }
@@ -2391,59 +2495,130 @@
     }
 
     function renderAluSystems() {
-        const list = aluSystems.map(function (sys, si) {
-            const parts = (sys.parts || []).map(function (p) {
-                return '<li><strong>' + aluEsc(PART_ROLES[p.role] || p.role) + '</strong> — ' +
-                    aluEsc(p.nameAr) + ' (' + aluEsc(p.sku) + ') · ' + aluNum(p.weightKgPerM) + ' كغ/م · ' +
-                    aluNum(p.pricePerKg) + '/كغ' +
-                    (p.withPackage ? ' · بباكيته' : '') +
-                    (p.disableLastBarRemnant ? ' · بدون آخر عود فاضل' : '') +
-                    '</li>';
-            }).join('');
-            return '<article class="alu-cut-form-card"><h4>' + aluEsc(sys.nameAr) +
-                ' <small>' + (sys.family === 'sliding' ? 'سحاب' : sys.family === 'facade' ? 'واجهة' : 'مفصلي') +
-                (sys.tracksCount ? ' · تراكات ' + sys.tracksCount : '') +
-                ' · زاوية ' + (sys.cutAngle || 45) + '°</small></h4>' +
-                '<ul class="alu-parts-list">' + parts + '</ul>' +
-                '<button type="button" class="nebras-users-btn" onclick="editAluSystemDeducts(\'' + aluEsc(sys.id) + '\')">تعديل التخصيمات</button>' +
-                '</article>';
+        if (!aluEditSystemId && aluSystems[0]) aluEditSystemId = aluSystems[0].id;
+        const sys = getSystem(aluEditSystemId) || aluSystems[0];
+        if (!sys) {
+            return '<div class="alu-cut-form-card"><h4>إعدادات القطاعات</h4>' +
+                '<p class="erp-empty">لا يوجد نظام بعد — أضف أول قطاع من الكتالوج (أي نظام ألومنيوم في السوق).</p>' +
+                renderAluNewSystemForm() + '</div>';
+        }
+        aluEditSystemId = sys.id;
+        if (!aluSystemsPartRole) aluSystemsPartRole = 'frame';
+
+        const famAr = sys.family === 'sliding' ? 'سحاب' : sys.family === 'facade' ? 'واجهة' : 'مفصلي';
+        const sysSelect = '<label class="nebras-field"><span>نظام القطاع (كل قطاعات السوق)</span><select id="alu-sys-pick" onchange="selectAluSystemForEdit(this.value)">' +
+            aluSystems.map(function (s) {
+                return '<option value="' + aluEsc(s.id) + '"' + (s.id === sys.id ? ' selected' : '') + '>' +
+                    aluEsc(s.nameAr) + ' — ' + (s.family === 'sliding' ? 'سحاب' : s.family === 'facade' ? 'واجهة' : 'مفصلي') +
+                    '</option>';
+            }).join('') + '</select></label>';
+
+        const roleTabs = PART_ROLE_ORDER.map(function (role) {
+            const count = (sys.parts || []).filter(function (p) { return p.role === role && p.active !== false; }).length;
+            return '<button type="button" class="alu-role-tab' + (aluSystemsPartRole === role ? ' is-active' : '') +
+                '" onclick="setAluSystemsPartRole(\'' + role + '\')">' +
+                aluEsc(PART_ROLES[role]) + (count ? ' <em>' + count + '</em>' : '') + '</button>';
         }).join('');
 
-        return '<p class="alu-cut-note">أضف/عدّل أنظمة القطاعات (مفصلي · سحاب) مع الحلوق والضرف والباكيت والمرد والسكينة — كما في إعدادات القطاعات بالبرامج الاحترافية.</p>' +
-            list +
-            '<div class="alu-cut-form-card"><h4>إضافة نظام قطاع</h4>' +
+        const parts = (sys.parts || []).filter(function (p) { return p.role === aluSystemsPartRole && p.active !== false; });
+        const rows = parts.map(function (p, i) {
+            const idx = (sys.parts || []).indexOf(p);
+            return '<tr>' +
+                '<td>' + aluEsc(p.nameAr) + '</td>' +
+                '<td>' + aluEsc(p.sku) + '</td>' +
+                '<td>' + aluNum(p.thicknessMm) + '</td>' +
+                '<td>' + aluNum(p.weightKgPerM) + '</td>' +
+                '<td>' + aluNum(p.pricePerKg) + '</td>' +
+                '<td>' + aluEsc(LIP_TYPES[p.lipType] || (p.role === 'frame' ? '—' : '—')) + '</td>' +
+                '<td>' + aluEsc(GLASS_KINDS[p.glassKind] || 'غير محدد') + '</td>' +
+                '<td>' + (p.withPackage ? 'نعم' : 'لا') + '</td>' +
+                '<td><button type="button" class="erp-tag" onclick="removeAluPart(' + idx + ')">حذف</button></td>' +
+                '</tr>';
+        }).join('') || '<tr><td colspan="9">لا قطاعات في «' + aluEsc(PART_ROLES[aluSystemsPartRole]) + '» — أضف من النموذج بالأسفل (مثل Ecotal).</td></tr>';
+
+        return '<div class="alu-cut-form-card alu-ecotal-head">' +
+            '<h4><i class="fas fa-bars-staggered"></i> إعدادات القطاعات — كما في Ecotal / Uptime Window</h4>' +
+            '<p class="alu-cut-note">الفكرة الأساسية من فيديوهات التخصيمات: مكتبة <strong>كل قطاعات الألومنيوم</strong> (مفصلي · سحاب · واجهات) مع حلوق/ضرف/باكيتات/مرد… وتخصيماتها. ' +
+            'أضف أي قطاع من الكتالوج — ليس محدوداً بنظام واحد. الرقم هنا يغيّر طول الضرفة والزجاج والباكيت مباشرة.</p>' +
+            '<div class="erp-form-grid">' + sysSelect +
+            '<div class="nebras-field"><span>العائلة</span><strong>' + famAr + '</strong></div>' +
+            '<div class="nebras-field"><span>زاوية القص</span><strong>' + (sys.cutAngle || 45) + '°</strong></div>' +
+            '<div class="nebras-field"><span>أجزاء النظام</span><strong>' + (sys.parts || []).length + '</strong></div>' +
+            '</div>' +
+            '<div class="erp-form-actions">' +
+            '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="editAluSystemDeducts(\'' + aluEsc(sys.id) + '\')"><i class="fas fa-sliders"></i> تخصيمات هذا النظام</button>' +
+            '<button type="button" class="nebras-users-btn" onclick="setAluCutTab(\'estimate\')"><i class="fas fa-ruler-combined"></i> ابدأ مقايسة بهذا القطاع</button>' +
+            '</div></div>' +
+
+            '<div class="alu-cut-form-card">' +
+            '<div class="alu-role-tabs" role="tablist">' + roleTabs + '</div>' +
+            '<div class="alu-table-wrap"><table class="alu-table"><thead><tr>' +
+            '<th>اسم القطاع</th><th>رقم/SKU</th><th>تخانة</th><th>وزن م</th><th>سعر/كغ</th><th>الشفة</th><th>زجاج</th><th>بباكيته</th><th></th>' +
+            '</tr></thead><tbody>' + rows + '</tbody></table></div>' +
+
+            '<h5 style="margin-top:1rem">إضافة قطاع في «' + aluEsc(PART_ROLES[aluSystemsPartRole]) + '»</h5>' +
             '<div class="erp-form-grid">' +
-            '<label class="nebras-field"><span>الاسم</span><input type="text" id="alu-sys-name" placeholder="سوناتا 45"></label>' +
+            '<input type="hidden" id="alu-part-sys" value="' + aluEsc(sys.id) + '">' +
+            '<input type="hidden" id="alu-part-role" value="' + aluEsc(aluSystemsPartRole) + '">' +
+            '<label class="nebras-field"><span>اسم القطاع</span><input type="text" id="alu-part-name" placeholder="حلق سوناتا 45"></label>' +
+            '<label class="nebras-field"><span>رقم القطاع / SKU</span><input type="text" id="alu-part-sku" placeholder="SON-FR-45"></label>' +
+            '<label class="nebras-field"><span>تخانة مم</span><input type="number" id="alu-part-th" value="45"></label>' +
+            '<label class="nebras-field"><span>وزن كغ/م</span><input type="number" id="alu-part-w" value="0.9" step="0.01"></label>' +
+            '<label class="nebras-field"><span>سعر الكيلو</span><input type="number" id="alu-part-pkg" value="18" step="0.1"></label>' +
+            (aluSystemsPartRole === 'frame'
+                ? '<label class="nebras-field"><span>نوع الشفة</span><select id="alu-part-lip">' +
+                  Object.keys(LIP_TYPES).map(function (k) { return '<option value="' + k + '">' + LIP_TYPES[k] + '</option>'; }).join('') +
+                  '</select></label>' +
+                  '<label class="nebras-field"><span>تخانة الشفة مم</span><input type="number" id="alu-part-lipth" value="20"></label>' +
+                  '<label class="nebras-field"><span>عدد التراكات</span><input type="number" id="alu-part-tracks" value="' + aluNum(sys.tracksCount) + '" min="0"></label>'
+                : '<input type="hidden" id="alu-part-lip" value="none"><input type="hidden" id="alu-part-lipth" value="0"><input type="hidden" id="alu-part-tracks" value="0">') +
+            (aluSystemsPartRole === 'sash' || aluSystemsPartRole === 'bead'
+                ? '<label class="nebras-field"><span>نوع الزجاج</span><select id="alu-part-glasskind">' +
+                  Object.keys(GLASS_KINDS).map(function (k) { return '<option value="' + k + '">' + GLASS_KINDS[k] + '</option>'; }).join('') +
+                  '</select></label>'
+                : '<input type="hidden" id="alu-part-glasskind" value="any">') +
+            (aluSystemsPartRole === 'sash'
+                ? '<label class="nebras-field"><span>الضرفة بباكيته؟</span><select id="alu-part-pkgflag"><option value="0">لا — الباكيت يُحسب قطاعاً</option><option value="1">نعم — لا يظهر الباكيت منفرداً</option></select></label>' +
+                  '<label class="nebras-field"><span>آخر عود فاضل</span><select id="alu-part-nolast"><option value="1">موقوف للضرفة (موصى)</option><option value="0">مفعّل</option></select></label>'
+                : '<input type="hidden" id="alu-part-pkgflag" value="0"><input type="hidden" id="alu-part-nolast" value="0">') +
+            '</div>' +
+            '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="addAluPart()"><i class="fas fa-plus"></i> حفظ القطاع في «' +
+            aluEsc(PART_ROLES[aluSystemsPartRole]) + '»</button>' +
+            '</div>' +
+
+            renderAluNewSystemForm();
+    }
+
+    function renderAluNewSystemForm() {
+        return '<div class="alu-cut-form-card"><h4>إضافة نظام قطاع جديد (أي كتالوج)</h4>' +
+            '<p class="alu-cut-note">مثل الفيديو: اكتب اسم النظام من الكتالوج واحفظ ثم أضف الحلوق والضرف والباكيتات… بنفسك — بدون انتظار دعم فني.</p>' +
+            '<div class="erp-form-grid">' +
+            '<label class="nebras-field"><span>اسم النظام</span><input type="text" id="alu-sys-name" placeholder="سوناتا 45 / ألوميل / فولكانو / …"></label>' +
             '<label class="nebras-field"><span>العائلة</span><select id="alu-sys-family"><option value="hinged">مفصلي</option><option value="sliding">سحاب</option><option value="facade">واجهة</option></select></label>' +
             '<label class="nebras-field"><span>زاوية قص</span><select id="alu-sys-angle"><option value="45">45</option><option value="90">90</option></select></label>' +
             '<label class="nebras-field"><span>عدد التراكات</span><input type="number" id="alu-sys-tracks" value="0" min="0"></label>' +
             '</div>' +
-            '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="addAluSystem()">حفظ النظام</button></div>' +
-            '<div class="alu-cut-form-card"><h4>إضافة جزء لنظام</h4>' +
-            '<div class="erp-form-grid">' +
-            '<label class="nebras-field"><span>النظام</span><select id="alu-part-sys">' +
-            aluSystems.map(function (s) { return '<option value="' + aluEsc(s.id) + '">' + aluEsc(s.nameAr) + '</option>'; }).join('') +
-            '</select></label>' +
-            '<label class="nebras-field"><span>النوع</span><select id="alu-part-role">' +
-            Object.keys(PART_ROLES).map(function (r) { return '<option value="' + r + '">' + PART_ROLES[r] + '</option>'; }).join('') +
-            '</select></label>' +
-            '<label class="nebras-field"><span>الاسم</span><input type="text" id="alu-part-name"></label>' +
-            '<label class="nebras-field"><span>SKU</span><input type="text" id="alu-part-sku"></label>' +
-            '<label class="nebras-field"><span>تخانة مم</span><input type="number" id="alu-part-th" value="45"></label>' +
-            '<label class="nebras-field"><span>وزن كغ/م</span><input type="number" id="alu-part-w" value="0.9" step="0.01"></label>' +
-            '<label class="nebras-field"><span>سعر/كغ</span><input type="number" id="alu-part-pkg" value="18" step="0.1"></label>' +
-            '<label class="nebras-field"><span>بباكيته؟</span><select id="alu-part-pkgflag"><option value="0">لا</option><option value="1">نعم</option></select></label>' +
-            '<label class="nebras-field"><span>منع آخر عود فاضل</span><select id="alu-part-nolast"><option value="0">لا</option><option value="1">نعم (للضرفة غالباً)</option></select></label>' +
-            '</div>' +
-            '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="addAluPart()">إضافة الجزء</button></div>';
+            '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="addAluSystem()">حفظ النظام وابدأ إضافة قطاعاته</button></div>';
+    }
+
+    function selectAluSystemForEdit(id) {
+        aluEditSystemId = id;
+        aluSystemsPartRole = 'frame';
+        renderAluminumCuttingPanel();
+    }
+
+    function setAluSystemsPartRole(role) {
+        aluSystemsPartRole = role || 'frame';
+        renderAluminumCuttingPanel();
     }
 
     function addAluSystem() {
         if (!requireAluAccess()) return;
         const nameAr = aluField('alu-sys-name');
-        if (!nameAr) { alert('اسم النظام مطلوب'); return; }
+        if (!nameAr) { alert('اسم النظام مطلوب — من كتالوج القطاع الذي تستخدمه.'); return; }
+        const id = aluId('sys');
         aluSystems.push({
-            id: aluId('sys'),
+            id: id,
             nameAr: nameAr,
             family: aluField('alu-sys-family') || 'hinged',
             cutAngle: aluNum(aluField('alu-sys-angle')) || 45,
@@ -2452,30 +2627,50 @@
             parts: [],
             active: true
         });
+        aluEditSystemId = id;
+        aluSystemsPartRole = 'frame';
         persistAluminumCuttingCloud(['aluminum_systems', 'aluminum_profiles']);
+        if (typeof showNebrasAdminToast === 'function') showNebrasAdminToast('تم حفظ النظام — أضف الحلوق والضرف الآن', 'ok');
         renderAluminumCuttingPanel();
     }
 
     function addAluPart() {
         if (!requireAluAccess()) return;
-        const sys = getSystem(aluField('alu-part-sys'));
+        const sys = getSystem(aluField('alu-part-sys') || aluEditSystemId);
         if (!sys) return;
         const nameAr = aluField('alu-part-name');
         const sku = aluField('alu-part-sku');
-        if (!nameAr || !sku) { alert('الاسم و SKU مطلوبان'); return; }
+        if (!nameAr || !sku) { alert('الاسم ورقم القطاع مطلوبان'); return; }
+        const role = aluField('alu-part-role') || aluSystemsPartRole || 'frame';
         sys.parts = sys.parts || [];
         sys.parts.push({
             id: aluId('p'),
-            role: aluField('alu-part-role') || 'frame',
+            role: role,
             nameAr: nameAr,
             sku: sku,
             thicknessMm: aluNum(aluField('alu-part-th')) || 45,
             weightKgPerM: aluNum(aluField('alu-part-w')),
             pricePerKg: aluNum(aluField('alu-part-pkg')),
+            lipType: aluField('alu-part-lip') || 'none',
+            lipThicknessMm: aluNum(aluField('alu-part-lipth')),
+            tracksCount: aluNum(aluField('alu-part-tracks')),
+            glassKind: aluField('alu-part-glasskind') || 'any',
             withPackage: aluField('alu-part-pkgflag') === '1',
-            disableLastBarRemnant: aluField('alu-part-nolast') === '1',
+            disableLastBarRemnant: aluField('alu-part-nolast') === '1' || role === 'sash',
             active: true
         });
+        if (role === 'frame' && aluNum(aluField('alu-part-tracks')) > 0) {
+            sys.tracksCount = aluNum(aluField('alu-part-tracks'));
+        }
+        persistAluminumCuttingCloud(['aluminum_systems', 'aluminum_profiles']);
+        renderAluminumCuttingPanel();
+    }
+
+    function removeAluPart(idx) {
+        const sys = getSystem(aluEditSystemId);
+        if (!sys || !sys.parts || !sys.parts[idx]) return;
+        if (!confirm('حذف هذا القطاع من النظام؟')) return;
+        sys.parts.splice(idx, 1);
         persistAluminumCuttingCloud(['aluminum_systems', 'aluminum_profiles']);
         renderAluminumCuttingPanel();
     }
@@ -2910,6 +3105,9 @@
     global.deleteAluEstimate = deleteAluEstimate;
     global.sendAluEstimateToCutting = sendAluEstimateToCutting;
     global.saveAluCutJob = saveAluCutJob;
+    global.selectAluSystemForEdit = selectAluSystemForEdit;
+    global.setAluSystemsPartRole = setAluSystemsPartRole;
+    global.removeAluPart = removeAluPart;
     global.addAluSystem = addAluSystem;
     global.addAluPart = addAluPart;
     global.editAluSystemDeducts = editAluSystemDeducts;
