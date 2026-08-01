@@ -1201,3 +1201,56 @@ body.alu-platform-open #admin-dashboard {
     .alu-pipe-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .alu-pipe-board { grid-template-columns: repeat(2, minmax(160px, 1fr)); }
 }
+
+/* —— رسومات الارتفاع والزجاج (محرك نبراس) —— */
+.alu-item-with-draw {
+    display: grid;
+    grid-template-columns: minmax(180px, 220px) 1fr auto;
+    gap: 0.85rem;
+    align-items: center;
+    padding: 0.85rem 1rem !important;
+}
+
+.alu-elev-card {
+    background: linear-gradient(180deg, #ffffff, #f4f9fd);
+    border: 1px solid var(--alu-border, rgba(13, 40, 64, 0.1));
+    border-radius: 14px;
+    padding: 0.45rem;
+    box-shadow: 0 6px 16px rgba(7, 21, 37, 0.05);
+}
+
+.alu-elev-svg,
+.alu-glass-svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+}
+
+.alu-draw-pair {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 0.75rem;
+    margin: 0.65rem 0 1rem;
+}
+
+.alu-item-with-draw .erp-row-main strong {
+    color: var(--alu-navy, #0d2840);
+    font-size: 0.98rem;
+}
+
+.alu-item-with-draw .erp-row-main small {
+    color: var(--alu-muted, #5a6b7a);
+    display: block;
+    margin-top: 0.25rem;
+    line-height: 1.45;
+}
+
+@media (max-width: 720px) {
+    .alu-item-with-draw {
+        grid-template-columns: 1fr;
+    }
+    .alu-item-with-draw .erp-row-actions {
+        justify-content: flex-start;
+    }
+}
