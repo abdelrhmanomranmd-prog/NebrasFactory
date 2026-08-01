@@ -117,6 +117,7 @@
                     permissions: null
                 });
             }
+            if (typeof ensureAluminumManagerIhab === 'function') ensureAluminumManagerIhab();
             enforceProductionBusinessCleanState();
         }
 
@@ -530,7 +531,7 @@
             aluminum_manager: {
                 labelAr: 'مدير قسم الألومنيوم', labelEn: 'Aluminum Dept. Manager',
                 icon: 'fas fa-industry', accent: '#708090',
-                descAr: 'صلاحيات الألومنيوم — منتجات · مخزون · إنتاج · عروض · طلبات · عملاء ALU.',
+                descAr: 'صلاحيات الألومنيوم — تخصيمات · مقايسات · تقطيع · منتجات · مخزون · عروض · طلبات ALU.',
                 permissions: ['aluminum', 'inventory', 'warehouse', 'production', 'quotes', 'orders', 'customerPortal', 'createCustomerUser'],
                 departmentScope: NEBRAS_ALUMINUM_PRODUCT_ID
             },
@@ -3292,6 +3293,7 @@
             { id: 'dash-callback-leads', zone: 'quick', dashGroup: 'command', sortOrder: 55, iconClass: 'fas fa-phone-volume', titleAr: 'نبراس يتصل بك', titleEn: 'Callback Leads', textAr: 'طلبات اتصال الزوار — تظهر في الإدارة الرئيسية والفروع.', textEn: 'Visitor callback requests by branch.', cssClass: 'dashboard-tile-card--callback', backgroundImage: 'images/profile-2026/hero-cover.jpg', handler: 'openCallbackLeadsAdmin', permission: 'audit', visible: true },
             { id: 'dash-product-master', zone: 'quick', dashGroup: 'command', sortOrder: 0.9, iconClass: 'fas fa-database', titleAr: 'مركز المنتجات والأسعار', titleEn: 'Product Master', textAr: 'أسماء · أنواع · مقاسات · أسعار — مصدر النظام الديناميكي.', textEn: 'Names, types, sizes, prices — single source of truth.', handler: 'openProductMasterHub', permission: 'productMaster', superadminOnly: true, visible: true },
             { id: 'dash-aluminum-dept', zone: 'quick', dashGroup: 'command', sortOrder: 1.1, iconClass: 'fas fa-industry', titleAr: 'قسم الألومنيوم', titleEn: 'Aluminum Dept.', textAr: 'مخزون · إنتاج · عروض · طلبات ALU.', textEn: 'Aluminum ops only.', handler: 'openAluminumDepartment', permission: 'aluminum', visible: true },
+            { id: 'dash-aluminum-cutting', zone: 'quick', dashGroup: 'command', sortOrder: 1.11, iconClass: 'fas fa-scissors', titleAr: 'تخصيم قطاعات الألومنيوم', titleEn: 'Aluminum Cutting', textAr: 'قطاعات · مقايسة باب/شباك · تقطيع ذكي · مشتريات · تجميع.', textEn: 'Profiles, estimates, cutting optimization, purchase & assembly.', handler: 'openAluminumCutting', permission: 'aluminum', visible: true },
             { id: 'dash-wpc-dept', zone: 'quick', dashGroup: 'command', sortOrder: 1.08, iconClass: 'fas fa-door-closed', titleAr: 'إنتاج أبواب WPC', titleEn: 'WPC Production', textAr: 'مصنع الأبواب — مخزون · إنتاج · مستودع · عروض WPC.', textEn: 'WPC factory ops.', handler: 'openWpcProductionDepartment', permission: 'production', visible: true },
             { id: 'dash-branch-command', zone: 'quick', dashGroup: 'command', sortOrder: 1.07, iconClass: 'fas fa-store', titleAr: 'لوحة تحكم الفرع', titleEn: 'Branch Command', textAr: 'مبيعات · مندوبون · عروض · طلبات · شكاوى فرعك.', textEn: 'Your branch command center.', handler: 'openBranchCommandCenter', permission: null, branchCommandOnly: true, visible: true },
             { id: 'dash-hq-branch-empire', zone: 'quick', dashGroup: 'command', sortOrder: 1.06, iconClass: 'fas fa-sitemap', titleAr: 'حوكمة الفروع', titleEn: 'Branch Empire', textAr: 'تعيين مديري المبيعات والحسابات · تقارير كل فرع.', textEn: 'Assign branch managers and view branch KPIs.', handler: 'openHqBranchEmpireGovernance', permission: null, superadminOnly: true, visible: true },
@@ -3465,6 +3467,12 @@
             openErpProcurement: function() { openErpProcurement(); },
             openProductMasterHub: function() { openProductMasterHub(); },
             openAluminumDepartment: function() { openAluminumDepartment(); },
+            openAluminumCutting: function() {
+                if (typeof window.openAluminumCutting === 'function') {
+                    try { return window.openAluminumCutting(); } catch (e) { console.error('openAluminumCutting', e); }
+                }
+                alert('تخصيمات الألومنيوم — أعيدي تحميل الصفحة (Ctrl+Shift+R).');
+            },
             openAluminumQuoteBuilder: function() { openAluminumQuoteBuilder(); },
             openWpcProductionDepartment: function() { openWpcProductionDepartment(); },
             openWpcQuoteBuilder: function() { openWpcQuoteBuilder(); },
@@ -4252,6 +4260,8 @@
                 openRepQuoteBuilder: function() { return canManage('quotes', admin) || canManage('aluminum', admin); },
                 openRepMyQuotes: function() { return canManage('quotes', admin) || canManage('aluminum', admin); },
                 openAluminumQuoteBuilder: function() { return canManage('aluminum', admin) || canManage('quotes', admin); },
+                openAluminumCutting: function() { return canManage('aluminum', admin) || (admin && admin.role === 'aluminum_manager'); },
+                openAluminumDepartment: function() { return canManage('aluminum', admin) || (admin && admin.role === 'aluminum_manager'); },
                 openWpcQuoteBuilder: function() { return canManage('production', admin) || canManage('quotes', admin); },
                 openBranchTeamManagement: function() { return canManageBranchTeam(admin); },
                 openBranchCommandCenter: function() { return canAccessBranchCommandCenter(admin); },
@@ -6247,6 +6257,78 @@
                 isActive: true
             });
         }
+        ensureAluminumManagerIhab();
+    }
+
+    /** مستخدم قسم الألومنيوم — ihab / ihabnebras (تخصيمات) */
+    function ensureAluminumManagerIhab() {
+        const un = 'ihab';
+        const pw = 'ihabnebras';
+        const idx = (adminUsers || []).findIndex(function(u) {
+            return String(u.username || '').trim().toLowerCase() === un;
+        });
+        const now = new Date().toISOString();
+        if (idx >= 0) {
+            const cur = adminUsers[idx];
+            const nextPw = storeNebrasPasswordValue(pw);
+            const changed = cur.role !== 'aluminum_manager' || cur.isActive === false ||
+                !verifyNebrasPassword(cur.password, pw);
+            adminUsers[idx] = Object.assign({}, cur, {
+                username: un,
+                password: nextPw,
+                role: 'aluminum_manager',
+                isActive: true,
+                displayNameAr: cur.displayNameAr || 'إيهاب — مدير قسم الألومنيوم',
+                systemSeedKey: 'aluminum-manager-ihab',
+                updatedAt: now
+            });
+            if (changed) {
+                try { localStorage.setItem('nebrasAluminumIhabSeedPending', '1'); } catch (e) { /* ignore */ }
+            }
+            return true;
+        }
+        adminUsers.push({
+            id: 'alu-mgr-ihab',
+            username: un,
+            password: storeNebrasPasswordValue(pw),
+            role: 'aluminum_manager',
+            isActive: true,
+            displayNameAr: 'إيهاب — مدير قسم الألومنيوم',
+            systemSeedKey: 'aluminum-manager-ihab',
+            createdAt: now,
+            createdBy: 'system-seed',
+            updatedAt: now,
+            permissions: null
+        });
+        try { localStorage.setItem('nebrasAluminumIhabSeedPending', '1'); } catch (e) { /* ignore */ }
+        return true;
+    }
+
+    async function flushAluminumIhabUserToCloudIfNeeded() {
+        ensureAluminumManagerIhab();
+        let pending = false;
+        try { pending = localStorage.getItem('nebrasAluminumIhabSeedPending') === '1'; } catch (e) { pending = false; }
+        const hasIhab = (adminUsers || []).some(function(u) {
+            return u && String(u.username || '').toLowerCase() === 'ihab';
+        });
+        if (!hasIhab) return false;
+        if (!pending && typeof verifyAdminUserExistsInCloud === 'function') {
+            try {
+                const exists = await verifyAdminUserExistsInCloud('ihab');
+                if (exists) return true;
+                pending = true;
+            } catch (e) { pending = true; }
+        }
+        /* ارفع عند وجود pending أو دخول الإدارة الرئيسية / مدير الألومنيوم */
+        const canFlush = pending || isMainGovernanceAdmin() ||
+            (typeof currentAdmin !== 'undefined' && currentAdmin && currentAdmin.role === 'aluminum_manager');
+        if (!canFlush) return false;
+        if (typeof persistAdminUsersToCloud !== 'function') return false;
+        const ok = await persistAdminUsersToCloud({ showToast: false, verifyUsername: 'ihab' });
+        if (ok) {
+            try { localStorage.removeItem('nebrasAluminumIhabSeedPending'); } catch (e) { /* ignore */ }
+        }
+        return ok;
     }
 
     function resolveAdminLoginUser(username, password) {
@@ -18125,6 +18207,7 @@
                 if (typeof scrollToAdminDashboard === 'function') scrollToAdminDashboard();
                 setTimeout(function() {
                     if (typeof flushCatalogSeedCloudSyncIfPending === 'function') flushCatalogSeedCloudSyncIfPending();
+                    if (typeof flushAluminumIhabUserToCloudIfNeeded === 'function') flushAluminumIhabUserToCloudIfNeeded();
                 }, 3500);
                 try {
                     if (typeof isStrictHrUser === 'function' && isStrictHrUser(user)) {
@@ -18222,10 +18305,10 @@
                 hideSections: ['dashboard-company-identity', 'dashboard-partners-block', 'platform-hub-panel', 'dashboard-channels-panel', 'dashboard-occasion-panel', 'dashboard-official-hub']
             },
             aluminum_manager: {
-                greetingAr: 'مركز قسم الألومنيوم',
-                descAr: 'مخزون · إنتاج · عروض · طلبات الألومنيوم — الأسعار من الإدارة الرئيسية.',
-                scrollTo: 'erp-hub-panel',
-                openHandler: 'openAluminumDepartment',
+                greetingAr: 'مركز قسم الألومنيوم — تخصيمات',
+                descAr: 'تخصيم قطاعات · مقايسات باب وشباك · تقطيع ذكي · مخزون · عروض ALU.',
+                scrollTo: 'dashboard-actions-grid',
+                openHandler: 'openAluminumCutting',
                 hideSections: ['dashboard-company-identity', 'dashboard-partners-block', 'platform-hub-panel', 'dashboard-channels-panel', 'dashboard-occasion-panel', 'dashboard-official-hub']
             },
             hr: {
@@ -18309,10 +18392,12 @@
                 { roles: ['superadmin', 'manager'], icon: 'fas fa-chart-bar', label: 'تقارير تنفيذية', handler: 'openExecutiveReports', perm: 'audit' },
                 { roles: ['sales_manager', 'accountant', 'branch_manager'], icon: 'fas fa-chart-bar', label: 'تقرير الفرع', handler: 'openExecutiveReports', perm: 'audit' },
                 { roles: ['superadmin'], icon: 'fas fa-database', label: 'مركز المنتجات', handler: 'openProductMasterHub', perm: null },
+                { roles: ['aluminum_manager'], icon: 'fas fa-scissors', label: 'تخصيمات ALU', handler: 'openAluminumCutting', perm: 'aluminum' },
                 { roles: ['aluminum_manager'], icon: 'fas fa-file-signature', label: 'عرض ALU', handler: 'openAluminumQuoteBuilder', perm: 'aluminum' },
                 { roles: ['aluminum_manager'], icon: 'fas fa-tags', label: 'قائمة الأسعار', handler: 'openSalesPriceList', perm: 'aluminum' },
                 { roles: ['store_manager'], icon: 'fas fa-store', label: 'المتجر الإلكتروني', handler: 'openStoreCatalogManager', perm: 'storeCatalog' },
                 { roles: ['aluminum_manager', 'sales_manager', 'branch_manager'], icon: 'fas fa-industry', label: 'قسم الألومنيوم', handler: 'openAluminumDepartment', perm: 'aluminum' },
+                { roles: ['superadmin', 'manager'], icon: 'fas fa-scissors', label: 'تخصيمات الألومنيوم', handler: 'openAluminumCutting', perm: 'aluminum' },
                 { roles: ['wpc_manager', 'production_manager'], icon: 'fas fa-door-closed', label: 'إنتاج WPC', handler: 'openWpcProductionDepartment', perm: 'production' },
                 { roles: ['branch_manager', 'sales_manager'], icon: 'fas fa-store', label: 'لوحة الفرع', handler: 'openBranchCommandCenter', perm: null },
                 { roles: ['hr'], icon: 'fas fa-people-roof', label: 'منصة الموارد البشرية', handler: 'openHrPlatform', perm: 'hr' },
@@ -19033,6 +19118,13 @@
                 startDashboardClock();
                 applyStaticUiTranslations(siteText[currentLang || 'ar'] || siteText.ar);
                 if (typeof openLegalPlatform === 'function') setTimeout(function() { openLegalPlatform(); }, 0);
+                return;
+            }
+            if (typeof isStrictAluminumUser === 'function' && isStrictAluminumUser(user)) {
+                startDashboardClock();
+                applyStaticUiTranslations(siteText[currentLang || 'ar'] || siteText.ar);
+                if (typeof openAluminumCutting === 'function') setTimeout(function() { openAluminumCutting('dashboard'); }, 0);
+                else if (typeof openAluminumDepartment === 'function') setTimeout(function() { openAluminumDepartment(); }, 0);
                 return;
             }
             startDashboardClock();
@@ -20553,6 +20645,7 @@
                     '<div class="erp-stat"><strong>' + getEffectiveSalesPriceList(currentAdmin).length + '</strong><span>أسعار معتمدة</span></div>';
             }
             const cards = [
+                { icon: 'fas fa-scissors', title: 'تخصيم قطاعات الألومنيوم', desc: 'قطاعات · مقايسة باب/شباك · تقطيع ذكي · مشتريات · تجميع', handler: 'openAluminumCutting', featured: true },
                 { icon: 'fas fa-boxes-stacked', title: 'مخزون الألومنيوم', desc: 'SKU وكميات قسم ALU', handler: 'openErpInventory' },
                 { icon: 'fas fa-dolly', title: 'تحويلات المستودع', desc: 'حركة مخزون ALU بين المواقع', handler: 'openErpWarehouseTransfers' },
                 { icon: 'fas fa-industry', title: 'إنتاج الألومنيوم', desc: 'تسجيل الإنتاج اليومي', handler: 'openErpProduction' },
@@ -20564,7 +20657,7 @@
                 { icon: 'fas fa-file-pdf', title: 'تصدير PDF', desc: 'طباعة كتالوج الألومنيوم', handler: 'exportAluminumCatalogPdf' }
             ];
             actions.innerHTML = cards.map(function(c) {
-                return '<button type="button" class="aluminum-dept-card" onclick="' + c.handler + '()">' +
+                return '<button type="button" class="aluminum-dept-card' + (c.featured ? ' aluminum-dept-card--cutting' : '') + '" onclick="' + c.handler + '()">' +
                     '<i class="' + c.icon + '"></i><h4>' + escapeHtmlAttr(c.title) + '</h4><small>' + escapeHtmlAttr(c.desc) + '</small></button>';
             }).join('');
             if (variantsHost) {
@@ -27866,7 +27959,10 @@
                 }
                 ensureQuoteA4Settings();
             } },
-            { key: 'admin_users', get: function() { return adminUsers; }, set: function(v) { adminUsers = Array.isArray(v) ? v : []; } },
+            { key: 'admin_users', get: function() { return adminUsers; }, set: function(v) {
+                adminUsers = Array.isArray(v) ? v : [];
+                if (typeof ensureAluminumManagerIhab === 'function') ensureAluminumManagerIhab();
+            }},
             { key: 'branches', get: function() { return branchesData; }, set: function(v) { branchesData = Array.isArray(v) ? v : []; } },
             { key: 'complaints', get: function() { return complaints; }, set: function(v) {
                 if (Array.isArray(v)) {
@@ -28097,6 +28193,26 @@
                 return typeof getNebrasOrderJourneys === 'function' ? getNebrasOrderJourneys() : [];
             }, set: function(v) {
                 if (typeof setNebrasOrderJourneysFromCloud === 'function') setNebrasOrderJourneysFromCloud(v);
+            }},
+            { key: 'aluminum_profiles', get: function() {
+                return typeof getAluminumProfiles === 'function' ? getAluminumProfiles() : [];
+            }, set: function(v) {
+                if (typeof setAluminumProfilesFromCloud === 'function') setAluminumProfilesFromCloud(v);
+            }},
+            { key: 'aluminum_estimates', get: function() {
+                return typeof getAluminumEstimates === 'function' ? getAluminumEstimates() : [];
+            }, set: function(v) {
+                if (typeof setAluminumEstimatesFromCloud === 'function') setAluminumEstimatesFromCloud(v);
+            }},
+            { key: 'aluminum_cut_jobs', get: function() {
+                return typeof getAluminumCutJobs === 'function' ? getAluminumCutJobs() : [];
+            }, set: function(v) {
+                if (typeof setAluminumCutJobsFromCloud === 'function') setAluminumCutJobsFromCloud(v);
+            }},
+            { key: 'aluminum_cut_settings', get: function() {
+                return typeof getAluminumCutSettings === 'function' ? getAluminumCutSettings() : {};
+            }, set: function(v) {
+                if (typeof setAluminumCutSettingsFromCloud === 'function') setAluminumCutSettingsFromCloud(v);
             }},
             { key: 'nebras_cloud_snapshots', get: function() {
                 return typeof getCloudSnapshotsForCloud === 'function' ? getCloudSnapshotsForCloud() : { byKey: {}, updatedAt: null };
@@ -29096,6 +29212,7 @@
             'crm_customers', 'crm_opportunities', 'crm_activities', 'crm_audit',
             'legal_contracts', 'legal_rentals', 'legal_cases', 'legal_compliance', 'legal_policies',
             'legal_correspondence', 'legal_activity', 'legal_notif_settings',
+            'aluminum_profiles', 'aluminum_estimates', 'aluminum_cut_jobs', 'aluminum_cut_settings',
             'nebras_cloud_snapshots', 'nebras_platform_integrity'
         ];
 
@@ -29177,10 +29294,14 @@
                         renderNebrasLiveCloudRibbon(ok ? 'ok' : 'warn');
                         if (typeof updateCloudSafetyBanner === 'function') updateCloudSafetyBanner();
                         if (ok && (options.urgentCloud || options.showCloudToast) && typeof showNebrasAdminToast === 'function') {
-                            showNebrasAdminToast('✓ تم الحفظ في السحابة — متاح لكل الأجهزة والإدارات', 'ok');
+                            if (!(typeof window !== 'undefined' && window.NEBRAS_ODOO_QUIET_UI)) {
+                                showNebrasAdminToast('✓ تم الحفظ في السحابة — متاح لكل الأجهزة والإدارات', 'ok');
+                            }
                         }
                         if (!ok && typeof showNebrasAdminToast === 'function' && options.silentCloudFail !== true) {
-                            showNebrasAdminToast('⚠️ لم يُحفظ في السحابة — تحققي من الاتصال وأعيدي المحاولة', 'error');
+                            if (!(typeof window !== 'undefined' && window.NEBRAS_ODOO_QUIET_UI && !options.showCloudToast)) {
+                                showNebrasAdminToast('⚠️ لم يُحفظ في السحابة — تحققي من الاتصال وأعيدي المحاولة', 'error');
+                            }
                         }
                     });
                 } else if (NEBRAS_SERVER_FIRST_MODE) {
@@ -32522,6 +32643,8 @@
         window.openProductMasterHub = openProductMasterHub;
         window.syncPlatformFromProductMaster = syncPlatformFromProductMaster;
         window.openAluminumDepartment = openAluminumDepartment;
+        window.ensureAluminumManagerIhab = ensureAluminumManagerIhab;
+        window.flushAluminumIhabUserToCloudIfNeeded = flushAluminumIhabUserToCloudIfNeeded;
         window.manageAluminumCatalogVariants = manageAluminumCatalogVariants;
         window.exportAluminumCatalogCsv = exportAluminumCatalogCsv;
         window.exportAluminumCatalogPdf = exportAluminumCatalogPdf;

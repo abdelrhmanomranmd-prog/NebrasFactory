@@ -1,0 +1,366 @@
+/* نبراس — تخصيمات قطاعات الألومنيوم */
+
+.nebras-aluminum-cutting-modal {
+    max-width: min(1120px, 96vw);
+}
+
+.alu-cut-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin: 0 0 1rem;
+    padding: 0.35rem;
+    background: rgba(13, 61, 86, 0.06);
+    border-radius: 12px;
+}
+
+.alu-cut-tab {
+    border: 0;
+    background: transparent;
+    color: #2c3e50;
+    font: inherit;
+    font-weight: 700;
+    font-size: 0.86rem;
+    padding: 0.55rem 0.85rem;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.2s ease, color 0.2s ease, transform 0.15s ease;
+}
+
+.alu-cut-tab:hover {
+    background: rgba(255, 255, 255, 0.85);
+}
+
+.alu-cut-tab.is-active {
+    background: linear-gradient(135deg, #3d4f5f 0%, #708090 100%);
+    color: #fff;
+    transform: translateY(-1px);
+}
+
+.alu-cut-hero {
+    position: relative;
+    overflow: hidden;
+    border-radius: 16px;
+    margin-bottom: 1rem;
+    padding: 1.35rem 1.45rem;
+    background: linear-gradient(135deg, #2c3e50 0%, #4a5f6f 45%, #708090 100%);
+    color: #fff;
+}
+
+.alu-cut-hero-glow {
+    position: absolute;
+    inset: -45% -15% auto auto;
+    width: 55%;
+    height: 150%;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.14) 0%, transparent 68%);
+    pointer-events: none;
+}
+
+.alu-cut-hero-inner {
+    position: relative;
+    z-index: 1;
+}
+
+.alu-cut-kicker {
+    margin: 0;
+    font-size: 0.78rem;
+    letter-spacing: 0.04em;
+    opacity: 0.88;
+    font-weight: 700;
+}
+
+.alu-cut-hero h3 {
+    margin: 0.25rem 0 0.35rem;
+    font-size: 1.35rem;
+    font-weight: 800;
+}
+
+.alu-cut-hero p {
+    margin: 0;
+    opacity: 0.93;
+    line-height: 1.55;
+    max-width: 42rem;
+    font-size: 0.92rem;
+}
+
+.alu-cut-hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.55rem;
+    margin-top: 1rem;
+}
+
+.alu-cut-kpis {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 0.65rem;
+    margin-bottom: 1rem;
+}
+
+.alu-cut-kpi {
+    text-align: center;
+    padding: 0.85rem 0.45rem;
+    border-radius: 12px;
+    background: #fff;
+    border: 1px solid rgba(112, 128, 144, 0.22);
+    box-shadow: 0 2px 8px rgba(44, 62, 80, 0.05);
+}
+
+.alu-cut-kpi strong {
+    display: block;
+    font-size: 1.3rem;
+    color: #2c3e50;
+}
+
+.alu-cut-kpi span {
+    font-size: 0.76rem;
+    color: #5d6d7e;
+}
+
+.alu-cut-kpi--accent strong {
+    color: #a04000;
+}
+
+.alu-cut-quick {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+}
+
+.alu-cut-quick article {
+    padding: 1rem;
+    border-radius: 14px;
+    background: linear-gradient(180deg, #f7f9fb 0%, #eef2f5 100%);
+    border: 1px solid rgba(112, 128, 144, 0.18);
+}
+
+.alu-cut-quick h4 {
+    margin: 0 0 0.35rem;
+    font-size: 0.98rem;
+    color: #2c3e50;
+}
+
+.alu-cut-quick p {
+    margin: 0 0 0.75rem;
+    font-size: 0.82rem;
+    color: #566573;
+    line-height: 1.5;
+}
+
+.alu-cut-quick button {
+    border: 0;
+    background: #2c3e50;
+    color: #fff;
+    font: inherit;
+    font-weight: 700;
+    font-size: 0.82rem;
+    padding: 0.4rem 0.85rem;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.alu-cut-form-card {
+    background: #fff;
+    border: 1px solid rgba(112, 128, 144, 0.18);
+    border-radius: 14px;
+    padding: 1rem 1.1rem 1.15rem;
+    margin-bottom: 0.9rem;
+}
+
+.alu-cut-form-card h4 {
+    margin: 0 0 0.75rem;
+    color: #2c3e50;
+    font-size: 1.05rem;
+}
+
+.alu-cut-form-card h5 {
+    margin: 0 0 0.55rem;
+    color: #34495e;
+    font-size: 0.92rem;
+}
+
+.alu-cut-subcard {
+    background: #f4f7f9;
+    border-radius: 12px;
+    padding: 0.85rem;
+    margin: 0.75rem 0;
+}
+
+.alu-cut-note {
+    margin: 0.5rem 0 0.85rem;
+    font-size: 0.86rem;
+    color: #566573;
+    line-height: 1.5;
+}
+
+.alu-cut-totals {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 0.55rem;
+    margin: 0.85rem 0;
+}
+
+.alu-cut-totals > div {
+    background: #f7f9fb;
+    border-radius: 10px;
+    padding: 0.65rem 0.7rem;
+    border: 1px solid rgba(112, 128, 144, 0.14);
+}
+
+.alu-cut-totals span {
+    display: block;
+    font-size: 0.75rem;
+    color: #5d6d7e;
+}
+
+.alu-cut-totals strong {
+    font-size: 1.05rem;
+    color: #2c3e50;
+}
+
+.alu-cut-totals-grand {
+    background: linear-gradient(135deg, #2c3e50, #4a5f6f) !important;
+    color: #fff !important;
+    border: 0 !important;
+}
+
+.alu-cut-totals-grand span,
+.alu-cut-totals-grand strong {
+    color: #fff !important;
+}
+
+.alu-profile-row .alu-row-actions {
+    display: flex;
+    gap: 0.35rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.alu-saved-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    align-items: center;
+    margin-top: 0.85rem;
+    font-size: 0.82rem;
+    color: #5d6d7e;
+}
+
+.alu-saved-chip {
+    border: 1px solid rgba(112, 128, 144, 0.3);
+    background: #fff;
+    border-radius: 999px;
+    padding: 0.3rem 0.7rem;
+    font: inherit;
+    font-size: 0.78rem;
+    cursor: pointer;
+}
+
+.alu-cut-plan-block {
+    margin: 0.9rem 0;
+    padding: 0.85rem;
+    border-radius: 12px;
+    background: #f8fafb;
+    border: 1px solid rgba(112, 128, 144, 0.16);
+}
+
+.alu-cut-plan-block header h4 {
+    margin: 0;
+    font-size: 0.98rem;
+}
+
+.alu-cut-plan-block header p {
+    margin: 0.2rem 0 0.65rem;
+    font-size: 0.8rem;
+    color: #5d6d7e;
+}
+
+.alu-bar-row {
+    margin-bottom: 0.55rem;
+}
+
+.alu-bar-meta {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+    font-size: 0.78rem;
+    margin-bottom: 0.2rem;
+}
+
+.alu-bar-track {
+    display: flex;
+    height: 28px;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1px solid #8a9aab;
+    background: #eceff1;
+}
+
+.alu-bar-seg {
+    background: linear-gradient(180deg, #4a6578, #2c3e50);
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    border-left: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.alu-bar-waste {
+    background: repeating-linear-gradient(-45deg, #f5d0d0, #f5d0d0 4px, #f0c0c0 4px, #f0c0c0 8px);
+    color: #7b241c;
+    font-size: 0.65rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.alu-table-wrap {
+    overflow-x: auto;
+    margin: 0.5rem 0 0.85rem;
+}
+
+.alu-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.84rem;
+}
+
+.alu-table th,
+.alu-table td {
+    border: 1px solid rgba(112, 128, 144, 0.25);
+    padding: 0.45rem 0.55rem;
+    text-align: right;
+}
+
+.alu-table th {
+    background: #eef2f5;
+    color: #2c3e50;
+}
+
+.aluminum-dept-card--cutting {
+    background: linear-gradient(145deg, #2c3e50 0%, #5d6d7e 100%) !important;
+    color: #fff !important;
+    border: 0 !important;
+}
+
+.aluminum-dept-card--cutting h4,
+.aluminum-dept-card--cutting small,
+.aluminum-dept-card--cutting i {
+    color: #fff !important;
+}
+
+@media (max-width: 720px) {
+    .alu-cut-tab {
+        flex: 1 1 calc(50% - 0.4rem);
+        text-align: center;
+    }
+
+    .alu-cut-hero h3 {
+        font-size: 1.15rem;
+    }
+}
