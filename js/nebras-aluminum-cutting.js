@@ -1270,7 +1270,8 @@
                 { id: 'cutting', icon: 'fas fa-scissors', label: 'تقطيع ذكي' },
                 { id: 'audit', icon: 'fas fa-microscope', label: 'تدقيق الدقة' },
                 { id: 'remnants', icon: 'fas fa-recycle', label: 'بنك الفضلة' },
-                { id: 'shop', icon: 'fas fa-industry', label: 'ورشة العمل' }
+                { id: 'shop', icon: 'fas fa-industry', label: 'ورشة العمل' },
+                { id: 'production', icon: 'fas fa-clipboard-check', label: 'مسار المصنع' }
             ]
         },
         {
@@ -1400,6 +1401,7 @@
         else if (aluActiveTab === 'audit') body = renderAluAudit();
         else if (aluActiveTab === 'remnants') body = renderAluRemnants();
         else if (aluActiveTab === 'shop') body = renderAluShop();
+        else if (aluActiveTab === 'production') body = renderAluProductionBoard();
         else if (aluActiveTab === 'reports') body = renderAluReports();
         else if (aluActiveTab === 'settings') body = renderAluSettings();
 
@@ -1409,6 +1411,155 @@
         }
     }
 
+    const ALU_STATUS = {
+        draft: { ar: 'مسودة', step: 0 },
+        approved: { ar: 'معتمدة', step: 1 },
+        cutting: { ar: 'قيد التقطيع', step: 2 },
+        in_production: { ar: 'تجميع ورشة', step: 3 },
+        ready_install: { ar: 'جاهز للتركيب', step: 4 },
+        installed: { ar: 'تم التركيب', step: 5 },
+        done: { ar: 'مكتملة', step: 5 },
+        in_progress: { ar: 'قيد التنفيذ', step: 2 }
+    };
+
+    function aluStatusMeta(status) {
+        return ALU_STATUS[status] || ALU_STATUS.draft;
+    }
+
+    function syncEstimateStages(est) {
+        if (!est) return [];
+        const step = aluStatusMeta(est.status).step;
+        est.stages = [
+            { id: 'measure', name: 'قياس / مقايسة', done: step >= 0 },
+            { id: 'approve', name: 'اعتماد هندسي', done: step >= 1 },
+            { id: 'cut', name: 'تقطيع', done: step >= 2 },
+            { id: 'assemble', name: 'تجميع ورشة', done: step >= 3 },
+            { id: 'pack', name: 'تعبئة وتركيب', done: step >= 4 },
+            { id: 'done', name: 'تسليم', done: step >= 5 }
+        ];
+        return est.stages;
+    }
+
+    function aluBarcodeSvg(code) {
+        const raw = String(code || 'ALU');
+        let bits = '';
+        for (let i = 0; i < raw.length; i++) {
+            const n = raw.charCodeAt(i);
+            bits += ((n % 2) ? '1' : '0') + ((n % 3) ? '11' : '1') + ((n % 5) ? '0' : '00');
+        }
+        while (bits.length < 48) bits += bits;
+        bits = bits.slice(0, 56);
+        let x = 2;
+        const bars = [];
+        for (let i = 0; i < bits.length; i++) {
+            const w = bits[i] === '1' ? 2.2 : 1.1;
+            if (i % 2 === 0) bars.push('<rect x="' + x.toFixed(1) + '" y="2" width="' + w + '" height="28" fill="#0d2840"/>');
+            x += w + 0.7;
+        }
+        return '<svg xmlns="http://www.w3.org/2000/svg" width="' + Math.ceil(x + 4) + '" height="34" aria-hidden="true">' + bars.join('') + '</svg>';
+    }
+
+    function buildInstallPackRows(est) {
+        const items = (est && (est.items || [])) || [];
+        const rows = [];
+        items.forEach(function (it, i) {
+            const shape = READY_SHAPES[it.shape] || {};
+            const qty = Math.max(1, Math.round(aluNum(it.qty) || 1));
+            const glass = buildItemGlass(it);
+            const acc = buildItemAccessories(it, est.priceMode);
+            rows.push({
+                kind: 'وحدة',
+                label: it.labelAr || shape.nameAr || ('بند ' + (i + 1)),
+                detail: shape.nameAr + ' · ' + it.widthMm + '×' + it.heightMm + ' مم',
+                qty: qty,
+                loc: it.locationCode || '—'
+            });
+            rows.push({
+                kind: 'زجاج',
+                label: glass.nameAr,
+                detail: glass.widthMm + '×' + glass.heightMm + ' مم',
+                qty: glass.panels,
+                loc: it.locationCode || '—'
+            });
+            acc.forEach(function (a) {
+                rows.push({
+                    kind: 'إكسسوار',
+                    label: a.nameAr,
+                    detail: a.code + (a.colorAr ? ' · ' + a.colorAr : ''),
+                    qty: a.qty,
+                    loc: it.locationCode || '—'
+                });
+            });
+        });
+        return rows;
+    }
+
+    function renderAluProductionBoard() {
+        const buckets = {
+            draft: [],
+            approved: [],
+            cutting: [],
+            in_production: [],
+            ready_install: [],
+            installed: []
+        };
+        aluEstimates.forEach(function (e) {
+            let key = e.status || 'draft';
+            if (key === 'in_progress') key = 'cutting';
+            if (key === 'done') key = 'installed';
+            if (!buckets[key]) key = 'draft';
+            buckets[key].push(e);
+        });
+        const cols = [
+            { id: 'draft', title: 'مسودة', icon: 'fa-pen' },
+            { id: 'approved', title: 'معتمدة', icon: 'fa-stamp' },
+            { id: 'cutting', title: 'تقطيع', icon: 'fa-scissors' },
+            { id: 'in_production', title: 'تجميع', icon: 'fa-screwdriver-wrench' },
+            { id: 'ready_install', title: 'جاهز تركيب', icon: 'fa-truck' },
+            { id: 'installed', title: 'تم التركيب', icon: 'fa-circle-check' }
+        ];
+        const board = cols.map(function (col) {
+            const cards = (buckets[col.id] || []).slice().reverse().map(function (e) {
+                const t = e.totalsSnapshot || {};
+                return '<article class="alu-pipe-card">' +
+                    '<strong>' + aluEsc(e.ref) + '</strong>' +
+                    '<span>' + aluEsc(e.customerName || '—') + '</span>' +
+                    '<small>' + aluEsc(e.projectName || '') +
+                    (t.total != null ? ' · ' + t.total : '') + '</small>' +
+                    '<div class="alu-pipe-card-actions">' +
+                    '<button type="button" class="erp-tag erp-tag--action" onclick="loadAluEstimate(\'' + aluEsc(e.id) + '\')">فتح</button>' +
+                    '<button type="button" class="erp-tag" onclick="advanceAluEstimateStatus(\'' + aluEsc(e.id) + '\')">التالي ←</button>' +
+                    '</div></article>';
+            }).join('') || '<p class="alu-pipe-empty">فارغ</p>';
+            return '<section class="alu-pipe-col">' +
+                '<header><i class="fas ' + col.icon + '"></i> ' + col.title +
+                ' <em>' + (buckets[col.id] || []).length + '</em></header>' +
+                '<div class="alu-pipe-list">' + cards + '</div></section>';
+        }).join('');
+
+        return '<div class="alu-cut-form-card"><h4><i class="fas fa-clipboard-check"></i> مسار المصنع — من المقايسة إلى التركيب</h4>' +
+            '<p class="alu-cut-note">لوحة حيّة يعتمد عليها المدير والمشرف: اسحب العمل مرحلة بمرحلة حتى التسليم في الموقع.</p></div>' +
+            '<div class="alu-pipe-board">' + board + '</div>' +
+            '<div class="alu-cut-form-card"><div class="erp-form-actions">' +
+            '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="setAluCutTab(\'shop\')"><i class="fas fa-industry"></i> ورشة العمل</button>' +
+            '<button type="button" class="nebras-users-btn" onclick="printAluInstallPack()"><i class="fas fa-box-open"></i> قائمة تعبئة وتركيب</button>' +
+            '<button type="button" class="nebras-users-btn" onclick="printAluWorkerCutList()"><i class="fas fa-list-ol"></i> قائمة قص للعامل</button>' +
+            '</div></div>';
+    }
+
+    function advanceAluEstimateStatus(id) {
+        const e = aluEstimates.find(function (x) { return x.id === id; });
+        if (!e) return;
+        const order = ['draft', 'approved', 'cutting', 'in_production', 'ready_install', 'installed'];
+        let cur = e.status || 'draft';
+        if (cur === 'in_progress') cur = 'cutting';
+        if (cur === 'done') cur = 'installed';
+        const idx = order.indexOf(cur);
+        const next = order[Math.min(order.length - 1, Math.max(0, idx) + 1)];
+        aluEstimateDraft = JSON.parse(JSON.stringify(e));
+        setAluEstimateStatus(next);
+    }
+
     function renderAluDashboard() {
         const lastJob = aluCutJobs[aluCutJobs.length - 1];
         const avgWaste = aluCutJobs.length
@@ -1416,72 +1567,97 @@
             : 0;
         const liveRem = aluRemnants.filter(function (r) { return !r.used; }).length;
         const openEst = aluEstimates.filter(function (e) {
-            return !e.status || e.status === 'draft' || e.status === 'cutting' || e.status === 'in_progress';
+            const st = e.status || 'draft';
+            return st !== 'installed' && st !== 'done';
         }).length;
+        const inCut = aluEstimates.filter(function (e) {
+            return e.status === 'cutting' || e.status === 'in_progress' || e.status === 'in_production';
+        }).length;
+        const readyInst = aluEstimates.filter(function (e) { return e.status === 'ready_install'; }).length;
         const facadeSys = aluSystems.filter(function (s) { return s.family === 'facade'; }).length;
         const recent = aluEstimates.slice().reverse().slice(0, 4).map(function (e) {
             const t = e.totalsSnapshot || {};
+            const st = aluStatusMeta(e.status);
             return '<button type="button" class="alu-dash-recent" onclick="loadAluEstimate(\'' + aluEsc(e.id) + '\')">' +
                 '<strong>' + aluEsc(e.ref) + '</strong>' +
-                '<span>' + aluEsc(e.customerName || '—') + '</span>' +
+                '<span>' + aluEsc(e.customerName || '—') + ' · ' + aluEsc(st.ar) + '</span>' +
                 '<em>' + (t.total != null ? t.total + ' ' + aluSettings.currencyLabel : 'بدون إجمالي') + '</em>' +
                 '</button>';
         }).join('') || '<p class="erp-empty">لا مقايسات بعد — ابدأ الأولى من هنا.</p>';
+
+        const pipeMini = [
+            { id: 'draft', label: 'مسودة' },
+            { id: 'approved', label: 'اعتماد' },
+            { id: 'cutting', label: 'تقطيع' },
+            { id: 'in_production', label: 'تجميع' },
+            { id: 'ready_install', label: 'تركيب' }
+        ].map(function (p) {
+            const n = aluEstimates.filter(function (e) {
+                let s = e.status || 'draft';
+                if (s === 'in_progress') s = 'cutting';
+                if (s === 'done' || s === 'installed') s = 'ready_install';
+                return s === p.id;
+            }).length;
+            return '<button type="button" class="alu-pipe-chip" onclick="setAluCutTab(\'production\')"><strong>' + n + '</strong><span>' + p.label + '</span></button>';
+        }).join('');
 
         return '<div class="alu-command-dash">' +
             '<section class="alu-command-hero">' +
             '<div class="alu-command-hero-bg" aria-hidden="true"></div>' +
             '<div class="alu-command-hero-inner">' +
-            '<p class="alu-cut-kicker"><i class="fas fa-industry"></i> نبراس ALU Pro · منصة التخصيمات</p>' +
-            '<h2>مركز قيادة تخصيمات الألومنيوم</h2>' +
-            '<p>منصة إنتاج كاملة للمدير والمهندس والورشة — مقايسات دقيقة · تقطيع بأقل هدر · مشتريات · بنك فضلة · تدقيق قبل القص.</p>' +
+            '<p class="alu-cut-kicker"><i class="fas fa-industry"></i> نبراس ALU Pro · عمود قسم الألومنيوم</p>' +
+            '<h2>منصة التخصيمات — مصنع · إنتاج · تركيب</h2>' +
+            '<p>هنا يُدار أغلب إنتاج الألومنيوم: مقايسة هندسية دقيقة → تقطيع بأقل هدر → ورشة باستيكات وباركود → تعبئة وتركيب في الموقع.</p>' +
             '<div class="alu-cut-hero-actions">' +
             '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="newAluEstimate();setAluCutTab(\'estimate\')"><i class="fas fa-plus"></i> مقايسة جديدة</button>' +
+            '<button type="button" class="nebras-users-btn" onclick="setAluCutTab(\'production\')"><i class="fas fa-clipboard-check"></i> مسار المصنع</button>' +
             '<button type="button" class="nebras-users-btn" onclick="setAluCutTab(\'cutting\')"><i class="fas fa-scissors"></i> تقطيع ذكي</button>' +
-            '<button type="button" class="nebras-users-btn" onclick="setAluCutTab(\'audit\')"><i class="fas fa-microscope"></i> تدقيق قبل القص</button>' +
-            '<button type="button" class="nebras-users-btn" onclick="typeof openAluminumDepartment===\'function\'&&openAluminumDepartment()"><i class="fas fa-warehouse"></i> عمليات القسم</button>' +
+            '<button type="button" class="nebras-users-btn" onclick="setAluCutTab(\'shop\')"><i class="fas fa-tags"></i> استيكر الورشة</button>' +
             '</div></div></section>' +
+
+            '<div class="alu-pipe-strip">' + pipeMini + '</div>' +
 
             '<div class="alu-dash-metrics">' +
             '<article class="alu-metric"><i class="fas fa-cubes"></i><div><strong>' + aluSystems.length + '</strong><span>أنظمة قطاعات</span></div></article>' +
             '<article class="alu-metric"><i class="fas fa-folder-open"></i><div><strong>' + aluEstimates.length + '</strong><span>مقايسات</span></div></article>' +
             '<article class="alu-metric"><i class="fas fa-spinner"></i><div><strong>' + openEst + '</strong><span>قيد التنفيذ</span></div></article>' +
+            '<article class="alu-metric"><i class="fas fa-cut"></i><div><strong>' + inCut + '</strong><span>في الورشة</span></div></article>' +
+            '<article class="alu-metric alu-metric--accent"><i class="fas fa-truck"></i><div><strong>' + readyInst + '</strong><span>جاهز تركيب</span></div></article>' +
             '<article class="alu-metric"><i class="fas fa-recycle"></i><div><strong>' + liveRem + '</strong><span>فضلات حية</span></div></article>' +
-            '<article class="alu-metric alu-metric--accent"><i class="fas fa-chart-line"></i><div><strong>' + (lastJob ? lastJob.wastePct + '%' : '—') + '</strong><span>آخر هدر</span></div></article>' +
+            '<article class="alu-metric"><i class="fas fa-chart-line"></i><div><strong>' + (lastJob ? lastJob.wastePct + '%' : '—') + '</strong><span>آخر هدر</span></div></article>' +
             '<article class="alu-metric"><i class="fas fa-percent"></i><div><strong>' + (avgWaste || '—') + (avgWaste ? '%' : '') + '</strong><span>متوسط هدر</span></div></article>' +
-            '<article class="alu-metric"><i class="fas fa-building"></i><div><strong>' + facadeSys + '</strong><span>أنظمة واجهات</span></div></article>' +
-            '<article class="alu-metric"><i class="fas fa-cut"></i><div><strong>' + aluCutJobs.length + '</strong><span>خطط تقطيع</span></div></article>' +
             '</div>' +
 
             '<div class="alu-dash-grid">' +
             '<section class="alu-dash-card">' +
-            '<header><h3><i class="fas fa-bolt"></i> مسارات العمل</h3><p>اختصارات يومية للمدير والمهندس</p></header>' +
+            '<header><h3><i class="fas fa-bolt"></i> مسارات العمل اليومية</h3><p>مدير · مهندس تصميم · عامل قص · تركيب</p></header>' +
             '<div class="alu-dash-actions">' +
             '<button type="button" onclick="setAluCutTab(\'estimate\')"><i class="fas fa-ruler-combined"></i><span>هندسة مقايسة</span><small>باب · شباك · واجهة</small></button>' +
-            '<button type="button" onclick="setAluCutTab(\'systems\')"><i class="fas fa-bars-staggered"></i><span>أنظمة القطاعات</span><small>مفصلي · سحاب · ستارة</small></button>' +
+            '<button type="button" onclick="setAluCutTab(\'audit\')"><i class="fas fa-microscope"></i><span>تدقيق قبل القص</span><small>صفر خطأ في المعدن</small></button>' +
             '<button type="button" onclick="setAluCutTab(\'cutting\')"><i class="fas fa-scissors"></i><span>محرك التقطيع</span><small>مقارنة أعواد · أقل هدر</small></button>' +
-            '<button type="button" onclick="setAluCutTab(\'shop\')"><i class="fas fa-industry"></i><span>ورشة الإنتاج</span><small>استيكر · مراحل · تفريز</small></button>' +
-            '<button type="button" onclick="setAluCutTab(\'remnants\')"><i class="fas fa-recycle"></i><span>بنك الفضلة</span><small>إعادة استخدام المعدن</small></button>' +
-            '<button type="button" onclick="setAluCutTab(\'reports\')"><i class="fas fa-file-invoice"></i><span>تقارير المشتريات</span><small>قطاعات · زجاج · إكسسوار</small></button>' +
+            '<button type="button" onclick="setAluCutTab(\'shop\')"><i class="fas fa-industry"></i><span>ورشة الإنتاج</span><small>باركود · تفريز · مراحل</small></button>' +
+            '<button type="button" onclick="setAluCutTab(\'production\')"><i class="fas fa-clipboard-check"></i><span>مسار المصنع</span><small>من المسودة للتركيب</small></button>' +
+            '<button type="button" onclick="printAluInstallPack()"><i class="fas fa-box-open"></i><span>تعبئة وتركيب</span><small>قائمة موقع كاملة</small></button>' +
             '</div></section>' +
 
             '<section class="alu-dash-card">' +
-            '<header><h3><i class="fas fa-clock-rotate-left"></i> أحدث المقايسات</h3><p>افتح مباشرة للتعديل أو التقطيع</p></header>' +
+            '<header><h3><i class="fas fa-clock-rotate-left"></i> أحدث المقايسات</h3><p>الحالة · العميل · الإجمالي</p></header>' +
             '<div class="alu-dash-recent-list">' + recent + '</div>' +
             '<button type="button" class="nebras-users-btn" onclick="setAluCutTab(\'estimates\')">كل المقايسات</button>' +
             '</section>' +
 
             '<section class="alu-dash-card alu-dash-card--wide">' +
-            '<header><h3><i class="fas fa-shield-halved"></i> اعتماد الإنتاج</h3><p>قبل القص — راجع الدقة لتقليل هدر المعدن والخطأ في التركيب</p></header>' +
+            '<header><h3><i class="fas fa-shield-halved"></i> اعتماد الإنتاج والتركيب</h3><p>كل رقم هنا يؤثر مباشرة على شراء المعدن وهدر الورشة ودقة التركيب في الموقع</p></header>' +
             '<div class="alu-pro-badge-row">' +
-            '<span class="alu-pro-badge">مقارنة أعواد 6 / 6.5 / 7م</span>' +
-            '<span class="alu-pro-badge">Best · First · Worst Fit</span>' +
-            '<span class="alu-pro-badge">بنك فضلة حي</span>' +
-            '<span class="alu-pro-badge">تدقيق قطعة بقطعة</span>' +
             '<span class="alu-pro-badge">شبابيك · أبواب · واجهات</span>' +
-            '<span class="alu-pro-badge">استيكر ورشة</span>' +
+            '<span class="alu-pro-badge">مسار مصنع 6 مراحل</span>' +
+            '<span class="alu-pro-badge">استيكر + باركود</span>' +
+            '<span class="alu-pro-badge">قائمة قص للعامل</span>' +
+            '<span class="alu-pro-badge">تعبئة وتركيب</span>' +
+            '<span class="alu-pro-badge">بنك فضلة حي</span>' +
+            '<span class="alu-pro-badge">أنظمة واجهات: ' + facadeSys + '</span>' +
             '</div>' +
-            '<p class="alu-cut-note"><i class="fas fa-circle-check"></i> الفضلة القابلة لإعادة الاستخدام لا تُحسب هدراً نهائياً — تُحفظ في بنك الفضلة للمقايسة التالية.</p>' +
+            '<p class="alu-cut-note"><i class="fas fa-circle-check"></i> هذه المنصة هي عمود قسم الألومنيوم — النتائج تُعتمد قبل القص وقبل الخروج للتركيب.</p>' +
             '</section>' +
             '</div></div>';
     }
@@ -1489,13 +1665,16 @@
     function renderAluEstimatesList() {
         const cards = aluEstimates.slice().reverse().map(function (e) {
             const t = e.totalsSnapshot || {};
+            const st = aluStatusMeta(e.status);
             return '<article class="alu-est-card">' +
                 '<div><strong>' + aluEsc(e.ref) + '</strong>' +
+                '<span class="alu-status-pill">' + aluEsc(st.ar) + '</span>' +
                 '<small>' + aluEsc(e.customerName || '—') + ' · ' + aluEsc(e.projectName || '—') + '</small>' +
                 '<small>' + aluEsc((e.updatedAt || e.createdAt || '').slice(0, 10)) +
                 (t.total != null ? ' · ' + t.total + ' ' + aluSettings.currencyLabel : '') + '</small></div>' +
                 '<div class="alu-row-actions">' +
                 '<button type="button" class="erp-tag erp-tag--action" onclick="loadAluEstimate(\'' + aluEsc(e.id) + '\')">فتح</button>' +
+                '<button type="button" class="erp-tag" onclick="advanceAluEstimateStatus(\'' + aluEsc(e.id) + '\')">التالي</button>' +
                 '<button type="button" class="erp-tag" onclick="copyAluEstimate(\'' + aluEsc(e.id) + '\')">نسخ</button>' +
                 '<button type="button" class="erp-tag" onclick="deleteAluEstimate(\'' + aluEsc(e.id) + '\')">حذف</button>' +
                 '</div></article>';
@@ -1920,9 +2099,22 @@
         aluCutJobs.push(job);
         commitRemnantsFromPlan(aluCutDraft.lastResult, { estimateRef: aluCutDraft.estimateRef, jobId: jobId });
         aluCutDraft.savedJobId = jobId;
+        /* ربط خطة التقطيع بمسار المصنع */
+        if (aluCutDraft.estimateId) {
+            const est = aluEstimates.find(function (e) { return e.id === aluCutDraft.estimateId; });
+            if (est) {
+                est.status = 'cutting';
+                syncEstimateStages(est);
+                est.updatedAt = new Date().toISOString();
+                if (aluEstimateDraft && aluEstimateDraft.id === est.id) {
+                    aluEstimateDraft.status = 'cutting';
+                    syncEstimateStages(aluEstimateDraft);
+                }
+            }
+        }
         aluLog('قطع', 'حفظ خطة ' + (aluCutDraft.estimateRef || '') + ' · عود ' + job.stockBarMm + ' · هدر ' + job.wastePct + '%');
-        persistAluminumCuttingCloud(['aluminum_cut_jobs', 'aluminum_remnants', 'aluminum_audit']);
-        if (typeof showNebrasAdminToast === 'function') showNebrasAdminToast('تم حفظ الخطة وإضافة الفضلة لبنك إعادة الاستخدام', 'ok');
+        persistAluminumCuttingCloud(['aluminum_cut_jobs', 'aluminum_remnants', 'aluminum_audit', 'aluminum_estimates']);
+        if (typeof showNebrasAdminToast === 'function') showNebrasAdminToast('تم حفظ الخطة · الحالة: قيد التقطيع', 'ok');
         renderAluminumCuttingPanel();
     }
 
@@ -2026,26 +2218,47 @@
         const est = aluEstimateDraft || aluEstimates[aluEstimates.length - 1];
         const cut = aluCutDraft && aluCutDraft.lastResult;
         if (!cut) {
-            return '<p class="erp-empty">شغّل التقطيع أولاً لطباعة استيكرات الورشة وتقرير التفريز.</p>';
+            return '<div class="alu-cut-form-card"><h4><i class="fas fa-industry"></i> ورشة العمل</h4>' +
+                '<p class="erp-empty">شغّل التقطيع أولاً لطباعة استيكرات الباركود وقائمة القص وتقرير التفريز.</p>' +
+                '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="setAluCutTab(\'cutting\')">افتح التقطيع الذكي</button></div>' +
+                (est ? renderAluStagesBlock(est) : '');
         }
         let stickers = 0;
+        const bySku = {};
         cut.plans.forEach(function (pl) {
-            pl.plan.bars.forEach(function (b) { stickers += b.pieces.length; });
+            pl.plan.bars.forEach(function (b) {
+                stickers += b.pieces.length;
+            });
+            bySku[pl.profileSku] = (bySku[pl.profileSku] || 0) + pl.plan.barCount;
         });
+        const skuRows = Object.keys(bySku).map(function (sku) {
+            return '<tr><td>' + aluEsc(sku) + '</td><td>' + bySku[sku] + ' عود</td></tr>';
+        }).join('');
         const milling = (est && (est.items || []) || []).map(function (it, i) {
             const handle = aluNum(it.handleHeightMm) || 50;
             return '<tr><td>' + aluEsc(it.labelAr || ('بند ' + (i + 1))) + '</td><td>' + it.widthMm + '×' + it.heightMm +
-                '</td><td>' + handle + '</td><td>' + (READY_SHAPES[it.shape] || {}).nameAr + '</td>' +
-                '<td>مقبض على ' + handle + ' مم من الأسفل · مفصّلات حسب النظام</td></tr>';
+                '</td><td>' + handle + '</td><td>' + aluEsc((READY_SHAPES[it.shape] || {}).nameAr || '') + '</td>' +
+                '<td>مقبض على ' + handle + ' مم من الأسفل · موقع ' + aluEsc(it.locationCode || '—') + '</td></tr>';
         }).join('') || '<tr><td colspan="5">—</td></tr>';
 
-        return '<div class="alu-cut-form-card"><h4><i class="fas fa-industry"></i> ورشة — استيكر + تفريز</h4>' +
-            '<p class="alu-cut-note">عدد قطع الاستيكر المتوقعة: <strong>' + stickers + '</strong> — كل قطعة برمز W/H ورقم البند لتجنب الخطأ في القص.</p>' +
+        return '<div class="alu-cut-form-card"><h4><i class="fas fa-industry"></i> ورشة الإنتاج — استيكر · باركود · تفريز</h4>' +
+            '<p class="alu-cut-note">قطع الاستيكر: <strong>' + stickers + '</strong> · مرجع ' +
+            aluEsc((aluCutDraft && aluCutDraft.estimateRef) || (est && est.ref) || '') +
+            ' — كل قطعة تحمل رمز محور + باركود لتجنب الخطأ على المنشار.</p>' +
+            '<div class="alu-table-wrap"><table class="alu-table"><thead><tr><th>SKU</th><th>أعواد مطلوبة</th></tr></thead><tbody>' +
+            skuRows + '</tbody></table></div>' +
             '<div class="erp-form-actions">' +
-            '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="printAluStickers()"><i class="fas fa-tags"></i> طباعة استيكرات</button>' +
+            '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="printAluStickers()"><i class="fas fa-barcode"></i> طباعة استيكرات + باركود</button>' +
+            '<button type="button" class="nebras-users-btn" onclick="printAluWorkerCutList()"><i class="fas fa-list-ol"></i> قائمة قص للعامل</button>' +
             '<button type="button" class="nebras-users-btn" onclick="printAluMillingReport()"><i class="fas fa-drill"></i> تقرير تفريز</button>' +
-            '<button type="button" class="nebras-users-btn" onclick="setAluEstimateStatus(\'approved\')">اعتماد المقايسة</button>' +
-            '<button type="button" class="nebras-users-btn" onclick="setAluEstimateStatus(\'in_production\')">تحويل للإنتاج</button>' +
+            '<button type="button" class="nebras-users-btn" onclick="printAluInstallPack()"><i class="fas fa-box-open"></i> تعبئة وتركيب</button>' +
+            '</div>' +
+            '<div class="erp-form-actions">' +
+            '<button type="button" class="nebras-users-btn" onclick="setAluEstimateStatus(\'approved\')">1) اعتماد</button>' +
+            '<button type="button" class="nebras-users-btn" onclick="setAluEstimateStatus(\'cutting\')">2) تقطيع</button>' +
+            '<button type="button" class="nebras-users-btn" onclick="setAluEstimateStatus(\'in_production\')">3) تجميع</button>' +
+            '<button type="button" class="nebras-users-btn" onclick="setAluEstimateStatus(\'ready_install\')">4) جاهز تركيب</button>' +
+            '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="setAluEstimateStatus(\'installed\')">5) تم التركيب</button>' +
             '</div></div>' +
             '<div class="alu-cut-form-card"><h4>تفريز / مواقع التركيب</h4>' +
             '<div class="alu-table-wrap"><table class="alu-table"><thead><tr><th>بند</th><th>مقاس</th><th>مقبض مم</th><th>شكل</th><th>تعليمات</th></tr></thead><tbody>' +
@@ -2055,14 +2268,10 @@
 
     function renderAluStagesBlock(est) {
         if (!est) return '';
-        const stages = est.stages || [
-            { name: 'قياس/اعتماد', done: !!est.status },
-            { name: 'تقطيع', done: est.status === 'in_production' || est.status === 'done' },
-            { name: 'تجميع', done: est.status === 'done' },
-            { name: 'تركيب', done: false }
-        ];
-        return '<div class="alu-cut-form-card"><h4>مراحل التنفيذ</h4>' +
-            '<p>الحالة: <strong>' + aluEsc(est.status || 'draft') + '</strong></p>' +
+        const stages = syncEstimateStages(est);
+        const st = aluStatusMeta(est.status);
+        return '<div class="alu-cut-form-card"><h4>مراحل التنفيذ — ' + aluEsc(est.ref || '') + '</h4>' +
+            '<p>الحالة الحالية: <strong>' + aluEsc(st.ar) + '</strong></p>' +
             '<div class="alu-stages">' + stages.map(function (s) {
                 return '<span class="alu-stage' + (s.done ? ' is-done' : '') + '">' + aluEsc(s.name) + '</span>';
             }).join('') + '</div>' +
@@ -2077,12 +2286,16 @@
         if (!aluEstimateDraft && aluEstimates.length) aluEstimateDraft = JSON.parse(JSON.stringify(aluEstimates[aluEstimates.length - 1]));
         if (!aluEstimateDraft) { alert('لا مقايسة'); return; }
         aluEstimateDraft.status = status;
+        syncEstimateStages(aluEstimateDraft);
         aluEstimateDraft.updatedAt = new Date().toISOString();
         const idx = aluEstimates.findIndex(function (e) { return e.id === aluEstimateDraft.id; });
         if (idx >= 0) aluEstimates[idx] = JSON.parse(JSON.stringify(aluEstimateDraft));
         else aluEstimates.push(JSON.parse(JSON.stringify(aluEstimateDraft)));
-        aluLog('حالة', aluEstimateDraft.ref + ' → ' + status);
+        aluLog('حالة', aluEstimateDraft.ref + ' → ' + (aluStatusMeta(status).ar || status));
         persistAluminumCuttingCloud(['aluminum_estimates', 'aluminum_audit']);
+        if (typeof showNebrasAdminToast === 'function') {
+            showNebrasAdminToast('الحالة: ' + aluStatusMeta(status).ar, 'ok');
+        }
         renderAluminumCuttingPanel();
     }
 
@@ -2098,27 +2311,80 @@
 
     function printAluStickers() {
         if (!aluCutDraft || !aluCutDraft.lastResult) return;
-        let html = '<h1>استيكرات تقطيع — نبراس</h1><div style="display:flex;flex-wrap:wrap;gap:8px">';
+        const ref = aluEsc(aluCutDraft.estimateRef || '');
+        let html = '<h1>استيكرات تقطيع + باركود — نبراس</h1><p class="meta">' + ref + ' · ' +
+            aluEsc(aluCutDraft.customerName || '') + '</p><div class="alu-sticker-sheet">';
+        let seq = 1;
         aluCutDraft.lastResult.plans.forEach(function (pl) {
-            pl.plan.bars.forEach(function (b) {
+            pl.plan.bars.forEach(function (b, bi) {
                 b.pieces.forEach(function (p) {
-                    html += '<div style="border:1px solid #333;padding:8px 10px;width:140px;font-size:12px">' +
-                        '<strong>' + aluEsc(p.code) + '</strong><br>' + p.lengthMm + ' مم<br>' +
-                        aluEsc(p.labelAr) + '<br><small>' + aluEsc(pl.profileSku) + '</small></div>';
+                    const code = String(p.code || 'P') + '-' + seq;
+                    const barId = (pl.profileSku || 'SKU') + '|' + code + '|' + p.lengthMm;
+                    html += '<div class="alu-sticker">' +
+                        '<div class="alu-sticker-top"><strong>' + aluEsc(code) + '</strong><span>#' + seq + '</span></div>' +
+                        '<div class="alu-sticker-len">' + p.lengthMm + ' مم</div>' +
+                        '<div class="alu-sticker-label">' + aluEsc(p.labelAr || '') + '</div>' +
+                        '<div class="alu-sticker-sku">' + aluEsc(pl.profileSku) + ' · عود ' + (bi + 1) + '</div>' +
+                        '<div class="alu-sticker-bar">' + aluBarcodeSvg(barId) + '</div>' +
+                        '<div class="alu-sticker-ref">' + ref + '</div></div>';
+                    seq++;
                 });
             });
         });
         html += '</div>';
-        openPrintWindow('استيكرات', html);
+        openPrintWindow('استيكرات', html, true);
+    }
+
+    function printAluWorkerCutList() {
+        if (!aluCutDraft || !aluCutDraft.lastResult) {
+            alert('شغّل التقطيع أولاً.');
+            return;
+        }
+        let html = '<h1>قائمة قص للعامل — نبراس</h1><p class="meta">' +
+            aluEsc(aluCutDraft.estimateRef || '') + ' · عود ' + aluCutDraft.lastResult.stockBarMm + ' مم · هدر ' +
+            aluCutDraft.lastResult.wastePct + '%</p>';
+        aluCutDraft.lastResult.plans.forEach(function (pl) {
+            html += '<h2>' + aluEsc(pl.profileName) + ' <small>' + aluEsc(pl.profileSku) + '</small></h2>';
+            html += '<p>أعواد: ' + pl.plan.barCount + ' · خوارزمية: ' + aluEsc(pl.plan.algorithm || '') + '</p>';
+            html += '<table><tr><th>#</th><th>عود</th><th>رمز</th><th>قطعة</th><th>طول مم</th><th>✓</th></tr>';
+            let n = 1;
+            pl.plan.bars.forEach(function (b, bi) {
+                b.pieces.forEach(function (p) {
+                    html += '<tr><td>' + n + '</td><td>' + (bi + 1) + '</td><td>' + aluEsc(p.code) +
+                        '</td><td>' + aluEsc(p.labelAr) + '</td><td><strong>' + p.lengthMm +
+                        '</strong></td><td>□</td></tr>';
+                    n++;
+                });
+            });
+            html += '</table>';
+        });
+        openPrintWindow('قائمة قص', html);
+    }
+
+    function printAluInstallPack() {
+        const est = aluEstimateDraft || aluEstimates[aluEstimates.length - 1];
+        if (!est) { alert('افتح مقايسة أولاً.'); return; }
+        const rows = buildInstallPackRows(est);
+        let html = '<h1>قائمة تعبئة وتركيب — نبراس</h1><p class="meta">' +
+            aluEsc(est.ref) + ' — ' + aluEsc(est.customerName || '') + ' / ' + aluEsc(est.projectName || '') +
+            ' · حالة: ' + aluEsc(aluStatusMeta(est.status).ar) + '</p>';
+        html += '<table><tr><th>نوع</th><th>البند</th><th>التفصيل</th><th>كمية</th><th>موقع</th><th>✓</th></tr>';
+        rows.forEach(function (r) {
+            html += '<tr><td>' + aluEsc(r.kind) + '</td><td>' + aluEsc(r.label) + '</td><td>' +
+                aluEsc(r.detail) + '</td><td>' + r.qty + '</td><td>' + aluEsc(r.loc) + '</td><td>□</td></tr>';
+        });
+        html += '</table><p class="meta">راجع كل بند قبل الخروج للموقع — توقيع المشرف: ___________</p>';
+        openPrintWindow('تعبئة وتركيب', html);
     }
 
     function printAluMillingReport() {
         const est = aluEstimateDraft || aluEstimates[aluEstimates.length - 1];
         if (!est) return;
-        let html = '<h1>تقرير تفريز — نبراس</h1><p class="meta">' + aluEsc(est.ref) + '</p><table><tr><th>بند</th><th>مقاس</th><th>مقبض</th><th>ملاحظات</th></tr>';
+        let html = '<h1>تقرير تفريز — نبراس</h1><p class="meta">' + aluEsc(est.ref) + '</p><table><tr><th>بند</th><th>مقاس</th><th>مقبض</th><th>موقع</th><th>ملاحظات</th></tr>';
         (est.items || []).forEach(function (it) {
             html += '<tr><td>' + aluEsc(it.labelAr) + '</td><td>' + it.widthMm + '×' + it.heightMm +
-                '</td><td>' + (it.handleHeightMm || 50) + ' مم</td><td>تفريز حسب كتالوج النظام</td></tr>';
+                '</td><td>' + (it.handleHeightMm || 50) + ' مم</td><td>' + aluEsc(it.locationCode || '—') +
+                '</td><td>تفريز حسب كتالوج النظام</td></tr>';
         });
         html += '</table>';
         openPrintWindow('تفريز', html);
@@ -2135,7 +2401,7 @@
                     '</li>';
             }).join('');
             return '<article class="alu-cut-form-card"><h4>' + aluEsc(sys.nameAr) +
-                ' <small>' + (sys.family === 'sliding' ? 'سحاب' : 'مفصلي') +
+                ' <small>' + (sys.family === 'sliding' ? 'سحاب' : sys.family === 'facade' ? 'واجهة' : 'مفصلي') +
                 (sys.tracksCount ? ' · تراكات ' + sys.tracksCount : '') +
                 ' · زاوية ' + (sys.cutAngle || 45) + '°</small></h4>' +
                 '<ul class="alu-parts-list">' + parts + '</ul>' +
@@ -2148,7 +2414,7 @@
             '<div class="alu-cut-form-card"><h4>إضافة نظام قطاع</h4>' +
             '<div class="erp-form-grid">' +
             '<label class="nebras-field"><span>الاسم</span><input type="text" id="alu-sys-name" placeholder="سوناتا 45"></label>' +
-            '<label class="nebras-field"><span>العائلة</span><select id="alu-sys-family"><option value="hinged">مفصلي</option><option value="sliding">سحاب</option></select></label>' +
+            '<label class="nebras-field"><span>العائلة</span><select id="alu-sys-family"><option value="hinged">مفصلي</option><option value="sliding">سحاب</option><option value="facade">واجهة</option></select></label>' +
             '<label class="nebras-field"><span>زاوية قص</span><select id="alu-sys-angle"><option value="45">45</option><option value="90">90</option></select></label>' +
             '<label class="nebras-field"><span>عدد التراكات</span><input type="number" id="alu-sys-tracks" value="0" min="0"></label>' +
             '</div>' +
@@ -2466,6 +2732,8 @@
             '<button type="button" class="nebras-users-btn" onclick="printAluPurchaseReport()">طباعة مشتريات</button>' +
             '<button type="button" class="nebras-users-btn" onclick="printAluAssemblyReport()">طباعة تجميع</button>' +
             '<button type="button" class="nebras-users-btn" onclick="printAluQuoteReport()">عرض سعر</button>' +
+            '<button type="button" class="nebras-users-btn" onclick="printAluWorkerCutList()">قائمة قص</button>' +
+            '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="printAluInstallPack()">تعبئة وتركيب</button>' +
             '</div></div>';
     }
 
@@ -2520,9 +2788,17 @@
         if (typeof showNebrasAdminToast === 'function') showNebrasAdminToast('تم حفظ إعدادات Pro', 'ok');
     }
 
-    function openPrintWindow(title, html) {
+    function openPrintWindow(title, html, stickersMode) {
         const w = window.open('', '_blank', 'noopener,noreferrer,width=960,height=1000');
         if (!w) { alert('اسمح بالنوافذ المنبثقة للطباعة.'); return; }
+        const stickerCss = stickersMode
+            ? '.alu-sticker-sheet{display:flex;flex-wrap:wrap;gap:10px}' +
+              '.alu-sticker{border:1px solid #222;padding:8px 10px;width:168px;font-size:11px;page-break-inside:avoid}' +
+              '.alu-sticker-top{display:flex;justify-content:space-between;font-weight:700}' +
+              '.alu-sticker-len{font-size:18px;font-weight:800;margin:4px 0}' +
+              '.alu-sticker-sku,.alu-sticker-ref{color:#444;font-size:10px}' +
+              '.alu-sticker-bar{margin-top:4px;overflow:hidden}'
+            : '';
         w.document.write('<!DOCTYPE html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>' +
             aluEsc(title) + '</title><style>' +
             'body{font-family:Cairo,Tahoma,sans-serif;padding:24px;color:#1a1a1a}' +
@@ -2533,6 +2809,7 @@
             '.seg{background:#2c3e50;color:#fff;font-size:10px;display:flex;align-items:center;justify-content:center;border-left:1px solid #fff}' +
             '.waste{background:#f0c0c0;color:#622;font-size:10px;display:flex;align-items:center;justify-content:center}' +
             '.meta{color:#555;font-size:.9rem}@media print{button{display:none}}' +
+            stickerCss +
             '</style></head><body>' + html + '<p><button onclick="window.print()">طباعة</button></p></body></html>');
         w.document.close();
     }
@@ -2681,6 +2958,9 @@
     global.importAluSystemsJson = importAluSystemsJson;
     global.printAluStickers = printAluStickers;
     global.printAluMillingReport = printAluMillingReport;
+    global.printAluWorkerCutList = printAluWorkerCutList;
+    global.printAluInstallPack = printAluInstallPack;
+    global.advanceAluEstimateStatus = advanceAluEstimateStatus;
     global.setAluEstimateStatus = setAluEstimateStatus;
     global.saveAluEstimateFinance = saveAluEstimateFinance;
     global.editAluItem = editAluItem;
