@@ -28239,6 +28239,16 @@
             }, set: function(v) {
                 if (typeof setAluminumColorsFromCloud === 'function') setAluminumColorsFromCloud(v);
             }},
+            { key: 'aluminum_remnants', get: function() {
+                return typeof getAluminumRemnants === 'function' ? getAluminumRemnants() : [];
+            }, set: function(v) {
+                if (typeof setAluminumRemnantsFromCloud === 'function') setAluminumRemnantsFromCloud(v);
+            }},
+            { key: 'aluminum_audit', get: function() {
+                return typeof getAluminumAudit === 'function' ? getAluminumAudit() : [];
+            }, set: function(v) {
+                if (typeof setAluminumAuditFromCloud === 'function') setAluminumAuditFromCloud(v);
+            }},
             { key: 'nebras_cloud_snapshots', get: function() {
                 return typeof getCloudSnapshotsForCloud === 'function' ? getCloudSnapshotsForCloud() : { byKey: {}, updatedAt: null };
             }, set: function(v) {
@@ -29239,6 +29249,7 @@
             'legal_correspondence', 'legal_activity', 'legal_notif_settings',
             'aluminum_profiles', 'aluminum_systems', 'aluminum_estimates', 'aluminum_cut_jobs',
             'aluminum_cut_settings', 'aluminum_accessories', 'aluminum_glass', 'aluminum_wire', 'aluminum_colors',
+            'aluminum_remnants', 'aluminum_audit',
             'nebras_cloud_snapshots', 'nebras_platform_integrity'
         ];
 

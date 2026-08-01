@@ -30,7 +30,8 @@
         'site_products', 'visitor_icons', 'showroom_gallery', 'site_partners',
         'about_pages', 'dashboard_tiles', 'site_certifications', 'site_custom_sections',
         'aluminum_profiles', 'aluminum_systems', 'aluminum_estimates', 'aluminum_cut_jobs',
-        'aluminum_cut_settings', 'aluminum_accessories', 'aluminum_glass', 'aluminum_wire', 'aluminum_colors'
+        'aluminum_cut_settings', 'aluminum_accessories', 'aluminum_glass', 'aluminum_wire',
+        'aluminum_colors', 'aluminum_remnants', 'aluminum_audit'
     ];
 
     const ODOO_HR_KEYS = [
@@ -59,7 +60,8 @@
         'erp-aluminum-dept': ODOO_ERP_KEYS,
         'erp-aluminum-cutting': [
             'aluminum_profiles', 'aluminum_systems', 'aluminum_estimates', 'aluminum_cut_jobs',
-            'aluminum_cut_settings', 'aluminum_accessories', 'aluminum_glass', 'aluminum_wire', 'aluminum_colors'
+            'aluminum_cut_settings', 'aluminum_accessories', 'aluminum_glass', 'aluminum_wire',
+            'aluminum_colors', 'aluminum_remnants', 'aluminum_audit'
         ],
         'crm': ['crm_customers', 'crm_opportunities', 'crm_activities', 'crm_audit'],
         'complaints': ['complaints'],

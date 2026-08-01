@@ -354,10 +354,49 @@
     color: #fff !important;
 }
 
-.alu-est-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 0.7rem;
+.alu-pro-badge-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin: 0.75rem 0 0.5rem;
+}
+
+.alu-pro-badge {
+    font-size: 0.72rem;
+    font-weight: 700;
+    padding: 0.28rem 0.65rem;
+    border-radius: 999px;
+    background: rgba(44, 62, 80, 0.08);
+    color: #2c3e50;
+    border: 1px solid rgba(112, 128, 144, 0.25);
+}
+
+.alu-row-best {
+    background: rgba(39, 174, 96, 0.12) !important;
+}
+
+.alu-compare-table {
+    margin: 0.75rem 0 1rem;
+}
+
+.alu-stages {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.45rem;
+}
+
+.alu-stage {
+    padding: 0.4rem 0.75rem;
+    border-radius: 999px;
+    background: #eef2f5;
+    color: #5d6d7e;
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.alu-stage.is-done {
+    background: #2c3e50;
+    color: #fff;
 }
 
 .alu-est-card {
