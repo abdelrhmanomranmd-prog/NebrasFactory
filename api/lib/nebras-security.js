@@ -34,6 +34,9 @@ const SENSITIVE_STORE_KEYS = [
     'legal_contracts', 'legal_cases', 'legal_compliance', 'legal_policies',
     'legal_correspondence', 'legal_activity', 'legal_rentals', 'legal_notif_settings',
     'crm_customers', 'crm_opportunities', 'crm_activities', 'crm_audit',
+    'aluminum_profiles', 'aluminum_systems', 'aluminum_estimates', 'aluminum_cut_jobs',
+    'aluminum_cut_settings', 'aluminum_accessories', 'aluminum_glass', 'aluminum_wire',
+    'aluminum_colors', 'aluminum_remnants', 'aluminum_stock', 'aluminum_audit',
     'nebras_cloud_snapshots', 'nebras_platform_integrity'
 ];
 
@@ -363,9 +366,17 @@ function keysAllowedByCustomPermissions(permissions, keys) {
     permissions.forEach(function(perm) {
         const exact = PERMISSION_STORE_EXACT[perm];
         if (exact) exact.forEach(function(k) { allowed[k] = true; });
-        if (perm === 'erp' || perm === 'aluminum') {
+        if (perm === 'erp') {
             keys.forEach(function(k) {
                 if (k.indexOf('erp_') === 0) allowed[k] = true;
+            });
+        }
+        if (perm === 'aluminum') {
+            keys.forEach(function(k) {
+                if (k.indexOf('erp_') === 0 || k.indexOf('aluminum_') === 0 ||
+                    k.indexOf('sales_') === 0 || k.indexOf('quote_') === 0) {
+                    allowed[k] = true;
+                }
             });
         }
         if (perm === 'hr') {
@@ -464,7 +475,11 @@ function keysAllowedForSession(sess, keys) {
         if (role === 'legal' || role === 'legal_manager') {
             return k.indexOf('legal_') === 0 || k === 'audit_logs';
         }
-        if (role === 'aluminum_manager' || role === 'wpc_manager' || role === 'production_manager') {
+        if (role === 'aluminum_manager') {
+            return k.indexOf('erp_') === 0 || k.indexOf('aluminum_') === 0 ||
+                k.indexOf('sales_') === 0 || k.indexOf('quote_') === 0 || k === 'audit_logs';
+        }
+        if (role === 'wpc_manager' || role === 'production_manager') {
             return k.indexOf('erp_') === 0 || k.indexOf('sales_') === 0 || k.indexOf('quote_') === 0 || k === 'audit_logs';
         }
         if (role === 'accountant' || role === 'accounting_manager') {

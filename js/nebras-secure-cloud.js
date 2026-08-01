@@ -29,6 +29,9 @@
         'legal_contracts', 'legal_cases', 'legal_compliance', 'legal_policies',
         'legal_correspondence', 'legal_activity', 'legal_rentals', 'legal_notif_settings',
         'crm_customers', 'crm_opportunities', 'crm_activities', 'crm_audit',
+        'aluminum_profiles', 'aluminum_systems', 'aluminum_estimates', 'aluminum_cut_jobs',
+        'aluminum_cut_settings', 'aluminum_accessories', 'aluminum_glass', 'aluminum_wire',
+        'aluminum_colors', 'aluminum_remnants', 'aluminum_stock', 'aluminum_audit',
         'nebras_cloud_snapshots', 'nebras_platform_integrity'
     ];
 
@@ -69,9 +72,17 @@
         permissions.forEach(function(perm) {
             const exact = PERMISSION_STORE_EXACT[perm];
             if (exact) exact.forEach(function(k) { allowed[k] = true; });
-            if (perm === 'erp' || perm === 'aluminum') {
+            if (perm === 'erp') {
                 keys.forEach(function(k) {
                     if (k.indexOf('erp_') === 0) allowed[k] = true;
+                });
+            }
+            if (perm === 'aluminum') {
+                keys.forEach(function(k) {
+                    if (k.indexOf('erp_') === 0 || k.indexOf('aluminum_') === 0 ||
+                        k.indexOf('sales_') === 0 || k.indexOf('quote_') === 0) {
+                        allowed[k] = true;
+                    }
                 });
             }
             if (perm === 'hr') {
@@ -122,7 +133,11 @@
             if (role === 'legal' || role === 'legal_manager') {
                 return k.indexOf('legal_') === 0 || k === 'audit_logs';
             }
-            if (role === 'aluminum_manager' || role === 'wpc_manager' || role === 'production_manager') {
+            if (role === 'aluminum_manager') {
+                return k.indexOf('erp_') === 0 || k.indexOf('aluminum_') === 0 ||
+                    k.indexOf('sales_') === 0 || k.indexOf('quote_') === 0 || k === 'audit_logs';
+            }
+            if (role === 'wpc_manager' || role === 'production_manager') {
                 return k.indexOf('erp_') === 0 || k.indexOf('sales_') === 0 || k.indexOf('quote_') === 0 || k === 'audit_logs';
             }
             if (role === 'accountant' || role === 'accounting_manager') {
@@ -321,18 +336,29 @@
                 password = global.getNebrasLastLoginPassword() || '';
             }
         } catch (e) { /* ignore */ }
+        if (!password) {
+            try { password = sessionStorage.getItem('nebrasLoginPwCache') || ''; } catch (e2) { /* ignore */ }
+        }
         if (password) {
             const ok = await establishSecureSession(admin.username, password);
             if (ok) return true;
         }
-        if (options.promptReauth) {
-            const entered = window.prompt('أدخل كلمة مرورك لحفظ البيانات في السحابة:');
+        /* السؤال يظهر فقط عند طلب صريح — ومع تهدئة حتى لا يتكرر في كل خطوة */
+        if (options.promptReauth === true) {
+            let lastPrompt = 0;
+            try { lastPrompt = Number(sessionStorage.getItem('nebrasCloudPromptAt') || 0); } catch (e3) { /* ignore */ }
+            if (lastPrompt && (Date.now() - lastPrompt) < 12 * 60 * 1000) {
+                return false;
+            }
+            try { sessionStorage.setItem('nebrasCloudPromptAt', String(Date.now())); } catch (e4) { /* ignore */ }
+            const entered = window.prompt('أدخل كلمة مرورك مرة واحدة لمزامنة السحابة (لن تُطلب في كل خطوة):');
             if (entered) {
                 const ok = await establishSecureSession(admin.username, entered);
                 if (ok) {
                     try {
                         if (typeof global.setNebrasLastLoginPassword === 'function') global.setNebrasLastLoginPassword(entered);
-                    } catch (e2) { /* ignore */ }
+                        sessionStorage.setItem('nebrasLoginPwCache', entered);
+                    } catch (e5) { /* ignore */ }
                     return true;
                 }
             }

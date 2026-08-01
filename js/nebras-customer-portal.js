@@ -269,7 +269,7 @@
         options = options || {};
         if (typeof global.ensureNebrasCloudSessionReady === 'function') {
             const sessionOk = await global.ensureNebrasCloudSessionReady({
-                promptReauth: options.promptReauth !== false
+                promptReauth: options.promptReauth === true
             });
             if (!sessionOk) return false;
         }
@@ -277,7 +277,7 @@
         if (typeof global.persistNebrasCriticalStores === 'function') {
             cloudOk = await global.persistNebrasCriticalStores(['customer_portal_users', 'customer_portal_audit'], {
                 showToast: !!options.showToast,
-                promptReauth: options.promptReauth !== false
+                promptReauth: options.promptReauth === true
             });
         }
         if (!cloudOk) return false;

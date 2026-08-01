@@ -512,8 +512,13 @@
             'aluminum_colors', 'aluminum_remnants', 'aluminum_stock', 'aluminum_audit'
         ];
         if (typeof persistNebrasCriticalStores === 'function') {
-            try { return await persistNebrasCriticalStores(keys, { silent: true, showToast: false }); }
-            catch (e) { console.warn('aluminum cloud persist', e); }
+            try {
+                return await persistNebrasCriticalStores(keys, {
+                    silent: true,
+                    showToast: false,
+                    promptReauth: false
+                });
+            } catch (e) { console.warn('aluminum cloud persist', e); }
         }
         return false;
     }

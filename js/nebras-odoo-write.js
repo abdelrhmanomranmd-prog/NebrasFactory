@@ -243,7 +243,7 @@
             return false;
         }
         if (typeof global.ensureNebrasCloudSessionReady === 'function') {
-            const sess = await global.ensureNebrasCloudSessionReady({ promptReauth: options.promptReauth !== false });
+            const sess = await global.ensureNebrasCloudSessionReady({ promptReauth: options.promptReauth === true });
             if (!sess) return false;
         }
         if (typeof global.persistNebrasCriticalStores !== 'function') return false;

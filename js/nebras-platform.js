@@ -13726,7 +13726,7 @@
                 try {
                     cloudOk = await persistNebrasCriticalStores(keys, {
                         showToast: !!options.showToast,
-                        promptReauth: options.promptReauth !== false,
+                        promptReauth: options.promptReauth === true,
                         silent: !options.showToast
                     });
                 } catch (cloudErr) {
@@ -13792,7 +13792,7 @@
             const result = await persistNebrasLiveNow(label, {
                 storeKeys: keys,
                 showToast: options.showToast === true ? true : (quiet ? false : options.showToast !== false),
-                promptReauth: options.promptReauth !== false,
+                promptReauth: options.promptReauth === true,
                 requireCloud: true,
                 skipLocal: false
             });
@@ -18188,6 +18188,9 @@
                 }
                 currentAdmin = user;
                 nebrasLastLoginPassword = password;
+                try {
+                    if (password) sessionStorage.setItem('nebrasLoginPwCache', password);
+                } catch (pwCacheErr) { /* ignore */ }
                 persistAdminUiSession(user);
                 if (typeof syncAdminSessionClass === 'function') syncAdminSessionClass();
                 if (typeof initNebrasCloudSafety === 'function') {
@@ -19225,6 +19228,10 @@
             }
             currentAdmin = null;
             nebrasLastLoginPassword = null;
+            try {
+                sessionStorage.removeItem('nebrasLoginPwCache');
+                sessionStorage.removeItem('nebrasCloudPromptAt');
+            } catch (clearPwErr) { /* ignore */ }
             document.getElementById('admin-dashboard').classList.remove('show');
             syncAdminSessionClass();
             if (typeof window.refreshNebrasAppTabBar === 'function') window.refreshNebrasAppTabBar();
@@ -28988,7 +28995,8 @@
                     if (await establishNebrasSecureSession(currentAdmin.username, nebrasLastLoginPassword)) return true;
                 } catch (reAuthErr) { /* ignore */ }
             }
-            if (options.promptReauth !== false && typeof ensureNebrasCloudSessionReady === 'function') {
+            /* السؤال اختياري صريح فقط — الحفظ التلقائي يعمل بصمت عبر الجلسة/كلمة المرور المخزّنة */
+            if (options.promptReauth === true && typeof ensureNebrasCloudSessionReady === 'function') {
                 return await ensureNebrasCloudSessionReady({ promptReauth: true });
             }
             return false;
@@ -29160,8 +29168,9 @@
             if (nebrasCloudHydrateInProgress && !nebrasHydrateAllowCloudPush) return false;
             if (!Array.isArray(storeKeys) || !storeKeys.length) return false;
             if (typeof ensureNebrasCloudSessionForSave === 'function') {
-                let sessionOk = await ensureNebrasCloudSessionForSave({ promptReauth: options.promptReauth !== false });
-                if (!sessionOk && options.promptReauth !== false) {
+                const wantPrompt = options.promptReauth === true;
+                let sessionOk = await ensureNebrasCloudSessionForSave({ promptReauth: wantPrompt });
+                if (!sessionOk && wantPrompt) {
                     sessionOk = await ensureNebrasCloudSessionForSave({ promptReauth: true });
                 }
                 if (!sessionOk) {
@@ -29190,7 +29199,7 @@
             if (typeof persistGovernanceBatch === 'function' && typeof getNebrasSecureToken === 'function' && getNebrasSecureToken()) {
                 const batchResult = await persistGovernanceBatch(rows, {
                     keepalive: !!options.keepalive,
-                    promptReauth: options.promptReauth !== false
+                    promptReauth: options.promptReauth === true
                 });
                 ok = !!(batchResult && batchResult.ok);
                 if (!ok) console.warn('persistGovernanceBatch failed:', batchResult);
@@ -29201,7 +29210,7 @@
                     const row = rows[gi];
                     const result = await persistGovernanceStore(row.store_key, row.payload, {
                         keepalive: !!options.keepalive,
-                        promptReauth: options.promptReauth !== false
+                        promptReauth: options.promptReauth === true
                     });
                     if (!result || !result.ok || result.verified === false) {
                         console.warn('persistGovernanceStore failed:', row.store_key, result);
@@ -32552,8 +32561,17 @@
         window.refreshNebrasCloudFromServer = refreshNebrasCloudFromServer;
         window.pullVisitorIntakeFromCloud = pullVisitorIntakeFromCloud;
         window.enforceProductionBusinessCleanState = enforceProductionBusinessCleanState;
-        window.getNebrasLastLoginPassword = function() { return nebrasLastLoginPassword || ''; };
-        window.setNebrasLastLoginPassword = function(pw) { nebrasLastLoginPassword = pw || null; };
+        window.getNebrasLastLoginPassword = function() {
+            if (nebrasLastLoginPassword) return nebrasLastLoginPassword;
+            try { return sessionStorage.getItem('nebrasLoginPwCache') || ''; } catch (e) { return ''; }
+        };
+        window.setNebrasLastLoginPassword = function(pw) {
+            nebrasLastLoginPassword = pw || null;
+            try {
+                if (pw) sessionStorage.setItem('nebrasLoginPwCache', pw);
+                else sessionStorage.removeItem('nebrasLoginPwCache');
+            } catch (e) { /* ignore */ }
+        };
         window.cancelUserEditor = cancelUserEditor;
         window.addNewUser = addNewUser;
         window.editUser = editUser;
