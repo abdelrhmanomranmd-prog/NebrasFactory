@@ -12,8 +12,13 @@
         'sales_quotes_inbox', 'customer_order_journeys', 'customer_portal_users', 'hr_employees',
         'hr_advances', 'hr_vehicle_violations', 'crm_customers', 'crm_opportunities', 'erp_orders',
         'legal_contracts', 'legal_rentals', 'erp_inventory', 'erp_production', 'sales_data',
-        'sales_price_list', 'analytics_governance', 'system_settings', 'about_pages', 'showroom_gallery'
+        'sales_price_list', 'analytics_governance', 'system_settings', 'about_pages', 'showroom_gallery',
+        /* ترقية hrws220 — نسخ احتياطي للتخصيمات */
+        'aluminum_systems', 'aluminum_estimates', 'aluminum_cut_jobs', 'aluminum_cut_settings',
+        'aluminum_profiles', 'aluminum_accessories', 'aluminum_glass', 'aluminum_wire',
+        'aluminum_colors', 'aluminum_remnants', 'aluminum_stock', 'aluminum_audit'
     ];
+    const DAILY_SNAP_STAMP_KEY = 'nebrasDailySnapStamp';
     const LOCAL_MUTATION_KEY = 'nebrasLocalCloudMutationAt';
     const SENSITIVE_PENDING_KEY = 'nebrasSensitiveCloudPending';
     const GOV_REVISION_KEY = 'nebrasGovernanceRevision';
@@ -548,13 +553,34 @@
             const keys = [
                 'admin_users', 'customer_portal_users', 'customer_portal_audit', 'hr_employees',
                 'crm_customers', 'crm_opportunities', 'legal_contracts', 'sales_quotes_inbox',
-                'erp_orders', 'erp_inventory', 'complaints', 'audit_logs'
+                'erp_orders', 'erp_inventory', 'complaints', 'audit_logs',
+                'aluminum_systems', 'aluminum_estimates', 'aluminum_cut_jobs', 'aluminum_stock'
             ];
             try {
                 global.persistNebrasCriticalStores(keys, { showToast: false, promptReauth: false, keepalive: true });
                 return;
             } catch (e) { /* fallback below */ }
         }
+        /* ختم يومي — يدفع نسخة احتياطية للتخصيمات مرة كل يوم تقويمي */
+        try {
+            const day = new Date().toISOString().slice(0, 10);
+            const last = sessionStorage.getItem(DAILY_SNAP_STAMP_KEY) || localStorage.getItem(DAILY_SNAP_STAMP_KEY);
+            if (last !== day && typeof global.persistNebrasCriticalStores === 'function') {
+                const aluKeys = [
+                    'aluminum_systems', 'aluminum_estimates', 'aluminum_cut_jobs', 'aluminum_cut_settings',
+                    'aluminum_accessories', 'aluminum_glass', 'aluminum_stock', 'aluminum_remnants', 'aluminum_audit'
+                ];
+                global.persistNebrasCriticalStores(aluKeys, { showToast: false, promptReauth: false, keepalive: true })
+                    .then(function(ok) {
+                        if (ok) {
+                            try {
+                                sessionStorage.setItem(DAILY_SNAP_STAMP_KEY, day);
+                                localStorage.setItem(DAILY_SNAP_STAMP_KEY, day);
+                            } catch (e2) { /* ignore */ }
+                        }
+                    }).catch(function() { /* ignore */ });
+            }
+        } catch (dailyErr) { /* ignore */ }
         if (typeof global.flushPushToNebrasCloud === 'function') {
             try { global.flushPushToNebrasCloud({ silentCloud: true }); } catch (e) { /* ignore */ }
         }

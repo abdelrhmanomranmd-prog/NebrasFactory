@@ -253,6 +253,60 @@
         return true;
     }
 
+    /** يملأ مفاتيح التخصيم الناقصة دون مسح قيم المستخدم — لكل الأنظمة */
+    function normalizeAllSystemDeductions() {
+        let changed = 0;
+        (aluSystems || []).forEach(function (sys) {
+            if (!sys) return;
+            const before = JSON.stringify(sys.deductions || {});
+            sys.deductions = Object.assign({}, DEFAULT_DEDUCTIONS, sys.deductions || {});
+            if (sys.family === 'facade') {
+                if (aluNum(sys.deductions.mullionSightMm) <= 0) sys.deductions.mullionSightMm = 65;
+                if (aluNum(sys.deductions.transomSightMm) <= 0) sys.deductions.transomSightMm = 65;
+            }
+            if (JSON.stringify(sys.deductions) !== before) changed++;
+        });
+        return changed;
+    }
+
+    /**
+     * حراسة دقة قبل إرسال الورشة — تمنع التقطيع عند نقص قطاع أو أطوال غير صالحة
+     * ترجع { ok, blocking[], warnings[] }
+     */
+    function validateAluEstimateForWorkshop(est) {
+        est = est || aluEstimateDraft;
+        const blocking = [];
+        const warnings = [];
+        if (!est || !(est.items || []).length) {
+            blocking.push('لا توجد بنود في المقايسة');
+            return { ok: false, blocking: blocking, warnings: warnings };
+        }
+        const totals = computeEstimateTotals(est);
+        (totals.formulaWarnings || []).forEach(function (w) { warnings.push(w); });
+        if (aluNum(totals.missingParts) > 0) {
+            blocking.push('ناقص ' + totals.missingParts + ' قطاع في الأدوار المطلوبة — أكملي إعدادات القطاعات قبل الورشة');
+        }
+        (est.items || []).forEach(function (it, i) {
+            if (it.pricingOnly || it.shape === 'pricing_only') return;
+            const W = aluNum(it.widthMm);
+            const H = aluNum(it.heightMm);
+            if (W < 100 || H < 100) {
+                blocking.push('بند ' + (i + 1) + ': مقاس غير صالح (' + W + '×' + H + ' مم) — الحد الأدنى 100×100');
+            }
+            const built = shapeCutsWithMeta(it, i);
+            (built.warnings || []).forEach(function (w) { warnings.push('بند ' + (i + 1) + ': ' + w); });
+            const bad = (built.cuts || []).filter(function (c) { return aluNum(c.lengthMm) < 1 || c.missingPart; });
+            if (bad.length) {
+                blocking.push('بند ' + (i + 1) + ': ' + bad.length + ' قطعة ناقصة/بطول غير صالح');
+            }
+            const glass = buildItemGlass(it);
+            if (glass.widthMm <= 0 || glass.heightMm <= 0) {
+                warnings.push('بند ' + (i + 1) + ': مقاس زجاج صفر — راجعي التخصيمات');
+            }
+        });
+        return { ok: blocking.length === 0, blocking: blocking, warnings: warnings, totals: totals };
+    }
+
     function ensureMarketCatalogPresent() {
         const catalog = [
             {
@@ -327,6 +381,54 @@
                     { id: 'al-bd', role: 'bead', nameAr: 'باكيت ألوميل', sku: 'AL-BD-01', thicknessMm: 20, weightKgPerM: 0.3, pricePerKg: 20, glassKind: 'any', withPackage: false, disableLastBarRemnant: false, active: true }
                 ],
                 active: true
+            },
+            /* ترقية hrws220 — أنظمة إضافية شائعة في السوق */
+            {
+                id: 'sys-technal',
+                nameAr: 'تكنال Technal — مفصلي',
+                family: 'hinged',
+                cutAngle: 45,
+                tracksCount: 0,
+                deductions: Object.assign({}, DEFAULT_DEDUCTIONS, { sashDeductW: 42, sashDeductH: 42, glassSashDeductW: 84, glassSashDeductH: 104 }),
+                parts: [
+                    { id: 'tn-fr', role: 'frame', nameAr: 'حلق تكنال', sku: 'TN-FR-01', thicknessMm: 50, weightKgPerM: 1.12, pricePerKg: 21, withPackage: false, disableLastBarRemnant: false, active: true },
+                    { id: 'tn-sh', role: 'sash', nameAr: 'ضرفة تكنال', sku: 'TN-SH-01', thicknessMm: 50, weightKgPerM: 0.9, pricePerKg: 21, withPackage: false, disableLastBarRemnant: true, active: true },
+                    { id: 'tn-bd', role: 'bead', nameAr: 'باكيت تكنال', sku: 'TN-BD-01', thicknessMm: 20, weightKgPerM: 0.32, pricePerKg: 21, withPackage: false, disableLastBarRemnant: false, active: true },
+                    { id: 'tn-th', role: 'threshold', nameAr: 'عتبة تكنال', sku: 'TN-TH-01', thicknessMm: 50, weightKgPerM: 1.2, pricePerKg: 21, withPackage: false, disableLastBarRemnant: false, active: true }
+                ],
+                active: true
+            },
+            {
+                id: 'sys-schuco-slide',
+                nameAr: 'شوكو Schüco — سحاب',
+                family: 'sliding',
+                cutAngle: 45,
+                tracksCount: 2,
+                deductions: Object.assign({}, DEFAULT_DEDUCTIONS, { sashOverlapMm: 35, mullionDeductFull: 45, sashDeductH: 45 }),
+                parts: [
+                    { id: 'sc-fr', role: 'frame', nameAr: 'حلق شوكو سحاب', sku: 'SC-FR-01', thicknessMm: 70, weightKgPerM: 1.45, pricePerKg: 24, withPackage: false, disableLastBarRemnant: false, active: true },
+                    { id: 'sc-sh', role: 'sash', nameAr: 'ضرفة شوكو', sku: 'SC-SH-01', thicknessMm: 50, weightKgPerM: 1.05, pricePerKg: 24, withPackage: false, disableLastBarRemnant: true, active: true },
+                    { id: 'sc-mu', role: 'mullion', nameAr: 'مرد شوكو', sku: 'SC-MU-01', thicknessMm: 50, weightKgPerM: 1.1, pricePerKg: 24, withPackage: false, disableLastBarRemnant: false, active: true },
+                    { id: 'sc-kn', role: 'knife', nameAr: 'سكينة شوكو', sku: 'SC-KN-01', thicknessMm: 22, weightKgPerM: 0.55, pricePerKg: 24, withPackage: false, disableLastBarRemnant: false, active: true },
+                    { id: 'sc-bd', role: 'bead', nameAr: 'باكيت شوكو', sku: 'SC-BD-01', thicknessMm: 22, weightKgPerM: 0.35, pricePerKg: 24, withPackage: false, disableLastBarRemnant: false, active: true }
+                ],
+                active: true
+            },
+            {
+                id: 'sys-custom-generic',
+                nameAr: 'نظام حر — أي قطاع (خصّصي التخصيمات)',
+                family: 'hinged',
+                cutAngle: 45,
+                tracksCount: 0,
+                deductions: Object.assign({}, DEFAULT_DEDUCTIONS),
+                parts: [
+                    { id: 'cg-fr', role: 'frame', nameAr: 'حلق حر', sku: 'CG-FR-01', thicknessMm: 45, weightKgPerM: 1.0, pricePerKg: 18, withPackage: false, disableLastBarRemnant: false, active: true },
+                    { id: 'cg-sh', role: 'sash', nameAr: 'ضرفة حر', sku: 'CG-SH-01', thicknessMm: 45, weightKgPerM: 0.75, pricePerKg: 18, withPackage: false, disableLastBarRemnant: true, active: true },
+                    { id: 'cg-bd', role: 'bead', nameAr: 'باكيت حر', sku: 'CG-BD-01', thicknessMm: 18, weightKgPerM: 0.28, pricePerKg: 18, withPackage: false, disableLastBarRemnant: false, active: true },
+                    { id: 'cg-mu', role: 'mullion', nameAr: 'مرد حر', sku: 'CG-MU-01', thicknessMm: 40, weightKgPerM: 0.85, pricePerKg: 18, withPackage: false, disableLastBarRemnant: false, active: true },
+                    { id: 'cg-th', role: 'threshold', nameAr: 'عتبة حر', sku: 'CG-TH-01', thicknessMm: 45, weightKgPerM: 1.1, pricePerKg: 18, withPackage: false, disableLastBarRemnant: false, active: true }
+                ],
+                active: true
             }
         ];
         let added = 0;
@@ -381,7 +483,8 @@
                     cutAngle: 90,
                     tracksCount: 0,
                     deductions: Object.assign({}, DEFAULT_DEDUCTIONS, {
-                        mullionDeductFull: 0, sashDeductW: 40, glassFixedDeductW: 50, glassFixedDeductH: 50, cutAngle: 90, miterExtraMm: 0, beadInsetMm: 10
+                        mullionDeductFull: 0, sashDeductW: 40, glassFixedDeductW: 50, glassFixedDeductH: 50,
+                        cutAngle: 90, miterExtraMm: 0, beadInsetMm: 10, mullionSightMm: 65, transomSightMm: 65
                     }),
                     parts: [
                         { id: 'p-cw-fr', role: 'frame', nameAr: 'إطار محيط واجهة', sku: 'CW-FR-01', thicknessMm: 65, weightKgPerM: 1.85, pricePerKg: 19, withPackage: false, disableLastBarRemnant: false, active: true },
@@ -398,6 +501,9 @@
             try { saveLocal(ALU_SYSTEMS_KEY, aluSystems); } catch (e) { /* ignore */ }
         }
         if (ensureMarketCatalogPresent()) {
+            try { saveLocal(ALU_SYSTEMS_KEY, aluSystems); } catch (e) { /* ignore */ }
+        }
+        if (normalizeAllSystemDeductions()) {
             try { saveLocal(ALU_SYSTEMS_KEY, aluSystems); } catch (e) { /* ignore */ }
         }
         if (!aluAccessories.length) {
@@ -2886,7 +2992,17 @@
         if (!aluEstimateDraft) return;
         syncEstimateDraftFields();
         if (!(aluEstimateDraft.items || []).length) { alert('أضف بنوداً أولاً.'); return; }
-        const totals = computeEstimateTotals(aluEstimateDraft);
+        const gate = validateAluEstimateForWorkshop(aluEstimateDraft);
+        if (!gate.ok) {
+            alert('⛔ لا يمكن إرسال الورشة قبل إصلاح الدقة:\n• ' + gate.blocking.join('\n• '));
+            return;
+        }
+        if (gate.warnings.length) {
+            const go = confirm('تحذيرات دقة قبل التقطيع:\n• ' + gate.warnings.slice(0, 8).join('\n• ') +
+                (gate.warnings.length > 8 ? '\n…' : '') + '\n\nالمتابعة للتقطيع؟');
+            if (!go) return;
+        }
+        const totals = gate.totals || computeEstimateTotals(aluEstimateDraft);
         aluCutDraft = {
             estimateId: aluEstimateDraft.id,
             estimateRef: aluEstimateDraft.ref,
@@ -4400,6 +4516,8 @@
     global.copyAluEstimate = copyAluEstimate;
     global.deleteAluEstimate = deleteAluEstimate;
     global.sendAluEstimateToCutting = sendAluEstimateToCutting;
+    global.validateAluEstimateForWorkshop = validateAluEstimateForWorkshop;
+    global.normalizeAllSystemDeductions = normalizeAllSystemDeductions;
     global.saveAluCutJob = saveAluCutJob;
     global.selectAluSystemForEdit = selectAluSystemForEdit;
     global.setAluSystemsPartRole = setAluSystemsPartRole;
@@ -4693,6 +4811,23 @@
         const geoSvg = aluDrawElevationSvg(geoItem);
         assert('georgian-draw', geoSvg.indexOf('جورجيا') !== -1 && geoSvg.indexOf('polygon') !== -1, 'geo svg');
         assert('cnc-export-fn', typeof exportAluCutCnc === 'function', 'cnc');
+
+        /* hrws220 — كتالوج موسّع + حراسة ورشة + تطبيع تخصيمات */
+        ensureMarketCatalogPresent();
+        normalizeAllSystemDeductions();
+        const catalogIds = ['sys-technal', 'sys-schuco-slide', 'sys-custom-generic', 'sys-alumil', 'sys-rock-samba'];
+        assert('catalog-upgrade-220', catalogIds.every(function (id) {
+            return aluSystems.some(function (s) { return s.id === id; });
+        }), 'systems=' + aluSystems.length);
+        const gateOk = validateAluEstimateForWorkshop({
+            items: [{ shape: 'sliding2', profileSystemId: slideSys.id, widthMm: 2000, heightMm: 1600, qty: 1, glassId: (aluGlass[0] || {}).id }]
+        });
+        assert('workshop-gate-ok', gateOk.ok === true, JSON.stringify(gateOk.blocking || []));
+        const gateBad = validateAluEstimateForWorkshop({
+            items: [{ shape: 'sliding2', profileSystemId: slideSys.id, widthMm: 10, heightMm: 10, qty: 1 }]
+        });
+        assert('workshop-gate-blocks-tiny', gateBad.ok === false && gateBad.blocking.length > 0, 'blocked');
+        assert('validate-fn-present', typeof validateAluEstimateForWorkshop === 'function', 'fn');
 
 
         report.summary = report.ok ? 'PASS ' + report.checks.length + '/' + report.checks.length : 'FAIL ' + report.fails.length + '/' + report.checks.length;
