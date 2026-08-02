@@ -57,7 +57,12 @@
         sashDeductH: 40,
         cutAngle: 45,
         miterExtraMm: 0,
-        beadInsetMm: 8
+        beadInsetMm: 8,
+        /* رؤية العمود/العارضة للواجهة — 0 = السلوك القديم (التخصيم الثابت يستوعب السُمك) */
+        mullionSightMm: 0,
+        transomSightMm: 0,
+        /* تخصيم اختياري لارتفاع الحلق الرأسي عند وجود عتبة (مم) */
+        frameVerticalDeductMm: 0
     };
 
     let aluProfiles = [];
@@ -211,7 +216,20 @@
     }
 
     function ensureFacadeSystemPresent() {
-        if (aluSystems.some(function (s) { return s.family === 'facade' && s.active !== false; })) return false;
+        let changed = false;
+        const existing = aluSystems.find(function (s) { return s.family === 'facade' && s.active !== false; });
+        if (existing) {
+            existing.deductions = existing.deductions || {};
+            if (aluNum(existing.deductions.mullionSightMm) <= 0) {
+                existing.deductions.mullionSightMm = 65;
+                changed = true;
+            }
+            if (aluNum(existing.deductions.transomSightMm) <= 0) {
+                existing.deductions.transomSightMm = 65;
+                changed = true;
+            }
+            return changed;
+        }
         aluSystems.push({
             id: 'sys-facade-cw',
             nameAr: 'واجهة ستارة Curtain Wall',
@@ -219,7 +237,9 @@
             cutAngle: 90,
             tracksCount: 0,
             deductions: Object.assign({}, DEFAULT_DEDUCTIONS, {
-                mullionDeductFull: 0, sashDeductW: 40, glassFixedDeductW: 50, glassFixedDeductH: 50, cutAngle: 90, miterExtraMm: 0, beadInsetMm: 10
+                mullionDeductFull: 0, sashDeductW: 40, glassFixedDeductW: 50, glassFixedDeductH: 50,
+                cutAngle: 90, miterExtraMm: 0, beadInsetMm: 10,
+                mullionSightMm: 65, transomSightMm: 65
             }),
             parts: [
                 { id: 'p-cw-fr', role: 'frame', nameAr: 'إطار محيط واجهة', sku: 'CW-FR-01', thicknessMm: 65, weightKgPerM: 1.85, pricePerKg: 19, withPackage: false, disableLastBarRemnant: false, active: true },
@@ -585,6 +605,51 @@
     }
 
     /**
+     * عرض ضرفة السحاب المتساوي — نموذج ورشة قياسي:
+     * مجموع عروض الضرف = فتحة + (ضلف−1)×ركوب − (ضلف−1)×تقسيم
+     * لكل ضرفة: (W + (n−1)×overlap − (n−1)×split) / n
+     * مثال ضلفتين: (W + overlap − split) / 2   وليس (W/2)+overlap
+     */
+    function slidingSashWidthMm(W, leaves, d) {
+        const n = Math.max(1, Math.round(aluNum(leaves) || 1));
+        const overlap = aluNum(d && d.sashOverlapMm);
+        const split = aluNum(d && d.splitBetweenSashesMm);
+        if (n <= 1) return aluRound(Math.max(0, W + overlap), 1);
+        return aluRound(Math.max(0, (W + (n - 1) * overlap - (n - 1) * split) / n), 1);
+    }
+
+    /** ارتفاع ضرفة السحاب — يخصم كعب الباب من الأرض إن وُجد */
+    function slidingSashHeightMm(H, d, isSlidingDoor) {
+        const heel = isSlidingDoor ? aluNum(d && d.sashFromFloorMm) : 0;
+        return aluRound(Math.max(0, H - aluNum(d && d.sashDeductH) - heel), 1);
+    }
+
+    /**
+     * عرض/ارتفاع خلية واجهة بعد خصم رؤية الأعمدة والعوارض
+     * cellW = (W − (cols−1)×mullSight) / cols
+     */
+    function facadeCellSizeMm(W, H, cols, rows, d, sys) {
+        cols = Math.max(1, Math.round(aluNum(cols) || 1));
+        rows = Math.max(1, Math.round(aluNum(rows) || 1));
+        /* 0 = لا تخصم رؤية (توافق كتالوج قديم) · قيمة >0 = رؤية صريحة من التخصيمات */
+        let mullSight = aluNum(d && d.mullionSightMm);
+        let transSight = aluNum(d && d.transomSightMm);
+        if (mullSight < 0 && sys) {
+            const mp = partForRole(sys, 'mullion');
+            mullSight = mp ? aluNum(mp.thicknessMm) : 0;
+        }
+        if (transSight < 0 && sys) {
+            const tp = partForRole(sys, 'meeting') || partForRole(sys, 'bar');
+            transSight = tp ? aluNum(tp.thicknessMm) : 0;
+        }
+        if (mullSight < 0) mullSight = 0;
+        if (transSight < 0) transSight = 0;
+        const cellW = aluRound(Math.max(0, (W - (cols - 1) * mullSight) / cols), 1);
+        const cellH = aluRound(Math.max(0, (H - (rows - 1) * transSight) / rows), 1);
+        return { cellW: cellW, cellH: cellH, mullSight: mullSight, transSight: transSight, cols: cols, rows: rows };
+    }
+
+    /**
      * بناء قطع التقطيع من شكل جاهز + تخصيمات النظام
      * الأطوال بالمليمتر — أي خطأ هنا = هدر/خسارة مباشرة
      * لا تعيين صامت لقطاع خاطئ: إن نقص الدور يُسجَّل تحذير
@@ -661,8 +726,16 @@
         const rows = shape.bayRows || Math.max(1, Math.round(aluNum(item.bayRows) || 1));
 
         function push(role, labelAr, lengthMm, pieceQty, axisTag) {
-            const len = aluRound(Math.max(1, lengthMm + miterExtra), 1);
-            if (len < 1 || pieceQty <= 0) return;
+            /* بدل الزاوية 45° للحلق/الضرف/الباكيت فقط — السكينة/العتبة/المرد عادة قص 90 */
+            const miterRoles = { frame: 1, sash: 1, bead: 1 };
+            const extra = miterRoles[role] ? miterExtra : 0;
+            const raw = aluNum(lengthMm) + extra;
+            if (raw < 0.5) {
+                warnings.push('طول غير صالح لـ «' + labelAr + '»: ' + raw + ' مم — راجعي المقاس/التخصيمات');
+                return;
+            }
+            const len = aluRound(Math.max(0.1, raw), 1);
+            if (pieceQty <= 0) return;
             const part = partForRole(sys, role);
             if (!part) {
                 warnings.push('ناقص قطاع لدور «' + (PART_ROLES[role] || role) + '» في نظام ' + sys.nameAr);
@@ -676,8 +749,8 @@
                 code: (axisTag || 'P') + idx,
                 lengthMm: len,
                 qty: pieceQty * qty,
-                angleL: angle,
-                angleR: angle,
+                angleL: (miterRoles[role] && angle === 45) ? 45 : (angle === 45 && !miterRoles[role] ? 90 : angle),
+                angleR: (miterRoles[role] && angle === 45) ? 45 : (angle === 45 && !miterRoles[role] ? 90 : angle),
                 openingLabel: item.labelAr || shape.nameAr,
                 itemIndex: idx,
                 disableLastBarRemnant: !!(part && part.disableLastBarRemnant),
@@ -690,30 +763,36 @@
 
         if (shape.family === 'facade') {
             /* واجهة: إطار خارجي + أعمدة رأسية + عوارض أفقية + ضغط/كابينج اختياري */
+            const cell = facadeCellSizeMm(W, H, cols, rows, d, sys);
             push('frame', 'إطار واجهة أفقي', W, 2, 'W');
             push('frame', 'إطار واجهة رأسي', H, 2, 'H');
             const mullionLen = H - aluNum(d.mullionDeductFull);
-            const transomLen = W - aluNum(d.sashDeductW);
             push('mullion', 'عمود واجهة رأسي', mullionLen, Math.max(0, cols - 1), 'H');
-            push('meeting', 'عارضة أفقية / Transom', Math.max(1, transomLen / Math.max(1, cols)), Math.max(0, rows - 1) * cols, 'W');
-            push('bar', 'ضغط / Pressure bar', W, Math.max(1, rows), 'W');
+            /* العارضة تمتد بعرض الخلية الصافي بين الأعمدة */
+            push('meeting', 'عارضة أفقية / Transom', Math.max(1, cell.cellW), Math.max(0, rows - 1) * cols, 'W');
+            push('bar', 'ضغط / Pressure bar', Math.max(1, cell.cellW), Math.max(0, cols * rows), 'W');
             if (!partForRole(sys, 'sash') || !partForRole(sys, 'sash').withPackage) {
-                const cellW = W / cols;
-                const cellH = H / rows;
-                push('bead', 'باكيت خلية — أفقي', Math.max(1, cellW - beadInset), cols * rows * 2, 'W');
-                push('bead', 'باكيت خلية — رأسي', Math.max(1, cellH - beadInset), cols * rows * 2, 'H');
+                push('bead', 'باكيت خلية — أفقي', Math.max(1, cell.cellW - beadInset), cols * rows * 2, 'W');
+                push('bead', 'باكيت خلية — رأسي', Math.max(1, cell.cellH - beadInset), cols * rows * 2, 'H');
+            }
+            if (item.hasWire) {
+                const deduct = item.wireFixed === 'none' ? aluNum(d.wireMovingDeduct) : aluNum(d.wireFixedDeduct);
+                push('wireFrame', 'إطار سلك خلية — أفقي', Math.max(1, cell.cellW - deduct), cols * rows * 2, 'W');
+                push('wireFrame', 'إطار سلك خلية — رأسي', Math.max(1, cell.cellH - deduct), cols * rows * 2, 'H');
             }
             return { cuts: cuts, warnings: warnings };
         }
 
+        const frameVDeduct = aluNum(d.frameVerticalDeductMm);
+        const frameH = Math.max(1, H - ((shape.isDoor || shape.isSlidingDoor) ? frameVDeduct : 0));
         /* حلق دائماً لشبابيك/أبواب */
         push('frame', 'حلق أفقي', W, 2, 'W');
-        push('frame', 'حلق رأسي', H, 2, 'H');
+        push('frame', 'حلق رأسي', frameH, 2, 'H');
 
         if (shape.family === 'sliding') {
-            const sashW = (W / leaves) + aluNum(d.sashOverlapMm) - aluNum(d.splitBetweenSashesMm);
-            const sashH = H - aluNum(d.sashDeductH);
-            const mullDed = (shape.isSlidingDoor && aluNum(d.sashFromFloorMm) > 0)
+            const sashW = slidingSashWidthMm(W, leaves, d);
+            const sashH = slidingSashHeightMm(H, d, shape.isSlidingDoor || shape.isDoor);
+            const mullDed = ((shape.isSlidingDoor || shape.isDoor) && aluNum(d.sashFromFloorMm) > 0)
                 ? aluNum(d.mullionDeductWithHeel) : aluNum(d.mullionDeductFull);
             push('mullion', 'مرد / عمود التقاء', H - mullDed, Math.max(0, leaves - 1), 'H');
             push('sash', 'ضرفة — أفقي', sashW, leaves * 2, 'W');
@@ -730,8 +809,9 @@
                 push('bead', 'باكيت رأسي', Math.max(1, sashH - beadInset), leaves * 2, 'H');
             }
         } else if (shape.isFixed) {
-            push('bead', 'باكيت ثابت أفقي', Math.max(1, W - aluNum(d.glassFixedDeductW)), 2, 'W');
-            push('bead', 'باكيت ثابت رأسي', Math.max(1, H - aluNum(d.glassFixedDeductH)), 2, 'H');
+            /* الباكيت من الفتحة بـ beadInset — والزجاج بتخصيم الثابت (قد يختلفان) */
+            push('bead', 'باكيت ثابت أفقي', Math.max(1, W - beadInset), 2, 'W');
+            push('bead', 'باكيت ثابت رأسي', Math.max(1, H - beadInset), 2, 'H');
         } else {
             /* مفصلي / قلاب / باب / رسم يدوي متعدد الضلف */
             const heel = shape.isDoor ? aluNum(d.sashFromFloorMm) : 0;
@@ -761,6 +841,12 @@
                     push('bead', 'باكيت رأسي', Math.max(1, sashH - beadInset), 2, 'H');
                 }
             }
+        }
+
+        if (item.hasWire && shape.family !== 'facade') {
+            const deduct = item.wireFixed === 'none' ? aluNum(d.wireMovingDeduct) : aluNum(d.wireFixedDeduct);
+            push('wireFrame', 'إطار سلك — أفقي', Math.max(1, W - deduct), 2, 'W');
+            push('wireFrame', 'إطار سلك — رأسي', Math.max(1, H - deduct), 2, 'H');
         }
         return { cuts: cuts, warnings: warnings };
     }
@@ -796,18 +882,17 @@
         let panels = qty;
 
         if (shape.family === 'facade') {
-            const cellW = W / cols;
-            const cellH = H / rows;
-            gW = Math.max(0, aluRound(cellW - aluNum(d.glassFixedDeductW), 1));
-            gH = Math.max(0, aluRound(cellH - aluNum(d.glassFixedDeductH), 1));
+            const cell = facadeCellSizeMm(W, H, cols, rows, d, sys);
+            gW = Math.max(0, aluRound(cell.cellW - aluNum(d.glassFixedDeductW), 1));
+            gH = Math.max(0, aluRound(cell.cellH - aluNum(d.glassFixedDeductH), 1));
             panels = cols * rows * qty;
         } else if (shape.isFixed) {
             gW = Math.max(0, aluRound(W - aluNum(d.glassFixedDeductW), 1));
             gH = Math.max(0, aluRound(H - aluNum(d.glassFixedDeductH), 1));
             panels = qty;
         } else if (shape.family === 'sliding') {
-            const sashW = (W / leaves) + aluNum(d.sashOverlapMm) - aluNum(d.splitBetweenSashesMm);
-            const sashH = H - aluNum(d.sashDeductH);
+            const sashW = slidingSashWidthMm(W, leaves, d);
+            const sashH = slidingSashHeightMm(H, d, shape.isSlidingDoor || shape.isDoor);
             gW = Math.max(0, aluRound(sashW - aluNum(d.glassSashDeductW), 1));
             gH = Math.max(0, aluRound(sashH - aluNum(d.glassSashDeductH), 1));
             panels = leaves * qty;
@@ -3818,7 +3903,7 @@
         const d = dOf(sys);
         const fields = [
             ['sashOverlapMm', 'ركوب الضرفة'],
-            ['splitBetweenSashesMm', 'تقسيم بين الضرفتين'],
+            ['splitBetweenSashesMm', 'تقسيم بين الضرفتين (لكل التقاء)'],
             ['sashFromFloorMm', 'تقسيم الضرفة من الأرض (باب بكعب)'],
             ['mullionDeductFull', 'تخصيم المرد — ضرفة كاملة'],
             ['mullionDeductWithHeel', 'تخصيم المرد — بكعب'],
@@ -3831,15 +3916,18 @@
             ['wireMovingDeduct', 'تخصيم السلك المتحرك'],
             ['wireFixedDeduct', 'تخصيم السلك الثابت'],
             ['cutAngle', 'زاوية القص (45 أو 90)'],
-            ['miterExtraMm', 'بدل زاوية 45° (مم لكل قطعة)'],
-            ['beadInsetMm', 'تخصيم الباكيت من داخل الضرفة']
+            ['miterExtraMm', 'بدل زاوية 45° (حلق/ضرف/باكيت)'],
+            ['beadInsetMm', 'تخصيم الباكيت من داخل الضرفة'],
+            ['mullionSightMm', 'رؤية عمود الواجهة مم (0=بدون · للدقّة ضع سُمك العمود)'],
+            ['transomSightMm', 'رؤية عارضة الواجهة مم (0=بدون · للدقّة ضع سُمك العارضة)'],
+            ['frameVerticalDeductMm', 'تخصيم الحلق الرأسي مع العتبة (اختياري)']
         ];
         const sysSelect = '<label class="nebras-field"><span>النظام</span><select id="alu-ded-sys" onchange="editAluSystemDeducts(this.value)">' +
             aluSystems.map(function (s) {
                 return '<option value="' + aluEsc(s.id) + '"' + (s.id === sys.id ? ' selected' : '') + '>' + aluEsc(s.nameAr) + '</option>';
             }).join('') + '</select></label>';
         return '<div class="alu-cut-form-card"><h4>تخصيمات — ' + aluEsc(sys.nameAr) + '</h4>' +
-            '<p class="alu-cut-note">هذه الأرقام تُحسب مباشرة في أطوال الضرف والزجاج والباكيت. أي تعديل يغيّر الكاتنج ليست والمشتريات فوراً.</p>' +
+            '<p class="alu-cut-note">هذه الأرقام تُحسب مباشرة في أطوال الضرف والزجاج والباكيت للورشة. معادلة السحاب: عرض الضرفة = (العرض + (عدد الضلف−1)×الركوب − (عدد الضلف−1)×التقسيم) ÷ عدد الضلف. أي خطأ هنا = هدر في الورشة.</p>' +
             '<div class="erp-form-grid">' + sysSelect + fields.map(function (f) {
                 return '<label class="nebras-field"><span>' + f[1] + '</span><input type="number" id="alu-ded-' + f[0] + '" value="' + aluNum(d[f[0]]) + '" step="1"></label>';
             }).join('') + '</div>' +
@@ -4421,9 +4509,60 @@
 
         const glass = buildItemGlass(slidingItem);
         const d = dOf(slideSys);
-        const expectSashW = (2000 / 2) + aluNum(d.sashOverlapMm) - aluNum(d.splitBetweenSashesMm);
+        const expectSashW = slidingSashWidthMm(2000, 2, d);
+        const expectSashH = slidingSashHeightMm(1600, d, false);
         const expectGW = aluRound(expectSashW - aluNum(d.glassSashDeductW), 1);
-        assert('sliding-glass-from-sash', Math.abs(glass.widthMm - expectGW) < 0.2, glass.widthMm + ' vs ' + expectGW);
+        const expectGH = aluRound(expectSashH - aluNum(d.glassSashDeductH), 1);
+        assert('sliding-glass-from-sash', Math.abs(glass.widthMm - expectGW) < 0.2 && Math.abs(glass.heightMm - expectGH) < 0.2,
+            glass.widthMm + '×' + glass.heightMm + ' vs ' + expectGW + '×' + expectGH);
+
+        /* معادلة الركوب القياسية: ضلفتين (W+overlap)/2 — ليس (W/2)+overlap */
+        assert('sliding2-sash-equal-overlap', Math.abs(expectSashW - aluRound((2000 + aluNum(d.sashOverlapMm)) / 2, 1)) < 0.2,
+            'sashW=' + expectSashW);
+        const sashCutW = (slideBuilt.cuts || []).find(function (c) { return c.role === 'sash' && /أفقي/.test(c.labelAr); });
+        const sashCutH = (slideBuilt.cuts || []).find(function (c) { return c.role === 'sash' && /رأسي/.test(c.labelAr); });
+        assert('sliding2-cut-sash-w', sashCutW && Math.abs(sashCutW.lengthMm - expectSashW) < 0.2, sashCutW && sashCutW.lengthMm);
+        assert('sliding2-cut-sash-h', sashCutH && Math.abs(sashCutH.lengthMm - expectSashH) < 0.2, sashCutH && sashCutH.lengthMm);
+        assert('sliding2-sash-qty', sashCutW && sashCutW.qty === 4, sashCutW && sashCutW.qty);
+
+        /* 3 ضلف: (W + 2×overlap) / 3 */
+        const d3 = Object.assign({}, d, { sashOverlapMm: 30, splitBetweenSashesMm: 0 });
+        const sash3 = slidingSashWidthMm(2400, 3, d3);
+        assert('sliding3-sash-formula', Math.abs(sash3 - 820) < 0.2, 'got=' + sash3 + ' expect=820');
+
+        /* باب سحاب بكعب — ارتفاع الضرفة يخصم الكعب */
+        const doorSlide = {
+            shape: 'door_sliding', profileSystemId: slideSys.id,
+            widthMm: 2000, heightMm: 2200, qty: 1, glassId: (aluGlass[0] || {}).id
+        };
+        const dDoor = Object.assign({}, dOf(slideSys), { sashFromFloorMm: 50, sashDeductH: 40 });
+        /* مؤقتاً على النظام */
+        const prevDed = slideSys.deductions;
+        slideSys.deductions = Object.assign({}, dOf(slideSys), { sashFromFloorMm: 50, sashDeductH: 40 });
+        const doorBuilt = shapeCutsWithMeta(doorSlide, 0);
+        const doorSashH = (doorBuilt.cuts || []).find(function (c) { return c.role === 'sash' && /رأسي/.test(c.labelAr); });
+        const expectDoorSashH = slidingSashHeightMm(2200, slideSys.deductions, true);
+        assert('sliding-door-heel-sash', doorSashH && Math.abs(doorSashH.lengthMm - expectDoorSashH) < 0.2 && expectDoorSashH === 2110,
+            (doorSashH && doorSashH.lengthMm) + ' vs ' + expectDoorSashH);
+        const doorGlass = buildItemGlass(doorSlide);
+        assert('sliding-door-heel-glass', Math.abs(doorGlass.heightMm - (expectDoorSashH - aluNum(dOf(slideSys).glassSashDeductH))) < 0.2, String(doorGlass.heightMm));
+        slideSys.deductions = prevDed;
+
+        /* مفصلي باب: ضرفة = W−sashDeductW ، H−sashDeductH−heel */
+        const hingeDoorItem = {
+            shape: 'door_hinged', profileSystemId: hingeSys.id,
+            widthMm: 900, heightMm: 2200, qty: 1, glassId: (aluGlass[0] || {}).id
+        };
+        const prevHingeDed = hingeSys.deductions;
+        hingeSys.deductions = Object.assign({}, dOf(hingeSys), { sashFromFloorMm: 0, sashDeductW: 40, sashDeductH: 40, glassSashDeductW: 80, glassSashDeductH: 100, beadInsetMm: 8 });
+        const hingeBuilt = shapeCutsWithMeta(hingeDoorItem, 0);
+        const hsW = (hingeBuilt.cuts || []).find(function (c) { return c.role === 'sash' && /أفقي/.test(c.labelAr); });
+        const hsH = (hingeBuilt.cuts || []).find(function (c) { return c.role === 'sash' && /رأسي/.test(c.labelAr); });
+        assert('hinged-door-sash', hsW && hsH && Math.abs(hsW.lengthMm - 860) < 0.2 && Math.abs(hsH.lengthMm - 2160) < 0.2,
+            (hsW && hsW.lengthMm) + '×' + (hsH && hsH.lengthMm));
+        const hg = buildItemGlass(hingeDoorItem);
+        assert('hinged-door-glass', Math.abs(hg.widthMm - 780) < 0.2 && Math.abs(hg.heightMm - 2060) < 0.2, hg.widthMm + '×' + hg.heightMm);
+        hingeSys.deductions = prevHingeDed;
 
         const facadeItem = {
             shape: 'facade_bay', profileSystemId: facadeSys.id,
@@ -4434,6 +4573,22 @@
         assert('facade-mullions', mullions.length >= 1 && mullions[0].qty === 2, 'cols-1=' + (mullions[0] && mullions[0].qty));
         const fGlass = buildItemGlass(facadeItem);
         assert('facade-glass-panels', fGlass.panels === 6, String(fGlass.panels));
+        const fd = dOf(facadeSys);
+        const fCell = facadeCellSizeMm(6000, 3000, 3, 2, fd, facadeSys);
+        /* بذرة الواجهة: رؤية 65 → cellW=(6000-130)/3=1956.7 */
+        assert('facade-cell-sight', Math.abs(fCell.cellW - 1956.7) < 0.2 && Math.abs(fCell.cellH - 1467.5) < 0.2,
+            fCell.cellW + '×' + fCell.cellH);
+        assert('facade-glass-from-cell', Math.abs(fGlass.widthMm - aluRound(fCell.cellW - aluNum(fd.glassFixedDeductW), 1)) < 0.2, String(fGlass.widthMm));
+        const fTransom = (facadeBuilt.cuts || []).find(function (c) { return c.role === 'meeting'; });
+        assert('facade-transom-cell', fTransom && Math.abs(fTransom.lengthMm - fCell.cellW) < 0.2, fTransom && fTransom.lengthMm);
+
+        /* سلك → أطوال إطار سلك في الكاتنج ليست */
+        const wireItem = Object.assign({}, slidingItem, { hasWire: true, wireFixed: 'none' });
+        const wireBuilt = shapeCutsWithMeta(wireItem, 0);
+        assert('wire-frame-cuts', (wireBuilt.cuts || []).some(function (c) { return c.role === 'wireFrame'; }), 'wireFrame');
+
+        /* cuts و glass من نفس الدالة — لا اختلاف صامت */
+        assert('glass-cut-engine-shared', typeof slidingSashWidthMm === 'function' && typeof facadeCellSizeMm === 'function', 'helpers');
 
         const fake = { remnantsCommitted: false, plans: [{ profileId: 'x', profileSku: 'X', profileName: 'X', role: 'frame', plan: { bars: [{ remain: 500 }] } }], consumedRemnantIds: [] };
         const before = aluRemnants.length;
