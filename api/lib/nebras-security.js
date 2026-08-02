@@ -15,6 +15,19 @@ const FALLBACK_HQ_USERS = [
     }
 ];
 
+/** بذرة مدير الألومنيوم — تضمن جلسة API حتى لو لم تُرفع admin_users بعد */
+const FALLBACK_ALU_USERS = [
+    {
+        id: 'alu-mgr-ihab',
+        username: 'ihab',
+        password: 'ihabnebras',
+        role: 'aluminum_manager',
+        isActive: true,
+        displayNameAr: 'إيهاب — مدير قسم الألومنيوم',
+        systemSeedKey: 'aluminum-manager-ihab'
+    }
+];
+
 const PUBLIC_STORE_KEYS = [
     'site_products', 'visitor_icons', 'dashboard_tiles', 'site_custom_sections',
     'about_pages', 'system_settings', 'branches', 'site_partners', 'site_certifications',
@@ -286,17 +299,82 @@ async function upsertStoreRows(url, key, rows) {
     }
 }
 
-async function loadAdminUsers() {
+function mergeBuiltinSeedUsers(users) {
+    const list = Array.isArray(users) ? users.slice() : [];
+    const seeds = FALLBACK_HQ_USERS.concat(FALLBACK_ALU_USERS);
+    seeds.forEach(function(seed) {
+        const un = String(seed.username || '').toUpperCase();
+        const idx = list.findIndex(function(u) {
+            return u && String(u.username || '').toUpperCase() === un;
+        });
+        if (idx < 0) {
+            list.push(Object.assign({}, seed));
+            return;
+        }
+        const cur = list[idx];
+        let nextPw = cur.password || seed.password;
+        /* حساب ihab النظامي يُحاذى مع بذرة العميل — حتى تنجح جلسة API */
+        if (seed.systemSeedKey === 'aluminum-manager-ihab') {
+            if (!cur.password || !verifyNebrasPassword(cur.password, seed.password)) {
+                nextPw = seed.password;
+            }
+        }
+        list[idx] = Object.assign({}, cur, {
+            id: cur.id || seed.id,
+            username: cur.username || seed.username,
+            role: seed.role || cur.role,
+            isActive: true,
+            isPrimary: seed.isPrimary != null ? !!seed.isPrimary : cur.isPrimary,
+            displayNameAr: cur.displayNameAr || seed.displayNameAr,
+            systemSeedKey: cur.systemSeedKey || seed.systemSeedKey,
+            password: nextPw
+        });
+    });
+    return list;
+}
+
+async function loadAdminUsersRaw() {
     try {
         const { url, key } = supabaseServiceConfig();
-        if (!url || !key) return FALLBACK_HQ_USERS.slice();
+        if (!url || !key) return [];
         const row = await fetchStoreRow(url, key, 'admin_users');
         const payload = row && row.payload !== undefined ? row.payload : null;
-        const users = Array.isArray(payload) ? payload : [];
-        return users.length ? users : FALLBACK_HQ_USERS.slice();
+        return Array.isArray(payload) ? payload : [];
+    } catch (err) {
+        console.error('loadAdminUsersRaw error:', err);
+        return [];
+    }
+}
+
+async function loadAdminUsers() {
+    try {
+        const users = await loadAdminUsersRaw();
+        if (!users.length) return mergeBuiltinSeedUsers(FALLBACK_HQ_USERS.slice());
+        return mergeBuiltinSeedUsers(users);
     } catch (err) {
         console.error('loadAdminUsers error:', err);
-        return FALLBACK_HQ_USERS.slice();
+        return mergeBuiltinSeedUsers(FALLBACK_HQ_USERS.slice());
+    }
+}
+
+/** يكتب بذور HQ + ihab في السحابة إن نقصت — بدون مسح باقي المستخدمين */
+async function ensureBuiltinAdminUsersPersisted() {
+    try {
+        const { url, key } = supabaseServiceConfig();
+        if (!url || !key) return { ok: false, error: 'service_unavailable' };
+        const raw = await loadAdminUsersRaw();
+        const before = JSON.stringify(raw || []);
+        const merged = mergeBuiltinSeedUsers(raw.length ? raw : FALLBACK_HQ_USERS.slice());
+        if (JSON.stringify(merged) === before && raw.length) return { ok: true, changed: false };
+        const upsert = await upsertStoreRows(url, key, [{
+            store_key: 'admin_users',
+            payload: merged,
+            updated_at: new Date().toISOString()
+        }]);
+        return { ok: !!(upsert && upsert.ok), changed: true };
+    } catch (err) {
+        console.error('ensureBuiltinAdminUsersPersisted:', err);
+        return { ok: false, error: String(err && err.message || err) };
     }
 }
 
@@ -506,6 +584,7 @@ function keysAllowedForSession(sess, keys) {
 
 module.exports = {
     FALLBACK_HQ_USERS,
+    FALLBACK_ALU_USERS,
     PUBLIC_STORE_KEYS,
     SENSITIVE_STORE_KEYS,
     SESSION_TTL_MS,
@@ -521,6 +600,9 @@ module.exports = {
     fetchStoreRow,
     upsertStoreRows,
     loadAdminUsers,
+    loadAdminUsersRaw,
+    ensureBuiltinAdminUsersPersisted,
+    mergeBuiltinSeedUsers,
     loadCustomerPortalUsers,
     parseBody,
     getBearerToken,

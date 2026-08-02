@@ -1,12 +1,23 @@
 ﻿        const SUPABASE_URL = 'https://oedldllrjavofpeaputz.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_bt6rlHxu_pjc1xpkKEWOcg_HZ43JMR0';
         let supabaseClient = null;
-        try {
-            if (window.supabase && typeof window.supabase.createClient === 'function') {
-                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        function ensureNebrasSupabaseClient() {
+            if (supabaseClient) return supabaseClient;
+            try {
+                if (window.supabase && typeof window.supabase.createClient === 'function') {
+                    supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                }
+            } catch (supabaseInitErr) {
+                console.warn('Supabase unavailable — local mode only:', supabaseInitErr);
             }
-        } catch (supabaseInitErr) {
-            console.warn('Supabase unavailable — local mode only:', supabaseInitErr);
+            return supabaseClient;
+        }
+        try { ensureNebrasSupabaseClient(); } catch (e0) { /* ignore */ }
+        /* إن تأخر تحميل مكتبة Supabase (defer) — أعد المحاولة عند الجاهزية */
+        if (!supabaseClient && typeof document !== 'undefined') {
+            document.addEventListener('DOMContentLoaded', function() { ensureNebrasSupabaseClient(); });
+            setTimeout(function() { ensureNebrasSupabaseClient(); }, 800);
+            setTimeout(function() { ensureNebrasSupabaseClient(); }, 2500);
         }
         const NEBRAS_MEDIA_BUCKET = 'nebras-media';
         const NEBRAS_MEDIA_MAX_BYTES = 20 * 1024 * 1024;
@@ -18776,8 +18787,12 @@
 
             const sync = document.getElementById('dashboard-command-sync');
             if (sync) {
-                const cloudOk = !!supabaseClient;
-                let syncLine = cloudOk ? 'متصل — Supabase' : 'وضع محلي — انتظار السحابة';
+                ensureNebrasSupabaseClient();
+                const hasSecure = typeof hasNebrasSecureSession === 'function' && hasNebrasSecureSession();
+                const cloudOk = !!supabaseClient || hasSecure || !!nebrasLastCloudSaveAt;
+                let syncLine = cloudOk
+                    ? (hasSecure || nebrasLastCloudSaveAt ? 'متصل — السحابة' : 'متصل — Supabase')
+                    : 'وضع محلي — انتظار السحابة';
                 if (cloudOk && nebrasLastCloudSaveAt) {
                     syncLine += ' · آخر رفع: ' + formatNebrasDateTime(nebrasLastCloudSaveAt, 'ar');
                 } else if (cloudOk && nebrasLastCloudLoadAt) {
@@ -29167,6 +29182,11 @@
             options = options || {};
             if (nebrasCloudHydrateInProgress && !nebrasHydrateAllowCloudPush) return false;
             if (!Array.isArray(storeKeys) || !storeKeys.length) return false;
+            /* لا ترفعي مفاتيح ممنوعة للدور — كانت تسبب فشل الحفظ بالكامل */
+            if (typeof keysAllowedForNebrasAdmin === 'function' && currentAdmin) {
+                storeKeys = keysAllowedForNebrasAdmin(currentAdmin, storeKeys);
+            }
+            if (!storeKeys.length) return true;
             if (typeof ensureNebrasCloudSessionForSave === 'function') {
                 const wantPrompt = options.promptReauth === true;
                 let sessionOk = await ensureNebrasCloudSessionForSave({ promptReauth: wantPrompt });
@@ -29206,19 +29226,24 @@
             }
             if (!ok && typeof persistGovernanceStore === 'function') {
                 let allOk = true;
+                let savedAny = false;
                 for (let gi = 0; gi < rows.length; gi++) {
                     const row = rows[gi];
                     const result = await persistGovernanceStore(row.store_key, row.payload, {
                         keepalive: !!options.keepalive,
                         promptReauth: options.promptReauth === true
                     });
+                    if (result && result.error === 'forbidden_for_role') {
+                        continue;
+                    }
                     if (!result || !result.ok || result.verified === false) {
                         console.warn('persistGovernanceStore failed:', row.store_key, result);
                         allOk = false;
                         break;
                     }
+                    savedAny = true;
                 }
-                ok = allOk;
+                ok = allOk && (savedAny || !rows.length);
             }
             if (!ok && typeof secureCloudPush === 'function' && typeof getNebrasSecureToken === 'function' && getNebrasSecureToken()) {
                 const result = await secureCloudPush(rows);

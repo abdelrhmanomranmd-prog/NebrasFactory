@@ -26,6 +26,17 @@ async function handleLogin(body) {
     if (!authed) {
         return { code: 401, data: { ok: false, error: 'invalid_credentials' } };
     }
+    /* ثبّت بذرة ihab/HQ في السحابة بهدوء حتى تنجح جلسة الحفظ لاحقاً */
+    try {
+        await sec.ensureBuiltinAdminUsersPersisted();
+        const refreshed = await sec.loadAdminUsers();
+        const again = refreshed.find(function(u) {
+            return String(u.username || '').toUpperCase() === unUpper && u.isActive !== false;
+        });
+        if (again) user = again;
+    } catch (seedErr) {
+        console.warn('ensureBuiltinAdminUsersPersisted:', seedErr);
+    }
     const exp = Date.now() + sec.SESSION_TTL_MS;
     let session;
     try {

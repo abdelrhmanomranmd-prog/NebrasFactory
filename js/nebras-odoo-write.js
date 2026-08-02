@@ -31,7 +31,7 @@
         'about_pages', 'dashboard_tiles', 'site_certifications', 'site_custom_sections',
         'aluminum_profiles', 'aluminum_systems', 'aluminum_estimates', 'aluminum_cut_jobs',
         'aluminum_cut_settings', 'aluminum_accessories', 'aluminum_glass', 'aluminum_wire',
-        'aluminum_colors', 'aluminum_remnants', 'aluminum_audit'
+        'aluminum_colors', 'aluminum_remnants', 'aluminum_stock', 'aluminum_audit'
     ];
 
     const ODOO_HR_KEYS = [
@@ -61,7 +61,7 @@
         'erp-aluminum-cutting': [
             'aluminum_profiles', 'aluminum_systems', 'aluminum_estimates', 'aluminum_cut_jobs',
             'aluminum_cut_settings', 'aluminum_accessories', 'aluminum_glass', 'aluminum_wire',
-            'aluminum_colors', 'aluminum_remnants', 'aluminum_audit'
+            'aluminum_colors', 'aluminum_remnants', 'aluminum_stock', 'aluminum_audit'
         ],
         'crm': ['crm_customers', 'crm_opportunities', 'crm_activities', 'crm_audit'],
         'complaints': ['complaints'],
@@ -236,14 +236,31 @@
         }
     }
 
+    function filterKeysForAdmin(keys) {
+        const admin = typeof global.getNebrasCurrentAdmin === 'function' ? global.getNebrasCurrentAdmin() : null;
+        if (admin && typeof global.keysAllowedForNebrasAdmin === 'function') {
+            return global.keysAllowedForNebrasAdmin(admin, keys || []);
+        }
+        return (keys || []).slice();
+    }
+
     async function nebrasOdooPersistKeys(storeKeys, options) {
         options = options || {};
         storeKeys = (storeKeys && storeKeys.length) ? storeKeys : ODOO_WRITE_KEYS.slice();
+        storeKeys = filterKeysForAdmin(storeKeys);
+        if (!storeKeys.length) return true;
         if (typeof global.isNebrasCloudHydrating === 'function' && global.isNebrasCloudHydrating()) {
             return false;
         }
         if (typeof global.ensureNebrasCloudSessionReady === 'function') {
-            const sess = await global.ensureNebrasCloudSessionReady({ promptReauth: options.promptReauth === true });
+            let sess = await global.ensureNebrasCloudSessionReady({ promptReauth: options.promptReauth === true });
+            if (!sess && typeof global.getNebrasLastLoginPassword === 'function') {
+                const admin = typeof global.getNebrasCurrentAdmin === 'function' ? global.getNebrasCurrentAdmin() : null;
+                const pw = global.getNebrasLastLoginPassword();
+                if (admin && pw && typeof global.establishNebrasSecureSession === 'function') {
+                    try { sess = await global.establishNebrasSecureSession(admin.username, pw); } catch (e) { sess = false; }
+                }
+            }
             if (!sess) return false;
         }
         if (typeof global.persistNebrasCriticalStores !== 'function') return false;
@@ -287,7 +304,7 @@
             return true;
         }
         if (typeof global.purgeDeprecatedVisitorIcons === 'function') global.purgeDeprecatedVisitorIcons();
-        const keys = options.storeKeys || ODOO_WRITE_KEYS.slice();
+        const keys = filterKeysForAdmin(options.storeKeys || ODOO_WRITE_KEYS.slice());
         if (!odooQuietOrb('saving')) {
             if (typeof global.renderNebrasLiveCloudRibbon === 'function') global.renderNebrasLiveCloudRibbon('saving');
             if (typeof global.renderNebrasCloudStatusOrb === 'function') {
@@ -295,7 +312,11 @@
             }
         }
 
-        const ok = await nebrasOdooPersistKeys(keys, { showToast: false, promptReauth: false });
+        let ok = await nebrasOdooPersistKeys(keys, { showToast: false, promptReauth: false });
+        if (!ok) {
+            /* محاولة ثانية صامتة بعد استعادة الجلسة من كلمة مرور الدخول */
+            ok = await nebrasOdooPersistKeys(keys, { showToast: false, promptReauth: false });
+        }
         const localOk = nebrasOdooFlushLocalCache();
 
         if (ok) {
@@ -305,7 +326,17 @@
         }
 
         if (ok) odooQuietOrb('ok');
-        else if (!odooQuietOrb('error')) {
+        else if (localOk) {
+            /* محلي نجح — لا نرعب المستخدم بـ«فشل الحفظ» إن كانت السحابة تُستعاد */
+            if (!odooQuietOrb('error')) {
+                if (typeof global.renderNebrasLiveCloudRibbon === 'function') {
+                    global.renderNebrasLiveCloudRibbon('warn', 'محلي — جاري مزامنة السحابة');
+                }
+                if (typeof global.renderNebrasCloudStatusOrb === 'function') {
+                    global.renderNebrasCloudStatusOrb('warn', 'محفوظ محلياً — المزامنة قادمة');
+                }
+            }
+        } else if (!odooQuietOrb('error')) {
             if (typeof global.renderNebrasLiveCloudRibbon === 'function') global.renderNebrasLiveCloudRibbon('error');
             if (typeof global.renderNebrasCloudStatusOrb === 'function') {
                 global.renderNebrasCloudStatusOrb('error', '✗ فشل الحفظ');
