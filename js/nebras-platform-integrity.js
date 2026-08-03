@@ -13,7 +13,7 @@
         'hr_advances', 'hr_vehicle_violations', 'crm_customers', 'crm_opportunities', 'erp_orders',
         'legal_contracts', 'legal_rentals', 'erp_inventory', 'erp_production', 'sales_data',
         'sales_price_list', 'analytics_governance', 'system_settings', 'about_pages', 'showroom_gallery',
-        /* ترقية hrws220 — نسخ احتياطي للتخصيمات */
+        /* ترقية hrws221 — نسخ احتياطي للتخصيمات */
         'aluminum_systems', 'aluminum_estimates', 'aluminum_cut_jobs', 'aluminum_cut_settings',
         'aluminum_profiles', 'aluminum_accessories', 'aluminum_glass', 'aluminum_wire',
         'aluminum_colors', 'aluminum_remnants', 'aluminum_stock', 'aluminum_audit'
@@ -599,8 +599,15 @@
         if (cloudAutoSyncTimer) return;
         nebrasFlushCloudIfAdmin();
         nebrasPullCloudIfAdmin();
-        cloudAutoSyncTimer = setInterval(nebrasFlushCloudIfAdmin, 8000);
-        cloudAutoPullTimer = setInterval(nebrasPullCloudIfAdmin, 8000);
+        /* إدارة: 20ث بدل 8ث — أخف على الجهاز مع الحفاظ على المزامنة */
+        cloudAutoSyncTimer = setInterval(function() {
+            if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
+            nebrasFlushCloudIfAdmin();
+        }, 20000);
+        cloudAutoPullTimer = setInterval(function() {
+            if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
+            nebrasPullCloudIfAdmin();
+        }, 20000);
         if (typeof window !== 'undefined' && !window._nebrasCloudUnloadHook) {
             window._nebrasCloudUnloadHook = true;
             window.addEventListener('pagehide', function() { nebrasFlushCloudIfAdmin(); });

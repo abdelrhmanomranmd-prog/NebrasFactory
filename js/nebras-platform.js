@@ -3421,7 +3421,18 @@
                 }
                 return;
             }
-            openHrPlatformFallback();
+            /* HR يُحمَّل كسولاً — ابدأ التحميل وانتظر الجاهزية بدل فشل فوري */
+            if (typeof window.ensureNebrasDeptBundle === 'function') {
+                window.ensureNebrasDeptBundle('hr').then(function() {
+                    openHrWhenReady(0);
+                }).catch(function(err) {
+                    console.error('HR lazy load', err);
+                    openHrPlatformFallback();
+                });
+                openHrWhenReady(0);
+                return;
+            }
+            openHrWhenReady(0);
         }
 
         function getNebrasHrUsers() {
@@ -3479,10 +3490,17 @@
             openProductMasterHub: function() { openProductMasterHub(); },
             openAluminumDepartment: function() { openAluminumDepartment(); },
             openAluminumCutting: function() {
-                if (typeof window.openAluminumCutting === 'function') {
-                    try { return window.openAluminumCutting(); } catch (e) { console.error('openAluminumCutting', e); }
+                function tryOpen() {
+                    if (typeof window.openAluminumCutting === 'function') {
+                        try { return window.openAluminumCutting(); } catch (e) { console.error('openAluminumCutting', e); }
+                        return;
+                    }
+                    alert('تخصيمات الألومنيوم — أعيدي تحميل الصفحة (Ctrl+Shift+R).');
                 }
-                alert('تخصيمات الألومنيوم — أعيدي تحميل الصفحة (Ctrl+Shift+R).');
+                if (typeof window.ensureNebrasDeptBundle === 'function') {
+                    return window.ensureNebrasDeptBundle('aluminum').then(tryOpen).catch(tryOpen);
+                }
+                return tryOpen();
             },
             openAluminumQuoteBuilder: function() { openAluminumQuoteBuilder(); },
             openWpcProductionDepartment: function() { openWpcProductionDepartment(); },
@@ -3491,27 +3509,54 @@
             openHqBranchEmpireGovernance: function() { openHqBranchEmpireGovernance(); },
             openHrPlatform: openHrPlatformBridge,
             openLegalPlatform: function() {
-                if (typeof window.openLegalPlatform === 'function') {
-                    try { return window.openLegalPlatform(); } catch (e) { console.error('openLegalPlatform', e); }
+                function tryOpen() {
+                    if (typeof window.openLegalPlatform === 'function') {
+                        try { return window.openLegalPlatform(); } catch (e) { console.error('openLegalPlatform', e); }
+                        return;
+                    }
+                    alert('منصة الشؤون القانونية — أعيدي تحميل الصفحة (Ctrl+Shift+R).');
                 }
-                alert('منصة الشؤون القانونية — أعيدي تحميل الصفحة (Ctrl+Shift+R).');
+                if (typeof window.ensureNebrasDeptBundle === 'function') {
+                    return window.ensureNebrasDeptBundle('legal').then(tryOpen).catch(tryOpen);
+                }
+                return tryOpen();
             },
             openCrmPlatform: function() {
-                if (typeof window.openCrmPlatform === 'function') {
-                    try { return window.openCrmPlatform(); } catch (e) { console.error('openCrmPlatform', e); }
+                function tryOpen() {
+                    if (typeof window.openCrmPlatform === 'function') {
+                        try { return window.openCrmPlatform(); } catch (e) { console.error('openCrmPlatform', e); }
+                        return;
+                    }
+                    alert('منصة CRM — أعيدي تحميل الصفحة (Ctrl+Shift+R).');
                 }
-                alert('منصة CRM — أعيدي تحميل الصفحة (Ctrl+Shift+R).');
+                if (typeof window.ensureNebrasDeptBundle === 'function') {
+                    return window.ensureNebrasDeptBundle('crm').then(tryOpen).catch(tryOpen);
+                }
+                return tryOpen();
             },
             openAccountingPlatform: function() {
-                if (typeof window.openAccountingPlatform === 'function') {
-                    try { return window.openAccountingPlatform(); } catch (e) { console.error('openAccountingPlatform', e); }
+                function tryOpen() {
+                    if (typeof window.openAccountingPlatform === 'function') {
+                        try { return window.openAccountingPlatform(); } catch (e) { console.error('openAccountingPlatform', e); }
+                        return;
+                    }
+                    if (typeof openErpAccounting === 'function') return openErpAccounting();
+                    alert('منصة الحسابات — أعيدي تحميل الصفحة (Ctrl+Shift+R).');
                 }
-                if (typeof openErpAccounting === 'function') return openErpAccounting();
-                alert('منصة الحسابات — أعيدي تحميل الصفحة (Ctrl+Shift+R).');
+                if (typeof window.ensureNebrasDeptBundle === 'function') {
+                    return window.ensureNebrasDeptBundle('accounting').then(tryOpen).catch(tryOpen);
+                }
+                return tryOpen();
             },
             openNebrasEmpireHub: function() {
-                if (typeof window.openNebrasEmpireHub === 'function') return window.openNebrasEmpireHub();
-                alert('مركز إمبراطورية نبراس — أعيدي تحميل الصفحة (Ctrl+Shift+R).');
+                function tryOpen() {
+                    if (typeof window.openNebrasEmpireHub === 'function') return window.openNebrasEmpireHub();
+                    alert('مركز إمبراطورية نبراس — أعيدي تحميل الصفحة (Ctrl+Shift+R).');
+                }
+                if (typeof window.ensureNebrasDeptBundle === 'function') {
+                    return window.ensureNebrasDeptBundle('empire').then(tryOpen).catch(tryOpen);
+                }
+                return tryOpen();
             },
             openCloudGovernance: function() { openCloudGovernance(); },
             openPlatformIntegrationHub: function() {
@@ -18210,6 +18255,7 @@
                 if (typeof startNebrasRealtimeSync === 'function') {
                     try { startNebrasRealtimeSync(); } catch (rtErr) { console.warn('Realtime shadow:', rtErr); }
                 }
+                try { window.dispatchEvent(new CustomEvent('nebras-admin-session', { detail: { username: user.username } })); } catch (sessEv) { /* ignore */ }
                 saveSystemData({ skipCloud: true, skipMutationMark: true });
                 if (typeof startAdminPresenceHeartbeat === 'function') startAdminPresenceHeartbeat(user);
                 if (typeof setAdminLoginStatus === 'function') setAdminLoginStatus(ui.adminLoginOk || 'تم تسجيل الدخول بنجاح.', 'ok');
@@ -28685,15 +28731,16 @@
         function startNebrasPublicSiteCloudRefresh() {
             if (nebrasPublicSiteCloudRefreshTimer) return;
             async function tick() {
+                if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
                 try {
                     await pullPublicSiteGovernanceFromCloud({ silent: true });
                 } catch (tickErr) { /* ignore */ }
             }
-            nebrasPublicSiteCloudRefreshTimer = setInterval(tick, 8000);
+            /* زائر: كل 60ث بدل 8ث — يقلل ثقل الشبكة دون إيقاف تحديث المحتوى */
+            nebrasPublicSiteCloudRefreshTimer = setInterval(tick, 60000);
             document.addEventListener('visibilitychange', function() {
                 if (document.visibilityState === 'visible') tick();
             });
-            window.addEventListener('focus', tick);
         }
 
         let nebrasHydrateInFlight = null;
@@ -30030,6 +30077,7 @@
             if (typeof startNebrasRealtimeSync === 'function') {
                 try { startNebrasRealtimeSync(); } catch (rtErr) { console.warn('Realtime shadow:', rtErr); }
             }
+            try { window.dispatchEvent(new CustomEvent('nebras-admin-session', { detail: { username: user.username } })); } catch (sessEv) { /* ignore */ }
             if (typeof startAdminPresenceHeartbeat === 'function') startAdminPresenceHeartbeat(user);
             if (typeof dismissBrandIntro === 'function') dismissBrandIntro();
             showAdminDashboard(user);
