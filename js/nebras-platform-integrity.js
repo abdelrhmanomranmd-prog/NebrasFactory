@@ -13,7 +13,7 @@
         'hr_advances', 'hr_vehicle_violations', 'crm_customers', 'crm_opportunities', 'erp_orders',
         'legal_contracts', 'legal_rentals', 'erp_inventory', 'erp_production', 'sales_data',
         'sales_price_list', 'analytics_governance', 'system_settings', 'about_pages', 'showroom_gallery',
-        /* ترقية hrws221 — نسخ احتياطي للتخصيمات */
+        /* ترقية hrws222 — نسخ احتياطي للتخصيمات */
         'aluminum_systems', 'aluminum_estimates', 'aluminum_cut_jobs', 'aluminum_cut_settings',
         'aluminum_profiles', 'aluminum_accessories', 'aluminum_glass', 'aluminum_wire',
         'aluminum_colors', 'aluminum_remnants', 'aluminum_stock', 'aluminum_audit'

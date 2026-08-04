@@ -1,11 +1,11 @@
 /**
- * نبراس — تحميل كسول لوحدات الإدارات (hrws221)
+ * نبراس — تحميل كسول لوحدات الإدارات (hrws222)
  * يبقي أول فتح خفيفاً: التخصيمات / HR / Legal / CRM تُحمَّل عند الحاجة أو بعد الخمول.
  */
 (function (global) {
     'use strict';
 
-    var VER = 'hrws221';
+    var VER = 'hrws222';
     var loaded = Object.create(null);
     var inflight = Object.create(null);
     var bundleDone = Object.create(null);

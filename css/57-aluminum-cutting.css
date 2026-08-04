@@ -1350,6 +1350,70 @@ body.alu-platform-open #admin-dashboard {
     margin: 0.65rem 0 1rem;
 }
 
+.alu-draw-suite {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    width: 100%;
+}
+
+.alu-draw-suite--compact {
+    max-width: 240px;
+    flex-shrink: 0;
+}
+
+.alu-formula-strip {
+    background: linear-gradient(135deg, rgba(13, 40, 64, 0.04), rgba(21, 94, 148, 0.06));
+    border: 1px solid rgba(13, 40, 64, 0.1);
+    border-radius: 12px;
+    padding: 0.7rem 0.9rem;
+}
+
+.alu-formula-strip strong {
+    display: block;
+    color: var(--alu-navy, #0d2840);
+    font-size: 0.92rem;
+    margin-bottom: 0.35rem;
+}
+
+.alu-formula-strip ul {
+    margin: 0;
+    padding: 0 1.1rem 0 0;
+    list-style: disc;
+}
+
+.alu-formula-strip li {
+    color: var(--alu-muted, #5a6b7a);
+    font-size: 0.82rem;
+    line-height: 1.45;
+    margin: 0.2rem 0;
+}
+
+.alu-formula-strip li span {
+    color: var(--alu-navy, #0d2840);
+    font-weight: 700;
+    margin-left: 0.25rem;
+}
+
+.alu-formula-mini {
+    font-size: 0.72rem;
+    line-height: 1.35;
+    color: var(--alu-muted, #5a6b7a);
+    margin-top: 0.35rem;
+}
+
+.alu-cut-ticket-svg,
+.alu-section-svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    max-width: 100%;
+}
+
+.alu-cut-ticket-card {
+    overflow-x: auto;
+}
+
 .alu-item-with-draw .erp-row-main strong {
     color: var(--alu-navy, #0d2840);
     font-size: 0.98rem;
