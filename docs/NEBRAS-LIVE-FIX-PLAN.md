@@ -1,55 +1,43 @@
 # خطة إصلاح «الموقع الحي 100%» — نبراس
 
-**الحالة:** نُفِّذ في hrws200 — حفظ حي فوري + سحابة أولاً للمفاتيح العامة  
+**الحالة:** ✅ نُفّذ hrws223 — حفظ حي + سحابة أولاً + polling 20ث  
 **Google Play:** متوقف مؤقتاً — `nebras-app/PAUSED-GOOGLE-PLAY.md`
 
-## مقارنة سريعة (مؤكدة حيّاً)
+## ما تم تنفيذه (hrws223)
 
-| | نبراس | Accmaa |
-|---|--------|--------|
-| الدومين | nebrasplasticcompany.com (Vercel) | **accmaa.com** (VPS + Node + Nginx) |
-| قاعدة البيانات | Supabase | ملف `platform.json` على السيرفر |
-| نمط الحفظ | محلي ثم سحابة (معقد + حماية 24س) | محلي ثم `PUT /api` فوراً |
-| إحساس الحي | أضعف بسبب الكاش | أوضح لأن الـ API نفس الدومين |
-| القوة طويلة الأمد | أقوى (DB سحابية + RLS) | أبسط لكن ملف JSON محدود للتوسع |
+| المرحلة | التغيير | الملف |
+|---------|---------|-------|
+| A | توست «تم الحفظ على السيرفر الحي» بعد تأكيد Supabase | `nebras-odoo-write.js` |
+| A | `saveContentData` ينتظر نجاح السحابة قبل تحديث الواجهة | `nebras-platform.js` |
+| A | `NEBRAS_ODOO_QUIET_UI = false` — feedback واضح | `nebras-odoo-write.js` |
+| B | `MUTATION_GRACE_MS` 120ث → 25ث (عام) / 8ث (محتوى عام) | `nebras-platform-integrity.js` |
+| B | `shouldSeedSiteChrome()` لا يعيد زرع chrome بعد sync السحابة | `nebras-platform.js` |
+| B | bootstrap cloud timeout 4.5ث → 8ث | `nebras-platform.js` |
+| B | reset token `prod-live-5` — مسح كاش قديم مرة واحدة | integrity + platform |
+| C | لا يمس صور أيقونات الإدارة بعد sync | `ensureBuiltinVisitorIcons` |
+| C | `skipBuiltinSeeds` يتخطى `ensureSiteChromeDefaults` | `finalizePlatformDataAfterLoad` |
+| D | polling الزائر 60ث → **20ث** | `nebras-platform.js` |
+| D | `pullPublicSiteGovernanceFromCloud` يحدّث DOM فوراً | `nebras-platform.js` |
+| D | بعد حفظ Odoo → `refreshPublicSiteFromGovernance()` | `nebras-odoo-write.js` |
 
-**الدرس من Accmaa:** الزائر يسحب CMS من `/api/cms` عند كل فتح — لذلك التعديل يظهر.  
-**المطلوب لنبراس:** نفس الوضوح — كل حفظ إداري = تأكيد Supabase، وكل فتح = السحابة أولاً.
+## النشر على Vercel
 
-## التشخيص (مؤكد)
+```bash
+git add js/nebras-platform.js js/nebras-odoo-write.js js/nebras-platform-integrity.js index.html docs/NEBRAS-LIVE-FIX-PLAN.md
+git commit -m "fix: live site sync — cloud-first content, faster visitor poll (hrws223)"
+git push
+```
 
-المنصة **سحابية فعلاً** (Supabase + Vercel)، لكن الإحساس «مش حي» بسبب:
+## اختبار بعد النشر
 
-1. حفظ محلي أولاً ثم سحابة لاحقاً
-2. حماية 24 ساعة ضد سحب السحابة إذا المحلي أحدث
-3. مسح إنتاجي ناقص — مفاتيح الواجهة (أيقونات/شركاء/معرض) تبقى محلياً
-4. إعادة زرع chrome defaults بعد كل تحميل
-5. مسار Odoo لا يغطي كل مفاتيح المحتوى
-6. الزائر يعتمد polling وليس realtime
+1. افتح الموقع في **نافذة خاصة** (زائر)
+2. من الإدارة: عدّل منتج/سعر → احفظ
+3. تأكد ظهور toast: **«تم الحفظ على السيرفر الحي»**
+4. على نافذة الزائر: انتظر ≤20 ث (أو غيّر التبويب) → يظهر التعديل
+5. Refresh على الزائر → لا يرجع للبيانات القديمة
 
-## ترتيب الإصلاح (الأصح)
+## المرحلة التالية (اختياري)
 
-### المرحلة A — الحفظ الحي الإجباري (أولوية قصوى)
-- أي حفظ إدارة حساس/منتجات/أسعار/عملاء → لا يُعلن نجاحاً إلا بعد `governance-persist` verified
-- تقليل `skipCloud: true` في المسارات الحساسة
-- توست واضح: «تم على السيرفر الحي» / «فشل الرفع»
-
-### المرحلة B — السحابة أولاً عند الفتح
-- تقليل `MUTATION_GRACE_MS` أو استثناء المفاتيح العامة
-- توسيع purge الإنتاجي ليشمل chrome keys عند reset token
-- عدم رفض سحابة عامة أحدث بسبب كاش محلي قديم
-
-### المرحلة C — اكتمال مفاتيح الكتابة
-- توسيع `ODOO_WRITE_KEYS` / `persistNebrasCriticalStores` لتشمل:
-  visitor_icons, showroom_gallery, site_partners, about_pages, dashboard_tiles, site_certifications
-
-### المرحلة D — تجربة الزائر
-- بعد الحفظ الإداري: تحديث فوري للواجهة العامة
-- (اختياري لاحقاً) realtime للجمهور أو تقصير polling من 20ث
-
-## معيار النجاح
-- تعديل منتج/سعر من الإدارة → يظهر على جهاز آخر / نافذة خاصة خلال ثوانٍ بدون تسجيل دخول إداري
-- Refresh لا يعيد بيانات قديمة من localStorage فوق السحابة
-
-## للبدء
-قولي: **ابدئي إصلاح الموقع الحي**
+- Realtime للزوار (Supabase subscription)
+- إصلاح `fetchDynamicContentBlocks` أو إزالته
+- CMS blocks جديدة بدون كود

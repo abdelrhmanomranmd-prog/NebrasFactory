@@ -67,7 +67,7 @@
         const NEBRAS_SERVER_FIRST_MODE = true;
         /** إنتاج حي — بدون بذور تجريبية؛ الإدارة تضيف كل البيانات */
         const NEBRAS_PRODUCTION_LIVE_MODE = true;
-        const NEBRAS_CLIENT_RESET_TOKEN = 'prod-live-4';
+        const NEBRAS_CLIENT_RESET_TOKEN = 'prod-live-5';
         window.NEBRAS_PRODUCTION_LIVE_MODE = NEBRAS_PRODUCTION_LIVE_MODE;
 
         function shouldSeedBusinessDemoData() {
@@ -79,8 +79,9 @@
             return shouldSeedBusinessDemoData();
         }
 
-        /** واجهة الموقع الرسمية — شركاء · أيقونات · فروع · معرض (ليست بيانات تجريبية) */
+        /** واجهة الموقع — في الإنتاج: لا نعيد زرع chrome إذا السحابة محمّلة */
         function shouldSeedSiteChrome() {
+            if (NEBRAS_PRODUCTION_LIVE_MODE && nebrasCloudSynced) return false;
             return true;
         }
 
@@ -3665,6 +3666,7 @@
                     byId[def.id] = visitorIcons[visitorIcons.length - 1];
                 } else {
                     const cur = byId[def.id];
+                    const preserveAdminMedia = NEBRAS_PRODUCTION_LIVE_MODE && nebrasCloudSynced && !!cur.backgroundImage;
                     if (def.titleKey && !cur.titleKey) cur.titleKey = def.titleKey;
                     if (def.lane && !cur.lane) cur.lane = def.lane;
                     if (def.placement && !cur.placement) cur.placement = def.placement;
@@ -3678,6 +3680,7 @@
                     } else if (def.id === 11 && (!cur.visitorMode || cur.visitorMode === 'browse')) {
                         cur.visitorMode = 'shop';
                     }
+                    if (preserveAdminMedia) return;
                     if (def.id >= 14 && def.id <= 16) {
                         if (!cur.placement) cur.placement = 'services';
                         cur.target = '';
@@ -8871,14 +8874,30 @@
                 syncSalesPriceListFromProductMaster();
                 syncDoorDesignerCatalogFromProductMaster();
             }
-            const opts = Object.assign({ urgentCloud: true }, options || {});
-            saveSystemData(opts);
-            refreshPublicSiteFromGovernance();
-            const scm = document.getElementById('site-content-management');
-            if (scm && scm.classList.contains('show')) renderGovernanceStatusPanel();
-            if (document.getElementById('product-master-hub') && document.getElementById('product-master-hub').classList.contains('show')) {
-                renderProductMasterPanel();
+            const opts = Object.assign({
+                urgentCloud: true,
+                showCloudToast: true,
+                storeKeys: [
+                    'site_products', 'visitor_icons', 'showroom_gallery', 'site_partners',
+                    'about_pages', 'dashboard_tiles', 'site_certifications', 'site_custom_sections',
+                    'system_settings', 'sales_price_list', 'branches'
+                ]
+            }, options || {});
+            const afterSaveUi = function(ok) {
+                refreshPublicSiteFromGovernance();
+                const scm = document.getElementById('site-content-management');
+                if (scm && scm.classList.contains('show')) renderGovernanceStatusPanel();
+                if (document.getElementById('product-master-hub') && document.getElementById('product-master-hub').classList.contains('show')) {
+                    renderProductMasterPanel();
+                }
+                return ok;
+            };
+            if (typeof window !== 'undefined' && window.NEBRAS_ODOO_WRITE_MODE &&
+                typeof window.nebrasOdooSaveSystemData === 'function' && currentAdmin && !opts.skipCloud) {
+                return window.nebrasOdooSaveSystemData(opts).then(afterSaveUi);
             }
+            saveSystemData(opts);
+            return Promise.resolve(afterSaveUi(true));
         }
 
         window.saveContentData = saveContentData;
@@ -28641,7 +28660,7 @@
                 applyNebrasProfile2026Seed();
             }
             ensureDefaultBankAccounts();
-            ensureSiteChromeDefaults();
+            if (!options.skipBuiltinSeeds) ensureSiteChromeDefaults();
             enforceProductionBusinessCleanState();
             if (countShowroomGalleryItems(showroomGallery) < 12 && typeof repairShowroomGallerySections === 'function') {
                 repairShowroomGallerySections();
@@ -28666,7 +28685,7 @@
             ensureDoorDesignerConfig();
             ensureQuoteA4Settings();
             ensureDefaultSocialSettings();
-            ensureSiteChromeDefaults();
+            if (!options.skipBuiltinSeeds) ensureSiteChromeDefaults();
             ensureDashboardGovernanceHandlers();
             repairDashboardTilesIntegrity();
             ensureMinimumLiveSiteCatalog();
@@ -28720,12 +28739,15 @@
             if (!ok) return false;
             finalizePlatformDataAfterLoad({ skipBuiltinSeeds: true });
             if (typeof forceRecoverPublicSiteUi === 'function') forceRecoverPublicSiteUi();
+            if (typeof refreshPublicSiteFromGovernance === 'function') refreshPublicSiteFromGovernance();
             try { persistLocalGovernanceKeys(); } catch (cacheErr) { /* visitor cache */ }
             if (!options.silent && window.__NEBRAS_LAUNCH_DEBUG__) {
                 console.log('[Nebras] public site cloud refresh OK');
             }
             return true;
         }
+
+        const NEBRAS_PUBLIC_SITE_POLL_MS = 20000;
 
         let nebrasPublicSiteCloudRefreshTimer = null;
         function startNebrasPublicSiteCloudRefresh() {
@@ -28736,8 +28758,8 @@
                     await pullPublicSiteGovernanceFromCloud({ silent: true });
                 } catch (tickErr) { /* ignore */ }
             }
-            /* زائر: كل 60ث بدل 8ث — يقلل ثقل الشبكة دون إيقاف تحديث المحتوى */
-            nebrasPublicSiteCloudRefreshTimer = setInterval(tick, 60000);
+            /* زائر: كل 20ث — توازن بين الحيّية وخفة الشبكة */
+            nebrasPublicSiteCloudRefreshTimer = setInterval(tick, NEBRAS_PUBLIC_SITE_POLL_MS);
             document.addEventListener('visibilitychange', function() {
                 if (document.visibilityState === 'visible') tick();
             });
@@ -28830,6 +28852,16 @@
             if (typeof shouldRejectStaleCloudPull === 'function' && shouldRejectStaleCloudPull(storeKey, cloudUpdatedAt, payload)) return;
             applyNebrasCloudRow(storeKey, payload, cloudUpdatedAt);
             try { persistLocalGovernanceKeys(); } catch (e) { /* ignore */ }
+            const publicKeys = (typeof window !== 'undefined' && window.NEBRAS_PUBLIC_STORE_KEYS) || [];
+            const isPublic = publicKeys.indexOf(storeKey) >= 0 || [
+                'site_products', 'visitor_icons', 'showroom_gallery', 'site_partners',
+                'about_pages', 'system_settings', 'branches', 'site_certifications',
+                'sales_price_list', 'dashboard_tiles', 'site_custom_sections'
+            ].indexOf(storeKey) >= 0;
+            if (isPublic && typeof refreshPublicSiteFromGovernance === 'function') {
+                refreshPublicSiteFromGovernance();
+                return;
+            }
             if (storeKey === 'dashboard_tiles' && currentAdmin && typeof refreshAdminDashboardAfterGovernanceSync === 'function') {
                 refreshAdminDashboardAfterGovernanceSync();
                 return;
@@ -28960,7 +28992,6 @@
             const ok = await loadFromNebrasCloud();
             if (!ok) return false;
             finalizePlatformDataAfterLoad({ skipBuiltinSeeds: true });
-            ensureSiteChromeDefaults();
             if (typeof refreshPublicSiteFromGovernance === 'function') refreshPublicSiteFromGovernance();
             try { persistLocalGovernanceKeys(); } catch (e) { /* ignore */ }
             if (currentAdmin && typeof renderDashboardCommandShell === 'function') {
@@ -30141,7 +30172,7 @@
                 let cloudBootOk = false;
                 if (supabaseClient && NEBRAS_SERVER_FIRST_MODE) {
                     try {
-                        cloudBootOk = await cloudLoadWithTimeout(4500);
+                        cloudBootOk = await cloudLoadWithTimeout(8000);
                     } catch (cloudBootErr) {
                         console.warn('Bootstrap cloud load:', cloudBootErr);
                     }
@@ -30151,6 +30182,9 @@
                 if (typeof repairStoreHubCatalogBindings === 'function') repairStoreHubCatalogBindings();
                 if (typeof forceRecoverPublicSiteUi === 'function') forceRecoverPublicSiteUi();
                 startNebrasPublicSiteCloudRefresh();
+                if (typeof startNebrasRealtimeSync === 'function') {
+                    try { startNebrasRealtimeSync(); } catch (rtErr) { console.warn('Realtime live:', rtErr); }
+                }
                 loadNebrasCart();
                 updateSalesQuoteFab();
                 try {

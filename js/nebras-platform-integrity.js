@@ -22,8 +22,10 @@
     const LOCAL_MUTATION_KEY = 'nebrasLocalCloudMutationAt';
     const SENSITIVE_PENDING_KEY = 'nebrasSensitiveCloudPending';
     const GOV_REVISION_KEY = 'nebrasGovernanceRevision';
-    /** مهلة قصيرة فقط — بعد نجاح الرفع تُمسح العلامة؛ لا نمنع السحابة لساعات */
-    const MUTATION_GRACE_MS = 120000;
+    /** مهلة قصيرة — بعد نجاح الرفع تُمسح العلامة فوراً؛ 25ث كحد أقصى للحماية */
+    const MUTATION_GRACE_MS = 25000;
+    /** مفاتيح المحتوى العام — سحابة أولاً بمهلة أقصر */
+    const PUBLIC_MUTATION_GRACE_MS = 8000;
     const PUBLIC_LIVE_PULL_KEYS = [
         'site_products', 'visitor_icons', 'dashboard_tiles', 'site_custom_sections',
         'about_pages', 'system_settings', 'branches', 'site_partners', 'site_certifications',
@@ -52,7 +54,7 @@
         sales_price_list: 'nebrasSalesPriceList'
     };
     const PRODUCTION_RESET_TOKEN_KEY = 'nebrasProductionResetToken';
-    const PRODUCTION_RESET_TOKEN_VALUE = 'prod-live-4';
+    const PRODUCTION_RESET_TOKEN_VALUE = 'prod-live-5';
     const PRODUCTION_LOCAL_PURGE_KEYS = [
         'nebrasAdminUsers', 'nebrasSiteProducts', 'nebrasDashboardTiles',
         'nebrasVisitorIcons', 'nebrasBranches', 'nebrasSystemSettings',
@@ -229,10 +231,15 @@
         });
     }
 
+    function mutationGraceMsForKey(storeKey) {
+        return isPublicLivePullKey(storeKey) ? PUBLIC_MUTATION_GRACE_MS : MUTATION_GRACE_MS;
+    }
+
     function hasLocalCloudMutation(storeKey) {
         loadIntegrityData();
         const localAt = Number(localCloudMutations[storeKey] || 0);
-        return localAt > 0 && (Date.now() - localAt) < MUTATION_GRACE_MS;
+        const grace = mutationGraceMsForKey(storeKey);
+        return localAt > 0 && (Date.now() - localAt) < grace;
     }
 
     function isPublicLivePullKey(storeKey) {
@@ -268,7 +275,9 @@
         if (isPublicLivePullKey(storeKey) && size > 0) {
             const localAt = Number(localCloudMutations[storeKey] || 0);
             const cloudAt = cloudUpdatedAt ? new Date(cloudUpdatedAt).getTime() : 0;
-            if (localAt && cloudAt && localAt > cloudAt && (Date.now() - localAt) < MUTATION_GRACE_MS) return true;
+            const grace = PUBLIC_MUTATION_GRACE_MS;
+            if (localAt && cloudAt && cloudAt >= localAt) return false;
+            if (localAt && (Date.now() - localAt) < grace) return true;
             return false;
         }
         if (shouldRejectRegressiveCloudPull(storeKey, payload)) return true;

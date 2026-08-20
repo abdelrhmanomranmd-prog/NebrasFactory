@@ -9,8 +9,14 @@
     'use strict';
 
     global.NEBRAS_ODOO_WRITE_MODE = true;
-    /** مثل Accmaa: صمت عند النجاح — تنبيه فقط عند فشل حقيقي */
-    global.NEBRAS_ODOO_QUIET_UI = true;
+    /** false = توست واضح عند نجاح الحفظ على السيرفر الحي */
+    global.NEBRAS_ODOO_QUIET_UI = false;
+
+    const NEBRAS_LIVE_CONTENT_KEYS = [
+        'site_products', 'visitor_icons', 'showroom_gallery', 'site_partners',
+        'about_pages', 'dashboard_tiles', 'site_certifications', 'site_custom_sections',
+        'system_settings', 'sales_price_list', 'branches'
+    ];
 
     const SYNC_CURSOR_KEY = 'nebrasOdooSyncCursor';
     const DELTA_INTERVAL_MS = 12000;
@@ -323,6 +329,9 @@
             setSyncCursor(new Date().toISOString());
             if (typeof global.clearSensitiveCloudPending === 'function') global.clearSensitiveCloudPending();
             if (typeof global.clearLocalCloudMutations === 'function') global.clearLocalCloudMutations(keys);
+            if (typeof global.refreshPublicSiteFromGovernance === 'function') {
+                global.refreshPublicSiteFromGovernance();
+            }
         }
 
         if (ok) odooQuietOrb('ok');
@@ -344,7 +353,16 @@
         }
         if (typeof global.updateCloudSafetyBanner === 'function') global.updateCloudSafetyBanner();
 
-        const showToast = options.showCloudToast === true;
+        const showToast = options.showCloudToast === true || options.urgentCloud === true;
+        const isContentSave = keys.some(function(k) { return NEBRAS_LIVE_CONTENT_KEYS.indexOf(k) >= 0; });
+        if (ok && showToast && typeof global.showNebrasAdminToast === 'function') {
+            global.showNebrasAdminToast(
+                isContentSave
+                    ? '✓ تم الحفظ على السيرفر الحي — يظهر للزوار خلال ثوانٍ'
+                    : '✓ تم الحفظ في السحابة — متاح لكل الأجهزة',
+                'ok'
+            );
+        }
         if (!ok && !options.silentCloudFail && showToast && typeof global.showNebrasAdminToast === 'function') {
             global.showNebrasAdminToast('✗ لم يُحفظ على السيرفر — تحققي من الاتصال وأعيدي المحاولة', 'error');
         }
