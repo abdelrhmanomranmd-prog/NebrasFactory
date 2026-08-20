@@ -1555,11 +1555,17 @@ body.nebras-mobile-bar-active.admin-session .nebras-mobile-commerce-bar {
     }
 }
 
-/* WPC جاهز — معاينة الباب + اختيار لون الرولّة (بدون raster — حادّة) */
+/* WPC جاهز — معاينة الباب + اختيار لون الرولّة — إطار احترافي بدون خروج */
 .nebras-store-sku-media--wpc-door,
 .nebras-store-sku-media--vector {
-    aspect-ratio: 3 / 4;
-    background: linear-gradient(180deg, #eef2f7 0%, #e2e8f0 100%);
+    aspect-ratio: 4 / 5;
+    background: linear-gradient(165deg, #f8fafc 0%, #eef2f7 48%, #e8edf3 100%);
+}
+
+.nebras-store-sku-media--wpc-photo {
+    aspect-ratio: 4 / 5;
+    overflow: hidden;
+    background: linear-gradient(165deg, #fafbfc 0%, #f1f5f9 55%, #e9eef4 100%);
 }
 
 .nebras-store-sku-media--vector:not(.nebras-store-sku-media--wpc-door) {
@@ -1567,15 +1573,16 @@ body.nebras-mobile-bar-active.admin-session .nebras-mobile-commerce-bar {
 }
 
 .nebras-store-sku-media--wpc-door {
-    cursor: default;
+    cursor: zoom-in;
 }
 
 .nebras-store-sku-door-stack {
     position: relative;
     width: 100%;
     height: 100%;
+    overflow: hidden;
     display: flex;
-    align-items: center;
+    align-items: stretch;
     justify-content: center;
     isolation: isolate;
 }
@@ -1583,32 +1590,30 @@ body.nebras-mobile-bar-active.admin-session .nebras-mobile-commerce-bar {
 .nebras-store-sku-door-stack.has-door-roll-tint::after {
     content: '';
     position: absolute;
-    left: 17%;
-    top: 6%;
-    width: 66%;
-    height: 86%;
+    inset: 4% 8% 4% 8%;
     z-index: 2;
-    border-radius: 3px;
+    border-radius: 4px;
     background-color: var(--door-roll-tint, #b8bcc4);
     mix-blend-mode: color;
-    opacity: var(--door-roll-tint-opacity, 0.72);
+    opacity: var(--door-roll-tint-opacity, 0.68);
     pointer-events: none;
     transition: background-color 0.38s ease, opacity 0.38s ease;
 }
 
 .nebras-store-sku-door-stack--photo.has-door-roll-tint::after {
-    left: 14%;
-    top: 5%;
-    width: 72%;
-    height: 88%;
-    border-radius: 6px;
+    inset: 3% 6% 3% 6%;
+    border-radius: 8px;
     mix-blend-mode: soft-light;
-    opacity: var(--door-roll-tint-opacity, 0.62);
+    opacity: var(--door-roll-tint-opacity, 0.55);
 }
 
 .nebras-store-sku-media--wpc-photo img.nebras-store-sku-img--wpc {
-    padding: 6px;
-    max-height: 220px;
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    padding: 0;
+    object-fit: cover;
+    object-position: center center;
     transition: filter 0.38s ease, transform 0.38s ease;
 }
 
@@ -1622,12 +1627,25 @@ body.nebras-mobile-bar-active.admin-session .nebras-mobile-commerce-bar {
 
 .nebras-store-sku-media--wpc-door img.nebras-store-sku-img--wpc,
 .nebras-store-sku-media--vector img {
-    object-fit: contain;
-    padding: 10px;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center center;
+    padding: 0;
     transform: none !important;
-    image-rendering: auto;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
+}
+
+.nebras-store-sku-media--wpc-photo img.nebras-store-sku-img--wpc {
+    object-fit: cover;
+    image-rendering: auto;
+}
+
+.nebras-store-sku-media--wpc-photo::after {
+    display: none;
 }
 
 .nebras-store-sku-media--has-image img.nebras-clickable-media,

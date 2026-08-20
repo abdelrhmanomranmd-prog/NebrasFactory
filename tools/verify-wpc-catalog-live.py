@@ -173,7 +173,7 @@ def main():
         not missing_ready and not missing_raw
         and photo_fail_n == 0
         and code_has_mapping
-        and len(wpc_photos) >= 10
+        and len(wpc_photos) >= 26
     )
     print('\nRESULT:', 'PASS — catalog + real photos + roll picker ready' if ok else 'ISSUES FOUND')
     if missing_ready or missing_raw:

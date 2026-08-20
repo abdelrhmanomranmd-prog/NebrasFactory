@@ -2608,11 +2608,11 @@
             sortOrder: 2
         };
 
-        const WPC_READY_CATALOG_VERSION = 8;
+        const WPC_READY_CATALOG_VERSION = 9;
         const WPC_READY_INSTALL_IMG = 'images/catalog/wpc-ready-install/';
         const WPC_READY_SUPPLY_IMG = 'images/catalog/wpc-ready-supply/';
 
-        /** صور منتجات WPC الحقيقية — كتالوج المتجر (10 أنواع) */
+        /** صور منتجات WPC الحقيقية — كتالوج المتجر (26 نوع — دقة حسب SKU) */
         const WPC_CATALOG_PHOTOS = {
             noAccessory: 'images/catalog/wpc-photos/01-no-accessory.png',
             withAccessory: 'images/catalog/wpc-photos/02-with-accessory.png',
@@ -2623,19 +2623,34 @@
             classicPanel: 'images/catalog/wpc-photos/07-classic-panel.png',
             boneProfile: 'images/catalog/wpc-photos/08-bone-profile.png',
             mdf: 'images/catalog/wpc-photos/09-mdf.png',
-            leafSection: 'images/catalog/wpc-photos/10-leaf-section.png'
+            leafSection: 'images/catalog/wpc-photos/10-leaf-section.png',
+            uPlain: 'images/catalog/wpc-photos/11-u-plain-door.png',
+            libPlain: 'images/catalog/wpc-photos/12-lib-plain-door.png',
+            leafQuarterU: 'images/catalog/wpc-photos/15-leaf-quarter-u.png',
+            leafQuarterLib: 'images/catalog/wpc-photos/16-leaf-quarter-lib.png',
+            flatSteel: 'images/catalog/wpc-photos/17-flat-steel-decor.png',
+            slidingFlat: 'images/catalog/wpc-photos/18-sliding-flat.png',
+            slidingU: 'images/catalog/wpc-photos/19-sliding-u.png',
+            rawUProfile: 'images/catalog/wpc-photos/20-raw-u-profile.png',
+            rawFrame: 'images/catalog/wpc-photos/21-raw-frame-profile.png',
+            rawDecor: 'images/catalog/wpc-photos/22-raw-decor-profile.png',
+            rawSlice: 'images/catalog/wpc-photos/23-raw-slice.png',
+            rawPvc: 'images/catalog/wpc-photos/24-raw-pvc-sheet.png',
+            rawEdgeBand: 'images/catalog/wpc-photos/25-raw-edge-band.png',
+            rawCladLeaf: 'images/catalog/wpc-photos/26-raw-clad-leaf.png'
         };
 
         const WPC_PRODUCT_HERO_ALBUM = {
             'prod-wpc': [
                 WPC_CATALOG_PHOTOS.withAccessory,
-                WPC_CATALOG_PHOTOS.classicPanel,
-                WPC_CATALOG_PHOTOS.glassLeafQuarter,
-                WPC_CATALOG_PHOTOS.slidingDecor
+                WPC_CATALOG_PHOTOS.uPlain,
+                WPC_CATALOG_PHOTOS.leafQuarterFlat,
+                WPC_CATALOG_PHOTOS.classicPanel
             ],
             'prod-wpc-raw': [
                 WPC_CATALOG_PHOTOS.boneProfile,
                 WPC_CATALOG_PHOTOS.leafSection,
+                WPC_CATALOG_PHOTOS.rawUProfile,
                 WPC_CATALOG_PHOTOS.mdf
             ]
         };
@@ -2647,9 +2662,35 @@
             }
             if (productId === 'prod-wpc-raw') {
                 if (subCategoryId === 'wpc-raw-bare') return WPC_CATALOG_PHOTOS.boneProfile;
-                if (subCategoryId === 'wpc-raw-clad') return WPC_CATALOG_PHOTOS.leafSection;
+                if (subCategoryId === 'wpc-raw-clad') return WPC_CATALOG_PHOTOS.rawCladLeaf;
             }
             return '';
+        }
+
+        function wpcVariantIsLeafQuarterU(sku, typeAr, id) {
+            if (sku.indexOf('LQ-U') >= 0) return true;
+            const t = String(typeAr || '');
+            return (t.indexOf('ضلفة ورب') >= 0 || t.indexOf('وربع') >= 0) &&
+                (t.indexOf('— U') >= 0 || t.indexOf('- U') >= 0 || /\bU\b/.test(t)) &&
+                t.indexOf('Lib') < 0 && t.indexOf('فلات') < 0;
+        }
+
+        function wpcVariantIsLeafQuarterLib(sku, typeAr) {
+            if (sku.indexOf('LQ-LIB') >= 0) return true;
+            const t = String(typeAr || '');
+            return (t.indexOf('ضلفة ورب') >= 0 || t.indexOf('وربع') >= 0) && t.indexOf('Lib') >= 0;
+        }
+
+        function wpcVariantIsUDoor(sku, typeAr, id) {
+            if (/WPC-(SUP|RDY)-U\d|WPC-(SUP|RDY)-U45|WPC-(SUP|RDY)-U60/.test(sku)) return true;
+            if (sku.indexOf('-U45') >= 0 || sku.indexOf('-U60') >= 0) return true;
+            const t = String(typeAr || '');
+            return t.indexOf('باب U') >= 0 || /^باب U/.test(t);
+        }
+
+        function wpcVariantIsLibDoor(sku, typeAr) {
+            if (/LIB\d|LIB40|LQ-LIB|SLD-LIB/.test(sku)) return true;
+            return String(typeAr || '').indexOf('Lib') >= 0;
         }
 
         function resolveWpcCatalogPhotoForVariant(variant) {
@@ -2658,35 +2699,60 @@
             const sub = String(variant.subCategoryId || '');
             const typeAr = String(variant.typeAr || '');
             const id = String(variant.id || '').toLowerCase();
+            const P = WPC_CATALOG_PHOTOS;
 
             if (sku.indexOf('MDF') >= 0 || id.indexOf('mdf') >= 0 || typeAr.indexOf('ام دى اف') >= 0 || typeAr.indexOf('MDF') >= 0) {
-                return WPC_CATALOG_PHOTOS.mdf;
+                return P.mdf;
             }
 
             if (sub === 'wpc-raw-bare' || sub === 'wpc-raw-clad') {
-                if (/[-_]L\d|ضلف|ضلفة|LEAF/i.test(sku + typeAr + id)) return WPC_CATALOG_PHOTOS.leafSection;
-                return WPC_CATALOG_PHOTOS.boneProfile;
+                const clad = sub === 'wpc-raw-clad';
+                if (sku.indexOf('PVC') >= 0) return P.rawPvc;
+                if (sku.indexOf('EDGE') >= 0 || typeAr.indexOf('ايدج') >= 0 || typeAr.indexOf('EDGE') >= 0) return P.rawEdgeBand;
+                if (/[-_]L\d|ضلف|ضلفة/.test(sku + typeAr + id)) return clad ? P.rawCladLeaf : P.leafSection;
+                if (sku.indexOf('SL') >= 0 || typeAr.indexOf('slice') >= 0 || typeAr.indexOf('شريحة') >= 0) return P.rawSlice;
+                if (/[-_]F\d|حلق/.test(sku + typeAr)) return P.rawFrame;
+                if (/[-_]U\d|[-_]UT|يو shape|يو U-T/.test(sku + typeAr)) return P.rawUProfile;
+                if (/[-_]D[JNF]|ديكور/.test(sku + typeAr)) return P.rawDecor;
+                return clad ? P.rawCladLeaf : P.boneProfile;
+            }
+
+            if (wpcVariantIsLeafQuarterU(sku, typeAr, id)) {
+                if (sku.indexOf('GLASS') >= 0 || typeAr.indexOf('زجاج') >= 0) return P.glassLeafQuarter;
+                return P.leafQuarterU;
+            }
+            if (wpcVariantIsLeafQuarterLib(sku, typeAr)) {
+                if (sku.indexOf('GLASS') >= 0 || typeAr.indexOf('زجاج') >= 0) return P.glassLeafQuarter;
+                return P.leafQuarterLib;
+            }
+            if (sku.indexOf('LQ') >= 0 || typeAr.indexOf('ضلفة ورب') >= 0 || typeAr.indexOf('وربع') >= 0) {
+                if (sku.indexOf('GLASS') >= 0 || typeAr.indexOf('زجاج') >= 0) return P.glassLeafQuarter;
+                return P.leafQuarterFlat;
+            }
+
+            if (sku.indexOf('SLD') >= 0 || typeAr.indexOf('سحاب') >= 0 || typeAr.indexOf('سحب') >= 0) {
+                if (sku.indexOf('SLD-U') >= 0 || (typeAr.indexOf(' U') >= 0 && typeAr.indexOf('Lib') < 0 && typeAr.indexOf('فلات') < 0)) return P.slidingU;
+                if (sku.indexOf('SLD-LIB') >= 0 || typeAr.indexOf('Lib') >= 0) return P.libPlain;
+                return P.slidingFlat;
             }
 
             if (typeAr.indexOf('درفتين') >= 0 || typeAr.indexOf('مزدوج') >= 0 || sku.indexOf('DBL') >= 0) {
-                return WPC_CATALOG_PHOTOS.doubleFlat;
-            }
-            if (sku.indexOf('SLD') >= 0 || sku.indexOf('SLIDE') >= 0 || typeAr.indexOf('سحاب') >= 0 || typeAr.indexOf('سحب') >= 0) {
-                return WPC_CATALOG_PHOTOS.slidingDecor;
-            }
-            if (sku.indexOf('LQ') >= 0 || typeAr.indexOf('وربع') >= 0 || typeAr.indexOf('ونص') >= 0) {
-                if (sku.indexOf('GLASS') >= 0 || typeAr.indexOf('زجاج') >= 0) return WPC_CATALOG_PHOTOS.glassLeafQuarter;
-                return WPC_CATALOG_PHOTOS.leafQuarterFlat;
+                return P.doubleFlat;
             }
             if (sku.indexOf('GLASS') >= 0 || typeAr.indexOf('زجاج') >= 0) {
-                return WPC_CATALOG_PHOTOS.glassLeafQuarter;
+                return P.glassLeafQuarter;
             }
             if (sku.indexOf('CLS') >= 0 || sku.indexOf('CLASSIC') >= 0 || typeAr.indexOf('كلاسيك') >= 0) {
-                return WPC_CATALOG_PHOTOS.classicPanel;
+                return P.classicPanel;
             }
-            if (sub === 'wpc-ready-supply') return WPC_CATALOG_PHOTOS.noAccessory;
-            if (sub === 'wpc-ready-install') return WPC_CATALOG_PHOTOS.withAccessory;
-            return WPC_CATALOG_PHOTOS.withAccessory;
+            if (sku.indexOf('STEEL') >= 0 || typeAr.indexOf('استيل') >= 0 || typeAr.indexOf('ستان') >= 0) {
+                return P.flatSteel;
+            }
+            if (wpcVariantIsUDoor(sku, typeAr, id)) return P.uPlain;
+            if (wpcVariantIsLibDoor(sku, typeAr)) return P.libPlain;
+            if (sub === 'wpc-ready-supply') return P.noAccessory;
+            if (sub === 'wpc-ready-install') return P.withAccessory;
+            return P.withAccessory;
         }
 
         function applyWpcProductHeroAlbums() {
