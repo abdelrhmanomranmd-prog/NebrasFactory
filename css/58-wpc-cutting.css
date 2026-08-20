@@ -1,0 +1,288 @@
+/* نبراس — منصة تخصيمات أبواب WPC */
+
+#wpc-cutting.wpc-workspace-section {
+    --wpc-navy: var(--nb-navy, #0d2840);
+    --wpc-navy-deep: var(--nb-navy-deep, #071525);
+    --wpc-accent: #1a6b4a;
+    --wpc-wood: #8b6914;
+    --wpc-gold: var(--nb-gold, #c9a227);
+    --wpc-surface: #f4f7f5;
+    --wpc-card: #ffffff;
+    --wpc-text: #0d2840;
+    --wpc-muted: #5a6b7a;
+    --wpc-border: rgba(13, 40, 64, 0.1);
+    --wpc-radius: 18px;
+}
+
+#wpc-cutting.wpc-workspace-section.admin-section:not(.show) {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+#wpc-cutting.wpc-workspace-section.admin-section {
+    padding: 0 !important;
+    display: none !important;
+    flex-direction: column !important;
+    background: var(--wpc-navy-deep) !important;
+    z-index: 10050;
+    pointer-events: none !important;
+}
+
+#wpc-cutting.wpc-workspace-section.admin-section.show {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
+
+#wpc-cutting .wpc-workspace-app {
+    display: flex;
+    flex: 1 1 auto;
+    width: 100%;
+    min-height: 100vh;
+    max-height: 100vh;
+    background: linear-gradient(180deg, #eef5f1 0%, var(--wpc-surface) 42%, #e8f0ec 100%);
+    color: var(--wpc-text);
+    overflow: hidden;
+}
+
+#wpc-cutting .wpc-ws-sidebar {
+    background: linear-gradient(180deg, var(--wpc-navy-deep) 0%, var(--wpc-navy) 55%, #145a3a 100%);
+    border-inline-end: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+#wpc-cutting .wpc-ws-sidebar .hr-ws-sidebar-head strong,
+#wpc-cutting .wpc-ws-sidebar .hr-ws-nav-item { color: #f4f8fb; }
+
+#wpc-cutting .wpc-ws-sidebar .hr-ws-nav-item.is-active {
+    background: linear-gradient(135deg, rgba(201, 162, 39, 0.28), rgba(26, 107, 74, 0.22));
+    border: 1px solid rgba(201, 162, 39, 0.35);
+    box-shadow: inset 3px 0 0 var(--wpc-gold);
+}
+
+#wpc-cutting .wpc-ws-brand-icon {
+    background: linear-gradient(145deg, rgba(26, 107, 74, 0.35), rgba(13, 40, 64, 0.35));
+    border: 1px solid rgba(26, 107, 74, 0.45);
+    color: #fff;
+}
+
+#wpc-cutting .wpc-ws-topbar {
+    display: flex !important;
+    align-items: center !important;
+    gap: 12px !important;
+    padding: 12px 16px !important;
+    background: #fff !important;
+    border-bottom: 1px solid var(--wpc-border) !important;
+}
+
+#wpc-cutting .wpc-ws-content {
+    flex: 1;
+    overflow: auto;
+    padding: 16px;
+}
+
+#wpc-cutting .wpc-cut-form-card {
+    background: var(--wpc-card);
+    border: 1px solid var(--wpc-border);
+    border-radius: var(--wpc-radius);
+    padding: 18px 20px;
+    margin-bottom: 14px;
+    box-shadow: 0 8px 24px rgba(7, 21, 37, 0.06);
+}
+
+#wpc-cutting .wpc-cut-form-card h4 {
+    margin: 0 0 12px;
+    font-size: 1.05rem;
+    color: var(--wpc-navy);
+}
+
+#wpc-cutting .wpc-cut-note {
+    color: var(--wpc-muted);
+    font-size: 0.92rem;
+    margin: 0 0 12px;
+}
+
+#wpc-cutting .wpc-cut-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+#wpc-cutting .wpc-cut-table th,
+#wpc-cutting .wpc-cut-table td {
+    border: 1px solid var(--wpc-border);
+    padding: 8px 10px;
+    text-align: right;
+}
+
+#wpc-cutting .wpc-cut-table th {
+    background: rgba(26, 107, 74, 0.08);
+}
+
+#wpc-cutting .wpc-command-hero {
+    position: relative;
+    border-radius: var(--wpc-radius);
+    overflow: hidden;
+    margin-bottom: 16px;
+    background: linear-gradient(135deg, var(--wpc-navy-deep), #145a3a 70%, #1a6b4a);
+    color: #fff;
+    padding: 28px 24px;
+}
+
+#wpc-cutting .wpc-cut-kicker {
+    font-size: 0.85rem;
+    opacity: 0.85;
+    margin: 0 0 8px;
+}
+
+#wpc-cutting .wpc-command-hero h2 {
+    margin: 0 0 10px;
+    font-size: 1.55rem;
+}
+
+#wpc-cutting .wpc-cut-hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+#wpc-cutting .wpc-dash-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+}
+
+#wpc-cutting .wpc-metric {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: var(--wpc-card);
+    border: 1px solid var(--wpc-border);
+    border-radius: 14px;
+    padding: 14px 16px;
+}
+
+#wpc-cutting .wpc-metric i {
+    font-size: 1.4rem;
+    color: var(--wpc-accent);
+}
+
+#wpc-cutting .wpc-metric strong {
+    display: block;
+    font-size: 1.35rem;
+}
+
+#wpc-cutting .wpc-metric span {
+    font-size: 0.82rem;
+    color: var(--wpc-muted);
+}
+
+#wpc-cutting .wpc-sheet-card {
+    background: rgba(26, 107, 74, 0.06);
+    border: 1px dashed rgba(26, 107, 74, 0.25);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin: 10px 0;
+}
+
+#wpc-cutting .wpc-pipe-board {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px;
+}
+
+#wpc-cutting .wpc-pipe-col {
+    background: rgba(13, 40, 64, 0.04);
+    border-radius: 12px;
+    padding: 10px;
+    min-height: 120px;
+}
+
+#wpc-cutting .wpc-pipe-col header {
+    font-weight: 700;
+    margin-bottom: 8px;
+    font-size: 0.88rem;
+}
+
+#wpc-cutting .wpc-pipe-card {
+    background: #fff;
+    border: 1px solid var(--wpc-border);
+    border-radius: 10px;
+    padding: 10px;
+    margin-bottom: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+body.wpc-platform-open { overflow: hidden; }
+
+.dashboard-tile-card--wpc-cutting {
+    border-color: rgba(26, 107, 74, 0.35) !important;
+    background: linear-gradient(145deg, rgba(26, 107, 74, 0.08), rgba(201, 162, 39, 0.06)) !important;
+}
+
+.wpc-dept-card--cutting {
+    border: 2px solid rgba(26, 107, 74, 0.45) !important;
+    background: linear-gradient(145deg, rgba(26, 107, 74, 0.1), #fff) !important;
+}
+
+#wpc-cutting .wpc-geo-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-top: 12px;
+    padding: 10px 14px;
+    background: rgba(26, 107, 74, 0.08);
+    border-radius: 10px;
+    font-size: 0.92rem;
+}
+
+#wpc-cutting .wpc-formula-steps {
+    margin: 0;
+    padding-right: 20px;
+    font-size: 0.88rem;
+    line-height: 1.6;
+}
+
+#wpc-cutting .wpc-formula-cell {
+    font-size: 0.78rem;
+    color: var(--wpc-muted);
+    max-width: 220px;
+}
+
+#wpc-cutting .wpc-cut-alert {
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 12px;
+    font-size: 0.9rem;
+}
+
+#wpc-cutting .wpc-cut-alert--block {
+    background: rgba(185, 28, 28, 0.08);
+    border: 1px solid rgba(185, 28, 28, 0.25);
+    color: #991b1b;
+}
+
+#wpc-cutting .wpc-cut-alert--warn {
+    background: rgba(202, 138, 4, 0.1);
+    border: 1px solid rgba(202, 138, 4, 0.3);
+    color: #854d0e;
+}
+
+#wpc-cutting .wpc-cut-alert--ok {
+    background: rgba(26, 107, 74, 0.1);
+    border: 1px solid rgba(26, 107, 74, 0.25);
+    color: #145a3a;
+}
+
+#wpc-cutting .wpc-audit-card {
+    border: 1px solid var(--wpc-border);
+    border-radius: 12px;
+    padding: 12px 14px;
+    margin-bottom: 10px;
+    background: #fff;
+}

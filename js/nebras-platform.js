@@ -2123,6 +2123,7 @@
                 { id: 'erp-product-master', pillar: 'master', status: 'live', icon: 'fas fa-database', permission: 'productMaster', handler: 'openProductMasterHub', nameAr: 'مركز المنتجات والأسعار', descAr: 'مصدر ديناميكي — أسماء · أنواع · مقاسات · أسعار', nameEn: 'Product & pricing hub' },
                 { id: 'erp-aluminum-dept', pillar: 'supply', status: 'live', icon: 'fas fa-industry', permission: 'aluminum', handler: 'openAluminumDepartment', nameAr: 'قسم الألومنيوم', descAr: 'مخزون · إنتاج · عروض ALU فقط', nameEn: 'Aluminum department' },
                 { id: 'erp-wpc-dept', pillar: 'supply', status: 'live', icon: 'fas fa-door-closed', permission: 'production', handler: 'openWpcProductionDepartment', nameAr: 'إنتاج WPC', descAr: 'أبواب WPC · مخزون · مستودع · عروض', nameEn: 'WPC production' },
+                { id: 'erp-wpc-cutting', pillar: 'supply', status: 'live', icon: 'fas fa-ruler-combined', permission: 'production', handler: 'openWpcCutting', nameAr: 'تخصيمات WPC', descAr: 'مقايسات · قص ألواح · ورشة أبواب WPC', nameEn: 'WPC door cutting' },
                 { id: 'erp-branch-command', pillar: 'commerce', status: 'live', icon: 'fas fa-store', permission: null, handler: 'openBranchCommandCenter', nameAr: 'لوحة الفرع', descAr: 'مبيعات · فريق · طلبات فرعك', nameEn: 'Branch command' },
                 { id: 'erp-catalog', pillar: 'master', status: 'live', icon: 'fas fa-database', permission: 'content', handler: 'openSiteContentManager', nameAr: 'كتالوج المنتجات', descAr: 'صور ومحتوى المتجر', nameEn: 'Store catalogue' },
                 { id: 'erp-production', pillar: 'supply', status: 'live', icon: 'fas fa-industry', permission: 'production', handler: 'openErpProduction', nameAr: 'الإنتاج اليومي', descAr: 'كميات الإنتاج المتاحة', nameEn: 'Production' },
@@ -3307,6 +3308,7 @@
             { id: 'dash-aluminum-cutting', zone: 'quick', dashGroup: 'command', sortOrder: 0.5, iconClass: 'fas fa-scissors', titleAr: 'التخصيمات', titleEn: 'Cutting Pro', textAr: 'منصة تخصيمات الألومنيوم — مقايسات · تقطيع ذكي · ورشة · واجهات.', textEn: 'Aluminum cutting platform — estimates, optimization, shop floor.', handler: 'openAluminumCutting', permission: 'aluminum', visible: true },
             { id: 'dash-aluminum-dept', zone: 'quick', dashGroup: 'command', sortOrder: 1.1, iconClass: 'fas fa-industry', titleAr: 'قسم الألومنيوم', titleEn: 'Aluminum Dept.', textAr: 'مخزون · إنتاج · عروض · طلبات ALU.', textEn: 'Aluminum ops only.', handler: 'openAluminumDepartment', permission: 'aluminum', visible: true },
             { id: 'dash-wpc-dept', zone: 'quick', dashGroup: 'command', sortOrder: 1.08, iconClass: 'fas fa-door-closed', titleAr: 'إنتاج أبواب WPC', titleEn: 'WPC Production', textAr: 'مصنع الأبواب — مخزون · إنتاج · مستودع · عروض WPC.', textEn: 'WPC factory ops.', handler: 'openWpcProductionDepartment', permission: 'production', visible: true },
+            { id: 'dash-wpc-cutting', zone: 'quick', dashGroup: 'command', sortOrder: 1.07, iconClass: 'fas fa-ruler-combined', titleAr: 'تخصيمات WPC', titleEn: 'WPC Cutting', textAr: 'تخصيم وقص أبواب WPC — فلات · يو 60 · ليب · سحاب · تخطيط ألواح.', textEn: 'WPC door cutting — estimates, sheet nesting, shop reports.', handler: 'openWpcCutting', permission: 'production', visible: true },
             { id: 'dash-branch-command', zone: 'quick', dashGroup: 'command', sortOrder: 1.07, iconClass: 'fas fa-store', titleAr: 'لوحة تحكم الفرع', titleEn: 'Branch Command', textAr: 'مبيعات · مندوبون · عروض · طلبات · شكاوى فرعك.', textEn: 'Your branch command center.', handler: 'openBranchCommandCenter', permission: null, branchCommandOnly: true, visible: true },
             { id: 'dash-hq-branch-empire', zone: 'quick', dashGroup: 'command', sortOrder: 1.06, iconClass: 'fas fa-sitemap', titleAr: 'حوكمة الفروع', titleEn: 'Branch Empire', textAr: 'تعيين مديري المبيعات والحسابات · تقارير كل فرع.', textEn: 'Assign branch managers and view branch KPIs.', handler: 'openHqBranchEmpireGovernance', permission: null, superadminOnly: true, visible: true },
             { id: 'dash-hr-platform', zone: 'quick', dashGroup: 'command', sortOrder: 1.05, iconClass: 'fas fa-industry', titleAr: 'HR — مصنع نبراس WPC', titleEn: 'Nebras WPC HR', textAr: 'إنتاج أبواب WPC · ورديات · سعودة · حضور · رواتب · أسطول — كل الفروع.', textEn: 'WPC production HR — shifts, Saudization, payroll, fleet.', handler: 'openHrPlatform', permission: 'hr', visible: true },
@@ -3505,6 +3507,19 @@
             },
             openAluminumQuoteBuilder: function() { openAluminumQuoteBuilder(); },
             openWpcProductionDepartment: function() { openWpcProductionDepartment(); },
+            openWpcCutting: function() {
+                function tryOpen() {
+                    if (typeof window.openWpcCutting === 'function') {
+                        try { return window.openWpcCutting(); } catch (e) { console.error('openWpcCutting', e); }
+                        return;
+                    }
+                    alert('تخصيمات WPC — أعيدي تحميل الصفحة (Ctrl+Shift+R).');
+                }
+                if (typeof window.ensureNebrasDeptBundle === 'function') {
+                    return window.ensureNebrasDeptBundle('wpc').then(tryOpen).catch(tryOpen);
+                }
+                return tryOpen();
+            },
             openWpcQuoteBuilder: function() { openWpcQuoteBuilder(); },
             openBranchCommandCenter: function() { openBranchCommandCenter(); },
             openHqBranchEmpireGovernance: function() { openHqBranchEmpireGovernance(); },
@@ -4322,6 +4337,9 @@
                 openAluminumCutting: function() { return canManage('aluminum', admin) || (admin && admin.role === 'aluminum_manager'); },
                 openAluminumDepartment: function() { return canManage('aluminum', admin) || (admin && admin.role === 'aluminum_manager'); },
                 openWpcQuoteBuilder: function() { return canManage('production', admin) || canManage('quotes', admin); },
+                openWpcCutting: function() {
+                    return canManage('production', admin) || (admin && (admin.role === 'wpc_manager' || admin.role === 'production_manager'));
+                },
                 openBranchTeamManagement: function() { return canManageBranchTeam(admin); },
                 openBranchCommandCenter: function() { return canAccessBranchCommandCenter(admin); },
                 openExecutiveReports: function() {
@@ -12912,6 +12930,8 @@
                 if (t.branchCommandOnly && !canAccessBranchCommandCenter()) return false;
                 if (t.id === 'dash-wpc-dept' && !canManage('production') && !isMainGovernanceAdmin()) return false;
                 if (t.id === 'dash-wpc-dept' && isAluminumDepartmentAdmin(currentAdmin)) return false;
+                if (t.id === 'dash-wpc-cutting' && !canManage('production') && !isMainGovernanceAdmin()) return false;
+                if (t.id === 'dash-wpc-cutting' && isAluminumDepartmentAdmin(currentAdmin)) return false;
                 if (t.permission && currentAdmin && !dashboardTilePassesPermission(t, currentAdmin)) return false;
                 return true;
             });
@@ -12958,6 +12978,7 @@
                 if (tile.id === 'dash-hq-branch-empire') premiumClass = ' dashboard-tile-card--branch-empire';
                 else if (tile.id === 'dash-branch-command') premiumClass = ' dashboard-tile-card--branch-command';
                 else if (tile.id === 'dash-aluminum-cutting') premiumClass = ' dashboard-tile-card--alu-cutting';
+                else if (tile.id === 'dash-wpc-cutting') premiumClass = ' dashboard-tile-card--wpc-cutting';
                 return '<button type="button" class="dashboard-tile-card' + zoneClass + extraClass + premiumClass + '" data-tile-id="' + escapeHtmlAttr(tile.id) + '" style="--tile-i:' + index + '" onclick="onDashboardTileClick(\'' + String(tile.id).replace(/'/g, "\\'") + '\')">' +
                     '<span class="dashboard-tile-group-badge ' + groupClass + '">' + escapeHtmlAttr(groupLabel) + '</span>' +
                     '<div class="dashboard-tile-glow" aria-hidden="true"></div>' +
@@ -17882,6 +17903,7 @@
             document.body.classList.toggle('crm-platform-open', !!(document.getElementById('crm-platform') && document.getElementById('crm-platform').classList.contains('show')));
             document.body.classList.toggle('accounting-platform-open', !!(document.getElementById('accounting-platform') && document.getElementById('accounting-platform').classList.contains('show')));
             document.body.classList.toggle('alu-platform-open', !!(document.getElementById('aluminum-cutting') && document.getElementById('aluminum-cutting').classList.contains('show')));
+            document.body.classList.toggle('wpc-platform-open', !!(document.getElementById('wpc-cutting') && document.getElementById('wpc-cutting').classList.contains('show')));
             const cpApp = document.getElementById('customer-portal-app');
             document.body.classList.toggle('customer-portal-open', !!(cpApp && cpApp.classList.contains('show')));
             const lightbox = document.getElementById('nebras-media-lightbox');
@@ -18497,6 +18519,7 @@
                 { roles: ['aluminum_manager', 'sales_manager', 'branch_manager'], icon: 'fas fa-industry', label: 'قسم الألومنيوم', handler: 'openAluminumDepartment', perm: 'aluminum' },
                 { roles: ['superadmin', 'manager'], icon: 'fas fa-scissors', label: 'التخصيمات', handler: 'openAluminumCutting', perm: 'aluminum' },
                 { roles: ['wpc_manager', 'production_manager'], icon: 'fas fa-door-closed', label: 'إنتاج WPC', handler: 'openWpcProductionDepartment', perm: 'production' },
+                { roles: ['wpc_manager', 'production_manager'], icon: 'fas fa-ruler-combined', label: 'تخصيمات WPC', handler: 'openWpcCutting', perm: 'production' },
                 { roles: ['branch_manager', 'sales_manager'], icon: 'fas fa-store', label: 'لوحة الفرع', handler: 'openBranchCommandCenter', perm: null },
                 { roles: ['hr'], icon: 'fas fa-people-roof', label: 'منصة الموارد البشرية', handler: 'openHrPlatform', perm: 'hr' },
                 { roles: ['hr'], icon: 'fas fa-shield-halved', label: 'أمان حسابي', handler: 'openAccountSecurity', perm: null },
@@ -20959,6 +20982,7 @@
                     '<div class="erp-stat"><strong>' + getEffectiveSalesPriceList(currentAdmin).length + '</strong><span>أسعار معتمدة</span></div>';
             }
             const cards = [
+                { icon: 'fas fa-ruler-combined', title: 'تخصيمات WPC', desc: 'مقايسة · قص ألواح · قوائم ورشة — فلات · يو 60 · ليب · سحاب', handler: 'openWpcCutting', featured: true },
                 { icon: 'fas fa-boxes-stacked', title: 'مخزون WPC', desc: 'أبواب جاهزة وعضم — SKU وكميات', handler: 'openErpInventory' },
                 { icon: 'fas fa-industry', title: 'الإنتاج اليومي', desc: 'تسجيل كميات الإنتاج', handler: 'openErpProduction' },
                 { icon: 'fas fa-dolly', title: 'تحويلات المستودع', desc: 'نقل بين فروع المصنع', handler: 'openErpWarehouseTransfers' },
@@ -20966,7 +20990,7 @@
                 { icon: 'fas fa-truck', title: 'طلبات WPC', desc: 'OMS — تنفيذ طلبات المصنع', handler: 'openErpOrders' }
             ];
             actions.innerHTML = cards.map(function(c) {
-                return '<button type="button" class="nebras-dept-card wpc-dept-card" onclick="' + c.handler + '()">' +
+                return '<button type="button" class="nebras-dept-card wpc-dept-card' + (c.featured ? ' wpc-dept-card--cutting' : '') + '" onclick="' + c.handler + '()">' +
                     '<i class="' + c.icon + '"></i><h4>' + escapeHtmlAttr(c.title) + '</h4><small>' + escapeHtmlAttr(c.desc) + '</small></button>';
             }).join('');
             if (variantsHost) {
@@ -26779,11 +26803,12 @@
             document.body.classList.remove('crm-platform-open');
             document.body.classList.remove('accounting-platform-open');
             document.body.classList.remove('alu-platform-open');
+            document.body.classList.remove('wpc-platform-open');
             syncPlatformInteractionLayers();
         }
 
         function ensureAdminPanelExitChrome() {
-            const workspaceSelfExit = { 'hr-platform': true, 'legal-platform': true, 'crm-platform': true, 'accounting-platform': true, 'aluminum-cutting': true };
+            const workspaceSelfExit = { 'hr-platform': true, 'legal-platform': true, 'crm-platform': true, 'accounting-platform': true, 'aluminum-cutting': true, 'wpc-cutting': true };
             document.querySelectorAll('.admin-section[id]').forEach(function(section) {
                 if (workspaceSelfExit[section.id]) return;
                 if (section.querySelector('.nebras-admin-exit-bar')) return;
@@ -26828,6 +26853,10 @@
                 closeAluminumCuttingWorkspace();
                 return;
             }
+            if (sectionId === 'wpc-cutting' && typeof closeWpcCuttingWorkspace === 'function') {
+                closeWpcCuttingWorkspace();
+                return;
+            }
             if (sectionId === 'admin-ai-assistant' && typeof closeNebrasAdminAi === 'function') {
                 closeNebrasAdminAi();
                 return;
@@ -26854,6 +26883,7 @@
                 document.body.classList.remove('hr-platform-open');
                 document.body.classList.remove('legal-platform-open');
                 document.body.classList.remove('alu-platform-open');
+            document.body.classList.remove('wpc-platform-open');
             }
             syncPlatformInteractionLayers();
         }
@@ -28378,6 +28408,44 @@
             }, set: function(v) {
                 if (typeof setAluminumAuditFromCloud === 'function') setAluminumAuditFromCloud(v);
             }},
+            { key: 'wpc_models', get: function() {
+                return typeof getWpcModels === 'function' ? getWpcModels() : [];
+            }, set: function(v) {
+                if (typeof setWpcModelsFromCloud === 'function') setWpcModelsFromCloud(v);
+            }},
+            { key: 'wpc_estimates', get: function() {
+                return typeof getWpcEstimates === 'function' ? getWpcEstimates() : [];
+            }, set: function(v) {
+                if (typeof setWpcEstimatesFromCloud === 'function') setWpcEstimatesFromCloud(v);
+            }},
+            { key: 'wpc_cut_jobs', get: function() {
+                return typeof getWpcCutJobs === 'function' ? getWpcCutJobs() : [];
+            }, set: function(v) {
+                if (typeof setWpcCutJobsFromCloud === 'function') setWpcCutJobsFromCloud(v);
+            }},
+            { key: 'wpc_cut_settings', get: function() {
+                return typeof getWpcCutSettings === 'function' ? getWpcCutSettings() : {};
+            }, set: function(v) {
+                if (typeof setWpcCutSettingsFromCloud === 'function') setWpcCutSettingsFromCloud(v);
+            }},
+            { key: 'wpc_accessories', get: function() {
+                return typeof getWpcAccessories === 'function' ? getWpcAccessories() : [];
+            }, set: function(v) {
+                if (typeof setWpcAccessoriesFromCloud === 'function') setWpcAccessoriesFromCloud(v);
+            }},
+            { key: 'wpc_remnants', get: function() {
+                return typeof getWpcRemnants === 'function' ? getWpcRemnants() : [];
+            }, set: function(v) {
+                if (typeof setWpcRemnantsFromCloud === 'function') setWpcRemnantsFromCloud(v);
+            }},
+            { key: 'wpc_cut_audit', get: function() {
+                try {
+                    var raw = localStorage.getItem('nebrasWpcCutAudit');
+                    return raw ? JSON.parse(raw) : [];
+                } catch (e) { return []; }
+            }, set: function(v) {
+                if (typeof setWpcCutAuditFromCloud === 'function') setWpcCutAuditFromCloud(v);
+            }},
             { key: 'nebras_cloud_snapshots', get: function() {
                 return typeof getCloudSnapshotsForCloud === 'function' ? getCloudSnapshotsForCloud() : { byKey: {}, updatedAt: null };
             }, set: function(v) {
@@ -28399,7 +28467,8 @@
             'visitor_icons',
             'aluminum_profiles', 'aluminum_systems', 'aluminum_estimates', 'aluminum_cut_jobs',
             'aluminum_accessories', 'aluminum_glass', 'aluminum_wire', 'aluminum_colors',
-            'aluminum_remnants', 'aluminum_stock', 'aluminum_audit'
+            'aluminum_remnants', 'aluminum_stock', 'aluminum_audit',
+            'wpc_models', 'wpc_estimates', 'wpc_cut_jobs', 'wpc_accessories', 'wpc_remnants'
         ];
 
         function nebrasChromePayloadIsEmpty(storeKey, payload) {
@@ -29407,6 +29476,8 @@
             'aluminum_profiles', 'aluminum_systems', 'aluminum_estimates', 'aluminum_cut_jobs',
             'aluminum_cut_settings', 'aluminum_accessories', 'aluminum_glass', 'aluminum_wire', 'aluminum_colors',
             'aluminum_remnants', 'aluminum_stock', 'aluminum_audit',
+            'wpc_models', 'wpc_estimates', 'wpc_cut_jobs', 'wpc_cut_settings',
+            'wpc_accessories', 'wpc_remnants', 'wpc_cut_audit',
             'nebras_cloud_snapshots', 'nebras_platform_integrity'
         ];
 
@@ -30171,8 +30242,11 @@
                 if (typeof markGovernanceBootstrapRevision === 'function') markGovernanceBootstrapRevision();
                 let cloudBootOk = false;
                 if (supabaseClient && NEBRAS_SERVER_FIRST_MODE) {
+                    var adminBootHint = false;
+                    try { adminBootHint = !!localStorage.getItem('nebrasAdminUiSession'); } catch (bootHintErr) { /* ignore */ }
+                    var cloudBootMs = adminBootHint ? 8000 : 5000;
                     try {
-                        cloudBootOk = await cloudLoadWithTimeout(8000);
+                        cloudBootOk = await cloudLoadWithTimeout(cloudBootMs);
                     } catch (cloudBootErr) {
                         console.warn('Bootstrap cloud load:', cloudBootErr);
                     }

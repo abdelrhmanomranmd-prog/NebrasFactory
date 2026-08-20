@@ -37,7 +37,9 @@
         'about_pages', 'dashboard_tiles', 'site_certifications', 'site_custom_sections',
         'aluminum_profiles', 'aluminum_systems', 'aluminum_estimates', 'aluminum_cut_jobs',
         'aluminum_cut_settings', 'aluminum_accessories', 'aluminum_glass', 'aluminum_wire',
-        'aluminum_colors', 'aluminum_remnants', 'aluminum_stock', 'aluminum_audit'
+        'aluminum_colors', 'aluminum_remnants', 'aluminum_stock', 'aluminum_audit',
+        'wpc_models', 'wpc_estimates', 'wpc_cut_jobs', 'wpc_cut_settings',
+        'wpc_accessories', 'wpc_remnants', 'wpc_cut_audit'
     ];
 
     const ODOO_HR_KEYS = [
@@ -63,6 +65,10 @@
         'erp-pricelist': ['sales_price_list', 'site_products'],
         'erp-hr-platform': ODOO_HR_KEYS,
         'erp-wpc-dept': ODOO_ERP_KEYS,
+        'erp-wpc-cutting': [
+            'wpc_models', 'wpc_estimates', 'wpc_cut_jobs', 'wpc_cut_settings',
+            'wpc_accessories', 'wpc_remnants', 'wpc_cut_audit'
+        ],
         'erp-aluminum-dept': ODOO_ERP_KEYS,
         'erp-aluminum-cutting': [
             'aluminum_profiles', 'aluminum_systems', 'aluminum_estimates', 'aluminum_cut_jobs',
