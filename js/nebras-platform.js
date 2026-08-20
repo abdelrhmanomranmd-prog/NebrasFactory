@@ -19281,9 +19281,24 @@
         }
 
         let nebrasDashboardRefreshInFlight = false;
+        let nebrasDashboardRefreshTimer = null;
 
         /** إعادة بناء الداشبورد بعد مزامنة السحابة — يمنع اختفاء الأيقونات */
         function refreshAdminDashboardAfterGovernanceSync(options) {
+            options = options || {};
+            if (!currentAdmin) return;
+            if (options.immediate) {
+                refreshAdminDashboardAfterGovernanceSyncCore(options);
+                return;
+            }
+            if (nebrasDashboardRefreshTimer) clearTimeout(nebrasDashboardRefreshTimer);
+            nebrasDashboardRefreshTimer = setTimeout(function() {
+                nebrasDashboardRefreshTimer = null;
+                refreshAdminDashboardAfterGovernanceSyncCore(options);
+            }, 220);
+        }
+
+        function refreshAdminDashboardAfterGovernanceSyncCore(options) {
             options = options || {};
             if (!currentAdmin || nebrasDashboardRefreshInFlight) return;
             nebrasDashboardRefreshInFlight = true;
@@ -29009,8 +29024,10 @@
             }
             nebrasHydrateInFlight = hydrateGovernanceFromServerAfterLogin({
                 background: true,
-                skipInit: true
+                skipInit: true,
+                deferHeavy: true
             }).then(function(ok) {
+                setNebrasCloudHydrateGate(false);
                 if (currentAdmin && typeof refreshAdminDashboardAfterGovernanceSync === 'function') {
                     refreshAdminDashboardAfterGovernanceSync({ scheduleHealth: true });
                 } else if (currentAdmin && typeof renderDashboardCommandShell === 'function') {
@@ -29027,11 +29044,18 @@
                 }
                 if (typeof startNebrasCloudAutoSync === 'function') startNebrasCloudAutoSync();
                 if (typeof window.startNebrasOdooDeltaSync === 'function') window.startNebrasOdooDeltaSync();
-                if (currentAdmin && typeof renderAdminAnalyticsPanel === 'function' && canManage('audit')) {
-                    try { renderAdminAnalyticsPanel(); } catch (anErr) { console.warn('Post-hydrate analytics:', anErr); }
+                function runPostHydrateUiExtras() {
+                    if (currentAdmin && typeof renderAdminAnalyticsPanel === 'function' && canManage('audit')) {
+                        try { renderAdminAnalyticsPanel(); } catch (anErr) { console.warn('Post-hydrate analytics:', anErr); }
+                    }
+                    if (typeof refreshDashboardExecutiveBi === 'function' && currentAdmin) {
+                        refreshDashboardExecutiveBi(currentAdmin).catch(function(biErr) { console.warn('Post-hydrate BI:', biErr); });
+                    }
                 }
-                if (typeof refreshDashboardExecutiveBi === 'function' && currentAdmin) {
-                    refreshDashboardExecutiveBi(currentAdmin).catch(function(biErr) { console.warn('Post-hydrate BI:', biErr); });
+                if (typeof requestIdleCallback === 'function') {
+                    requestIdleCallback(runPostHydrateUiExtras, { timeout: 7000 });
+                } else {
+                    setTimeout(runPostHydrateUiExtras, 1800);
                 }
                 return ok;
             }).catch(function(hydrateErr) {
@@ -29077,22 +29101,7 @@
             }
         }
 
-        /** المرحلة 1 — تحميل السحابة بعد دخول الإدارة (دمج + بدون مسح البذور) */
-        async function hydrateGovernanceFromServerAfterLogin(options) {
-            options = options || {};
-            if (!NEBRAS_SERVER_FIRST_MODE || !supabaseClient) return false;
-            const ok = await loadFromNebrasCloud();
-            finalizePlatformDataAfterLoad({ skipBuiltinSeeds: ok, refreshDashboardUi: true });
-            ensureSiteChromeDefaults();
-            if (typeof repairStoreHubCatalogBindings === 'function') repairStoreHubCatalogBindings();
-            if (typeof refreshPublicSiteFromGovernance === 'function') refreshPublicSiteFromGovernance();
-            startNebrasPublicSiteCloudRefresh();
-            try {
-                persistLocalGovernanceKeys();
-                if (typeof persistAnalyticsGovernanceLocal === 'function') persistAnalyticsGovernanceLocal();
-            } catch (cacheErr) {
-                console.warn('Post-hydrate local cache:', cacheErr);
-            }
+        async function runPostHydrateHeavyCloudTasks() {
             const pending = typeof hasPendingLocalCloudMutations === 'function' && hasPendingLocalCloudMutations();
             const sensPending = typeof hasSensitiveCloudPending === 'function' && hasSensitiveCloudPending();
             if ((pending || sensPending) && currentAdmin) {
@@ -29136,6 +29145,38 @@
                 try { await pullVisitorIntakeFromCloud(); } catch (intakeErr) {
                     console.warn('Post-hydrate visitor intake pull:', intakeErr);
                 }
+            }
+        }
+
+        /** المرحلة 1 — تحميل السحابة بعد دخول الإدارة (دمج + بدون مسح البذور) */
+        async function hydrateGovernanceFromServerAfterLogin(options) {
+            options = options || {};
+            if (!NEBRAS_SERVER_FIRST_MODE || !supabaseClient) return false;
+            const ok = await loadFromNebrasCloud();
+            finalizePlatformDataAfterLoad({ skipBuiltinSeeds: ok, refreshDashboardUi: true });
+            ensureSiteChromeDefaults();
+            if (typeof repairStoreHubCatalogBindings === 'function') repairStoreHubCatalogBindings();
+            if (typeof refreshPublicSiteFromGovernance === 'function') refreshPublicSiteFromGovernance();
+            startNebrasPublicSiteCloudRefresh();
+            try {
+                persistLocalGovernanceKeys();
+                if (typeof persistAnalyticsGovernanceLocal === 'function') persistAnalyticsGovernanceLocal();
+            } catch (cacheErr) {
+                console.warn('Post-hydrate local cache:', cacheErr);
+            }
+            if (options.deferHeavy) {
+                const scheduleHeavy = function() {
+                    runPostHydrateHeavyCloudTasks().catch(function(heavyErr) {
+                        console.warn('Post-hydrate heavy tasks:', heavyErr);
+                    });
+                };
+                if (typeof requestIdleCallback === 'function') {
+                    requestIdleCallback(scheduleHeavy, { timeout: 9000 });
+                } else {
+                    setTimeout(scheduleHeavy, 1600);
+                }
+            } else {
+                await runPostHydrateHeavyCloudTasks();
             }
             if (!options.skipInit) {
                 if (typeof startNebrasRealtimeSync === 'function') {
@@ -30381,11 +30422,24 @@
                 if (supabaseClient && NEBRAS_SERVER_FIRST_MODE) {
                     var adminBootHint = false;
                     try { adminBootHint = !!localStorage.getItem('nebrasAdminUiSession'); } catch (bootHintErr) { /* ignore */ }
-                    var cloudBootMs = adminBootHint ? 8000 : 5000;
-                    try {
-                        cloudBootOk = await cloudLoadWithTimeout(cloudBootMs);
-                    } catch (cloudBootErr) {
-                        console.warn('Bootstrap cloud load:', cloudBootErr);
+                    if (adminBootHint) {
+                        try {
+                            cloudBootOk = await cloudLoadWithTimeout(5500);
+                        } catch (cloudBootErr) {
+                            console.warn('Bootstrap cloud load:', cloudBootErr);
+                        }
+                    } else {
+                        cloudLoadWithTimeout(3500).then(function(visitorCloudOk) {
+                            if (!visitorCloudOk) return;
+                            try {
+                                finalizePlatformDataAfterLoad({ skipBuiltinSeeds: true });
+                                if (typeof repairStoreHubCatalogBindings === 'function') repairStoreHubCatalogBindings();
+                                if (typeof refreshPublicSiteFromGovernance === 'function') refreshPublicSiteFromGovernance();
+                                if (typeof forceRecoverPublicSiteUi === 'function') forceRecoverPublicSiteUi();
+                            } catch (visitorBootErr) {
+                                console.warn('Visitor background cloud refresh:', visitorBootErr);
+                            }
+                        }).catch(function() { /* ignore */ });
                     }
                 }
                 window._nebrasCloudDataReady = true;

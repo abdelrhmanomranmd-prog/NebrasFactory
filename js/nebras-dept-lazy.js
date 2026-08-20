@@ -1,11 +1,11 @@
 /**
- * نبراس — تحميل كسول لوحدات الإدارات (hrws227)
+ * نبراس — تحميل كسول لوحدات الإدارات (hrws228)
  * فتح فوري + prefetch ذكي حسب الدور — بدون إثقال الزائر.
  */
 (function (global) {
     'use strict';
 
-    var VER = 'hrws227';
+    var VER = 'hrws228';
     var loaded = Object.create(null);
     var inflight = Object.create(null);
     var bundleDone = Object.create(null);
@@ -203,7 +203,7 @@
             if (i >= names.length) return;
             var name = names[i++];
             loadBundle(name).catch(function () { /* soft */ }).then(function () {
-                var gap = name === 'aluminum' ? 3000 : name === 'hr' ? 2000 : 800;
+                var gap = name === 'aluminum' ? 5000 : name === 'hr' ? 3500 : 1000;
                 setTimeout(next, gap);
             });
         }
@@ -239,13 +239,20 @@
     function schedulePrefetch() {
         window.addEventListener('nebras-admin-session', function () {
             prefetchPriorityImmediately();
-            setTimeout(function () {
-                if (typeof requestIdleCallback === 'function') {
-                    requestIdleCallback(prefetchNebrasAdminDepts, { timeout: 6000 });
-                } else {
-                    setTimeout(prefetchNebrasAdminDepts, 1200);
-                }
-            }, 600);
+            function startFullPrefetch() {
+                setTimeout(function () {
+                    if (typeof requestIdleCallback === 'function') {
+                        requestIdleCallback(prefetchNebrasAdminDepts, { timeout: 9000 });
+                    } else {
+                        setTimeout(prefetchNebrasAdminDepts, 2000);
+                    }
+                }, 1200);
+            }
+            if (typeof global.waitForNebrasCloudHydrate === 'function') {
+                global.waitForNebrasCloudHydrate().then(startFullPrefetch).catch(startFullPrefetch);
+            } else {
+                startFullPrefetch();
+            }
         });
     }
 
