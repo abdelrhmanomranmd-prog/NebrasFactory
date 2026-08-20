@@ -1,5 +1,5 @@
 /**
- * نبراس — تخصيمات WPC (V3 Pro · hrws225)
+ * نبراس — تخصيمات WPC (V3 Pro · hrws226)
  * محرك دقة ورشة — أبواب · خزائن · رسومات SVG · 3D · Stolcad/PowerPVC
  */
 (function (global) {
@@ -214,6 +214,53 @@
     function wField(id) {
         var el = document.getElementById(id);
         return el ? String(el.value || '').trim() : '';
+    }
+
+    var wpcRenderDebounce = null;
+    var WPC_FIELD_EVT = 'oninput="wpcItemFieldUpdate()" onchange="wpcItemFieldUpdate(true)"';
+
+    /** حقول إدخال احترافية — أيقونة · وحدة · تلميح */
+    function wpcField(opts) {
+        opts = opts || {};
+        var id = opts.id || '';
+        var label = opts.label || '';
+        var icon = opts.icon || 'fas fa-pen';
+        var hint = opts.hint || '';
+        var unit = opts.unit || '';
+        var type = opts.type || 'text';
+        var variant = opts.variant || 'default';
+        var evt = opts.event || WPC_FIELD_EVT;
+        var attrs = opts.attrs || '';
+        var value = opts.value != null ? opts.value : '';
+        var control = '';
+
+        if (type === 'select') {
+            control = '<select id="' + id + '" class="wpc-field-control wpc-field-control--select" ' + evt + '>' + (opts.options || '') + '</select>';
+        } else if (type === 'checkbox') {
+            return '<label class="wpc-field wpc-field--toggle" for="' + id + '">' +
+                '<input type="checkbox" id="' + id + '" class="wpc-field-check"' + (value ? ' checked' : '') + ' ' + evt + '>' +
+                '<span class="wpc-field-toggle-ui"><i class="' + icon + '"></i><span class="wpc-field-label">' + wEsc(label) + '</span>' +
+                (hint ? '<small>' + wEsc(hint) + '</small>' : '') + '</span></label>';
+        } else {
+            control = '<input type="' + type + '" id="' + id + '" class="wpc-field-control" value="' + wEsc(String(value)) + '" ' + attrs + ' ' + evt + '>';
+        }
+
+        return '<div class="wpc-field wpc-field--' + variant + '">' +
+            '<div class="wpc-field-head"><span class="wpc-field-icon"><i class="' + icon + '"></i></span>' +
+            '<span class="wpc-field-label">' + wEsc(label) + '</span>' +
+            (unit ? '<span class="wpc-field-unit">' + wEsc(unit) + '</span>' : '') + '</div>' +
+            '<div class="wpc-field-body">' + control + '</div>' +
+            (hint ? '<p class="wpc-field-hint">' + wEsc(hint) + '</p>' : '') + '</div>';
+    }
+
+    function wpcPrecisionBadges() {
+        return '<div class="wpc-precision-strip">' +
+            '<span class="wpc-badge"><i class="fas fa-crosshairs"></i> دقة 0.1 مم</span>' +
+            '<span class="wpc-badge"><i class="fas fa-calculator"></i> Stolcad · PowerPVC</span>' +
+            '<span class="wpc-badge"><i class="fas fa-shield-halved"></i> تدقيق يمنع الخطأ</span>' +
+            '<span class="wpc-badge"><i class="fas fa-door-open"></i> أبواب + خزائن</span>' +
+            '<span class="wpc-badge"><i class="fas fa-cube"></i> SVG + 3D</span>' +
+            '<span class="wpc-badge"><i class="fas fa-scissors"></i> تخطيط ألواح</span></div>';
     }
 
     function loadLocal(key, fallback) {
@@ -1184,7 +1231,9 @@
         if (!showWpcCuttingShell()) return;
         renderWpcCuttingPanel();
         if (typeof odooReadThroughPanel === 'function') {
-            try { odooReadThroughPanel('erp-wpc-cutting'); } catch (e) { /* ignore */ }
+            setTimeout(function () {
+                try { odooReadThroughPanel('erp-wpc-cutting'); } catch (e) { /* ignore */ }
+            }, 150);
         }
     }
 
@@ -1285,6 +1334,7 @@
             '<p class="wpc-cut-kicker"><i class="fas fa-door-closed"></i> تخصيمات WPC — أبواب وخزائن · مصنع نبراس</p>' +
             '<h2>محرك تخصيم WPC — دقة ورشة V3</h2>' +
             '<p>أبواب · خزائن · مطبخ · رسومات SVG · معاينة 3D · Stolcad/PowerPVC · تدقيق · تخطيط ألواح</p>' +
+            wpcPrecisionBadges() +
             '<div class="wpc-cut-hero-actions">' +
             '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="newWpcEstimate();setWpcCutTab(\'estimate\')"><i class="fas fa-plus"></i> مقايسة جديدة</button>' +
             '<button type="button" class="nebras-users-btn" onclick="setWpcCutTab(\'drawings\')"><i class="fas fa-drafting-compass"></i> رسومات / 3D</button>' +
@@ -1350,30 +1400,32 @@
         var warnHtml = (meta.warnings || []).length
             ? '<div class="wpc-cut-alert wpc-cut-alert--warn"><strong>⚠ تحذير:</strong><ul>' + meta.warnings.map(function (w) { return '<li>' + wEsc(w) + '</li>'; }).join('') + '</ul></div>' : '';
 
-        return '<div class="wpc-cut-form-card"><h4><i class="fas fa-ruler-combined"></i> ' + wEsc(est.ref) + '</h4>' +
-            '<div class="erp-form-grid">' +
-            '<label>العميل<input id="wpc-est-customer" value="' + wEsc(est.customerName) + '" onchange="wpcEstFieldUpdate()"></label>' +
-            '<label>المشروع<input id="wpc-est-project" value="' + wEsc(est.projectName) + '" onchange="wpcEstFieldUpdate()"></label>' +
+        return '<div class="wpc-cut-form-card wpc-form-studio"><div class="wpc-form-card-head"><h4><i class="fas fa-ruler-combined"></i> ' + wEsc(est.ref) + '</h4><span class="wpc-form-card-tag">محرك V3</span></div>' +
+            '<div class="wpc-field-grid wpc-field-grid--2">' +
+            wpcField({ id: 'wpc-est-customer', label: 'العميل', icon: 'fas fa-user', value: est.customerName, event: 'onchange="wpcEstFieldUpdate()"' }) +
+            wpcField({ id: 'wpc-est-project', label: 'المشروع', icon: 'fas fa-building', value: est.projectName, event: 'onchange="wpcEstFieldUpdate()"' }) +
             '</div></div>' +
-            '<div class="wpc-cut-form-card"><h4>' + (isCabinet ? 'بند الخزانة — مقاسات دقيقة' : 'بند الباب — مقاسات دقيقة') + '</h4>' +
+            '<div class="wpc-cut-form-card wpc-form-studio wpc-form-studio--measure">' +
+            '<div class="wpc-form-card-head"><h4>' + (isCabinet ? 'بند الخزانة — مقاسات دقيقة' : 'بند الباب — مقاسات دقيقة') + '</h4>' +
+            '<span class="wpc-live-pill"><i class="fas fa-circle"></i> حي</span></div>' +
             '<p class="wpc-cut-note">' + wEsc((MEASURE_MODES[item.measureMode || 'frame_outer'] || {}).desc || '') + '</p>' +
-            '<div class="erp-form-grid">' +
-            '<label>نوع القياس<select id="wpc-item-measure-mode" onchange="wpcItemFieldUpdate()">' + modeOpts + '</select></label>' +
-            '<label>النوع<select id="wpc-item-shape" onchange="wpcItemFieldUpdate()">' + shapeOpts + '</select></label>' +
-            '<label>موديل WPC<select id="wpc-item-model" onchange="wpcItemFieldUpdate()">' + modelOpts + '</select></label>' +
-            '<label>العرض (مم)<input type="number" step="0.1" id="wpc-item-width" value="' + wNum(item.widthMm) + '" onchange="wpcItemFieldUpdate()"></label>' +
-            '<label>الارتفاع (مم)<input type="number" step="0.1" id="wpc-item-height" value="' + wNum(item.heightMm) + '" onchange="wpcItemFieldUpdate()"></label>' +
-            (isCabinet ? '<label>العمق (مم)<input type="number" step="0.1" id="wpc-item-depth" value="' + wNum(item.depthMm || DEFAULT_DEDUCTIONS.defaultCabinetDepthMm) + '" onchange="wpcItemFieldUpdate()"></label>' : '') +
-            (isCabinet && !shapeInfo.drawers ? '<label>عدد الرفوف<input type="number" id="wpc-item-shelves" value="' + wNum(item.shelfCount != null ? item.shelfCount : 2) + '" min="0" onchange="wpcItemFieldUpdate()"></label>' : '') +
-            (isCabinet && shapeInfo.drawers ? '<label>عدد الأدراج<input type="number" id="wpc-item-drawers" value="' + wNum(item.drawerCount || 4) + '" min="2" onchange="wpcItemFieldUpdate()"></label>' : '') +
-            '<label>الكمية<input type="number" id="wpc-item-qty" value="' + wNum(item.qty) + '" min="1" onchange="wpcItemFieldUpdate()"></label>' +
-            (!isCabinet ? '<label><input type="checkbox" id="wpc-item-bath"' + (item.isBathroom ? ' checked' : '') + ' onchange="wpcItemFieldUpdate()"> حمام (فجوة 12مم)</label>' : '') +
+            '<div class="wpc-field-grid">' +
+            wpcField({ id: 'wpc-item-measure-mode', label: 'نوع القياس', icon: 'fas fa-ruler', type: 'select', options: modeOpts, hint: '3 أوضاع — حلق · فتحة خام · لوح جاهز' }) +
+            wpcField({ id: 'wpc-item-shape', label: 'النوع', icon: 'fas fa-shapes', type: 'select', options: shapeOpts, hint: 'باب · خزانة · مطبخ · أدراج' }) +
+            wpcField({ id: 'wpc-item-model', label: 'موديل WPC', icon: 'fas fa-layer-group', type: 'select', options: modelOpts }) +
+            wpcField({ id: 'wpc-item-width', label: 'العرض', icon: 'fas fa-arrows-left-right', type: 'number', unit: 'مم', value: wNum(item.widthMm), attrs: 'step="0.1" min="100"', variant: 'dimension' }) +
+            wpcField({ id: 'wpc-item-height', label: 'الارتفاع', icon: 'fas fa-arrows-up-down', type: 'number', unit: 'مم', value: wNum(item.heightMm), attrs: 'step="0.1" min="100"', variant: 'dimension' }) +
+            (isCabinet ? wpcField({ id: 'wpc-item-depth', label: 'العمق', icon: 'fas fa-cube', type: 'number', unit: 'مم', value: wNum(item.depthMm || DEFAULT_DEDUCTIONS.defaultCabinetDepthMm), attrs: 'step="0.1" min="200"', variant: 'dimension' }) : '') +
+            (isCabinet && !shapeInfo.drawers ? wpcField({ id: 'wpc-item-shelves', label: 'عدد الرفوف', icon: 'fas fa-bars-staggered', type: 'number', value: wNum(item.shelfCount != null ? item.shelfCount : 2), attrs: 'min="0" max="12"' }) : '') +
+            (isCabinet && shapeInfo.drawers ? wpcField({ id: 'wpc-item-drawers', label: 'عدد الأدراج', icon: 'fas fa-inbox', type: 'number', value: wNum(item.drawerCount || 4), attrs: 'min="2" max="8"' }) : '') +
+            wpcField({ id: 'wpc-item-qty', label: 'الكمية', icon: 'fas fa-hashtag', type: 'number', value: wNum(item.qty), attrs: 'min="1"' }) +
+            (!isCabinet ? wpcField({ id: 'wpc-item-bath', label: 'حمام — فجوة 12مم', icon: 'fas fa-shower', type: 'checkbox', value: item.isBathroom, hint: 'تخصيم سفلي إضافي للرطوبة' }) : '') +
             '</div>' +
-            '<div class="wpc-geo-summary">' +
-            '<span>خارجي: <strong>' + (geo.frameOuterW || '—') + '×' + (geo.frameOuterH || '—') + '</strong></span> ' +
-            (isCabinet ? '<span>عمق: <strong>' + (geo.depthMm || '—') + '</strong></span> ' : '') +
-            (!isCabinet ? '<span>صافي: <strong>' + (geo.innerClearW || '—') + '×' + (geo.innerClearH || '—') + '</strong></span> ' : '') +
-            '<span>' + (shapeInfo.drawers ? 'درج' : (isCabinet ? 'باب' : 'لوح')) + ': <strong>' + (geo.leafW || '—') + '×' + (geo.leafH || '—') + '</strong></span>' +
+            '<div class="wpc-geo-summary wpc-geo-summary--premium">' +
+            '<article><small>خارجي</small><strong>' + (geo.frameOuterW || '—') + '×' + (geo.frameOuterH || '—') + '</strong></article>' +
+            (isCabinet ? '<article><small>عمق</small><strong>' + (geo.depthMm || '—') + ' مم</strong></article>' : '') +
+            (!isCabinet ? '<article><small>صافي</small><strong>' + (geo.innerClearW || '—') + '×' + (geo.innerClearH || '—') + '</strong></article>' : '') +
+            '<article class="wpc-geo-highlight"><small>' + (shapeInfo.drawers ? 'درج' : (isCabinet ? 'باب' : 'لوح')) + '</small><strong>' + (geo.leafW || '—') + '×' + (geo.leafH || '—') + '</strong></article>' +
             '</div></div>' +
             '<div class="wpc-draw-grid wpc-draw-grid--inline">' +
             '<section class="wpc-draw-panel"><h5><i class="fas fa-ruler-combined"></i> رسم هندسي</h5>' + wpcDrawElevationSvg(item, { viewW: 360, viewH: 300 }) + '</section>' +
@@ -1395,7 +1447,7 @@
         wpcEstimateDraft.customerName = wField('wpc-est-customer');
         wpcEstimateDraft.projectName = wField('wpc-est-project');
     }
-    function wpcItemFieldUpdate() {
+    function wpcItemFieldUpdate(immediate) {
         if (!wpcEstimateDraft) return;
         if (!wpcEstimateDraft.items.length) wpcEstimateDraft.items.push({});
         var it = wpcEstimateDraft.items[0];
@@ -1410,7 +1462,12 @@
         it.qty = Math.max(1, wNum(wField('wpc-item-qty')) || 1);
         var bathEl = document.getElementById('wpc-item-bath');
         it.isBathroom = bathEl ? bathEl.checked : false;
-        renderWpcCuttingPanel();
+        clearTimeout(wpcRenderDebounce);
+        if (immediate) {
+            renderWpcCuttingPanel();
+            return;
+        }
+        wpcRenderDebounce = setTimeout(renderWpcCuttingPanel, 300);
     }
 
     function renderWpcModels() {
@@ -1431,12 +1488,12 @@
         var d = dOf(m);
         var fields = Object.keys(DEFAULT_DEDUCTIONS).map(function (k) {
             var label = DEDUCTION_LABELS[k] || k;
-            return '<label>' + wEsc(label) + ' (مم)<input type="number" step="0.1" id="wpc-ded-' + k + '" value="' + wNum(d[k]) + '"></label>';
+            return wpcField({ id: 'wpc-ded-' + k, label: label, icon: 'fas fa-minus', type: 'number', unit: 'مم', value: wNum(d[k]), attrs: 'step="0.1"', event: 'onchange="void 0"' });
         }).join('');
-        return '<div class="wpc-cut-form-card"><h4><i class="fas fa-sliders"></i> التخصيمات — قابلة للتعديل</h4>' +
-            '<p class="wpc-cut-note">مرجع صناعي: Stolcad · PowerPVC · KOJO WPC — كل مم يؤثر على اللوح والحلق.</p>' +
-            '<label>الموديل<select id="wpc-ded-model" onchange="renderWpcCuttingPanel()">' + modelOpts + '</select></label>' +
-            '<div class="erp-form-grid erp-form-grid--compact">' + fields + '</div>' +
+        return '<div class="wpc-cut-form-card wpc-form-studio"><div class="wpc-form-card-head"><h4><i class="fas fa-sliders"></i> التخصيمات — قابلة للتعديل</h4></div>' +
+            '<p class="wpc-cut-note">مرجع صناعي: Stolcad · PowerPVC · KOJO WPC — كل مم يؤثر على اللوح والحلق والخزانة.</p>' +
+            wpcField({ id: 'wpc-ded-model', label: 'الموديل', icon: 'fas fa-layer-group', type: 'select', options: modelOpts, event: 'onchange="renderWpcCuttingPanel()"' }) +
+            '<div class="wpc-field-grid wpc-field-grid--deductions">' + fields + '</div>' +
             '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="saveWpcModelDeductions()"><i class="fas fa-save"></i> حفظ التخصيمات</button></div>';
     }
 
@@ -1525,12 +1582,12 @@
     }
 
     function renderWpcSettings() {
-        return '<div class="wpc-cut-form-card"><h4>إعدادات المحرك</h4>' +
-            '<div class="erp-form-grid">' +
-            '<label>عرض اللوح (مم)<input type="number" id="wpc-set-sheet-w" value="' + wNum(wpcSettings.sheetWidthMm) + '"></label>' +
-            '<label>طول اللوح (مم)<input type="number" id="wpc-set-sheet-h" value="' + wNum(wpcSettings.sheetHeightMm) + '"></label>' +
-            '<label>كيرف القص (مm)<input type="number" id="wpc-set-kerf" value="' + wNum(wpcSettings.kerfMm) + '"></label>' +
-            '<label>أجر باب<input type="number" id="wpc-set-labor" value="' + wNum(wpcSettings.laborPerDoor) + '"></label>' +
+        return '<div class="wpc-cut-form-card wpc-form-studio"><div class="wpc-form-card-head"><h4>إعدادات المحرك</h4></div>' +
+            '<div class="wpc-field-grid wpc-field-grid--2">' +
+            wpcField({ id: 'wpc-set-sheet-w', label: 'عرض اللوح', icon: 'fas fa-arrows-left-right', type: 'number', unit: 'مم', value: wNum(wpcSettings.sheetWidthMm) }) +
+            wpcField({ id: 'wpc-set-sheet-h', label: 'طول اللوح', icon: 'fas fa-arrows-up-down', type: 'number', unit: 'مم', value: wNum(wpcSettings.sheetHeightMm) }) +
+            wpcField({ id: 'wpc-set-kerf', label: 'كيرف القص', icon: 'fas fa-scissors', type: 'number', unit: 'مم', value: wNum(wpcSettings.kerfMm) }) +
+            wpcField({ id: 'wpc-set-labor', label: 'أجر باب', icon: 'fas fa-coins', type: 'number', unit: wpcSettings.currencyLabel, value: wNum(wpcSettings.laborPerDoor) }) +
             '</div>' +
             '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="saveWpcSettings()"><i class="fas fa-save"></i> حفظ</button></div>';
     }

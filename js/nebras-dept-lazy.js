@@ -1,16 +1,17 @@
 /**
- * نبراس — تحميل كسول لوحدات الإدارات (hrws225)
- * لا يُحمّل HR/ALU/WPC إلا عند الحاجة أو بعد دخول الإدارة (بدون إثقال الزائر).
+ * نبراس — تحميل كسول لوحدات الإدارات (hrws226)
+ * فتح فوري + prefetch ذكي حسب الدور — بدون إثقال الزائر.
  */
 (function (global) {
     'use strict';
 
-    var VER = 'hrws225';
+    var VER = 'hrws226';
     var loaded = Object.create(null);
     var inflight = Object.create(null);
     var bundleDone = Object.create(null);
     var bundleWait = Object.create(null);
     var prefetchStarted = false;
+    var priorityLoaded = false;
 
     var BUNDLES = {
         aluminum: ['js/nebras-aluminum-cutting.js'],
@@ -43,9 +44,9 @@
         ]
     };
 
-    /** ترتيب التحميل الكسول — الأخف أولاً؛ aluminum ثقيل (~2MB) دائماً آخر */
-    var PREFETCH_LIGHT = ['wpc', 'crm', 'legal', 'accounting', 'adminTools', 'empire', 'hr'];
-    var PREFETCH_HEAVY = ['aluminum'];
+    /** ترتيب التحميل — الأخف أولاً؛ aluminum ثقيل (~2MB) دائماً آخر */
+    var PREFETCH_LIGHT = ['wpc', 'crm', 'legal', 'accounting', 'adminTools', 'empire'];
+    var PREFETCH_HEAVY = ['hr', 'aluminum'];
 
     var STUBS = [
         { name: 'openAluminumCutting', bundle: 'aluminum' },
@@ -125,6 +126,12 @@
         return loadBundle(name);
     }
 
+    function showDeptLoadingHint() {
+        if (typeof global.showNebrasAdminToast === 'function') {
+            global.showNebrasAdminToast('⏳ جاري فتح الوحدة…', 'ok');
+        }
+    }
+
     function installStub(entry) {
         var fnName = entry.name;
         var bundle = entry.bundle;
@@ -134,6 +141,7 @@
         function stub() {
             var args = arguments;
             var self = stub;
+            if (!bundleDone[bundle]) showDeptLoadingHint();
             return ensureNebrasDeptBundle(bundle).then(function () {
                 var real = global[fnName];
                 if (typeof real === 'function' && real !== self) {
@@ -165,10 +173,10 @@
         var admin = typeof global.currentAdmin !== 'undefined' ? global.currentAdmin : null;
         var role = admin && admin.role ? admin.role : '';
         if (role === 'aluminum_manager') {
-            return ['aluminum'];
+            return ['aluminum', 'wpc'];
         }
         if (role === 'wpc_manager' || role === 'production_manager') {
-            return ['wpc'];
+            return ['wpc', 'crm'];
         }
         if (role === 'superadmin' || role === 'manager') {
             return PREFETCH_LIGHT.concat(PREFETCH_HEAVY);
@@ -176,19 +184,27 @@
         return ['wpc', 'crm', 'legal'];
     }
 
-    function prefetchBundlesSequential(names) {
+    function priorityBundleForRole() {
+        var q = adminPrefetchQueue();
+        return q.length ? q[0] : 'wpc';
+    }
+
+    function prefetchBundlesParallel(names) {
+        (names || []).forEach(function (name) {
+            if (!name || bundleDone[name]) return;
+            loadBundle(name).catch(function () { /* soft */ });
+        });
+    }
+
+    function prefetchBundlesSequentialHeavy(names) {
         if (!names || !names.length) return;
         var i = 0;
         function next() {
             if (i >= names.length) return;
             var name = names[i++];
             loadBundle(name).catch(function () { /* soft */ }).then(function () {
-                var gap = name === 'aluminum' || name === 'hr' ? 2500 : 1200;
-                if (typeof requestIdleCallback === 'function') {
-                    requestIdleCallback(next, { timeout: gap + 2000 });
-                } else {
-                    setTimeout(next, gap);
-                }
+                var gap = name === 'aluminum' ? 3000 : name === 'hr' ? 2000 : 800;
+                setTimeout(next, gap);
             });
         }
         next();
@@ -198,19 +214,38 @@
         if (prefetchStarted) return;
         if (document.visibilityState === 'hidden') return;
         prefetchStarted = true;
-        prefetchBundlesSequential(adminPrefetchQueue());
+        var queue = adminPrefetchQueue();
+        var priority = queue[0];
+        var light = queue.filter(function (n) { return PREFETCH_LIGHT.indexOf(n) >= 0 && n !== priority; });
+        var heavy = queue.filter(function (n) { return PREFETCH_HEAVY.indexOf(n) >= 0; });
+
+        loadBundle(priority).catch(function () { /* soft */ }).then(function () {
+            setTimeout(function () {
+                prefetchBundlesParallel(light);
+                setTimeout(function () {
+                    prefetchBundlesSequentialHeavy(heavy);
+                }, 1200);
+            }, 400);
+        });
+    }
+
+    function prefetchPriorityImmediately() {
+        if (priorityLoaded) return;
+        priorityLoaded = true;
+        var name = priorityBundleForRole();
+        loadBundle(name).catch(function () { /* soft */ });
     }
 
     function schedulePrefetch() {
-        /* hrws225: لا prefetch للزائر — فقط بعد جلسة إدارة + تأخير idle */
         window.addEventListener('nebras-admin-session', function () {
+            prefetchPriorityImmediately();
             setTimeout(function () {
                 if (typeof requestIdleCallback === 'function') {
-                    requestIdleCallback(prefetchNebrasAdminDepts, { timeout: 15000 });
+                    requestIdleCallback(prefetchNebrasAdminDepts, { timeout: 6000 });
                 } else {
-                    setTimeout(prefetchNebrasAdminDepts, 4000);
+                    setTimeout(prefetchNebrasAdminDepts, 1200);
                 }
-            }, 3000);
+            }, 600);
         });
     }
 
