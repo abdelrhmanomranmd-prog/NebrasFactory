@@ -286,3 +286,139 @@ body.wpc-platform-open { overflow: hidden; }
     margin-bottom: 10px;
     background: #fff;
 }
+
+#wpc-cutting .nebras-users-btn {
+    border: 1px solid var(--wpc-border);
+    background: #fff;
+    color: var(--wpc-navy);
+    font-weight: 750;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(7, 21, 37, 0.06);
+}
+
+#wpc-cutting .nebras-users-btn:hover {
+    border-color: rgba(26, 107, 74, 0.45);
+    color: var(--wpc-accent);
+}
+
+#wpc-cutting .nebras-users-btn--primary,
+#wpc-cutting .wpc-command-hero .nebras-users-btn--primary {
+    background: linear-gradient(135deg, var(--wpc-gold) 0%, #a8841a 100%);
+    border-color: transparent;
+    color: #071525 !important;
+    box-shadow: 0 8px 22px rgba(201, 162, 39, 0.35);
+}
+
+#wpc-cutting .wpc-command-hero .nebras-users-btn:not(.nebras-users-btn--primary) {
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.28);
+    color: #fff !important;
+    box-shadow: none;
+}
+
+#wpc-cutting .wpc-command-hero .nebras-users-btn:not(.nebras-users-btn--primary):hover {
+    background: rgba(26, 107, 74, 0.35);
+    border-color: rgba(255, 255, 255, 0.45);
+    color: #fff !important;
+}
+
+#wpc-cutting .wpc-draw-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+#wpc-cutting .wpc-draw-grid--inline {
+    margin-top: 12px;
+}
+
+#wpc-cutting .wpc-draw-panel {
+    background: #fff;
+    border: 1px solid var(--wpc-border);
+    border-radius: var(--wpc-radius);
+    padding: 14px;
+}
+
+#wpc-cutting .wpc-draw-panel h5 {
+    margin: 0 0 10px;
+    font-size: 0.92rem;
+    color: var(--wpc-navy);
+}
+
+#wpc-cutting .wpc-elev-svg {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 10px;
+    background: #fafcfb;
+}
+
+#wpc-cutting .wpc-3d-wrap {
+    text-align: center;
+}
+
+#wpc-cutting .wpc-3d-toolbar {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+
+#wpc-cutting .wpc-3d-btn {
+    padding: 6px 10px !important;
+    min-width: auto !important;
+}
+
+#wpc-cutting .wpc-3d-stage {
+    perspective: 900px;
+    height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at 50% 40%, rgba(26, 107, 74, 0.08), transparent 70%);
+    border-radius: 12px;
+}
+
+#wpc-cutting .wpc-3d-scene {
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.35s ease;
+}
+
+#wpc-cutting .wpc-3d-face {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    margin-left: -50%;
+    margin-top: -50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backface-visibility: hidden;
+    border: 2px solid rgba(13, 40, 64, 0.35);
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--wpc-navy);
+    text-align: center;
+    padding: 4px;
+    box-sizing: border-box;
+}
+
+#wpc-cutting .wpc-3d-front {
+    background: linear-gradient(145deg, rgba(26, 107, 74, 0.25), rgba(139, 105, 20, 0.15));
+}
+
+#wpc-cutting .wpc-3d-back { background: rgba(13, 40, 64, 0.12); }
+#wpc-cutting .wpc-3d-left,
+#wpc-cutting .wpc-3d-right { background: rgba(26, 107, 74, 0.18); }
+#wpc-cutting .wpc-3d-top { background: rgba(201, 162, 39, 0.2); }
+#wpc-cutting .wpc-3d-bottom { background: rgba(13, 40, 64, 0.08); }
+
+#wpc-cutting .wpc-3d-dims {
+    margin: 10px 0 0;
+    font-size: 0.85rem;
+    color: var(--wpc-muted);
+}

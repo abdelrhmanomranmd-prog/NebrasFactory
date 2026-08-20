@@ -1,11 +1,11 @@
 /**
- * نبراس — تحميل كسول لوحدات الإدارات (hrws224)
+ * نبراس — تحميل كسول لوحدات الإدارات (hrws225)
  * لا يُحمّل HR/ALU/WPC إلا عند الحاجة أو بعد دخول الإدارة (بدون إثقال الزائر).
  */
 (function (global) {
     'use strict';
 
-    var VER = 'hrws224';
+    var VER = 'hrws225';
     var loaded = Object.create(null);
     var inflight = Object.create(null);
     var bundleDone = Object.create(null);
@@ -202,7 +202,7 @@
     }
 
     function schedulePrefetch() {
-        /* hrws224: لا prefetch للزائر — فقط بعد جلسة إدارة + تأخير idle */
+        /* hrws225: لا prefetch للزائر — فقط بعد جلسة إدارة + تأخير idle */
         window.addEventListener('nebras-admin-session', function () {
             setTimeout(function () {
                 if (typeof requestIdleCallback === 'function') {

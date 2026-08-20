@@ -1,6 +1,6 @@
 /**
- * نبراس — تخصيمات أبواب WPC (V2 Pro · hrws224)
- * محرك دقة ورشة — معادلات Stolcad/PowerPVC · تدقيق · تتبع خطوات · تخطيط ألواح
+ * نبراس — تخصيمات WPC (V3 Pro · hrws225)
+ * محرك دقة ورشة — أبواب · خزائن · رسومات SVG · 3D · Stolcad/PowerPVC
  */
 (function (global) {
     'use strict';
@@ -85,7 +85,14 @@
         minOpeningH: 1800,
         maxOpeningH: 2800,
         minLeafW: 400,
-        minLeafH: 1500
+        minLeafH: 1500,
+        /* خزائن */
+        panelThicknessMm: 18,
+        backPanelThicknessMm: 8,
+        shelfGapMm: 3,
+        toeKickHeightMm: 100,
+        drawerFrontGapMm: 3,
+        defaultCabinetDepthMm: 600
     };
 
     var DEDUCTION_LABELS = {
@@ -124,7 +131,13 @@
         minOpeningH: 'أدنى ارتفاع فتحة',
         maxOpeningH: 'أقصى ارتفاع فتحة',
         minLeafW: 'أدنى عرض لوح',
-        minLeafH: 'أدنى ارتفاع لوح'
+        minLeafH: 'أدنى ارتفاع لوح',
+        panelThicknessMm: 'سُمك لوح الخزانة',
+        backPanelThicknessMm: 'سُمك ظهر الخزانة',
+        shelfGapMm: 'فجوة بين الرفوف',
+        toeKickHeightMm: 'ارتفاع قاعدة المطبخ',
+        drawerFrontGapMm: 'فجوة بين واجهات الأدراج',
+        defaultCabinetDepthMm: 'عمق الخزانة الافتراضي'
     };
 
     var MEASURE_MODES = {
@@ -144,7 +157,13 @@
         lib_plain: { nameAr: 'ليب سادة', family: 'lib', leaves: 1, style: 'lib' },
         flat_glass: { nameAr: 'فلات زجاج', family: 'flat', leaves: 1, style: 'flat', hasGlass: true },
         flat_classic: { nameAr: 'فلات كلاسيك CNC', family: 'flat', leaves: 1, style: 'flat', hasCnc: true },
-        pricing_only: { nameAr: 'بند تسعير فقط', family: 'hinged', leaves: 0, pricingOnly: true }
+        pricing_only: { nameAr: 'بند تسعير فقط', family: 'hinged', leaves: 0, pricingOnly: true },
+        /* خزائن WPC */
+        cabinet_wardrobe: { nameAr: 'خزانة ملابس — بابين', family: 'cabinet', leaves: 2, product: 'cabinet' },
+        cabinet_single: { nameAr: 'خزانة — باب واحد', family: 'cabinet', leaves: 1, product: 'cabinet' },
+        cabinet_kitchen_base: { nameAr: 'خزانة مطبخ سفلية', family: 'cabinet', leaves: 1, product: 'cabinet', kitchen: true },
+        cabinet_kitchen_wall: { nameAr: 'خزانة مطبخ علوية', family: 'cabinet', leaves: 1, product: 'cabinet', kitchen: true, wallMount: true },
+        cabinet_drawer_stack: { nameAr: 'خزانة أدراج', family: 'cabinet', leaves: 0, product: 'cabinet', drawers: true }
     };
 
     var PART_ROLES = {
@@ -157,7 +176,10 @@
         transom: 'فتحة علوية',
         lock_block: 'بلوک قفل',
         filler: 'حشو زجاج',
-        cnc_panel: 'لوح CNC'
+        shelf: 'رف WPC',
+        back: 'ظهر الخزانة',
+        drawer_front: 'واجهة درج',
+        toe_kick: 'قاعدة / كعب'
     };
 
     var wpcModels = [];
@@ -296,6 +318,23 @@
                     { id: 'ws-lock', role: 'lock_block', nameAr: 'قفل سحاب', sku: 'WPC-SL-LOCK', pricePerUnit: 18, active: true }
                 ],
                 active: true
+            },
+            {
+                id: 'wpc-nebras-cabinet',
+                nameAr: 'نبراس — خزائن WPC',
+                family: 'cabinet',
+                style: 'cabinet',
+                deductions: Object.assign({}, DEFAULT_DEDUCTIONS, { defaultCabinetDepthMm: 600, panelThicknessMm: 18 }),
+                parts: [
+                    { id: 'wc-side', role: 'frame_v', nameAr: 'جانب خزانة', sku: 'WPC-CB-SIDE', pricePerM2: 72, thicknessMm: 18, active: true },
+                    { id: 'wc-top', role: 'frame_h', nameAr: 'سقف/قاعدة', sku: 'WPC-CB-TOP', pricePerM2: 72, thicknessMm: 18, active: true },
+                    { id: 'wc-back', role: 'back', nameAr: 'ظهر الخزانة', sku: 'WPC-CB-BACK', pricePerM2: 45, thicknessMm: 8, active: true },
+                    { id: 'wc-shelf', role: 'shelf', nameAr: 'رف WPC', sku: 'WPC-CB-SHF', pricePerM2: 68, thicknessMm: 18, active: true },
+                    { id: 'wc-door', role: 'leaf', nameAr: 'باب خزانة', sku: 'WPC-CB-DOOR', pricePerM2: 85, thicknessMm: 18, active: true },
+                    { id: 'wc-drawer', role: 'drawer_front', nameAr: 'واجهة درج', sku: 'WPC-CB-DRW', pricePerM2: 82, thicknessMm: 18, active: true },
+                    { id: 'wc-toe', role: 'toe_kick', nameAr: 'قاعدة مطبخ', sku: 'WPC-CB-TOE', pricePerM2: 55, thicknessMm: 18, active: true }
+                ],
+                active: true
             }
         ];
         if (!wpcAccessories.length) {
@@ -316,13 +355,16 @@
 
     function resolveItemShape(item) {
         var base = DOOR_SHAPES[item.shape] || DOOR_SHAPES.single_hinged;
+        var leaves = base.family === 'cabinet' && base.drawers ? 0 : Math.max(1, wNum(item.leaves) || base.leaves || 1);
+        if (base.family === 'cabinet' && !base.drawers) leaves = Math.max(1, wNum(item.leaves) || base.leaves || 1);
         return Object.assign({}, base, {
-            leaves: Math.max(1, wNum(item.leaves) || base.leaves || 1),
+            leaves: leaves,
             hasTransom: !!(item.hasTransom || base.hasTransom),
             hasGlass: !!(item.hasGlass || base.hasGlass),
             hasCnc: !!(item.hasCnc || base.hasCnc),
             isBathroom: !!item.isBathroom,
-            isDoor: true
+            isDoor: base.family !== 'cabinet',
+            isCabinet: base.family === 'cabinet'
         });
     }
 
@@ -333,9 +375,53 @@
     }
 
     /** يحوّل مدخلات المستخدم إلى frameOuter + innerClear + leafCut — مصدر واحد للورشة */
+    function computeWpcCabinetGeometry(item, model) {
+        var d = dOf(model);
+        var shape = resolveItemShape(item);
+        var W = wNum(item.widthMm);
+        var H = wNum(item.heightMm);
+        var D = wNum(item.depthMm) || wNum(d.defaultCabinetDepthMm);
+        var panelT = wNum(d.panelThicknessMm);
+        var backT = wNum(d.backPanelThicknessMm);
+        var steps = [];
+        var leaves = shape.drawers ? 0 : Math.max(1, shape.leaves || 1);
+        steps.push({ k: 'خزانة خارجي', v: W + '×' + H + '×' + D + ' مم' });
+        var internalW = wRound(W - 2 * panelT, 1);
+        var internalH = wRound(H - 2 * panelT, 1);
+        var internalD = wRound(D - panelT - backT, 1);
+        steps.push({ k: 'داخلي', v: 'عرض ' + internalW + ' · عمق ' + internalD + ' · ارتفاع صافي ' + internalH });
+        var sideGap = wNum(d.sideClearanceMm);
+        var headGap = wNum(d.headClearanceMm);
+        var bottomGap = shape.drawers ? wNum(d.drawerFrontGapMm) : wNum(d.bottomClearanceMm);
+        var leafW = 0;
+        var leafH = 0;
+        if (shape.drawers) {
+            var drawerCount = Math.max(2, Math.round(wNum(item.drawerCount) || 4));
+            leafH = wRound(Math.max(50, (H - (drawerCount + 1) * bottomGap) / drawerCount), 1);
+            leafW = wRound(Math.max(50, W - 2 * sideGap), 1);
+            steps.push({ k: 'واجهات أدراج', v: leafW + '×' + leafH + ' × ' + drawerCount });
+        } else if (leaves <= 1) {
+            leafW = wRound(Math.max(50, W - 2 * sideGap), 1);
+            leafH = wRound(Math.max(50, H - headGap - bottomGap), 1);
+            steps.push({ k: 'باب خزانة', v: leafW + '×' + leafH });
+        } else {
+            var meeting = wNum(d.meetingGapMm);
+            leafW = wRound(Math.max(50, (W - 2 * sideGap - (leaves - 1) * meeting) / leaves), 1);
+            leafH = wRound(Math.max(50, H - headGap - bottomGap), 1);
+            steps.push({ k: 'باب خزانة مزدوج', v: leafW + '×' + leafH + ' × ' + leaves });
+        }
+        return {
+            frameOuterW: wRound(W, 1), frameOuterH: wRound(H, 1), depthMm: wRound(D, 1),
+            innerClearW: internalW, innerClearH: internalH, internalDepthMm: internalD,
+            leafW: leafW, leafH: leafH, leaves: leaves, transomH: 0,
+            steps: steps, shape: shape, deductions: d, product: 'cabinet'
+        };
+    }
+
     function computeWpcGeometry(item, model) {
         var d = dOf(model);
         var shape = resolveItemShape(item);
+        if (shape.family === 'cabinet') return computeWpcCabinetGeometry(item, model);
         var mode = resolveMeasureMode(item);
         var W = wNum(item.widthMm);
         var H = wNum(item.heightMm);
@@ -463,7 +549,7 @@
         if (H < wNum(d.minOpeningH) || H > wNum(d.maxOpeningH)) {
             blocking.push('ارتفاع ' + H + ' خارج الحدود (' + d.minOpeningH + '–' + d.maxOpeningH + ' مم)');
         }
-        if (result.geometry) {
+        if (result.geometry && resolveItemShape(item).family !== 'cabinet') {
             if (result.geometry.leafW < wNum(d.minLeafW)) blocking.push('عرض اللوح ' + result.geometry.leafW + ' أقل من الأدنى ' + d.minLeafW);
             if (result.geometry.leafH < wNum(d.minLeafH)) blocking.push('ارتفاع اللوح ' + result.geometry.leafH + ' أقل من الأدنى ' + d.minLeafH);
         }
@@ -471,10 +557,80 @@
         return result;
     }
 
+    function buildWpcCabinetCuts(item, itemIndex) {
+        var shape = resolveItemShape(item);
+        var model = findModel(item.modelId) || wpcModels[0];
+        var warnings = [];
+        var formulaSteps = [];
+        if (!model) warnings.push('لا يوجد موديل WPC — أضف موديلاً أولاً');
+        normalizeModelDeductions(model);
+        var geo = computeWpcCabinetGeometry(item, model);
+        formulaSteps = geo.steps.slice();
+        var d = geo.deductions;
+        var qty = Math.max(1, Math.round(wNum(item.qty) || 1));
+        var cuts = [];
+        var panels = [];
+        var idx = itemIndex + 1;
+        var W = geo.frameOuterW;
+        var H = geo.frameOuterH;
+        var D = geo.depthMm;
+        var panelT = wNum(d.panelThicknessMm);
+        var backT = wNum(d.backPanelThicknessMm);
+        var internalW = geo.innerClearW;
+        var internalD = geo.internalDepthMm;
+        var bodyH = shape.kitchen && !shape.wallMount ? wRound(H - wNum(d.toeKickHeightMm), 1) : H;
+        var shelfCount = Math.max(0, Math.round(wNum(item.shelfCount != null ? item.shelfCount : (shape.wallMount ? 0 : 2))));
+
+        function pushPanel(role, labelAr, widthMm, heightMm, pieceQty, formulaNote) {
+            var w = wRound(Math.max(0.1, wNum(widthMm)), 1);
+            var h = wRound(Math.max(0.1, wNum(heightMm)), 1);
+            if (w < 1 || h < 1) { warnings.push('مقاس غير صالح لـ «' + labelAr + '»: ' + w + '×' + h); return; }
+            var part = partForRole(model, role);
+            panels.push({
+                role: role, labelAr: labelAr, partName: part ? part.nameAr : (PART_ROLES[role] || role),
+                sku: part ? part.sku : ('WPC-' + role), widthMm: w, heightMm: h, qty: pieceQty * qty,
+                areaM2: wRound((w / 1000) * (h / 1000) * pieceQty * qty, 4), itemIndex: idx,
+                openingLabel: item.labelAr || shape.nameAr, missingPart: !part, formulaNote: formulaNote || '',
+                pricePerM2: part ? wNum(part.pricePerM2) : 0, pricePerM: part ? wNum(part.pricePerM) : 0,
+                pricePerUnit: part ? wNum(part.pricePerUnit) : 0
+            });
+        }
+
+        pushPanel('frame_v', 'جانب خزانة', internalD, bodyH, 2,
+            'Side = (' + D + '−' + panelT + '−' + backT + ')×' + bodyH + ' ×2');
+        pushPanel('frame_h', 'سقف/قاعدة خزانة', internalW, wRound(D - panelT, 1), 2,
+            'Top/Bot = (' + W + '−2×' + panelT + ')×(' + D + '−' + panelT + ') ×2');
+        pushPanel('back', 'ظهر الخزانة', internalW, wRound(bodyH - (shape.kitchen ? 0 : 0), 1), 1,
+            'Back = ' + internalW + '×' + bodyH);
+        if (shelfCount > 0) {
+            pushPanel('shelf', 'رف WPC', internalW, internalD, shelfCount,
+                'Shelf = ' + internalW + '×' + internalD + ' ×' + shelfCount);
+            formulaSteps.push({ k: 'رفوف', v: shelfCount + ' × ' + internalW + '×' + internalD });
+        }
+        if (shape.kitchen && !shape.wallMount) {
+            pushPanel('toe_kick', 'قاعدة مطبخ (كعب)', internalW, wNum(d.toeKickHeightMm), 1,
+                'Toe = ' + internalW + '×' + d.toeKickHeightMm);
+        }
+        if (shape.drawers) {
+            var drawerCount = Math.max(2, Math.round(wNum(item.drawerCount) || 4));
+            pushPanel('drawer_front', 'واجهة درج', geo.leafW, geo.leafH, drawerCount,
+                'Drawer = ' + geo.leafW + '×' + geo.leafH + ' ×' + drawerCount);
+        } else {
+            var leaves = geo.leaves;
+            for (var li = 0; li < leaves; li++) {
+                pushPanel('leaf', 'باب خزانة' + (leaves > 1 ? ' ضلفة ' + (li + 1) : ''), geo.leafW, geo.leafH, 1,
+                    'Door = ' + geo.leafW + '×' + geo.leafH);
+            }
+        }
+        return { cuts: cuts, panels: panels, warnings: warnings, formulaSteps: formulaSteps, geometry: geo, blocking: [] };
+    }
+
     function buildWpcDoorCuts(item, itemIndex) {
         if (item && (item.pricingOnly || item.shape === 'pricing_only')) {
             return { cuts: [], panels: [], warnings: [], blocking: [], formulaSteps: [], geometry: null };
         }
+        var shapeEarly = resolveItemShape(item);
+        if (shapeEarly.family === 'cabinet') return buildWpcCabinetCuts(item, itemIndex);
         var shape = resolveItemShape(item);
         var model = findModel(item.modelId) || wpcModels[0];
         var warnings = [];
@@ -773,6 +929,161 @@
     function setWpcRemnantsFromCloud(v) { wpcRemnants = Array.isArray(v) ? v : []; saveLocal(REMNANTS_KEY, wpcRemnants); }
     function setWpcCutAuditFromCloud(v) { wpcAudit = Array.isArray(v) ? v : []; saveLocal(AUDIT_KEY, wpcAudit); }
 
+    /* —— رسومات هندسية + معاينة 3D —— */
+    function wpcDrawElevationSvg(item, opts) {
+        opts = opts || {};
+        var Wmm = Math.max(100, wNum(item.widthMm) || 900);
+        var Hmm = Math.max(100, wNum(item.heightMm) || 2100);
+        var Dmm = Math.max(100, wNum(item.depthMm) || wNum(DEFAULT_DEDUCTIONS.defaultCabinetDepthMm));
+        var shape = resolveItemShape(item);
+        var geo = computeWpcGeometry(item, findModel(item.modelId) || wpcModels[0]);
+        var viewW = opts.viewW || 400;
+        var viewH = opts.viewH || 340;
+        var margin = 52;
+        var drawW = viewW - margin * 2;
+        var drawH = viewH - margin * 2 - 20;
+        var scale = Math.min(drawW / Wmm, drawH / Hmm);
+        var fw = Wmm * scale;
+        var fh = Hmm * scale;
+        var ox = (viewW - fw) / 2;
+        var oy = margin * 0.5;
+        var navy = '#0d2840';
+        var accent = '#1a6b4a';
+        var gold = '#c9a227';
+        var wood = '#8b6914';
+        var inner = '';
+
+        function dimH(x1, x2, y, label) {
+            var mid = (x1 + x2) / 2;
+            return '<line x1="' + x1 + '" y1="' + y + '" x2="' + x2 + '" y2="' + y + '" stroke="' + gold + '" stroke-width="1.2"/>' +
+                '<line x1="' + x1 + '" y1="' + (y - 4) + '" x2="' + x1 + '" y2="' + (y + 4) + '" stroke="' + gold + '" stroke-width="1.2"/>' +
+                '<line x1="' + x2 + '" y1="' + (y - 4) + '" x2="' + x2 + '" y2="' + (y + 4) + '" stroke="' + gold + '" stroke-width="1.2"/>' +
+                '<text x="' + mid + '" y="' + (y + 14) + '" text-anchor="middle" font-size="11" font-weight="700" fill="' + navy + '">' + wEsc(label) + '</text>';
+        }
+        function dimV(y1, y2, x, label) {
+            var mid = (y1 + y2) / 2;
+            return '<line x1="' + x + '" y1="' + y1 + '" x2="' + x + '" y2="' + y2 + '" stroke="' + gold + '" stroke-width="1.2"/>' +
+                '<text x="' + (x - 10) + '" y="' + mid + '" text-anchor="middle" font-size="11" font-weight="700" fill="' + navy + '" transform="rotate(-90 ' + (x - 10) + ' ' + mid + ')">' + wEsc(label) + '</text>';
+        }
+
+        if (shape.family === 'cabinet') {
+            var frameT = Math.max(4, Math.min(14, fw * 0.04));
+            inner += '<rect x="' + ox + '" y="' + oy + '" width="' + fw + '" height="' + fh + '" fill="#f4f7f5" stroke="' + navy + '" stroke-width="2" rx="2"/>';
+            inner += '<rect x="' + (ox + frameT) + '" y="' + (oy + frameT) + '" width="' + Math.max(1, fw - frameT * 2) + '" height="' + Math.max(1, fh - frameT * 2) + '" fill="#fff" stroke="' + accent + '" stroke-width="1.2" stroke-dasharray="4 3"/>';
+            if (shape.drawers) {
+                var dc = Math.max(2, Math.round(wNum(item.drawerCount) || 4));
+                var gap = 3 * scale;
+                var dh = (fh - frameT * 2 - gap * (dc + 1)) / dc;
+                for (var di = 0; di < dc; di++) {
+                    var dy = oy + frameT + gap + di * (dh + gap);
+                    inner += '<rect x="' + (ox + frameT + 4) + '" y="' + dy + '" width="' + Math.max(1, fw - frameT * 2 - 8) + '" height="' + Math.max(1, dh) + '" fill="rgba(139,105,20,0.15)" stroke="' + wood + '" stroke-width="1.2" rx="2"/>';
+                    inner += '<circle cx="' + (ox + fw - frameT - 12) + '" cy="' + (dy + dh / 2) + '" r="3" fill="' + gold + '"/>';
+                }
+            } else {
+                var leaves = Math.max(1, geo.leaves || 1);
+                var lw = (fw - frameT * 2) / leaves;
+                for (var li = 0; li < leaves; li++) {
+                    var lx = ox + frameT + li * lw;
+                    inner += '<rect x="' + (lx + 3) + '" y="' + (oy + frameT + 3) + '" width="' + Math.max(1, lw - 6) + '" height="' + Math.max(1, fh - frameT * 2 - 6) + '" fill="rgba(26,107,74,0.12)" stroke="' + accent + '" stroke-width="1.4" rx="2"/>';
+                    inner += '<line x1="' + (lx + lw / 2) + '" y1="' + (oy + fh / 2 - 20) + '" x2="' + (lx + lw / 2) + '" y2="' + (oy + fh / 2 + 20) + '" stroke="' + gold + '" stroke-width="1.5"/>';
+                }
+            }
+            inner += dimH(ox, ox + fw, oy + fh + 18, Wmm + ' مم');
+            inner += dimV(oy, oy + fh, ox - 14, Hmm + ' مم');
+            inner += '<text x="' + (viewW / 2) + '" y="18" text-anchor="middle" font-size="12" font-weight="800" fill="' + navy + '">' + wEsc(shape.nameAr) + ' — منظر أمامي</text>';
+            inner += '<text x="' + (viewW / 2) + '" y="32" text-anchor="middle" font-size="10" fill="' + accent + '">عمق: ' + Dmm + ' مم</text>';
+        } else {
+            var frameT2 = Math.max(5, Math.min(16, Math.round(Math.min(fw, fh) * 0.038)));
+            var leaves2 = Math.max(1, geo.leaves || 1);
+            inner += '<rect x="' + ox + '" y="' + oy + '" width="' + fw + '" height="' + fh + '" fill="#f8fafc" stroke="' + navy + '" stroke-width="2.2" rx="2"/>';
+            inner += '<rect x="' + (ox + frameT2) + '" y="' + (oy + frameT2) + '" width="' + Math.max(1, fw - frameT2 * 2) + '" height="' + Math.max(1, fh - frameT2 * 2) + '" fill="#fff" stroke="' + accent + '" stroke-width="1.4"/>';
+            var leafPxW = (fw - frameT2 * 2) / leaves2;
+            for (var lj = 0; lj < leaves2; lj++) {
+                var ljx = ox + frameT2 + lj * leafPxW;
+                inner += '<rect x="' + (ljx + 4) + '" y="' + (oy + frameT2 + 4) + '" width="' + Math.max(1, leafPxW - 8) + '" height="' + Math.max(1, fh - frameT2 * 2 - 8) + '" fill="rgba(26,107,74,0.1)" stroke="' + accent + '" stroke-width="1.2"/>';
+            }
+            if (geo.transomH > 0) {
+                var th = geo.transomH * scale;
+                inner += '<rect x="' + (ox + frameT2) + '" y="' + (oy + frameT2) + '" width="' + Math.max(1, fw - frameT2 * 2) + '" height="' + th + '" fill="rgba(56,189,248,0.2)" stroke="#38bdf8" stroke-width="1"/>';
+            }
+            inner += dimH(ox, ox + fw, oy + fh + 18, Wmm + ' مم');
+            inner += dimV(oy, oy + fh, ox - 14, Hmm + ' مم');
+            inner += '<text x="' + (viewW / 2) + '" y="18" text-anchor="middle" font-size="12" font-weight="800" fill="' + navy + '">' + wEsc(shape.nameAr) + ' — ارتفاع</text>';
+            inner += '<text x="' + (viewW / 2) + '" y="32" text-anchor="middle" font-size="10" fill="' + accent + '">لوح: ' + (geo.leafW || '—') + '×' + (geo.leafH || '—') + ' مم</text>';
+        }
+        return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + viewW + ' ' + viewH + '" class="wpc-elev-svg" role="img" aria-label="رسم هندسي">' + inner + '</svg>';
+    }
+
+    var wpc3dState = { rotX: -12, rotY: 28 };
+
+    function wpcDraw3dPreviewHtml(item, opts) {
+        opts = opts || {};
+        var shape = resolveItemShape(item);
+        var W = Math.max(100, wNum(item.widthMm) || 900);
+        var H = Math.max(100, wNum(item.heightMm) || 2100);
+        var D = shape.family === 'cabinet' ? Math.max(100, wNum(item.depthMm) || 600) : Math.max(80, wNum(DEFAULT_DEDUCTIONS.jambDepthMm) || 120);
+        var maxDim = Math.max(W, H, D);
+        var sc = Math.min(180 / maxDim, 0.22);
+        var pw = Math.round(W * sc);
+        var ph = Math.round(H * sc);
+        var pd = Math.round(D * sc);
+        var uid = opts.uid || 'wpc3d-' + Date.now();
+        var isCab = shape.family === 'cabinet';
+        var label = shape.nameAr + (isCab ? ' · ' + D + 'مم عمق' : '');
+        return '<div class="wpc-3d-wrap" id="' + uid + '-wrap">' +
+            '<div class="wpc-3d-toolbar">' +
+            '<button type="button" class="nebras-users-btn wpc-3d-btn" onclick="wpcRotate3d(-1,0,\'' + uid + '\')"><i class="fas fa-rotate-left"></i></button>' +
+            '<button type="button" class="nebras-users-btn wpc-3d-btn" onclick="wpcRotate3d(1,0,\'' + uid + '\')"><i class="fas fa-rotate-right"></i></button>' +
+            '<button type="button" class="nebras-users-btn wpc-3d-btn" onclick="wpcRotate3d(0,-1,\'' + uid + '\')"><i class="fas fa-arrow-up"></i></button>' +
+            '<button type="button" class="nebras-users-btn wpc-3d-btn" onclick="wpcRotate3d(0,1,\'' + uid + '\')"><i class="fas fa-arrow-down"></i></button>' +
+            '</div>' +
+            '<div class="wpc-3d-stage" id="' + uid + '-stage">' +
+            '<div class="wpc-3d-scene" id="' + uid + '" style="transform:rotateX(' + wpc3dState.rotX + 'deg) rotateY(' + wpc3dState.rotY + 'deg)">' +
+            '<div class="wpc-3d-face wpc-3d-front" style="width:' + pw + 'px;height:' + ph + 'px;transform:translateZ(' + (pd / 2) + 'px)"><span>' + wEsc(label) + '</span></div>' +
+            '<div class="wpc-3d-face wpc-3d-back" style="width:' + pw + 'px;height:' + ph + 'px;transform:rotateY(180deg) translateZ(' + (pd / 2) + 'px)"></div>' +
+            '<div class="wpc-3d-face wpc-3d-left" style="width:' + pd + 'px;height:' + ph + 'px;transform:rotateY(-90deg) translateZ(' + (pw / 2) + 'px)"></div>' +
+            '<div class="wpc-3d-face wpc-3d-right" style="width:' + pd + 'px;height:' + ph + 'px;transform:rotateY(90deg) translateZ(' + (pw / 2) + 'px)"></div>' +
+            '<div class="wpc-3d-face wpc-3d-top" style="width:' + pw + 'px;height:' + pd + 'px;transform:rotateX(90deg) translateZ(' + (ph / 2) + 'px)"></div>' +
+            '<div class="wpc-3d-face wpc-3d-bottom" style="width:' + pw + 'px;height:' + pd + 'px;transform:rotateX(-90deg) translateZ(' + (ph / 2) + 'px)"></div>' +
+            '</div></div>' +
+            '<p class="wpc-3d-dims">' + W + ' × ' + H + ' × ' + D + ' مم</p></div>';
+    }
+
+    function wpcRotate3d(dYaw, dPitch, uid) {
+        wpc3dState.rotY += dYaw * 18;
+        wpc3dState.rotX += dPitch * 12;
+        wpc3dState.rotX = Math.max(-60, Math.min(30, wpc3dState.rotX));
+        var el = document.getElementById(uid);
+        if (el) el.style.transform = 'rotateX(' + wpc3dState.rotX + 'deg) rotateY(' + wpc3dState.rotY + 'deg)';
+    }
+
+    function wpcGetPreviewItem() {
+        if (wpcEstimateDraft && wpcEstimateDraft.items && wpcEstimateDraft.items.length) return wpcEstimateDraft.items[0];
+        var est = wpcEstimates[wpcEstimates.length - 1];
+        return est && est.items && est.items[0] ? est.items[0] : {
+            shape: 'single_hinged', widthMm: 900, heightMm: 2100, depthMm: 600, qty: 1, measureMode: 'frame_outer',
+            modelId: wpcModels[0] ? wpcModels[0].id : ''
+        };
+    }
+
+    function renderWpcDrawings() {
+        var item = wpcGetPreviewItem();
+        var shape = resolveItemShape(item);
+        var svg = wpcDrawElevationSvg(item);
+        var html3d = wpcDraw3dPreviewHtml(item, { uid: 'wpc3d-main' });
+        return '<div class="wpc-cut-form-card"><h4><i class="fas fa-drafting-compass"></i> رسومات هندسية ومعاينة 3D</h4>' +
+            '<p class="wpc-cut-note">أبواب · خزائن · أدراج — مقاسات من محرك التخصيم مباشرة (Stolcad/PowerPVC).</p></div>' +
+            '<div class="wpc-draw-grid">' +
+            '<section class="wpc-draw-panel"><h5><i class="fas fa-ruler-combined"></i> منظر أمامي (SVG)</h5>' + svg + '</section>' +
+            '<section class="wpc-draw-panel"><h5><i class="fas fa-cube"></i> معاينة ثلاثية الأبعاد</h5>' + html3d + '</section></div>' +
+            '<div class="wpc-cut-form-card"><h5>ملخص الهندسة</h5>' +
+            '<div class="wpc-geo-summary">' +
+            '<span>النوع: <strong>' + wEsc(shape.nameAr) + '</strong></span> ' +
+            (shape.family === 'cabinet' ? '<span>عمق: <strong>' + wNum(item.depthMm || DEFAULT_DEDUCTIONS.defaultCabinetDepthMm) + '</strong> مم</span> ' : '') +
+            '<span>خارجي: <strong>' + wNum(item.widthMm) + '×' + wNum(item.heightMm) + '</strong></span></div>' +
+            '<button type="button" class="nebras-users-btn" onclick="setWpcCutTab(\'estimate\')"><i class="fas fa-edit"></i> تعديل المقاسات</button></div>';
+    }
+
     /* —— UI —— */
     var WPC_NAV_GROUPS = [
         { label: 'القيادة', items: [
@@ -782,6 +1093,7 @@
         ]},
         { label: 'الهندسة', items: [
             { id: 'models', icon: 'fas fa-door-closed', label: 'موديلات WPC' },
+            { id: 'drawings', icon: 'fas fa-drafting-compass', label: 'رسومات / 3D' },
             { id: 'deductions', icon: 'fas fa-sliders', label: 'التخصيمات' },
             { id: 'audit', icon: 'fas fa-microscope', label: 'تدقيق المعادلات' },
             { id: 'accessories', icon: 'fas fa-puzzle-piece', label: 'إكسسوارات' }
@@ -898,6 +1210,7 @@
         else if (wpcActiveTab === 'estimates') body = renderWpcEstimatesList();
         else if (wpcActiveTab === 'estimate') body = renderWpcEstimateEditor();
         else if (wpcActiveTab === 'models') body = renderWpcModels();
+        else if (wpcActiveTab === 'drawings') body = renderWpcDrawings();
         else if (wpcActiveTab === 'deductions') body = renderWpcDeductions();
         else if (wpcActiveTab === 'audit') body = renderWpcAudit();
         else if (wpcActiveTab === 'accessories') body = renderWpcAccessoriesPanel();
@@ -969,11 +1282,12 @@
         var openEst = wpcEstimates.filter(function (e) { return e.status !== 'installed'; }).length;
         return '<div class="wpc-command-dash">' +
             '<section class="wpc-command-hero">' +
-            '<p class="wpc-cut-kicker"><i class="fas fa-door-closed"></i> تخصيمات أبواب WPC — مصنع نبراس</p>' +
-            '<h2>محرك تخصيم WPC — دقة ورشة V2</h2>' +
-            '<p>3 أنواع قياس · معادلات Stolcad/PowerPVC · تدقيق يمنع الخطأ · تخطيط ألواح 1مm · فلات · يو 60 · ليب · سحاب</p>' +
+            '<p class="wpc-cut-kicker"><i class="fas fa-door-closed"></i> تخصيمات WPC — أبواب وخزائن · مصنع نبراس</p>' +
+            '<h2>محرك تخصيم WPC — دقة ورشة V3</h2>' +
+            '<p>أبواب · خزائن · مطبخ · رسومات SVG · معاينة 3D · Stolcad/PowerPVC · تدقيق · تخطيط ألواح</p>' +
             '<div class="wpc-cut-hero-actions">' +
             '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="newWpcEstimate();setWpcCutTab(\'estimate\')"><i class="fas fa-plus"></i> مقايسة جديدة</button>' +
+            '<button type="button" class="nebras-users-btn" onclick="setWpcCutTab(\'drawings\')"><i class="fas fa-drafting-compass"></i> رسومات / 3D</button>' +
             '<button type="button" class="nebras-users-btn" onclick="setWpcCutTab(\'models\')"><i class="fas fa-door-closed"></i> موديلات WPC</button>' +
             '<button type="button" class="nebras-users-btn" onclick="setWpcCutTab(\'cutting\')"><i class="fas fa-scissors"></i> تخطيط الألواح</button>' +
             '</div></section>' +
@@ -1014,9 +1328,11 @@
         }).join('');
         var item = est.items[0] || {
             shape: 'single_hinged', modelId: wpcModels[0] ? wpcModels[0].id : '',
-            widthMm: 900, heightMm: 2100, qty: 1, measureMode: 'frame_outer'
+            widthMm: 900, heightMm: 2100, depthMm: 600, qty: 1, measureMode: 'frame_outer', shelfCount: 2
         };
         if (!est.items.length) est.items.push(item);
+        var shapeInfo = resolveItemShape(item);
+        var isCabinet = shapeInfo.family === 'cabinet';
         var meta = wpcCutsWithMeta(item, 0);
         var totals = computeWpcEstimateTotals(est);
         var geo = meta.geometry || {};
@@ -1039,22 +1355,29 @@
             '<label>العميل<input id="wpc-est-customer" value="' + wEsc(est.customerName) + '" onchange="wpcEstFieldUpdate()"></label>' +
             '<label>المشروع<input id="wpc-est-project" value="' + wEsc(est.projectName) + '" onchange="wpcEstFieldUpdate()"></label>' +
             '</div></div>' +
-            '<div class="wpc-cut-form-card"><h4>بند الباب — مقاسات دقيقة</h4>' +
+            '<div class="wpc-cut-form-card"><h4>' + (isCabinet ? 'بند الخزانة — مقاسات دقيقة' : 'بند الباب — مقاسات دقيقة') + '</h4>' +
             '<p class="wpc-cut-note">' + wEsc((MEASURE_MODES[item.measureMode || 'frame_outer'] || {}).desc || '') + '</p>' +
             '<div class="erp-form-grid">' +
             '<label>نوع القياس<select id="wpc-item-measure-mode" onchange="wpcItemFieldUpdate()">' + modeOpts + '</select></label>' +
-            '<label>نوع الباب<select id="wpc-item-shape" onchange="wpcItemFieldUpdate()">' + shapeOpts + '</select></label>' +
+            '<label>النوع<select id="wpc-item-shape" onchange="wpcItemFieldUpdate()">' + shapeOpts + '</select></label>' +
             '<label>موديل WPC<select id="wpc-item-model" onchange="wpcItemFieldUpdate()">' + modelOpts + '</select></label>' +
             '<label>العرض (مم)<input type="number" step="0.1" id="wpc-item-width" value="' + wNum(item.widthMm) + '" onchange="wpcItemFieldUpdate()"></label>' +
             '<label>الارتفاع (مم)<input type="number" step="0.1" id="wpc-item-height" value="' + wNum(item.heightMm) + '" onchange="wpcItemFieldUpdate()"></label>' +
+            (isCabinet ? '<label>العمق (مم)<input type="number" step="0.1" id="wpc-item-depth" value="' + wNum(item.depthMm || DEFAULT_DEDUCTIONS.defaultCabinetDepthMm) + '" onchange="wpcItemFieldUpdate()"></label>' : '') +
+            (isCabinet && !shapeInfo.drawers ? '<label>عدد الرفوف<input type="number" id="wpc-item-shelves" value="' + wNum(item.shelfCount != null ? item.shelfCount : 2) + '" min="0" onchange="wpcItemFieldUpdate()"></label>' : '') +
+            (isCabinet && shapeInfo.drawers ? '<label>عدد الأدراج<input type="number" id="wpc-item-drawers" value="' + wNum(item.drawerCount || 4) + '" min="2" onchange="wpcItemFieldUpdate()"></label>' : '') +
             '<label>الكمية<input type="number" id="wpc-item-qty" value="' + wNum(item.qty) + '" min="1" onchange="wpcItemFieldUpdate()"></label>' +
-            '<label><input type="checkbox" id="wpc-item-bath"' + (item.isBathroom ? ' checked' : '') + ' onchange="wpcItemFieldUpdate()"> حمام (فجوة 12مم)</label>' +
+            (!isCabinet ? '<label><input type="checkbox" id="wpc-item-bath"' + (item.isBathroom ? ' checked' : '') + ' onchange="wpcItemFieldUpdate()"> حمام (فجوة 12مم)</label>' : '') +
             '</div>' +
             '<div class="wpc-geo-summary">' +
-            '<span>حلق: <strong>' + (geo.frameOuterW || '—') + '×' + (geo.frameOuterH || '—') + '</strong></span> ' +
-            '<span>صافي: <strong>' + (geo.innerClearW || '—') + '×' + (geo.innerClearH || '—') + '</strong></span> ' +
-            '<span>لوح: <strong>' + (geo.leafW || '—') + '×' + (geo.leafH || '—') + '</strong></span>' +
-            '</div></div>' + blockHtml + warnHtml +
+            '<span>خارجي: <strong>' + (geo.frameOuterW || '—') + '×' + (geo.frameOuterH || '—') + '</strong></span> ' +
+            (isCabinet ? '<span>عمق: <strong>' + (geo.depthMm || '—') + '</strong></span> ' : '') +
+            (!isCabinet ? '<span>صافي: <strong>' + (geo.innerClearW || '—') + '×' + (geo.innerClearH || '—') + '</strong></span> ' : '') +
+            '<span>' + (shapeInfo.drawers ? 'درج' : (isCabinet ? 'باب' : 'لوح')) + ': <strong>' + (geo.leafW || '—') + '×' + (geo.leafH || '—') + '</strong></span>' +
+            '</div></div>' +
+            '<div class="wpc-draw-grid wpc-draw-grid--inline">' +
+            '<section class="wpc-draw-panel"><h5><i class="fas fa-ruler-combined"></i> رسم هندسي</h5>' + wpcDrawElevationSvg(item, { viewW: 360, viewH: 300 }) + '</section>' +
+            '<section class="wpc-draw-panel"><h5><i class="fas fa-cube"></i> معاينة 3D</h5>' + wpcDraw3dPreviewHtml(item, { uid: 'wpc3d-est' }) + '</section></div>' + blockHtml + warnHtml +
             '<div class="wpc-cut-form-card"><h4>سلسلة المعادلات</h4><ol class="wpc-formula-steps">' + (formulaHtml || '<li>—</li>') + '</ol></div>' +
             '<div class="wpc-cut-form-card"><h4>قائمة القص للورشة</h4>' +
             '<table class="wpc-cut-table"><thead><tr><th>البند</th><th>القطعة</th><th>المقاس</th><th>عدد</th><th>م²</th><th>المعادلة</th></tr></thead>' +
@@ -1081,8 +1404,12 @@
         it.measureMode = wField('wpc-item-measure-mode') || 'frame_outer';
         it.widthMm = wNum(wField('wpc-item-width')) || 900;
         it.heightMm = wNum(wField('wpc-item-height')) || 2100;
+        it.depthMm = wNum(wField('wpc-item-depth')) || wNum(DEFAULT_DEDUCTIONS.defaultCabinetDepthMm);
+        it.shelfCount = wNum(wField('wpc-item-shelves'));
+        it.drawerCount = wNum(wField('wpc-item-drawers')) || 4;
         it.qty = Math.max(1, wNum(wField('wpc-item-qty')) || 1);
-        it.isBathroom = !!document.getElementById('wpc-item-bath') && document.getElementById('wpc-item-bath').checked;
+        var bathEl = document.getElementById('wpc-item-bath');
+        it.isBathroom = bathEl ? bathEl.checked : false;
         renderWpcCuttingPanel();
     }
 
@@ -1294,6 +1621,9 @@
     global.printWpcQuoteReport = printWpcQuoteReport;
     global.printWpcSheetPlan = printWpcSheetPlan;
     global.exportWpcCutCsv = exportWpcCutCsv;
+    global.wpcRotate3d = wpcRotate3d;
+    global.wpcDrawElevationSvg = wpcDrawElevationSvg;
+    global.wpcDraw3dPreviewHtml = wpcDraw3dPreviewHtml;
     global.buildWpcDoorCuts = buildWpcDoorCuts;
     global.buildWpcFormulaSteps = buildWpcFormulaSteps;
     global.validateWpcEstimateForWorkshop = validateWpcEstimateForWorkshop;
