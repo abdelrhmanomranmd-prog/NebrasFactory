@@ -1,11 +1,11 @@
 /**
- * نبراس — تحميل كسول لوحدات الإدارات (hrws226)
+ * نبراس — تحميل كسول لوحدات الإدارات (hrws227)
  * فتح فوري + prefetch ذكي حسب الدور — بدون إثقال الزائر.
  */
 (function (global) {
     'use strict';
 
-    var VER = 'hrws226';
+    var VER = 'hrws227';
     var loaded = Object.create(null);
     var inflight = Object.create(null);
     var bundleDone = Object.create(null);

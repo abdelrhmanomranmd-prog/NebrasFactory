@@ -2503,7 +2503,7 @@
             sortOrder: 2
         };
 
-        const WPC_RAW_CATALOG_VERSION = 4;
+        const WPC_RAW_CATALOG_VERSION = 5;
         const WPC_RAW_BARE_IMG = 'images/catalog/wpc-raw-bare/';
         const WPC_RAW_CLAD_IMG = 'images/catalog/wpc-raw-clad/';
 
@@ -2608,9 +2608,93 @@
             sortOrder: 2
         };
 
-        const WPC_READY_CATALOG_VERSION = 7;
+        const WPC_READY_CATALOG_VERSION = 8;
         const WPC_READY_INSTALL_IMG = 'images/catalog/wpc-ready-install/';
         const WPC_READY_SUPPLY_IMG = 'images/catalog/wpc-ready-supply/';
+
+        /** صور منتجات WPC الحقيقية — كتالوج المتجر (10 أنواع) */
+        const WPC_CATALOG_PHOTOS = {
+            noAccessory: 'images/catalog/wpc-photos/01-no-accessory.png',
+            withAccessory: 'images/catalog/wpc-photos/02-with-accessory.png',
+            glassLeafQuarter: 'images/catalog/wpc-photos/03-glass-leaf-quarter.png',
+            doubleFlat: 'images/catalog/wpc-photos/04-double-flat.png',
+            leafQuarterFlat: 'images/catalog/wpc-photos/05-leaf-quarter-flat.png',
+            slidingDecor: 'images/catalog/wpc-photos/06-sliding-double-decor.png',
+            classicPanel: 'images/catalog/wpc-photos/07-classic-panel.png',
+            boneProfile: 'images/catalog/wpc-photos/08-bone-profile.png',
+            mdf: 'images/catalog/wpc-photos/09-mdf.png',
+            leafSection: 'images/catalog/wpc-photos/10-leaf-section.png'
+        };
+
+        const WPC_PRODUCT_HERO_ALBUM = {
+            'prod-wpc': [
+                WPC_CATALOG_PHOTOS.withAccessory,
+                WPC_CATALOG_PHOTOS.classicPanel,
+                WPC_CATALOG_PHOTOS.glassLeafQuarter,
+                WPC_CATALOG_PHOTOS.slidingDecor
+            ],
+            'prod-wpc-raw': [
+                WPC_CATALOG_PHOTOS.boneProfile,
+                WPC_CATALOG_PHOTOS.leafSection,
+                WPC_CATALOG_PHOTOS.mdf
+            ]
+        };
+
+        function resolveWpcSubCategoryHeroImage(productId, subCategoryId) {
+            if (productId === 'prod-wpc') {
+                if (subCategoryId === 'wpc-ready-supply') return WPC_CATALOG_PHOTOS.noAccessory;
+                if (subCategoryId === 'wpc-ready-install') return WPC_CATALOG_PHOTOS.withAccessory;
+            }
+            if (productId === 'prod-wpc-raw') {
+                if (subCategoryId === 'wpc-raw-bare') return WPC_CATALOG_PHOTOS.boneProfile;
+                if (subCategoryId === 'wpc-raw-clad') return WPC_CATALOG_PHOTOS.leafSection;
+            }
+            return '';
+        }
+
+        function resolveWpcCatalogPhotoForVariant(variant) {
+            if (!variant) return '';
+            const sku = String(variant.sku || '').toUpperCase();
+            const sub = String(variant.subCategoryId || '');
+            const typeAr = String(variant.typeAr || '');
+            const id = String(variant.id || '').toLowerCase();
+
+            if (sku.indexOf('MDF') >= 0 || id.indexOf('mdf') >= 0 || typeAr.indexOf('ام دى اف') >= 0 || typeAr.indexOf('MDF') >= 0) {
+                return WPC_CATALOG_PHOTOS.mdf;
+            }
+
+            if (sub === 'wpc-raw-bare' || sub === 'wpc-raw-clad') {
+                if (/[-_]L\d|ضلف|ضلفة|LEAF/i.test(sku + typeAr + id)) return WPC_CATALOG_PHOTOS.leafSection;
+                return WPC_CATALOG_PHOTOS.boneProfile;
+            }
+
+            if (typeAr.indexOf('درفتين') >= 0 || typeAr.indexOf('مزدوج') >= 0 || sku.indexOf('DBL') >= 0) {
+                return WPC_CATALOG_PHOTOS.doubleFlat;
+            }
+            if (sku.indexOf('SLD') >= 0 || sku.indexOf('SLIDE') >= 0 || typeAr.indexOf('سحاب') >= 0 || typeAr.indexOf('سحب') >= 0) {
+                return WPC_CATALOG_PHOTOS.slidingDecor;
+            }
+            if (sku.indexOf('LQ') >= 0 || typeAr.indexOf('وربع') >= 0 || typeAr.indexOf('ونص') >= 0) {
+                if (sku.indexOf('GLASS') >= 0 || typeAr.indexOf('زجاج') >= 0) return WPC_CATALOG_PHOTOS.glassLeafQuarter;
+                return WPC_CATALOG_PHOTOS.leafQuarterFlat;
+            }
+            if (sku.indexOf('GLASS') >= 0 || typeAr.indexOf('زجاج') >= 0) {
+                return WPC_CATALOG_PHOTOS.glassLeafQuarter;
+            }
+            if (sku.indexOf('CLS') >= 0 || sku.indexOf('CLASSIC') >= 0 || typeAr.indexOf('كلاسيك') >= 0) {
+                return WPC_CATALOG_PHOTOS.classicPanel;
+            }
+            if (sub === 'wpc-ready-supply') return WPC_CATALOG_PHOTOS.noAccessory;
+            if (sub === 'wpc-ready-install') return WPC_CATALOG_PHOTOS.withAccessory;
+            return WPC_CATALOG_PHOTOS.withAccessory;
+        }
+
+        function applyWpcProductHeroAlbums() {
+            (siteProducts || []).forEach(function(p) {
+                if (!p || !WPC_PRODUCT_HERO_ALBUM[p.id]) return;
+                p.album = WPC_PRODUCT_HERO_ALBUM[p.id].slice();
+            });
+        }
 
         function productSupportsWpcRollColorPicker(product) {
             return !!(product && product.id === 'prod-wpc');
@@ -2655,7 +2739,8 @@
         function getWpcStoreSkuBaseImage(variant) {
             if (!variant) return '';
             const img = String(variant.image || '').trim();
-            return isAdminManagedProductImage(img) ? img : '';
+            if (isAdminManagedProductImage(img)) return img;
+            return resolveWpcCatalogPhotoForVariant(variant) || '';
         }
 
         function resolveWpcReadyCatalogImage(variant) {
@@ -2663,8 +2748,10 @@
         }
 
         function resolveWpcRawCatalogImage(variant) {
-            if (!variant || !variant.image) return '';
-            return String(variant.image).trim();
+            if (!variant) return '';
+            const img = String(variant.image || '').trim();
+            if (isAdminManagedProductImage(img)) return img;
+            return resolveWpcCatalogPhotoForVariant(variant) || '';
         }
 
         function buildWpcStoreRollCssFilter(hex) {
@@ -2708,18 +2795,42 @@
             };
         }
 
+        function variantSupportsWpcRollColorPicker(variant) {
+            if (!variant) return false;
+            const sub = String(variant.subCategoryId || '');
+            if (sub !== 'wpc-ready-install' && sub !== 'wpc-ready-supply') return false;
+            const sku = String(variant.sku || '').toUpperCase();
+            const typeAr = String(variant.typeAr || '');
+            if (sku.indexOf('GLASS') >= 0 || typeAr.indexOf('زجاج') >= 0) return false;
+            if (sku.indexOf('CLS') >= 0 || typeAr.indexOf('كلاسيك') >= 0) return false;
+            if (sku.indexOf('STEEL') >= 0 || typeAr.indexOf('ستان') >= 0) return false;
+            if (sku.indexOf('SLD') >= 0 || typeAr.indexOf('سحاب') >= 0 || typeAr.indexOf('سحب') >= 0) return false;
+            return true;
+        }
+
+        function isWpcCatalogPhotoPath(path) {
+            return /\.(png|jpe?g|webp|avif)(\?|$)/i.test(String(path || ''));
+        }
+
+        function buildWpcStoreRollCssFilterForPhoto(hex) {
+            const base = buildWpcStoreRollCssFilter(hex);
+            return base + ' sepia(0.08)';
+        }
+
         function applyWpcStoreSkuRollTint(card, catalogIndex) {
             if (!card) return;
             const stack = card.querySelector('.nebras-store-sku-door-stack');
             const img = stack ? stack.querySelector('img') : card.querySelector('.nebras-store-sku-media img');
             if (!img) return;
             const baseSrc = img.getAttribute('data-base-src') || img.getAttribute('src') || '';
+            const isPhoto = isWpcCatalogPhotoPath(baseSrc);
             if (!baseSrc) {
                 img.style.filter = '';
                 if (stack) {
-                    stack.classList.remove('has-door-roll-tint');
+                    stack.classList.remove('has-door-roll-tint', 'has-door-roll-tint--photo');
                     stack.style.removeProperty('--door-roll-tint');
                 }
+                card.classList.remove('is-roll-color-live');
                 return;
             }
             const colors = getNebrasColorCatalog();
@@ -2727,25 +2838,34 @@
             const roll = colors[rollIdx] || colors[0];
             if (!roll) return;
             if (baseSrc && img.getAttribute('src') !== baseSrc) img.src = baseSrc;
-            img.style.filter = buildWpcStoreRollCssFilter(roll.hex);
+            img.style.transition = 'filter 0.38s ease, transform 0.38s ease';
+            img.style.filter = isPhoto ? buildWpcStoreRollCssFilterForPhoto(roll.hex) : buildWpcStoreRollCssFilter(roll.hex);
             img.setAttribute('data-composed-roll', String(rollIdx));
             if (stack) {
+                stack.classList.toggle('has-door-roll-tint--photo', isPhoto);
                 applyDoorRollTintToElements(stack, buildWpcStoreRollStateFromCatalog(roll, rollIdx));
             }
+            card.classList.add('is-roll-color-live');
+            card.setAttribute('data-active-roll-hex', roll.hex || '');
         }
 
         function buildWpcStoreSkuDoorMediaHtml(baseImg, label, fullSrc, ui) {
-            return '<div class="nebras-store-sku-media nebras-store-sku-media--wpc-door nebras-store-sku-media--vector nebras-store-sku-media--has-image">' +
-                '<div class="nebras-store-sku-door-stack">' +
+            const isPhoto = isWpcCatalogPhotoPath(baseImg);
+            const mediaClass = 'nebras-store-sku-media nebras-store-sku-media--wpc-door nebras-store-sku-media--has-image' +
+                (isPhoto ? ' nebras-store-sku-media--wpc-photo' : ' nebras-store-sku-media--vector');
+            return '<div class="' + mediaClass + '">' +
+                '<div class="nebras-store-sku-door-stack' + (isPhoto ? ' nebras-store-sku-door-stack--photo' : '') + '">' +
                 '<img class="nebras-store-sku-img nebras-store-sku-img--wpc nebras-clickable-media" src="' + escapeHtmlAttr(baseImg) + '"' +
                 ' data-base-src="' + escapeHtmlAttr(baseImg) + '" data-full-src="' + escapeHtmlAttr(fullSrc || baseImg) + '"' +
+                ' data-wpc-photo="' + (isPhoto ? '1' : '0') + '"' +
                 ' alt="' + escapeHtmlAttr(label) + '" loading="lazy" decoding="async"' +
                 ' title="' + escapeHtmlAttr(ui.lightboxOpenHint || 'اضغط للتكبير') + '"></div></div>';
         }
 
         function buildWpcStoreRollPickerHtml(productId, variantIndex, lang, ui) {
             const colors = getNebrasColorCatalog();
-            const label = ui.wpcStoreRollPickerLabel || 'اختر لون الرولّة — كتالوج ألوان نبراس';
+            const label = ui.wpcStoreRollPickerLabel || 'اختر لون الرولّة — معاينة حية على الباب';
+            const hint = ui.wpcStoreRollPickerHint || 'اضغطي أي لون — يتغيّر لون الباب فوراً';
             const safePid = String(productId).replace(/'/g, "\\'");
             const swatches = colors.map(function(item, idx) {
                 const code = String(item.code || getRollCatalogCode(item.nebCode || getNebrasRollCodeByIndex(idx))).trim();
@@ -2766,8 +2886,9 @@
             const first = colors[0];
             const firstCode = first ? (first.code || getRollCatalogCode(first.nebCode || 1)) : 'N-1';
             const firstName = first ? getLocalizedDoorCatalogLabel(first, lang) : '';
-            return '<div class="nebras-store-roll-picker" data-wpc-roll-picker="' + escapeHtmlAttr(productId + '-' + variantIndex) + '">' +
+            return '<div class="nebras-store-roll-picker nebras-store-roll-picker--live" data-wpc-roll-picker="' + escapeHtmlAttr(productId + '-' + variantIndex) + '">' +
                 '<p class="nebras-store-roll-picker-label"><i class="fas fa-palette"></i> ' + escapeHtmlAttr(label) + '</p>' +
+                '<p class="nebras-store-roll-picker-hint"><i class="fas fa-wand-magic-sparkles"></i> ' + escapeHtmlAttr(hint) + '</p>' +
                 '<div class="nebras-store-roll-swatches" role="listbox" aria-label="' + escapeHtmlAttr(label) + '">' + swatches + '</div>' +
                 '<p class="nebras-store-roll-picker-active" data-roll-active-label>' + escapeHtmlAttr(firstCode + ' — ' + firstName) + '</p></div>';
         }
@@ -2804,6 +2925,7 @@
                 const product = siteProducts.find(function(p) { return p.id === productId; });
                 const variant = product && (product.variants || [])[variantIndex];
                 if (!variant || !getWpcStoreSkuBaseImage(variant)) return;
+                if (!variantSupportsWpcRollColorPicker(variant)) return;
                 const rollIdx = parseInt(card.getAttribute('data-selected-roll-index') || '0', 10);
                 refreshWpcStoreSkuPreview(card, productId, variantIndex, rollIdx);
             });
@@ -2995,7 +3117,11 @@
             const fromPrice = prices.length
                 ? ((ui.storeSubFromPrice || 'يبدأ من') + ' ' + formatSar(Math.min.apply(null, prices)) + '+')
                 : (ui.catalogHubPriceOnRequest || 'عند الطلب');
-            const preview = grp.items[0] && grp.items[0].variant ? resolveDisplayMediaUrl(grp.items[0].variant.image || '') : '';
+            const previewVariant = grp.items[0] && grp.items[0].variant;
+            const previewPath = previewVariant
+                ? getWpcStoreSkuBaseImage(previewVariant)
+                : resolveWpcSubCategoryHeroImage(product.id, grp.sub.id);
+            const preview = previewPath ? resolveDisplayMediaUrl(previewPath) : '';
             const pid = String(product.id).replace(/'/g, "\\'");
             const sid = String(sub.id).replace(/'/g, "\\'");
             const iid = iconId != null ? iconId : 'null';
@@ -3266,7 +3392,8 @@
             }
             systemSettings.wpcReadyCatalogVersion = WPC_READY_CATALOG_VERSION;
             systemSettings.wpcReadyInstallCatalogVersion = WPC_READY_CATALOG_VERSION;
-            systemSettings.wpcCatalogProductImagesVersion = 3;
+            systemSettings.wpcCatalogProductImagesVersion = 4;
+            applyWpcProductHeroAlbums();
             if (merged > 0) {
                 markCatalogSeedNeedsCloudSync();
                 if (typeof syncSalesPriceListFromProductMaster === 'function') {
@@ -3293,8 +3420,8 @@
         ];
 
         const DEFAULT_SITE_PRODUCTS = [
-            { id: 'prod-wpc-raw', sortOrder: 1, cssClass: 'card-wpc-raw', iconClass: 'fas fa-door-open', titleIcon: 'fas fa-industry', legacyKey: 'wpc-raw', titleAr: 'أبواب WPC عضم (للورش والمصانع)', titleEn: 'WPC Raw Doors (Workshops)', titleZh: 'WPC 毛坯门', textAr: 'أبواب WPC عضم غير ملبّسة وغير جاهزة — للورش والمصانع التي تكمل التشطيب والتركيب.', textEn: 'Unfinished WPC door leaves for workshops and factories.', textZh: '供车间加工的 WPC 毛坯门。', backgroundImage: 'wpc-background', album: ['images/wpc-background.avif'], target: '#products', action: 'shop', anchorId: 'products', visible: true, shopEnabled: true, variants: DEFAULT_WPC_RAW_VARIANTS },
-            { id: 'prod-wpc', sortOrder: 2, cssClass: 'card-wpc', iconClass: 'fas fa-door-closed', titleIcon: 'fas fa-door-open', legacyKey: 'wpc', titleAr: 'أبواب WPC جاهزة للتركيب', titleEn: 'WPC Ready Doors', titleZh: 'WPC 成品门', textAr: 'أبواب WPC جاهزة للتركيب — تجمع بين فخامة المظهر وصمود البلاستيك للمنازل والمشاريع.', textEn: 'Ready-to-install WPC doors for homes and projects.', textZh: '即装型 WPC 门。', backgroundImage: 'wpc-background', album: ['images/wpc-background.avif'], target: '#doors', action: 'shop', anchorId: 'doors', visible: true, shopEnabled: true, variants: DEFAULT_WPC_READY_VARIANTS },
+            { id: 'prod-wpc-raw', sortOrder: 1, cssClass: 'card-wpc-raw', iconClass: 'fas fa-door-open', titleIcon: 'fas fa-industry', legacyKey: 'wpc-raw', titleAr: 'أبواب WPC عضم (للورش والمصانع)', titleEn: 'WPC Raw Doors (Workshops)', titleZh: 'WPC 毛坯门', textAr: 'أبواب WPC عضم غير ملبّسة وغير جاهزة — للورش والمصانع التي تكمل التشطيب والتركيب.', textEn: 'Unfinished WPC door leaves for workshops and factories.', textZh: '供车间加工的 WPC 毛坯门。', backgroundImage: 'wpc-background', album: ['images/catalog/wpc-photos/08-bone-profile.png', 'images/catalog/wpc-photos/10-leaf-section.png', 'images/catalog/wpc-photos/09-mdf.png'], target: '#products', action: 'shop', anchorId: 'products', visible: true, shopEnabled: true, variants: DEFAULT_WPC_RAW_VARIANTS },
+            { id: 'prod-wpc', sortOrder: 2, cssClass: 'card-wpc', iconClass: 'fas fa-door-closed', titleIcon: 'fas fa-door-open', legacyKey: 'wpc', titleAr: 'أبواب WPC جاهزة للتركيب', titleEn: 'WPC Ready Doors', titleZh: 'WPC 成品门', textAr: 'أبواب WPC جاهزة للتركيب — تجمع بين فخامة المظهر وصمود البلاستيك للمنازل والمشاريع.', textEn: 'Ready-to-install WPC doors for homes and projects.', textZh: '即装型 WPC 门。', backgroundImage: 'wpc-background', album: ['images/catalog/wpc-photos/02-with-accessory.png', 'images/catalog/wpc-photos/07-classic-panel.png', 'images/catalog/wpc-photos/03-glass-leaf-quarter.png', 'images/catalog/wpc-photos/06-sliding-double-decor.png'], target: '#doors', action: 'shop', anchorId: 'doors', visible: true, shopEnabled: true, variants: DEFAULT_WPC_READY_VARIANTS },
             { id: 'prod-aluminum', sortOrder: 3, cssClass: 'card-aluminum', iconClass: 'fas fa-industry', titleIcon: 'fas fa-cog', legacyKey: 'aluminum', titleAr: 'الألومنيوم', titleEn: 'Aluminum', titleZh: '铝制品', textAr: 'منتجات ألومنيوم متينة وتصميمات ذكية تناسب مشاريع البناء والتشطيب.', textEn: 'Durable aluminum for construction and finishing.', textZh: '适用于建筑与装修的耐用铝材。', backgroundImage: 'aluminum-background', album: ['images/aluminum-background.webp'], target: '#aluminum', action: 'shop', anchorId: 'aluminum', visible: true, shopEnabled: true, variants: DEFAULT_ALUMINUM_VARIANTS },
             { id: 'prod-other', sortOrder: 4, cssClass: 'card-other-products', iconClass: 'fas fa-boxes', titleIcon: 'fas fa-boxes', legacyKey: 'otherProducts', titleAr: 'منتجات أخرى', titleEn: 'Other Products', titleZh: '其他产品', textAr: 'مجموعة متنوعة من المنتجات الإضافية والحلول المبتكرة.', textEn: 'A diverse range of additional products.', textZh: '多样化的附加产品与创新方案。', backgroundImage: 'background-other-products', album: ['images/background-other-products.jpeg'], target: '#products', visitorMode: 'shop', action: 'shop', anchorId: '', visible: true, shopEnabled: true, variants: DEFAULT_OTHER_VARIANTS },
             { id: 'prod-complaints', sortOrder: 5, cssClass: 'card-customer-complaints', iconClass: 'fas fa-search', titleIcon: 'fas fa-search', legacyKey: 'complaints', titleAr: 'استفسار عن الشكاوى', titleEn: 'Complaint Inquiry', titleZh: '投诉查询', textAr: 'تحقق من حالة شكواك بإدخال رقم الشكوى.', textEn: 'Check your complaint status with the complaint number.', textZh: '输入投诉编号查询处理状态。', backgroundImage: '', album: [], target: '', action: 'complaint', anchorId: '', visible: true }
@@ -4195,6 +4322,12 @@
                 }
             });
             ensureStoreCatalogAdminImagesOnly();
+            applyWpcProductHeroAlbums();
+            if (!systemSettings || typeof systemSettings !== 'object') systemSettings = Object.assign({}, DEFAULT_SYSTEM_SETTINGS);
+            if (Number(systemSettings.wpcCatalogProductImagesVersion) < 4) {
+                systemSettings.wpcCatalogProductImagesVersion = 4;
+                markCatalogSeedNeedsCloudSync();
+            }
         }
 
         function clearDemoCatalogVariants() {
@@ -4651,9 +4784,12 @@
             const pid = String(product.id).replace(/'/g, "\\'");
             const isWpcReady = productSupportsWpcRollColorPicker(product);
             const rawImg = String(v.image || '').trim();
-            const baseImg = isWpcReady
+            const catalogPath = (product.id === 'prod-wpc' || product.id === 'prod-wpc-raw')
                 ? getWpcStoreSkuBaseImage(v)
-                : (isAdminManagedProductImage(rawImg) ? resolveDisplayMediaUrl(rawImg) : '');
+                : (isAdminManagedProductImage(rawImg) ? rawImg : '');
+            const baseImg = isWpcReady
+                ? (catalogPath ? resolveDisplayMediaUrl(catalogPath) : '')
+                : (catalogPath ? resolveDisplayMediaUrl(catalogPath) : (isAdminManagedProductImage(rawImg) ? resolveDisplayMediaUrl(rawImg) : ''));
             const img = baseImg;
             const fullSrc = isWpcReady ? baseImg : (isAdminManagedProductImage(rawImg) ? mediaUrlForLightbox(rawImg) : '');
             const isVectorImg = !isWpcReady && /\.svg(\?|$)/i.test(String(baseImg || ''));
@@ -4691,7 +4827,8 @@
             if (type) specs.push('<li><span>' + escapeHtmlAttr(ui.variantTypeLabel || 'النوع') + '</span><strong>' + escapeHtmlAttr(type) + '</strong></li>');
             if (size) specs.push('<li><span>' + escapeHtmlAttr(ui.variantSizeLabel || 'المقاس') + '</span><strong>' + escapeHtmlAttr(size) + '</strong></li>');
             if (color && !isWpcReady) specs.push('<li><span>' + escapeHtmlAttr(ui.variantColorLabel || 'اللون') + '</span><strong>' + escapeHtmlAttr(color) + '</strong></li>');
-            const rollPicker = isWpcReady ? buildWpcStoreRollPickerHtml(product.id, idx, lang, ui) : '';
+            const rollPicker = (isWpcReady && variantSupportsWpcRollColorPicker(v) && baseImg)
+                ? buildWpcStoreRollPickerHtml(product.id, idx, lang, ui) : '';
             return '<article' + cardAttrs + '>' + media +
                 '<div class="nebras-store-sku-body">' +
                 '<strong class="nebras-store-sku-name">' + escapeHtmlAttr(label) + '</strong>' +
