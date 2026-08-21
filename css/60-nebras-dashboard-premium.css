@@ -17,7 +17,7 @@
 
 /* ── لوحة التحكم الرئيسية ── */
 body.admin-session #admin-dashboard.show {
-    background: linear-gradient(180deg, #eef3f9 0%, #f5f7fb 38%, #eef2f7 100%);
+    background: linear-gradient(180deg, #ffffff 0%, #f6f9fc 35%, #eef3f9 100%);
 }
 
 .dashboard-command-shell {

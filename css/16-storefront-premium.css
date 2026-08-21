@@ -1610,13 +1610,17 @@ body.nebras-mobile-bar-active.admin-session .nebras-mobile-commerce-bar {
     top: 8px;
     inset-inline-end: 8px;
     z-index: 6;
-    width: var(--wm-size, 52px);
+    width: var(--wm-size, 58px);
     height: auto;
-    max-height: 20%;
+    max-height: 14%;
     object-fit: contain;
-    opacity: var(--wm-opacity, 0.92);
+    opacity: var(--wm-opacity, 0.9);
     pointer-events: none;
-    filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.38));
+    filter: drop-shadow(0 2px 8px rgba(7, 21, 37, 0.22));
+    image-rendering: auto;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    transform: translateZ(0);
 }
 
 .nebras-store-sku-door-stack .nebras-product-photo-watermark {

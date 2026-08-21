@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" role="img" aria-label="Nebras">
+  <rect width="120" height="120" rx="22" fill="#0d2840"/>
+  <g transform="translate(10 12) scale(0.78)">
+    <path d="M18 78 L6 78 C6 52 22 30 48 28 C74 28 92 44 92 66 L92 94 L108 94" fill="none" stroke="#ffffff" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="54" cy="48" r="12" fill="#ffffff"/>
+  </g>
+</svg>

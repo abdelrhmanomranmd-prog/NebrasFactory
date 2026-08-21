@@ -775,11 +775,11 @@
             doorDesigner: null,
             heroSlideshowSlides: null,
             productPhotoWatermark: {
-                enabled: false,
-                mode: 'baked',
-                logoUrl: 'images/logo-nebras-product-badge.png',
-                opacity: 1,
-                sizePx: 52
+                enabled: true,
+                mode: 'overlay',
+                logoUrl: 'images/logo-nebras-watermark.svg',
+                opacity: 0.9,
+                sizePx: 58
             }
         };
 
@@ -3028,20 +3028,23 @@
             const wm = (s.productPhotoWatermark && typeof s.productPhotoWatermark === 'object')
                 ? s.productPhotoWatermark
                 : (DEFAULT_SYSTEM_SETTINGS.productPhotoWatermark || {});
-            const mode = wm.mode || 'baked';
+            const mode = wm.mode || 'overlay';
             return {
-                enabled: wm.enabled === true && mode === 'overlay',
+                enabled: wm.enabled !== false && mode === 'overlay',
                 mode: mode,
-                logoUrl: wm.logoUrl || 'images/logo-nebras-product-badge.png',
-                opacity: Math.min(1, Math.max(0.35, Number(wm.opacity) || 1)),
-                sizePx: Math.min(88, Math.max(28, Number(wm.sizePx) || 52))
+                logoUrl: wm.logoUrl || 'images/logo-nebras-watermark.svg',
+                opacity: Math.min(1, Math.max(0.5, Number(wm.opacity) || 0.9)),
+                sizePx: Math.min(96, Math.max(40, Number(wm.sizePx) || 58))
             };
         }
 
         function buildProductPhotoWatermarkHtml() {
             const wm = getProductPhotoWatermarkSettings();
-            if (!wm.enabled || wm.mode === 'baked') return '';
-            const logo = normalizeMediaPath(wm.logoUrl);
+            if (!wm.enabled) return '';
+            let logo = normalizeMediaPath(wm.logoUrl);
+            const ver = (typeof window.NEBRAS_DEPLOY_TAG !== 'undefined' && window.NEBRAS_DEPLOY_TAG)
+                ? window.NEBRAS_DEPLOY_TAG : 'live';
+            if (logo && logo.indexOf('?') < 0) logo = logo + '?v=' + ver;
             return '<img class="nebras-product-photo-watermark" src="' + escapeHtmlAttr(logo) + '"' +
                 ' data-src-list="' + escapeHtmlAttr(getSiteLogoUrlListAttr()) + '" data-src-idx="0"' +
                 ' onerror="siteLogoImgFallback(this)" alt="" aria-hidden="true" loading="lazy" decoding="async"' +
@@ -10974,11 +10977,18 @@
             const def = DEFAULT_SYSTEM_SETTINGS.productPhotoWatermark || {};
             systemSettings.productPhotoWatermark = Object.assign({}, def, incoming);
             const wm = systemSettings.productPhotoWatermark;
-            wm.opacity = Math.min(1, Math.max(0.35, Number(wm.opacity) || def.opacity || 1));
-            wm.sizePx = Math.min(88, Math.max(28, Number(wm.sizePx) || def.sizePx || 52));
-            if (!wm.logoUrl) wm.logoUrl = def.logoUrl || 'images/logo-nebras-product-badge.png';
-            if (!wm.mode) wm.mode = def.mode || 'baked';
-            if (wm.enabled == null) wm.enabled = false;
+            wm.opacity = Math.min(1, Math.max(0.5, Number(wm.opacity) || def.opacity || 0.9));
+            wm.sizePx = Math.min(96, Math.max(40, Number(wm.sizePx) || def.sizePx || 58));
+            if (!wm.mode || wm.mode === 'baked') {
+                if (wm.mode === 'baked' || String(wm.logoUrl || '').indexOf('logo-nebras-product-badge') >= 0) {
+                    wm.logoUrl = def.logoUrl || 'images/logo-nebras-watermark.svg';
+                }
+                wm.mode = 'overlay';
+                if (wm.enabled === false) wm.enabled = true;
+            } else if (!wm.logoUrl) {
+                wm.logoUrl = def.logoUrl || 'images/logo-nebras-watermark.svg';
+            }
+            if (wm.enabled == null) wm.enabled = true;
             return wm;
         }
 
@@ -25721,7 +25731,7 @@
             const wmOpacity = document.getElementById('setting-product-watermark-opacity');
             const wmSize = document.getElementById('setting-product-watermark-size');
             if (wmEnabled) wmEnabled.checked = wm.enabled !== false;
-            if (wmLogo) wmLogo.value = wm.logoUrl || 'images/logo-nebras-mark.png';
+            if (wmLogo) wmLogo.value = wm.logoUrl || 'images/logo-nebras-watermark.svg';
             if (wmOpacity) wmOpacity.value = String(wm.opacity);
             if (wmSize) wmSize.value = String(wm.sizePx);
 
@@ -25808,10 +25818,10 @@
             const wmOpacity = document.getElementById('setting-product-watermark-opacity');
             const wmSize = document.getElementById('setting-product-watermark-size');
             if (wmEnabled) wm.enabled = !!wmEnabled.checked;
-            if (wmLogo) wm.logoUrl = wmLogo.value.trim() || 'images/logo-nebras-product-badge.png';
+            if (wmLogo) wm.logoUrl = wmLogo.value.trim() || 'images/logo-nebras-watermark.svg';
             if (wmOpacity) wm.opacity = parseFloat(wmOpacity.value) || DEFAULT_SYSTEM_SETTINGS.productPhotoWatermark.opacity;
             if (wmSize) wm.sizePx = parseFloat(wmSize.value) || DEFAULT_SYSTEM_SETTINGS.productPhotoWatermark.sizePx;
-            wm.mode = wm.enabled ? 'overlay' : (wm.mode || 'baked');
+            wm.mode = wm.enabled ? 'overlay' : 'off';
             systemSettings.productPhotoWatermark = wm;
             ensureProductPhotoWatermarkSettings();
             if (!Array.isArray(systemSettings.bankAccounts)) systemSettings.bankAccounts = [];

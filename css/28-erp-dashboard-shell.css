@@ -4,10 +4,10 @@
     margin: 0 0 28px;
     padding: 0;
     border-radius: 24px;
-    background: linear-gradient(135deg, #071525 0%, #0d2840 42%, #134e6f 100%);
-    color: #fff;
-    border: 1px solid rgba(56, 189, 248, 0.28);
-    box-shadow: 0 24px 60px rgba(7, 21, 37, 0.35);
+    background: #ffffff;
+    color: #0d2840;
+    border: 1px solid rgba(13, 40, 64, 0.12);
+    box-shadow: 0 20px 52px rgba(13, 40, 64, 0.1);
     overflow: hidden;
 }
 
@@ -17,6 +17,17 @@
     align-items: center;
     gap: 16px 24px;
     padding: 20px 24px 16px;
+    background: linear-gradient(125deg, #0d2840 0%, #155e94 58%, #1a6fa8 100%);
+    color: #fff;
+    position: relative;
+}
+
+.dashboard-command-shell-inner::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: radial-gradient(circle at 88% 18%, rgba(255, 255, 255, 0.14), transparent 46%);
 }
 
 .dashboard-command-brand {
@@ -25,6 +36,15 @@
     gap: 14px;
     flex: 1 1 220px;
     min-width: 0;
+    position: relative;
+    z-index: 1;
+}
+
+.dashboard-role-badge,
+.dashboard-command-clock,
+.dashboard-command-sync {
+    position: relative;
+    z-index: 1;
 }
 
 .dashboard-command-logo {
@@ -110,26 +130,28 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
     gap: 1px;
-    background: rgba(255, 255, 255, 0.08);
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    background: #eef3f9;
+    border-top: 1px solid rgba(13, 40, 64, 0.08);
 }
 
 .dashboard-live-kpi {
     padding: 14px 16px;
-    background: rgba(0, 0, 0, 0.12);
+    background: #ffffff;
     text-align: center;
-    transition: background 0.2s;
+    transition: background 0.2s, box-shadow 0.2s;
+    color: #475569;
 }
 
 .dashboard-live-kpi:hover {
-    background: rgba(255, 255, 255, 0.06);
+    background: #f8fbfe;
+    box-shadow: inset 0 -3px 0 rgba(21, 94, 148, 0.35);
 }
 
 .dashboard-live-kpi strong {
     display: block;
     font-size: 1.4rem;
     font-weight: 800;
-    color: #7dcea0;
+    color: #155e94;
     line-height: 1.1;
 }
 
@@ -146,26 +168,29 @@
 
 .dashboard-role-focus-banner {
     padding: 16px 24px;
-    background: linear-gradient(90deg, rgba(46, 204, 113, 0.18), rgba(56, 189, 248, 0.12));
-    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    background: linear-gradient(90deg, rgba(21, 94, 148, 0.08), rgba(56, 189, 248, 0.06));
+    border-top: 1px solid rgba(13, 40, 64, 0.08);
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     gap: 14px 20px;
+    color: #0d2840;
 }
 
 .dashboard-role-focus-banner h4 {
     margin: 0;
     font-size: 1.05rem;
     flex: 1 1 200px;
+    color: #0d2840;
 }
 
 .dashboard-role-focus-banner p {
     margin: 0;
     flex: 2 1 280px;
     font-size: 0.88rem;
-    opacity: 0.9;
+    opacity: 0.88;
     line-height: 1.55;
+    color: #475569;
 }
 
 .dashboard-role-focus-banner button {
@@ -190,27 +215,29 @@
     flex-wrap: wrap;
     gap: 10px;
     padding: 14px 24px 18px;
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: 1px solid rgba(13, 40, 64, 0.08);
+    background: #ffffff;
 }
 
 .dashboard-quick-action {
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(13, 40, 64, 0.14);
     border-radius: 12px;
     padding: 9px 14px;
     font-family: inherit;
     font-size: 0.84rem;
     font-weight: 700;
     cursor: pointer;
-    background: rgba(255, 255, 255, 0.08);
-    color: #fff;
+    background: #f4f8fc;
+    color: #0d2840;
     display: inline-flex;
     align-items: center;
     gap: 8px;
-    transition: background 0.2s, transform 0.2s;
+    transition: background 0.2s, transform 0.2s, border-color 0.2s;
 }
 
 .dashboard-quick-action:hover {
-    background: rgba(56, 189, 248, 0.25);
+    background: #e8f3fb;
+    border-color: rgba(21, 94, 148, 0.35);
     transform: translateY(-1px);
 }
 
@@ -225,7 +252,9 @@
     z-index: 40;
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    box-shadow: 0 8px 24px rgba(13, 40, 64, 0.08);
+    box-shadow: 0 8px 24px rgba(13, 40, 64, 0.06);
+    background: rgba(255, 255, 255, 0.94);
+    border: 1px solid rgba(13, 40, 64, 0.08);
 }
 
 .dashboard-main-nav button.is-active {

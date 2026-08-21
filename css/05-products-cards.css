@@ -773,7 +773,7 @@
 .admin-dashboard {
     display: none;
     padding: 60px 5%;
-    background: rgba(13,40,64,0.04);
+    background: linear-gradient(180deg, #ffffff 0%, #f4f8fc 42%, #eef3f9 100%);
 }
 
 .admin-dashboard.show {
