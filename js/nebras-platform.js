@@ -773,7 +773,13 @@
             platformTaglineAr: 'منصة رقمية محكومة — واجهة عالمية للمصنع ومركز قيادة داخلي بصلاحيات وأتمتة.',
             platformTaglineEn: 'Governed digital platform — global factory storefront and internal command center.',
             doorDesigner: null,
-            heroSlideshowSlides: null
+            heroSlideshowSlides: null,
+            productPhotoWatermark: {
+                enabled: true,
+                logoUrl: 'images/logo-nebras-mark.png',
+                opacity: 0.92,
+                sizePx: 52
+            }
         };
 
         const NEBRAS_ROLL_CATALOG_IMAGE = 'images/background-Nebras-colour-catalogue-(rolls).jpeg';
@@ -1891,14 +1897,17 @@
         function tryMountDoorDesignerCompositor(root) {
             if (!isDoorDesignerCompositorMode() || !root) return;
             const viewport = document.getElementById('nebras-door-compositor-viewport');
-            if (!viewport || !isDoorDesignerCompositorReady()) return;
-            if (NebrasDoorCompositor.mount(viewport)) {
-                const loading = document.getElementById('nebras-door-compositor-loading');
-                if (loading) loading.remove();
-                const badge = document.getElementById('nebras-door-compositor-badge');
-                if (badge) badge.hidden = false;
-            }
-            updateDoorDesignerPreview(root);
+            if (!viewport) return;
+            loadNebrasDoorDesignerEngines().then(function() {
+                if (!isDoorDesignerCompositorReady()) return;
+                if (NebrasDoorCompositor.mount(viewport)) {
+                    const loading = document.getElementById('nebras-door-compositor-loading');
+                    if (loading) loading.remove();
+                    const badge = document.getElementById('nebras-door-compositor-badge');
+                    if (badge) badge.hidden = false;
+                }
+                updateDoorDesignerPreview(root);
+            }).catch(function() { /* compositor optional */ });
         }
 
         function disposeDoorDesigner3dEngine() {
@@ -1924,8 +1933,10 @@
         function showDoorDesigner3dReadyBadge() {
             const badge = document.getElementById('nebras-door-3d-badge');
             const viewport = document.getElementById('nebras-door-3d-viewport');
+            const stage = document.getElementById('door-3d-preview');
             if (badge) badge.hidden = false;
             if (viewport) viewport.setAttribute('data-3d-ready', '1');
+            if (stage) stage.classList.remove('wpc-door-stage--engine-3d-loading');
         }
 
         /** فشل المحرك 3D (WebGL/Three.js) — تحويل سلس لاستوديو SVG بدون أي خطأ ظاهر */
@@ -1949,7 +1960,7 @@
             if (!isDoorDesigner3dMode() || !root) return;
             const viewport = document.getElementById('nebras-door-3d-viewport');
             if (!viewport) return;
-            loadNebrasThreeJs().then(function() {
+            loadNebrasDoorDesignerEngines().then(function() {
                 if (isDoorDesigner3dEngineReady()) {
                     const ok = NebrasDoor3D.mount(viewport);
                     if (!ok) {
@@ -1958,18 +1969,20 @@
                     }
                     const loading = document.getElementById('nebras-door-3d-loading');
                     if (loading) loading.remove();
+                    const fallback = document.getElementById('nebras-door-3d-fallback');
+                    if (fallback) fallback.classList.add('is-hidden');
                     showDoorDesigner3dReadyBadge();
                     updateDoorDesignerPreview(root);
                     return;
                 }
-                if ((attempt || 0) < 24) {
-                    setTimeout(function() { tryMountDoorDesigner3d(root, (attempt || 0) + 1); }, 120);
+                if ((attempt || 0) < 12) {
+                    setTimeout(function() { tryMountDoorDesigner3d(root, (attempt || 0) + 1); }, 90);
                 } else {
                     fallbackDoorDesignerToStudio(root);
                 }
             }).catch(function() {
-                if ((attempt || 0) < 8) {
-                    setTimeout(function() { tryMountDoorDesigner3d(root, (attempt || 0) + 1); }, 200);
+                if ((attempt || 0) < 4) {
+                    setTimeout(function() { tryMountDoorDesigner3d(root, (attempt || 0) + 1); }, 180);
                 } else {
                     fallbackDoorDesignerToStudio(root);
                 }
@@ -5664,11 +5677,15 @@
                 return '<span class="variant-price variant-price--request">' + escapeHtmlAttr(ui.catalogHubPriceOnRequest || 'عند الطلب') + '</span>';
             }
             const pct = getNebrasVatPercentLabel();
+            const vatBridge = (ui.priceVatBridge || '+ ضريبة القيمة المضافة {pct}% (VAT)').replace('{pct}', String(pct));
+            const incNote = (ui.priceIncVatShort || 'شامل الضريبة {pct}% (VAT)').replace('{pct}', String(pct));
+            const exNote = ui.priceExVatShort || 'قبل الضريبة (Excl. VAT)';
             return '<span class="variant-price-stack">' +
                 '<span class="variant-price-ex">' + escapeHtmlAttr(formatSar(ex)) + '</span>' +
-                '<span class="variant-price-note">' + escapeHtmlAttr(ui.priceExVatShort || 'قبل الضريبة') + '</span>' +
+                '<span class="variant-price-note">' + escapeHtmlAttr(exNote) + '</span>' +
+                '<span class="variant-price-vat-bridge" aria-hidden="true">' + escapeHtmlAttr(vatBridge) + '</span>' +
                 '<span class="variant-price-inc">' + escapeHtmlAttr(formatSar(priceIncVat(ex))) + '</span>' +
-                '<span class="variant-price-note variant-price-note--inc">' + escapeHtmlAttr((ui.priceIncVatShort || 'شامل الضريبة {pct}%').replace('{pct}', String(pct))) + '</span>' +
+                '<span class="variant-price-note variant-price-note--inc">' + escapeHtmlAttr(incNote) + '</span>' +
                 '</span>';
         }
 
@@ -22753,6 +22770,8 @@
         }
 
         function openDoorDesignerFromGateway() {
+            prefetchNebrasDoorDesignerEngines();
+            loadNebrasDoorDesignerEngines().catch(function() { /* studio fallback */ });
             openNebrasWorkspace({ pillar: 'showroom', view: 'door-designer' });
         }
 
@@ -22760,6 +22779,12 @@
             syncMobileCommerceBar();
             if (getResolvedOccasionThemeId() === 'default') initHeroSlideshow();
             initStorefrontScrollReveal();
+            const doorGatewayBtn = document.getElementById('gateway-door-designer-btn');
+            if (doorGatewayBtn && !doorGatewayBtn.dataset.enginePrefetchBound) {
+                doorGatewayBtn.dataset.enginePrefetchBound = '1';
+                doorGatewayBtn.addEventListener('mouseenter', prefetchNebrasDoorDesignerEngines, { passive: true });
+                doorGatewayBtn.addEventListener('focus', prefetchNebrasDoorDesignerEngines, { passive: true });
+            }
             if (!window._nebrasMobileBarResizeBound) {
                 window._nebrasMobileBarResizeBound = true;
                 window.addEventListener('resize', syncMobileCommerceBar, { passive: true });
@@ -23656,8 +23681,11 @@
                     '<span class="nebras-door-3d-badge" id="nebras-door-compositor-badge" hidden>Studio · 360°</span>' +
                     '<p class="nebras-door-3d-hint"><i class="fas fa-arrows-rotate" aria-hidden="true"></i> ' + escapeHtmlAttr(hint3d) + '</p>'
                 ) : (use3d ? (
+                    '<div class="nebras-door-3d-stack">' +
+                    '<div class="nebras-door-3d-fallback-studio" id="nebras-door-3d-fallback">' + buildDoorStudioLiveHtml(leafMask, hint3d) + '</div>' +
                     '<div class="nebras-door-3d-viewport" id="nebras-door-3d-viewport" role="application" aria-label="' + escapeHtmlAttr(ui.doorDesigner3dAria || 'معاينة باب ثلاثي الأبعاد') + '">' +
                     '<p class="nebras-door-3d-loading" id="nebras-door-3d-loading">' + escapeHtmlAttr(ui.doorDesigner3dLoading || 'جاري تحميل النموذج ثلاثي الأبعاد…') + '</p></div>' +
+                    '</div>' +
                     '<span class="nebras-door-3d-badge" id="nebras-door-3d-badge" hidden>3D · 360°</span>' +
                     '<p class="nebras-door-3d-hint"><i class="fas fa-arrows-rotate" aria-hidden="true"></i> ' + escapeHtmlAttr(hint3d) + '</p>'
                 ) : buildDoorDesignerLegacyCanvasHtml(doorPhoto, photoreal, leafMask)))) +
@@ -23855,10 +23883,11 @@
             updateDoorDesignerPreview(root);
             if (isDoorDesignerStudioLiveMode()) {
                 bindDoorDesignerTurntable();
+            } else if (isDoorDesigner3dMode()) {
+                bindDoorDesignerTurntable();
+                tryMountDoorDesigner3d(root, 0);
             } else if (isDoorDesignerCompositorMode()) {
                 tryMountDoorDesignerCompositor(root);
-            } else if (isDoorDesigner3dMode()) {
-                tryMountDoorDesigner3d(root, 0);
             }
             const panelScroll = root.querySelector('.door-designer-flow') || root.querySelector('.door-studio-panel-scroll');
             if (panelScroll) panelScroll.scrollTop = 0;
@@ -24523,7 +24552,10 @@
                 return;
             }
             if (isDoorDesigner3dMode(cfg) && !isDoorDesigner3dEngineReady()) {
-                stage.classList.add('wpc-door-stage--engine-3d');
+                paintDoorDesignerLivePreview(root, stage, cfg, state, ui);
+                const tt = document.getElementById('wpc-door-turntable');
+                if (!tt || tt.dataset.turntableBound !== '1') bindDoorDesignerTurntable();
+                stage.classList.add('wpc-door-stage--engine-3d', 'wpc-door-stage--engine-3d-loading');
                 syncDoorDesignerOptionStates(root);
                 tryMountDoorDesigner3d(root, 0);
                 return;
@@ -29026,20 +29058,56 @@
         }
 
         let nebrasThreeLoadPromise = null;
+        let nebrasDoorEngineLoadPromise = null;
+
+        function loadNebrasScriptOnce(src) {
+            const key = String(src || '').split('?')[0];
+            if (document.querySelector('script[data-nebras-engine="' + key + '"]')) {
+                return Promise.resolve();
+            }
+            return new Promise(function(resolve, reject) {
+                const s = document.createElement('script');
+                s.src = src;
+                s.async = true;
+                s.setAttribute('data-nebras-engine', key);
+                s.onload = function() { resolve(); };
+                s.onerror = function() { reject(new Error('engine-script-fail:' + key)); };
+                document.head.appendChild(s);
+            });
+        }
+
         function loadNebrasThreeJs() {
             if (typeof globalThis.THREE !== 'undefined' || typeof window.THREE !== 'undefined') {
                 return Promise.resolve();
             }
             if (nebrasThreeLoadPromise) return nebrasThreeLoadPromise;
-            nebrasThreeLoadPromise = new Promise(function(resolve, reject) {
-                const s = document.createElement('script');
-                s.src = 'js/vendor/three.min.js';
-                s.async = true;
-                s.onload = function() { resolve(); };
-                s.onerror = function() { reject(new Error('three.min.js load failed')); };
-                document.head.appendChild(s);
-            });
+            nebrasThreeLoadPromise = loadNebrasScriptOnce('js/vendor/three.min.js');
             return nebrasThreeLoadPromise;
+        }
+
+        /** Three.js + محرك 3D + Compositor — تحميل عند فتح «صمّم بابك» فقط */
+        function loadNebrasDoorDesignerEngines() {
+            if (nebrasDoorEngineLoadPromise) return nebrasDoorEngineLoadPromise;
+            const ver = (typeof window.NEBRAS_DEPLOY_TAG !== 'undefined' && window.NEBRAS_DEPLOY_TAG) ? window.NEBRAS_DEPLOY_TAG : 'live';
+            nebrasDoorEngineLoadPromise = loadNebrasThreeJs().then(function() {
+                return Promise.all([
+                    loadNebrasScriptOnce('js/nebras-door-3d.js?v=' + ver),
+                    loadNebrasScriptOnce('js/nebras-door-compositor.js?v=' + ver)
+                ]);
+            }).catch(function(err) {
+                nebrasDoorEngineLoadPromise = null;
+                throw err;
+            });
+            return nebrasDoorEngineLoadPromise;
+        }
+
+        function prefetchNebrasDoorDesignerEngines() {
+            if (nebrasDoorEngineLoadPromise || nebrasDoor3dRuntimeFailed) return;
+            const run = function() {
+                loadNebrasDoorDesignerEngines().catch(function() { /* silent prefetch */ });
+            };
+            if (typeof requestIdleCallback === 'function') requestIdleCallback(run, { timeout: 3500 });
+            else setTimeout(run, 1200);
         }
 
         function finalizePlatformDataAfterLoad(options) {
@@ -29083,8 +29151,14 @@
             ensureAnalyticsGovernance();
             if (typeof syncSalesPriceListFromProductMaster === 'function') {
                 syncSalesPriceListFromProductMaster();
-                syncDoorDesignerCatalogFromProductMaster();
             }
+            const deferDesignerSync = function() {
+                if (typeof syncDoorDesignerCatalogFromProductMaster === 'function') {
+                    syncDoorDesignerCatalogFromProductMaster();
+                }
+            };
+            if (typeof requestIdleCallback === 'function') requestIdleCallback(deferDesignerSync, { timeout: 5000 });
+            else setTimeout(deferDesignerSync, 1800);
             setTimeout(function() {
                 if (typeof flushCatalogSeedCloudSyncIfPending === 'function') flushCatalogSeedCloudSyncIfPending();
             }, 2500);
@@ -31252,8 +31326,9 @@
                 catalogVariantsCount: 'عدد الأصناف المعروضة: ',
                 addVariantToCart: 'أضف للسلة',
                 pricesExVatNotice: 'جميع الأسعار قبل ضريبة القيمة المضافة — تُعرض الضريبة تلقائياً عند الإضافة للسلة وفي عرض السعر الرسمي.',
-                priceExVatShort: 'قبل الضريبة',
-                priceIncVatShort: 'شامل الضريبة {pct}%',
+                priceExVatShort: 'قبل الضريبة (Excl. VAT)',
+                priceVatBridge: '+ ضريبة القيمة المضافة {pct}% (VAT)',
+                priceIncVatShort: 'شامل الضريبة {pct}% (VAT)',
                 cartSubtotalEx: 'المجموع قبل الضريبة: ',
                 cartProductsSubtotalEx: 'مجموع المنتجات قبل الضريبة: ',
                 cartVatRow: 'مجموع ضريبة المنتجات ({pct}%): ',
@@ -31845,6 +31920,7 @@
                 addVariantToCart: 'Add to cart',
                 pricesExVatNotice: 'All prices exclude VAT — tax is calculated in the cart and official quotation.',
                 priceExVatShort: 'ex VAT',
+                priceVatBridge: '+ VAT {pct}%',
                 priceIncVatShort: 'inc VAT {pct}%',
                 cartSubtotalEx: 'Subtotal (ex VAT): ',
                 cartProductsSubtotalEx: 'Products subtotal (ex VAT): ',
@@ -32429,6 +32505,7 @@
                 cartAddedOk: '已加入您的购物车',
                 pricesExVatNotice: '所有价格为不含税价 — 加入购物车与报价单时自动计算增值税。',
                 priceExVatShort: '不含税',
+                priceVatBridge: '+ 增值税 {pct}%',
                 priceIncVatShort: '含税 {pct}%',
                 cartSubtotalEx: '不含税合计：',
                 cartProductsSubtotalEx: '产品不含税合计：',

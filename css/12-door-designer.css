@@ -3046,6 +3046,44 @@
     display: none !important;
 }
 
+/* معاينة فورية أثناء تحميل محرك 3D */
+.nebras-door-3d-stack {
+    position: relative;
+    grid-row: 1;
+    min-height: min(68vh, 600px);
+    width: 100%;
+    isolation: isolate;
+}
+
+.nebras-door-3d-fallback-studio {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    opacity: 1;
+    visibility: visible;
+    transition: opacity 0.45s ease, visibility 0.45s ease;
+}
+
+.nebras-door-3d-fallback-studio.is-hidden {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+}
+
+.wpc-door-stage--engine-3d-loading .nebras-door-3d-fallback-studio:not(.is-hidden) {
+    z-index: 2;
+}
+
+.wpc-door-stage--engine-3d-loading .nebras-door-3d-viewport {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.wpc-door-stage--engine-3d:not(.wpc-door-stage--engine-3d-loading) .nebras-door-3d-viewport[data-3d-ready="1"] {
+    opacity: 1;
+    pointer-events: auto;
+}
+
 .nebras-door-3d-viewport {
     grid-row: 1;
     position: relative;

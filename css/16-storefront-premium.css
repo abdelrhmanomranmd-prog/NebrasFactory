@@ -1072,6 +1072,31 @@ body.nebras-mobile-bar-active.admin-session .nebras-mobile-commerce-bar {
     margin-top: 4px;
 }
 
+.nebras-store-sku-price .variant-price-stack {
+    gap: 3px;
+}
+
+.nebras-store-sku-price .variant-price-ex {
+    font-size: 1rem;
+    color: #0d9488;
+}
+
+.nebras-store-sku-price .variant-price-inc {
+    font-size: 0.92rem;
+    color: #155e94;
+}
+
+.nebras-store-sku-price .variant-price-vat-bridge {
+    margin: 5px 0 3px;
+    font-size: 0.65rem;
+    color: #64748b;
+}
+
+.nebras-store-sku-price .variant-price-note {
+    font-size: 0.68rem;
+    opacity: 0.78;
+}
+
 .nebras-store-sku-add-btn {
     margin-top: auto;
     width: 100%;

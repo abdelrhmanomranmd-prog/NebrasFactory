@@ -550,6 +550,27 @@
     color: #0d9488;
 }
 
+.variant-price-vat-bridge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 4px 0 2px;
+    padding: 3px 0;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    color: #64748b;
+    opacity: 0.92;
+}
+
+.variant-price-vat-bridge::before,
+.variant-price-vat-bridge::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(13, 40, 64, 0.14), transparent);
+}
+
 .variant-price-inc {
     font-weight: 700;
     font-size: 0.85rem;
