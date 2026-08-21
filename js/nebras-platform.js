@@ -15585,22 +15585,36 @@
             { id: 8, city: 'الدمام', city_en: 'Dammam', city_zh: '达曼', salesPhone: '0508833231', image: 'branch-dammam.jpg' },
             { id: 9, city: 'جيزان', city_en: 'Jizan', city_zh: '吉赞', salesPhone: '0558818530', image: 'branch-jizan.jpg' }
         ];
-        const BRANCHES_CATALOG_VERSION = 2;
+        const BRANCHES_CATALOG_VERSION = 3;
 
         let branchesData = DEFAULT_BRANCHES.map(function(b) { return Object.assign({}, b); });
 
         function normalizeBranchPhoneDigits(phone) {
-            return String(phone || '').replace(/\D/g, '');
+            let d = String(phone || '').replace(/\D/g, '');
+            if (d.indexOf('966') === 0 && d.length > 9) d = d.slice(3);
+            if (d.indexOf('0') === 0 && d.length > 9) d = d.slice(1);
+            return d;
         }
 
-        function migrateBranchesCatalogV2() {
+        function reconcileBuiltinBranchDefaults() {
             let changed = false;
-            (branchesData || []).forEach(function(b) {
-                if (Number(b.id) === 4 && normalizeBranchPhoneDigits(b.salesPhone) === '0558818530') {
-                    b.salesPhone = '0508833231';
+            DEFAULT_BRANCHES.forEach(function(def) {
+                let existing = (branchesData || []).find(function(b) { return Number(b.id) === Number(def.id); });
+                if (!existing) {
+                    branchesData.push(Object.assign({}, def));
+                    changed = true;
+                    return;
+                }
+                if (Number(def.id) === 4 && normalizeBranchPhoneDigits(existing.salesPhone) === normalizeBranchPhoneDigits('0558818530')) {
+                    existing.salesPhone = def.salesPhone;
                     changed = true;
                 }
             });
+            return changed;
+        }
+
+        function migrateBranchesCatalogV2() {
+            let changed = reconcileBuiltinBranchDefaults();
             DEFAULT_BRANCHES.forEach(function(def) {
                 if (Number(def.id) >= 8 && !(branchesData || []).some(function(b) { return Number(b.id) === Number(def.id); })) {
                     branchesData.push(Object.assign({}, def));
@@ -15620,13 +15634,18 @@
                 }
             });
             branchesData = branchesData.map(normalizeBranchRecord);
+            let branchReconciled = reconcileBuiltinBranchDefaults();
             let catalogVer = 0;
             try { catalogVer = Number(localStorage.getItem('nebrasBranchesCatalogVer') || 0); } catch (e) { catalogVer = 0; }
             if (catalogVer < BRANCHES_CATALOG_VERSION) {
-                if (migrateBranchesCatalogV2()) {
-                    try { localStorage.setItem('nebrasBranches', JSON.stringify(branchesData)); } catch (e) { /* ignore */ }
-                }
+                if (migrateBranchesCatalogV2()) branchReconciled = true;
                 try { localStorage.setItem('nebrasBranchesCatalogVer', String(BRANCHES_CATALOG_VERSION)); } catch (e) { /* ignore */ }
+            }
+            if (branchReconciled) {
+                try { localStorage.setItem('nebrasBranches', JSON.stringify(branchesData)); } catch (e) { /* ignore */ }
+                if (typeof nebrasCloudSynced !== 'undefined' && nebrasCloudSynced && typeof persistNebrasCriticalStores === 'function') {
+                    persistNebrasCriticalStores(['branches'], { silent: true });
+                }
             }
         }
 
@@ -29257,6 +29276,10 @@
             ensureMinimumLiveSiteCatalog();
             if (typeof migrateLegacyCatalogProducts === 'function') migrateLegacyCatalogProducts();
             ensureAnalyticsGovernance();
+            ensureBuiltinBranches();
+            if (typeof displayBranches === 'function') {
+                try { displayBranches(); } catch (branchUiErr) { /* ignore */ }
+            }
             if (typeof syncSalesPriceListFromProductMaster === 'function') {
                 syncSalesPriceListFromProductMaster();
             }

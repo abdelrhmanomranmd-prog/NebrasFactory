@@ -29,7 +29,7 @@ def main():
         html = fetch('/index.html')
         m = re.search(r'data-nebras-deploy="([^"]+)"', html)
         deploy = m.group(1) if m else 'none'
-        check('deploy_tag', deploy == 'hrws235', deploy)
+        check('deploy_tag', deploy == 'hrws236', deploy)
 
         check('watermark_admin_ui', 'setting-product-watermark-enabled' in html, 'settings panel')
         check('branch_images_refs', 'branch-dammam' in html or 'branch-dammam.jpg' in html, 'dammam image ref')
