@@ -2475,10 +2475,21 @@
 
         const DEFAULT_WPC_RAW_VARIANTS = [];
 
-        function wpcRawCatalogPriceExVat(baseTablePrice) {
+        function wpcRawBarePriceExVat(baseTablePrice) {
+            const n = parseFloat(baseTablePrice);
+            const base = isNaN(n) ? 0 : n;
+            return Math.round(base * 1.05 * 100) / 100;
+        }
+
+        function wpcRawCladPriceExVat(baseTablePrice) {
             const n = parseFloat(baseTablePrice);
             const base = isNaN(n) ? 0 : n;
             return Math.round(base * 1.10 * 100) / 100;
+        }
+
+        /** @deprecated use wpcRawBarePriceExVat / wpcRawCladPriceExVat */
+        function wpcRawCatalogPriceExVat(baseTablePrice) {
+            return wpcRawBarePriceExVat(baseTablePrice);
         }
 
         const WPC_RAW_BARE_SUBCATEGORY = {
@@ -2503,7 +2514,7 @@
             sortOrder: 2
         };
 
-        const WPC_RAW_CATALOG_VERSION = 5;
+        const WPC_RAW_CATALOG_VERSION = 6;
         const WPC_RAW_BARE_IMG = 'images/catalog/wpc-raw-bare/';
         const WPC_RAW_CLAD_IMG = 'images/catalog/wpc-raw-clad/';
 
@@ -2520,7 +2531,7 @@
                 sizeEn: sizeEn,
                 colorAr: clad ? 'قطاع ملبس' : 'قطاع بدون تلبيس',
                 colorEn: clad ? 'Clad section' : 'Section — no cladding',
-                price: wpcRawCatalogPriceExVat(basePrice),
+                price: clad ? wpcRawCladPriceExVat(basePrice) : wpcRawBarePriceExVat(basePrice),
                 inStock: true
             };
         }
@@ -2608,7 +2619,7 @@
             sortOrder: 2
         };
 
-        const WPC_READY_CATALOG_VERSION = 12;
+        const WPC_READY_CATALOG_VERSION = 13;
         const WPC_READY_INSTALL_IMG = 'images/catalog/wpc-ready-install/';
         const WPC_READY_SUPPLY_IMG = 'images/catalog/wpc-ready-supply/';
 
@@ -3083,15 +3094,21 @@
             });
         }
 
-        function wpcReadyCatalogPriceExVat(baseTablePrice) {
+        function wpcReadyInstallPriceExVat(baseTablePrice) {
             const n = parseFloat(baseTablePrice);
             const base = isNaN(n) ? 0 : n;
-            return Math.round(base * 100) / 100;
+            return Math.round(base * 1.08 * 100) / 100;
         }
 
-        /** @deprecated use wpcReadyCatalogPriceExVat */
-        function wpcReadyInstallPriceExVat(baseTablePrice) {
-            return wpcReadyCatalogPriceExVat(baseTablePrice);
+        function wpcReadySupplyPriceExVat(baseTablePrice) {
+            const n = parseFloat(baseTablePrice);
+            const base = isNaN(n) ? 0 : n;
+            return Math.round(base * 1.06 * 100) / 100;
+        }
+
+        /** @deprecated use wpcReadySupplyPriceExVat */
+        function wpcReadyCatalogPriceExVat(baseTablePrice) {
+            return wpcReadySupplyPriceExVat(baseTablePrice);
         }
 
         /** أبواب WPC جاهزة للتركيب — جدول توريد وتركيب شامل اكسسوارات */
@@ -3117,33 +3134,33 @@
             { id: 'wpc-rdy-lq-lib', sku: 'WPC-RDY-LQ-LIB', subCategoryId: 'wpc-ready-install', image: WPC_READY_INSTALL_IMG + 'leaf-quarter-lib.svg', typeAr: 'باب وربعه — ضلفة وربعه Lib', typeEn: 'Leaf & quarter — Lib-style', sizeAr: 'ارتفاع 236 سم · عرض حتى 160 سم', sizeEn: 'H 236 cm · W up to 160 cm', colorAr: 'شامل الاكسسوار', colorEn: 'Accessories included', price: wpcReadyInstallPriceExVat(1270), inStock: true },
             { id: 'wpc-rdy-slide-flat', sku: 'WPC-RDY-SLD-FLAT', subCategoryId: 'wpc-ready-install', image: WPC_READY_INSTALL_IMG + 'sliding-flat.svg', typeAr: 'باب سحب فلات — قياسي', typeEn: 'Sliding flat door — standard', sizeAr: 'ارتفاع 236 سم · عرض حتى 115 سم', sizeEn: 'H 236 cm · W up to 115 cm', colorAr: 'شامل الاكسسوار', colorEn: 'Accessories included', price: wpcReadyInstallPriceExVat(1200), inStock: true },
             { id: 'wpc-rdy-slide-u', sku: 'WPC-RDY-SLD-U', subCategoryId: 'wpc-ready-install', image: WPC_READY_INSTALL_IMG + 'sliding-u.svg', typeAr: 'باب سحب U — قياسي', typeEn: 'Sliding U-door — standard', sizeAr: 'ارتفاع 250 سم · عرض حتى 130 سم', sizeEn: 'H 250 cm · W up to 130 cm', colorAr: 'شامل الاكسسوار', colorEn: 'Accessories included', price: wpcReadyInstallPriceExVat(1300), inStock: true },
-            { id: 'wpc-rdy-slide-lib', sku: 'WPC-RDY-SLD-LIB', subCategoryId: 'wpc-ready-install', image: WPC_READY_INSTALL_IMG + 'sliding-lib.svg', typeAr: 'باب سحب Lib — قياسي', typeEn: 'Sliding Lib door — standard', sizeAr: 'ارتفاع 236 سم · عرض حتى 115 سم', sizeEn: 'H 236 cm · W up to 115 cm', colorAr: 'شامل الاكسسوار', colorEn: 'Accessories included', price: wpcReadyCatalogPriceExVat(1250), inStock: true }
+            { id: 'wpc-rdy-slide-lib', sku: 'WPC-RDY-SLD-LIB', subCategoryId: 'wpc-ready-install', image: WPC_READY_INSTALL_IMG + 'sliding-lib.svg', typeAr: 'باب سحب Lib — قياسي', typeEn: 'Sliding Lib door — standard', sizeAr: 'ارتفاع 236 سم · عرض حتى 115 سم', sizeEn: 'H 236 cm · W up to 115 cm', colorAr: 'شامل الاكسسوار', colorEn: 'Accessories included', price: wpcReadyInstallPriceExVat(1250), inStock: true }
         ];
 
         /** أبواب WPC توريد فقط — استلام المصنع بدون اكسسوارات */
         const DEFAULT_WPC_READY_SUPPLY_VARIANTS = [
-            { id: 'wpc-sup-flat-45-std', sku: 'WPC-SUP-FLAT-45-STD', subCategoryId: 'wpc-ready-supply', image: WPC_READY_SUPPLY_IMG + 'flat-plain.svg', typeAr: 'باب فلات سادة مع شريط — 45ملم قياسي', typeEn: 'Flat plain with strip — 45mm standard', sizeAr: 'ارتفاع 236 سم · عرض حتى 115 سم', sizeEn: 'H 236 cm · W up to 115 cm', colorAr: 'بدون اكسسوار — استلام المصنع', colorEn: 'No accessories — factory pickup', price: wpcReadyCatalogPriceExVat(530), inStock: true },
-            { id: 'wpc-sup-flat-45-n110', sku: 'WPC-SUP-FLAT-45-N110', subCategoryId: 'wpc-ready-supply', image: WPC_READY_SUPPLY_IMG + 'flat-plain.svg', typeAr: 'باب فلات سادة مع شريط — 45ملم صافي 110', typeEn: 'Flat plain with strip — 45mm net 110', sizeAr: 'ارتفاع 236 سم · عرض حتى 120 سم', sizeEn: 'H 236 cm · W up to 120 cm', colorAr: 'بدون اكسسوار — استلام المصنع', colorEn: 'No accessories — factory pickup', price: wpcReadyCatalogPriceExVat(599), inStock: true },
-            { id: 'wpc-sup-flat-steel', sku: 'WPC-SUP-FLAT-STEEL', subCategoryId: 'wpc-ready-supply', image: WPC_READY_SUPPLY_IMG + 'flat-steel.svg', typeAr: 'باب فلات مع ديكور استيل — وجه واحد', typeEn: 'Flat door — steel decor one side', sizeAr: 'ارتفاع 236 سم · عرض حتى 115 سم', sizeEn: 'H 236 cm · W up to 115 cm', colorAr: 'بدون اكسسوار — استلام المصنع', colorEn: 'No accessories — factory pickup', price: wpcReadyCatalogPriceExVat(630), inStock: true },
-            { id: 'wpc-sup-flat-glass', sku: 'WPC-SUP-FLAT-GLASS', subCategoryId: 'wpc-ready-supply', image: WPC_READY_SUPPLY_IMG + 'flat-glass.svg', typeAr: 'باب فلات مع ديكور زجاج — بدون الزجاج', typeEn: 'Flat door — glass decor (glass excluded)', sizeAr: 'ارتفاع 236 سم · عرض حتى 115 سم', sizeEn: 'H 236 cm · W up to 115 cm', colorAr: 'بدون اكسسوار — استلام المصنع', colorEn: 'No accessories — factory pickup', price: wpcReadyCatalogPriceExVat(790), inStock: true },
-            { id: 'wpc-sup-flat-classic', sku: 'WPC-SUP-FLAT-CLS', subCategoryId: 'wpc-ready-supply', image: WPC_READY_SUPPLY_IMG + 'flat-classic.svg', typeAr: 'باب فلات ديكور كلاسيك — وجه واحد', typeEn: 'Flat door — classic decor one side', sizeAr: 'ارتفاع 236 سم · عرض حتى 115 سم', sizeEn: 'H 236 cm · W up to 115 cm', colorAr: 'بدون اكسسوار — استلام المصنع', colorEn: 'No accessories — factory pickup', price: wpcReadyCatalogPriceExVat(655), inStock: true },
-            { id: 'wpc-sup-u45-std', sku: 'WPC-SUP-U45-STD', subCategoryId: 'wpc-ready-supply', image: WPC_READY_SUPPLY_IMG + 'u-plain.svg', typeAr: 'باب U — 45ملم سادة قياسي', typeEn: 'U-door 45mm — plain standard', sizeAr: 'ارتفاع 250 سم · عرض حتى 130 سم', sizeEn: 'H 250 cm · W up to 130 cm', colorAr: 'بدون اكسسوار — استلام المصنع', colorEn: 'No accessories — factory pickup', price: wpcReadyCatalogPriceExVat(620), inStock: true },
-            { id: 'wpc-sup-u45-classic', sku: 'WPC-SUP-U45-CLS', subCategoryId: 'wpc-ready-supply', image: WPC_READY_SUPPLY_IMG + 'u-classic.svg', typeAr: 'باب U — 45ملم ديكور كلاسيك وجه واحد', typeEn: 'U-door 45mm — classic decor', sizeAr: 'ارتفاع 250 سم · عرض حتى 130 سم', sizeEn: 'H 250 cm · W up to 130 cm', colorAr: 'بدون اكسسوار — استلام المصنع', colorEn: 'No accessories — factory pickup', price: wpcReadyCatalogPriceExVat(750), inStock: true },
-            { id: 'wpc-sup-u45-steel', sku: 'WPC-SUP-U45-STEEL', subCategoryId: 'wpc-ready-supply', image: WPC_READY_SUPPLY_IMG + 'u-steel.svg', typeAr: 'باب U — 45ملم ديكور استيل وجه واحد', typeEn: 'U-door 45mm — steel decor', sizeAr: 'ارتفاع 250 سم · عرض حتى 130 سم', sizeEn: 'H 250 cm · W up to 130 cm', colorAr: 'بدون اكسسوار — استلام المصنع', colorEn: 'No accessories — factory pickup', price: wpcReadyCatalogPriceExVat(720), inStock: true },
-            { id: 'wpc-sup-u60-std', sku: 'WPC-SUP-U60-STD', subCategoryId: 'wpc-ready-supply', image: WPC_READY_SUPPLY_IMG + 'u60-plain.svg', typeAr: 'باب U — 60ملم قياسي', typeEn: 'U-door 60mm — standard', sizeAr: 'ارتفاع 250 سم · عرض حتى 130 سم', sizeEn: 'H 250 cm · W up to 130 cm', colorAr: 'بدون اكسسوار — استلام المصنع', colorEn: 'No accessories — factory pickup', price: wpcReadyCatalogPriceExVat(720), inStock: true },
-            { id: 'wpc-sup-u60-steel', sku: 'WPC-SUP-U60-STEEL', subCategoryId: 'wpc-ready-supply', image: WPC_READY_SUPPLY_IMG + 'u60-steel.svg', typeAr: 'باب U — 60ملم ديكور استيل وجه واحد', typeEn: 'U-door 60mm — steel decor', sizeAr: 'ارتفاع 250 سم · عرض حتى 130 سم', sizeEn: 'H 250 cm · W up to 130 cm', colorAr: 'بدون اكسسوار — استلام المصنع', colorEn: 'No accessories — factory pickup', price: wpcReadyCatalogPriceExVat(820), inStock: true },
-            { id: 'wpc-sup-u60-classic', sku: 'WPC-SUP-U60-CLS', subCategoryId: 'wpc-ready-supply', image: WPC_READY_SUPPLY_IMG + 'u60-classic.svg', typeAr: 'باب U — 60ملم ديكور كلاسيك وجه واحد', typeEn: 'U-door 60mm — classic decor', sizeAr: 'ارتفاع 250 سم · عرض حتى 130 سم', sizeEn: 'H 250 cm · W up to 130 cm', colorAr: 'بدون اكسسوار — استلام المصنع', colorEn: 'No accessories — factory pickup', price: wpcReadyCatalogPriceExVat(850), inStock: true },
-            { id: 'wpc-sup-u60-glass', sku: 'WPC-SUP-U60-GLASS', subCategoryId: 'wpc-ready-supply', image: WPC_READY_SUPPLY_IMG + 'u60-glass.svg', typeAr: 'باب U — 60ملم ديكور زجاج بدون الزجاج', typeEn: 'U-door 60mm — glass decor (no glass)', sizeAr: 'ارتفاع 250 سم · عرض حتى 130 سم', sizeEn: 'H 250 cm · W up to 130 cm', colorAr: 'بدون اكسسوار — استلام المصنع', colorEn: 'No accessories — factory pickup', price: wpcReadyCatalogPriceExVat(970), inStock: true },
-            { id: 'wpc-sup-lib40-std', sku: 'WPC-SUP-LIB40-STD', subCategoryId: 'wpc-ready-supply', image: WPC_READY_SUPPLY_IMG + 'lib-plain.svg', typeAr: 'باب Lib — 40ملم سادة', typeEn: 'Lib door 40mm — plain', sizeAr: 'ارتفاع 236 سم · عرض حتى 115 سم', sizeEn: 'H 236 cm · W up to 115 cm', colorAr: 'بدون اكسسوار — استلام المصنع', colorEn: 'No accessories — factory pickup', price: wpcReadyCatalogPriceExVat(580), inStock: true },
-            { id: 'wpc-sup-lib40-steel', sku: 'WPC-SUP-LIB40-STEEL', subCategoryId: 'wpc-ready-supply', image: WPC_READY_SUPPLY_IMG + 'lib-steel.svg', typeAr: 'باب Lib — 40ملم استيل وجه واحد', typeEn: 'Lib door 40mm — steel one side', sizeAr: 'ارتفاع 236 سم · عرض حتى 115 سم', sizeEn: 'H 236 cm · W up to 115 cm', colorAr: 'بدون اكسسوار — استلام المصنع', colorEn: 'No accessories — factory pickup', price: wpcReadyCatalogPriceExVat(680), inStock: true },
-            { id: 'wpc-sup-lib40-glass', sku: 'WPC-SUP-LIB40-GLASS', subCategoryId: 'wpc-ready-supply', image: WPC_READY_SUPPLY_IMG + 'lib-glass.svg', typeAr: 'باب Lib — 40ملم زجاج بدون الزجاج', typeEn: 'Lib door 40mm — glass prep (no glass)', sizeAr: 'ارتفاع 236 سم · عرض حتى 115 سم', sizeEn: 'H 236 cm · W up to 115 cm', colorAr: 'بدون اكسسوار — استلام المصنع', colorEn: 'No accessories — factory pickup', price: wpcReadyCatalogPriceExVat(830), inStock: true },
-            { id: 'wpc-sup-lib40-classic', sku: 'WPC-SUP-LIB40-CLS', subCategoryId: 'wpc-ready-supply', image: WPC_READY_SUPPLY_IMG + 'lib-classic.svg', typeAr: 'باب Lib — 40ملم ديكور كلاسيك وجه واحد', typeEn: 'Lib door 40mm — classic decor', sizeAr: 'ارتفاع 236 سم · عرض حتى 115 سم', sizeEn: 'H 236 cm · W up to 115 cm', colorAr: 'بدون اكسسوار — استلام المصنع', colorEn: 'No accessories — factory pickup', price: wpcReadyCatalogPriceExVat(710), inStock: true },
-            { id: 'wpc-sup-lq-flat', sku: 'WPC-SUP-LQ-FLAT', subCategoryId: 'wpc-ready-supply', image: WPC_READY_SUPPLY_IMG + 'leaf-quarter-flat.svg', typeAr: 'باب ضلفة وربع — فلات', typeEn: 'Leaf & quarter — flat', sizeAr: 'ارتفاع 236 سم · عرض حتى 160 سم', sizeEn: 'H 236 cm · W up to 160 cm', colorAr: 'بدون اكسسوار — استلام المصنع', colorEn: 'No accessories — factory pickup', price: wpcReadyCatalogPriceExVat(920), inStock: true },
-            { id: 'wpc-sup-lq-u', sku: 'WPC-SUP-LQ-U', subCategoryId: 'wpc-ready-supply', image: WPC_READY_SUPPLY_IMG + 'leaf-quarter-u.svg', typeAr: 'باب ضلفة وربع — U', typeEn: 'Leaf & quarter — U-style', sizeAr: 'ارتفاع 250 سم · عرض حتى 175 سم', sizeEn: 'H 250 cm · W up to 175 cm', colorAr: 'بدون اكسسوار — استلام المصنع', colorEn: 'No accessories — factory pickup', price: wpcReadyCatalogPriceExVat(1120), inStock: true },
-            { id: 'wpc-sup-lq-lib', sku: 'WPC-SUP-LQ-LIB', subCategoryId: 'wpc-ready-supply', image: WPC_READY_SUPPLY_IMG + 'leaf-quarter-lib.svg', typeAr: 'باب ضلفة وربع — Lib', typeEn: 'Leaf & quarter — Lib-style', sizeAr: 'ارتفاع 236 سم · عرض حتى 160 سم', sizeEn: 'H 236 cm · W up to 160 cm', colorAr: 'بدون اكسسوار — استلام المصنع', colorEn: 'No accessories — factory pickup', price: wpcReadyCatalogPriceExVat(1050), inStock: true },
-            { id: 'wpc-sup-slide-flat', sku: 'WPC-SUP-SLD-FLAT', subCategoryId: 'wpc-ready-supply', image: WPC_READY_SUPPLY_IMG + 'sliding-flat.svg', typeAr: 'باب سحاب فلات — قياسي', typeEn: 'Sliding flat door — standard', sizeAr: 'ارتفاع 236 سم · عرض حتى 115 سم', sizeEn: 'H 236 cm · W up to 115 cm', colorAr: 'بدون اكسسوار — استلام المصنع', colorEn: 'No accessories — factory pickup', price: wpcReadyCatalogPriceExVat(599), inStock: true },
-            { id: 'wpc-sup-slide-u', sku: 'WPC-SUP-SLD-U', subCategoryId: 'wpc-ready-supply', image: WPC_READY_SUPPLY_IMG + 'sliding-u.svg', typeAr: 'باب سحاب U — قياسي', typeEn: 'Sliding U-door — standard', sizeAr: 'ارتفاع 250 سم · عرض حتى 130 سم', sizeEn: 'H 250 cm · W up to 130 cm', colorAr: 'بدون اكسسوار — استلام المصنع', colorEn: 'No accessories — factory pickup', price: wpcReadyCatalogPriceExVat(670), inStock: true },
-            { id: 'wpc-sup-slide-lib', sku: 'WPC-SUP-SLD-LIB', subCategoryId: 'wpc-ready-supply', image: WPC_READY_SUPPLY_IMG + 'sliding-lib.svg', typeAr: 'باب سحاب Lib — قياسي', typeEn: 'Sliding Lib door — standard', sizeAr: 'ارتفاع 236 سم · عرض حتى 115 سم', sizeEn: 'H 236 cm · W up to 115 cm', colorAr: 'بدون اكسسوار — استلام المصنع', colorEn: 'No accessories — factory pickup', price: wpcReadyCatalogPriceExVat(640), inStock: true }
+            { id: 'wpc-sup-flat-45-std', sku: 'WPC-SUP-FLAT-45-STD', subCategoryId: 'wpc-ready-supply', image: WPC_READY_SUPPLY_IMG + 'flat-plain.svg', typeAr: 'باب فلات سادة مع شريط — 45ملم قياسي', typeEn: 'Flat plain with strip — 45mm standard', sizeAr: 'ارتفاع 236 سم · عرض حتى 115 سم', sizeEn: 'H 236 cm · W up to 115 cm', colorAr: 'بدون اكسسوار — استلام المصنع', colorEn: 'No accessories — factory pickup', price: wpcReadySupplyPriceExVat(530), inStock: true },
+            { id: 'wpc-sup-flat-45-n110', sku: 'WPC-SUP-FLAT-45-N110', subCategoryId: 'wpc-ready-supply', image: WPC_READY_SUPPLY_IMG + 'flat-plain.svg', typeAr: 'باب فلات سادة مع شريط — 45ملم صافي 110', typeEn: 'Flat plain with strip — 45mm net 110', sizeAr: 'ارتفاع 236 سم · عرض حتى 120 سم', sizeEn: 'H 236 cm · W up to 120 cm', colorAr: 'بدون اكسسوار — استلام المصنع', colorEn: 'No accessories — factory pickup', price: wpcReadySupplyPriceExVat(599), inStock: true },
+            { id: 'wpc-sup-flat-steel', sku: 'WPC-SUP-FLAT-STEEL', subCategoryId: 'wpc-ready-supply', image: WPC_READY_SUPPLY_IMG + 'flat-steel.svg', typeAr: 'باب فلات مع ديكور استيل — وجه واحد', typeEn: 'Flat door — steel decor one side', sizeAr: 'ارتفاع 236 سم · عرض حتى 115 سم', sizeEn: 'H 236 cm · W up to 115 cm', colorAr: 'بدون اكسسوار — استلام المصنع', colorEn: 'No accessories — factory pickup', price: wpcReadySupplyPriceExVat(630), inStock: true },
+            { id: 'wpc-sup-flat-glass', sku: 'WPC-SUP-FLAT-GLASS', subCategoryId: 'wpc-ready-supply', image: WPC_READY_SUPPLY_IMG + 'flat-glass.svg', typeAr: 'باب فلات مع ديكور زجاج — بدون الزجاج', typeEn: 'Flat door — glass decor (glass excluded)', sizeAr: 'ارتفاع 236 سم · عرض حتى 115 سم', sizeEn: 'H 236 cm · W up to 115 cm', colorAr: 'بدون اكسسوار — استلام المصنع', colorEn: 'No accessories — factory pickup', price: wpcReadySupplyPriceExVat(790), inStock: true },
+            { id: 'wpc-sup-flat-classic', sku: 'WPC-SUP-FLAT-CLS', subCategoryId: 'wpc-ready-supply', image: WPC_READY_SUPPLY_IMG + 'flat-classic.svg', typeAr: 'باب فلات ديكور كلاسيك — وجه واحد', typeEn: 'Flat door — classic decor one side', sizeAr: 'ارتفاع 236 سم · عرض حتى 115 سم', sizeEn: 'H 236 cm · W up to 115 cm', colorAr: 'بدون اكسسوار — استلام المصنع', colorEn: 'No accessories — factory pickup', price: wpcReadySupplyPriceExVat(655), inStock: true },
+            { id: 'wpc-sup-u45-std', sku: 'WPC-SUP-U45-STD', subCategoryId: 'wpc-ready-supply', image: WPC_READY_SUPPLY_IMG + 'u-plain.svg', typeAr: 'باب U — 45ملم سادة قياسي', typeEn: 'U-door 45mm — plain standard', sizeAr: 'ارتفاع 250 سم · عرض حتى 130 سم', sizeEn: 'H 250 cm · W up to 130 cm', colorAr: 'بدون اكسسوار — استلام المصنع', colorEn: 'No accessories — factory pickup', price: wpcReadySupplyPriceExVat(620), inStock: true },
+            { id: 'wpc-sup-u45-classic', sku: 'WPC-SUP-U45-CLS', subCategoryId: 'wpc-ready-supply', image: WPC_READY_SUPPLY_IMG + 'u-classic.svg', typeAr: 'باب U — 45ملم ديكور كلاسيك وجه واحد', typeEn: 'U-door 45mm — classic decor', sizeAr: 'ارتفاع 250 سم · عرض حتى 130 سم', sizeEn: 'H 250 cm · W up to 130 cm', colorAr: 'بدون اكسسوار — استلام المصنع', colorEn: 'No accessories — factory pickup', price: wpcReadySupplyPriceExVat(750), inStock: true },
+            { id: 'wpc-sup-u45-steel', sku: 'WPC-SUP-U45-STEEL', subCategoryId: 'wpc-ready-supply', image: WPC_READY_SUPPLY_IMG + 'u-steel.svg', typeAr: 'باب U — 45ملم ديكور استيل وجه واحد', typeEn: 'U-door 45mm — steel decor', sizeAr: 'ارتفاع 250 سم · عرض حتى 130 سم', sizeEn: 'H 250 cm · W up to 130 cm', colorAr: 'بدون اكسسوار — استلام المصنع', colorEn: 'No accessories — factory pickup', price: wpcReadySupplyPriceExVat(720), inStock: true },
+            { id: 'wpc-sup-u60-std', sku: 'WPC-SUP-U60-STD', subCategoryId: 'wpc-ready-supply', image: WPC_READY_SUPPLY_IMG + 'u60-plain.svg', typeAr: 'باب U — 60ملم قياسي', typeEn: 'U-door 60mm — standard', sizeAr: 'ارتفاع 250 سم · عرض حتى 130 سم', sizeEn: 'H 250 cm · W up to 130 cm', colorAr: 'بدون اكسسوار — استلام المصنع', colorEn: 'No accessories — factory pickup', price: wpcReadySupplyPriceExVat(720), inStock: true },
+            { id: 'wpc-sup-u60-steel', sku: 'WPC-SUP-U60-STEEL', subCategoryId: 'wpc-ready-supply', image: WPC_READY_SUPPLY_IMG + 'u60-steel.svg', typeAr: 'باب U — 60ملم ديكور استيل وجه واحد', typeEn: 'U-door 60mm — steel decor', sizeAr: 'ارتفاع 250 سم · عرض حتى 130 سم', sizeEn: 'H 250 cm · W up to 130 cm', colorAr: 'بدون اكسسوار — استلام المصنع', colorEn: 'No accessories — factory pickup', price: wpcReadySupplyPriceExVat(820), inStock: true },
+            { id: 'wpc-sup-u60-classic', sku: 'WPC-SUP-U60-CLS', subCategoryId: 'wpc-ready-supply', image: WPC_READY_SUPPLY_IMG + 'u60-classic.svg', typeAr: 'باب U — 60ملم ديكور كلاسيك وجه واحد', typeEn: 'U-door 60mm — classic decor', sizeAr: 'ارتفاع 250 سم · عرض حتى 130 سم', sizeEn: 'H 250 cm · W up to 130 cm', colorAr: 'بدون اكسسوار — استلام المصنع', colorEn: 'No accessories — factory pickup', price: wpcReadySupplyPriceExVat(850), inStock: true },
+            { id: 'wpc-sup-u60-glass', sku: 'WPC-SUP-U60-GLASS', subCategoryId: 'wpc-ready-supply', image: WPC_READY_SUPPLY_IMG + 'u60-glass.svg', typeAr: 'باب U — 60ملم ديكور زجاج بدون الزجاج', typeEn: 'U-door 60mm — glass decor (no glass)', sizeAr: 'ارتفاع 250 سم · عرض حتى 130 سم', sizeEn: 'H 250 cm · W up to 130 cm', colorAr: 'بدون اكسسوار — استلام المصنع', colorEn: 'No accessories — factory pickup', price: wpcReadySupplyPriceExVat(970), inStock: true },
+            { id: 'wpc-sup-lib40-std', sku: 'WPC-SUP-LIB40-STD', subCategoryId: 'wpc-ready-supply', image: WPC_READY_SUPPLY_IMG + 'lib-plain.svg', typeAr: 'باب Lib — 40ملم سادة', typeEn: 'Lib door 40mm — plain', sizeAr: 'ارتفاع 236 سم · عرض حتى 115 سم', sizeEn: 'H 236 cm · W up to 115 cm', colorAr: 'بدون اكسسوار — استلام المصنع', colorEn: 'No accessories — factory pickup', price: wpcReadySupplyPriceExVat(580), inStock: true },
+            { id: 'wpc-sup-lib40-steel', sku: 'WPC-SUP-LIB40-STEEL', subCategoryId: 'wpc-ready-supply', image: WPC_READY_SUPPLY_IMG + 'lib-steel.svg', typeAr: 'باب Lib — 40ملم استيل وجه واحد', typeEn: 'Lib door 40mm — steel one side', sizeAr: 'ارتفاع 236 سم · عرض حتى 115 سم', sizeEn: 'H 236 cm · W up to 115 cm', colorAr: 'بدون اكسسوار — استلام المصنع', colorEn: 'No accessories — factory pickup', price: wpcReadySupplyPriceExVat(680), inStock: true },
+            { id: 'wpc-sup-lib40-glass', sku: 'WPC-SUP-LIB40-GLASS', subCategoryId: 'wpc-ready-supply', image: WPC_READY_SUPPLY_IMG + 'lib-glass.svg', typeAr: 'باب Lib — 40ملم زجاج بدون الزجاج', typeEn: 'Lib door 40mm — glass prep (no glass)', sizeAr: 'ارتفاع 236 سم · عرض حتى 115 سم', sizeEn: 'H 236 cm · W up to 115 cm', colorAr: 'بدون اكسسوار — استلام المصنع', colorEn: 'No accessories — factory pickup', price: wpcReadySupplyPriceExVat(830), inStock: true },
+            { id: 'wpc-sup-lib40-classic', sku: 'WPC-SUP-LIB40-CLS', subCategoryId: 'wpc-ready-supply', image: WPC_READY_SUPPLY_IMG + 'lib-classic.svg', typeAr: 'باب Lib — 40ملم ديكور كلاسيك وجه واحد', typeEn: 'Lib door 40mm — classic decor', sizeAr: 'ارتفاع 236 سم · عرض حتى 115 سم', sizeEn: 'H 236 cm · W up to 115 cm', colorAr: 'بدون اكسسوار — استلام المصنع', colorEn: 'No accessories — factory pickup', price: wpcReadySupplyPriceExVat(710), inStock: true },
+            { id: 'wpc-sup-lq-flat', sku: 'WPC-SUP-LQ-FLAT', subCategoryId: 'wpc-ready-supply', image: WPC_READY_SUPPLY_IMG + 'leaf-quarter-flat.svg', typeAr: 'باب ضلفة وربع — فلات', typeEn: 'Leaf & quarter — flat', sizeAr: 'ارتفاع 236 سم · عرض حتى 160 سم', sizeEn: 'H 236 cm · W up to 160 cm', colorAr: 'بدون اكسسوار — استلام المصنع', colorEn: 'No accessories — factory pickup', price: wpcReadySupplyPriceExVat(920), inStock: true },
+            { id: 'wpc-sup-lq-u', sku: 'WPC-SUP-LQ-U', subCategoryId: 'wpc-ready-supply', image: WPC_READY_SUPPLY_IMG + 'leaf-quarter-u.svg', typeAr: 'باب ضلفة وربع — U', typeEn: 'Leaf & quarter — U-style', sizeAr: 'ارتفاع 250 سم · عرض حتى 175 سم', sizeEn: 'H 250 cm · W up to 175 cm', colorAr: 'بدون اكسسوار — استلام المصنع', colorEn: 'No accessories — factory pickup', price: wpcReadySupplyPriceExVat(1120), inStock: true },
+            { id: 'wpc-sup-lq-lib', sku: 'WPC-SUP-LQ-LIB', subCategoryId: 'wpc-ready-supply', image: WPC_READY_SUPPLY_IMG + 'leaf-quarter-lib.svg', typeAr: 'باب ضلفة وربع — Lib', typeEn: 'Leaf & quarter — Lib-style', sizeAr: 'ارتفاع 236 سم · عرض حتى 160 سم', sizeEn: 'H 236 cm · W up to 160 cm', colorAr: 'بدون اكسسوار — استلام المصنع', colorEn: 'No accessories — factory pickup', price: wpcReadySupplyPriceExVat(1050), inStock: true },
+            { id: 'wpc-sup-slide-flat', sku: 'WPC-SUP-SLD-FLAT', subCategoryId: 'wpc-ready-supply', image: WPC_READY_SUPPLY_IMG + 'sliding-flat.svg', typeAr: 'باب سحاب فلات — قياسي', typeEn: 'Sliding flat door — standard', sizeAr: 'ارتفاع 236 سم · عرض حتى 115 سم', sizeEn: 'H 236 cm · W up to 115 cm', colorAr: 'بدون اكسسوار — استلام المصنع', colorEn: 'No accessories — factory pickup', price: wpcReadySupplyPriceExVat(599), inStock: true },
+            { id: 'wpc-sup-slide-u', sku: 'WPC-SUP-SLD-U', subCategoryId: 'wpc-ready-supply', image: WPC_READY_SUPPLY_IMG + 'sliding-u.svg', typeAr: 'باب سحاب U — قياسي', typeEn: 'Sliding U-door — standard', sizeAr: 'ارتفاع 250 سم · عرض حتى 130 سم', sizeEn: 'H 250 cm · W up to 130 cm', colorAr: 'بدون اكسسوار — استلام المصنع', colorEn: 'No accessories — factory pickup', price: wpcReadySupplyPriceExVat(670), inStock: true },
+            { id: 'wpc-sup-slide-lib', sku: 'WPC-SUP-SLD-LIB', subCategoryId: 'wpc-ready-supply', image: WPC_READY_SUPPLY_IMG + 'sliding-lib.svg', typeAr: 'باب سحاب Lib — قياسي', typeEn: 'Sliding Lib door — standard', sizeAr: 'ارتفاع 236 سم · عرض حتى 115 سم', sizeEn: 'H 236 cm · W up to 115 cm', colorAr: 'بدون اكسسوار — استلام المصنع', colorEn: 'No accessories — factory pickup', price: wpcReadySupplyPriceExVat(640), inStock: true }
         ];
 
         const WPC_READY_CATALOG_ALL_VARIANTS = DEFAULT_WPC_READY_INSTALL_VARIANTS.concat(DEFAULT_WPC_READY_SUPPLY_VARIANTS);
