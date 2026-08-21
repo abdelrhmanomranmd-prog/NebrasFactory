@@ -1,5 +1,5 @@
 /**
- * نبراس hrws237 — صحة السيرفر الحية (بدون بيانات حساسة)
+ * نبراس hrws238 — صحة السيرفر الحية (بدون بيانات حساسة)
  * GET /api/health → { ok, deploy hint, supabase, time }
  */
 const sec = require('./lib/nebras-security');
@@ -46,7 +46,7 @@ module.exports = async function handler(req, res) {
                 sessionTtlMs: sec.SESSION_TTL_MS,
                 sensitiveKeyCount: Array.isArray(sec.SENSITIVE_STORE_KEYS) ? sec.SENSITIVE_STORE_KEYS.length : 0
             },
-            upgrade: 'hrws237'
+            upgrade: 'hrws238'
         };
         return sec.jsonRes(res, payload.ok ? 200 : 503, payload);
     } catch (err) {
