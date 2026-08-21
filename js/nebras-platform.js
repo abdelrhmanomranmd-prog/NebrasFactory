@@ -2348,7 +2348,9 @@
             'الأحساء': { en: 'Al-Ahsa', zh: '艾赫萨' },
             'خميس مشيط': { en: 'Khamis Mushait', zh: '海米س穆谢特' },
             'تبوك': { en: 'Tabuk', zh: '塔布克' },
-            'جدة': { en: 'Jeddah', zh: '吉达' }
+            'جدة': { en: 'Jeddah', zh: '吉达' },
+            'الدمام': { en: 'Dammam', zh: '达曼' },
+            'جيزان': { en: 'Jizan', zh: '吉赞' }
         };
 
         const QUOTE_REGISTRY_KEY = 'nebrasQuoteRegistry';
@@ -3018,6 +3020,29 @@
             card.setAttribute('data-active-roll-hex', roll.hex || '');
         }
 
+        function getProductPhotoWatermarkSettings() {
+            const s = systemSettings || {};
+            const wm = (s.productPhotoWatermark && typeof s.productPhotoWatermark === 'object')
+                ? s.productPhotoWatermark
+                : (DEFAULT_SYSTEM_SETTINGS.productPhotoWatermark || {});
+            return {
+                enabled: wm.enabled !== false,
+                logoUrl: wm.logoUrl || 'images/logo-nebras-mark.png',
+                opacity: Math.min(1, Math.max(0.35, Number(wm.opacity) || 0.92)),
+                sizePx: Math.min(88, Math.max(28, Number(wm.sizePx) || 52))
+            };
+        }
+
+        function buildProductPhotoWatermarkHtml() {
+            const wm = getProductPhotoWatermarkSettings();
+            if (!wm.enabled) return '';
+            const logo = normalizeMediaPath(wm.logoUrl);
+            return '<img class="nebras-product-photo-watermark" src="' + escapeHtmlAttr(logo) + '"' +
+                ' data-src-list="' + escapeHtmlAttr(getSiteLogoUrlListAttr()) + '" data-src-idx="0"' +
+                ' onerror="siteLogoImgFallback(this)" alt="" aria-hidden="true" loading="lazy" decoding="async"' +
+                ' style="--wm-opacity:' + wm.opacity + ';--wm-size:' + wm.sizePx + 'px">';
+        }
+
         function buildWpcStoreSkuDoorMediaHtml(baseImg, label, fullSrc, ui, variant) {
             const isPhoto = isWpcCatalogPhotoPath(baseImg);
             const tintProfile = variant ? getWpcDoorTintProfile(variant) : 'flat';
@@ -3035,6 +3060,7 @@
                 ' alt="' + escapeHtmlAttr(label) + '" loading="lazy" decoding="async"' +
                 ' title="' + escapeHtmlAttr(ui.lightboxOpenHint || 'اضغط للتكبير') + '">' +
                 (isPhoto ? '<div class="nebras-store-sku-door-panel-color" aria-hidden="true"></div>' : '') +
+                buildProductPhotoWatermarkHtml() +
                 '</div></div>';
         }
 
@@ -4993,7 +5019,7 @@
                 : (img
                 ? (isWpcReady
                     ? buildWpcStoreSkuDoorMediaHtml(baseImg, label, fullSrc, ui, v)
-                    : ('<div class="' + mediaClass + '"><img class="' + imgClass + '" src="' + escapeHtmlAttr(img) + '" data-base-src="' + escapeHtmlAttr(baseImg) + '" data-full-src="' + escapeHtmlAttr(fullSrc || img) + '" alt="' + escapeHtmlAttr(label) + '" loading="lazy" decoding="async" title="' + escapeHtmlAttr(ui.lightboxOpenHint || 'اضغط للتكبير') + '"></div>'))
+                    : ('<div class="' + mediaClass + '"><img class="' + imgClass + '" src="' + escapeHtmlAttr(img) + '" data-base-src="' + escapeHtmlAttr(baseImg) + '" data-full-src="' + escapeHtmlAttr(fullSrc || img) + '" alt="' + escapeHtmlAttr(label) + '" loading="lazy" decoding="async" title="' + escapeHtmlAttr(ui.lightboxOpenHint || 'اضغط للتكبير') + '">' + buildProductPhotoWatermarkHtml() + '</div>'))
                 : '<div class="nebras-store-sku-media nebras-store-sku-media--empty"><i class="fas fa-box-open"></i><span class="nebras-store-sku-awaiting-image">' + escapeHtmlAttr(awaitingLabel) + '</span></div>');
             const cardAttrs = isWpcReady
                 ? (' class="nebras-store-sku-card nebras-store-sku-card--wpc-ready' + (compact ? ' nebras-store-sku-card--compact' : '') + '" data-product-id="' + escapeHtmlAttr(product.id) + '" data-variant-index="' + idx + '" data-selected-roll-index="0"')
@@ -10935,6 +10961,21 @@
             return ensureQuoteA4Settings();
         }
 
+        function ensureProductPhotoWatermarkSettings() {
+            if (!systemSettings || typeof systemSettings !== 'object') return DEFAULT_SYSTEM_SETTINGS.productPhotoWatermark;
+            const incoming = systemSettings.productPhotoWatermark && typeof systemSettings.productPhotoWatermark === 'object'
+                ? systemSettings.productPhotoWatermark
+                : {};
+            const def = DEFAULT_SYSTEM_SETTINGS.productPhotoWatermark || {};
+            systemSettings.productPhotoWatermark = Object.assign({}, def, incoming);
+            const wm = systemSettings.productPhotoWatermark;
+            wm.opacity = Math.min(1, Math.max(0.35, Number(wm.opacity) || def.opacity || 0.92));
+            wm.sizePx = Math.min(88, Math.max(28, Number(wm.sizePx) || def.sizePx || 52));
+            if (!wm.logoUrl) wm.logoUrl = def.logoUrl || 'images/logo-nebras-mark.png';
+            if (wm.enabled == null) wm.enabled = true;
+            return wm;
+        }
+
         function getQuoteA4LogoUrl() {
             const q = getQuoteA4Settings();
             return resolveDisplayMediaUrl(q.logoUrl || getSiteLogoUrl());
@@ -15537,18 +15578,41 @@
             { id: 1, city: 'القصيم - الفرع الرئيسي', city_en: 'Qassim — Main Branch', city_zh: '盖西姆（总部）', salesPhone: '0555092383', image: 'branch-qassim-main.jpg' },
             { id: 2, city: 'الرياض', city_en: 'Riyadh', city_zh: '利雅得', salesPhone: '0536694464', image: 'branch-riyadh.jpg' },
             { id: 3, city: 'المدينة', city_en: 'Madinah', city_zh: '麦地那', salesPhone: '0558358306', image: 'branch-madinah.webp' },
-            { id: 4, city: 'الأحساء', city_en: 'Al-Ahsa', city_zh: '艾赫萨', salesPhone: '0558818530', image: 'branch-ahsa.jpg' },
+            { id: 4, city: 'الأحساء', city_en: 'Al-Ahsa', city_zh: '艾赫萨', salesPhone: '0508833231', image: 'branch-ahsa.jpg' },
             { id: 5, city: 'خميس مشيط', city_en: 'Khamis Mushait', city_zh: '海米斯穆谢特', salesPhone: '0554501661', image: 'branch-khamis-mushait.jpg' },
             { id: 6, city: 'تبوك', city_en: 'Tabuk', city_zh: '塔布ك', salesPhone: '0555278214', image: 'branch-tabuk.jpg' },
-            { id: 7, city: 'جدة', city_en: 'Jeddah', city_zh: '吉达', salesPhone: '96655710226', image: 'branch-jeddah.jpg' }
+            { id: 7, city: 'جدة', city_en: 'Jeddah', city_zh: '吉达', salesPhone: '96655710226', image: 'branch-jeddah.jpg' },
+            { id: 8, city: 'الدمام', city_en: 'Dammam', city_zh: '达曼', salesPhone: '0508833231', image: 'branch-dammam.jpg' },
+            { id: 9, city: 'جيزان', city_en: 'Jizan', city_zh: '吉赞', salesPhone: '0558818530', image: 'branch-jizan.jpg' }
         ];
+        const BRANCHES_CATALOG_VERSION = 2;
 
         let branchesData = DEFAULT_BRANCHES.map(function(b) { return Object.assign({}, b); });
+
+        function normalizeBranchPhoneDigits(phone) {
+            return String(phone || '').replace(/\D/g, '');
+        }
+
+        function migrateBranchesCatalogV2() {
+            let changed = false;
+            (branchesData || []).forEach(function(b) {
+                if (Number(b.id) === 4 && normalizeBranchPhoneDigits(b.salesPhone) === '0558818530') {
+                    b.salesPhone = '0508833231';
+                    changed = true;
+                }
+            });
+            DEFAULT_BRANCHES.forEach(function(def) {
+                if (Number(def.id) >= 8 && !(branchesData || []).some(function(b) { return Number(b.id) === Number(def.id); })) {
+                    branchesData.push(Object.assign({}, def));
+                    changed = true;
+                }
+            });
+            return changed;
+        }
 
         function ensureBuiltinBranches() {
             if (!Array.isArray(branchesData) || !branchesData.length) {
                 branchesData = DEFAULT_BRANCHES.map(function(b) { return Object.assign({}, b); });
-                return;
             }
             DEFAULT_BRANCHES.forEach(function(def) {
                 if (!branchesData.some(function(b) { return Number(b.id) === Number(def.id); })) {
@@ -15556,6 +15620,14 @@
                 }
             });
             branchesData = branchesData.map(normalizeBranchRecord);
+            let catalogVer = 0;
+            try { catalogVer = Number(localStorage.getItem('nebrasBranchesCatalogVer') || 0); } catch (e) { catalogVer = 0; }
+            if (catalogVer < BRANCHES_CATALOG_VERSION) {
+                if (migrateBranchesCatalogV2()) {
+                    try { localStorage.setItem('nebrasBranches', JSON.stringify(branchesData)); } catch (e) { /* ignore */ }
+                }
+                try { localStorage.setItem('nebrasBranchesCatalogVer', String(BRANCHES_CATALOG_VERSION)); } catch (e) { /* ignore */ }
+            }
         }
 
         function getBranchDisplayName(branch, lang) {
@@ -25505,6 +25577,22 @@
             addAuditLog('تعديل بانر الرئيسية', url);
         }
 
+        async function pickProductWatermarkLogoFromSettings() {
+            if (!requirePermission('content')) return;
+            const wm = ensureProductPhotoWatermarkSettings();
+            const url = await pickMediaPath({
+                label: 'شعار صور المنتجات (زاوية علوية)',
+                defaultValue: wm.logoUrl || 'images/logo-nebras-mark.png'
+            });
+            if (!url) return;
+            wm.logoUrl = url;
+            systemSettings.productPhotoWatermark = wm;
+            const input = document.getElementById('setting-product-watermark-logo');
+            if (input) input.value = url;
+            saveContentData();
+            addAuditLog('تعديل شعار صور المنتجات', url);
+        }
+
         async function pickOccasionHeroFromSettings() {
             if (!requirePermission('content', 'رفع صورة المناسبة يتطلب صلاحية المحتوى.')) return;
             const url = await pickMediaPath({
@@ -25602,6 +25690,15 @@
             renderHeroSlideshowAdminList();
             renderColorCatalogAdminList();
             renderDoorSizeCatalogAdminList();
+            const wm = ensureProductPhotoWatermarkSettings();
+            const wmEnabled = document.getElementById('setting-product-watermark-enabled');
+            const wmLogo = document.getElementById('setting-product-watermark-logo');
+            const wmOpacity = document.getElementById('setting-product-watermark-opacity');
+            const wmSize = document.getElementById('setting-product-watermark-size');
+            if (wmEnabled) wmEnabled.checked = wm.enabled !== false;
+            if (wmLogo) wmLogo.value = wm.logoUrl || 'images/logo-nebras-mark.png';
+            if (wmOpacity) wmOpacity.value = String(wm.opacity);
+            if (wmSize) wmSize.value = String(wm.sizePx);
 
             populateOccasionThemeSelect();
             const occEnabled = document.getElementById('setting-occasion-enabled');
@@ -25680,6 +25777,17 @@
             if (addrEnEl) systemSettings.companyAddressEn = addrEnEl.value.trim();
             const heroBannerEl = document.getElementById('setting-hero-banner-url');
             if (heroBannerEl) systemSettings.heroBannerImageUrl = heroBannerEl.value.trim() || 'images/hero-nebras-banner.png';
+            const wm = ensureProductPhotoWatermarkSettings();
+            const wmEnabled = document.getElementById('setting-product-watermark-enabled');
+            const wmLogo = document.getElementById('setting-product-watermark-logo');
+            const wmOpacity = document.getElementById('setting-product-watermark-opacity');
+            const wmSize = document.getElementById('setting-product-watermark-size');
+            if (wmEnabled) wm.enabled = !!wmEnabled.checked;
+            if (wmLogo) wm.logoUrl = wmLogo.value.trim() || 'images/logo-nebras-mark.png';
+            if (wmOpacity) wm.opacity = parseFloat(wmOpacity.value) || DEFAULT_SYSTEM_SETTINGS.productPhotoWatermark.opacity;
+            if (wmSize) wm.sizePx = parseFloat(wmSize.value) || DEFAULT_SYSTEM_SETTINGS.productPhotoWatermark.sizePx;
+            systemSettings.productPhotoWatermark = wm;
+            ensureProductPhotoWatermarkSettings();
             if (!Array.isArray(systemSettings.bankAccounts)) systemSettings.bankAccounts = [];
 
             if (isMainGovernanceAdmin()) {
@@ -30019,6 +30127,7 @@
                     systemSettings = Object.assign({}, DEFAULT_SYSTEM_SETTINGS, parsed && typeof parsed === 'object' ? parsed : {});
                 } catch (error) { console.warn('Invalid settings data in localStorage', error); }
             }
+            ensureProductPhotoWatermarkSettings();
             const savedAdminUsers = localStorage.getItem('nebrasAdminUsers');
             const savedVisitorIcons = localStorage.getItem('nebrasVisitorIcons');
             const savedSiteProducts = localStorage.getItem('nebrasSiteProducts');
@@ -33146,6 +33255,7 @@
         window.addHeroSlideshowSlideFromSettings = addHeroSlideshowSlideFromSettings;
         window.removeHeroSlideshowSlide = removeHeroSlideshowSlide;
         window.pickHeroSlideshowSlideImage = pickHeroSlideshowSlideImage;
+        window.pickProductWatermarkLogoFromSettings = pickProductWatermarkLogoFromSettings;
         window.resetHeroSlideshowToDefault = resetHeroSlideshowToDefault;
         window.saveColorCatalogFromAdmin = saveColorCatalogFromAdmin;
         window.addColorCatalogEntryFromSettings = addColorCatalogEntryFromSettings;

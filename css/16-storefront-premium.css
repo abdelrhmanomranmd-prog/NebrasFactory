@@ -1601,6 +1601,29 @@ body.nebras-mobile-bar-active.admin-session .nebras-mobile-commerce-bar {
     cursor: zoom-in;
 }
 
+.nebras-store-sku-media--has-image {
+    position: relative;
+}
+
+.nebras-product-photo-watermark {
+    position: absolute;
+    top: 8px;
+    inset-inline-end: 8px;
+    z-index: 6;
+    width: var(--wm-size, 52px);
+    height: auto;
+    max-height: 20%;
+    object-fit: contain;
+    opacity: var(--wm-opacity, 0.92);
+    pointer-events: none;
+    filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.38));
+}
+
+.nebras-store-sku-door-stack .nebras-product-photo-watermark {
+    top: 6px;
+    inset-inline-end: 6px;
+}
+
 .nebras-store-sku-door-stack {
     position: relative;
     width: 100%;
