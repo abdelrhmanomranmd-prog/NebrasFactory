@@ -1604,28 +1604,29 @@ body.nebras-mobile-bar-active.admin-session .nebras-mobile-commerce-bar {
     display: none;
 }
 
-.nebras-store-sku-door-panel-tint {
+.nebras-store-sku-door-panel-color {
     position: absolute;
-    top: var(--wpc-tint-top, 14%);
-    left: var(--wpc-tint-left, 27%);
-    width: var(--wpc-tint-width, 46%);
-    height: var(--wpc-tint-height, 72%);
-    z-index: 3;
-    border-radius: 5px;
-    background-color: var(--door-roll-tint, #b8bcc4);
-    mix-blend-mode: soft-light;
-    opacity: var(--door-roll-tint-opacity, 0.62);
+    inset: 0;
+    z-index: 2;
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    opacity: 0;
     pointer-events: none;
-    display: none;
-    transition: background-color 0.38s ease, opacity 0.38s ease;
+    transition: filter 0.38s ease, opacity 0.25s ease;
+    will-change: filter;
 }
 
-.nebras-store-sku-door-stack.has-door-roll-tint--panel-only .nebras-store-sku-door-panel-tint {
-    display: block;
+.nebras-store-sku-door-stack.has-door-roll-tint--clip-panel .nebras-store-sku-door-panel-color {
+    opacity: 1;
 }
 
-.nebras-store-sku-door-stack.has-door-roll-tint--panel-only img.nebras-store-sku-img--wpc {
+.nebras-store-sku-door-stack.has-door-roll-tint--clip-panel img.nebras-store-sku-img--wpc {
     filter: none !important;
+}
+
+.nebras-store-sku-door-panel-tint {
+    display: none !important;
 }
 
 .nebras-store-sku-door-stack--photo.has-door-roll-tint::after {
@@ -1662,8 +1663,7 @@ body.nebras-mobile-bar-active.admin-session .nebras-mobile-commerce-bar {
     object-position: center center;
     padding: 0;
     transform: none !important;
-    image-rendering: -webkit-optimize-contrast;
-    image-rendering: crisp-edges;
+    image-rendering: auto;
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
 }
