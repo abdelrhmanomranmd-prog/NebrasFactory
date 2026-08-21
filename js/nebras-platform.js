@@ -775,9 +775,10 @@
             doorDesigner: null,
             heroSlideshowSlides: null,
             productPhotoWatermark: {
-                enabled: true,
-                logoUrl: 'images/logo-nebras-mark.png',
-                opacity: 0.92,
+                enabled: false,
+                mode: 'baked',
+                logoUrl: 'images/logo-nebras-product-badge.png',
+                opacity: 1,
                 sizePx: 52
             }
         };
@@ -2882,11 +2883,20 @@
             return cleared;
         }
 
+        function appendWpcSkuPhotoCacheBust(url) {
+            const u = String(url || '').trim();
+            if (!u || u.indexOf('wpc-photos/by-sku/') < 0) return u;
+            const ver = (typeof window.NEBRAS_DEPLOY_TAG !== 'undefined' && window.NEBRAS_DEPLOY_TAG)
+                ? window.NEBRAS_DEPLOY_TAG : 'live';
+            return u + (u.indexOf('?') >= 0 ? '&' : '?') + 'v=' + ver;
+        }
+
         function getWpcStoreSkuBaseImage(variant) {
             if (!variant) return '';
             const img = String(variant.image || '').trim();
             if (isAdminManagedProductImage(img)) return img;
-            return resolveWpcCatalogPhotoForVariant(variant) || '';
+            const resolved = resolveWpcCatalogPhotoForVariant(variant) || '';
+            return appendWpcSkuPhotoCacheBust(resolved);
         }
 
         function resolveWpcReadyCatalogImage(variant) {
@@ -2944,14 +2954,7 @@
         function variantSupportsWpcRollColorPicker(variant) {
             if (!variant) return false;
             const sub = String(variant.subCategoryId || '');
-            if (sub !== 'wpc-ready-install' && sub !== 'wpc-ready-supply') return false;
-            const sku = String(variant.sku || '').toUpperCase();
-            const typeAr = String(variant.typeAr || '');
-            if (sku.indexOf('GLASS') >= 0 || typeAr.indexOf('زجاج') >= 0) return false;
-            if (sku.indexOf('CLS') >= 0 || typeAr.indexOf('كلاسيك') >= 0) return false;
-            if (sku.indexOf('STEEL') >= 0 || typeAr.indexOf('ستان') >= 0) return false;
-            if (sku.indexOf('SLD') >= 0 || typeAr.indexOf('سحاب') >= 0 || typeAr.indexOf('سحب') >= 0) return false;
-            return true;
+            return sub === 'wpc-ready-install' || sub === 'wpc-ready-supply';
         }
 
         function isWpcCatalogPhotoPath(path) {
@@ -3025,17 +3028,19 @@
             const wm = (s.productPhotoWatermark && typeof s.productPhotoWatermark === 'object')
                 ? s.productPhotoWatermark
                 : (DEFAULT_SYSTEM_SETTINGS.productPhotoWatermark || {});
+            const mode = wm.mode || 'baked';
             return {
-                enabled: wm.enabled !== false,
-                logoUrl: wm.logoUrl || 'images/logo-nebras-mark.png',
-                opacity: Math.min(1, Math.max(0.35, Number(wm.opacity) || 0.92)),
+                enabled: wm.enabled === true && mode === 'overlay',
+                mode: mode,
+                logoUrl: wm.logoUrl || 'images/logo-nebras-product-badge.png',
+                opacity: Math.min(1, Math.max(0.35, Number(wm.opacity) || 1)),
                 sizePx: Math.min(88, Math.max(28, Number(wm.sizePx) || 52))
             };
         }
 
         function buildProductPhotoWatermarkHtml() {
             const wm = getProductPhotoWatermarkSettings();
-            if (!wm.enabled) return '';
+            if (!wm.enabled || wm.mode === 'baked') return '';
             const logo = normalizeMediaPath(wm.logoUrl);
             return '<img class="nebras-product-photo-watermark" src="' + escapeHtmlAttr(logo) + '"' +
                 ' data-src-list="' + escapeHtmlAttr(getSiteLogoUrlListAttr()) + '" data-src-idx="0"' +
@@ -10969,10 +10974,11 @@
             const def = DEFAULT_SYSTEM_SETTINGS.productPhotoWatermark || {};
             systemSettings.productPhotoWatermark = Object.assign({}, def, incoming);
             const wm = systemSettings.productPhotoWatermark;
-            wm.opacity = Math.min(1, Math.max(0.35, Number(wm.opacity) || def.opacity || 0.92));
+            wm.opacity = Math.min(1, Math.max(0.35, Number(wm.opacity) || def.opacity || 1));
             wm.sizePx = Math.min(88, Math.max(28, Number(wm.sizePx) || def.sizePx || 52));
-            if (!wm.logoUrl) wm.logoUrl = def.logoUrl || 'images/logo-nebras-mark.png';
-            if (wm.enabled == null) wm.enabled = true;
+            if (!wm.logoUrl) wm.logoUrl = def.logoUrl || 'images/logo-nebras-product-badge.png';
+            if (!wm.mode) wm.mode = def.mode || 'baked';
+            if (wm.enabled == null) wm.enabled = false;
             return wm;
         }
 
@@ -25802,9 +25808,10 @@
             const wmOpacity = document.getElementById('setting-product-watermark-opacity');
             const wmSize = document.getElementById('setting-product-watermark-size');
             if (wmEnabled) wm.enabled = !!wmEnabled.checked;
-            if (wmLogo) wm.logoUrl = wmLogo.value.trim() || 'images/logo-nebras-mark.png';
+            if (wmLogo) wm.logoUrl = wmLogo.value.trim() || 'images/logo-nebras-product-badge.png';
             if (wmOpacity) wm.opacity = parseFloat(wmOpacity.value) || DEFAULT_SYSTEM_SETTINGS.productPhotoWatermark.opacity;
             if (wmSize) wm.sizePx = parseFloat(wmSize.value) || DEFAULT_SYSTEM_SETTINGS.productPhotoWatermark.sizePx;
+            wm.mode = wm.enabled ? 'overlay' : (wm.mode || 'baked');
             systemSettings.productPhotoWatermark = wm;
             ensureProductPhotoWatermarkSettings();
             if (!Array.isArray(systemSettings.bankAccounts)) systemSettings.bankAccounts = [];
