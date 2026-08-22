@@ -777,9 +777,9 @@
             productPhotoWatermark: {
                 enabled: true,
                 mode: 'overlay',
-                logoUrl: 'images/logo-nebras-watermark.svg',
-                opacity: 0.9,
-                sizePx: 58
+                logoUrl: 'images/logo-nebras-watermark.png',
+                opacity: 0.95,
+                sizePx: 56
             }
         };
 
@@ -3032,9 +3032,9 @@
             return {
                 enabled: wm.enabled !== false && mode === 'overlay',
                 mode: mode,
-                logoUrl: wm.logoUrl || 'images/logo-nebras-watermark.svg',
-                opacity: Math.min(1, Math.max(0.5, Number(wm.opacity) || 0.9)),
-                sizePx: Math.min(96, Math.max(40, Number(wm.sizePx) || 58))
+                logoUrl: wm.logoUrl || 'images/logo-nebras-watermark.png',
+                opacity: Math.min(1, Math.max(0.5, Number(wm.opacity) || 0.95)),
+                sizePx: Math.min(96, Math.max(40, Number(wm.sizePx) || 56))
             };
         }
 
@@ -3046,8 +3046,7 @@
                 ? window.NEBRAS_DEPLOY_TAG : 'live';
             if (logo && logo.indexOf('?') < 0) logo = logo + '?v=' + ver;
             return '<img class="nebras-product-photo-watermark" src="' + escapeHtmlAttr(logo) + '"' +
-                ' data-src-list="' + escapeHtmlAttr(getSiteLogoUrlListAttr()) + '" data-src-idx="0"' +
-                ' onerror="siteLogoImgFallback(this)" alt="" aria-hidden="true" loading="lazy" decoding="async"' +
+                ' alt="" aria-hidden="true" loading="eager" decoding="sync"' +
                 ' style="--wm-opacity:' + wm.opacity + ';--wm-size:' + wm.sizePx + 'px">';
         }
 
@@ -10980,13 +10979,13 @@
             wm.opacity = Math.min(1, Math.max(0.5, Number(wm.opacity) || def.opacity || 0.9));
             wm.sizePx = Math.min(96, Math.max(40, Number(wm.sizePx) || def.sizePx || 58));
             if (!wm.mode || wm.mode === 'baked') {
-                if (wm.mode === 'baked' || String(wm.logoUrl || '').indexOf('logo-nebras-product-badge') >= 0) {
-                    wm.logoUrl = def.logoUrl || 'images/logo-nebras-watermark.svg';
+                if (wm.mode === 'baked' || String(wm.logoUrl || '').indexOf('logo-nebras-product-badge') >= 0 || String(wm.logoUrl || '').indexOf('logo-nebras-watermark.svg') >= 0) {
+                    wm.logoUrl = def.logoUrl || 'images/logo-nebras-watermark.png';
                 }
                 wm.mode = 'overlay';
                 if (wm.enabled === false) wm.enabled = true;
             } else if (!wm.logoUrl) {
-                wm.logoUrl = def.logoUrl || 'images/logo-nebras-watermark.svg';
+                wm.logoUrl = def.logoUrl || 'images/logo-nebras-watermark.png';
             }
             if (wm.enabled == null) wm.enabled = true;
             return wm;
@@ -25731,7 +25730,7 @@
             const wmOpacity = document.getElementById('setting-product-watermark-opacity');
             const wmSize = document.getElementById('setting-product-watermark-size');
             if (wmEnabled) wmEnabled.checked = wm.enabled !== false;
-            if (wmLogo) wmLogo.value = wm.logoUrl || 'images/logo-nebras-watermark.svg';
+            if (wmLogo) wmLogo.value = wm.logoUrl || 'images/logo-nebras-watermark.png';
             if (wmOpacity) wmOpacity.value = String(wm.opacity);
             if (wmSize) wmSize.value = String(wm.sizePx);
 
@@ -25818,7 +25817,7 @@
             const wmOpacity = document.getElementById('setting-product-watermark-opacity');
             const wmSize = document.getElementById('setting-product-watermark-size');
             if (wmEnabled) wm.enabled = !!wmEnabled.checked;
-            if (wmLogo) wm.logoUrl = wmLogo.value.trim() || 'images/logo-nebras-watermark.svg';
+            if (wmLogo) wm.logoUrl = wmLogo.value.trim() || 'images/logo-nebras-watermark.png';
             if (wmOpacity) wm.opacity = parseFloat(wmOpacity.value) || DEFAULT_SYSTEM_SETTINGS.productPhotoWatermark.opacity;
             if (wmSize) wm.sizePx = parseFloat(wmSize.value) || DEFAULT_SYSTEM_SETTINGS.productPhotoWatermark.sizePx;
             wm.mode = wm.enabled ? 'overlay' : 'off';
