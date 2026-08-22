@@ -2075,8 +2075,8 @@
         max-height: min(40vh, 380px);
     }
 
-    .wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-svg-overlay.is-accessories-overlay {
-        display: block !important;
+    .wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-svg-overlay {
+        display: none !important;
     }
 
     .door-designer--studio .door-active-color-label {
@@ -2843,63 +2843,21 @@
         brightness(0.98);
 }
 
+.wpc-door-stage--photo-preset .wpc-door-keybab-textures,
+.wpc-door-stage--photo-preset .wpc-door-svg-overlay,
 .wpc-door-stage--photo-preset .wpc-door-photo-stack {
     visibility: hidden !important;
     opacity: 0 !important;
     pointer-events: none !important;
 }
 
-/* hrws249 — صورة مصنع حقيقية + حائط + MDF + إكسسوارات */
-.wpc-door-stage--studio-live.wpc-door-stage--photo-preset.wpc-door-stage--studio-wall .wpc-door-struct-texture.is-visible {
-    visibility: visible !important;
-    opacity: 1 !important;
-    pointer-events: none !important;
-}
-
-.wpc-door-stage--studio-live.wpc-door-stage--photo-preset.wpc-door-stage--decor-transom .wpc-door-struct-texture--top-clad.is-visible,
-.wpc-door-stage--studio-live.wpc-door-stage--photo-preset.wpc-door-stage--decor-transom .wpc-door-keybab-transom.is-visible {
-    visibility: visible !important;
-    opacity: 1 !important;
-}
-
+.wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-svg-overlay,
 .wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-leaf-texture,
+.wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-struct-texture,
+.wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-keybab-transom,
 .wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-center-mullion {
     visibility: hidden !important;
     opacity: 0 !important;
-}
-
-.wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-svg-overlay.is-accessories-overlay {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-    pointer-events: none !important;
-    z-index: 6;
-}
-
-.wpc-door-svg--photo-companion #wpcSvgDoorUnit,
-.wpc-door-svg--photo-companion #wpcSvgWallScene {
-    opacity: 0 !important;
-    visibility: hidden !important;
-}
-
-.wpc-door-svg--photo-companion #wpcSvgAccessories,
-.wpc-door-svg--photo-companion .wpc-svg-detail {
-    opacity: 1;
-    visibility: visible;
-}
-
-.wpc-door-svg--photo-companion.wpc-door-svg--surface-overlay .wpc-svg-detail {
-    opacity: 0.92;
-}
-
-.wpc-door-stage--photo-preset .wpc-door-photo-preset-wrap.is-active {
-    z-index: 4;
-}
-
-.wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-keybab-textures {
-    z-index: 1;
-    visibility: visible !important;
-    opacity: 1 !important;
     pointer-events: none !important;
 }
 
@@ -3225,47 +3183,4 @@
     .nebras-door-3d-viewport {
         min-height: 52vh;
     }
-}
-
-/* hrws248 — استوديو: حائط توضيحي + تكسية MDF علوية بلون الرولّة */
-.wpc-door-stage--studio-wall .wpc-door-svg-host {
-    background: linear-gradient(180deg, #eef1f5 0%, #e4e8ee 50%, #d6dbe2 100%);
-    border-radius: 10px;
-    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.04);
-}
-
-.wpc-door-stage--studio-wall #wpcSvgWallScene rect {
-    filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.05));
-}
-
-.wpc-door-stage--studio-live.wpc-door-stage--keybab .wpc-door-struct-texture--left.is-visible,
-.wpc-door-stage--studio-live.wpc-door-stage--keybab .wpc-door-struct-texture--right.is-visible,
-.wpc-door-stage--studio-live.wpc-door-stage--keybab .wpc-door-struct-texture--top.is-visible {
-    box-shadow:
-        inset 0 0 28px rgba(0, 0, 0, 0.09),
-        inset 0 1px 0 rgba(255, 255, 255, 0.24);
-}
-
-.wpc-door-stage--struct-transom .wpc-door-struct-texture--top-clad.is-visible {
-    z-index: 2;
-    box-shadow:
-        inset 0 0 20px rgba(0, 0, 0, 0.1),
-        inset 0 2px 0 rgba(255, 255, 255, 0.28),
-        0 1px 4px rgba(0, 0, 0, 0.08);
-}
-
-.wpc-door-keybab-transom.is-visible {
-    z-index: 2;
-}
-
-.door-designer-section--accessories .door-designer-opts {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-}
-
-.door-designer-section--accessories .door-designer-opt {
-    flex: 1 1 calc(50% - 6px);
-    font-size: 0.82rem;
-    min-height: 2.4rem;
 }
