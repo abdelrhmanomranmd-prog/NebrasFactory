@@ -3184,3 +3184,46 @@
         min-height: 52vh;
     }
 }
+
+/* hrws248 — استوديو: حائط توضيحي + تكسية MDF علوية بلون الرولّة */
+.wpc-door-stage--studio-wall .wpc-door-svg-host {
+    background: linear-gradient(180deg, #eef1f5 0%, #e4e8ee 50%, #d6dbe2 100%);
+    border-radius: 10px;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.04);
+}
+
+.wpc-door-stage--studio-wall #wpcSvgWallScene rect {
+    filter: drop-shadow(0 1px 4px rgba(0, 0, 0, 0.05));
+}
+
+.wpc-door-stage--studio-live.wpc-door-stage--keybab .wpc-door-struct-texture--left.is-visible,
+.wpc-door-stage--studio-live.wpc-door-stage--keybab .wpc-door-struct-texture--right.is-visible,
+.wpc-door-stage--studio-live.wpc-door-stage--keybab .wpc-door-struct-texture--top.is-visible {
+    box-shadow:
+        inset 0 0 28px rgba(0, 0, 0, 0.09),
+        inset 0 1px 0 rgba(255, 255, 255, 0.24);
+}
+
+.wpc-door-stage--struct-transom .wpc-door-struct-texture--top-clad.is-visible {
+    z-index: 2;
+    box-shadow:
+        inset 0 0 20px rgba(0, 0, 0, 0.1),
+        inset 0 2px 0 rgba(255, 255, 255, 0.28),
+        0 1px 4px rgba(0, 0, 0, 0.08);
+}
+
+.wpc-door-keybab-transom.is-visible {
+    z-index: 2;
+}
+
+.door-designer-section--accessories .door-designer-opts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.door-designer-section--accessories .door-designer-opt {
+    flex: 1 1 calc(50% - 6px);
+    font-size: 0.82rem;
+    min-height: 2.4rem;
+}

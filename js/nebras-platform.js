@@ -973,7 +973,7 @@
         const DOOR_PHOTO_PRESET_ROOT = 'images/doors/presets/';
         const DOOR_PHOTO_PRESET_CACHE = '28';
         /** صور أبواب المصنع الحقيقية في المعاينة — SVG احتياطي عند غياب الصورة */
-        const DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS = true;
+        const DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS = false;
         let doorDesignerPreviewRaf = 0;
 
         function scheduleDoorDesignerPreviewUpdate(root) {
@@ -1106,7 +1106,7 @@
                 const r = slidingB.querySelector('rect');
                 if (r) r.setAttribute('fill', fillVal);
             }
-            const transomLeaf = document.querySelector('#wpcSvgTransom rect:first-child');
+            const transomLeaf = document.getElementById('wpcSvgTransomMdf') || document.querySelector('#wpcSvgTransom rect:first-child');
             if (transomLeaf) transomLeaf.setAttribute('fill', fillVal);
         }
 
@@ -1523,34 +1523,47 @@
 
         const DEFAULT_DOOR_DESIGNER = {
             enabled: true,
-            dataSeed: 'v26-3d-studio-size-matrix',
+            dataSeed: 'v33-studio-wall-mdf-models',
             previewModelEnabled: true,
             useCompositorPreview: false,
-            use3dPreview: true,
-            introAr: 'استوديو «صمّم بابك» — اختر نوع الباب، النموذج، الديكور الخارجي، التكسية العلوية، ورولّة اللون (N-1..21 بدون N-12).',
-            introEn: 'Design Your Door — pick door family, model, exterior decor (flat/curve), top cladding, and one of 20 NEBR roll colours.',
-            introZh: '设计您的门 — 选择门型、型号、外饰（平/弧）、顶部包覆及 20 种 NEBR 卷材色。',
+            use3dPreview: false,
+            introAr: 'استوديو «صمّم بابك» — باب WPC على حائط توضيحي مع تكسية MDF علوية بلون الرولّة، ونماذج وإكسسوارات تُطبَّق مباشرة على المعاينة.',
+            introEn: 'Design Your Door — WPC door on illustrative wall with roll-coloured MDF top cladding; models and accessories apply live on preview.',
+            introZh: '设计您的门 — WPC门置于示意墙面，MDF顶包覆与卷材同色；型号与配件实时应用于预览。',
             heroImageUrl: 'images/background-quality-managment.jpeg',
             sceneBackgroundUrl: 'images/background-quality-managment.jpeg',
             previewImageUrl: 'images/background-quality-managment.jpeg',
             doorBaseImageUrl: NEBRAS_DOOR_PHOTO_DEFAULT,
             layerManifest: DEFAULT_DOOR_LAYER_MANIFEST,
-            designCanvasMode: '3d',
+            designCanvasMode: 'studio',
             usePhotorealPreview: false,
             types: [
                 { id: 'edge-band', labelAr: 'باب إيدج باند فلات', labelEn: 'Edge-band flat door', labelZh: '封边平板门', icon: 'modern' },
                 { id: 'u-channel', labelAr: 'يو شانيل', labelEn: 'U-channel door', labelZh: 'U槽门', icon: 'classic' },
+                { id: 'lib', labelAr: 'باب Lib', labelEn: 'Lib door', labelZh: 'Lib门', icon: 'modern' },
                 { id: 'sliding', labelAr: 'باب سحاب', labelEn: 'Sliding door', labelZh: '推拉门', icon: 'sliding' }
             ],
             models: [
-                { id: 'edge-1', typeId: 'edge-band', labelAr: 'دلفة واحدة', labelEn: 'Single leaf', labelZh: '单扇', config: { mechanism: 'hinged', leafCount: '1', surface: 'flat' } },
-                { id: 'edge-2', typeId: 'edge-band', labelAr: 'دلفتين', labelEn: 'Double leaves', labelZh: '双扇', config: { mechanism: 'hinged', leafCount: '2', surface: 'flat' } },
+                { id: 'edge-1', typeId: 'edge-band', labelAr: 'دلفة واحدة — فلات سادة', labelEn: 'Single leaf — plain flat', labelZh: '单扇素面平板', config: { mechanism: 'hinged', leafCount: '1', surface: 'flat' } },
+                { id: 'edge-2', typeId: 'edge-band', labelAr: 'دلفتين — فلات سادة', labelEn: 'Double leaves — plain flat', labelZh: '双扇素面平板', config: { mechanism: 'hinged', leafCount: '2', surface: 'flat' } },
+                { id: 'edge-steel', typeId: 'edge-band', labelAr: 'فلات + شريط استيل', labelEn: 'Flat + steel strip decor', labelZh: '平板+钢条装饰', config: { mechanism: 'hinged', leafCount: '1', surface: 'edge-steel' } },
+                { id: 'edge-glass', typeId: 'edge-band', labelAr: 'فلات + ديكور زجاج', labelEn: 'Flat + glass decor', labelZh: '平板+玻璃装饰', config: { mechanism: 'hinged', leafCount: '1', surface: 'edge-glass', glassLayout: 'strip-tall' } },
+                { id: 'edge-classic', typeId: 'edge-band', labelAr: 'فلات + ديكور كلاسيك', labelEn: 'Flat + classic panels', labelZh: '平板+经典装饰', config: { mechanism: 'hinged', leafCount: '1', surface: 'edge-classic' } },
+                { id: 'edge-net110', typeId: 'edge-band', labelAr: 'فلات صافي 110', labelEn: 'Flat net 110', labelZh: '净宽110平板', config: { mechanism: 'hinged', leafCount: '1', surface: 'flat' } },
                 { id: 'u-plain', typeId: 'u-channel', labelAr: 'يو شانيل سادة', labelEn: 'Plain U-channel', labelZh: '素面U槽', config: { mechanism: 'hinged', leafCount: '1', surface: 'u-plain' } },
                 { id: 'u-slats', typeId: 'u-channel', labelAr: 'يو شانيل شرائح', labelEn: 'Slatted U-channel', labelZh: '条板U槽', config: { mechanism: 'hinged', leafCount: '1', surface: 'u-slats' } },
                 { id: 'u-classic', typeId: 'u-channel', labelAr: 'يو شانيل كلاسيك', labelEn: 'Classic U-channel', labelZh: '经典U槽', config: { mechanism: 'hinged', leafCount: '1', surface: 'u-classic' } },
                 { id: 'u-glass', typeId: 'u-channel', labelAr: 'يو شانيل زجاج', labelEn: 'Glass U-channel', labelZh: '玻璃U槽', config: { mechanism: 'hinged', leafCount: '1', surface: 'u-glass', glassLayout: 'strips-5' } },
+                { id: 'u-steel', typeId: 'u-channel', labelAr: 'يو شانيل + استيل', labelEn: 'U-channel + steel strip', labelZh: 'U槽+钢条', config: { mechanism: 'hinged', leafCount: '1', surface: 'u-steel' } },
+                { id: 'lib-flat', typeId: 'lib', labelAr: 'Lib سادة 40ملم', labelEn: 'Lib plain 40mm', labelZh: 'Lib素面40mm', config: { mechanism: 'hinged', leafCount: '1', surface: 'lib-flat' } },
+                { id: 'lib-curve', typeId: 'lib', labelAr: 'Lib كيرف', labelEn: 'Lib curved top', labelZh: 'Lib弧形顶', config: { mechanism: 'hinged', leafCount: '1', surface: 'lib-curve', outerShape: 'outer-curve' } },
+                { id: 'lib-steel', typeId: 'lib', labelAr: 'Lib + استيل', labelEn: 'Lib + steel strip', labelZh: 'Lib+钢条', config: { mechanism: 'hinged', leafCount: '1', surface: 'lib-steel' } },
+                { id: 'lib-glass', typeId: 'lib', labelAr: 'Lib + زجاج', labelEn: 'Lib + glass decor', labelZh: 'Lib+玻璃', config: { mechanism: 'hinged', leafCount: '1', surface: 'lib-glass', glassLayout: 'strips-5' } },
+                { id: 'lib-classic', typeId: 'lib', labelAr: 'Lib كلاسيك', labelEn: 'Lib classic panels', labelZh: 'Lib经典', config: { mechanism: 'hinged', leafCount: '1', surface: 'edge-classic' } },
                 { id: 'slide-1', typeId: 'sliding', labelAr: 'سحاب دلفة واحدة', labelEn: 'Single sliding leaf', labelZh: '单扇推拉', config: { mechanism: 'sliding', leafCount: '1', surface: 'flat' } },
-                { id: 'slide-2', typeId: 'sliding', labelAr: 'سحاب دلفتين', labelEn: 'Double sliding leaves', labelZh: '双扇推拉', config: { mechanism: 'sliding', leafCount: '2', surface: 'flat' } }
+                { id: 'slide-2', typeId: 'sliding', labelAr: 'سحاب دلفتين', labelEn: 'Double sliding leaves', labelZh: '双扇推拉', config: { mechanism: 'sliding', leafCount: '2', surface: 'flat' } },
+                { id: 'slide-u', typeId: 'sliding', labelAr: 'سحاب U شانيل', labelEn: 'Sliding U-channel', labelZh: 'U槽推拉', config: { mechanism: 'sliding', leafCount: '1', surface: 'u-plain' } },
+                { id: 'slide-lib', typeId: 'sliding', labelAr: 'سحاب Lib', labelEn: 'Sliding Lib door', labelZh: 'Lib推拉', config: { mechanism: 'sliding', leafCount: '1', surface: 'lib-flat' } }
             ],
             mechanisms: [
                 { id: 'hinged', labelAr: 'مفصلي', labelEn: 'Hinged', labelZh: '平开' },
@@ -1562,10 +1575,18 @@
             ],
             surfaces: [
                 { id: 'flat', labelAr: 'إيدج باند فلات', labelEn: 'Edge-band flat', labelZh: '封边平板' },
+                { id: 'edge-steel', labelAr: 'فلات + استيل', labelEn: 'Flat + steel', labelZh: '平板+钢条' },
+                { id: 'edge-glass', labelAr: 'فلات + زجاج', labelEn: 'Flat + glass', labelZh: '平板+玻璃' },
+                { id: 'edge-classic', labelAr: 'فلات كلاسيك', labelEn: 'Flat classic', labelZh: '平板经典' },
                 { id: 'u-plain', labelAr: 'يو شانيل سادة', labelEn: 'Plain U-channel', labelZh: '素面U槽' },
                 { id: 'u-slats', labelAr: 'يو شانيل شرائح', labelEn: 'Slatted U-channel', labelZh: '条板U槽' },
                 { id: 'u-classic', labelAr: 'يو شانيل كلاسيك', labelEn: 'Classic U-channel', labelZh: '经典U槽' },
-                { id: 'u-glass', labelAr: 'يو شانيل زجاج', labelEn: 'Glass U-channel', labelZh: '玻璃U槽' }
+                { id: 'u-glass', labelAr: 'يو شانيل زجاج', labelEn: 'Glass U-channel', labelZh: '玻璃U槽' },
+                { id: 'u-steel', labelAr: 'يو شانيل + استيل', labelEn: 'U-channel + steel', labelZh: 'U槽+钢条' },
+                { id: 'lib-flat', labelAr: 'Lib سادة', labelEn: 'Lib plain', labelZh: 'Lib素面' },
+                { id: 'lib-curve', labelAr: 'Lib كيرف', labelEn: 'Lib curved', labelZh: 'Lib弧形' },
+                { id: 'lib-steel', labelAr: 'Lib + استيل', labelEn: 'Lib + steel', labelZh: 'Lib+钢条' },
+                { id: 'lib-glass', labelAr: 'Lib + زجاج', labelEn: 'Lib + glass', labelZh: 'Lib+玻璃' }
             ],
             glassLayouts: [
                 { id: 'strip-tall', labelAr: 'لوح زجاجي طويل', labelEn: 'Tall glass panel', labelZh: '长玻璃' },
@@ -1619,6 +1640,14 @@
                 { id: 'pull-inox', labelAr: 'سحّة إinox', labelEn: 'Stainless pull', labelZh: '不锈钢拉手' },
                 { id: 'knob-gold', labelAr: 'مقبض ذهبي', labelEn: 'Gold knob', labelZh: '金色旋钮' }
             ],
+            accessories: [
+                { id: 'none', labelAr: 'بدون إكسسوارات', labelEn: 'No accessories', labelZh: '无配件' },
+                { id: 'viewer', labelAr: 'عدسة Mirino', labelEn: 'Door viewer', labelZh: '猫眼' },
+                { id: 'kick-plate', labelAr: 'حاجز ركل', labelEn: 'Kick plate', labelZh: '踢脚板' },
+                { id: 'letter-plate', labelAr: 'فتحة بريد', labelEn: 'Letter plate', labelZh: '信报口' },
+                { id: 'door-chain', labelAr: 'سلسلة أمان', labelEn: 'Security chain', labelZh: '防盗链' },
+                { id: 'flush-bolt', labelAr: 'مزنجل (دلفتين)', labelEn: 'Flush bolt (double)', labelZh: '插销(双扇)' }
+            ],
             colors: getNebrasDoorCatalogColors()
         };
 
@@ -1638,7 +1667,8 @@
             opening: 'right',
             hardware: 'lever-black',
             lock: 'cylinder',
-            glassPattern: 'clear'
+            glassPattern: 'clear',
+            accessories: 'none'
         };
 
         function isDoorDesignerKeybabCanvas(cfg) {
@@ -1843,7 +1873,7 @@
                 hardware = 'pull-inox';
             }
             stage.classList.remove('wpc-door-stage--dynamic-render', 'wpc-door-stage--photoreal', 'wpc-door-stage--engine-compositor', 'wpc-door-stage--engine-3d');
-            stage.classList.add('wpc-door-stage--studio-live', 'wpc-door-stage--keybab');
+            stage.classList.add('wpc-door-stage--studio-live', 'wpc-door-stage--keybab', 'wpc-door-stage--studio-wall');
             const svg = document.getElementById('wpc-door-svg-root');
             const styleKey = (state.surface === 'u-plain' || state.surface === 'u-slats' || state.surface === 'u-glass') ? 'slats' : 'normal';
             applyWpcSvgDoorSurface(svg, state);
@@ -1858,6 +1888,7 @@
             applyWpcSvgSize(stage, size, cfg);
             applyWpcSvgLock(svg, lock);
             applyWpcSvgHardware(svg, hardware);
+            applyWpcSvgAccessories(svg, pick('accessories') || state.accessories || 'none', state);
             applyDoorLeafMask(stage, decor);
             applyWpcStudioVisualLayers(stage, state, swatchUrl);
             applyWpcSvgDoorColor(stage, hex, swatchUrl, styleKey, { isRoll: isRoll, catalogIndex: isNaN(catalogIndex) ? 0 : catalogIndex });
@@ -11333,11 +11364,12 @@
                 [ui.doorDesignerDecorLabel || 'التكسية العلوية', lbl('decor')],
                 [ui.doorDesignerLeafSizeLabel || 'مقاس الضلفة', lbl('size')],
                 [ui.doorDesignerRollLabel || 'رولّة اللون', colorValue],
+                [ui.doorDesignerAccessoriesLabel || 'إكسسوارات', lbl('accessories')],
                 [ui.doorDesignerOpeningLabel || 'اتجاه الفتح', lbl('opening')],
                 [ui.doorDesignerHardwareLabel || 'المقبض', lbl('hardware')],
                 [ui.doorDesignerLockLabel || 'القفل', lbl('lock')]
             ];
-            return rows.filter(function(r) { return r[1]; }).map(function(r) { return r[0] + ': ' + r[1]; }).join('\n');
+            return rows.filter(function(r) { return r[1] && r[1] !== 'بدون إكسسوارات' && r[1] !== 'No accessories' && r[1] !== '无配件'; }).map(function(r) { return r[0] + ': ' + r[1]; }).join('\n');
         }
 
         function formatDoorDesignerSpecHtml(specText) {
@@ -23082,7 +23114,7 @@
                 systemSettings.doorDesigner = JSON.parse(JSON.stringify(DEFAULT_DOOR_DESIGNER));
             }
             const cfg = systemSettings.doorDesigner;
-            ['mechanisms', 'leafCounts', 'surfaces', 'glassLayouts', 'presets', 'types', 'models', 'styles', 'outerShapes', 'frameStyles', 'decors', 'glassPatterns', 'openings', 'sizes', 'locks', 'hardware'].forEach(function(key) {
+            ['mechanisms', 'leafCounts', 'surfaces', 'glassLayouts', 'presets', 'types', 'models', 'styles', 'outerShapes', 'frameStyles', 'decors', 'glassPatterns', 'openings', 'sizes', 'locks', 'hardware', 'accessories'].forEach(function(key) {
                 if (!Array.isArray(cfg[key]) || !cfg[key].length) {
                     cfg[key] = JSON.parse(JSON.stringify(DEFAULT_DOOR_DESIGNER[key] || []));
                 }
@@ -23112,11 +23144,11 @@
             if (!cfg.previewImageUrl) {
                 cfg.previewImageUrl = cfg.sceneBackgroundUrl || DEFAULT_DOOR_DESIGNER.previewImageUrl;
             }
-            const knownTypeIds = ['edge-band', 'u-channel', 'sliding'];
+            const knownTypeIds = ['edge-band', 'u-channel', 'lib', 'sliding'];
             if (!cfg.types.some(function(t) { return t && knownTypeIds.indexOf(t.id) !== -1; })) {
                 cfg.types = JSON.parse(JSON.stringify(DEFAULT_DOOR_DESIGNER.types));
             }
-            if (!cfg.models || !cfg.models.some(function(m) { return m && m.typeId === 'edge-band'; })) {
+            if (!cfg.models || !cfg.models.some(function(m) { return m && m.id === 'edge-steel'; })) {
                 cfg.models = JSON.parse(JSON.stringify(DEFAULT_DOOR_DESIGNER.models));
             }
             if (!cfg.frameStyles || !cfg.frameStyles.length) {
@@ -23160,10 +23192,17 @@
             }
             if (cfg.enabled !== false) {
                 cfg.previewModelEnabled = true;
-                cfg.designCanvasMode = '3d';
-                cfg.use3dPreview = true;
-                cfg.useCompositorPreview = false;
-                cfg.usePhotorealPreview = false;
+                if (DEFAULT_DOOR_DESIGNER.designCanvasMode === 'studio' || DEFAULT_DOOR_DESIGNER.use3dPreview === false) {
+                    cfg.designCanvasMode = 'studio';
+                    cfg.use3dPreview = false;
+                    cfg.useCompositorPreview = false;
+                    cfg.usePhotorealPreview = false;
+                } else {
+                    cfg.designCanvasMode = '3d';
+                    cfg.use3dPreview = true;
+                    cfg.useCompositorPreview = false;
+                    cfg.usePhotorealPreview = false;
+                }
             } else if (cfg.previewModelEnabled == null) {
                 cfg.previewModelEnabled = DEFAULT_DOOR_DESIGNER.previewModelEnabled !== false;
             }
@@ -23214,6 +23253,7 @@
                 size: pick('size') || '',
                 lock: pick('lock') || 'cylinder',
                 hardware: pick('hardware') || 'lever-black',
+                accessories: pick('accessories') || 'none',
                 isSliding: isSliding,
                 isDouble: isDouble,
                 legacyType: legacyType || (isSliding ? 'sliding' : (isDouble ? 'double' : 'single'))
@@ -23312,9 +23352,10 @@
                 '<filter id="wpcDoorShadow" x="-20%" y="-10%" width="140%" height="120%"><feDropShadow dx="12" dy="20" stdDeviation="18" flood-color="#000" flood-opacity="0.45"/></filter>' +
                 '<filter id="wpcDoorSpecular"><feGaussianBlur in="SourceAlpha" stdDeviation="1.2" result="b"/><feOffset dx="-2" dy="-3" result="o"/><feComponentTransfer in="o"><feFuncA type="linear" slope="0.25"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>' +
                 '<pattern id="wpcDoorTexture" patternUnits="objectBoundingBox" width="1" height="1"><image id="wpcDoorTextureImg" href="" width="1" height="1" preserveAspectRatio="xMidYMid slice"/></pattern></defs>' +
+                '<g id="wpcSvgWallScene"><rect id="wpcSvgWallLeft" x="0" y="0" width="78" height="920" fill="#d4d8de"/><rect id="wpcSvgWallRight" x="362" y="0" width="78" height="920" fill="#d4d8de"/><rect id="wpcSvgWallHeader" x="78" y="0" width="284" height="44" fill="#cdd2d9"/></g>' +
                 '<g id="wpcSvgDoorUnit" filter="url(#wpcDoorShadow)"><rect id="wpcSvgOuterFrame" x="18" y="8" width="404" height="892" rx="4" fill="url(#wpcFrameGrad)" stroke="#2e3338" stroke-width="4"/>' +
                 '<rect id="wpcSvgFrameLiner" x="38" y="38" width="364" height="832" fill="var(--door-frame-liner,#3a4046)"/><rect id="wpcSvgFrameBevel" x="50" y="50" width="340" height="808" fill="none" stroke="var(--door-frame-bevel,rgba(255,255,255,0.22))" stroke-width="2"/><rect x="18" y="878" width="404" height="22" rx="2" fill="url(#wpcThresholdGrad)"/>' +
-                '<g id="wpcSvgTransom" opacity="0"><rect x="96" y="48" width="248" height="72" rx="3" fill="url(#wpcLeafGrad)" stroke="rgba(0,0,0,0.12)"/><rect x="108" y="58" width="224" height="52" rx="2" fill="url(#wpcGlassGrad)" opacity="0.85"/></g>' +
+                '<g id="wpcSvgTransom" opacity="0"><rect id="wpcSvgTransomMdf" x="96" y="48" width="248" height="72" rx="3" fill="url(#wpcLeafGrad)" stroke="rgba(0,0,0,0.14)" stroke-width="1.5"/><g class="wpc-svg-mdf-grain" opacity="0.42"><path d="M104 62h232M104 72h232M104 82h232M104 92h232M104 102h232M104 112h232" stroke="rgba(0,0,0,0.1)" stroke-width="1.2"/></g></g>' +
                 '<g id="wpcSvgSidelite" opacity="0"><rect x="318" y="48" width="72" height="780" fill="url(#wpcFrameGrad)" stroke="#2e3338"/><rect x="328" y="58" width="52" height="760" fill="url(#wpcGlassGrad)" stroke="rgba(255,255,255,0.35)" stroke-width="2"/></g>' +
                 '<g id="wpcSvgLeafA"><rect id="wpcSvgFaceA" x="96" y="48" width="248" height="772" rx="3" fill="url(#wpcLeafGrad)" stroke="rgba(0,0,0,0.15)"/>' +
                 '<g class="wpc-svg-detail wpc-svg-shaker" opacity="0"><rect x="112" y="68" width="102" height="360" fill="rgba(0,0,0,0.05)" stroke="rgba(255,255,255,0.22)" stroke-width="2" rx="2"/><rect x="226" y="68" width="102" height="360" fill="rgba(0,0,0,0.05)" stroke="rgba(255,255,255,0.22)" stroke-width="2" rx="2"/><rect x="112" y="448" width="102" height="352" fill="rgba(0,0,0,0.05)" stroke="rgba(255,255,255,0.22)" stroke-width="2" rx="2"/><rect x="226" y="448" width="102" height="352" fill="rgba(0,0,0,0.05)" stroke="rgba(255,255,255,0.22)" stroke-width="2" rx="2"/></g>' +
@@ -23326,6 +23367,10 @@
                 '<g class="wpc-svg-detail wpc-svg-vision" opacity="0"><rect x="132" y="110" width="176" height="210" rx="6" fill="url(#wpcGlassGrad)" stroke="#5a6269" stroke-width="3"/></g>' +
                 '<g id="wpcSvgSlidingLeafB" opacity="0"><rect x="228" y="48" width="116" height="772" rx="3" fill="url(#wpcLeafGrad)" stroke="rgba(0,0,0,0.12)"/><g class="wpc-hw-pull-inox" transform="translate(308,408)"><rect x="20" y="0" width="8" height="58" rx="4" fill="#b8c0c8"/></g></g>' +
                 '<g class="wpc-svg-detail wpc-svg-louver" opacity="0"><rect x="106" y="100" width="228" height="660" fill="rgba(0,0,0,0.08)"/><path d="M106 130h228M106 170h228M106 210h228M106 250h228M106 290h228M106 330h228M106 370h228M106 410h228M106 450h228M106 490h228M106 530h228M106 570h228M106 610h228M106 650h228M106 690h228M106 730h228" stroke="rgba(0,0,0,0.22)" stroke-width="3"/></g>' +
+                '<g class="wpc-svg-detail wpc-svg-steel-strip" opacity="0"><rect x="108" y="300" width="224" height="10" rx="1" fill="url(#wpcThresholdGrad)"/><rect x="108" y="480" width="224" height="10" rx="1" fill="url(#wpcThresholdGrad)"/></g>' +
+                '<g class="wpc-svg-detail wpc-svg-lib-curve" opacity="0"><path d="M108 108 Q220 62 332 108" fill="none" stroke="rgba(0,0,0,0.16)" stroke-width="5"/></g>' +
+                '<g class="wpc-svg-detail wpc-svg-net110" opacity="0"><rect x="102" y="64" width="236" height="5" rx="1" fill="rgba(0,0,0,0.14)"/><rect x="102" y="798" width="236" height="5" rx="1" fill="rgba(0,0,0,0.14)"/></g>' +
+                '<g id="wpcSvgAccessories"><g class="wpc-acc-viewer" opacity="0"><circle cx="220" cy="175" r="9" fill="#2a2a2a" stroke="#888" stroke-width="2"/><circle cx="220" cy="175" r="3.5" fill="#555"/></g><g class="wpc-acc-kick-plate" opacity="0"><rect x="110" y="778" width="220" height="30" rx="2" fill="url(#wpcThresholdGrad)" stroke="#777" stroke-width="1.2"/></g><g class="wpc-acc-letter-plate" opacity="0"><rect x="178" y="510" width="84" height="16" rx="2" fill="#c8d0d8" stroke="#666" stroke-width="1"/><line x1="188" y1="518" x2="252" y2="518" stroke="#444" stroke-width="1.2"/></g><g class="wpc-acc-door-chain" opacity="0"><rect x="90" y="350" width="7" height="52" rx="2" fill="#9aa0a8"/><circle cx="93" cy="408" r="7" fill="none" stroke="#777" stroke-width="2.5"/></g><g class="wpc-acc-flush-bolt" opacity="0"><rect x="356" y="395" width="7" height="86" rx="2" fill="#b0b8c0" stroke="#666" stroke-width="1"/></g></g>' +
                 '<rect x="312" y="398" width="20" height="76" rx="3" fill="#3d4349"/><circle cx="322" cy="436" r="7" fill="#111" stroke="#999" stroke-width="1.5"/>' +
                 '<g id="wpcSvgHandleA" transform="translate(292,408)"><g class="wpc-hw-lever-black"><rect x="18" y="0" width="12" height="52" rx="3" fill="#2a2a2a"/><rect x="0" y="22" width="36" height="9" rx="3" fill="#333"/></g><g class="wpc-hw-lever-chrome" opacity="0"><rect x="18" y="0" width="12" height="52" rx="3" fill="#c0c8d0"/><rect x="0" y="22" width="36" height="9" rx="3" fill="#eef2f6"/></g><g class="wpc-hw-pull-inox" opacity="0"><rect x="20" y="0" width="8" height="58" rx="4" fill="#b8c0c8"/></g><g class="wpc-hw-knob-gold" opacity="0"><circle cx="24" cy="28" r="14" fill="#d4af37" stroke="#8b6914" stroke-width="2"/></g></g>' +
                 '<g id="wpcSvgHingesA"><rect x="88" y="120" width="10" height="36" rx="2" fill="#8a929a"/><rect x="88" y="400" width="10" height="36" rx="2" fill="#8a929a"/><rect x="88" y="680" width="10" height="36" rx="2" fill="#8a929a"/></g></g>' +
@@ -23751,6 +23796,7 @@
                 buildDoorDesignerModelSection(cfg.models, lang, ui.doorDesignerSubModelLabel || 'نموذج الباب') +
                 buildDoorDesignerOptionSection(ui.doorDesignerShapeLabel || 'الديكور الخارجي', 'outerShape', cfg.outerShapes, lang) +
                 buildDoorDesignerOptionSection(ui.doorDesignerDecorLabel || 'التكسية العلوية', 'decor', cfg.decors, lang) +
+                buildDoorDesignerOptionSection(ui.doorDesignerAccessoriesLabel || 'إكسسوارات', 'accessories', cfg.accessories, lang, 'door-designer-section--accessories') +
                 buildDoorDesignerOptionSection(ui.doorDesignerLeafSizeLabel || 'مقاس الضلفة', 'size', cfg.sizes, lang) +
                 '<section class="door-designer-section door-designer-section--colors">' +
                 '<h3 class="door-designer-section-title">' + escapeHtmlAttr(ui.doorDesignerColorLabel || 'رولات ألوان مصنع نبراس') + '</h3>' +
@@ -23902,6 +23948,15 @@
                 btn.classList.toggle('is-disabled', disabled);
                 if (disabled && btn.classList.contains('is-active')) {
                     setDoorDesignerGroupValue(root, 'hardware', 'pull-inox');
+                }
+            });
+            root.querySelectorAll('[data-door-group="accessories"]').forEach(function(btn) {
+                const val = String(btn.getAttribute('data-door-value') || '');
+                const disabled = (val === 'flush-bolt' && !state.isDouble) || (val === 'door-chain' && state.isSliding);
+                btn.disabled = disabled;
+                btn.classList.toggle('is-disabled', disabled);
+                if (disabled && btn.classList.contains('is-active')) {
+                    setDoorDesignerGroupValue(root, 'accessories', 'none');
                 }
             });
             const openingSec = root.querySelector('[data-door-section="opening"]');
@@ -24061,19 +24116,26 @@
             const leafB = document.getElementById('wpc-door-leaf-texture-b');
             const transom = document.getElementById('wpc-door-keybab-transom');
             const mullion = document.getElementById('wpc-door-center-mullion');
-            function paintStruct(el, visible, shade) {
+            function paintStruct(el, visible, shade, useRoll) {
                 if (!el) return;
-                const base = shadeDoorHex(safe, shade);
-                el.style.backgroundColor = base;
-                el.classList.toggle('has-door-roll-tint', rollFinish);
-                el.style.setProperty('--door-roll-tint', safe);
-                if (rollFinish && absUrl) {
-                el.style.backgroundImage = bgImage;
-                el.style.backgroundSize = 'cover';
-                el.style.backgroundPosition = 'center';
-                    el.style.filter = structFilter;
+                if (useRoll) {
+                    const base = shadeDoorHex(safe, shade);
+                    el.style.backgroundColor = base;
+                    el.classList.toggle('has-door-roll-tint', rollFinish);
+                    el.style.setProperty('--door-roll-tint', safe);
+                    if (rollFinish && absUrl) {
+                        el.style.backgroundImage = bgImage;
+                        el.style.backgroundSize = 'cover';
+                        el.style.backgroundPosition = 'center';
+                        el.style.filter = structFilter;
+                    } else {
+                        el.style.backgroundImage = 'none';
+                        el.style.filter = 'none';
+                    }
                 } else {
-                    el.style.backgroundImage = 'none';
+                    el.style.backgroundColor = '#d5d9df';
+                    el.style.backgroundImage = 'linear-gradient(180deg, #e8ebf0 0%, #c4c9d2 100%)';
+                    el.classList.remove('has-door-roll-tint');
                     el.style.filter = 'none';
                 }
                 el.classList.toggle('is-visible', !!visible);
@@ -24083,10 +24145,10 @@
                     if (el) el.classList.remove('is-visible');
                 });
             }
-            paintStruct(structLeft, true, -20);
-            paintStruct(structRight, true, -20);
-            paintStruct(structTop, true, -24);
-            paintStruct(structTopClad, state.decor === 'transom' && !state.isSliding, -8);
+            paintStruct(structLeft, true, -20, false);
+            paintStruct(structRight, true, -20, false);
+            paintStruct(structTop, true, -24, false);
+            paintStruct(structTopClad, state.decor === 'transom' && !state.isSliding, -8, true);
             stage.classList.toggle('wpc-door-stage--struct-transom', state.decor === 'transom' && !state.isSliding);
             stage.style.setProperty('--door-frame-tint', shadeDoorHex(safe, -28));
         }
@@ -24255,7 +24317,7 @@
                 setLeafFill(document.getElementById(id));
             });
             if (slidingB) setLeafFill(slidingB.querySelector('rect'));
-            const transomLeaf = document.querySelector('#wpcSvgTransom rect:first-child');
+            const transomLeaf = document.getElementById('wpcSvgTransomMdf') || document.querySelector('#wpcSvgTransom rect:first-child');
             if (transomLeaf) setLeafFill(transomLeaf);
             svg.classList.toggle('wpc-door-svg--slats', style === 'slats');
             const svgOverlay = document.getElementById('wpc-door-svg-overlay');
@@ -24293,6 +24355,15 @@
                 } else {
                     svg.querySelectorAll('.wpc-svg-glass-tall, .wpc-svg-vision').forEach(function(g) { g.setAttribute('opacity', '1'); });
                 }
+            } else if (surface === 'edge-steel' || surface === 'u-steel' || surface === 'lib-steel') {
+                svg.querySelectorAll('.wpc-svg-steel-strip').forEach(function(g) { g.setAttribute('opacity', '1'); });
+                if (surface === 'u-steel') svg.querySelectorAll('.wpc-svg-uchannel-v').forEach(function(g) { g.setAttribute('opacity', '1'); });
+            } else if (surface === 'edge-glass' || surface === 'lib-glass') {
+                svg.querySelectorAll('.wpc-svg-glass-tall').forEach(function(g) { g.setAttribute('opacity', '1'); });
+            } else if (surface === 'edge-classic') {
+                svg.querySelectorAll('.wpc-svg-shaker').forEach(function(g) { g.setAttribute('opacity', '1'); });
+            } else if (surface === 'lib-curve') {
+                svg.querySelectorAll('.wpc-svg-lib-curve').forEach(function(g) { g.setAttribute('opacity', '1'); });
             }
         }
 
@@ -24338,23 +24409,41 @@
             const flags = {
                 'edge-1': 'wpc-door-stage--profile-edge-1',
                 'edge-2': 'wpc-door-stage--profile-edge-2',
+                'edge-steel': 'wpc-door-stage--profile-edge-steel',
+                'edge-glass': 'wpc-door-stage--profile-edge-glass',
+                'edge-classic': 'wpc-door-stage--profile-edge-classic',
+                'edge-net110': 'wpc-door-stage--profile-edge-net110',
                 'u-plain': 'wpc-door-stage--profile-u-plain',
                 'u-slats': 'wpc-door-stage--profile-u-slats',
                 'u-classic': 'wpc-door-stage--profile-u-classic',
                 'u-glass': 'wpc-door-stage--profile-u-glass',
+                'u-steel': 'wpc-door-stage--profile-u-steel',
+                'lib-flat': 'wpc-door-stage--profile-lib-flat',
+                'lib-curve': 'wpc-door-stage--profile-lib-curve',
+                'lib-steel': 'wpc-door-stage--profile-lib-steel',
+                'lib-glass': 'wpc-door-stage--profile-lib-glass',
+                'lib-classic': 'wpc-door-stage--profile-lib-classic',
                 'slide-1': 'wpc-door-stage--profile-slide-1',
-                'slide-2': 'wpc-door-stage--profile-slide-2'
+                'slide-2': 'wpc-door-stage--profile-slide-2',
+                'slide-u': 'wpc-door-stage--profile-slide-u',
+                'slide-lib': 'wpc-door-stage--profile-slide-lib'
             };
             Object.keys(flags).forEach(function(id) {
                 stage.classList.toggle(flags[id], model === id);
             });
+            const svg = document.getElementById('wpc-door-svg-root');
+            if (svg) {
+                svg.querySelectorAll('.wpc-svg-net110').forEach(function(g) {
+                    g.setAttribute('opacity', model === 'edge-net110' ? '1' : '0');
+                });
+            }
         }
 
         function applyWpcSvgDecor(svg, decor, isSliding) {
             const transom = document.getElementById('wpcSvgTransom');
             const leafA = document.getElementById('wpcSvgLeafA');
             const faceA = document.getElementById('wpcSvgFaceA');
-            const show = decor === 'transom';
+            const show = decor === 'transom' && !isSliding;
             if (transom) transom.setAttribute('opacity', show ? '1' : '0');
             if (faceA && show) {
                 faceA.setAttribute('y', '132');
@@ -24362,6 +24451,30 @@
             } else if (faceA) {
                 faceA.setAttribute('y', '48');
                 faceA.setAttribute('height', '772');
+            }
+        }
+
+        function applyWpcSvgAccessories(svg, accessoryId, state) {
+            if (!svg) return;
+            const acc = accessoryId || 'none';
+            const map = {
+                'viewer': '.wpc-acc-viewer',
+                'kick-plate': '.wpc-acc-kick-plate',
+                'letter-plate': '.wpc-acc-letter-plate',
+                'door-chain': '.wpc-acc-door-chain',
+                'flush-bolt': '.wpc-acc-flush-bolt'
+            };
+            svg.querySelectorAll('#wpcSvgAccessories [class*="wpc-acc-"]').forEach(function(g) {
+                g.setAttribute('opacity', '0');
+            });
+            if (acc !== 'none' && map[acc]) {
+                svg.querySelectorAll(map[acc]).forEach(function(g) { g.setAttribute('opacity', '1'); });
+            }
+            if (state && state.isSliding && acc === 'door-chain') {
+                svg.querySelectorAll('.wpc-acc-door-chain').forEach(function(g) { g.setAttribute('opacity', '0'); });
+            }
+            if (state && !state.isDouble && acc === 'flush-bolt') {
+                svg.querySelectorAll('.wpc-acc-flush-bolt').forEach(function(g) { g.setAttribute('opacity', '0'); });
             }
         }
 
