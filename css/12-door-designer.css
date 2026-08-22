@@ -2629,76 +2629,13 @@
 
 /* استوديو حي — SVG + رولّات + دوران 360° (الحل المستقر) */
 .wpc-door-stage--studio-live {
-    background: linear-gradient(165deg, #ffffff 0%, #f4f7fb 42%, #e8eef5 100%);
+    background: linear-gradient(165deg, #dce1e8 0%, #c5ccd6 48%, #b8c0cc 100%);
     min-height: min(72vh, 640px);
     display: grid;
     grid-template-rows: 1fr auto;
     position: relative;
     perspective: 1400px;
     isolation: isolate;
-    border: 1px solid rgba(13, 40, 64, 0.08);
-    border-radius: 20px;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 20px 48px rgba(13, 40, 64, 0.1);
-}
-
-.wpc-door-stage--configurator.wpc-door-stage--updating .wpc-door-canvas {
-    transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), filter 0.28s ease;
-    filter: brightness(1.03);
-}
-
-.door-configurator-hud {
-    position: absolute;
-    top: 14px;
-    inset-inline-start: 14px;
-    z-index: 8;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    pointer-events: none;
-    max-width: min(92%, 320px);
-}
-
-.door-configurator-hud-chip {
-    display: inline-flex;
-    align-items: center;
-    padding: 6px 12px;
-    border-radius: 999px;
-    font-size: 0.72rem;
-    font-weight: 700;
-    line-height: 1.35;
-    color: #0d2840;
-    background: rgba(255, 255, 255, 0.92);
-    border: 1px solid rgba(13, 40, 64, 0.12);
-    box-shadow: 0 6px 18px rgba(13, 40, 64, 0.08);
-    backdrop-filter: blur(8px);
-}
-
-.door-configurator-hud-chip--size {
-    color: #155e94;
-    border-color: rgba(21, 94, 148, 0.22);
-}
-
-.door-configurator-hud-chip--roll {
-    color: #0d2840;
-    border-color: rgba(201, 162, 39, 0.35);
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 251, 240, 0.92));
-}
-
-.wpc-door-stage--configurator.wpc-door-stage--roll-color-active .wpc-door-leaf-texture--a.is-visible,
-.wpc-door-stage--configurator.wpc-door-stage--roll-color-active .wpc-door-leaf-texture--b.is-visible {
-    opacity: 0 !important;
-}
-
-.wpc-door-stage--configurator .wpc-door-svg-overlay.is-active #wpcSvgFaceA,
-.wpc-door-stage--configurator .wpc-door-svg-overlay.is-active #wpcSvgFaceB,
-.wpc-door-stage--configurator .wpc-door-svg-overlay.is-active #wpcSvgFaceB2 {
-    transition: fill 0.35s ease;
-}
-
-.wpc-door-stage--configurator .nebras-door-studio-badge {
-    background: linear-gradient(135deg, #0d2840, #155e94);
-    color: #fff;
-    border: 1px solid rgba(255, 255, 255, 0.18);
 }
 
 .wpc-door-stage--studio-live .wpc-door-turntable {
@@ -2914,15 +2851,8 @@
     pointer-events: none !important;
 }
 
-.wpc-door-stage--studio-live.wpc-door-stage--keybab .wpc-door-svg-overlay.is-active {
-    filter: drop-shadow(0 26px 52px rgba(13, 40, 64, 0.2));
-}
-
-.wpc-door-stage--studio-live.wpc-door-stage--keybab .wpc-door-canvas {
-    background: radial-gradient(ellipse at 50% 88%, rgba(21, 94, 148, 0.12), transparent 62%);
-}
-
 .wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-svg-overlay,
+.wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-leaf-texture,
 .wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-struct-texture,
 .wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-keybab-transom,
 .wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-center-mullion {

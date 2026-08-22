@@ -971,9 +971,9 @@
         }
 
         const DOOR_PHOTO_PRESET_ROOT = 'images/doors/presets/';
-        const DOOR_PHOTO_PRESET_CACHE = '29';
+        const DOOR_PHOTO_PRESET_CACHE = '28';
         /** صور أبواب المصنع الحقيقية في المعاينة — SVG احتياطي عند غياب الصورة */
-        const DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS = false;
+        const DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS = true;
         let doorDesignerPreviewRaf = 0;
 
         function scheduleDoorDesignerPreviewUpdate(root) {
@@ -1523,13 +1523,13 @@
 
         const DEFAULT_DOOR_DESIGNER = {
             enabled: true,
-            dataSeed: 'v29-wpc-configurator-pro',
+            dataSeed: 'v30-real-door-photo-restore',
             previewModelEnabled: true,
             useCompositorPreview: false,
             use3dPreview: false,
-            introAr: 'مصمّم WPC الاحترافي — نموذج باب تفاعلي: النوع، الشكل، المقاس، والرولّة تتغيّر مباشرة على النموذج (ليس صورة ثابتة).',
-            introEn: 'Design Your Door — interactive door model: change type, shape, glass, cladding, and roll colour with live preview on the model.',
-            introZh: '设计您的门 — 交互式门模型，可实时更改型号、造型、玻璃、顶包覆及卷材色。',
+            introAr: 'استوديو «صمّم بابك» — معاينة باب WPC حقيقي من المصنع: النوع والمقاس والرولّة تُطبَّق على صورة الباب الفعلية.',
+            introEn: 'Design Your Door — real Nebras factory door preview with live roll colour on the actual door photo.',
+            introZh: '设计您的门 — 真实工厂门预览，卷材色实时应用于门扇照片。',
             heroImageUrl: 'images/background-quality-managment.jpeg',
             sceneBackgroundUrl: 'images/background-quality-managment.jpeg',
             previewImageUrl: 'images/background-quality-managment.jpeg',
@@ -1842,8 +1842,8 @@
             if (state.isSliding && hardware.indexOf('pull') === -1 && hardware.indexOf('lever') !== -1) {
                 hardware = 'pull-inox';
             }
-            stage.classList.remove('wpc-door-stage--dynamic-render', 'wpc-door-stage--photoreal', 'wpc-door-stage--engine-compositor', 'wpc-door-stage--engine-3d', 'wpc-door-stage--photo-preset');
-            stage.classList.add('wpc-door-stage--studio-live', 'wpc-door-stage--keybab', 'wpc-door-stage--configurator');
+            stage.classList.remove('wpc-door-stage--dynamic-render', 'wpc-door-stage--photoreal', 'wpc-door-stage--engine-compositor', 'wpc-door-stage--engine-3d');
+            stage.classList.add('wpc-door-stage--studio-live', 'wpc-door-stage--keybab');
             const svg = document.getElementById('wpc-door-svg-root');
             const styleKey = (state.surface === 'u-plain' || state.surface === 'u-slats' || state.surface === 'u-glass') ? 'slats' : 'normal';
             applyWpcSvgDoorSurface(svg, state);
@@ -1865,14 +1865,6 @@
                 applyWpcKeybabLeafTextures(stage, state, swatchUrl, hex, isRoll);
             }
             applyDoorRollColorFinish(stage, rollColor);
-            updateDoorConfiguratorHud(root, state, cfg, {
-                isRoll: isRoll,
-                code: code,
-                name: colorName,
-                hex: hex,
-                catalogIndex: catalogIndex,
-                swatchUrl: swatchUrl
-            });
             const svgOverlay = document.getElementById('wpc-door-svg-overlay');
             if (svgOverlay) svgOverlay.classList.add('is-active');
             syncDoorDesignerOptionStates(root);
@@ -23670,43 +23662,8 @@
             return '<div class="wpc-door-turntable" id="wpc-door-turntable">' +
                 buildDoorDesignerLegacyCanvasHtml('', false, leafMask) +
                 '</div>' +
-                '<div class="door-configurator-hud" id="door-configurator-hud" aria-live="polite">' +
-                '<span class="door-configurator-hud-chip" id="door-configurator-model"></span>' +
-                '<span class="door-configurator-hud-chip door-configurator-hud-chip--size" id="door-configurator-size"></span>' +
-                '<span class="door-configurator-hud-chip door-configurator-hud-chip--roll" id="door-configurator-roll"></span>' +
-                '</div>' +
-                '<span class="nebras-door-3d-badge nebras-door-studio-badge">Configurator · 360°</span>' +
+                '<span class="nebras-door-3d-badge nebras-door-studio-badge">Studio · 360°</span>' +
                 '<p class="nebras-door-3d-hint"><i class="fas fa-arrows-rotate" aria-hidden="true"></i> ' + hint + '</p>';
-        }
-
-        function updateDoorConfiguratorHud(root, state, cfg, rollColor) {
-            if (!root || !state) return;
-            const modelEl = document.getElementById('door-configurator-model');
-            const sizeEl = document.getElementById('door-configurator-size');
-            const rollEl = document.getElementById('door-configurator-roll');
-            if (!modelEl && !sizeEl && !rollEl) return;
-            function pickLabel(group) {
-                const active = root.querySelector('.is-active[data-door-group="' + group + '"]');
-                if (!active) return '';
-                const nameEl = active.querySelector('.door-designer-type-card-label, .door-designer-model-card-label, .door-color-swatch-name');
-                return (nameEl ? nameEl.textContent : active.textContent).trim();
-            }
-            const sizeObj = (cfg.sizes || []).find(function(s) { return s && s.id === state.size; }) || null;
-            const dim = sizeObj
-                ? [sizeObj.widthCm, sizeObj.thicknessCm, sizeObj.heightCm].filter(Boolean).join(' × ') + ' سم'
-                : pickLabel('size');
-            const typeParts = [pickLabel('type'), pickLabel('model')];
-            if (state.decor === 'transom') typeParts.push(pickLabel('decor'));
-            if (state.outerShape === 'outer-curve') typeParts.push(pickLabel('outerShape'));
-            if (modelEl) modelEl.textContent = typeParts.filter(Boolean).join(' · ');
-            if (sizeEl) sizeEl.textContent = dim;
-            if (rollEl) {
-                const code = rollColor && rollColor.code ? rollColor.code : '';
-                const name = rollColor && rollColor.name ? rollColor.name : '';
-                rollEl.textContent = rollColor && rollColor.isRoll !== false
-                    ? (code + (name ? ' — ' + name : ''))
-                    : '';
-            }
         }
 
         function buildDoorDesignerLegacyCanvasHtml(doorPhoto, photoreal, leafMask) {
@@ -24288,11 +24245,9 @@
                 useTexturePattern = false;
             }
             let fillVal = 'url(#wpcLeafGrad)';
-            if (useTexturePattern || (isKeybab && !isPhotoPreset && rollOpts.isRoll && rollTexUrl)) {
-                fillVal = 'url(#wpcDoorTexture)';
-            } else if (usePhotoRoll) {
-                fillVal = 'transparent';
-            }
+            if (useTexturePattern) fillVal = 'url(#wpcDoorTexture)';
+            else if (isKeybab && !isPhotoPreset && !rollOpts.isRoll) fillVal = 'transparent';
+            else if (usePhotoRoll) fillVal = 'transparent';
             function setLeafFill(el) {
                 if (el) el.setAttribute('fill', fillVal);
             }
@@ -24475,39 +24430,17 @@
             const w = (size && size.widthCm) ? size.widthCm : 100;
             const t = (size && size.thicknessCm) ? size.thicknessCm : 4;
             const h = (size && size.heightCm) ? size.heightCm : 210;
-            const scaleX = Math.min(1.2, Math.max(0.74, (w / 90)));
-            const scaleY = Math.min(1.06, Math.max(0.9, (h / 230)));
+            const scaleX = Math.min(1.12, Math.max(0.84, (w / 95)));
+            const scaleY = Math.min(1.08, Math.max(0.9, (h / 230)));
             const scale = (scaleX + scaleY) / 2;
             stage.style.setProperty('--door-size-scale', String(scale));
             stage.style.setProperty('--door-size-scale-x', String(scaleX));
             stage.style.setProperty('--door-size-scale-y', String(scaleY));
-            stage.style.setProperty('--door-leaf-width-ratio', String(w / 90));
             stage.style.setProperty('--door-thickness-cm', String(t));
             stage.setAttribute('data-size', sizeId || '');
-            stage.setAttribute('data-size-dim', w + 'x' + t + 'x' + h);
             applyWpcSvgFrameThickness(stage, t);
-            applyWpcSvgLeafWidthFromSize(w, stage);
             const specH = stage.querySelector('.door-size-dim');
             if (specH) specH.textContent = w + '×' + t + '×' + h;
-        }
-
-        function applyWpcSvgLeafWidthFromSize(widthCm, stage) {
-            const w = Number(widthCm) || 90;
-            const ratio = Math.min(1.18, Math.max(0.78, w / 90));
-            const baseLeafW = 248;
-            const baseLeafX = 96;
-            const centerX = baseLeafX + baseLeafW / 2;
-            const newW = Math.round(baseLeafW * ratio);
-            const newX = Math.round(centerX - newW / 2);
-            const faceA = document.getElementById('wpcSvgFaceA');
-            if (faceA) {
-                faceA.setAttribute('width', String(newW));
-                faceA.setAttribute('x', String(newX));
-            }
-            if (stage) {
-                stage.style.setProperty('--door-svg-leaf-width', String(newW));
-                stage.style.setProperty('--door-svg-leaf-x', String(newX));
-            }
         }
 
         function applyWpcSvgLock(svg, lockId) {
@@ -29313,7 +29246,6 @@
 
         function prefetchNebrasDoorDesignerEngines() {
             if (nebrasDoorEngineLoadPromise || nebrasDoor3dRuntimeFailed) return;
-            if (isDoorDesignerStudioLiveMode(ensureDoorDesignerConfig())) return;
             const run = function() {
                 loadNebrasDoorDesignerEngines().catch(function() { /* silent prefetch */ });
             };
@@ -31290,7 +31222,7 @@
                 doorDesignerCompositorHint: 'اسحب للدوران 360° حول الباب — عجلة الفأرة للتقريب والتبعيد',
                 doorDesignerCompositorLoading: 'جاري تجميع طبقات التصميم…',
                 doorDesignerCompositorAria: 'معاينة باب ديناميكية بطبقات — أسلوب الاستوديو',
-                doorDesignerCanvasHint: 'نموذج WPC تفاعلي — النوع والشكل والمقاس والرولّة تُطبَّق على الضلفة مباشرة. اسحب للدوران 360°.',
+                doorDesignerCanvasHint: 'كل خيار يغيّر الهيكل والمادة فعلياً — اللون من رولّات نبراس (20 لوناً)',
                 partnersSuccessSubtitle: 'شركاؤنا في النجاح',
                 lightboxOpenHint: 'اضغط للتكبير — عرض بالدقة الكاملة',
                 lightboxImageAlt: 'صورة',

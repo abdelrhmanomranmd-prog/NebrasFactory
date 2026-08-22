@@ -34,12 +34,8 @@ def main():
         warn('JPEG compose found — may cause pixelation; prefer PNG')
     if "toDataURL('image/png')" not in js:
         err('PNG compose missing in composeDoorPhotoWithRoll')
-    if not re.search(r"DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS\s*=\s*false", js):
-        warn('Photo presets enabled — SVG studio model path may be bypassed')
-    if "designCanvasMode: 'studio'" not in js and "designCanvasMode: \"studio\"" not in js:
-        err('DEFAULT_DOOR_DESIGNER designCanvasMode studio missing')
-    if 'cfg.designCanvasMode = \'studio\'' not in js:
-        err('ensureDoorDesignerConfig must force studio mode when enabled')
+    if not re.search(r'DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS\s*=\s*true', js):
+        err('DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS is not true')
     if 'applyComposedRollToPhotoPresetImg(img' not in js:
         err('applyComposedRollToPhotoPresetImg not called — color bake missing')
     if 'has-door-roll-tint:not(.has-roll-composite-ready)::after' not in css and 'has-door-roll-tint::after' not in css:
