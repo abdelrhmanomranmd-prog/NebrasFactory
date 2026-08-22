@@ -973,7 +973,7 @@
         const DOOR_PHOTO_PRESET_ROOT = 'images/doors/presets/';
         const DOOR_PHOTO_PRESET_CACHE = '29';
         /** صور أبواب المصنع الحقيقية في المعاينة — SVG احتياطي عند غياب الصورة */
-        const DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS = true;
+        const DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS = false;
         let doorDesignerPreviewRaf = 0;
 
         function scheduleDoorDesignerPreviewUpdate(root) {
@@ -1502,16 +1502,10 @@
             defaultBase: NEBRAS_DOOR_PHOTO_DEFAULT,
             leafMask: NEBRAS_DOOR_LEAF_MASK,
             bases: {
-                'edge-band|edge-1': 'images/catalog/wpc-photos/by-sku/WPC-RDY-FLAT-45-STD.png',
-                'edge-band|edge-2': 'images/catalog/wpc-photos/by-sku/WPC-RDY-FLAT-45-STD.png',
-                'u-channel|u-plain': 'images/catalog/wpc-photos/by-sku/WPC-RDY-U45-STD.png',
-                'u-channel|u-slats': 'images/catalog/wpc-photos/by-sku/WPC-RDY-U45-STD.png',
-                'u-channel|u-classic': 'images/catalog/wpc-photos/by-sku/WPC-RDY-U45-CLS.png',
-                'u-channel|u-glass': 'images/catalog/wpc-photos/by-sku/WPC-RDY-U60-GLASS.png',
-                'u-channel|default': 'images/catalog/wpc-photos/by-sku/WPC-RDY-U45-STD.png',
-                'sliding|slide-1': 'images/catalog/wpc-photos/by-sku/WPC-RDY-SLD-FLAT.png',
-                'sliding|slide-2': 'images/catalog/wpc-photos/by-sku/WPC-RDY-SLD-FLAT.png',
-                'sliding|default': 'images/catalog/wpc-photos/by-sku/WPC-RDY-SLD-FLAT.png'
+                'edge-band|edge-1': NEBRAS_DOOR_PHOTO_DEFAULT,
+                'edge-band|edge-2': NEBRAS_DOOR_PHOTO_DEFAULT,
+                'u-channel|default': NEBRAS_DOOR_PHOTO_DEFAULT,
+                'sliding|default': NEBRAS_DOOR_PHOTO_DEFAULT
             },
             overlays: {
                 'outer-curve': 'images/doors/overlays/outer-curve.svg',
@@ -1529,20 +1523,20 @@
 
         const DEFAULT_DOOR_DESIGNER = {
             enabled: true,
-            dataSeed: 'v27-real-photo-studio',
+            dataSeed: 'v28-svg-studio-model-restore',
             previewModelEnabled: true,
             useCompositorPreview: false,
             use3dPreview: false,
-            introAr: 'استوديو «صمّم بابك» — أبواب حقيقية من مصنع نبراس. اختر النموذج، شكل الديكور، التكسية، ورولّة اللون — مع معاينة واقعية ودوران 360°.',
-            introEn: 'Design Your Door — real Nebras factory doors. Pick model, exterior decor, top cladding, and roll colour with photoreal preview and 360° rotation.',
-            introZh: '设计您的门 — 真实工厂门款，可选型号、外饰、顶包覆及卷材色，支持360°预览。',
+            introAr: 'استوديو «صمّم بابك» — نموذج باب تفاعلي: غيّري النوع، الشكل، الزجاج، التكسية، ورولّة اللون — المعاينة تتحدّث مباشرة على النموذج.',
+            introEn: 'Design Your Door — interactive door model: change type, shape, glass, cladding, and roll colour with live preview on the model.',
+            introZh: '设计您的门 — 交互式门模型，可实时更改型号、造型、玻璃、顶包覆及卷材色。',
             heroImageUrl: 'images/background-quality-managment.jpeg',
             sceneBackgroundUrl: 'images/background-quality-managment.jpeg',
             previewImageUrl: 'images/background-quality-managment.jpeg',
             doorBaseImageUrl: NEBRAS_DOOR_PHOTO_DEFAULT,
             layerManifest: DEFAULT_DOOR_LAYER_MANIFEST,
-            designCanvasMode: 'studio-live',
-            usePhotorealPreview: true,
+            designCanvasMode: 'studio',
+            usePhotorealPreview: false,
             types: [
                 { id: 'edge-band', labelAr: 'باب إيدج باند فلات', labelEn: 'Edge-band flat door', labelZh: '封边平板门', icon: 'modern' },
                 { id: 'u-channel', labelAr: 'يو شانيل', labelEn: 'U-channel door', labelZh: 'U槽门', icon: 'classic' },
@@ -23148,10 +23142,10 @@
                 cfg.layerManifest = getDoorDesignerLayerManifest(cfg);
             }
             if (DEFAULT_DOOR_DESIGNER.designCanvasMode === 'studio' || isDoorDesignerStudioLiveMode(DEFAULT_DOOR_DESIGNER)) {
-                cfg.designCanvasMode = 'studio-live';
+                cfg.designCanvasMode = 'studio';
                 cfg.useCompositorPreview = false;
                 cfg.use3dPreview = false;
-                cfg.usePhotorealPreview = true;
+                cfg.usePhotorealPreview = false;
             } else if (DEFAULT_DOOR_DESIGNER.designCanvasMode === 'compositor' || DEFAULT_DOOR_DESIGNER.useCompositorPreview) {
                 cfg.useCompositorPreview = true;
                 cfg.designCanvasMode = 'compositor';
@@ -23166,12 +23160,10 @@
             }
             if (cfg.enabled !== false) {
                 cfg.previewModelEnabled = true;
-                if (cfg.designCanvasMode === '3d' || cfg.use3dPreview === true) {
-                    cfg.designCanvasMode = DEFAULT_DOOR_DESIGNER.designCanvasMode || 'studio-live';
-                    cfg.use3dPreview = DEFAULT_DOOR_DESIGNER.use3dPreview === true;
-                    cfg.useCompositorPreview = DEFAULT_DOOR_DESIGNER.useCompositorPreview === true;
-                    cfg.usePhotorealPreview = DEFAULT_DOOR_DESIGNER.usePhotorealPreview !== false;
-                }
+                cfg.designCanvasMode = 'studio';
+                cfg.useCompositorPreview = false;
+                cfg.use3dPreview = false;
+                cfg.usePhotorealPreview = false;
             } else if (cfg.previewModelEnabled == null) {
                 cfg.previewModelEnabled = DEFAULT_DOOR_DESIGNER.previewModelEnabled !== false;
             }
