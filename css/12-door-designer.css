@@ -2075,8 +2075,8 @@
         max-height: min(40vh, 380px);
     }
 
-    .wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-svg-overlay {
-        display: none !important;
+    .wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-svg-overlay.is-accessories-overlay {
+        display: block !important;
     }
 
     .door-designer--studio .door-active-color-label {
@@ -2843,21 +2843,63 @@
         brightness(0.98);
 }
 
-.wpc-door-stage--photo-preset .wpc-door-keybab-textures,
-.wpc-door-stage--photo-preset .wpc-door-svg-overlay,
 .wpc-door-stage--photo-preset .wpc-door-photo-stack {
     visibility: hidden !important;
     opacity: 0 !important;
     pointer-events: none !important;
 }
 
-.wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-svg-overlay,
+/* hrws249 — صورة مصنع حقيقية + حائط + MDF + إكسسوارات */
+.wpc-door-stage--studio-live.wpc-door-stage--photo-preset.wpc-door-stage--studio-wall .wpc-door-struct-texture.is-visible {
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: none !important;
+}
+
+.wpc-door-stage--studio-live.wpc-door-stage--photo-preset.wpc-door-stage--decor-transom .wpc-door-struct-texture--top-clad.is-visible,
+.wpc-door-stage--studio-live.wpc-door-stage--photo-preset.wpc-door-stage--decor-transom .wpc-door-keybab-transom.is-visible {
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
 .wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-leaf-texture,
-.wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-struct-texture,
-.wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-keybab-transom,
 .wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-center-mullion {
     visibility: hidden !important;
     opacity: 0 !important;
+}
+
+.wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-svg-overlay.is-accessories-overlay {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: none !important;
+    z-index: 6;
+}
+
+.wpc-door-svg--photo-companion #wpcSvgDoorUnit,
+.wpc-door-svg--photo-companion #wpcSvgWallScene {
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+
+.wpc-door-svg--photo-companion #wpcSvgAccessories,
+.wpc-door-svg--photo-companion .wpc-svg-detail {
+    opacity: 1;
+    visibility: visible;
+}
+
+.wpc-door-svg--photo-companion.wpc-door-svg--surface-overlay .wpc-svg-detail {
+    opacity: 0.92;
+}
+
+.wpc-door-stage--photo-preset .wpc-door-photo-preset-wrap.is-active {
+    z-index: 4;
+}
+
+.wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-keybab-textures {
+    z-index: 1;
+    visibility: visible !important;
+    opacity: 1 !important;
     pointer-events: none !important;
 }
 

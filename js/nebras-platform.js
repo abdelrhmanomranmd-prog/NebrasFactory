@@ -972,8 +972,8 @@
 
         const DOOR_PHOTO_PRESET_ROOT = 'images/doors/presets/';
         const DOOR_PHOTO_PRESET_CACHE = '28';
-        /** صور أبواب المصنع الحقيقية في المعاينة — SVG احتياطي عند غياب الصورة */
-        const DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS = false;
+        /** صور أبواب المصنع الحقيقية — SVG/احتياطي عند غياب الصورة فقط */
+        const DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS = true;
         let doorDesignerPreviewRaf = 0;
 
         function scheduleDoorDesignerPreviewUpdate(root) {
@@ -1297,6 +1297,22 @@
             'sliding|slide-2|outer-curve|transom': DOOR_PHOTO_PRESET_ROOT + 'sliding/slide-2/outer-curve-plain.png'
         };
 
+        /** نماذج بلا صورة مخصّصة — أقرب صورة مصنع حقيقية */
+        const DOOR_PHOTO_PRESET_MODEL_FALLBACK = {
+            'edge-steel': { type: 'edge-band', model: 'edge-1' },
+            'edge-glass': { type: 'u-channel', model: 'u-glass' },
+            'edge-classic': { type: 'u-channel', model: 'u-classic' },
+            'edge-net110': { type: 'edge-band', model: 'edge-1' },
+            'u-steel': { type: 'u-channel', model: 'u-plain' },
+            'lib-flat': { type: 'edge-band', model: 'edge-1' },
+            'lib-curve': { type: 'edge-band', model: 'edge-1' },
+            'lib-steel': { type: 'u-channel', model: 'u-plain' },
+            'lib-glass': { type: 'u-channel', model: 'u-glass' },
+            'lib-classic': { type: 'u-channel', model: 'u-classic' },
+            'slide-u': { type: 'sliding', model: 'slide-1' },
+            'slide-lib': { type: 'sliding', model: 'slide-1' }
+        };
+
         const DOOR_PHOTO_TRANSOM_CAP = {
             flat: DOOR_PHOTO_PRESET_ROOT + 'u-channel/_shared/transom-cladding-flat.png',
             curve: DOOR_PHOTO_PRESET_ROOT + 'u-channel/_shared/transom-cladding-curve.png'
@@ -1308,8 +1324,9 @@
             return base + (base.indexOf('?') >= 0 ? '&' : '?') + 'v=' + DOOR_PHOTO_PRESET_CACHE;
         }
 
-        function resolveDoorDesignerPhotoPreset(state) {
+        function resolveDoorDesignerPhotoPreset(state, depth) {
             if (!state) return null;
+            depth = depth || 0;
             const type = state.type || '';
             const model = state.model || '';
             const outer = state.outerShape || 'outer-flat';
@@ -1317,19 +1334,37 @@
             const transomKey = type + '|' + model + '|' + outer + '|transom';
             const plainKey = type + '|' + model + '|' + outer + '|plain';
             if (decor === 'transom' && DOOR_PHOTO_PRESET_MAP[transomKey]) {
-                return { url: DOOR_PHOTO_PRESET_MAP[transomKey], mode: 'full', transomCap: '' };
+                return { url: DOOR_PHOTO_PRESET_MAP[transomKey], mode: 'full', transomCap: '', photoModel: model };
             }
             if (decor === 'transom' && DOOR_PHOTO_PRESET_MAP[plainKey]) {
                 return {
                     url: DOOR_PHOTO_PRESET_MAP[plainKey],
                     mode: 'composite-transom',
-                    transomCap: outer === 'outer-curve' ? DOOR_PHOTO_TRANSOM_CAP.curve : DOOR_PHOTO_TRANSOM_CAP.flat
+                    transomCap: outer === 'outer-curve' ? DOOR_PHOTO_TRANSOM_CAP.curve : DOOR_PHOTO_TRANSOM_CAP.flat,
+                    photoModel: model
                 };
             }
             const key = type + '|' + model + '|' + outer + '|' + decor;
             const direct = DOOR_PHOTO_PRESET_MAP[key];
-            if (direct) return { url: direct, mode: 'full', transomCap: '' };
-            return null;
+            if (direct) return { url: direct, mode: 'full', transomCap: '', photoModel: model };
+            if (depth < 2) {
+                const fb = DOOR_PHOTO_PRESET_MODEL_FALLBACK[model];
+                if (fb) {
+                    const mapped = resolveDoorDesignerPhotoPreset(Object.assign({}, state, fb), depth + 1);
+                    if (mapped) {
+                        mapped.usedFallback = true;
+                        mapped.requestedModel = model;
+                        return mapped;
+                    }
+                }
+            }
+            return {
+                url: NEBRAS_DOOR_PHOTO_DEFAULT,
+                mode: 'full',
+                transomCap: '',
+                photoModel: model,
+                synthetic: true
+            };
         }
 
         function clearDoorDesignerPhotoPreset(stage) {
@@ -1435,21 +1470,48 @@
             }
         }
 
+        function applyDoorDesignerStudioEnhancements(root, stage, cfg, state, rollColor) {
+            if (!stage || !state) return;
+            stage.classList.add('wpc-door-stage--studio-wall');
+            applyDoorLeafMask(stage, state.decor);
+            applyWpcKeybabStructRollFinish(stage, state, rollColor.swatchUrl, rollColor.hex, rollColor.isRoll);
+            applyWpcStudioVisualLayers(stage, state, rollColor.swatchUrl);
+            applyWpcSvgModelProfile(stage, state);
+            applyWpcSvgSize(stage, state.size || (root ? getDoorDesignerPick(root, 'size') : ''), cfg);
+            const svg = document.getElementById('wpc-door-svg-root');
+            const svgOverlay = document.getElementById('wpc-door-svg-overlay');
+            if (!svg || !svgOverlay) return;
+            const isPhoto = stage.classList.contains('wpc-door-stage--photo-preset');
+            svg.classList.toggle('wpc-door-svg--photo-companion', isPhoto);
+            svg.classList.toggle('wpc-door-svg--surface-overlay', isPhoto && !!state.surface);
+            if (isPhoto) {
+                applyWpcSvgDoorSurface(svg, state);
+            }
+            applyWpcSvgAccessories(svg, state.accessories || 'none', state);
+            svgOverlay.classList.add('is-active');
+            svgOverlay.classList.toggle('is-accessories-overlay', isPhoto);
+        }
+
         function applyDoorDesignerPhotoPreset(stage, preset, rollUrl, hex, isRoll, decor, catalogIndex, state, options) {
             options = options || {};
             if (!stage || !preset || !preset.url) return false;
             ensurePhotoPresetStackDom();
             stage.classList.remove('wpc-door-stage--dynamic-render', 'wpc-door-stage--photoreal', 'wpc-door-stage--engine-compositor', 'wpc-door-stage--engine-3d');
-            stage.classList.add('wpc-door-stage--studio-live', 'wpc-door-stage--keybab', 'wpc-door-stage--photo-preset');
+            stage.classList.add('wpc-door-stage--studio-live', 'wpc-door-stage--keybab', 'wpc-door-stage--photo-preset', 'wpc-door-stage--studio-wall');
             stage.classList.toggle('wpc-door-stage--photo-preset-transom', preset.mode === 'composite-transom');
             stage.classList.toggle('wpc-door-stage--decor-transom', decor === 'transom');
+            stage.classList.toggle('wpc-door-stage--photo-synthetic', !!preset.synthetic);
             hideAllWpcPhotoDecorLayers();
             const keybab = document.getElementById('wpc-door-keybab-textures');
             if (keybab) {
-                keybab.querySelectorAll('.is-visible').forEach(function(el) { el.classList.remove('is-visible'); });
+                keybab.querySelectorAll('.wpc-door-leaf-texture, .wpc-door-keybab-transom, .wpc-door-center-mullion').forEach(function(el) {
+                    el.classList.remove('is-visible');
+                });
             }
             const svgOverlay = document.getElementById('wpc-door-svg-overlay');
-            if (svgOverlay) svgOverlay.classList.remove('is-active');
+            if (svgOverlay) svgOverlay.classList.remove('is-active', 'is-accessories-overlay');
+            const svg = document.getElementById('wpc-door-svg-root');
+            if (svg) svg.classList.remove('wpc-door-svg--photo-companion', 'wpc-door-svg--surface-overlay');
             const wrap = document.getElementById('wpc-door-photo-preset-wrap');
             const stack = document.getElementById('wpc-door-photo-preset-stack');
             const img = document.getElementById('wpc-door-photo-preset-img');
@@ -1523,13 +1585,13 @@
 
         const DEFAULT_DOOR_DESIGNER = {
             enabled: true,
-            dataSeed: 'v33-studio-wall-mdf-models',
+            dataSeed: 'v34-photo-real-studio',
             previewModelEnabled: true,
             useCompositorPreview: false,
             use3dPreview: false,
-            introAr: 'استوديو «صمّم بابك» — باب WPC على حائط توضيحي مع تكسية MDF علوية بلون الرولّة، ونماذج وإكسسوارات تُطبَّق مباشرة على المعاينة.',
-            introEn: 'Design Your Door — WPC door on illustrative wall with roll-coloured MDF top cladding; models and accessories apply live on preview.',
-            introZh: '设计您的门 — WPC门置于示意墙面，MDF顶包覆与卷材同色；型号与配件实时应用于预览。',
+            introAr: 'استوديو «صمّم بابك» — صورة باب WPC حقيقية من المصنع على حائط توضيحي، بلون الرولّة والتكسية MDF والإكسسوارات تُطبَّق مباشرة.',
+            introEn: 'Design Your Door — real factory WPC door photo on illustrative wall; roll colour, MDF cladding and accessories apply live.',
+            introZh: '设计您的门 — 工厂真实WPC门图置于示意墙面；卷材色、MDF顶包覆与配件实时应用。',
             heroImageUrl: 'images/background-quality-managment.jpeg',
             sceneBackgroundUrl: 'images/background-quality-managment.jpeg',
             previewImageUrl: 'images/background-quality-managment.jpeg',
@@ -1845,6 +1907,7 @@
             const skipPhotoPreset = stage.getAttribute('data-door-photo-preset-skip') === presetSkipKey;
             if (DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS && preset && !skipPhotoPreset &&
                 applyDoorDesignerPhotoPreset(stage, preset, swatchUrl, hex, isRoll, state.decor, catalogIndex, state)) {
+                applyDoorDesignerStudioEnhancements(root, stage, cfg, state, rollColor);
                 applyDoorRollColorFinish(stage, rollColor);
                 syncDoorDesignerOptionStates(root);
                 const rollSuffixP = isRoll ? (' (' + (ui.doorDesignerRollTag || 'رولّة') + ')') : '';
@@ -24148,8 +24211,9 @@
             paintStruct(structLeft, true, -20, false);
             paintStruct(structRight, true, -20, false);
             paintStruct(structTop, true, -24, false);
-            paintStruct(structTopClad, state.decor === 'transom' && !state.isSliding, -8, true);
-            stage.classList.toggle('wpc-door-stage--struct-transom', state.decor === 'transom' && !state.isSliding);
+            const isPhotoCompositeTransom = stage.classList.contains('wpc-door-stage--photo-preset-transom');
+            paintStruct(structTopClad, state.decor === 'transom' && !state.isSliding && !isPhotoCompositeTransom, -8, true);
+            stage.classList.toggle('wpc-door-stage--struct-transom', state.decor === 'transom' && !state.isSliding && !isPhotoCompositeTransom);
             stage.style.setProperty('--door-frame-tint', shadeDoorHex(safe, -28));
         }
 
@@ -24201,7 +24265,7 @@
             if (leafB && !showB) {
                 leafB.classList.remove('is-visible');
             }
-            paintLeaf(transom, state.decor === 'transom' && !state.isSliding, false);
+            paintLeaf(transom, state.decor === 'transom' && !state.isSliding && !stage.classList.contains('wpc-door-stage--photo-preset-transom'), false);
             if (mullion) {
                 const showMullion = showB && !state.isSliding;
                 mullion.classList.toggle('is-visible', showMullion);
