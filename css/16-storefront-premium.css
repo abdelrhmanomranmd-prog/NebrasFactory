@@ -1897,3 +1897,26 @@ body.nebras-mobile-bar-active.admin-session .nebras-mobile-commerce-bar {
     font-size: 1.8rem;
     color: #94a3b8;
 }
+
+@media (max-width: 768px) {
+    .nebras-store-sku-media--wpc-photo img.nebras-store-sku-img--wpc,
+    .nebras-store-sku-media--wpc-door img.nebras-store-sku-img--wpc {
+        object-fit: contain;
+        object-position: center center;
+        padding: 8px 6px;
+        transform: none !important;
+    }
+
+    .nebras-store-sku-media--wpc-photo,
+    .nebras-store-sku-media--wpc-door {
+        background: linear-gradient(165deg, #fafbfc 0%, #f4f7fa 100%);
+    }
+
+    .nebras-product-photo-watermark {
+        display: none !important;
+    }
+
+    .nebras-store-sku-card--wpc-ready .nebras-store-roll-picker {
+        margin-top: 8px;
+    }
+}

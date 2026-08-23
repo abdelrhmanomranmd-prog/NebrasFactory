@@ -37,7 +37,10 @@ def watermark_image(img_path: Path, logo: Image.Image, size_px: int, opacity: fl
     x = w - target_w - margin
     y = margin
     base.alpha_composite(mark, (x, y))
-    base.convert('RGB').save(img_path, optimize=True)
+    out = base.convert('RGB')
+    tmp = img_path.with_suffix('.wm.tmp.png')
+    out.save(tmp, 'PNG', optimize=True)
+    tmp.replace(img_path)
     return True
 
 

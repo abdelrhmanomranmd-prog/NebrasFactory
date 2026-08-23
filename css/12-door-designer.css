@@ -2084,13 +2084,49 @@
     }
 
     .wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-turntable {
-        min-height: min(40vh, 360px);
-        cursor: grab;
-        touch-action: none;
+        transform: none !important;
+        transform-style: flat;
+        min-height: min(42vh, 340px);
+        cursor: default;
+        touch-action: pan-y;
     }
 
-    .wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-canvas > :not(.wpc-door-photo-preset-wrap) {
-        display: none !important;
+    .wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-canvas {
+        min-height: min(40vh, 320px);
+        width: min(100%, 360px);
+        margin-inline: auto;
+    }
+
+    .wpc-door-stage--photo-preset .wpc-door-photo-preset-wrap.is-active {
+        min-height: min(40vh, 320px);
+    }
+
+    .wpc-door-stage--photo-preset .wpc-door-photo-preset-img {
+        max-width: min(92vw, 100%);
+        max-height: min(36vh, 360px);
+        width: auto;
+        height: auto;
+        object-fit: contain;
+        image-rendering: auto;
+        -webkit-backface-visibility: hidden;
+        backface-visibility: hidden;
+    }
+
+    .door-designer--studio .door-studio-step-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .door-designer--studio .door-studio-chip-row {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .door-designer--studio .door-studio-chip {
+        flex: 1 1 calc(50% - 4px);
+        min-width: 0;
+        font-size: 0.82rem;
+        padding: 10px 8px;
     }
 
     .door-designer--studio .door-active-color-label {
