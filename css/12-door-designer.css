@@ -2051,8 +2051,21 @@
     }
 
     .wpc-door-stage--keybab .wpc-door-canvas {
-        width: min(280px, 84vw);
-        height: min(300px, 38vh);
+        width: min(320px, 92vw);
+        height: min(400px, 52vh);
+    }
+
+    .wpc-door-stage--studio-live:not(.wpc-door-stage--photo-preset) .wpc-door-photo-preset-wrap {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+    }
+
+    .wpc-door-stage--studio-live:not(.wpc-door-stage--photo-preset) .wpc-door-svg-overlay,
+    .wpc-door-stage--studio-live:not(.wpc-door-stage--photo-preset) .wpc-door-svg-overlay.is-active {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
     }
 
     .wpc-door-stage--photo-preset .wpc-door-photo-preset-wrap.is-active {
@@ -2900,12 +2913,36 @@
     opacity: 0.96;
 }
 
+.wpc-door-stage--studio-live:not(.wpc-door-stage--photo-preset) .wpc-door-photo-preset-wrap,
+.wpc-door-stage--studio-live:not(.wpc-door-stage--photo-preset) .wpc-door-photo-preset-stack {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+.wpc-door-stage--studio-live:not(.wpc-door-stage--photo-preset) .wpc-door-svg-overlay {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+.wpc-door-stage--studio-live .wpc-door-svg-overlay svg {
+    shape-rendering: geometricPrecision;
+}
+
+.wpc-door-stage--studio-live .wpc-door-leaf-texture,
+.wpc-door-stage--studio-live .wpc-door-struct-texture {
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+}
+
 .wpc-door-stage--studio-live .wpc-door-svg-overlay.is-active {
     opacity: 1;
     visibility: visible;
 }
 
-/* صورة المصنع — دوران 160° مع contain دون SVG متداخل */
+/* صورة المصنع — دوران مع contain (وضع التصدير فقط) */
 .wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-turntable {
     transform: rotateX(6deg) rotateY(var(--turntable-rotate-y, -14deg));
     transform-style: preserve-3d;

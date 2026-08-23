@@ -971,16 +971,16 @@
         }
 
         const DOOR_PHOTO_PRESET_ROOT = 'images/doors/presets/';
-        const DOOR_PHOTO_PRESET_CACHE = '34';
-        /** مرجع استوديو — edge-1/edge-2 فقط؛ لا قفز لصور showcase/transom كاملة */
+        const DOOR_PHOTO_PRESET_CACHE = '35';
+        /** مرجع fallback لصور المصنع عند التصدير/العرض السعر */
         const DOOR_PHOTO_CANONICAL = {
             flat: DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-1/outer-flat-plain.png',
             curve: DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-1/outer-curve-plain.png',
             doubleFlat: DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-2/outer-flat-plain.png',
             doubleCurve: DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-2/outer-curve-plain.png'
         };
-        /** صور أبواب المصنع الحقيقية في المعاينة — SVG احتياطي عند غياب الصورة */
-        const DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS = true;
+        /** استوديو SVG ديناميكي — صور المصنع للتصدير فقط (لا تستبدل المعاينة الحية) */
+        const DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS = false;
         let doorDesignerPreviewRaf = 0;
         let doorDesignerPreviewDebounce = 0;
 
@@ -1101,10 +1101,6 @@
                 : '';
 
             applyDoorRollTintToElements(stage, rollState);
-
-            const wrap = document.getElementById('wpc-door-photo-preset-wrap');
-            const stack = document.getElementById('wpc-door-photo-preset-stack');
-            applyDoorRollTintToElements([wrap, stack], rollState);
 
             const svg = document.getElementById('wpc-door-svg-root');
             if (!svg) return;
@@ -1582,30 +1578,41 @@
             return m === 'edge-2' || m === 'slide-2';
         }
 
-        /** نموذج استوديو ثابت (edge-1 / edge-2) — التكسية MDF تُدمَج فوقه دائماً */
+        /** صورة مصنع مطابقة للاختيار — للتصدير/عرض السعر فقط */
         function resolveDoorDesignerPhotoPreset(state) {
             if (!state) return null;
+            const type = state.type || '';
+            const model = state.model || '';
             const outer = state.outerShape || 'outer-flat';
             const decor = state.decor || 'plain';
-            const isDouble = isDoorDesignerDoubleLeaf(state);
-            const isCurve = outer === 'outer-curve';
-            const baseUrl = isDouble
-                ? (isCurve ? DOOR_PHOTO_CANONICAL.doubleCurve : DOOR_PHOTO_CANONICAL.doubleFlat)
-                : (isCurve ? DOOR_PHOTO_CANONICAL.curve : DOOR_PHOTO_CANONICAL.flat);
-
-            if (decor === 'transom') {
-                return {
-                    url: baseUrl,
-                    mode: 'bake-transom',
-                    transomCap: isCurve ? DOOR_PHOTO_TRANSOM_CAP.curve : DOOR_PHOTO_TRANSOM_CAP.flat
-                };
+            const plainKey = type + '|' + model + '|' + outer + '|plain';
+            const flatKey = type + '|' + model + '|outer-flat|plain';
+            let plainUrl = DOOR_PHOTO_PRESET_MAP[plainKey] || DOOR_PHOTO_PRESET_MAP[flatKey];
+            if (!plainUrl) {
+                const isDouble = isDoorDesignerDoubleLeaf(state);
+                const isCurve = outer === 'outer-curve';
+                plainUrl = isDouble
+                    ? (isCurve ? DOOR_PHOTO_CANONICAL.doubleCurve : DOOR_PHOTO_CANONICAL.doubleFlat)
+                    : (isCurve ? DOOR_PHOTO_CANONICAL.curve : DOOR_PHOTO_CANONICAL.flat);
             }
-            return { url: baseUrl, mode: 'full', transomCap: '' };
+            if (!plainUrl) return null;
+            const transomCap = outer === 'outer-curve'
+                ? DOOR_PHOTO_TRANSOM_CAP.curve
+                : DOOR_PHOTO_TRANSOM_CAP.flat;
+            if (decor === 'transom') {
+                return { url: plainUrl, mode: 'bake-transom', transomCap: transomCap };
+            }
+            return { url: plainUrl, mode: 'full', transomCap: '' };
         }
 
         function clearDoorDesignerPhotoPreset(stage) {
             if (stage) {
                 stage.classList.remove('wpc-door-stage--photo-preset', 'wpc-door-stage--photo-preset-transom', 'wpc-door-stage--photo-roll-tint', 'wpc-door-stage--photo-roll-active', 'wpc-door-stage--decor-transom');
+            }
+            const tt = document.getElementById('wpc-door-turntable');
+            if (tt && tt._nebrasTurntableDispose) {
+                tt._nebrasTurntableDispose();
+                tt._nebrasTurntableDispose = null;
             }
             const wrap = document.getElementById('wpc-door-photo-preset-wrap');
             const img = document.getElementById('wpc-door-photo-preset-img');
@@ -1762,7 +1769,7 @@
 
         const DEFAULT_DOOR_DESIGNER = {
             enabled: true,
-            dataSeed: 'v31-door-canonical-mdf160',
+            dataSeed: 'v32-studio-dynamic-360',
             previewModelEnabled: true,
             useCompositorPreview: false,
             use3dPreview: true,
@@ -1929,20 +1936,19 @@
             const stage = document.getElementById('door-3d-preview');
             const tt = document.getElementById('wpc-door-turntable');
             if (!stage || !tt) return;
-            const isPhotoPreset = stage.classList.contains('wpc-door-stage--photo-preset');
             if (tt._nebrasTurntableDispose) {
                 tt._nebrasTurntableDispose();
                 tt._nebrasTurntableDispose = null;
             }
-            let rotY = parseFloat(tt.dataset.turntableRotY || '-14') || -14;
-            const ROT_MIN = -80;
-            const ROT_MAX = 80;
+            let rotY = parseFloat(tt.dataset.turntableRotY || '-12') || -12;
+            const ROT_MIN = -180;
+            const ROT_MAX = 180;
             let spinDir = 1;
             let dragging = false;
             let lastX = 0;
             const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
             const isMobileView = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
-            let autoSpin = !reduceMotion && !isMobileView && !isPhotoPreset;
+            let autoSpin = !reduceMotion && !isMobileView;
             let rafId = 0;
             let visible = true;
             if (typeof IntersectionObserver !== 'undefined') {
@@ -1973,7 +1979,7 @@
             function onUp(e) {
                 dragging = false;
                 tt._nebrasDragPending = false;
-                autoSpin = !reduceMotion && !isMobileView && !isPhotoPreset;
+                autoSpin = !reduceMotion && !isMobileView;
                 if (tt.releasePointerCapture && e && e.pointerId !== undefined) {
                     try { tt.releasePointerCapture(e.pointerId); } catch (err) { /* ignore */ }
                 }
@@ -2130,6 +2136,8 @@
                 const parts = [pickLabel('type'), pickLabel('model'), pickLabel('outerShape'), decor === 'transom' ? pickLabel('decor') : '', sizeDim].filter(Boolean);
                 specEl.textContent = parts.join(' · ');
             }
+            const ttEnd = document.getElementById('wpc-door-turntable');
+            if (ttEnd && ttEnd.dataset.turntableBound !== '1') bindDoorDesignerTurntable();
         }
 
         function isDoorDesignerCompositorReady() {
@@ -23415,17 +23423,10 @@
             }
             if (cfg.enabled !== false) {
                 cfg.previewModelEnabled = true;
-                if (DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS) {
-                    cfg.designCanvasMode = 'studio-live';
-                    cfg.use3dPreview = false;
-                    cfg.useCompositorPreview = false;
-                    cfg.usePhotorealPreview = false;
-                } else {
-                    cfg.designCanvasMode = '3d';
-                    cfg.use3dPreview = true;
-                    cfg.useCompositorPreview = false;
-                    cfg.usePhotorealPreview = false;
-                }
+                cfg.designCanvasMode = 'studio-live';
+                cfg.use3dPreview = false;
+                cfg.useCompositorPreview = false;
+                cfg.usePhotorealPreview = false;
             } else if (cfg.previewModelEnabled == null) {
                 cfg.previewModelEnabled = DEFAULT_DOOR_DESIGNER.previewModelEnabled !== false;
             }
