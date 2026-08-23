@@ -1,11 +1,11 @@
 /**
- * نبراس — تحميل كسول لوحدات الإدارات (hrws266)
+ * نبراس — تحميل كسول لوحدات الإدارات (hrws268)
  * فتح فوري + prefetch ذكي حسب الدور — بدون إثقال الزائر.
  */
 (function (global) {
     'use strict';
 
-    var VER = 'hrws266';
+    var VER = 'hrws268';
     var loaded = Object.create(null);
     var inflight = Object.create(null);
     var bundleDone = Object.create(null);
@@ -41,6 +41,11 @@
             'js/nebras-site-database.js',
             'js/nebras-data-warehouse.js',
             'js/nebras-media-admin.js'
+        ],
+        visitor: [
+            'js/nebras-customer-portal.js',
+            'js/nebras-order-journey.js',
+            'js/nebras-mobile-app.js'
         ]
     };
 
@@ -58,7 +63,10 @@
         { name: 'openNebrasAdminAi', bundle: 'adminTools' },
         { name: 'openNebrasDataWarehouse', bundle: 'adminTools' },
         { name: 'openNebrasEmpireBridges', bundle: 'empire' },
-        { name: 'openPlatformIntegrationHub', bundle: 'empire' }
+        { name: 'openPlatformIntegrationHub', bundle: 'empire' },
+        { name: 'openCustomerPortalLogin', bundle: 'visitor' },
+        { name: 'openCustomerPortalGovernance', bundle: 'visitor' },
+        { name: 'openCpUserEditorNew', bundle: 'visitor' }
     ];
 
     function withVer(path) {
@@ -259,7 +267,31 @@
     installAllStubs();
     schedulePrefetch();
 
+    function scheduleVisitorBundleWarmup() {
+        function warm() {
+            if (document.visibilityState === 'hidden') return;
+            loadBundle('visitor').catch(function() { /* soft */ });
+        }
+        if (typeof global.nebrasRunWhenIdle === 'function') {
+            global.nebrasRunWhenIdle(warm, 12000);
+        } else {
+            setTimeout(warm, 8000);
+        }
+        document.addEventListener('click', function(ev) {
+            var t = ev.target && ev.target.closest ? ev.target.closest('#nav-customer-portal, [data-nebras-open-portal], .customer-portal-trigger') : null;
+            if (t) loadBundle('visitor').catch(function() { /* soft */ });
+        }, { capture: true, passive: true });
+    }
+    if (typeof document !== 'undefined') {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', scheduleVisitorBundleWarmup, { once: true });
+        } else {
+            scheduleVisitorBundleWarmup();
+        }
+    }
+
     global.ensureNebrasDeptBundle = ensureNebrasDeptBundle;
     global.prefetchNebrasAdminDepts = prefetchNebrasAdminDepts;
+    global.ensureNebrasVisitorBundle = function() { return loadBundle('visitor'); };
     global.__NEBRAS_DEPT_LAZY__ = VER;
 })(typeof window !== 'undefined' ? window : globalThis);

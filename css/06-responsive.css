@@ -575,3 +575,19 @@ a,
         font-size: 0.82rem;
     }
 }
+
+/* perf-lite — Accmaa-style · hrws268 */
+body.perf-lite *,
+body.perf-lite *::before,
+body.perf-lite *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+}
+
+body.perf-lite .wpc-door-turntable,
+body.perf-lite .nebras-promo-ticker,
+body.perf-lite .hero-slide-track {
+    animation: none !important;
+}

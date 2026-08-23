@@ -100,11 +100,16 @@
         return lastRealtimeAt || 0;
     }
 
+    function isNebrasRealtimeActive() {
+        return !!realtimeStarted;
+    }
+
     global.NEBRAS_REALTIME_ENABLED = REALTIME_ENABLED;
     global.NEBRAS_REALTIME_PUBLIC_KEYS = PUBLIC_LIVE_KEYS;
     global.startNebrasRealtimeSync = startNebrasRealtimeSync;
     global.stopNebrasRealtimeSync = stopNebrasRealtimeSync;
     global.getNebrasRealtimeLastAt = getNebrasRealtimeLastAt;
+    global.isNebrasRealtimeActive = isNebrasRealtimeActive;
 
     if (typeof document !== 'undefined') {
         document.addEventListener('DOMContentLoaded', function() {

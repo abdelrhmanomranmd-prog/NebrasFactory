@@ -604,19 +604,30 @@
         if (typeof global.refreshNebrasCloudFromServer !== 'function') return;
         try { global.refreshNebrasCloudFromServer({ silent: true }); } catch (e) { /* ignore */ }
     }
+    function adminCloudSyncIntervalMs() {
+        if (typeof global.isNebrasRealtimeActive === 'function' && global.isNebrasRealtimeActive()) return 45000;
+        return 20000;
+    }
     function startNebrasCloudAutoSync() {
         if (cloudAutoSyncTimer) return;
         nebrasFlushCloudIfAdmin();
         nebrasPullCloudIfAdmin();
-        /* إدارة: 20ث بدل 8ث — أخف على الجهاز مع الحفاظ على المزامنة */
-        cloudAutoSyncTimer = setInterval(function() {
-            if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
-            nebrasFlushCloudIfAdmin();
-        }, 20000);
-        cloudAutoPullTimer = setInterval(function() {
-            if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
-            nebrasPullCloudIfAdmin();
-        }, 20000);
+        function scheduleSyncLoop() {
+            if (cloudAutoSyncTimer) clearInterval(cloudAutoSyncTimer);
+            cloudAutoSyncTimer = setInterval(function() {
+                if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
+                nebrasFlushCloudIfAdmin();
+            }, adminCloudSyncIntervalMs());
+        }
+        function schedulePullLoop() {
+            if (cloudAutoPullTimer) clearInterval(cloudAutoPullTimer);
+            cloudAutoPullTimer = setInterval(function() {
+                if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
+                nebrasPullCloudIfAdmin();
+            }, adminCloudSyncIntervalMs());
+        }
+        scheduleSyncLoop();
+        schedulePullLoop();
         if (typeof window !== 'undefined' && !window._nebrasCloudUnloadHook) {
             window._nebrasCloudUnloadHook = true;
             window.addEventListener('pagehide', function() { nebrasFlushCloudIfAdmin(); });
