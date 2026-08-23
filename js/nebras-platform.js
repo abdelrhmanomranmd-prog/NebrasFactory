@@ -971,7 +971,7 @@
         }
 
         const DOOR_PHOTO_PRESET_ROOT = 'images/doors/presets/';
-        const DOOR_PHOTO_PRESET_CACHE = '39';
+        const DOOR_PHOTO_PRESET_CACHE = '40';
         /** fallback عند غياب صورة نموذج محدد */
         const DOOR_PHOTO_CANONICAL = {
             flat: DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-1/outer-flat-plain.png',
@@ -1381,21 +1381,25 @@
             ctx.drawImage(img, 0, 0, iw, ih, ox, oy, sw, sh);
         }
 
-        /** MDF فوق الباب — قصّ شريط التكسية من أعلى مرجع المصنع فقط (ليس باباً كاملاً) */
+        /** MDF فوق الباب — تخطيط hrws252 مع قصّ شريط التكسية فقط */
         function mergeDoorPhotoTransomCap(ctx, w, h, base, cap) {
-            ctx.fillStyle = '#d8dce2';
-            ctx.fillRect(0, 0, w, h);
-            const box = measureDoorPhotoContainBox(w, h, base);
-            ctx.drawImage(base, 0, 0, box.iw, box.ih, box.ox, box.oy, box.sw, box.sh);
-            if (!cap) return;
-            const capIw = cap.naturalWidth || cap.width || box.sw;
-            const capIh = cap.naturalHeight || cap.height || 1;
-            const capScale = box.sw / Math.max(1, capIw);
+            if (!cap) {
+                drawDoorDesignerScaled(ctx, base, w, h);
+                return;
+            }
+            const capIw = cap.naturalWidth || cap.width || w;
+            const capIh = cap.naturalHeight || cap.height || h;
             const transomBandRatio = 0.34;
             const capSrcH = Math.max(1, Math.round(capIh * transomBandRatio));
-            const transomDrawH = Math.min(capSrcH * capScale, box.sh * 0.28);
-            const capY = Math.max(0, box.oy - transomDrawH + (box.sh * 0.012));
-            ctx.drawImage(cap, 0, 0, capIw, capSrcH, box.ox, capY, box.sw, transomDrawH);
+            const capScale = w / Math.max(1, capIw);
+            const capH = Math.min(Math.round(capSrcH * capScale), Math.round(h * 0.24));
+            const doorY = capH;
+            const baseIw = base.naturalWidth || base.width || w;
+            const baseIh = base.naturalHeight || base.height || h;
+            ctx.fillStyle = '#d8dce2';
+            ctx.fillRect(0, 0, w, h);
+            ctx.drawImage(base, 0, 0, baseIw, baseIh, 0, doorY, w, h - doorY);
+            ctx.drawImage(cap, 0, 0, capIw, capSrcH, 0, 0, w, capH);
         }
 
         function bakeDoorRollLayer(w, h, source, roll, mask, profile, hexFallback) {
@@ -1406,19 +1410,22 @@
             lctx.imageSmoothingEnabled = true;
             lctx.imageSmoothingQuality = 'high';
             lctx.drawImage(source, 0, 0, w, h);
+            lctx.globalCompositeOperation = 'saturation';
+            lctx.fillStyle = 'rgba(128,128,128,' + (profile.saturationGray || 0.35) + ')';
+            lctx.fillRect(0, 0, w, h);
             if (roll) {
                 lctx.globalCompositeOperation = 'multiply';
-                lctx.globalAlpha = profile.multiplyAlpha * 0.84;
+                lctx.globalAlpha = profile.multiplyAlpha * 0.88;
                 tileDoorRollTexture(lctx, roll, w, h);
                 lctx.globalAlpha = 1;
                 lctx.globalCompositeOperation = 'color';
-                lctx.globalAlpha = profile.colorAlpha * 0.8;
+                lctx.globalAlpha = profile.colorAlpha * 0.85;
                 tileDoorRollTexture(lctx, roll, w, h);
                 lctx.globalAlpha = 1;
             } else if (hexFallback) {
                 lctx.globalCompositeOperation = 'color';
                 lctx.fillStyle = hexFallback;
-                lctx.globalAlpha = 0.9;
+                lctx.globalAlpha = roll ? (profile.hexBoost || 0.9) : 0.92;
                 lctx.fillRect(0, 0, w, h);
                 lctx.globalAlpha = 1;
             }
@@ -1473,7 +1480,11 @@
                         const ctx = canvas.getContext('2d');
                         ctx.imageSmoothingEnabled = true;
                         ctx.imageSmoothingQuality = 'high';
-                        mergeDoorPhotoTransomCap(ctx, w, h, base, cap);
+                        if (cap) {
+                            mergeDoorPhotoTransomCap(ctx, w, h, base, cap);
+                        } else {
+                            drawDoorDesignerScaled(ctx, base, w, h);
+                        }
                         if (!rollKey && !hexFallback) {
                             return canvasToDoorPreviewUrl(canvas).then(function(out) {
                                 if (out) doorComposeCacheStore(cacheKey, out);
@@ -1527,7 +1538,14 @@
                 rollImg.classList.remove('is-active');
                 rollImg.removeAttribute('src');
             }
-            const needsBake = true;
+            const needsBake = !!(isRoll || transomCapSrc);
+            if (!needsBake) {
+                showDoorPhotoPresetBase(img, baseSrc);
+                img.classList.remove('has-roll-pending');
+                if (stack) stack.classList.remove('has-roll-composite-ready', 'has-roll-pending', 'has-roll-texture', 'has-door-roll-tint');
+                return;
+            }
+
             const cacheKey = doorPhotoRollComposeCacheKey(baseSrc, rollUrl, hex, transomCapSrc, isRoll);
             const cached = doorPhotoRollComposeCache[cacheKey];
             if (cached) {
@@ -1612,7 +1630,7 @@
             return m === 'edge-2' || m === 'slide-2';
         }
 
-        /** صورة مصنع حقيقية لكل اختيار — plain + bake-transom (لا PNG transom كامل) */
+        /** صورة مصنع حقيقية لكل اختيار — transom كامل إن وُجد، وإلا bake */
         function resolveDoorDesignerPhotoPreset(state) {
             if (!state) return null;
             const type = state.type || '';
@@ -1634,6 +1652,12 @@
                 ? DOOR_PHOTO_TRANSOM_CAP.curve
                 : DOOR_PHOTO_TRANSOM_CAP.flat;
             if (decor === 'transom') {
+                const transomKey = type + '|' + model + '|' + outer + '|transom';
+                const transomFlatKey = type + '|' + model + '|outer-flat|transom';
+                const fullTransomUrl = DOOR_PHOTO_PRESET_MAP[transomKey] || DOOR_PHOTO_PRESET_MAP[transomFlatKey];
+                if (fullTransomUrl) {
+                    return { url: fullTransomUrl, mode: 'full', transomCap: '' };
+                }
                 return { url: plainUrl, mode: 'bake-transom', transomCap: transomCap };
             }
             return { url: plainUrl, mode: 'full', transomCap: '' };
@@ -1807,7 +1831,7 @@
 
         const DEFAULT_DOOR_DESIGNER = {
             enabled: true,
-            dataSeed: 'v35-factory-photo-transom-fix',
+            dataSeed: 'v36-factory-photo-match-sharp',
             previewModelEnabled: true,
             useCompositorPreview: false,
             use3dPreview: true,
