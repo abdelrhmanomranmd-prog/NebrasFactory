@@ -1,5 +1,5 @@
 /**
- * نبراس — أدوات الأداء (Accmaa-style · hrws268)
+ * نبراس — أدوات الأداء (Accmaa-style · hrws269)
  * تأجيل العمل غير الحرج · perf-lite للجوال · فحص API خفيف
  */
 (function(global) {
@@ -57,7 +57,7 @@
         const timeoutMs = options.timeoutMs || 8000;
         const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
         const timer = controller ? setTimeout(function() { controller.abort(); }, timeoutMs) : null;
-        const url = (options.deep ? '/api/health' : '/api/ping') + '?t=' + now;
+        const url = (options.deep ? '/api/health?deep=1' : '/api/health?ping=1') + '&t=' + now;
         return fetch(url, {
             method: 'GET',
             cache: 'no-store',

@@ -1,7 +1,7 @@
 /**
- * نبراس hrws268 — صحة السيرفر الحية (بدون بيانات حساسة)
+ * نبراس hrws269 — صحة السيرفر الحية (بدون بيانات حساسة)
  * GET /api/health → { ok, deploy hint, supabase, time }
- * GET /api/ping — فحص خفيف بدون Supabase
+ * GET /api/health?ping=1 → فحص خفيف بدون Supabase
  */
 const sec = require('./lib/nebras-security');
 
@@ -20,6 +20,18 @@ module.exports = async function handler(req, res) {
         }
         if (req.method !== 'GET') {
             return sec.jsonRes(res, 405, { ok: false, error: 'method_not_allowed' });
+        }
+
+        const isPing = String(req.query && req.query.ping || '') === '1';
+        if (isPing) {
+            res.setHeader('Cache-Control', 'no-store');
+            return sec.jsonRes(res, 200, {
+                ok: true,
+                service: 'nebras-platform',
+                ping: true,
+                time: new Date().toISOString(),
+                upgrade: 'hrws269'
+            });
         }
 
         const now = Date.now();
@@ -56,7 +68,7 @@ module.exports = async function handler(req, res) {
                 sessionTtlMs: sec.SESSION_TTL_MS,
                 sensitiveKeyCount: Array.isArray(sec.SENSITIVE_STORE_KEYS) ? sec.SENSITIVE_STORE_KEYS.length : 0
             },
-            upgrade: 'hrws268'
+            upgrade: 'hrws269'
         };
         healthCache = payload;
         healthCacheAt = now;

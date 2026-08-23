@@ -1,11 +1,11 @@
 /**
- * نبراس — تحميل كسول لوحدات الإدارات (hrws268)
+ * نبراس — تحميل كسول لوحدات الإدارات (hrws269)
  * فتح فوري + prefetch ذكي حسب الدور — بدون إثقال الزائر.
  */
 (function (global) {
     'use strict';
 
-    var VER = 'hrws268';
+    var VER = 'hrws269';
     var loaded = Object.create(null);
     var inflight = Object.create(null);
     var bundleDone = Object.create(null);
@@ -43,9 +43,8 @@
             'js/nebras-media-admin.js'
         ],
         visitor: [
-            'js/nebras-customer-portal.js',
-            'js/nebras-order-journey.js',
-            'js/nebras-mobile-app.js'
+            'js/nebras-mobile-app.js',
+            'js/nebras-order-journey.js'
         ]
     };
 
@@ -63,10 +62,7 @@
         { name: 'openNebrasAdminAi', bundle: 'adminTools' },
         { name: 'openNebrasDataWarehouse', bundle: 'adminTools' },
         { name: 'openNebrasEmpireBridges', bundle: 'empire' },
-        { name: 'openPlatformIntegrationHub', bundle: 'empire' },
-        { name: 'openCustomerPortalLogin', bundle: 'visitor' },
-        { name: 'openCustomerPortalGovernance', bundle: 'visitor' },
-        { name: 'openCpUserEditorNew', bundle: 'visitor' }
+        { name: 'openPlatformIntegrationHub', bundle: 'empire' }
     ];
 
     function withVer(path) {

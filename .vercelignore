@@ -1,0 +1,10 @@
+# لا تُرفع مع النشر — تخفيف حجم الـ deployment وتجنب أخطاء Vercel
+tools/
+accmaa-deploy/
+nebras-app/
+.git/
+.cursor/
+*.md
+NEBRAS-WPC-VIDEO-SCRIPT.md
+STABILITY-FIX-REPORT.txt
+GITHUB-REUPLOAD-CHECKLIST.txt
