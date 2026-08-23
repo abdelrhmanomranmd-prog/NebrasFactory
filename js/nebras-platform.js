@@ -971,7 +971,7 @@
         }
 
         const DOOR_PHOTO_PRESET_ROOT = 'images/doors/presets/';
-        const DOOR_PHOTO_PRESET_CACHE = '37';
+        const DOOR_PHOTO_PRESET_CACHE = '38';
         /** fallback عند غياب صورة نموذج محدد */
         const DOOR_PHOTO_CANONICAL = {
             flat: DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-1/outer-flat-plain.png',
@@ -1207,32 +1207,47 @@
 
         function getDoorComposeDimensions(nw, nh) {
             if (!nw || !nh) return { w: 1, h: 1 };
-            /* حد أقصى معقول — حِدّة كافية دون canvas ضخم (بطء الموقع) */
-            const hardMaxW = 880;
-            const hardMaxH = 1320;
+            const hardMaxW = 1200;
+            const hardMaxH = 1800;
             if (nw <= hardMaxW && nh <= hardMaxH) return { w: nw, h: nh };
             const scale = Math.min(hardMaxW / nw, hardMaxH / nh, 1);
             return { w: Math.max(1, Math.round(nw * scale)), h: Math.max(1, Math.round(nh * scale)) };
         }
 
-        /** منع تكبير الصورة فوق دقتها — مع احترام مقاس الضلفة */
+        function measureDoorPhotoContainBox(w, h, img) {
+            const iw = img.naturalWidth || img.width || w;
+            const ih = img.naturalHeight || img.height || h;
+            const scale = Math.min(w / iw, h / ih);
+            const sw = iw * scale;
+            const sh = ih * scale;
+            return {
+                ox: (w - sw) / 2,
+                oy: (h - sh) / 2,
+                sw: sw,
+                sh: sh,
+                iw: iw,
+                ih: ih
+            };
+        }
+
+        /** منع تكبير blob فوق دقته — contain داخل الإطار */
         function fitDoorPhotoPresetDisplaySize(img) {
             if (!img) return;
             const nw = img.naturalWidth || 0;
             const nh = img.naturalHeight || 0;
             if (!nw || !nh) return;
-            const stage = document.getElementById('door-3d-preview');
-            const sizeScale = stage ? (parseFloat(stage.style.getPropertyValue('--door-size-scale')) || 1) : 1;
-            const vw = (typeof window !== 'undefined' && window.innerWidth) ? window.innerWidth : 360;
-            const maxCssW = Math.min(nw, Math.max(240, Math.round(vw * 0.88 * sizeScale)));
-            img.style.width = maxCssW + 'px';
+            img.style.width = 'auto';
             img.style.height = 'auto';
-            img.style.maxWidth = maxCssW + 'px';
-            img.style.maxHeight = Math.min(nh, Math.round((window.innerHeight || 640) * 0.62 * sizeScale)) + 'px';
+            img.style.maxWidth = 'min(92vw, 420px)';
+            img.style.maxHeight = 'min(62vh, 560px)';
+            img.style.objectFit = 'contain';
+            img.style.objectPosition = 'center center';
+            img.style.display = 'block';
+            img.style.margin = '0 auto';
             const stack = img.closest ? img.closest('.wpc-door-photo-preset-stack') : null;
             if (stack) {
-                stack.style.maxWidth = maxCssW + 'px';
-                stack.style.width = maxCssW + 'px';
+                stack.style.maxWidth = 'min(92vw, 420px)';
+                stack.style.width = 'auto';
                 stack.style.margin = '0 auto';
                 stack.style.transform = '';
             }
@@ -1314,7 +1329,7 @@
                     canvas.toBlob(function(blob) {
                         if (!blob) { resolve(canvas.toDataURL('image/png')); return; }
                         resolve(URL.createObjectURL(blob));
-                    }, 'image/png', 0.96);
+                    }, 'image/png', 1);
                     return;
                 }
                 resolve(canvas.toDataURL('image/png'));
@@ -1346,26 +1361,19 @@
             ctx.drawImage(img, 0, 0, iw, ih, ox, oy, sw, sh);
         }
 
-        /** MDF على الحائط فوق الباب — طبقة واحدة مع صورة الباب */
+        /** MDF فوق الباب — محاذاة بعرض الباب فقط (لا شريط غريب) */
         function mergeDoorPhotoTransomCap(ctx, w, h, base, cap) {
             ctx.fillStyle = '#d8dce2';
             ctx.fillRect(0, 0, w, h);
-            if (!cap) {
-                const padX = Math.round(w * 0.035);
-                const padY = Math.round(h * 0.025);
-                drawDoorPhotoPresetContained(ctx, w - padX * 2, h - padY * 2, padX, padY, base);
-                return;
-            }
-            const capIw = cap.naturalWidth || cap.width || w;
-            const capIh = cap.naturalHeight || cap.height || h;
-            const capRatio = capIh / Math.max(1, capIw);
-            const capH = Math.min(Math.round(w * capRatio), Math.round(h * 0.2));
-            const doorY = capH;
-            const doorH = h - capH;
-            const padX = Math.round(w * 0.035);
-            const padBottom = Math.round(doorH * 0.02);
-            drawDoorPhotoPresetContained(ctx, w - padX * 2, doorH - padBottom, padX, doorY, base);
-            ctx.drawImage(cap, 0, 0, capIw, capIh, 0, 0, w, capH);
+            const box = measureDoorPhotoContainBox(w, h, base);
+            ctx.drawImage(base, 0, 0, box.iw, box.ih, box.ox, box.oy, box.sw, box.sh);
+            if (!cap) return;
+            const capIw = cap.naturalWidth || cap.width || box.sw;
+            const capIh = cap.naturalHeight || cap.height || box.sh * 0.2;
+            const capScale = box.sw / Math.max(1, capIw);
+            const capDrawH = Math.min(capIh * capScale, box.sh * 0.22);
+            const capY = Math.max(0, box.oy - capDrawH);
+            ctx.drawImage(cap, 0, 0, capIw, capIh, box.ox, capY, box.sw, capDrawH);
         }
 
         function bakeDoorRollLayer(w, h, source, roll, mask, profile, hexFallback) {
@@ -1376,23 +1384,19 @@
             lctx.imageSmoothingEnabled = true;
             lctx.imageSmoothingQuality = 'high';
             lctx.drawImage(source, 0, 0, w, h);
-            lctx.globalCompositeOperation = 'saturation';
-            lctx.fillStyle = 'rgba(128,128,128,' + profile.saturationGray + ')';
-            lctx.fillRect(0, 0, w, h);
             if (roll) {
                 lctx.globalCompositeOperation = 'multiply';
-                lctx.globalAlpha = profile.multiplyAlpha;
+                lctx.globalAlpha = profile.multiplyAlpha * 0.92;
                 tileDoorRollTexture(lctx, roll, w, h);
                 lctx.globalAlpha = 1;
                 lctx.globalCompositeOperation = 'color';
-                lctx.globalAlpha = profile.colorAlpha;
+                lctx.globalAlpha = profile.colorAlpha * 0.88;
                 tileDoorRollTexture(lctx, roll, w, h);
                 lctx.globalAlpha = 1;
-            }
-            if (hexFallback) {
+            } else if (hexFallback) {
                 lctx.globalCompositeOperation = 'color';
                 lctx.fillStyle = hexFallback;
-                lctx.globalAlpha = roll ? profile.hexBoost : 0.95;
+                lctx.globalAlpha = 0.9;
                 lctx.fillRect(0, 0, w, h);
                 lctx.globalAlpha = 1;
             }
@@ -1476,11 +1480,10 @@
         function runDoorPhotoRollCompose(img, baseSrc, rollUrl, hex, isRoll, catalogIndex, transomCapSrc, token) {
             const stack = img.closest ? img.closest('.wpc-door-photo-preset-stack') : document.getElementById('wpc-door-photo-preset-stack');
             const tex = rollUrl ? resolveDoorRollTextureUrl(rollUrl) : '';
-            const baseImg = resolveDoorComposeBaseImage(img, baseSrc);
-            composeDoorPhotoWithRoll(baseSrc, isRoll ? tex : '', hex, catalogIndex, {
+            composeDoorPhotoWithRoll(baseSrc, isRoll ? tex : '', isRoll ? hex : '', catalogIndex, {
                 transomCapSrc: transomCapSrc || '',
-                baseImg: baseImg,
-                skipLeafMask: true
+                baseImg: null,
+                skipLeafMask: false
             }).then(function(composed) {
                 if (!img.isConnected) return;
                 if (img.getAttribute('data-roll-compose-token') !== token) return;
@@ -1513,10 +1516,12 @@
                 img.classList.remove('has-roll-composite');
                 if (stack) stack.classList.remove('has-roll-composite-ready');
             }
-            if (!img.getAttribute('src')) img.src = baseSrc;
 
             img.classList.add('has-roll-pending');
-            if (stack) stack.classList.add('has-roll-pending');
+            if (stack) {
+                stack.classList.add('has-roll-pending');
+                stack.classList.remove('has-door-roll-tint', 'has-roll-texture');
+            }
 
             const delay = baseChanged ? DOOR_COMPOSE_DEBOUNCE_MS : DOOR_COMPOSE_COLOR_MS;
             if (doorComposeDebounceTimer) clearTimeout(doorComposeDebounceTimer);
@@ -1723,11 +1728,6 @@
                 if (stack) stack.classList.remove('has-roll-composite-ready', 'has-roll-pending', 'has-roll-texture', 'has-door-roll-tint');
                 stage.removeAttribute('data-door-photo-preset-skip');
             }
-            if (!needsPhotoBake) {
-                img.src = baseSrc;
-            } else if (presetBaseChanged || !img.getAttribute('src')) {
-                img.src = baseSrc;
-            }
             img.alt = '';
             if (transomCap) {
                 transomCap.hidden = true;
@@ -1781,7 +1781,7 @@
 
         const DEFAULT_DOOR_DESIGNER = {
             enabled: true,
-            dataSeed: 'v33-factory-photo-contained',
+            dataSeed: 'v34-factory-photo-sharp',
             previewModelEnabled: true,
             useCompositorPreview: false,
             use3dPreview: true,

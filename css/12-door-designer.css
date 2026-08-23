@@ -2765,20 +2765,24 @@
     isolation: isolate;
 }
 
-/* طبقة لون فورية — تطابق كتالوج الرولّات بدون اسود/بكسلة */
-.wpc-door-photo-preset-stack.has-door-roll-tint:not(.has-roll-composite-ready)::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 3;
-    background-color: var(--door-roll-tint, #b8bcc4);
-    mix-blend-mode: color;
-    opacity: var(--door-roll-tint-opacity, 0.82);
-    pointer-events: none;
+/* صورة المصنع — طبقة واحدة فقط، بدون tint شبحي */
+.wpc-door-stage--photo-preset .wpc-door-photo-preset-stack::after,
+.wpc-door-stage--photo-preset .wpc-door-photo-preset-stack::before,
+.wpc-door-stage--photo-preset .wpc-door-photo-preset-stack.has-door-roll-tint::after,
+.wpc-door-stage--photo-preset .wpc-door-photo-preset-stack.has-roll-texture::before {
+    display: none !important;
+    content: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
 }
 
-.wpc-door-photo-preset-stack.has-door-roll-tint.has-roll-texture:not(.has-roll-composite-ready)::before {
-    display: none;
+.wpc-door-stage--photo-preset .wpc-door-photo-preset-stack.has-roll-pending .wpc-door-photo-preset-img {
+    opacity: 1;
+    filter: none;
+}
+
+.wpc-door-stage--photo-preset .wpc-door-photo-preset-transom-cap {
+    display: none !important;
 }
 
 .wpc-door-photo-preset-stack.has-roll-composite-ready::after,
