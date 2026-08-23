@@ -971,16 +971,16 @@
         }
 
         const DOOR_PHOTO_PRESET_ROOT = 'images/doors/presets/';
-        const DOOR_PHOTO_PRESET_CACHE = '35';
-        /** مرجع fallback لصور المصنع عند التصدير/العرض السعر */
+        const DOOR_PHOTO_PRESET_CACHE = '36';
+        /** fallback عند غياب صورة نموذج محدد */
         const DOOR_PHOTO_CANONICAL = {
             flat: DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-1/outer-flat-plain.png',
             curve: DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-1/outer-curve-plain.png',
             doubleFlat: DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-2/outer-flat-plain.png',
             doubleCurve: DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-2/outer-curve-plain.png'
         };
-        /** استوديو SVG ديناميكي — صور المصنع للتصدير فقط (لا تستبدل المعاينة الحية) */
-        const DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS = false;
+        /** صور مصنع حقيقية — كل اختيار له صورته + لون/تكسية مدمجة فعلياً */
+        const DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS = true;
         let doorDesignerPreviewRaf = 0;
         let doorDesignerPreviewDebounce = 0;
 
@@ -1215,23 +1215,32 @@
             return { w: Math.max(1, Math.round(nw * scale)), h: Math.max(1, Math.round(nh * scale)) };
         }
 
-        /** منع تكبير الصورة فوق دقتها الأصلية على الشاشة */
+        /** منع تكبير الصورة فوق دقتها — مع احترام مقاس الضلفة */
         function fitDoorPhotoPresetDisplaySize(img) {
             if (!img) return;
             const nw = img.naturalWidth || 0;
             const nh = img.naturalHeight || 0;
             if (!nw || !nh) return;
+            const stage = document.getElementById('door-3d-preview');
+            const sizeScale = stage ? (parseFloat(stage.style.getPropertyValue('--door-size-scale')) || 1) : 1;
             const vw = (typeof window !== 'undefined' && window.innerWidth) ? window.innerWidth : 360;
-            const maxCssW = Math.min(nw, Math.max(240, Math.round(vw * 0.88)));
+            const maxCssW = Math.min(nw, Math.max(240, Math.round(vw * 0.88 * sizeScale)));
             img.style.width = maxCssW + 'px';
             img.style.height = 'auto';
             img.style.maxWidth = maxCssW + 'px';
-            img.style.maxHeight = Math.min(nh, Math.round((window.innerHeight || 640) * 0.62)) + 'px';
+            img.style.maxHeight = Math.min(nh, Math.round((window.innerHeight || 640) * 0.62 * sizeScale)) + 'px';
             const stack = img.closest ? img.closest('.wpc-door-photo-preset-stack') : null;
             if (stack) {
                 stack.style.maxWidth = maxCssW + 'px';
                 stack.style.width = maxCssW + 'px';
+                stack.style.transform = 'scale(' + sizeScale + ')';
+                stack.style.transformOrigin = 'center bottom';
             }
+        }
+
+        function applyDoorPhotoPresetSize(stage, sizeId, cfg) {
+            if (!stage) return;
+            applyWpcSvgSize(stage, sizeId, cfg);
         }
 
         function hideDoorDesignerLayersForPhotoPreset(stage) {
@@ -1578,7 +1587,7 @@
             return m === 'edge-2' || m === 'slide-2';
         }
 
-        /** صورة مصنع مطابقة للاختيار — للتصدير/عرض السعر فقط */
+        /** صورة مصنع حقيقية لكل اختيار — plain + bake-transom (لا PNG transom كامل) */
         function resolveDoorDesignerPhotoPreset(state) {
             if (!state) return null;
             const type = state.type || '';
@@ -1712,10 +1721,15 @@
             const prevPresetBase = img.getAttribute('data-door-base-src') || '';
             const presetBaseChanged = !!(prevPresetBase && prevPresetBase !== baseSrc);
             img.setAttribute('data-door-base-src', baseSrc);
+            if (presetBaseChanged) {
+                img.classList.remove('has-roll-composite', 'has-roll-pending');
+                if (stack) stack.classList.remove('has-roll-composite-ready', 'has-roll-pending', 'has-roll-texture', 'has-door-roll-tint');
+                stage.removeAttribute('data-door-photo-preset-skip');
+            }
             if (!needsPhotoBake) {
                 img.src = baseSrc;
-            } else if (!img.getAttribute('src') || !presetBaseChanged) {
-                if (!img.getAttribute('src')) img.src = baseSrc;
+            } else if (presetBaseChanged || !img.getAttribute('src')) {
+                img.src = baseSrc;
             }
             img.alt = '';
             if (transomCap) {
@@ -1733,8 +1747,9 @@
             stage.style.setProperty('--door-frame-light', shadeDoorHex(hex, 6));
             stage.style.setProperty('--door-frame-face', shadeDoorHex(hex, -16));
             stage.style.setProperty('--door-frame-dark', shadeDoorHex(hex, -34));
-            const tt = document.getElementById('wpc-door-turntable');
-            if (tt && tt.dataset.turntableBound !== '1') bindDoorDesignerTurntable();
+            const cfgPhoto = ensureDoorDesignerConfig();
+            if (state) applyDoorPhotoPresetSize(stage, state.size || 'std-100', cfgPhoto);
+            bindDoorDesignerTurntable();
             return true;
         }
 
@@ -1769,7 +1784,7 @@
 
         const DEFAULT_DOOR_DESIGNER = {
             enabled: true,
-            dataSeed: 'v32-studio-dynamic-360',
+            dataSeed: 'v33-factory-photo-live',
             previewModelEnabled: true,
             useCompositorPreview: false,
             use3dPreview: true,

@@ -27,8 +27,8 @@ def main():
 
     if "designCanvasMode: 'studio-live'" not in js:
         err('DEFAULT door designer should use studio-live mode')
-    if 'DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS = false' not in js:
-        err('Live preview must use dynamic SVG studio (photo presets off)')
+    if 'DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS = true' not in js:
+        err('Live preview must use real factory photos per selection')
     if 'const ROT_MIN = -180' not in js or 'const ROT_MAX = 180' not in js:
         err('360° turntable rotation missing')
     if 'mode: \'bake-transom\'' not in js:
