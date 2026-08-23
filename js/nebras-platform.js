@@ -3295,15 +3295,14 @@
             if (!img) return;
             const baseSrc = img.getAttribute('data-base-src') || img.getAttribute('src') || '';
             const isPhoto = isWpcCatalogPhotoPath(baseSrc);
-            const productId = card.getAttribute('data-product-id');
-            const variantIndex = parseInt(card.getAttribute('data-variant-index'), 10);
-            const product = productId ? siteProducts.find(function(p) { return p && p.id === productId; }) : null;
-            const variant = product && !isNaN(variantIndex) ? (product.variants || [])[variantIndex] : null;
             const panelLayer = stack ? stack.querySelector('.nebras-store-sku-door-panel-color') : null;
-            if (!baseSrc) {
+            const rollPick = catalogIndex != null && !isNaN(catalogIndex);
+            if (!baseSrc || !rollPick) {
+                if (baseSrc) img.src = baseSrc;
                 img.style.filter = '';
+                img.style.transition = '';
                 if (stack) {
-                    stack.classList.remove('has-door-roll-tint', 'has-door-roll-tint--photo', 'has-door-roll-tint--clip-panel');
+                    stack.classList.remove('has-door-roll-tint', 'has-door-roll-tint--photo', 'has-door-roll-tint--clip-panel', 'has-door-roll-tint--panel-only');
                     if (panelLayer) {
                         panelLayer.style.filter = '';
                         panelLayer.style.backgroundImage = '';
@@ -3311,33 +3310,24 @@
                     }
                 }
                 card.classList.remove('is-roll-color-live');
+                card.removeAttribute('data-active-roll-hex');
+                img.removeAttribute('data-composed-roll');
                 return;
             }
             const colors = getNebrasColorCatalog();
-            const rollIdx = catalogIndex != null && !isNaN(catalogIndex) ? catalogIndex : 0;
+            const rollIdx = catalogIndex;
             const roll = colors[rollIdx] || colors[0];
             if (!roll) return;
-            if (baseSrc && img.getAttribute('src') !== baseSrc) img.src = baseSrc;
+            if (img.getAttribute('src') !== baseSrc) img.src = baseSrc;
             const rollFilter = buildWpcStoreRollCssFilter(roll.hex);
-            if (stack && variant) applyWpcDoorTintRegion(stack, getWpcDoorTintProfile(variant));
-            if (isPhoto && stack && panelLayer) {
-                img.style.filter = 'none';
-                img.style.transition = 'transform 0.35s ease';
-                const clip = variant ? getWpcDoorClipPath(variant) : (stack.style.getPropertyValue('--wpc-door-clip') || '7% 13% 7% 13%');
-                const displaySrc = resolveDisplayMediaUrl(baseSrc);
-                panelLayer.style.backgroundImage = 'url("' + displaySrc.replace(/"/g, '') + '")';
-                panelLayer.style.clipPath = 'inset(' + clip + ')';
-                panelLayer.style.webkitClipPath = 'inset(' + clip + ')';
-                panelLayer.style.filter = rollFilter;
-                panelLayer.style.opacity = '1';
-                stack.classList.add('has-door-roll-tint', 'has-door-roll-tint--clip-panel');
-                stack.classList.remove('has-door-roll-tint--panel-only', 'has-door-roll-tint--photo');
-            } else {
-                img.style.transition = 'filter 0.38s ease, transform 0.38s ease';
-                img.style.filter = rollFilter;
-                if (stack) {
-                    stack.classList.remove('has-door-roll-tint--clip-panel', 'has-door-roll-tint--panel-only');
-                    applyDoorRollTintToElements(stack, buildWpcStoreRollStateFromCatalog(roll, rollIdx));
+            img.style.transition = 'filter 0.38s ease, transform 0.38s ease';
+            img.style.filter = rollFilter;
+            if (stack) {
+                stack.classList.remove('has-door-roll-tint', 'has-door-roll-tint--photo', 'has-door-roll-tint--clip-panel', 'has-door-roll-tint--panel-only');
+                if (panelLayer) {
+                    panelLayer.style.filter = '';
+                    panelLayer.style.backgroundImage = '';
+                    panelLayer.style.opacity = '0';
                 }
             }
             img.setAttribute('data-composed-roll', String(rollIdx));
@@ -3388,7 +3378,6 @@
                 ' data-wpc-photo="' + (isPhoto ? '1' : '0') + '"' +
                 ' alt="' + escapeHtmlAttr(label) + '" loading="lazy" decoding="async"' +
                 ' title="' + escapeHtmlAttr(ui.lightboxOpenHint || 'اضغط للتكبير') + '">' +
-                (isPhoto ? '<div class="nebras-store-sku-door-panel-color" aria-hidden="true"></div>' : '') +
                 buildProductPhotoWatermarkHtml() +
                 '</div></div>';
         }
@@ -3457,8 +3446,7 @@
                 const variant = product && (product.variants || [])[variantIndex];
                 if (!variant || !getWpcStoreSkuBaseImage(variant)) return;
                 if (!variantSupportsWpcRollColorPicker(variant)) return;
-                const rollIdx = parseInt(card.getAttribute('data-selected-roll-index') || '0', 10);
-                refreshWpcStoreSkuPreview(card, productId, variantIndex, rollIdx);
+                applyWpcStoreSkuRollTint(card, null);
             });
         }
 

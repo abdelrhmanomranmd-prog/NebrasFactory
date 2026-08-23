@@ -1652,21 +1652,14 @@ body.nebras-mobile-bar-active.admin-session .nebras-mobile-commerce-bar {
     transition: background-color 0.38s ease, opacity 0.38s ease;
 }
 
-.nebras-store-sku-door-stack.has-door-roll-tint--panel-only::after {
-    display: none;
+.nebras-store-sku-door-stack.has-door-roll-tint--panel-only::after,
+.nebras-store-sku-door-stack.has-door-roll-tint--clip-panel::after,
+.nebras-store-sku-door-stack--photo.has-door-roll-tint::after {
+    display: none !important;
 }
 
 .nebras-store-sku-door-panel-color {
-    position: absolute;
-    inset: 0;
-    z-index: 2;
-    background-size: cover;
-    background-position: center center;
-    background-repeat: no-repeat;
-    opacity: 0;
-    pointer-events: none;
-    transition: filter 0.38s ease, opacity 0.25s ease;
-    will-change: filter;
+    display: none !important;
 }
 
 .nebras-store-sku-door-stack.has-door-roll-tint--clip-panel .nebras-store-sku-door-panel-color {
@@ -1692,10 +1685,11 @@ body.nebras-mobile-bar-active.admin-session .nebras-mobile-commerce-bar {
     width: 100%;
     height: 100%;
     max-height: none;
-    padding: 0;
-    object-fit: cover;
+    padding: 4px;
+    object-fit: contain;
     object-position: center center;
     transition: filter 0.38s ease, transform 0.38s ease;
+    image-rendering: auto;
 }
 
 .nebras-store-sku-card--wpc-ready.is-roll-color-live {
@@ -1704,16 +1698,15 @@ body.nebras-mobile-bar-active.admin-session .nebras-mobile-commerce-bar {
 
 .nebras-store-sku-card--wpc-ready.is-roll-color-live .nebras-store-sku-media--wpc-photo img {
     transform: scale(1.01);
-    filter: none !important;
 }
 
 .nebras-store-sku-media--wpc-door img.nebras-store-sku-img--wpc,
 .nebras-store-sku-media--vector img {
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
     object-position: center center;
-    padding: 0;
+    padding: 4px;
     transform: none !important;
     image-rendering: auto;
     -webkit-backface-visibility: hidden;
@@ -1721,7 +1714,7 @@ body.nebras-mobile-bar-active.admin-session .nebras-mobile-commerce-bar {
 }
 
 .nebras-store-sku-media--wpc-photo img.nebras-store-sku-img--wpc {
-    object-fit: cover;
+    object-fit: contain;
     image-rendering: auto;
 }
 
