@@ -2999,92 +2999,92 @@
 
         /** كل SKU → صورة واحدة صحيحة — بدون تخمين */
         const WPC_SKU_PHOTO_MAP = {
-            'WPC-RDY-FLAT-45-STD': 'images/catalog/wpc-photos/by-sku/WPC-RDY-FLAT-45-STD.png',
-            'WPC-RDY-FLAT-45-N110': 'images/catalog/wpc-photos/by-sku/WPC-RDY-FLAT-45-N110.png',
-            'WPC-RDY-FLAT-STEEL': 'images/catalog/wpc-photos/by-sku/WPC-RDY-FLAT-STEEL.png',
-            'WPC-RDY-FLAT-GLASS': 'images/catalog/wpc-photos/by-sku/WPC-RDY-FLAT-GLASS.png',
-            'WPC-RDY-FLAT-CLS': 'images/catalog/wpc-photos/by-sku/WPC-RDY-FLAT-CLS.png',
-            'WPC-RDY-U45-STD': 'images/catalog/wpc-photos/by-sku/WPC-RDY-U45-STD.png',
-            'WPC-RDY-U45-CLS': 'images/catalog/wpc-photos/by-sku/WPC-RDY-U45-CLS.png',
-            'WPC-RDY-U45-STEEL': 'images/catalog/wpc-photos/by-sku/WPC-RDY-U45-STEEL.png',
-            'WPC-RDY-U60-STD': 'images/catalog/wpc-photos/by-sku/WPC-RDY-U60-STD.png',
-            'WPC-RDY-U60-STEEL': 'images/catalog/wpc-photos/by-sku/WPC-RDY-U60-STEEL.png',
-            'WPC-RDY-U60-CLS': 'images/catalog/wpc-photos/by-sku/WPC-RDY-U60-CLS.png',
-            'WPC-RDY-U60-GLASS': 'images/catalog/wpc-photos/by-sku/WPC-RDY-U60-GLASS.png',
-            'WPC-RDY-LIB40-STD': 'images/catalog/wpc-photos/by-sku/WPC-RDY-LIB40-STD.png',
-            'WPC-RDY-LIB40-STEEL': 'images/catalog/wpc-photos/by-sku/WPC-RDY-LIB40-STEEL.png',
-            'WPC-RDY-LIB40-GLASS': 'images/catalog/wpc-photos/by-sku/WPC-RDY-LIB40-GLASS.png',
-            'WPC-RDY-LIB40-CLS': 'images/catalog/wpc-photos/by-sku/WPC-RDY-LIB40-CLS.png',
-            'WPC-RDY-LQ-FLAT': 'images/catalog/wpc-photos/by-sku/WPC-RDY-LQ-FLAT.png',
-            'WPC-RDY-LQ-U': 'images/catalog/wpc-photos/by-sku/WPC-RDY-LQ-U.png',
-            'WPC-RDY-LQ-LIB': 'images/catalog/wpc-photos/by-sku/WPC-RDY-LQ-LIB.png',
-            'WPC-RDY-SLD-FLAT': 'images/catalog/wpc-photos/by-sku/WPC-RDY-SLD-FLAT.png',
-            'WPC-RDY-SLD-U': 'images/catalog/wpc-photos/by-sku/WPC-RDY-SLD-U.png',
-            'WPC-RDY-SLD-LIB': 'images/catalog/wpc-photos/by-sku/WPC-RDY-SLD-LIB.png',
-            'WPC-SUP-FLAT-45-STD': 'images/catalog/wpc-photos/by-sku/WPC-SUP-FLAT-45-STD.png',
-            'WPC-SUP-FLAT-45-N110': 'images/catalog/wpc-photos/by-sku/WPC-SUP-FLAT-45-N110.png',
-            'WPC-SUP-FLAT-STEEL': 'images/catalog/wpc-photos/by-sku/WPC-SUP-FLAT-STEEL.png',
-            'WPC-SUP-FLAT-GLASS': 'images/catalog/wpc-photos/by-sku/WPC-SUP-FLAT-GLASS.png',
-            'WPC-SUP-FLAT-CLS': 'images/catalog/wpc-photos/by-sku/WPC-SUP-FLAT-CLS.png',
-            'WPC-SUP-U45-STD': 'images/catalog/wpc-photos/by-sku/WPC-SUP-U45-STD.png',
-            'WPC-SUP-U45-CLS': 'images/catalog/wpc-photos/by-sku/WPC-SUP-U45-CLS.png',
-            'WPC-SUP-U45-STEEL': 'images/catalog/wpc-photos/by-sku/WPC-SUP-U45-STEEL.png',
-            'WPC-SUP-U60-STD': 'images/catalog/wpc-photos/by-sku/WPC-SUP-U60-STD.png',
-            'WPC-SUP-U60-STEEL': 'images/catalog/wpc-photos/by-sku/WPC-SUP-U60-STEEL.png',
-            'WPC-SUP-U60-CLS': 'images/catalog/wpc-photos/by-sku/WPC-SUP-U60-CLS.png',
-            'WPC-SUP-U60-GLASS': 'images/catalog/wpc-photos/by-sku/WPC-SUP-U60-GLASS.png',
-            'WPC-SUP-LIB40-STD': 'images/catalog/wpc-photos/by-sku/WPC-SUP-LIB40-STD.png',
-            'WPC-SUP-LIB40-STEEL': 'images/catalog/wpc-photos/by-sku/WPC-SUP-LIB40-STEEL.png',
-            'WPC-SUP-LIB40-GLASS': 'images/catalog/wpc-photos/by-sku/WPC-SUP-LIB40-GLASS.png',
-            'WPC-SUP-LIB40-CLS': 'images/catalog/wpc-photos/by-sku/WPC-SUP-LIB40-CLS.png',
-            'WPC-SUP-LQ-FLAT': 'images/catalog/wpc-photos/by-sku/WPC-SUP-LQ-FLAT.png',
-            'WPC-SUP-LQ-U': 'images/catalog/wpc-photos/by-sku/WPC-SUP-LQ-U.png',
-            'WPC-SUP-LQ-LIB': 'images/catalog/wpc-photos/by-sku/WPC-SUP-LQ-LIB.png',
-            'WPC-SUP-SLD-FLAT': 'images/catalog/wpc-photos/by-sku/WPC-SUP-SLD-FLAT.png',
-            'WPC-SUP-SLD-U': 'images/catalog/wpc-photos/by-sku/WPC-SUP-SLD-U.png',
-            'WPC-SUP-SLD-LIB': 'images/catalog/wpc-photos/by-sku/WPC-SUP-SLD-LIB.png',
-            'WPC-RAW-B-L90': 'images/catalog/wpc-photos/by-sku/WPC-RAW-B-L90.png',
-            'WPC-RAW-B-L105': 'images/catalog/wpc-photos/by-sku/WPC-RAW-B-L105.png',
-            'WPC-RAW-B-L80': 'images/catalog/wpc-photos/by-sku/WPC-RAW-B-L80.png',
-            'WPC-RAW-B-L100': 'images/catalog/wpc-photos/by-sku/WPC-RAW-B-L100.png',
-            'WPC-RAW-B-SL25': 'images/catalog/wpc-photos/by-sku/WPC-RAW-B-SL25.png',
-            'WPC-RAW-B-F21': 'images/catalog/wpc-photos/by-sku/WPC-RAW-B-F21.png',
-            'WPC-RAW-B-F16': 'images/catalog/wpc-photos/by-sku/WPC-RAW-B-F16.png',
-            'WPC-RAW-B-F10': 'images/catalog/wpc-photos/by-sku/WPC-RAW-B-F10.png',
+            'WPC-RAW-B-DF3260': 'images/catalog/wpc-photos/by-sku/WPC-RAW-B-DF3260.png',
+            'WPC-RAW-B-DF6260': 'images/catalog/wpc-photos/by-sku/WPC-RAW-B-DF6260.png',
+            'WPC-RAW-B-DF8260': 'images/catalog/wpc-photos/by-sku/WPC-RAW-B-DF8260.png',
             'WPC-RAW-B-DJ260': 'images/catalog/wpc-photos/by-sku/WPC-RAW-B-DJ260.png',
             'WPC-RAW-B-DJ350': 'images/catalog/wpc-photos/by-sku/WPC-RAW-B-DJ350.png',
             'WPC-RAW-B-DN260': 'images/catalog/wpc-photos/by-sku/WPC-RAW-B-DN260.png',
             'WPC-RAW-B-DN350': 'images/catalog/wpc-photos/by-sku/WPC-RAW-B-DN350.png',
-            'WPC-RAW-B-DF8260': 'images/catalog/wpc-photos/by-sku/WPC-RAW-B-DF8260.png',
-            'WPC-RAW-B-DF6260': 'images/catalog/wpc-photos/by-sku/WPC-RAW-B-DF6260.png',
-            'WPC-RAW-B-DF3260': 'images/catalog/wpc-photos/by-sku/WPC-RAW-B-DF3260.png',
+            'WPC-RAW-B-EDGE': 'images/catalog/wpc-photos/by-sku/WPC-RAW-B-EDGE.png',
+            'WPC-RAW-B-F10': 'images/catalog/wpc-photos/by-sku/WPC-RAW-B-F10.png',
+            'WPC-RAW-B-F16': 'images/catalog/wpc-photos/by-sku/WPC-RAW-B-F16.png',
+            'WPC-RAW-B-F21': 'images/catalog/wpc-photos/by-sku/WPC-RAW-B-F21.png',
+            'WPC-RAW-B-L100': 'images/catalog/wpc-photos/by-sku/WPC-RAW-B-L100.png',
+            'WPC-RAW-B-L105': 'images/catalog/wpc-photos/by-sku/WPC-RAW-B-L105.png',
+            'WPC-RAW-B-L80': 'images/catalog/wpc-photos/by-sku/WPC-RAW-B-L80.png',
+            'WPC-RAW-B-L90': 'images/catalog/wpc-photos/by-sku/WPC-RAW-B-L90.png',
+            'WPC-RAW-B-MDF': 'images/catalog/wpc-photos/by-sku/WPC-RAW-B-MDF.png',
+            'WPC-RAW-B-PVC': 'images/catalog/wpc-photos/by-sku/WPC-RAW-B-PVC.png',
+            'WPC-RAW-B-SL25': 'images/catalog/wpc-photos/by-sku/WPC-RAW-B-SL25.png',
             'WPC-RAW-B-U45': 'images/catalog/wpc-photos/by-sku/WPC-RAW-B-U45.png',
             'WPC-RAW-B-U6': 'images/catalog/wpc-photos/by-sku/WPC-RAW-B-U6.png',
             'WPC-RAW-B-UT': 'images/catalog/wpc-photos/by-sku/WPC-RAW-B-UT.png',
-            'WPC-RAW-B-EDGE': 'images/catalog/wpc-photos/by-sku/WPC-RAW-B-EDGE.png',
-            'WPC-RAW-B-PVC': 'images/catalog/wpc-photos/by-sku/WPC-RAW-B-PVC.png',
-            'WPC-RAW-B-MDF': 'images/catalog/wpc-photos/by-sku/WPC-RAW-B-MDF.png',
-            'WPC-RAW-C-L90': 'images/catalog/wpc-photos/by-sku/WPC-RAW-C-L90.png',
-            'WPC-RAW-C-L105': 'images/catalog/wpc-photos/by-sku/WPC-RAW-C-L105.png',
-            'WPC-RAW-C-L80': 'images/catalog/wpc-photos/by-sku/WPC-RAW-C-L80.png',
-            'WPC-RAW-C-L100': 'images/catalog/wpc-photos/by-sku/WPC-RAW-C-L100.png',
-            'WPC-RAW-C-SL25': 'images/catalog/wpc-photos/by-sku/WPC-RAW-C-SL25.png',
-            'WPC-RAW-C-F21': 'images/catalog/wpc-photos/by-sku/WPC-RAW-C-F21.png',
-            'WPC-RAW-C-F16': 'images/catalog/wpc-photos/by-sku/WPC-RAW-C-F16.png',
-            'WPC-RAW-C-F10': 'images/catalog/wpc-photos/by-sku/WPC-RAW-C-F10.png',
+            'WPC-RAW-C-DF3260': 'images/catalog/wpc-photos/by-sku/WPC-RAW-C-DF3260.png',
+            'WPC-RAW-C-DF6260': 'images/catalog/wpc-photos/by-sku/WPC-RAW-C-DF6260.png',
+            'WPC-RAW-C-DF8260': 'images/catalog/wpc-photos/by-sku/WPC-RAW-C-DF8260.png',
             'WPC-RAW-C-DJ260': 'images/catalog/wpc-photos/by-sku/WPC-RAW-C-DJ260.png',
             'WPC-RAW-C-DJ350': 'images/catalog/wpc-photos/by-sku/WPC-RAW-C-DJ350.png',
             'WPC-RAW-C-DN260': 'images/catalog/wpc-photos/by-sku/WPC-RAW-C-DN260.png',
             'WPC-RAW-C-DN350': 'images/catalog/wpc-photos/by-sku/WPC-RAW-C-DN350.png',
-            'WPC-RAW-C-DF8260': 'images/catalog/wpc-photos/by-sku/WPC-RAW-C-DF8260.png',
-            'WPC-RAW-C-DF6260': 'images/catalog/wpc-photos/by-sku/WPC-RAW-C-DF6260.png',
-            'WPC-RAW-C-DF3260': 'images/catalog/wpc-photos/by-sku/WPC-RAW-C-DF3260.png',
+            'WPC-RAW-C-EDGE': 'images/catalog/wpc-photos/by-sku/WPC-RAW-C-EDGE.png',
+            'WPC-RAW-C-F10': 'images/catalog/wpc-photos/by-sku/WPC-RAW-C-F10.png',
+            'WPC-RAW-C-F16': 'images/catalog/wpc-photos/by-sku/WPC-RAW-C-F16.png',
+            'WPC-RAW-C-F21': 'images/catalog/wpc-photos/by-sku/WPC-RAW-C-F21.png',
+            'WPC-RAW-C-L100': 'images/catalog/wpc-photos/by-sku/WPC-RAW-C-L100.png',
+            'WPC-RAW-C-L105': 'images/catalog/wpc-photos/by-sku/WPC-RAW-C-L105.png',
+            'WPC-RAW-C-L80': 'images/catalog/wpc-photos/by-sku/WPC-RAW-C-L80.png',
+            'WPC-RAW-C-L90': 'images/catalog/wpc-photos/by-sku/WPC-RAW-C-L90.png',
+            'WPC-RAW-C-MDF': 'images/catalog/wpc-photos/by-sku/WPC-RAW-C-MDF.png',
+            'WPC-RAW-C-PVC': 'images/catalog/wpc-photos/by-sku/WPC-RAW-C-PVC.png',
+            'WPC-RAW-C-SL25': 'images/catalog/wpc-photos/by-sku/WPC-RAW-C-SL25.png',
             'WPC-RAW-C-U45': 'images/catalog/wpc-photos/by-sku/WPC-RAW-C-U45.png',
             'WPC-RAW-C-U6': 'images/catalog/wpc-photos/by-sku/WPC-RAW-C-U6.png',
             'WPC-RAW-C-UT': 'images/catalog/wpc-photos/by-sku/WPC-RAW-C-UT.png',
-            'WPC-RAW-C-EDGE': 'images/catalog/wpc-photos/by-sku/WPC-RAW-C-EDGE.png',
-            'WPC-RAW-C-PVC': 'images/catalog/wpc-photos/by-sku/WPC-RAW-C-PVC.png',
-            'WPC-RAW-C-MDF': 'images/catalog/wpc-photos/by-sku/WPC-RAW-C-MDF.png',
+            'WPC-RDY-FLAT-45-N110': 'images/catalog/wpc-photos/by-sku/WPC-RDY-FLAT-45-N110.png',
+            'WPC-RDY-FLAT-45-STD': 'images/catalog/wpc-photos/by-sku/WPC-RDY-FLAT-45-STD.png',
+            'WPC-RDY-FLAT-CLS': 'images/catalog/wpc-photos/by-sku/WPC-RDY-FLAT-CLS.png',
+            'WPC-RDY-FLAT-GLASS': 'images/catalog/wpc-photos/by-sku/WPC-RDY-FLAT-GLASS.png',
+            'WPC-RDY-FLAT-STEEL': 'images/catalog/wpc-photos/by-sku/WPC-RDY-FLAT-STEEL.png',
+            'WPC-RDY-LIB40-CLS': 'images/catalog/wpc-photos/by-sku/WPC-RDY-LIB40-CLS.png',
+            'WPC-RDY-LIB40-GLASS': 'images/catalog/wpc-photos/by-sku/WPC-RDY-LIB40-GLASS.png',
+            'WPC-RDY-LIB40-STD': 'images/catalog/wpc-photos/by-sku/WPC-RDY-LIB40-STD.png',
+            'WPC-RDY-LIB40-STEEL': 'images/catalog/wpc-photos/by-sku/WPC-RDY-LIB40-STEEL.png',
+            'WPC-RDY-LQ-FLAT': 'images/catalog/wpc-photos/by-sku/WPC-RDY-LQ-FLAT.png',
+            'WPC-RDY-LQ-LIB': 'images/catalog/wpc-photos/by-sku/WPC-RDY-LQ-LIB.png',
+            'WPC-RDY-LQ-U': 'images/catalog/wpc-photos/by-sku/WPC-RDY-LQ-U.png',
+            'WPC-RDY-SLD-FLAT': 'images/catalog/wpc-photos/by-sku/WPC-RDY-SLD-FLAT.png',
+            'WPC-RDY-SLD-LIB': 'images/catalog/wpc-photos/by-sku/WPC-RDY-SLD-LIB.png',
+            'WPC-RDY-SLD-U': 'images/catalog/wpc-photos/by-sku/WPC-RDY-SLD-U.png',
+            'WPC-RDY-U45-CLS': 'images/catalog/wpc-photos/by-sku/WPC-RDY-U45-CLS.png',
+            'WPC-RDY-U45-STD': 'images/catalog/wpc-photos/by-sku/WPC-RDY-U45-STD.png',
+            'WPC-RDY-U45-STEEL': 'images/catalog/wpc-photos/by-sku/WPC-RDY-U45-STEEL.png',
+            'WPC-RDY-U60-CLS': 'images/catalog/wpc-photos/by-sku/WPC-RDY-U60-CLS.png',
+            'WPC-RDY-U60-GLASS': 'images/catalog/wpc-photos/by-sku/WPC-RDY-U60-GLASS.png',
+            'WPC-RDY-U60-STD': 'images/catalog/wpc-photos/by-sku/WPC-RDY-U60-STD.png',
+            'WPC-RDY-U60-STEEL': 'images/catalog/wpc-photos/by-sku/WPC-RDY-U60-STEEL.png',
+            'WPC-SUP-FLAT-45-N110': 'images/catalog/wpc-photos/by-sku/WPC-SUP-FLAT-45-N110.png',
+            'WPC-SUP-FLAT-45-STD': 'images/catalog/wpc-photos/by-sku/WPC-SUP-FLAT-45-STD.png',
+            'WPC-SUP-FLAT-CLS': 'images/catalog/wpc-photos/by-sku/WPC-SUP-FLAT-CLS.png',
+            'WPC-SUP-FLAT-GLASS': 'images/catalog/wpc-photos/by-sku/WPC-SUP-FLAT-GLASS.png',
+            'WPC-SUP-FLAT-STEEL': 'images/catalog/wpc-photos/by-sku/WPC-SUP-FLAT-STEEL.png',
+            'WPC-SUP-LIB40-CLS': 'images/catalog/wpc-photos/by-sku/WPC-SUP-LIB40-CLS.png',
+            'WPC-SUP-LIB40-GLASS': 'images/catalog/wpc-photos/by-sku/WPC-SUP-LIB40-GLASS.png',
+            'WPC-SUP-LIB40-STD': 'images/catalog/wpc-photos/by-sku/WPC-SUP-LIB40-STD.png',
+            'WPC-SUP-LIB40-STEEL': 'images/catalog/wpc-photos/by-sku/WPC-SUP-LIB40-STEEL.png',
+            'WPC-SUP-LQ-FLAT': 'images/catalog/wpc-photos/by-sku/WPC-SUP-LQ-FLAT.png',
+            'WPC-SUP-LQ-LIB': 'images/catalog/wpc-photos/by-sku/WPC-SUP-LQ-LIB.png',
+            'WPC-SUP-LQ-U': 'images/catalog/wpc-photos/by-sku/WPC-SUP-LQ-U.png',
+            'WPC-SUP-SLD-FLAT': 'images/catalog/wpc-photos/by-sku/WPC-SUP-SLD-FLAT.png',
+            'WPC-SUP-SLD-LIB': 'images/catalog/wpc-photos/by-sku/WPC-SUP-SLD-LIB.png',
+            'WPC-SUP-SLD-U': 'images/catalog/wpc-photos/by-sku/WPC-SUP-SLD-U.png',
+            'WPC-SUP-U45-CLS': 'images/catalog/wpc-photos/by-sku/WPC-SUP-U45-CLS.png',
+            'WPC-SUP-U45-STD': 'images/catalog/wpc-photos/by-sku/WPC-SUP-U45-STD.png',
+            'WPC-SUP-U45-STEEL': 'images/catalog/wpc-photos/by-sku/WPC-SUP-U45-STEEL.png',
+            'WPC-SUP-U60-CLS': 'images/catalog/wpc-photos/by-sku/WPC-SUP-U60-CLS.png',
+            'WPC-SUP-U60-GLASS': 'images/catalog/wpc-photos/by-sku/WPC-SUP-U60-GLASS.png',
+            'WPC-SUP-U60-STD': 'images/catalog/wpc-photos/by-sku/WPC-SUP-U60-STD.png',
+            'WPC-SUP-U60-STEEL': 'images/catalog/wpc-photos/by-sku/WPC-SUP-U60-STEEL.png',
         };
 
         /** منطقة تلوين الرولّة — clip-path على لوح الباب فقط */
@@ -3294,45 +3294,29 @@
             const img = stack ? stack.querySelector('img.nebras-store-sku-img--wpc, img.nebras-store-sku-img') : card.querySelector('.nebras-store-sku-media img');
             if (!img) return;
             const baseSrc = img.getAttribute('data-base-src') || img.getAttribute('src') || '';
-            const isPhoto = isWpcCatalogPhotoPath(baseSrc);
-            const panelLayer = stack ? stack.querySelector('.nebras-store-sku-door-panel-color') : null;
             const rollPick = catalogIndex != null && !isNaN(catalogIndex);
-            if (!baseSrc || !rollPick) {
-                if (baseSrc) img.src = baseSrc;
+            if (baseSrc) {
+                img.src = baseSrc;
                 img.style.filter = '';
                 img.style.transition = '';
-                if (stack) {
-                    stack.classList.remove('has-door-roll-tint', 'has-door-roll-tint--photo', 'has-door-roll-tint--clip-panel', 'has-door-roll-tint--panel-only');
-                    if (panelLayer) {
-                        panelLayer.style.filter = '';
-                        panelLayer.style.backgroundImage = '';
-                        panelLayer.style.opacity = '0';
-                    }
-                }
+            }
+            if (stack) {
+                stack.classList.remove('has-door-roll-tint', 'has-door-roll-tint--photo', 'has-door-roll-tint--clip-panel', 'has-door-roll-tint--panel-only');
+            }
+            if (!rollPick) {
                 card.classList.remove('is-roll-color-live');
                 card.removeAttribute('data-active-roll-hex');
+                card.removeAttribute('data-selected-roll-index');
                 img.removeAttribute('data-composed-roll');
                 return;
             }
             const colors = getNebrasColorCatalog();
-            const rollIdx = catalogIndex;
-            const roll = colors[rollIdx] || colors[0];
+            const roll = colors[catalogIndex] || colors[0];
             if (!roll) return;
-            if (img.getAttribute('src') !== baseSrc) img.src = baseSrc;
-            const rollFilter = buildWpcStoreRollCssFilter(roll.hex);
-            img.style.transition = 'filter 0.38s ease, transform 0.38s ease';
-            img.style.filter = rollFilter;
-            if (stack) {
-                stack.classList.remove('has-door-roll-tint', 'has-door-roll-tint--photo', 'has-door-roll-tint--clip-panel', 'has-door-roll-tint--panel-only');
-                if (panelLayer) {
-                    panelLayer.style.filter = '';
-                    panelLayer.style.backgroundImage = '';
-                    panelLayer.style.opacity = '0';
-                }
-            }
-            img.setAttribute('data-composed-roll', String(rollIdx));
+            img.setAttribute('data-composed-roll', String(catalogIndex));
             card.classList.add('is-roll-color-live');
             card.setAttribute('data-active-roll-hex', roll.hex || '');
+            card.setAttribute('data-selected-roll-index', String(catalogIndex));
         }
 
         function getProductPhotoWatermarkSettings() {
@@ -3385,7 +3369,7 @@
         function buildWpcStoreRollPickerHtml(productId, variantIndex, lang, ui) {
             const colors = getNebrasColorCatalog();
             const label = ui.wpcStoreRollPickerLabel || 'اختر لون الرولّة — معاينة حية على الباب';
-            const hint = ui.wpcStoreRollPickerHint || 'اضغطي أي لون — يتغيّر لون الباب فوراً';
+            const hint = ui.wpcStoreRollPickerHint || 'اختر لون الرولّة للطلب — الصورة ثابتة بدون طبقات';
             const safePid = String(productId).replace(/'/g, "\\'");
             const swatches = colors.map(function(item, idx) {
                 const code = String(item.code || getRollCatalogCode(item.nebCode || getNebrasRollCodeByIndex(idx))).trim();
