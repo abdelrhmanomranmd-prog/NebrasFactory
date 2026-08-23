@@ -971,7 +971,7 @@
         }
 
         const DOOR_PHOTO_PRESET_ROOT = 'images/doors/presets/';
-        const DOOR_PHOTO_PRESET_CACHE = '36';
+        const DOOR_PHOTO_PRESET_CACHE = '37';
         /** fallback عند غياب صورة نموذج محدد */
         const DOOR_PHOTO_CANONICAL = {
             flat: DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-1/outer-flat-plain.png',
@@ -1233,8 +1233,8 @@
             if (stack) {
                 stack.style.maxWidth = maxCssW + 'px';
                 stack.style.width = maxCssW + 'px';
-                stack.style.transform = 'scale(' + sizeScale + ')';
-                stack.style.transformOrigin = 'center bottom';
+                stack.style.margin = '0 auto';
+                stack.style.transform = '';
             }
         }
 
@@ -1351,7 +1351,9 @@
             ctx.fillStyle = '#d8dce2';
             ctx.fillRect(0, 0, w, h);
             if (!cap) {
-                drawDoorPhotoPresetContained(ctx, w, h, 0, 0, base);
+                const padX = Math.round(w * 0.035);
+                const padY = Math.round(h * 0.025);
+                drawDoorPhotoPresetContained(ctx, w - padX * 2, h - padY * 2, padX, padY, base);
                 return;
             }
             const capIw = cap.naturalWidth || cap.width || w;
@@ -1360,7 +1362,9 @@
             const capH = Math.min(Math.round(w * capRatio), Math.round(h * 0.2));
             const doorY = capH;
             const doorH = h - capH;
-            drawDoorPhotoPresetContained(ctx, w, doorH, 0, doorY, base);
+            const padX = Math.round(w * 0.035);
+            const padBottom = Math.round(doorH * 0.02);
+            drawDoorPhotoPresetContained(ctx, w - padX * 2, doorH - padBottom, padX, doorY, base);
             ctx.drawImage(cap, 0, 0, capIw, capIh, 0, 0, w, capH);
         }
 
@@ -1497,14 +1501,7 @@
                 rollImg.classList.remove('is-active');
                 rollImg.removeAttribute('src');
             }
-            const needsBake = !!(isRoll || transomCapSrc);
-            if (!needsBake) {
-                img.src = baseSrc;
-                img.classList.remove('has-roll-composite', 'has-roll-pending');
-                if (stack) stack.classList.remove('has-roll-composite-ready', 'has-roll-pending', 'has-roll-texture', 'has-door-roll-tint');
-                return;
-            }
-
+            const needsBake = true;
             const cacheKey = doorPhotoRollComposeCacheKey(baseSrc, rollUrl, hex, transomCapSrc, isRoll);
             const cached = doorPhotoRollComposeCache[cacheKey];
             if (cached) {
@@ -1717,7 +1714,7 @@
                 if (presetKey) stage.removeAttribute('data-door-photo-preset-skip');
                 fitDoorPhotoPresetDisplaySize(img);
             };
-            const needsPhotoBake = !!(isRoll || transomCapSrc);
+            const needsPhotoBake = true;
             const prevPresetBase = img.getAttribute('data-door-base-src') || '';
             const presetBaseChanged = !!(prevPresetBase && prevPresetBase !== baseSrc);
             img.setAttribute('data-door-base-src', baseSrc);
@@ -1784,7 +1781,7 @@
 
         const DEFAULT_DOOR_DESIGNER = {
             enabled: true,
-            dataSeed: 'v33-factory-photo-live',
+            dataSeed: 'v33-factory-photo-contained',
             previewModelEnabled: true,
             useCompositorPreview: false,
             use3dPreview: true,

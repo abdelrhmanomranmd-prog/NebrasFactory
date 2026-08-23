@@ -2982,6 +2982,15 @@
     width: 100%;
     min-height: min(58vh, 480px);
     z-index: 30;
+    align-items: center;
+    justify-content: center;
+    padding: 0 3%;
+    box-sizing: border-box;
+}
+
+.wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-photo-preset-stack {
+    max-width: min(92%, 400px);
+    margin: 0 auto;
 }
 
 .wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-photo-preset-img {
@@ -2989,7 +2998,10 @@
     width: auto;
     height: auto;
     object-fit: contain;
+    object-position: center center;
     image-rendering: auto;
+    display: block;
+    margin: 0 auto;
 }
 
 .wpc-door-stage--studio-live .wpc-door-leaf-texture.is-visible {
