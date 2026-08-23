@@ -2063,19 +2063,19 @@
     }
 
     .wpc-door-stage--photo-preset .wpc-door-photo-preset-img {
-        max-width: min(90vw, 320px);
-        max-height: min(40vh, 380px);
+        max-width: min(88vw, 100%);
+        max-height: min(38vh, 420px);
         width: auto;
         height: auto;
         object-fit: contain;
     }
 
-    .wpc-door-stage--photo-preset .wpc-door-photo-preset-stack {
-        max-width: min(90vw, 320px);
-        max-height: min(40vh, 380px);
+    .wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-turntable {
+        transform: none !important;
+        min-height: min(40vh, 360px);
     }
 
-    .wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-svg-overlay {
+    .wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-canvas > :not(.wpc-door-photo-preset-wrap) {
         display: none !important;
     }
 
@@ -2902,6 +2902,57 @@
 .wpc-door-stage--studio-live .wpc-door-svg-overlay.is-active {
     opacity: 1;
     visibility: visible;
+}
+
+/* صورة المصنع فقط — إخفاء SVG/Keybab/3D التي تسبب بكسلة وتداخل */
+.wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-turntable {
+    transform: none !important;
+    perspective: none !important;
+    transform-style: flat !important;
+    cursor: default;
+    touch-action: pan-y;
+    min-height: min(62vh, 520px);
+}
+
+.wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-canvas {
+    width: 100%;
+    height: auto;
+    min-height: min(58vh, 480px);
+}
+
+.wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-canvas > :not(.wpc-door-photo-preset-wrap) {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+.wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-svg-overlay,
+.wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-svg-overlay.is-active,
+.wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-keybab-textures,
+.wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-leaf-texture,
+.wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-struct-texture,
+.wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-photo-stack {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+}
+
+.wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-photo-preset-wrap.is-active {
+    display: flex !important;
+    position: relative;
+    inset: auto;
+    width: 100%;
+    min-height: min(58vh, 480px);
+    z-index: 30;
+}
+
+.wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-photo-preset-img {
+    max-width: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    image-rendering: auto;
 }
 
 .wpc-door-stage--studio-live .wpc-door-leaf-texture.is-visible {

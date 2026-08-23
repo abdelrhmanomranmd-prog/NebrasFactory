@@ -971,7 +971,7 @@
         }
 
         const DOOR_PHOTO_PRESET_ROOT = 'images/doors/presets/';
-        const DOOR_PHOTO_PRESET_CACHE = '31';
+        const DOOR_PHOTO_PRESET_CACHE = '32';
         /** صور أبواب المصنع الحقيقية في المعاينة — SVG احتياطي عند غياب الصورة */
         const DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS = true;
         let doorDesignerPreviewRaf = 0;
@@ -1177,7 +1177,7 @@
         const DOOR_COMPOSE_MAX_H = 720;
         const DOOR_COMPOSE_CACHE_MAX = 24;
         const DOOR_COMPOSE_DEBOUNCE_MS = 90;
-        const DOOR_COMPOSE_COLOR_MS = 24;
+        const DOOR_COMPOSE_COLOR_MS = 0;
         const doorPhotoRollComposeCache = {};
         const doorPhotoRollComposeOrder = [];
         let doorComposeDebounceTimer = 0;
@@ -1204,25 +1204,54 @@
 
         function getDoorComposeDimensions(nw, nh) {
             if (!nw || !nh) return { w: 1, h: 1 };
-            let targetW = DOOR_COMPOSE_MAX_W;
-            let targetH = DOOR_COMPOSE_MAX_H;
-            if (typeof window !== 'undefined') {
-                const stack = document.getElementById('wpc-door-photo-preset-stack');
-                const imgEl = document.getElementById('wpc-door-photo-preset-img');
-                const rect = (stack && stack.getBoundingClientRect) ? stack.getBoundingClientRect()
-                    : (imgEl && imgEl.getBoundingClientRect ? imgEl.getBoundingClientRect() : null);
-                if (rect && rect.width > 48 && rect.height > 48) {
-                    targetW = Math.min(Math.max(Math.round(rect.width), 300), 520);
-                    targetH = Math.min(Math.max(Math.round(rect.height), 380), 780);
-                }
-            }
-            const dpr = (typeof window !== 'undefined' && window.devicePixelRatio)
-                ? Math.min(window.devicePixelRatio, 2.5) : 1;
-            const capW = Math.round(targetW * dpr);
-            const capH = Math.round(targetH * dpr);
-            if (nw <= capW && nh <= capH) return { w: nw, h: nh };
-            const scale = Math.min(capW / nw, capH / nh, 1);
+            /* دقة المصنع الأصلية — لا نكبّر في canvas (سبب البكسلة على الموبايل) */
+            const hardMaxW = 1200;
+            const hardMaxH = 1600;
+            if (nw <= hardMaxW && nh <= hardMaxH) return { w: nw, h: nh };
+            const scale = Math.min(hardMaxW / nw, hardMaxH / nh, 1);
             return { w: Math.max(1, Math.round(nw * scale)), h: Math.max(1, Math.round(nh * scale)) };
+        }
+
+        /** منع تكبير الصورة فوق دقتها الأصلية على الشاشة */
+        function fitDoorPhotoPresetDisplaySize(img) {
+            if (!img) return;
+            const nw = img.naturalWidth || 0;
+            const nh = img.naturalHeight || 0;
+            if (!nw || !nh) return;
+            const vw = (typeof window !== 'undefined' && window.innerWidth) ? window.innerWidth : 360;
+            const maxCssW = Math.min(nw, Math.max(240, Math.round(vw * 0.88)));
+            img.style.width = maxCssW + 'px';
+            img.style.height = 'auto';
+            img.style.maxWidth = maxCssW + 'px';
+            img.style.maxHeight = Math.min(nh, Math.round((window.innerHeight || 640) * 0.62)) + 'px';
+            const stack = img.closest ? img.closest('.wpc-door-photo-preset-stack') : null;
+            if (stack) {
+                stack.style.maxWidth = maxCssW + 'px';
+                stack.style.width = maxCssW + 'px';
+            }
+        }
+
+        function hideDoorDesignerLayersForPhotoPreset(stage) {
+            if (!stage) return;
+            const hideIds = [
+                'wpc-door-svg-overlay', 'wpc-door-keybab-textures', 'wpc-door-photo-stack',
+                'wpc-door-leaf-texture-a', 'wpc-door-leaf-texture-b', 'wpc-door-keybab-transom',
+                'wpc-door-struct-left', 'wpc-door-struct-right', 'wpc-door-struct-top', 'wpc-door-struct-top-clad',
+                'wpc-door-center-mullion'
+            ];
+            hideIds.forEach(function(id) {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.classList.remove('is-visible', 'is-active');
+                el.setAttribute('aria-hidden', 'true');
+            });
+            const svgOverlay = document.getElementById('wpc-door-svg-overlay');
+            if (svgOverlay) svgOverlay.classList.remove('is-active');
+            const tt = document.getElementById('wpc-door-turntable');
+            if (tt) {
+                tt.style.transform = 'none';
+                tt.style.perspective = 'none';
+            }
         }
 
         function doorPhotoRollComposeCacheKey(baseSrc, rollUrl, hex, transomCapSrc, isRoll) {
@@ -1255,6 +1284,12 @@
             if (stack) {
                 stack.classList.add('has-roll-composite-ready');
                 stack.classList.remove('has-roll-pending', 'has-roll-texture', 'has-door-roll-tint');
+            }
+            if (img.complete) fitDoorPhotoPresetDisplaySize(img);
+            else {
+                img.addEventListener('load', function onDoorPhotoFit() {
+                    fitDoorPhotoPresetDisplaySize(img);
+                }, { once: true });
             }
         }
 
@@ -1627,12 +1662,7 @@
             stage.classList.remove('wpc-door-stage--photo-preset-transom');
             stage.classList.toggle('wpc-door-stage--decor-transom', decor === 'transom');
             hideAllWpcPhotoDecorLayers();
-            const keybab = document.getElementById('wpc-door-keybab-textures');
-            if (keybab) {
-                keybab.querySelectorAll('.is-visible').forEach(function(el) { el.classList.remove('is-visible'); });
-            }
-            const svgOverlay = document.getElementById('wpc-door-svg-overlay');
-            if (svgOverlay) svgOverlay.classList.remove('is-active');
+            hideDoorDesignerLayersForPhotoPreset(stage);
             const wrap = document.getElementById('wpc-door-photo-preset-wrap');
             const stack = document.getElementById('wpc-door-photo-preset-stack');
             const img = document.getElementById('wpc-door-photo-preset-img');
@@ -1654,6 +1684,7 @@
             };
             img.onload = function() {
                 if (presetKey) stage.removeAttribute('data-door-photo-preset-skip');
+                fitDoorPhotoPresetDisplaySize(img);
             };
             const needsPhotoBake = !!(isRoll || transomCapSrc);
             const prevPresetBase = img.getAttribute('data-door-base-src') || '';
@@ -1714,7 +1745,7 @@
 
         const DEFAULT_DOOR_DESIGNER = {
             enabled: true,
-            dataSeed: 'v29-photo-roll-sharp',
+            dataSeed: 'v30-photo-native-sharp',
             previewModelEnabled: true,
             useCompositorPreview: false,
             use3dPreview: true,
@@ -1881,6 +1912,10 @@
             const stage = document.getElementById('door-3d-preview');
             const tt = document.getElementById('wpc-door-turntable');
             if (!stage || !tt) return;
+            if (stage.classList.contains('wpc-door-stage--photo-preset')) {
+                tt.style.transform = 'none';
+                return;
+            }
             if (tt._nebrasTurntableDispose) {
                 tt._nebrasTurntableDispose();
                 tt._nebrasTurntableDispose = null;
