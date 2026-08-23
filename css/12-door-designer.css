@@ -2877,16 +2877,26 @@
     filter: drop-shadow(0 22px 48px rgba(0, 0, 0, 0.22));
 }
 
+.wpc-door-stage--photo-preset .wpc-door-photo-preset-stack.has-roll-pending.has-roll-composite-ready .wpc-door-photo-preset-img {
+    opacity: 1;
+}
+
+.wpc-door-stage--photo-preset .wpc-door-photo-preset-stack.has-roll-pending:not(.has-roll-composite-ready) .wpc-door-photo-preset-img {
+    opacity: 0.96;
+    transition: opacity 0.18s ease;
+}
+
 .wpc-door-stage--photo-preset .wpc-door-photo-preset-img.has-roll-composite,
 .wpc-door-stage--photo-preset .wpc-door-photo-preset-img {
     filter: drop-shadow(0 22px 48px rgba(0, 0, 0, 0.22));
     image-rendering: auto;
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
+    transform: translateZ(0);
 }
 
 .wpc-door-stage--photo-preset .wpc-door-photo-preset-stack.has-roll-pending .wpc-door-photo-preset-img {
-    opacity: 0.94;
+    opacity: 0.96;
 }
 
 .wpc-door-stage--studio-live .wpc-door-svg-overlay.is-active {

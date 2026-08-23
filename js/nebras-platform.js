@@ -971,7 +971,7 @@
         }
 
         const DOOR_PHOTO_PRESET_ROOT = 'images/doors/presets/';
-        const DOOR_PHOTO_PRESET_CACHE = '30';
+        const DOOR_PHOTO_PRESET_CACHE = '31';
         /** صور أبواب المصنع الحقيقية في المعاينة — SVG احتياطي عند غياب الصورة */
         const DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS = true;
         let doorDesignerPreviewRaf = 0;
@@ -1173,10 +1173,11 @@
             return tryNext();
         }
 
-        const DOOR_COMPOSE_MAX_W = 640;
-        const DOOR_COMPOSE_MAX_H = 800;
-        const DOOR_COMPOSE_CACHE_MAX = 16;
-        const DOOR_COMPOSE_DEBOUNCE_MS = 140;
+        const DOOR_COMPOSE_MAX_W = 480;
+        const DOOR_COMPOSE_MAX_H = 720;
+        const DOOR_COMPOSE_CACHE_MAX = 24;
+        const DOOR_COMPOSE_DEBOUNCE_MS = 90;
+        const DOOR_COMPOSE_COLOR_MS = 24;
         const doorPhotoRollComposeCache = {};
         const doorPhotoRollComposeOrder = [];
         let doorComposeDebounceTimer = 0;
@@ -1203,12 +1204,58 @@
 
         function getDoorComposeDimensions(nw, nh) {
             if (!nw || !nh) return { w: 1, h: 1 };
-            const dpr = (typeof window !== 'undefined' && window.devicePixelRatio) ? Math.min(window.devicePixelRatio, 2) : 1;
-            const capW = Math.round(DOOR_COMPOSE_MAX_W * dpr);
-            const capH = Math.round(DOOR_COMPOSE_MAX_H * dpr);
+            let targetW = DOOR_COMPOSE_MAX_W;
+            let targetH = DOOR_COMPOSE_MAX_H;
+            if (typeof window !== 'undefined') {
+                const stack = document.getElementById('wpc-door-photo-preset-stack');
+                const imgEl = document.getElementById('wpc-door-photo-preset-img');
+                const rect = (stack && stack.getBoundingClientRect) ? stack.getBoundingClientRect()
+                    : (imgEl && imgEl.getBoundingClientRect ? imgEl.getBoundingClientRect() : null);
+                if (rect && rect.width > 48 && rect.height > 48) {
+                    targetW = Math.min(Math.max(Math.round(rect.width), 300), 520);
+                    targetH = Math.min(Math.max(Math.round(rect.height), 380), 780);
+                }
+            }
+            const dpr = (typeof window !== 'undefined' && window.devicePixelRatio)
+                ? Math.min(window.devicePixelRatio, 2.5) : 1;
+            const capW = Math.round(targetW * dpr);
+            const capH = Math.round(targetH * dpr);
             if (nw <= capW && nh <= capH) return { w: nw, h: nh };
             const scale = Math.min(capW / nw, capH / nh, 1);
             return { w: Math.max(1, Math.round(nw * scale)), h: Math.max(1, Math.round(nh * scale)) };
+        }
+
+        function doorPhotoRollComposeCacheKey(baseSrc, rollUrl, hex, transomCapSrc, isRoll) {
+            const tex = (isRoll && rollUrl) ? resolveDoorRollTextureUrl(rollUrl) : '';
+            const baseKey = doorDesignerMediaUrl(String(baseSrc || '').split('?')[0]);
+            const rollKey = tex ? doorDesignerMediaUrl(String(tex || '').split('?')[0]) : '';
+            const capKey = transomCapSrc ? doorDesignerMediaUrl(String(transomCapSrc || '').split('?')[0]) : '';
+            return baseKey + '|' + rollKey + '|' + capKey + '|' + String(hex || '') + '|' + DOOR_PHOTO_PRESET_CACHE;
+        }
+
+        /** لا نستخدم صورة blob الملوّنة كأساس — تسبب بكسلة وتكرار الرشّ */
+        function resolveDoorComposeBaseImage(img, baseSrc) {
+            if (!img || !img.complete || !(img.naturalWidth || img.width)) return null;
+            const src = String(img.getAttribute('src') || '');
+            if (!src || src.indexOf('blob:') === 0 || src.indexOf('data:') === 0) return null;
+            const baseKey = doorDesignerMediaUrl(String(baseSrc || '').split('?')[0]);
+            const srcKey = doorDesignerMediaUrl(src.split('?')[0]);
+            return srcKey === baseKey ? img : null;
+        }
+
+        function applyDoorPhotoRollCompositeToImg(img, stack, composed) {
+            if (!img || !composed) return;
+            const prev = img.getAttribute('src') || '';
+            if (prev.indexOf('blob:') === 0 && prev !== composed) {
+                try { URL.revokeObjectURL(prev); } catch (e) { /* ignore */ }
+            }
+            img.src = composed;
+            img.classList.add('has-roll-composite');
+            img.classList.remove('has-roll-pending');
+            if (stack) {
+                stack.classList.add('has-roll-composite-ready');
+                stack.classList.remove('has-roll-pending', 'has-roll-texture', 'has-door-roll-tint');
+            }
         }
 
         function drawDoorDesignerScaled(ctx, image, w, h) {
@@ -1225,7 +1272,7 @@
                     canvas.toBlob(function(blob) {
                         if (!blob) { resolve(canvas.toDataURL('image/png')); return; }
                         resolve(URL.createObjectURL(blob));
-                    }, 'image/png', 0.92);
+                    }, 'image/png', 0.96);
                     return;
                 }
                 resolve(canvas.toDataURL('image/png'));
@@ -1306,7 +1353,8 @@
             const rollKey = rollSrc ? doorDesignerMediaUrl(String(rollSrc || '').split('?')[0]) : '';
             const capKey = transomCapSrc ? doorDesignerMediaUrl(String(transomCapSrc || '').split('?')[0]) : '';
             const profile = getRollBlendProfile(hexFallback);
-            const cacheKey = baseKey + '|' + rollKey + '|' + capKey + '|' + String(hexFallback || '') + '|' + DOOR_PHOTO_PRESET_CACHE;
+            const skipLeafMask = opts.skipLeafMask !== false;
+            const cacheKey = baseKey + '|' + rollKey + '|' + capKey + '|' + String(hexFallback || '') + '|' + (skipLeafMask ? 'full' : 'mask') + '|' + DOOR_PHOTO_PRESET_CACHE;
             if (doorPhotoRollComposeCache[cacheKey]) {
                 return Promise.resolve(doorPhotoRollComposeCache[cacheKey]);
             }
@@ -1323,7 +1371,9 @@
                 const capPromise = transomCapSrc
                     ? loadDoorDesignerImage(transomCapSrc).catch(function() { return null; })
                     : Promise.resolve(null);
-                const maskPromise = loadDoorDesignerImage(NEBRAS_DOOR_LEAF_MASK).catch(function() { return null; });
+                const maskPromise = skipLeafMask
+                    ? Promise.resolve(null)
+                    : loadDoorDesignerImage(NEBRAS_DOOR_LEAF_MASK).catch(function() { return null; });
                 const rollPromise = rollKey
                     ? loadDoorRollTexture(catalogIndex, rollSrc).catch(function() { return null; })
                     : Promise.resolve(null);
@@ -1371,33 +1421,24 @@
         function runDoorPhotoRollCompose(img, baseSrc, rollUrl, hex, isRoll, catalogIndex, transomCapSrc, token) {
             const stack = img.closest ? img.closest('.wpc-door-photo-preset-stack') : document.getElementById('wpc-door-photo-preset-stack');
             const tex = rollUrl ? resolveDoorRollTextureUrl(rollUrl) : '';
-            const baseImg = (img && img.complete && (img.naturalWidth || img.width)) ? img : null;
+            const baseImg = resolveDoorComposeBaseImage(img, baseSrc);
             composeDoorPhotoWithRoll(baseSrc, isRoll ? tex : '', hex, catalogIndex, {
                 transomCapSrc: transomCapSrc || '',
-                baseImg: baseImg
+                baseImg: baseImg,
+                skipLeafMask: true
             }).then(function(composed) {
                 if (!img.isConnected) return;
                 if (img.getAttribute('data-roll-compose-token') !== token) return;
-                if (composed) {
-                    const prev = img.getAttribute('src') || '';
-                    if (prev.indexOf('blob:') === 0) {
-                        try { URL.revokeObjectURL(prev); } catch (e) { /* ignore */ }
-                    }
-                    img.src = composed;
-                    img.classList.add('has-roll-composite');
-                    img.classList.remove('has-roll-pending');
-                    if (stack) {
-                        stack.classList.add('has-roll-composite-ready');
-                        stack.classList.remove('has-roll-pending', 'has-roll-texture', 'has-door-roll-tint');
-                    }
-                }
+                if (composed) applyDoorPhotoRollCompositeToImg(img, stack, composed);
             });
         }
 
         function applyComposedRollToPhotoPresetImg(img, baseSrc, rollUrl, hex, isRoll, catalogIndex, rollImg, transomCapSrc) {
             if (!img || !baseSrc) return;
             const stack = img.closest ? img.closest('.wpc-door-photo-preset-stack') : document.getElementById('wpc-door-photo-preset-stack');
-            const token = String(Date.now()) + '-' + String(catalogIndex || 0) + '-' + String(hex || '');
+            const prevBase = img.getAttribute('data-door-base-src') || '';
+            const baseChanged = !!(prevBase && prevBase !== baseSrc);
+            const token = String(Date.now()) + '-' + String(catalogIndex || 0) + '-' + String(hex || '') + '-' + (baseChanged ? 'b' : 'c');
             img.setAttribute('data-door-base-src', baseSrc);
             img.setAttribute('data-roll-compose-token', token);
             if (rollImg) {
@@ -1412,17 +1453,29 @@
                 if (stack) stack.classList.remove('has-roll-composite-ready', 'has-roll-pending', 'has-roll-texture', 'has-door-roll-tint');
                 return;
             }
-            const prevBase = img.getAttribute('data-door-base-src') || '';
-            if (prevBase !== baseSrc || !img.getAttribute('src')) {
-                img.src = baseSrc;
+
+            const cacheKey = doorPhotoRollComposeCacheKey(baseSrc, rollUrl, hex, transomCapSrc, isRoll);
+            const cached = doorPhotoRollComposeCache[cacheKey];
+            if (cached) {
+                applyDoorPhotoRollCompositeToImg(img, stack, cached);
+                return;
             }
+
+            if (baseChanged) {
+                img.classList.remove('has-roll-composite');
+                if (stack) stack.classList.remove('has-roll-composite-ready');
+            }
+            if (!img.getAttribute('src')) img.src = baseSrc;
+
             img.classList.add('has-roll-pending');
             if (stack) stack.classList.add('has-roll-pending');
+
+            const delay = baseChanged ? DOOR_COMPOSE_DEBOUNCE_MS : DOOR_COMPOSE_COLOR_MS;
             if (doorComposeDebounceTimer) clearTimeout(doorComposeDebounceTimer);
             doorComposeDebounceTimer = setTimeout(function() {
                 doorComposeDebounceTimer = 0;
                 runDoorPhotoRollCompose(img, baseSrc, rollUrl, hex, isRoll, catalogIndex, transomCapSrc, token);
-            }, DOOR_COMPOSE_DEBOUNCE_MS);
+            }, delay);
         }
 
         /** صور المصنع لكل اختيار — تُضاف تدريجياً مع صورك */
@@ -1547,7 +1600,7 @@
                 wrap.style.removeProperty('--door-roll-mask');
             }
             if (stack) {
-                stack.classList.remove('has-roll-texture', 'has-roll-pending', 'has-roll-composite-ready', 'has-door-roll-tint');
+                stack.classList.remove('has-roll-texture', 'has-door-roll-tint');
                 stack.style.removeProperty('--door-roll-mask');
             }
             if (rollImg) {
@@ -1602,7 +1655,15 @@
             img.onload = function() {
                 if (presetKey) stage.removeAttribute('data-door-photo-preset-skip');
             };
-            img.src = baseSrc;
+            const needsPhotoBake = !!(isRoll || transomCapSrc);
+            const prevPresetBase = img.getAttribute('data-door-base-src') || '';
+            const presetBaseChanged = !!(prevPresetBase && prevPresetBase !== baseSrc);
+            img.setAttribute('data-door-base-src', baseSrc);
+            if (!needsPhotoBake) {
+                img.src = baseSrc;
+            } else if (!img.getAttribute('src') || !presetBaseChanged) {
+                if (!img.getAttribute('src')) img.src = baseSrc;
+            }
             img.alt = '';
             if (transomCap) {
                 transomCap.hidden = true;
@@ -1653,7 +1714,7 @@
 
         const DEFAULT_DOOR_DESIGNER = {
             enabled: true,
-            dataSeed: 'v28-photo-real-studio',
+            dataSeed: 'v29-photo-roll-sharp',
             previewModelEnabled: true,
             useCompositorPreview: false,
             use3dPreview: true,
