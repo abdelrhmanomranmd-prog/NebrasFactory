@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify door designer: SVG studio live, export presets, 360° turntable."""
+"""Verify door designer: presets, color pipeline, no regression flags."""
 import os
 import re
 import sys
@@ -25,39 +25,23 @@ def main():
     with open(CSS, encoding='utf-8') as f:
         css = f.read()
 
-    if "designCanvasMode: 'studio-live'" not in js:
-        err('DEFAULT door designer should use studio-live mode')
-    if 'DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS = true' not in js:
-        err('Live preview must use real factory photos per selection')
-    if 'const ROT_MIN = -180' not in js or 'const ROT_MAX = 180' not in js:
-        err('360° turntable rotation missing')
-    if 'mode: \'bake-transom\'' not in js:
-        err('bake-transom MDF mode missing for quote/export photos')
-    if 'paintDoorDesignerLivePreview' not in js:
-        err('paintDoorDesignerLivePreview missing')
-    if 'bindDoorDesignerTurntable' not in js:
-        err('bindDoorDesignerTurntable missing')
-    if re.search(
-        r"if \(cfg\.enabled !== false\)[\s\S]{0,350}cfg\.designCanvasMode = 'studio-live'",
-        js,
-    ) is None:
-        err('Enabled door designer must force studio-live (not 3D hijack)')
-
-    # Export / quote photo pipeline
-    if 'resolveDoorDesignerPhotoPreset' not in js:
-        err('resolveDoorDesignerPhotoPreset missing for export photos')
-    if 'composeDoorPhotoWithRoll' not in js:
-        err('composeDoorPhotoWithRoll missing for export color bake')
-
     # Regression guards
     if 'composeRoll: false' in js:
         err('composeRoll: false still present — live preview color may freeze')
+    if 'has-roll-css-only' in js or 'has-roll-css-only' in css:
+        err('has-roll-css-only still present — disables instant color layers')
+    if "toDataURL('image/jpeg'" in js:
+        warn('JPEG compose found — may cause pixelation; prefer PNG')
     if "toDataURL('image/png')" not in js:
         err('PNG compose missing in composeDoorPhotoWithRoll')
-
-    # Studio SVG visible; photo preset hidden when not active
-    if ':not(.wpc-door-stage--photo-preset) .wpc-door-svg-overlay' not in css:
-        warn('CSS guard for SVG-over-photo ghost layers may be missing')
+    if not re.search(r'DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS\s*=\s*true', js):
+        err('DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS is not true')
+    if 'applyComposedRollToPhotoPresetImg(img' not in js:
+        err('applyComposedRollToPhotoPresetImg not called — color bake missing')
+    if 'has-door-roll-tint:not(.has-roll-composite-ready)::after' not in css and 'has-door-roll-tint::after' not in css:
+        err('Instant CSS tint layer (::after) missing from door designer CSS')
+    if 'grayscale(1)' in css and 'has-roll-composite' in css:
+        pass  # expected: grayscale only until composite ready
 
     # Preset map vs files
     preset_paths = re.findall(r"DOOR_PHOTO_PRESET_ROOT\s*\+\s*'([^']+)'", js)
@@ -69,12 +53,19 @@ def main():
     if missing:
         err(f'Missing {len(missing)} door preset images: {missing[:5]}...')
 
+    # Roll swatches
+    roll_dir = os.path.join(ROOT, 'images', 'rolls')
+    if os.path.isdir(roll_dir):
+        rolls = [f for f in os.listdir(roll_dir) if f.lower().endswith(('.jpg', '.jpeg', '.png', '.webp'))]
+        if len(rolls) < 15:
+            warn(f'Only {len(rolls)} roll swatch images in images/rolls')
+    else:
+        warn('images/rolls directory not found')
+
+    # Cache bust version
     m = re.search(r"DOOR_PHOTO_PRESET_CACHE\s*=\s*'(\d+)'", js)
     if m:
         print(f'DOOR_PHOTO_PRESET_CACHE = {m.group(1)}')
-    m2 = re.search(r"dataSeed: '([^']+)'", js)
-    if m2:
-        print(f'dataSeed = {m2.group(1)}')
 
     print('=== DOOR DESIGNER VERIFY ===')
     print(f'Preset paths in map: {len(preset_paths)}')

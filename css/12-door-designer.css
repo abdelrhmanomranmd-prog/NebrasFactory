@@ -2051,21 +2051,8 @@
     }
 
     .wpc-door-stage--keybab .wpc-door-canvas {
-        width: min(320px, 92vw);
-        height: min(400px, 52vh);
-    }
-
-    .wpc-door-stage--studio-live:not(.wpc-door-stage--photo-preset) .wpc-door-photo-preset-wrap {
-        display: none !important;
-        visibility: hidden !important;
-        opacity: 0 !important;
-    }
-
-    .wpc-door-stage--studio-live:not(.wpc-door-stage--photo-preset) .wpc-door-svg-overlay,
-    .wpc-door-stage--studio-live:not(.wpc-door-stage--photo-preset) .wpc-door-svg-overlay.is-active {
-        display: block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
+        width: min(280px, 84vw);
+        height: min(300px, 38vh);
     }
 
     .wpc-door-stage--photo-preset .wpc-door-photo-preset-wrap.is-active {
@@ -2076,57 +2063,20 @@
     }
 
     .wpc-door-stage--photo-preset .wpc-door-photo-preset-img {
-        max-width: min(88vw, 100%);
-        max-height: min(38vh, 420px);
+        max-width: min(90vw, 320px);
+        max-height: min(40vh, 380px);
         width: auto;
         height: auto;
         object-fit: contain;
     }
 
-    .wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-turntable {
-        transform: none !important;
-        transform-style: flat;
-        min-height: min(42vh, 340px);
-        cursor: default;
-        touch-action: pan-y;
+    .wpc-door-stage--photo-preset .wpc-door-photo-preset-stack {
+        max-width: min(90vw, 320px);
+        max-height: min(40vh, 380px);
     }
 
-    .wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-canvas {
-        min-height: min(40vh, 320px);
-        width: min(100%, 360px);
-        margin-inline: auto;
-    }
-
-    .wpc-door-stage--photo-preset .wpc-door-photo-preset-wrap.is-active {
-        min-height: min(40vh, 320px);
-    }
-
-    .wpc-door-stage--photo-preset .wpc-door-photo-preset-img {
-        max-width: min(92vw, 100%);
-        max-height: min(36vh, 360px);
-        width: auto;
-        height: auto;
-        object-fit: contain;
-        image-rendering: auto;
-        -webkit-backface-visibility: hidden;
-        backface-visibility: hidden;
-    }
-
-    .door-designer--studio .door-studio-step-grid {
-        grid-template-columns: 1fr;
-        gap: 10px;
-    }
-
-    .door-designer--studio .door-studio-chip-row {
-        flex-wrap: wrap;
-        gap: 8px;
-    }
-
-    .door-designer--studio .door-studio-chip {
-        flex: 1 1 calc(50% - 4px);
-        min-width: 0;
-        font-size: 0.82rem;
-        padding: 10px 8px;
+    .wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-svg-overlay {
+        display: none !important;
     }
 
     .door-designer--studio .door-active-color-label {
@@ -2801,24 +2751,20 @@
     isolation: isolate;
 }
 
-/* صورة المصنع — طبقة واحدة فقط، بدون tint شبحي */
-.wpc-door-stage--photo-preset .wpc-door-photo-preset-stack::after,
-.wpc-door-stage--photo-preset .wpc-door-photo-preset-stack::before,
-.wpc-door-stage--photo-preset .wpc-door-photo-preset-stack.has-door-roll-tint::after,
-.wpc-door-stage--photo-preset .wpc-door-photo-preset-stack.has-roll-texture::before {
-    display: none !important;
-    content: none !important;
-    opacity: 0 !important;
-    visibility: hidden !important;
+/* طبقة لون فورية — تطابق كتالوج الرولّات بدون اسود/بكسلة */
+.wpc-door-photo-preset-stack.has-door-roll-tint:not(.has-roll-composite-ready)::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    background-color: var(--door-roll-tint, #b8bcc4);
+    mix-blend-mode: color;
+    opacity: var(--door-roll-tint-opacity, 0.82);
+    pointer-events: none;
 }
 
-.wpc-door-stage--photo-preset .wpc-door-photo-preset-stack.has-roll-pending .wpc-door-photo-preset-img {
-    opacity: 1;
-    filter: none;
-}
-
-.wpc-door-stage--photo-preset .wpc-door-photo-preset-transom-cap {
-    display: none !important;
+.wpc-door-photo-preset-stack.has-door-roll-tint.has-roll-texture:not(.has-roll-composite-ready)::before {
+    display: none;
 }
 
 .wpc-door-photo-preset-stack.has-roll-composite-ready::after,
@@ -2915,135 +2861,9 @@
     pointer-events: none !important;
 }
 
-.wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-svg-overlay.is-active {
-    visibility: hidden !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
-}
-
-/* صورة المصنع — لون الرولّة عبر canvas فقط، بدون طبقات CSS فوق الصورة */
-.wpc-door-stage--photo-preset .wpc-door-photo-preset-stack.has-door-roll-tint::after,
-.wpc-door-stage--photo-preset .wpc-door-photo-preset-stack.has-door-roll-tint::before {
-    display: none !important;
-}
-
-.wpc-door-stage--photo-preset .wpc-door-photo-preset-stack.has-roll-texture:not(.has-roll-composite-ready) .wpc-door-photo-preset-img {
-    filter: drop-shadow(0 22px 48px rgba(0, 0, 0, 0.22));
-}
-
-.wpc-door-stage--photo-preset .wpc-door-photo-preset-stack.has-roll-pending.has-roll-composite-ready .wpc-door-photo-preset-img {
-    opacity: 1;
-}
-
-.wpc-door-stage--photo-preset .wpc-door-photo-preset-stack.has-roll-pending:not(.has-roll-composite-ready) .wpc-door-photo-preset-img {
-    opacity: 0.96;
-    transition: opacity 0.18s ease;
-}
-
-.wpc-door-stage--photo-preset .wpc-door-photo-preset-img.has-roll-composite,
-.wpc-door-stage--photo-preset .wpc-door-photo-preset-img {
-    filter: drop-shadow(0 22px 48px rgba(0, 0, 0, 0.22));
-    image-rendering: auto;
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
-}
-
-.wpc-door-stage--photo-preset .wpc-door-photo-preset-stack.has-roll-pending .wpc-door-photo-preset-img {
-    opacity: 0.96;
-}
-
-.wpc-door-stage--studio-live:not(.wpc-door-stage--photo-preset) .wpc-door-photo-preset-wrap,
-.wpc-door-stage--studio-live:not(.wpc-door-stage--photo-preset) .wpc-door-photo-preset-stack {
-    display: none !important;
-    visibility: hidden !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
-}
-
-.wpc-door-stage--studio-live:not(.wpc-door-stage--photo-preset) .wpc-door-svg-overlay {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-}
-
-.wpc-door-stage--studio-live .wpc-door-svg-overlay svg {
-    shape-rendering: geometricPrecision;
-}
-
-.wpc-door-stage--studio-live .wpc-door-leaf-texture,
-.wpc-door-stage--studio-live .wpc-door-struct-texture {
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
-}
-
 .wpc-door-stage--studio-live .wpc-door-svg-overlay.is-active {
     opacity: 1;
     visibility: visible;
-}
-
-/* صورة المصنع — دوران مع contain (وضع التصدير فقط) */
-.wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-turntable {
-    transform: rotateX(6deg) rotateY(var(--turntable-rotate-y, -14deg));
-    transform-style: preserve-3d;
-    cursor: grab;
-    touch-action: none;
-    min-height: min(62vh, 520px);
-}
-
-.wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-canvas {
-    width: 100%;
-    height: auto;
-    min-height: min(58vh, 480px);
-}
-
-.wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-canvas > :not(.wpc-door-photo-preset-wrap) {
-    display: none !important;
-    visibility: hidden !important;
-    opacity: 0 !important;
-    pointer-events: none !important;
-}
-
-.wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-svg-overlay,
-.wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-svg-overlay.is-active,
-.wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-keybab-textures,
-.wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-leaf-texture,
-.wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-struct-texture,
-.wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-photo-stack {
-    display: none !important;
-    visibility: hidden !important;
-    opacity: 0 !important;
-}
-
-.wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-photo-preset-wrap.is-active {
-    display: flex !important;
-    position: relative;
-    inset: auto;
-    width: 100%;
-    min-height: min(58vh, 480px);
-    z-index: 30;
-    align-items: center;
-    justify-content: center;
-    padding: 0 3%;
-    box-sizing: border-box;
-}
-
-.wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-photo-preset-stack {
-    max-width: min(92%, 400px);
-    margin: 0 auto;
-    transform: scale(var(--door-zoom, 1));
-    transform-origin: center center;
-}
-
-.wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-photo-preset-img {
-    max-width: 100%;
-    width: auto;
-    height: auto;
-    object-fit: contain;
-    object-position: center center;
-    image-rendering: auto;
-    display: block;
-    margin: 0 auto;
-    transform: none;
 }
 
 .wpc-door-stage--studio-live .wpc-door-leaf-texture.is-visible {
