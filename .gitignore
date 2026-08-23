@@ -20,6 +20,13 @@ tools/__pycache__/
 *.pyc
 __pycache__/
 
+# مسودات وملفات مؤقتة للتطوير (لا تُرفع)
+tools/_*
+accmaa-deploy/
+nebras-wpc-cinematic-reel.html
+nebras-wpc-reel-video.html
+images/wpc-doors/
+
 # بيئة محلية (لا ترفعي مفاتيح سرية)
 .env
 .env.local
