@@ -2910,7 +2910,6 @@
     image-rendering: auto;
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
-    transform: translateZ(0);
 }
 
 .wpc-door-stage--photo-preset .wpc-door-photo-preset-stack.has-roll-pending .wpc-door-photo-preset-img {
@@ -2995,6 +2994,8 @@
 .wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-photo-preset-stack {
     max-width: min(92%, 400px);
     margin: 0 auto;
+    transform: scale(var(--door-zoom, 1));
+    transform-origin: center center;
 }
 
 .wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-photo-preset-img {
@@ -3006,6 +3007,7 @@
     image-rendering: auto;
     display: block;
     margin: 0 auto;
+    transform: none;
 }
 
 .wpc-door-stage--studio-live .wpc-door-leaf-texture.is-visible {

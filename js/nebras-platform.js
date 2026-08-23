@@ -971,7 +971,7 @@
         }
 
         const DOOR_PHOTO_PRESET_ROOT = 'images/doors/presets/';
-        const DOOR_PHOTO_PRESET_CACHE = '38';
+        const DOOR_PHOTO_PRESET_CACHE = '39';
         /** fallback عند غياب صورة نموذج محدد */
         const DOOR_PHOTO_CANONICAL = {
             flat: DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-1/outer-flat-plain.png',
@@ -1254,8 +1254,28 @@
         }
 
         function applyDoorPhotoPresetSize(stage, sizeId, cfg) {
-            if (!stage) return;
-            applyWpcSvgSize(stage, sizeId, cfg);
+            if (!stage || !cfg || !cfg.sizes) return;
+            const size = cfg.sizes.find(function(s) { return s && s.id === sizeId; }) || cfg.sizes[0];
+            stage.style.setProperty('--door-size-scale', '1');
+            stage.style.setProperty('--door-size-scale-x', '1');
+            stage.style.setProperty('--door-size-scale-y', '1');
+            stage.setAttribute('data-size', sizeId || '');
+            if (size && size.thicknessCm) stage.style.setProperty('--door-thickness-cm', String(size.thicknessCm));
+            const specH = stage.querySelector('.door-size-dim');
+            if (specH && size) {
+                specH.textContent = [size.widthCm, size.thicknessCm, size.heightCm].filter(Boolean).join('×');
+            }
+        }
+
+        function showDoorPhotoPresetBase(img, baseSrc) {
+            if (!img || !baseSrc) return;
+            const prev = img.getAttribute('src') || '';
+            if (prev.indexOf('blob:') === 0 && prev !== baseSrc) {
+                try { URL.revokeObjectURL(prev); } catch (e) { /* ignore */ }
+            }
+            if (prev !== baseSrc) img.src = baseSrc;
+            img.classList.remove('has-roll-composite');
+            fitDoorPhotoPresetDisplaySize(img);
         }
 
         function hideDoorDesignerLayersForPhotoPreset(stage) {
@@ -1361,7 +1381,7 @@
             ctx.drawImage(img, 0, 0, iw, ih, ox, oy, sw, sh);
         }
 
-        /** MDF فوق الباب — محاذاة بعرض الباب فقط (لا شريط غريب) */
+        /** MDF فوق الباب — قصّ شريط التكسية من أعلى مرجع المصنع فقط (ليس باباً كاملاً) */
         function mergeDoorPhotoTransomCap(ctx, w, h, base, cap) {
             ctx.fillStyle = '#d8dce2';
             ctx.fillRect(0, 0, w, h);
@@ -1369,11 +1389,13 @@
             ctx.drawImage(base, 0, 0, box.iw, box.ih, box.ox, box.oy, box.sw, box.sh);
             if (!cap) return;
             const capIw = cap.naturalWidth || cap.width || box.sw;
-            const capIh = cap.naturalHeight || cap.height || box.sh * 0.2;
+            const capIh = cap.naturalHeight || cap.height || 1;
             const capScale = box.sw / Math.max(1, capIw);
-            const capDrawH = Math.min(capIh * capScale, box.sh * 0.22);
-            const capY = Math.max(0, box.oy - capDrawH);
-            ctx.drawImage(cap, 0, 0, capIw, capIh, box.ox, capY, box.sw, capDrawH);
+            const transomBandRatio = 0.34;
+            const capSrcH = Math.max(1, Math.round(capIh * transomBandRatio));
+            const transomDrawH = Math.min(capSrcH * capScale, box.sh * 0.28);
+            const capY = Math.max(0, box.oy - transomDrawH + (box.sh * 0.012));
+            ctx.drawImage(cap, 0, 0, capIw, capSrcH, box.ox, capY, box.sw, transomDrawH);
         }
 
         function bakeDoorRollLayer(w, h, source, roll, mask, profile, hexFallback) {
@@ -1386,11 +1408,11 @@
             lctx.drawImage(source, 0, 0, w, h);
             if (roll) {
                 lctx.globalCompositeOperation = 'multiply';
-                lctx.globalAlpha = profile.multiplyAlpha * 0.92;
+                lctx.globalAlpha = profile.multiplyAlpha * 0.84;
                 tileDoorRollTexture(lctx, roll, w, h);
                 lctx.globalAlpha = 1;
                 lctx.globalCompositeOperation = 'color';
-                lctx.globalAlpha = profile.colorAlpha * 0.88;
+                lctx.globalAlpha = profile.colorAlpha * 0.8;
                 tileDoorRollTexture(lctx, roll, w, h);
                 lctx.globalAlpha = 1;
             } else if (hexFallback) {
@@ -1483,11 +1505,12 @@
             composeDoorPhotoWithRoll(baseSrc, isRoll ? tex : '', isRoll ? hex : '', catalogIndex, {
                 transomCapSrc: transomCapSrc || '',
                 baseImg: null,
-                skipLeafMask: false
+                skipLeafMask: true
             }).then(function(composed) {
                 if (!img.isConnected) return;
                 if (img.getAttribute('data-roll-compose-token') !== token) return;
                 if (composed) applyDoorPhotoRollCompositeToImg(img, stack, composed);
+                else showDoorPhotoPresetBase(img, baseSrc);
             });
         }
 
@@ -1513,8 +1536,8 @@
             }
 
             if (baseChanged) {
-                img.classList.remove('has-roll-composite');
                 if (stack) stack.classList.remove('has-roll-composite-ready');
+                showDoorPhotoPresetBase(img, baseSrc);
             }
 
             img.classList.add('has-roll-pending');
@@ -1724,9 +1747,12 @@
             const presetBaseChanged = !!(prevPresetBase && prevPresetBase !== baseSrc);
             img.setAttribute('data-door-base-src', baseSrc);
             if (presetBaseChanged) {
-                img.classList.remove('has-roll-composite', 'has-roll-pending');
+                img.classList.remove('has-roll-pending');
                 if (stack) stack.classList.remove('has-roll-composite-ready', 'has-roll-pending', 'has-roll-texture', 'has-door-roll-tint');
                 stage.removeAttribute('data-door-photo-preset-skip');
+            }
+            if (presetBaseChanged || !img.getAttribute('src')) {
+                showDoorPhotoPresetBase(img, baseSrc);
             }
             img.alt = '';
             if (transomCap) {
@@ -1781,7 +1807,7 @@
 
         const DEFAULT_DOOR_DESIGNER = {
             enabled: true,
-            dataSeed: 'v34-factory-photo-sharp',
+            dataSeed: 'v35-factory-photo-transom-fix',
             previewModelEnabled: true,
             useCompositorPreview: false,
             use3dPreview: true,
