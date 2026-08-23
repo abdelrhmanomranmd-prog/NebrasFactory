@@ -2071,8 +2071,8 @@
     }
 
     .wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-turntable {
-        transform: rotateX(4deg) rotateY(var(--turntable-rotate-y, -12deg)) !important;
         min-height: min(40vh, 360px);
+        cursor: grab;
         touch-action: none;
     }
 
@@ -2905,11 +2905,10 @@
     visibility: visible;
 }
 
-/* صورة المصنع — دوران 160° مع إخفاء SVG */
+/* صورة المصنع — دوران 160° مع contain دون SVG متداخل */
 .wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-turntable {
-    transform: rotateX(5deg) rotateY(var(--turntable-rotate-y, -12deg)) !important;
-    perspective: 1400px !important;
-    transform-style: preserve-3d !important;
+    transform: rotateX(6deg) rotateY(var(--turntable-rotate-y, -14deg));
+    transform-style: preserve-3d;
     cursor: grab;
     touch-action: none;
     min-height: min(62vh, 520px);
