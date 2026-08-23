@@ -25,6 +25,17 @@ def main():
     with open(CSS, encoding='utf-8') as f:
         css = f.read()
 
+    if 'mode: \'bake-transom\'' not in js:
+        err('bake-transom MDF mode missing — transom may render as broken overlay')
+    if "designCanvasMode: 'studio-live'" not in js:
+        err('DEFAULT door designer should use studio-live photo mode')
+    if re.search(r"if \(cfg\.enabled !== false\)[\s\S]{0,400}DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS[\s\S]{0,200}studio-live", js) is None:
+        err('Photo preset mode must force studio-live instead of 3D when enabled')
+    if 'getDoorComposeDimensions' not in js or 'DOOR_COMPOSE_MAX_W' not in js:
+        err('Mobile compose cap missing')
+    if 'canvasToDoorPreviewUrl' not in js:
+        err('Blob URL compose missing — may cause mobile pixelation')
+
     # Regression guards
     if 'composeRoll: false' in js:
         err('composeRoll: false still present — live preview color may freeze')

@@ -2861,6 +2861,34 @@
     pointer-events: none !important;
 }
 
+.wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-svg-overlay.is-active {
+    visibility: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+}
+
+/* صورة المصنع — لون الرولّة عبر canvas فقط، بدون طبقات CSS فوق الصورة */
+.wpc-door-stage--photo-preset .wpc-door-photo-preset-stack.has-door-roll-tint::after,
+.wpc-door-stage--photo-preset .wpc-door-photo-preset-stack.has-door-roll-tint::before {
+    display: none !important;
+}
+
+.wpc-door-stage--photo-preset .wpc-door-photo-preset-stack.has-roll-texture:not(.has-roll-composite-ready) .wpc-door-photo-preset-img {
+    filter: drop-shadow(0 22px 48px rgba(0, 0, 0, 0.22));
+}
+
+.wpc-door-stage--photo-preset .wpc-door-photo-preset-img.has-roll-composite,
+.wpc-door-stage--photo-preset .wpc-door-photo-preset-img {
+    filter: drop-shadow(0 22px 48px rgba(0, 0, 0, 0.22));
+    image-rendering: auto;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+}
+
+.wpc-door-stage--photo-preset .wpc-door-photo-preset-stack.has-roll-pending .wpc-door-photo-preset-img {
+    opacity: 0.94;
+}
+
 .wpc-door-stage--studio-live .wpc-door-svg-overlay.is-active {
     opacity: 1;
     visibility: visible;
