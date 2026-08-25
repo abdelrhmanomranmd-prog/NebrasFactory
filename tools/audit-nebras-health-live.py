@@ -40,8 +40,8 @@ def main():
     print('HTTP /:', st, '| deploy:', v)
     if st != 200:
         issues.append('Homepage not 200')
-    if v != 'hrws273':
-        notes.append('Deploy tag is ' + v + ' (expected hrws273 if latest)')
+    if v != 'hrws274':
+        notes.append('Deploy tag is ' + v + ' (expected hrws274 if latest)')
 
     # assets linked
     refs = re.findall(r'(?:href|src)="((?:css|js)/[^"#?]+(?:\?v=[^"]+)?)"', html)
@@ -95,6 +95,8 @@ def main():
         ('erp_cloud_rollback', 'persistErpStoresWithRollback' in pl),
         ('portal_lazy', 'ensureNebrasPortalBundle' in open(os.path.join(ROOT, 'js/nebras-dept-lazy.js'), encoding='utf-8').read()),
         ('hq_complaints_queue', 'complaintsOpen' in pl),
+        ('platform_i18n_split', 'nebras-platform-i18n.js' in html and '__NEBRAS_I18N__' in open(os.path.join(ROOT, 'js/nebras-platform-i18n.js'), encoding='utf-8').read()),
+        ('complaints_cloud_rollback', 'persistErpStoresWithRollback' in pl and 'async function setComplaintStatus' in pl),
     ]
     print('\nFeature flags:')
     for name, ok in flags:
