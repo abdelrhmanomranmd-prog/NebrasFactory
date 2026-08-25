@@ -16542,6 +16542,7 @@
             const customer = fieldVal('ord-customer');
             const product = fieldVal('ord-product');
             if (!customer || !product) { alert('اسم العميل والمنتج مطلوبان.'); return; }
+            const snapshot = JSON.parse(JSON.stringify(erpOrders));
             const orderNo = 'NB-' + new Date().getFullYear() + '-' + String(erpOrders.length + 1).padStart(4, '0');
             erpOrders.unshift({
                 id: 'ORD-' + Date.now(),
@@ -16558,32 +16559,57 @@
                 by: erpActor(),
                 createdAt: new Date().toISOString()
             });
-            saveSystemData();
-            renderErpOrdersForm();
-            displayErpOrders();
-            renderErpHubPanel();
-            if (currentAdmin) renderDashboardCommandShell(currentAdmin);
-            addAuditLog('ERP طلب', customer + ' — ' + product);
+            saveSystemData({ skipCloud: true, skipMutationMark: true });
+            persistErpStoresWithRollback(['erp_orders'], function() {
+                erpOrders = snapshot;
+            }).then(function(cloudOk) {
+                if (!cloudOk) {
+                    renderErpOrdersForm();
+                    displayErpOrders();
+                    return;
+                }
+                renderErpOrdersForm();
+                displayErpOrders();
+                renderErpHubPanel();
+                if (currentAdmin) renderDashboardCommandShell(currentAdmin);
+                addAuditLog('ERP طلب', customer + ' — ' + product);
+            });
         }
 
-        function updateErpOrderStatus(id, status) {
+        async function updateErpOrderStatus(id, status) {
             if (!requirePermission('orders')) return;
             const o = erpOrders.find(function(x) { return x.id === id; });
             if (!o) return;
+            const snapshot = JSON.parse(JSON.stringify(erpOrders));
             o.status = status;
             o.updatedAt = new Date().toISOString();
-            saveSystemData();
+            saveSystemData({ skipCloud: true, skipMutationMark: true });
+            const cloudOk = await persistErpStoresWithRollback(['erp_orders'], function() {
+                erpOrders = snapshot;
+            });
+            if (!cloudOk) {
+                displayErpOrders();
+                return;
+            }
             displayErpOrders();
             renderErpHubPanel();
         }
 
-        function deleteErpOrder(id) {
+        async function deleteErpOrder(id) {
             if (!requirePermission('orders')) return;
             const o = erpOrders.find(function(x) { return x.id === id; });
             if (!o || !assertErpEntryInAdminScope(o, currentAdmin, 'لا يمكنك حذف طلب خارج فرعك/قسمك.')) return;
             if (!confirm('حذف الطلب ' + (o.orderNo || o.id) + '؟')) return;
+            const snapshot = JSON.parse(JSON.stringify(erpOrders));
             erpOrders = erpOrders.filter(function(x) { return x.id !== id; });
-            saveSystemData();
+            saveSystemData({ skipCloud: true, skipMutationMark: true });
+            const cloudOk = await persistErpStoresWithRollback(['erp_orders'], function() {
+                erpOrders = snapshot;
+            });
+            if (!cloudOk) {
+                displayErpOrders();
+                return;
+            }
             displayErpOrders();
             renderErpHubPanel();
         }
@@ -18761,6 +18787,9 @@
                 if (typeof ensureNebrasAdminCss === 'function') {
                     try { await ensureNebrasAdminCss(); } catch (cssErr) { console.warn('admin css:', cssErr); }
                 }
+                if (typeof ensureNebrasPortalBundle === 'function') {
+                    try { await ensureNebrasPortalBundle(); } catch (portalErr) { console.warn('portal bundle:', portalErr); }
+                }
                 bindAdminPlatformInits();
                 loadAdminBusinessCacheFromLocal();
                 if (typeof establishNebrasSecureSession === 'function') {
@@ -19317,6 +19346,7 @@
             let regPending = 0;
             let callbacksNew = 0;
             let quotesInbox = 0;
+            let complaintsOpen = 0;
             try {
                 if (typeof getCustomerRegistrationRequests === 'function') {
                     regPending = (getCustomerRegistrationRequests() || []).filter(function(r) {
@@ -19335,13 +19365,19 @@
                 const stats = getDashboardExtendedStats();
                 quotesInbox = stats && stats.quoteInbox ? stats.quoteInbox : 0;
             } catch (e) { /* ignore */ }
-            return { regPending: regPending, callbacksNew: callbacksNew, quotesInbox: quotesInbox };
+            try {
+                complaintsOpen = Object.keys(complaints || {}).filter(function(id) {
+                    const c = complaints[id];
+                    return c && c.status !== 'resolved';
+                }).length;
+            } catch (e) { /* ignore */ }
+            return { regPending: regPending, callbacksNew: callbacksNew, quotesInbox: quotesInbox, complaintsOpen: complaintsOpen };
         }
 
         function renderHqDecisionQueueStrip(user) {
             if (!user || !isMainGovernanceAdmin(user)) return '';
             const q = collectHqDecisionQueueStats();
-            const total = q.regPending + q.callbacksNew + q.quotesInbox;
+            const total = q.regPending + q.callbacksNew + q.quotesInbox + q.complaintsOpen;
             if (!total) {
                 return '<div class="hq-decision-queue hq-decision-queue--clear">' +
                     '<i class="fas fa-shield-check"></i> <strong>قرارات الإدارة الرئيسية</strong> — لا طلبات معلّقة الآن · المنصة متزامنة' +
@@ -19353,6 +19389,7 @@
                 (q.regPending ? '<button type="button" class="hq-decision-btn" onclick="switchCpGovView(\'registrations\');openCustomerPortalGovernance();"><span>' + q.regPending + '</span> موافقات تسجيل</button>' : '') +
                 (q.callbacksNew ? '<button type="button" class="hq-decision-btn" onclick="openCallbackLeadsAdmin()"><span>' + q.callbacksNew + '</span> طلبات اتصال</button>' : '') +
                 (q.quotesInbox ? '<button type="button" class="hq-decision-btn" onclick="openSalesManagement()"><span>' + q.quotesInbox + '</span> عروض واردة</button>' : '') +
+                (q.complaintsOpen ? '<button type="button" class="hq-decision-btn" onclick="openComplaintsManagement()"><span>' + q.complaintsOpen + '</span> شكاوى مفتوحة</button>' : '') +
                 '</div></div>';
         }
 
@@ -30894,6 +30931,9 @@
             if (typeof ensureNebrasAdminCss === 'function') {
                 try { await ensureNebrasAdminCss(); } catch (cssErr) { console.warn('admin css:', cssErr); }
             }
+            if (typeof ensureNebrasPortalBundle === 'function') {
+                try { await ensureNebrasPortalBundle(); } catch (portalErr) { console.warn('portal bundle:', portalErr); }
+            }
             bindAdminPlatformInits();
             loadAdminBusinessCacheFromLocal();
             const verified = await verifyNebrasSecureSession();
@@ -30940,6 +30980,11 @@
         async function restoreNebrasUserSessionsAfterBootstrap() {
             try {
                 if (await restoreAdminSessionFromPersist()) return 'admin';
+                let portalHint = false;
+                try { portalHint = !!localStorage.getItem('nebrasCustomerPortalSession'); } catch (cpHintErr) { /* ignore */ }
+                if (portalHint && typeof ensureNebrasPortalBundle === 'function') {
+                    try { await ensureNebrasPortalBundle(); } catch (portalLoadErr) { console.warn('portal bundle:', portalLoadErr); }
+                }
                 if (typeof window.resumeCustomerPortalAfterBootstrap === 'function') {
                     if (await window.resumeCustomerPortalAfterBootstrap()) return 'customer-portal';
                 }
@@ -33725,5 +33770,5 @@
                 return issues;
             };
         }
-        bindNebrasHrPlatformGlobals();
+        if (hasAdminSessionHint()) bindNebrasHrPlatformGlobals();
 

@@ -40,8 +40,8 @@ def main():
     print('HTTP /:', st, '| deploy:', v)
     if st != 200:
         issues.append('Homepage not 200')
-    if v != 'hrws272':
-        notes.append('Deploy tag is ' + v + ' (expected hrws272 if latest)')
+    if v != 'hrws273':
+        notes.append('Deploy tag is ' + v + ' (expected hrws273 if latest)')
 
     # assets linked
     refs = re.findall(r'(?:href|src)="((?:css|js)/[^"#?]+(?:\?v=[^"]+)?)"', html)
@@ -82,7 +82,7 @@ def main():
         ('public_poll_120s', 'NEBRAS_PUBLIC_SITE_POLL_MS = 120000' in pl),
         ('visitor_lazy', 'visitor:' in open(os.path.join(ROOT, 'js/nebras-dept-lazy.js'), encoding='utf-8').read()),
         ('mobile_app', 'resolveAppPersona' in mob or 'visitor:' in open(os.path.join(ROOT, 'js/nebras-dept-lazy.js'), encoding='utf-8').read()),
-        ('customer_portal_inline', 'nebras-customer-portal.js' in html),
+        ('customer_portal_inline', 'nebras-customer-portal.js' not in html and 'ensureNebrasPortalBundle' in open(os.path.join(ROOT, 'js/nebras-dept-lazy.js'), encoding='utf-8').read()),
         ('customer_type', 'CP_CUSTOMER_TYPE_BUSINESS' in cp),
         ('portal_session', 'resumeCustomerPortalAfterBootstrap' in cp),
         ('registration_approval', 'approveCpRegistration' in cp and 'portal_register' in open(os.path.join(ROOT, 'api/nebras-visitor-intake.js'), encoding='utf-8').read()),
@@ -93,6 +93,8 @@ def main():
         ('admin_css_lazy', 'ensureNebrasAdminCss' in open(os.path.join(ROOT, 'js/nebras-admin-css-lazy.js'), encoding='utf-8').read() and 'nebras-admin-css-lazy.js' in html),
         ('admin_inits_gated', 'bindAdminPlatformInits' in pl),
         ('erp_cloud_rollback', 'persistErpStoresWithRollback' in pl),
+        ('portal_lazy', 'ensureNebrasPortalBundle' in open(os.path.join(ROOT, 'js/nebras-dept-lazy.js'), encoding='utf-8').read()),
+        ('hq_complaints_queue', 'complaintsOpen' in pl),
     ]
     print('\nFeature flags:')
     for name, ok in flags:
