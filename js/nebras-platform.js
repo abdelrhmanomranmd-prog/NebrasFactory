@@ -16297,11 +16297,37 @@
                 '</div>';
         }
 
-        function saveErpInventoryItem() {
+        function bindAdminPlatformInits() {
+            if (window._nebrasAdminInitsBound) return;
+            window._nebrasAdminInitsBound = true;
+            bindScmGovernanceClicks();
+            if (typeof ensureRepQuotesLibraryClicks === 'function') ensureRepQuotesLibraryClicks();
+            bindNebrasHrPlatformGlobals();
+        }
+
+        async function persistErpStoresWithRollback(storeKeys, restoreSnapshot, options) {
+            options = options || {};
+            if (typeof persistNebrasCriticalStores !== 'function') return true;
+            const ok = await persistNebrasCriticalStores(storeKeys, {
+                showToast: options.showToast !== false,
+                promptReauth: !!options.promptReauth
+            });
+            if (!ok && typeof restoreSnapshot === 'function') {
+                restoreSnapshot();
+                saveSystemData({ skipCloud: true, skipMutationMark: true });
+                if (typeof showNebrasAdminToast === 'function') {
+                    showNebrasAdminToast('⚠️ لم يُحفظ ERP في السحابة — أعيدي المحاولة (Accmaa-style: لا حفظ بدون سحابة)', 'error');
+                }
+            }
+            return ok;
+        }
+
+        async function saveErpInventoryItem() {
             if (!requirePermission('inventory')) return;
             const sku = fieldVal('inv-sku');
             const nameAr = fieldVal('inv-name-ar');
             if (!sku || !nameAr) { alert('SKU واسم الصنف مطلوبان.'); return; }
+            const snapshot = JSON.parse(JSON.stringify(erpInventory));
             const payload = {
                 sku: sku,
                 nameAr: nameAr,
@@ -16322,7 +16348,15 @@
                 addAuditLog('ERP مخزون', 'إضافة SKU ' + sku);
             }
             erpInventoryEditId = null;
-            saveSystemData();
+            saveSystemData({ skipCloud: true, skipMutationMark: true });
+            const cloudOk = await persistErpStoresWithRollback(['erp_inventory'], function() {
+                erpInventory = snapshot;
+            });
+            if (!cloudOk) {
+                renderErpInventoryForm();
+                displayErpInventory();
+                return;
+            }
             renderErpInventoryForm();
             displayErpInventory();
             renderErpHubPanel();
@@ -16342,13 +16376,21 @@
             renderErpInventoryForm();
         }
 
-        function deleteErpInventoryItem(id) {
+        async function deleteErpInventoryItem(id) {
             if (!requirePermission('inventory')) return;
             const item = erpInventory.find(function(i) { return i.id === id; });
             if (!item || !assertErpEntryInAdminScope(item, currentAdmin, 'لا يمكنك حذف صنف خارج قسمك/فرعك.')) return;
             if (!confirm('حذف ' + item.sku + '؟')) return;
+            const snapshot = JSON.parse(JSON.stringify(erpInventory));
             erpInventory = erpInventory.filter(function(i) { return i.id !== id; });
-            saveSystemData();
+            saveSystemData({ skipCloud: true, skipMutationMark: true });
+            const cloudOk = await persistErpStoresWithRollback(['erp_inventory'], function() {
+                erpInventory = snapshot;
+            });
+            if (!cloudOk) {
+                displayErpInventory();
+                return;
+            }
             displayErpInventory();
             renderErpHubPanel();
         }
@@ -18303,6 +18345,9 @@
         function openAdminPanel(event) {
             if (event && event.preventDefault) event.preventDefault();
             if (typeof closeMobileNav === 'function') closeMobileNav();
+            if (typeof ensureNebrasAdminCss === 'function') {
+                try { ensureNebrasAdminCss(); } catch (cssErr) { console.warn('admin css:', cssErr); }
+            }
             if (currentAdmin) {
                 showAdminDashboard(currentAdmin);
                 if (typeof scrollToAdminDashboard === 'function') scrollToAdminDashboard();
@@ -18713,6 +18758,10 @@
                 if (typeof ensureNebrasAdminCoreBundle === 'function') {
                     try { await ensureNebrasAdminCoreBundle(); } catch (coreErr) { console.warn('adminCore bundle:', coreErr); }
                 }
+                if (typeof ensureNebrasAdminCss === 'function') {
+                    try { await ensureNebrasAdminCss(); } catch (cssErr) { console.warn('admin css:', cssErr); }
+                }
+                bindAdminPlatformInits();
                 loadAdminBusinessCacheFromLocal();
                 if (typeof establishNebrasSecureSession === 'function') {
                     try {
@@ -30842,6 +30891,10 @@
             if (typeof ensureNebrasAdminCoreBundle === 'function') {
                 try { await ensureNebrasAdminCoreBundle(); } catch (coreErr) { console.warn('adminCore bundle:', coreErr); }
             }
+            if (typeof ensureNebrasAdminCss === 'function') {
+                try { await ensureNebrasAdminCss(); } catch (cssErr) { console.warn('admin css:', cssErr); }
+            }
+            bindAdminPlatformInits();
             loadAdminBusinessCacheFromLocal();
             const verified = await verifyNebrasSecureSession();
             if (!verified || !verified.ok || !verified.session) {
@@ -31025,7 +31078,7 @@
         }
 
         window.addEventListener('load', function() {
-            bindNebrasHrPlatformGlobals();
+            if (hasAdminSessionHint()) bindAdminPlatformInits();
             clearStuckInteractionBlockers();
             bindStorefrontCommerceClicks();
             bindNavPortalAndAdminLinks();
@@ -31039,10 +31092,13 @@
             initNebrasConsoleGuard();
             clearStuckInteractionBlockers();
             initPlatformInteractionLayerGuard();
-            bindScmGovernanceClicks();
+            if (hasAdminSessionHint()) {
+                if (typeof ensureNebrasAdminCss === 'function') {
+                    try { ensureNebrasAdminCss(); } catch (cssErr) { console.warn('admin css:', cssErr); }
+                }
+                bindAdminPlatformInits();
+            }
             bindPlatformUniversalClicks();
-            if (typeof ensureRepQuotesLibraryClicks === 'function') ensureRepQuotesLibraryClicks();
-            bindNebrasHrPlatformGlobals();
             enforceAdminDashboardGate();
             if (typeof ensureAdminPanelExitChrome === 'function') ensureAdminPanelExitChrome();
             if (typeof bindAdminLoginForm === "function") bindAdminLoginForm();

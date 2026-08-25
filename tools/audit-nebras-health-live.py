@@ -40,8 +40,8 @@ def main():
     print('HTTP /:', st, '| deploy:', v)
     if st != 200:
         issues.append('Homepage not 200')
-    if v != 'hrws271':
-        notes.append('Deploy tag is ' + v + ' (expected hrws271 if latest)')
+    if v != 'hrws272':
+        notes.append('Deploy tag is ' + v + ' (expected hrws272 if latest)')
 
     # assets linked
     refs = re.findall(r'(?:href|src)="((?:css|js)/[^"#?]+(?:\?v=[^"]+)?)"', html)
@@ -90,6 +90,9 @@ def main():
         ('admin_core_lazy', 'adminCore' in open(os.path.join(ROOT, 'js/nebras-dept-lazy.js'), encoding='utf-8').read()),
         ('hq_decision_queue', 'renderHqDecisionQueueStrip' in pl),
         ('visitor_slim_load', 'loadAdminBusinessCacheFromLocal' in pl),
+        ('admin_css_lazy', 'ensureNebrasAdminCss' in open(os.path.join(ROOT, 'js/nebras-admin-css-lazy.js'), encoding='utf-8').read() and 'nebras-admin-css-lazy.js' in html),
+        ('admin_inits_gated', 'bindAdminPlatformInits' in pl),
+        ('erp_cloud_rollback', 'persistErpStoresWithRollback' in pl),
     ]
     print('\nFeature flags:')
     for name, ok in flags:
