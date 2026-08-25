@@ -40,8 +40,8 @@ def main():
     print('HTTP /:', st, '| deploy:', v)
     if st != 200:
         issues.append('Homepage not 200')
-    if v != 'hrws270':
-        notes.append('Deploy tag is ' + v + ' (expected hrws270 if latest)')
+    if v != 'hrws271':
+        notes.append('Deploy tag is ' + v + ' (expected hrws271 if latest)')
 
     # assets linked
     refs = re.findall(r'(?:href|src)="((?:css|js)/[^"#?]+(?:\?v=[^"]+)?)"', html)
@@ -87,6 +87,9 @@ def main():
         ('portal_session', 'resumeCustomerPortalAfterBootstrap' in cp),
         ('registration_approval', 'approveCpRegistration' in cp and 'portal_register' in open(os.path.join(ROOT, 'api/nebras-visitor-intake.js'), encoding='utf-8').read()),
         ('admin_autosync', 'nebras-admin-session' in open(os.path.join(ROOT, 'js/nebras-platform-integrity.js'), encoding='utf-8').read()),
+        ('admin_core_lazy', 'adminCore' in open(os.path.join(ROOT, 'js/nebras-dept-lazy.js'), encoding='utf-8').read()),
+        ('hq_decision_queue', 'renderHqDecisionQueueStrip' in pl),
+        ('visitor_slim_load', 'loadAdminBusinessCacheFromLocal' in pl),
     ]
     print('\nFeature flags:')
     for name, ok in flags:

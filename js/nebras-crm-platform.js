@@ -136,6 +136,12 @@
     }
 
     function saveCrmData() {
+        const snapshot = {
+            customers: JSON.parse(JSON.stringify(crmCustomers)),
+            opportunities: JSON.parse(JSON.stringify(crmOpportunities)),
+            activities: JSON.parse(JSON.stringify(crmActivities)),
+            audit: JSON.parse(JSON.stringify(crmAudit))
+        };
         try {
             localStorage.setItem(CRM_CUSTOMERS_KEY, JSON.stringify(crmCustomers));
             localStorage.setItem(CRM_OPPS_KEY, JSON.stringify(crmOpportunities));
@@ -145,15 +151,26 @@
         if (typeof markSensitiveCloudPending === 'function') markSensitiveCloudPending();
         if (typeof saveSystemData === 'function') saveSystemData({ urgentCloud: true });
         else if (typeof schedulePushToNebrasCloud === 'function') schedulePushToNebrasCloud();
-        if (typeof persistNebrasCriticalStores === 'function') {
-            persistNebrasCriticalStores([
-                'crm_customers', 'crm_opportunities', 'crm_activities', 'crm_audit'
-            ], { showToast: false, promptReauth: false }).then(function(ok) {
-                if (!ok && typeof showNebrasAdminToast === 'function') {
-                    showNebrasAdminToast('⚠️ بيانات CRM لم تُحفظ في السحابة', 'error');
+        if (typeof persistNebrasCriticalStores !== 'function') return;
+        persistNebrasCriticalStores([
+            'crm_customers', 'crm_opportunities', 'crm_activities', 'crm_audit'
+        ], { showToast: false, promptReauth: false }).then(function(ok) {
+            if (!ok) {
+                crmCustomers = snapshot.customers;
+                crmOpportunities = snapshot.opportunities;
+                crmActivities = snapshot.activities;
+                crmAudit = snapshot.audit;
+                try {
+                    localStorage.setItem(CRM_CUSTOMERS_KEY, JSON.stringify(crmCustomers));
+                    localStorage.setItem(CRM_OPPS_KEY, JSON.stringify(crmOpportunities));
+                    localStorage.setItem(CRM_ACTIVITIES_KEY, JSON.stringify(crmActivities));
+                    localStorage.setItem(CRM_AUDIT_KEY, JSON.stringify(crmAudit));
+                } catch (e) { /* ignore */ }
+                if (typeof showNebrasAdminToast === 'function') {
+                    showNebrasAdminToast('⚠️ لم يُحفظ CRM في السحابة — أعيدي المحاولة (Accmaa-style)', 'error');
                 }
-            }).catch(function(err) { console.warn('CRM cloud persist:', err); });
-        }
+            }
+        }).catch(function(err) { console.warn('CRM cloud persist:', err); });
     }
 
     function setCrmCustomersFromCloud(v) {

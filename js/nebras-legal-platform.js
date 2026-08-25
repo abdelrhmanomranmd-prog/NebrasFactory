@@ -236,12 +236,42 @@
         if (typeof saveSystemData === 'function') saveSystemData({ urgentCloud: true });
         else if (typeof schedulePushToNebrasCloud === 'function') schedulePushToNebrasCloud();
         if (typeof persistNebrasCriticalStores === 'function') {
+            const snapshot = {
+                contracts: JSON.parse(JSON.stringify(legalContracts)),
+                cases: JSON.parse(JSON.stringify(legalCases)),
+                compliance: JSON.parse(JSON.stringify(legalCompliance)),
+                policies: JSON.parse(JSON.stringify(legalPolicies)),
+                correspondence: JSON.parse(JSON.stringify(legalCorrespondence)),
+                activity: JSON.parse(JSON.stringify(legalActivity)),
+                rentals: JSON.parse(JSON.stringify(legalRentals)),
+                notifSettings: JSON.parse(JSON.stringify(legalNotifSettings))
+            };
             persistNebrasCriticalStores([
                 'legal_contracts', 'legal_cases', 'legal_compliance', 'legal_policies',
                 'legal_correspondence', 'legal_activity', 'legal_rentals', 'legal_notif_settings'
             ], { showToast: false, promptReauth: false }).then(function(ok) {
-                if (!ok && typeof showNebrasAdminToast === 'function') {
-                    showNebrasAdminToast('⚠️ بيانات القانونية لم تُحفظ في السحابة', 'error');
+                if (!ok) {
+                    legalContracts = snapshot.contracts;
+                    legalCases = snapshot.cases;
+                    legalCompliance = snapshot.compliance;
+                    legalPolicies = snapshot.policies;
+                    legalCorrespondence = snapshot.correspondence;
+                    legalActivity = snapshot.activity;
+                    legalRentals = snapshot.rentals;
+                    legalNotifSettings = snapshot.notifSettings;
+                    try {
+                        localStorage.setItem(LEGAL_CONTRACTS_KEY, JSON.stringify(legalContracts));
+                        localStorage.setItem(LEGAL_CASES_KEY, JSON.stringify(legalCases));
+                        localStorage.setItem(LEGAL_COMPLIANCE_KEY, JSON.stringify(legalCompliance));
+                        localStorage.setItem(LEGAL_POLICIES_KEY, JSON.stringify(legalPolicies));
+                        localStorage.setItem(LEGAL_CORR_KEY, JSON.stringify(legalCorrespondence));
+                        localStorage.setItem(LEGAL_ACTIVITY_KEY, JSON.stringify(legalActivity));
+                        localStorage.setItem(LEGAL_RENTALS_KEY, JSON.stringify(legalRentals));
+                        localStorage.setItem(LEGAL_NOTIF_SETTINGS_KEY, JSON.stringify(legalNotifSettings));
+                    } catch (e) { /* ignore */ }
+                    if (typeof showNebrasAdminToast === 'function') {
+                        showNebrasAdminToast('⚠️ لم تُحفظ بيانات القانونية في السحابة — أعيدي المحاولة (Accmaa-style)', 'error');
+                    }
                 }
             }).catch(function(err) { console.warn('Legal cloud persist:', err); });
         }

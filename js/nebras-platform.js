@@ -18710,6 +18710,10 @@
             }
 
             if (user) {
+                if (typeof ensureNebrasAdminCoreBundle === 'function') {
+                    try { await ensureNebrasAdminCoreBundle(); } catch (coreErr) { console.warn('adminCore bundle:', coreErr); }
+                }
+                loadAdminBusinessCacheFromLocal();
                 if (typeof establishNebrasSecureSession === 'function') {
                     try {
                         const sessOk = await establishNebrasSecureSession(username, password);
@@ -19260,6 +19264,49 @@
                 (branchChips ? '<div class="gov-branches-strip"><strong style="width:100%;font-size:0.8rem;color:#4a5a6a;margin-bottom:4px"><i class="fas fa-map-marked-alt"></i> شبكة الفروع</strong>' + branchChips + '</div>' : '');
         }
 
+        function collectHqDecisionQueueStats() {
+            let regPending = 0;
+            let callbacksNew = 0;
+            let quotesInbox = 0;
+            try {
+                if (typeof getCustomerRegistrationRequests === 'function') {
+                    regPending = (getCustomerRegistrationRequests() || []).filter(function(r) {
+                        return r && r.status === 'pending';
+                    }).length;
+                }
+            } catch (e) { /* ignore */ }
+            try {
+                if (typeof getCallbackLeads === 'function') {
+                    callbacksNew = (getCallbackLeads() || []).filter(function(l) {
+                        return l && (l.status === 'new' || !l.status);
+                    }).length;
+                }
+            } catch (e) { /* ignore */ }
+            try {
+                const stats = getDashboardExtendedStats();
+                quotesInbox = stats && stats.quoteInbox ? stats.quoteInbox : 0;
+            } catch (e) { /* ignore */ }
+            return { regPending: regPending, callbacksNew: callbacksNew, quotesInbox: quotesInbox };
+        }
+
+        function renderHqDecisionQueueStrip(user) {
+            if (!user || !isMainGovernanceAdmin(user)) return '';
+            const q = collectHqDecisionQueueStats();
+            const total = q.regPending + q.callbacksNew + q.quotesInbox;
+            if (!total) {
+                return '<div class="hq-decision-queue hq-decision-queue--clear">' +
+                    '<i class="fas fa-shield-check"></i> <strong>قرارات الإدارة الرئيسية</strong> — لا طلبات معلّقة الآن · المنصة متزامنة' +
+                    '</div>';
+            }
+            return '<div class="hq-decision-queue">' +
+                '<div class="hq-decision-queue-head"><i class="fas fa-gavel"></i> <strong>قرارات الإدارة الرئيسية — صاحبة القرار</strong></div>' +
+                '<div class="hq-decision-queue-actions">' +
+                (q.regPending ? '<button type="button" class="hq-decision-btn" onclick="switchCpGovView(\'registrations\');openCustomerPortalGovernance();"><span>' + q.regPending + '</span> موافقات تسجيل</button>' : '') +
+                (q.callbacksNew ? '<button type="button" class="hq-decision-btn" onclick="openCallbackLeadsAdmin()"><span>' + q.callbacksNew + '</span> طلبات اتصال</button>' : '') +
+                (q.quotesInbox ? '<button type="button" class="hq-decision-btn" onclick="openSalesManagement()"><span>' + q.quotesInbox + '</span> عروض واردة</button>' : '') +
+                '</div></div>';
+        }
+
         function renderDashboardCommandShell(user) {
             const shell = document.getElementById('dashboard-command-shell');
             if (!shell || !user) return;
@@ -19330,6 +19377,13 @@
             if (govStrip && typeof renderGovernanceUsersStrip === 'function') {
                 govStrip.innerHTML = isMainGovernanceAdmin(user) ? renderGovernanceUsersStrip() : '';
                 govStrip.hidden = !isMainGovernanceAdmin(user);
+            }
+
+            const hqQueue = document.getElementById('dashboard-hq-decision-queue');
+            if (hqQueue) {
+                const queueHtml = renderHqDecisionQueueStrip(user);
+                hqQueue.innerHTML = queueHtml;
+                hqQueue.hidden = !queueHtml;
             }
 
             const sync = document.getElementById('dashboard-command-sync');
@@ -30039,35 +30093,39 @@
             } catch (e) { /* ignore */ }
         }
 
-        function persistLocalGovernanceKeys() {
+        function persistLocalGovernanceKeys(options) {
+            options = options || {};
+            const includeAdmin = options.visitorOnlyPersist !== true;
             let ok = true;
             const put = typeof nebrasPersistLocal === 'function' ? nebrasPersistLocal : function(k, v) {
                 try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; }
             };
             ok = put('nebrasComplaints', complaints) && ok;
             ok = put('nebrasBranches', branchesData) && ok;
-            ok = put('nebrasAuditLogs', auditLogs) && ok;
+            if (includeAdmin) ok = put('nebrasAuditLogs', auditLogs) && ok;
             ok = put('nebrasSystemSettings', systemSettings) && ok;
-            ok = put('nebrasAdminUsers', adminUsers) && ok;
+            if (includeAdmin) ok = put('nebrasAdminUsers', adminUsers) && ok;
             ok = put('nebrasVisitorIcons', visitorIcons) && ok;
             ok = put('nebrasSiteProducts', siteProducts) && ok;
-            ok = put('nebrasDashboardTiles', dashboardTiles) && ok;
+            if (includeAdmin) ok = put('nebrasDashboardTiles', dashboardTiles) && ok;
             ok = put('nebrasCustomSections', siteCustomSections) && ok;
-            ok = put('nebrasErpInventory', erpInventory) && ok;
-            ok = put('nebrasErpOrders', erpOrders) && ok;
-            ok = put('nebrasErpProcurement', erpProcurement) && ok;
-            ok = put('nebrasErpProduction', erpProduction) && ok;
-            ok = put('nebrasErpPurchases', erpPurchases) && ok;
-            ok = put('nebrasProcurementCustomDepts', procurementCustomDepts || []) && ok;
-            ok = put('nebrasErpTransfers', erpTransfers) && ok;
-            ok = put('nebrasErpStockTransfers', erpStockTransfers) && ok;
+            if (includeAdmin) {
+                ok = put('nebrasErpInventory', erpInventory) && ok;
+                ok = put('nebrasErpOrders', erpOrders) && ok;
+                ok = put('nebrasErpProcurement', erpProcurement) && ok;
+                ok = put('nebrasErpProduction', erpProduction) && ok;
+                ok = put('nebrasErpPurchases', erpPurchases) && ok;
+                ok = put('nebrasProcurementCustomDepts', procurementCustomDepts || []) && ok;
+                ok = put('nebrasErpTransfers', erpTransfers) && ok;
+                ok = put('nebrasErpStockTransfers', erpStockTransfers) && ok;
+                ok = put('nebrasSalesData', salesData || []) && ok;
+                ok = put('nebrasCustomerService', customerServiceData || []) && ok;
+            }
             ok = put('nebrasSalesPriceList', salesPriceList) && ok;
             ok = put('nebrasAboutPages', aboutPages) && ok;
             ok = put('nebrasSitePartners', sitePartners) && ok;
             ok = put('nebrasSiteCertifications', siteCertifications) && ok;
             ok = put('nebrasShowroomGallery', ensureShowroomGallery()) && ok;
-            ok = put('nebrasSalesData', salesData || []) && ok;
-            ok = put('nebrasCustomerService', customerServiceData || []) && ok;
             ensureVisitorAnalytics();
             ok = put(VISITOR_ANALYTICS_KEY, visitorAnalytics) && ok;
             if (ok) stampNebrasLocalSaveMeta();
@@ -30122,7 +30180,7 @@
             purgeDeprecatedVisitorIcons();
             let localOk = true;
             try {
-            localOk = persistLocalGovernanceKeys();
+            localOk = persistLocalGovernanceKeys({ visitorOnlyPersist: !!options.visitorOnlyPersist });
             if (typeof persistAnalyticsGovernanceLocal === 'function') persistAnalyticsGovernanceLocal();
             if (typeof saveCallbackLeads === 'function') saveCallbackLeads();
             } catch (storageErr) {
@@ -30193,56 +30251,29 @@
             }
         }
 
-        function loadSystemData() {
-            const savedComplaints = localStorage.getItem('nebrasComplaints');
-            const savedBranches = localStorage.getItem('nebrasBranches');
+        function hasAdminSessionHint() {
+            if (currentAdmin) return true;
+            try {
+                return !!localStorage.getItem('nebrasAdminUiSession');
+            } catch (e) { return false; }
+        }
+
+        function loadAdminBusinessCacheFromLocal() {
             const savedAuditLogs = localStorage.getItem('nebrasAuditLogs');
-            const savedSystemSettings = localStorage.getItem('nebrasSystemSettings');
-            if (savedComplaints) {
-                try { complaints = JSON.parse(savedComplaints); } catch (error) { console.warn('Invalid complaints data in localStorage', error); }
-            }
-            if (savedBranches) {
-                try { branchesData = JSON.parse(savedBranches); } catch (error) { console.warn('Invalid branches data in localStorage', error); }
-            }
-            branchesData = (branchesData || []).map(normalizeBranchRecord);
-            if (savedAuditLogs) {
-                try { auditLogs = JSON.parse(savedAuditLogs); } catch (error) { console.warn('Invalid audit logs data in localStorage', error); }
-            }
-            if (savedSystemSettings) {
-                try {
-                    const parsed = JSON.parse(savedSystemSettings);
-                    systemSettings = Object.assign({}, DEFAULT_SYSTEM_SETTINGS, parsed && typeof parsed === 'object' ? parsed : {});
-                } catch (error) { console.warn('Invalid settings data in localStorage', error); }
-            }
-            ensureProductPhotoWatermarkSettings();
             const savedAdminUsers = localStorage.getItem('nebrasAdminUsers');
-            const savedVisitorIcons = localStorage.getItem('nebrasVisitorIcons');
-            const savedSiteProducts = localStorage.getItem('nebrasSiteProducts');
             const savedDashboardTiles = localStorage.getItem('nebrasDashboardTiles');
-            const savedCustomSections = localStorage.getItem('nebrasCustomSections');
             const savedErpInventory = localStorage.getItem('nebrasErpInventory');
             const savedErpOrders = localStorage.getItem('nebrasErpOrders');
             const savedErpProcurement = localStorage.getItem('nebrasErpProcurement');
-            const savedAboutPages = localStorage.getItem('nebrasAboutPages');
-            const savedSitePartners = localStorage.getItem('nebrasSitePartners');
-            const savedSiteCertifications = localStorage.getItem('nebrasSiteCertifications');
-            const savedShowroomGallery = localStorage.getItem('nebrasShowroomGallery');
             const savedSalesData = localStorage.getItem('nebrasSalesData');
-            const savedVisitorAnalytics = localStorage.getItem(VISITOR_ANALYTICS_KEY);
+            if (savedAuditLogs) {
+                try { auditLogs = JSON.parse(savedAuditLogs); } catch (error) { console.warn('Invalid audit logs data in localStorage', error); }
+            }
             if (savedAdminUsers) {
                 try { adminUsers = JSON.parse(savedAdminUsers); } catch (error) { console.warn('Invalid admin users data in localStorage', error); }
             }
-            if (savedVisitorIcons) {
-                try { visitorIcons = JSON.parse(savedVisitorIcons); } catch (error) { console.warn('Invalid visitor icons data in localStorage', error); }
-            }
-            if (savedSiteProducts) {
-                try { siteProducts = JSON.parse(savedSiteProducts); } catch (error) { console.warn('Invalid site products in localStorage', error); }
-            }
             if (savedDashboardTiles) {
                 try { dashboardTiles = JSON.parse(savedDashboardTiles); } catch (error) { console.warn('Invalid dashboard tiles in localStorage', error); }
-            }
-            if (savedCustomSections) {
-                try { siteCustomSections = JSON.parse(savedCustomSections); } catch (error) { console.warn('Invalid custom sections in localStorage', error); }
             }
             if (savedErpInventory) {
                 try { erpInventory = JSON.parse(savedErpInventory); } catch (e) { console.warn('ERP inventory parse error', e); }
@@ -30258,27 +30289,6 @@
             try { const v = localStorage.getItem('nebrasProcurementCustomDepts'); if (v) procurementCustomDepts = JSON.parse(v); } catch (e) { console.warn('Procurement depts parse error', e); }
             try { const v = localStorage.getItem('nebrasErpTransfers'); if (v) erpTransfers = JSON.parse(v); } catch (e) { console.warn('ERP transfers parse error', e); }
             try { const v = localStorage.getItem('nebrasErpStockTransfers'); if (v) erpStockTransfers = JSON.parse(v); } catch (e) { console.warn('ERP stock transfers parse error', e); }
-            try { const v = localStorage.getItem('nebrasSalesPriceList'); if (v) salesPriceList = JSON.parse(v); } catch (e) { console.warn('Sales price list parse error', e); }
-            if (savedAboutPages) {
-                try {
-                    const parsed = JSON.parse(savedAboutPages);
-                    if (parsed && typeof parsed === 'object') aboutPages = parsed;
-                } catch (e) { console.warn('About pages parse error', e); }
-            }
-            ensureBuiltinAboutPages();
-            ensureBuiltinErpData();
-            ensureErpOperationsData();
-            ensureBuiltinSiteCatalog();
-            ensureBuiltinVisitorIcons();
-            ensureBuiltinBranches();
-            if (!Array.isArray(sitePartners)) sitePartners = [];
-            ensureBuiltinSitePartners();
-            if (!Array.isArray(siteCertifications)) siteCertifications = [];
-            if (savedShowroomGallery) {
-                try {
-                    showroomGallery = normalizeShowroomGallery(JSON.parse(savedShowroomGallery));
-                } catch (e) { console.warn('Showroom gallery parse error', e); }
-            }
             if (savedSalesData) {
                 try { salesData = JSON.parse(savedSalesData); } catch (e) { console.warn('Sales data parse error', e); }
             }
@@ -30288,24 +30298,15 @@
             } catch (e) { console.warn('Customer service parse error', e); }
             ensureCustomerServiceData();
             if (!Array.isArray(salesData)) salesData = [];
-            if (savedVisitorAnalytics) {
-                try {
-                    visitorAnalytics = JSON.parse(savedVisitorAnalytics);
-                } catch (e) { console.warn('Visitor analytics parse error', e); }
-            }
-            ensureVisitorAnalytics();
             if (typeof loadAnalyticsGovernanceLocal === 'function') loadAnalyticsGovernanceLocal();
             if (typeof loadAdminPresenceLocal === 'function') loadAdminPresenceLocal();
-            if (typeof loadCallbackLeads === 'function') loadCallbackLeads();
-            ensureShowroomGallery();
+            ensureBuiltinErpData();
+            ensureErpOperationsData();
             adminUsers = (Array.isArray(adminUsers) ? adminUsers : []).map(function(user, index) {
                 return typeof normalizeAdminUserRecord === 'function'
                     ? normalizeAdminUserRecord(user, index)
                     : user;
             });
-            if (!Array.isArray(visitorIcons)) {
-                visitorIcons = [];
-            }
             if (!adminUsers.some(function(user) { return String(user.username || '').toUpperCase() === IMMUTABLE_PRIMARY_ADMIN_USERNAME; })) {
                 adminUsers.unshift({
                     id: IMMUTABLE_PRIMARY_ADMIN_ID,
@@ -30324,6 +30325,77 @@
                     u.isPrimary = false;
                 }
             });
+        }
+
+        function loadSystemData() {
+            const savedComplaints = localStorage.getItem('nebrasComplaints');
+            const savedBranches = localStorage.getItem('nebrasBranches');
+            const savedSystemSettings = localStorage.getItem('nebrasSystemSettings');
+            if (savedComplaints) {
+                try { complaints = JSON.parse(savedComplaints); } catch (error) { console.warn('Invalid complaints data in localStorage', error); }
+            }
+            if (savedBranches) {
+                try { branchesData = JSON.parse(savedBranches); } catch (error) { console.warn('Invalid branches data in localStorage', error); }
+            }
+            branchesData = (branchesData || []).map(normalizeBranchRecord);
+            if (savedSystemSettings) {
+                try {
+                    const parsed = JSON.parse(savedSystemSettings);
+                    systemSettings = Object.assign({}, DEFAULT_SYSTEM_SETTINGS, parsed && typeof parsed === 'object' ? parsed : {});
+                } catch (error) { console.warn('Invalid settings data in localStorage', error); }
+            }
+            ensureProductPhotoWatermarkSettings();
+            const savedVisitorIcons = localStorage.getItem('nebrasVisitorIcons');
+            const savedSiteProducts = localStorage.getItem('nebrasSiteProducts');
+            const savedCustomSections = localStorage.getItem('nebrasCustomSections');
+            const savedAboutPages = localStorage.getItem('nebrasAboutPages');
+            const savedSitePartners = localStorage.getItem('nebrasSitePartners');
+            const savedSiteCertifications = localStorage.getItem('nebrasSiteCertifications');
+            const savedShowroomGallery = localStorage.getItem('nebrasShowroomGallery');
+            const savedVisitorAnalytics = localStorage.getItem(VISITOR_ANALYTICS_KEY);
+            if (savedVisitorIcons) {
+                try { visitorIcons = JSON.parse(savedVisitorIcons); } catch (error) { console.warn('Invalid visitor icons data in localStorage', error); }
+            }
+            if (savedSiteProducts) {
+                try { siteProducts = JSON.parse(savedSiteProducts); } catch (error) { console.warn('Invalid site products in localStorage', error); }
+            }
+            if (savedCustomSections) {
+                try { siteCustomSections = JSON.parse(savedCustomSections); } catch (error) { console.warn('Invalid custom sections in localStorage', error); }
+            }
+            try { const v = localStorage.getItem('nebrasSalesPriceList'); if (v) salesPriceList = JSON.parse(v); } catch (e) { console.warn('Sales price list parse error', e); }
+            if (savedAboutPages) {
+                try {
+                    const parsed = JSON.parse(savedAboutPages);
+                    if (parsed && typeof parsed === 'object') aboutPages = parsed;
+                } catch (e) { console.warn('About pages parse error', e); }
+            }
+            ensureBuiltinAboutPages();
+            ensureBuiltinSiteCatalog();
+            ensureBuiltinVisitorIcons();
+            ensureBuiltinBranches();
+            if (!Array.isArray(sitePartners)) sitePartners = [];
+            ensureBuiltinSitePartners();
+            if (!Array.isArray(siteCertifications)) siteCertifications = [];
+            if (savedShowroomGallery) {
+                try {
+                    showroomGallery = normalizeShowroomGallery(JSON.parse(savedShowroomGallery));
+                } catch (e) { console.warn('Showroom gallery parse error', e); }
+            }
+            if (savedVisitorAnalytics) {
+                try {
+                    visitorAnalytics = JSON.parse(savedVisitorAnalytics);
+                } catch (e) { console.warn('Visitor analytics parse error', e); }
+            }
+            ensureVisitorAnalytics();
+            if (typeof loadCallbackLeads === 'function') loadCallbackLeads();
+            ensureShowroomGallery();
+            if (!Array.isArray(visitorIcons)) visitorIcons = [];
+            if (hasAdminSessionHint()) loadAdminBusinessCacheFromLocal();
+            else {
+                adminUsers = [];
+                auditLogs = [];
+                dashboardTiles = dashboardTiles || [];
+            }
             ensurePaymentMethodsDefaults();
             enforceProductionGovernanceCleanState();
         }
@@ -30767,6 +30839,10 @@
             if (currentAdmin) return true;
             if (typeof hasNebrasSecureSession !== 'function' || !hasNebrasSecureSession()) return false;
             if (typeof verifyNebrasSecureSession !== 'function') return false;
+            if (typeof ensureNebrasAdminCoreBundle === 'function') {
+                try { await ensureNebrasAdminCoreBundle(); } catch (coreErr) { console.warn('adminCore bundle:', coreErr); }
+            }
+            loadAdminBusinessCacheFromLocal();
             const verified = await verifyNebrasSecureSession();
             if (!verified || !verified.ok || !verified.session) {
                 if (typeof clearNebrasSecureSession === 'function') clearNebrasSecureSession();
@@ -30895,7 +30971,7 @@
                     const savedLang = localStorage.getItem('nebrasLang');
                     if (savedLang && siteText[savedLang]) currentLang = savedLang;
                 } catch (e) { /* ignore */ }
-                saveSystemData({ skipCloud: true, skipMutationMark: true });
+                saveSystemData({ skipCloud: true, skipMutationMark: true, visitorOnlyPersist: !hasAdminSessionHint() });
                 applySiteLogoImages();
                 fetchDynamicContentBlocks().catch(function(e) { console.warn('content blocks:', e); });
                 fetchDynamicSiteSections().catch(function(e) { console.warn('site sections:', e); });

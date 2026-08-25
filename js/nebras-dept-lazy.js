@@ -1,11 +1,11 @@
 /**
- * نبراس — تحميل كسول لوحدات الإدارات (hrws270)
+ * نبراس — تحميل كسول لوحدات الإدارات (hrws271)
  * فتح فوري + prefetch ذكي حسب الدور — بدون إثقال الزائر.
  */
 (function (global) {
     'use strict';
 
-    var VER = 'hrws270';
+    var VER = 'hrws271';
     var loaded = Object.create(null);
     var inflight = Object.create(null);
     var bundleDone = Object.create(null);
@@ -14,6 +14,10 @@
     var priorityLoaded = false;
 
     var BUNDLES = {
+        adminCore: [
+            'js/nebras-odoo-write.js',
+            'js/nebras-cloud-safety.js'
+        ],
         aluminum: ['js/nebras-aluminum-cutting.js'],
         wpc: ['js/nebras-wpc-cutting.js'],
         hr: [
@@ -243,21 +247,23 @@
 
     function schedulePrefetch() {
         window.addEventListener('nebras-admin-session', function () {
-            prefetchPriorityImmediately();
-            function startFullPrefetch() {
-                setTimeout(function () {
-                    if (typeof requestIdleCallback === 'function') {
-                        requestIdleCallback(prefetchNebrasAdminDepts, { timeout: 9000 });
-                    } else {
-                        setTimeout(prefetchNebrasAdminDepts, 2000);
-                    }
-                }, 1200);
-            }
-            if (typeof global.waitForNebrasCloudHydrate === 'function') {
-                global.waitForNebrasCloudHydrate().then(startFullPrefetch).catch(startFullPrefetch);
-            } else {
-                startFullPrefetch();
-            }
+            ensureNebrasDeptBundle('adminCore').catch(function () { /* soft */ }).then(function () {
+                prefetchPriorityImmediately();
+                function startFullPrefetch() {
+                    setTimeout(function () {
+                        if (typeof requestIdleCallback === 'function') {
+                            requestIdleCallback(prefetchNebrasAdminDepts, { timeout: 9000 });
+                        } else {
+                            setTimeout(prefetchNebrasAdminDepts, 2000);
+                        }
+                    }, 1200);
+                }
+                if (typeof global.waitForNebrasCloudHydrate === 'function') {
+                    global.waitForNebrasCloudHydrate().then(startFullPrefetch).catch(startFullPrefetch);
+                } else {
+                    startFullPrefetch();
+                }
+            });
         });
     }
 
@@ -290,5 +296,6 @@
     global.ensureNebrasDeptBundle = ensureNebrasDeptBundle;
     global.prefetchNebrasAdminDepts = prefetchNebrasAdminDepts;
     global.ensureNebrasVisitorBundle = function() { return loadBundle('visitor'); };
+    global.ensureNebrasAdminCoreBundle = function() { return loadBundle('adminCore'); };
     global.__NEBRAS_DEPT_LAZY__ = VER;
 })(typeof window !== 'undefined' ? window : globalThis);
