@@ -214,24 +214,22 @@
         return '#' + ('000000' + c.getHex().toString(16)).slice(-6);
     }
 
-    function makeWallPaintTexture(color, w, h) {
-        const c = color && color.isColor ? color : parseHex(color);
-        const hex = colorToCss(c);
-        return makeCanvasTexture(w || 512, h || 512, function(ctx, width, height) {
-            const g = ctx.createLinearGradient(0, 0, 0, height);
-            g.addColorStop(0, shadeColor(c, 0.06).getStyle());
-            g.addColorStop(0.55, hex);
-            g.addColorStop(1, shadeColor(c, -0.05).getStyle());
-            ctx.fillStyle = g;
-            ctx.fillRect(0, 0, width, height);
-            for (let i = 0; i < 9000; i++) {
-                const x = Math.random() * width;
-                const y = Math.random() * height;
-                const a = 0.012 + Math.random() * 0.018;
-                ctx.fillStyle = 'rgba(255,255,255,' + a + ')';
-                ctx.fillRect(x, y, 1, 1);
-            }
+    function makeRoomSurfaceMaterial(color, opts) {
+        opts = opts || {};
+        return new THREE.MeshStandardMaterial({
+            color: color && color.isColor ? color.clone() : parseHex(color),
+            roughness: opts.roughness != null ? opts.roughness : 0.92,
+            metalness: opts.metalness != null ? opts.metalness : 0,
+            envMapIntensity: opts.envMapIntensity != null ? opts.envMapIntensity : 0.12
         });
+    }
+
+    let neutralWoodFloorTex = null;
+    function getNeutralWoodFloorTexture() {
+        if (!neutralWoodFloorTex) {
+            neutralWoodFloorTex = makeWoodFloorTexture({ floor: parseHex('#8a8078') });
+        }
+        return neutralWoodFloorTex;
     }
 
     function makeWoodFloorTexture(palette, w, h) {
@@ -408,6 +406,8 @@
             this._envRT = null;
             this._lastState = null;
             this.room = null;
+            this._lastRoomKey = '';
+            this._lastDoorStateKey = '';
         }
 
         mount() {
@@ -576,14 +576,14 @@
                 group: rg,
                 palette: palette,
                 materials: {},
-                textures: {},
-                frontZ: frontZ
+                textures: { floor: getNeutralWoodFloorTexture() },
+                frontZ: frontZ,
+                _accentSrc: null
             };
 
-            const floorTex = makeWoodFloorTexture(palette);
-            this.room.textures.floor = floorTex;
             const floorMat = new THREE.MeshStandardMaterial({
-                map: floorTex,
+                map: this.room.textures.floor,
+                color: palette.floor.clone(),
                 roughness: 0.76,
                 metalness: 0.03,
                 envMapIntensity: 0.28
@@ -594,42 +594,29 @@
             floor.receiveShadow = true;
             rg.add(floor);
 
-            const ceilMat = new THREE.MeshStandardMaterial({ color: palette.ceiling.clone(), roughness: 0.94, metalness: 0 });
+            const ceilMat = makeRoomSurfaceMaterial(palette.ceiling, { roughness: 0.94, envMapIntensity: 0.08 });
             this.room.materials.ceiling = ceilMat;
             const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(RW, RD), ceilMat);
             ceiling.rotation.x = Math.PI / 2;
             ceiling.position.y = RH;
             rg.add(ceiling);
 
-            function wallTex(color) {
-                return makeWallPaintTexture(color, 512, 512);
-            }
-
-            const backTex = wallTex(palette.wall);
-            this.room.textures.wallBack = backTex;
-            const backMat = new THREE.MeshStandardMaterial({ map: backTex, roughness: 0.93, metalness: 0, envMapIntensity: 0.12 });
+            const backMat = makeRoomSurfaceMaterial(palette.wall);
             this.room.materials.wallBack = backMat;
             const back = new THREE.Mesh(new THREE.PlaneGeometry(RW, RH), backMat);
             back.position.set(0, RH / 2, -RD / 2 + 0.01);
             back.receiveShadow = true;
             rg.add(back);
 
-            const leftTex = wallTex(palette.wallSide);
-            this.room.textures.wallLeft = leftTex;
-            const leftMat = new THREE.MeshStandardMaterial({ map: leftTex, roughness: 0.92, metalness: 0, envMapIntensity: 0.12 });
+            const leftMat = makeRoomSurfaceMaterial(palette.wallSide);
             this.room.materials.wallLeft = leftMat;
-            this.room.materials.wallAccent = leftMat;
             const left = new THREE.Mesh(new THREE.PlaneGeometry(RD, RH), leftMat);
             left.rotation.y = Math.PI / 2;
             left.position.set(-RW / 2 + 0.01, RH / 2, 0);
             left.receiveShadow = true;
             rg.add(left);
 
-            const rightColor = palette.wallSide.clone();
-            shadeColor(rightColor, -0.04);
-            const rightTex = wallTex(rightColor);
-            this.room.textures.wallRight = rightTex;
-            const rightMat = new THREE.MeshStandardMaterial({ map: rightTex, roughness: 0.92, metalness: 0, envMapIntensity: 0.12 });
+            const rightMat = makeRoomSurfaceMaterial(shadeColor(palette.wallSide, -0.04));
             this.room.materials.wallRight = rightMat;
             const right = new THREE.Mesh(new THREE.PlaneGeometry(RD, RH), rightMat);
             right.rotation.y = -Math.PI / 2;
@@ -637,9 +624,7 @@
             right.receiveShadow = true;
             rg.add(right);
 
-            const frontTex = wallTex(palette.wall);
-            this.room.textures.wallFront = frontTex;
-            const frontMat = new THREE.MeshStandardMaterial({ map: frontTex, roughness: 0.93, metalness: 0, envMapIntensity: 0.12 });
+            const frontMat = makeRoomSurfaceMaterial(palette.wall);
             this.room.materials.wallFront = frontMat;
 
             const sidePanelW = (RW - openW) / 2;
@@ -659,7 +644,7 @@
             lintel.castShadow = true;
             rg.add(lintel);
 
-            const trimMat = new THREE.MeshStandardMaterial({ color: palette.trim.clone(), roughness: 0.72, metalness: 0.02 });
+            const trimMat = makeRoomSurfaceMaterial(palette.trim, { roughness: 0.72, envMapIntensity: 0.06 });
             this.room.materials.trim = trimMat;
             const skH = 0.11;
             [
@@ -674,7 +659,7 @@
                 rg.add(sk);
             });
 
-            const beyondMat = new THREE.MeshStandardMaterial({ color: palette.beyond.clone(), roughness: 0.98, metalness: 0 });
+            const beyondMat = makeRoomSurfaceMaterial(palette.beyond, { roughness: 0.98, envMapIntensity: 0 });
             this.room.materials.beyond = beyondMat;
             const beyond = new THREE.Mesh(new THREE.PlaneGeometry(openW - 0.04, openH - 0.04), beyondMat);
             beyond.position.set(0, openH / 2, frontZ - 0.12);
@@ -697,7 +682,7 @@
 
             const winFrame = new THREE.Mesh(
                 new THREE.BoxGeometry(0.04, 1.22, 1.02),
-                new THREE.MeshStandardMaterial({ color: palette.trim.clone(), roughness: 0.55 })
+                trimMat
             );
             winFrame.position.set(RW / 2 - 0.01, RH * 0.58, 0.35);
             winFrame.rotation.y = -Math.PI / 2;
@@ -720,7 +705,8 @@
             rg.add(blob);
 
             this.scene.add(rg);
-            this._applyRoomPalette(palette, null);
+            this.scene.background = palette.fog.clone();
+            if (this.scene.fog) this.scene.fog.color.copy(palette.fog);
         }
 
         _applyRoomPalette(palette, rollMap) {
@@ -732,46 +718,42 @@
             if (mats.ceiling) mats.ceiling.color.copy(palette.ceiling);
             if (mats.trim) mats.trim.color.copy(palette.trim);
             if (mats.beyond) mats.beyond.color.copy(palette.beyond);
+            if (mats.wallBack) mats.wallBack.color.copy(palette.wall);
+            if (mats.wallFront) mats.wallFront.color.copy(palette.wall);
+            if (mats.wallRight) mats.wallRight.color.copy(shadeColor(palette.wallSide, -0.04));
+            if (mats.floor) mats.floor.color.copy(palette.floor);
 
-            function refreshWall(mat, texObj, color) {
-                if (!mat || !color) return;
-                if (texObj) {
-                    texObj.dispose();
-                }
-                const newTex = makeWallPaintTexture(color);
-                mat.map = newTex;
-                mat.color.set(0xffffff);
-                mat.needsUpdate = true;
-                return newTex;
-            }
-
-            if (mats.wallBack) tex.wallBack = refreshWall(mats.wallBack, tex.wallBack, palette.wall);
-            if (mats.wallFront) tex.wallFront = refreshWall(mats.wallFront, tex.wallFront, palette.wall);
             if (mats.wallLeft) {
                 if (rollMap) {
-                    if (tex.wallLeft && tex.wallLeft !== rollMap) tex.wallLeft.dispose();
-                    const accentMap = rollMap.clone();
-                    accentMap.wrapS = THREE.RepeatWrapping;
-                    accentMap.wrapT = THREE.RepeatWrapping;
-                    accentMap.repeat.set(2.5, 2.5);
-                    accentMap.needsUpdate = true;
-                    tex.wallLeft = accentMap;
-                    mats.wallLeft.map = accentMap;
-                    mats.wallLeft.color.set(0xffffff);
-                    mats.wallLeft.roughness = 0.88;
-                    mats.wallLeft.needsUpdate = true;
+                    if (this.room._accentSrc !== rollMap) {
+                        if (tex.wallAccent) {
+                            tex.wallAccent.dispose();
+                            tex.wallAccent = null;
+                        }
+                        const accentMap = rollMap.clone();
+                        accentMap.wrapS = THREE.RepeatWrapping;
+                        accentMap.wrapT = THREE.RepeatWrapping;
+                        accentMap.repeat.set(2.5, 2.5);
+                        accentMap.needsUpdate = true;
+                        tex.wallAccent = accentMap;
+                        this.room._accentSrc = rollMap;
+                        mats.wallLeft.map = accentMap;
+                        mats.wallLeft.color.set(0xffffff);
+                        mats.wallLeft.roughness = 0.88;
+                    }
+                } else if (this.room._accentSrc) {
+                    if (tex.wallAccent) {
+                        tex.wallAccent.dispose();
+                        tex.wallAccent = null;
+                    }
+                    this.room._accentSrc = null;
+                    mats.wallLeft.map = null;
+                    mats.wallLeft.color.copy(palette.wallAccent);
+                    mats.wallLeft.roughness = 0.92;
                 } else {
-                    tex.wallLeft = refreshWall(mats.wallLeft, tex.wallLeft, palette.wallAccent);
+                    mats.wallLeft.color.copy(palette.wallAccent);
                 }
-            }
-            if (mats.wallRight) {
-                tex.wallRight = refreshWall(mats.wallRight, tex.wallRight, shadeColor(palette.wallSide, -0.04));
-            }
-            if (mats.floor && tex.floor) {
-                tex.floor.dispose();
-                tex.floor = makeWoodFloorTexture(palette);
-                mats.floor.map = tex.floor;
-                mats.floor.needsUpdate = true;
+                mats.wallLeft.needsUpdate = true;
             }
 
             if (this.scene) {
@@ -780,7 +762,10 @@
             }
         }
 
-        _updateRoomFromRoll(hex, rollMap) {
+        _updateRoomFromRoll(hex, rollMap, texUrl) {
+            const rollKey = (hex && hex.isColor ? colorToCss(hex) : String(hex || '')) + '|' + String(texUrl || (rollMap && rollMap.uuid) || '');
+            if (rollKey === this._lastRoomKey) return;
+            this._lastRoomKey = rollKey;
             const palette = deriveRoomPalette(hex);
             this._applyRoomPalette(palette, rollMap);
         }
@@ -1186,9 +1171,13 @@
             const map = await loadTexture(texUrl, maxAniso);
             if (!this.doorRoot) return;
 
-            this._updateRoomFromRoll(base, map);
+            this._updateRoomFromRoll(base, map, texUrl);
 
             const size = payload.size || {};
+            const stateKey = JSON.stringify(state) + '|' + JSON.stringify(size) + '|' + hex + '|' + texUrl;
+            if (stateKey === this._lastDoorStateKey && this.doorGroup) return;
+            this._lastDoorStateKey = stateKey;
+
             this._disposeDoorGroup();
             // السماكة (3.5 / 4.5 سم) مبنية داخل هندسة الضلفة نفسها
             this.doorGroup = this._buildDoor(state, base, map, size);
@@ -1220,6 +1209,9 @@
             if (this._intersectObs) this._intersectObs.disconnect();
             if (this.controls) this.controls.dispose();
             this._disposeDoorGroup();
+            if (this.room && this.room.textures && this.room.textures.wallAccent) {
+                this.room.textures.wallAccent.dispose();
+            }
             if (this._envRT) {
                 this._envRT.dispose();
                 this._envRT = null;

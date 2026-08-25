@@ -859,6 +859,10 @@
     z-index: 1;
 }
 
+.wpc-door-stage--engine-3d:not(.wpc-door-stage--engine-3d-loading) .nebras-door-3d-fallback-studio .wpc-door-room-scene {
+    display: none;
+}
+
 .wpc-door-stage--studio .wpc-door-photo-stack {
     transform: scale(
         calc(var(--door-zoom, 1) * var(--door-size-scale-x, 1)),

@@ -62,7 +62,21 @@ def main():
     else:
         warn('images/rolls directory not found')
 
-    # Cache bust version
+    if 'applyDoorRoomHarmony' not in js:
+        err('applyDoorRoomHarmony missing — room colour sync broken')
+    if 'wpc-door-room-scene' not in css:
+        err('wpc-door-room-scene CSS missing — 2D room backdrop broken')
+    door3d = os.path.join(ROOT, 'js', 'nebras-door-3d.js')
+    if os.path.isfile(door3d):
+        d3 = open(door3d, encoding='utf-8').read()
+        if '_buildPhotorealRoom' not in d3:
+            err('3D photoreal room builder missing from nebras-door-3d.js')
+        if '_lastRoomKey' not in d3:
+            warn('3D room palette cache missing — may re-tint on every option click')
+        if 'refreshWall' in d3:
+            warn('Slow refreshWall texture regen still in door 3D — check performance')
+    else:
+        err('js/nebras-door-3d.js missing')
     m = re.search(r"DOOR_PHOTO_PRESET_CACHE\s*=\s*'(\d+)'", js)
     if m:
         print(f'DOOR_PHOTO_PRESET_CACHE = {m.group(1)}')

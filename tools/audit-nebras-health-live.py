@@ -40,8 +40,8 @@ def main():
     print('HTTP /:', st, '| deploy:', v)
     if st != 200:
         issues.append('Homepage not 200')
-    if v != 'hrws277':
-        notes.append('Deploy tag is ' + v + ' (expected hrws277 if latest)')
+    if v != 'hrws278':
+        notes.append('Deploy tag is ' + v + ' (expected hrws278 if latest)')
 
     # assets linked
     refs = re.findall(r'(?:href|src)="((?:css|js)/[^"#?]+(?:\?v=[^"]+)?)"', html)
@@ -105,6 +105,7 @@ def main():
         ('complaints_cloud_rollback', 'persistErpStoresWithRollback' in pl and 'async function setComplaintStatus' in pl),
         ('erp_production_rollback', 'async function addErpProductionEntry' in erp_ui),
         ('platform_admin_erp_lazy', 'platformAdminErp' in dept_lazy_src and 'ensureNebrasPlatformAdminErp' in dept_lazy_src and 'nebrasErpUiLazy' in pl and 'nebras-platform-admin-erp.js' not in html and '__NEBRAS_ERP_UI_LOADED__' in erp_ui),
+        ('door_room_harmony', 'applyDoorRoomHarmony' in pl and 'wpc-door-room-scene' in open(os.path.join(ROOT, 'css/12-door-designer.css'), encoding='utf-8').read() and '_buildPhotorealRoom' in open(os.path.join(ROOT, 'js/nebras-door-3d.js'), encoding='utf-8').read()),
     ]
     print('\nFeature flags:')
     for name, ok in flags:

@@ -1063,7 +1063,6 @@
             stage.style.setProperty('--room-floor', shadeDoorHex(hex, -32));
             stage.style.setProperty('--room-trim', shadeDoorHex(hex, 22));
             stage.style.setProperty('--room-accent', hex);
-            stage.style.setProperty('--room-roll-texture', 'var(--door-roll-texture-url, none)');
             stage.classList.add('wpc-door-stage--room-harmony');
         }
 
