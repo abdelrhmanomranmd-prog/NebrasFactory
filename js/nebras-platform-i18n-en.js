@@ -1,5 +1,5 @@
 /**
- * نبراس hrws276 — siteText.en (lazy)
+ * نبراس hrws277 — siteText.en (lazy)
  */
 (function(global) {
     'use strict';
@@ -124,13 +124,13 @@
                 doorDesignerDisabled: 'Designer is not available right now.',
                 doorDesignerPendingData: 'Door designer data has been removed. Send the new dataset to rebuild it.',
                 doorDesignerDataOnlyHint: 'Data entry phase — visual door preview will be enabled after you send model images.',
-                doorDesigner3dHint: 'Drag to rotate 360° — scroll to zoom',
+                doorDesigner3dHint: 'Real room + WPC door — colour syncs door and room — drag 360°',
                 doorDesigner3dFail: 'Could not load 3D preview. Hard-refresh (Ctrl+F5) or use http://localhost:5500',
                 doorDesigner3dAria: '3D WPC door preview',
                 doorDesignerCompositorHint: 'Drag to rotate 360° — scroll to zoom',
                 doorDesignerCompositorLoading: 'Building design layers…',
                 doorDesignerCompositorAria: 'Layered dynamic door preview',
-                doorDesignerCanvasHint: 'Each option updates structure and materials — colours from 20 Nebras rolls',
+                doorDesignerCanvasHint: 'Real room + WPC door — every choice updates live — colour harmonizes the room',
                 partnersSuccessSubtitle: 'Partners in success',
                 lightboxOpenHint: 'Click to enlarge',
                 workspaceBackHome: 'Home',

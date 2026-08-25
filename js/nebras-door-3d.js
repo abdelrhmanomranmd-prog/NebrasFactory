@@ -2,7 +2,7 @@
  * Nebras — محرك 3D لمصمم الأبواب (يعمل مع file:// و Vercel — بدون ES modules)
  * يتطلب: three.min.js + OrbitControls.js قبل هذا الملف
  *
- * v2 — جودة استوديو: إضاءة فيزيائية + بيئة انعكاسات + إطار باب حقيقي
+ * v3 — غرفة واقعية متناسقة مع رولّة الباب (Max/AutoCAD-style) + باب WPC في حائط حقيقي
  * مفصلات تدور حولها الضلفة فعلياً + مقابض معدنية حسب الاختيار + زجاج فيزيائي
  * حركات ناعمة + إيقاف الرسم عند الخروج من الشاشة + إدارة ذاكرة كاملة.
  */
@@ -17,7 +17,7 @@
         constructor(camera, domElement, target) {
             this.camera = camera;
             this.domElement = domElement;
-            this.target = target || new THREE.Vector3(0, 1.12, 0.02);
+            this.target = target || new THREE.Vector3(0, 1.12, 1.92);
             this.spherical = new THREE.Spherical();
             this.spherical.setFromVector3(camera.position.clone().sub(this.target));
             this.autoRotate = true;
@@ -108,7 +108,7 @@
     }
 
     function createOrbitControls(camera, domElement) {
-        const target = new THREE.Vector3(0, 1.12, 0.02);
+        const target = new THREE.Vector3(0, 1.12, 1.92);
         if (OrbitControlsCtor) {
             const c = new OrbitControlsCtor(camera, domElement);
             c.enableDamping = true;
@@ -183,6 +183,84 @@
             c.b *= f;
         }
         return c;
+    }
+
+    /** لوحة ألوان الغرفة المتناسقة مع رولّة الباب — Max/AutoCAD-style harmony */
+    function deriveRoomPalette(hexColor) {
+        const base = hexColor && hexColor.isColor ? hexColor.clone() : parseHex(hexColor);
+        const hsl = { h: 0, s: 0, l: 0 };
+        base.getHSL(hsl);
+        const h = isNaN(hsl.h) ? 0.08 : hsl.h;
+        const s = Math.max(0.08, hsl.s || 0.15);
+        function tone(satMul, lit) {
+            const c = new THREE.Color();
+            c.setHSL(h, Math.min(0.42, Math.max(0.04, s * satMul)), Math.min(0.97, Math.max(0.08, lit)));
+            return c;
+        }
+        return {
+            base: base.clone(),
+            wall: tone(0.26, 0.87),
+            wallSide: tone(0.22, 0.81),
+            wallAccent: tone(0.38, 0.74),
+            floor: tone(0.52, 0.36),
+            ceiling: tone(0.10, 0.95),
+            trim: tone(0.30, 0.66),
+            fog: tone(0.16, 0.84),
+            beyond: tone(0.14, 0.70)
+        };
+    }
+
+    function colorToCss(c) {
+        return '#' + ('000000' + c.getHex().toString(16)).slice(-6);
+    }
+
+    function makeWallPaintTexture(color, w, h) {
+        const c = color && color.isColor ? color : parseHex(color);
+        const hex = colorToCss(c);
+        return makeCanvasTexture(w || 512, h || 512, function(ctx, width, height) {
+            const g = ctx.createLinearGradient(0, 0, 0, height);
+            g.addColorStop(0, shadeColor(c, 0.06).getStyle());
+            g.addColorStop(0.55, hex);
+            g.addColorStop(1, shadeColor(c, -0.05).getStyle());
+            ctx.fillStyle = g;
+            ctx.fillRect(0, 0, width, height);
+            for (let i = 0; i < 9000; i++) {
+                const x = Math.random() * width;
+                const y = Math.random() * height;
+                const a = 0.012 + Math.random() * 0.018;
+                ctx.fillStyle = 'rgba(255,255,255,' + a + ')';
+                ctx.fillRect(x, y, 1, 1);
+            }
+        });
+    }
+
+    function makeWoodFloorTexture(palette, w, h) {
+        const floor = palette.floor || parseHex('#7a6a58');
+        return makeCanvasTexture(w || 1024, h || 1024, function(ctx, width, height) {
+            ctx.fillStyle = shadeColor(floor, -0.08).getStyle();
+            ctx.fillRect(0, 0, width, height);
+            const plankH = Math.floor(height / 14);
+            for (let row = 0; row < 14; row++) {
+                const y = row * plankH;
+                const shift = (row % 2) * (width * 0.18);
+                ctx.fillStyle = shadeColor(floor, (row % 3) * 0.04 - 0.04).getStyle();
+                ctx.fillRect(0, y, width, plankH - 2);
+                ctx.strokeStyle = 'rgba(20,16,12,0.22)';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(shift, y);
+                ctx.lineTo(width, y);
+                ctx.stroke();
+                for (let j = 0; j < 5; j++) {
+                    const gx = shift + (width / 5) * j + ((row * 37) % 40);
+                    ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+                    ctx.beginPath();
+                    ctx.moveTo(gx, y + 4);
+                    ctx.lineTo(gx + 30, y + plankH - 6);
+                    ctx.stroke();
+                }
+            }
+        });
     }
 
     function applyTexColorSpace(tex) {
@@ -329,6 +407,7 @@
             this._scaleTarget = null;
             this._envRT = null;
             this._lastState = null;
+            this.room = null;
         }
 
         mount() {
@@ -338,11 +417,11 @@
             const h = Math.max(this.container.clientHeight, 420);
 
             this.scene = new THREE.Scene();
-            this.scene.background = new THREE.Color(0xe9edf2);
-            this.scene.fog = new THREE.Fog(0xe9edf2, 8, 18);
+            this.scene.background = new THREE.Color(0xe8e4de);
+            this.scene.fog = new THREE.Fog(0xe8e4de, 5.5, 11);
 
             this.camera = new THREE.PerspectiveCamera(42, w / h, 0.1, 40);
-            this.camera.position.set(1.9, 1.35, 3.0);
+            this.camera.position.set(0.12, 1.52, 0.55);
 
             try {
                 this.renderer = new THREE.WebGLRenderer({
@@ -375,10 +454,10 @@
 
             this._setupEnvironment();
             this._setupLights();
-            this._setupBackdrop();
+            this._buildPhotorealRoom();
 
             this.doorRoot = new THREE.Group();
-            this.doorRoot.position.y = 1.18;
+            this.doorRoot.position.set(0, 1.18, 1.88);
             this.scene.add(this.doorRoot);
 
             this.controls = createOrbitControls(this.camera, this.renderer.domElement);
@@ -483,68 +562,227 @@
             this.scene.add(rim);
         }
 
-        _setupBackdrop() {
-            const floorTex = makeCanvasTexture(512, 512, function(ctx, w, h) {
-                const grad = ctx.createRadialGradient(w / 2, h / 2, w * 0.08, w / 2, h / 2, w * 0.72);
-                grad.addColorStop(0, '#e3e7ec');
-                grad.addColorStop(0.6, '#d2d7de');
-                grad.addColorStop(1, '#b9c0c9');
-                ctx.fillStyle = grad;
-                ctx.fillRect(0, 0, w, h);
-                // خطوط بلاط رفيعة جداً للواقعية
-                ctx.strokeStyle = 'rgba(120,130,142,0.16)';
-                ctx.lineWidth = 2;
-                for (let i = 1; i < 4; i++) {
-                    ctx.beginPath();
-                    ctx.moveTo((w / 4) * i, 0);
-                    ctx.lineTo((w / 4) * i, h);
-                    ctx.stroke();
-                    ctx.beginPath();
-                    ctx.moveTo(0, (h / 4) * i);
-                    ctx.lineTo(w, (h / 4) * i);
-                    ctx.stroke();
-                }
+        _buildPhotorealRoom() {
+            const palette = deriveRoomPalette('#c4b8a8');
+            const rg = new THREE.Group();
+            const RW = 5.6;
+            const RD = 5.0;
+            const RH = 2.88;
+            const openW = 1.14;
+            const openH = 2.38;
+            const frontZ = RD / 2 - 0.04;
+
+            this.room = {
+                group: rg,
+                palette: palette,
+                materials: {},
+                textures: {},
+                frontZ: frontZ
+            };
+
+            const floorTex = makeWoodFloorTexture(palette);
+            this.room.textures.floor = floorTex;
+            const floorMat = new THREE.MeshStandardMaterial({
+                map: floorTex,
+                roughness: 0.76,
+                metalness: 0.03,
+                envMapIntensity: 0.28
             });
-            const floor = new THREE.Mesh(
-                new THREE.PlaneGeometry(12, 12),
-                new THREE.MeshStandardMaterial({ map: floorTex, roughness: 0.82, metalness: 0.04, envMapIntensity: 0.35 })
-            );
+            this.room.materials.floor = floorMat;
+            const floor = new THREE.Mesh(new THREE.PlaneGeometry(RW, RD), floorMat);
             floor.rotation.x = -Math.PI / 2;
             floor.receiveShadow = true;
-            this.scene.add(floor);
+            rg.add(floor);
 
-            const wall = new THREE.Mesh(
-                new THREE.PlaneGeometry(14, 6),
-                new THREE.MeshStandardMaterial({ color: 0xf1f3f6, roughness: 0.96, metalness: 0 })
+            const ceilMat = new THREE.MeshStandardMaterial({ color: palette.ceiling.clone(), roughness: 0.94, metalness: 0 });
+            this.room.materials.ceiling = ceilMat;
+            const ceiling = new THREE.Mesh(new THREE.PlaneGeometry(RW, RD), ceilMat);
+            ceiling.rotation.x = Math.PI / 2;
+            ceiling.position.y = RH;
+            rg.add(ceiling);
+
+            function wallTex(color) {
+                return makeWallPaintTexture(color, 512, 512);
+            }
+
+            const backTex = wallTex(palette.wall);
+            this.room.textures.wallBack = backTex;
+            const backMat = new THREE.MeshStandardMaterial({ map: backTex, roughness: 0.93, metalness: 0, envMapIntensity: 0.12 });
+            this.room.materials.wallBack = backMat;
+            const back = new THREE.Mesh(new THREE.PlaneGeometry(RW, RH), backMat);
+            back.position.set(0, RH / 2, -RD / 2 + 0.01);
+            back.receiveShadow = true;
+            rg.add(back);
+
+            const leftTex = wallTex(palette.wallSide);
+            this.room.textures.wallLeft = leftTex;
+            const leftMat = new THREE.MeshStandardMaterial({ map: leftTex, roughness: 0.92, metalness: 0, envMapIntensity: 0.12 });
+            this.room.materials.wallLeft = leftMat;
+            this.room.materials.wallAccent = leftMat;
+            const left = new THREE.Mesh(new THREE.PlaneGeometry(RD, RH), leftMat);
+            left.rotation.y = Math.PI / 2;
+            left.position.set(-RW / 2 + 0.01, RH / 2, 0);
+            left.receiveShadow = true;
+            rg.add(left);
+
+            const rightColor = palette.wallSide.clone();
+            shadeColor(rightColor, -0.04);
+            const rightTex = wallTex(rightColor);
+            this.room.textures.wallRight = rightTex;
+            const rightMat = new THREE.MeshStandardMaterial({ map: rightTex, roughness: 0.92, metalness: 0, envMapIntensity: 0.12 });
+            this.room.materials.wallRight = rightMat;
+            const right = new THREE.Mesh(new THREE.PlaneGeometry(RD, RH), rightMat);
+            right.rotation.y = -Math.PI / 2;
+            right.position.set(RW / 2 - 0.01, RH / 2, 0);
+            right.receiveShadow = true;
+            rg.add(right);
+
+            const frontTex = wallTex(palette.wall);
+            this.room.textures.wallFront = frontTex;
+            const frontMat = new THREE.MeshStandardMaterial({ map: frontTex, roughness: 0.93, metalness: 0, envMapIntensity: 0.12 });
+            this.room.materials.wallFront = frontMat;
+
+            const sidePanelW = (RW - openW) / 2;
+            const frontL = new THREE.Mesh(new THREE.BoxGeometry(sidePanelW, RH, 0.07), frontMat);
+            frontL.position.set(-openW / 2 - sidePanelW / 2, RH / 2, frontZ);
+            frontL.castShadow = true;
+            frontL.receiveShadow = true;
+            rg.add(frontL);
+
+            const frontR = frontL.clone();
+            frontR.position.x = openW / 2 + sidePanelW / 2;
+            rg.add(frontR);
+
+            const lintelH = RH - openH;
+            const lintel = new THREE.Mesh(new THREE.BoxGeometry(openW + 0.14, lintelH, 0.07), frontMat);
+            lintel.position.set(0, openH + lintelH / 2, frontZ);
+            lintel.castShadow = true;
+            rg.add(lintel);
+
+            const trimMat = new THREE.MeshStandardMaterial({ color: palette.trim.clone(), roughness: 0.72, metalness: 0.02 });
+            this.room.materials.trim = trimMat;
+            const skH = 0.11;
+            [
+                { w: RW, x: 0, z: -RD / 2 + 0.04, ry: 0 },
+                { w: RD, x: -RW / 2 + 0.04, z: 0, ry: Math.PI / 2 },
+                { w: RD, x: RW / 2 - 0.04, z: 0, ry: Math.PI / 2 },
+                { w: RW, x: 0, z: frontZ + 0.02, ry: 0 }
+            ].forEach(function(cfg) {
+                const sk = new THREE.Mesh(new THREE.BoxGeometry(cfg.w, skH, 0.025), trimMat);
+                sk.position.set(cfg.x, skH / 2, cfg.z);
+                if (cfg.ry) sk.rotation.y = cfg.ry;
+                rg.add(sk);
+            });
+
+            const beyondMat = new THREE.MeshStandardMaterial({ color: palette.beyond.clone(), roughness: 0.98, metalness: 0 });
+            this.room.materials.beyond = beyondMat;
+            const beyond = new THREE.Mesh(new THREE.PlaneGeometry(openW - 0.04, openH - 0.04), beyondMat);
+            beyond.position.set(0, openH / 2, frontZ - 0.12);
+            rg.add(beyond);
+
+            const winMat = new THREE.MeshStandardMaterial({
+                color: 0xd8e8f8,
+                roughness: 0.08,
+                metalness: 0.05,
+                emissive: 0xa8c8e8,
+                emissiveIntensity: 0.35,
+                transparent: true,
+                opacity: 0.88
+            });
+            this.room.materials.window = winMat;
+            const windowMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.95, 1.15), winMat);
+            windowMesh.position.set(RW / 2 - 0.02, RH * 0.58, 0.35);
+            windowMesh.rotation.y = -Math.PI / 2;
+            rg.add(windowMesh);
+
+            const winFrame = new THREE.Mesh(
+                new THREE.BoxGeometry(0.04, 1.22, 1.02),
+                new THREE.MeshStandardMaterial({ color: palette.trim.clone(), roughness: 0.55 })
             );
-            wall.position.set(0, 3, -2.2);
-            wall.receiveShadow = true;
-            this.scene.add(wall);
+            winFrame.position.set(RW / 2 - 0.01, RH * 0.58, 0.35);
+            winFrame.rotation.y = -Math.PI / 2;
+            rg.add(winFrame);
 
-            // وزرة سفلية على الجدار الخلفي
-            const skirting = new THREE.Mesh(
-                new THREE.BoxGeometry(14, 0.12, 0.02),
-                new THREE.MeshStandardMaterial({ color: 0xdfe3e8, roughness: 0.8 })
-            );
-            skirting.position.set(0, 0.06, -2.19);
-            this.scene.add(skirting);
-
-            // ظل تلامس ناعم تحت الباب
             const blobTex = makeCanvasTexture(256, 128, function(ctx, w, h) {
                 const grad = ctx.createRadialGradient(w / 2, h / 2, 4, w / 2, h / 2, w / 2);
-                grad.addColorStop(0, 'rgba(20,28,38,0.42)');
-                grad.addColorStop(0.65, 'rgba(20,28,38,0.16)');
+                grad.addColorStop(0, 'rgba(20,28,38,0.38)');
+                grad.addColorStop(0.65, 'rgba(20,28,38,0.14)');
                 grad.addColorStop(1, 'rgba(20,28,38,0)');
                 ctx.fillStyle = grad;
                 ctx.fillRect(0, 0, w, h);
             });
             const blob = new THREE.Mesh(
-                new THREE.PlaneGeometry(2.3, 0.95),
+                new THREE.PlaneGeometry(2.4, 1.0),
                 new THREE.MeshBasicMaterial({ map: blobTex, transparent: true, depthWrite: false })
             );
             blob.rotation.x = -Math.PI / 2;
-            blob.position.set(0, 0.012, 0.16);
-            this.scene.add(blob);
+            blob.position.set(0, 0.012, frontZ - 0.05);
+            rg.add(blob);
+
+            this.scene.add(rg);
+            this._applyRoomPalette(palette, null);
+        }
+
+        _applyRoomPalette(palette, rollMap) {
+            if (!this.room || !palette) return;
+            this.room.palette = palette;
+            const mats = this.room.materials;
+            const tex = this.room.textures;
+
+            if (mats.ceiling) mats.ceiling.color.copy(palette.ceiling);
+            if (mats.trim) mats.trim.color.copy(palette.trim);
+            if (mats.beyond) mats.beyond.color.copy(palette.beyond);
+
+            function refreshWall(mat, texObj, color) {
+                if (!mat || !color) return;
+                if (texObj) {
+                    texObj.dispose();
+                }
+                const newTex = makeWallPaintTexture(color);
+                mat.map = newTex;
+                mat.color.set(0xffffff);
+                mat.needsUpdate = true;
+                return newTex;
+            }
+
+            if (mats.wallBack) tex.wallBack = refreshWall(mats.wallBack, tex.wallBack, palette.wall);
+            if (mats.wallFront) tex.wallFront = refreshWall(mats.wallFront, tex.wallFront, palette.wall);
+            if (mats.wallLeft) {
+                if (rollMap) {
+                    if (tex.wallLeft && tex.wallLeft !== rollMap) tex.wallLeft.dispose();
+                    const accentMap = rollMap.clone();
+                    accentMap.wrapS = THREE.RepeatWrapping;
+                    accentMap.wrapT = THREE.RepeatWrapping;
+                    accentMap.repeat.set(2.5, 2.5);
+                    accentMap.needsUpdate = true;
+                    tex.wallLeft = accentMap;
+                    mats.wallLeft.map = accentMap;
+                    mats.wallLeft.color.set(0xffffff);
+                    mats.wallLeft.roughness = 0.88;
+                    mats.wallLeft.needsUpdate = true;
+                } else {
+                    tex.wallLeft = refreshWall(mats.wallLeft, tex.wallLeft, palette.wallAccent);
+                }
+            }
+            if (mats.wallRight) {
+                tex.wallRight = refreshWall(mats.wallRight, tex.wallRight, shadeColor(palette.wallSide, -0.04));
+            }
+            if (mats.floor && tex.floor) {
+                tex.floor.dispose();
+                tex.floor = makeWoodFloorTexture(palette);
+                mats.floor.map = tex.floor;
+                mats.floor.needsUpdate = true;
+            }
+
+            if (this.scene) {
+                this.scene.background = palette.fog.clone();
+                if (this.scene.fog) this.scene.fog.color.copy(palette.fog);
+            }
+        }
+
+        _updateRoomFromRoll(hex, rollMap) {
+            const palette = deriveRoomPalette(hex);
+            this._applyRoomPalette(palette, rollMap);
         }
 
         _onResize() {
@@ -641,10 +879,13 @@
             trimTop.position.set(0, halfH + headH - 0.005, jambD / 2 + trimT / 2 - 0.01);
             group.add(trimL, trimR, trimTop);
 
-            // عمق الغرفة خلف الفتحة — يظهر عند انفراج الضلفة
+            // عمق الغرفة خلف الفتحة — يظهر عند انفراج الضلفة (متناسق مع ألوان الغرفة)
+            const beyondColor = (this.room && this.room.palette && this.room.palette.beyond)
+                ? this.room.palette.beyond.clone()
+                : new THREE.Color(0x10161e);
             const interior = new THREE.Mesh(
                 new THREE.PlaneGeometry(W - 0.02, H - 0.02),
-                new THREE.MeshStandardMaterial({ color: 0x10161e, roughness: 1, metalness: 0 })
+                new THREE.MeshStandardMaterial({ color: beyondColor, roughness: 0.98, metalness: 0 })
             );
             interior.position.set(0, 0, -jambD / 2 + 0.005);
             group.add(interior);
@@ -944,6 +1185,8 @@
 
             const map = await loadTexture(texUrl, maxAniso);
             if (!this.doorRoot) return;
+
+            this._updateRoomFromRoll(base, map);
 
             const size = payload.size || {};
             this._disposeDoorGroup();

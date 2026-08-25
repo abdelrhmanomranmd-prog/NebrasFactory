@@ -1052,6 +1052,21 @@
             return [state.type, state.model, state.outerShape || 'outer-flat', state.decor || 'plain'].join('|');
         }
 
+        /** تنسيق ألوان الغرفة مع رولّة الباب — استوديو + معاينة 2D */
+        function applyDoorRoomHarmony(stage, hex) {
+            if (!stage || !hex) return;
+            stage.style.setProperty('--room-wall', shadeDoorHex(hex, 40));
+            stage.style.setProperty('--room-wall-back', shadeDoorHex(hex, 36));
+            stage.style.setProperty('--room-wall-left', shadeDoorHex(hex, 32));
+            stage.style.setProperty('--room-wall-right', shadeDoorHex(hex, 34));
+            stage.style.setProperty('--room-ceiling', shadeDoorHex(hex, 50));
+            stage.style.setProperty('--room-floor', shadeDoorHex(hex, -32));
+            stage.style.setProperty('--room-trim', shadeDoorHex(hex, 22));
+            stage.style.setProperty('--room-accent', hex);
+            stage.style.setProperty('--room-roll-texture', 'var(--door-roll-texture-url, none)');
+            stage.classList.add('wpc-door-stage--room-harmony');
+        }
+
         /** تطبيق موحّد — 20 رولّة WPC على الباب (SVG + صورة المصنع) */
         function applyDoorRollColorFinish(stage, rollState) {
             if (!stage || !rollState) return;
@@ -1076,6 +1091,12 @@
             stage.style.setProperty('--door-threshold-light', shadeDoorHex(hex, -18));
             stage.style.setProperty('--door-threshold-dark', shadeDoorHex(hex, -42));
             stage.style.setProperty('--door-roll-tint', hex);
+            if (isRoll && swatchPath) {
+                stage.style.setProperty('--door-roll-texture-url', 'url("' + absTex + '")');
+            } else {
+                stage.style.removeProperty('--door-roll-texture-url');
+            }
+            applyDoorRoomHarmony(stage, hex);
             const isPhotoPreset = stage.classList.contains('wpc-door-stage--photo-preset');
             if (!isPhotoPreset) {
                 applyDoorRollTintToElements(stage, rollState);
@@ -22542,7 +22563,15 @@
         }
 
         function buildDoorDesignerLegacyCanvasHtml(doorPhoto, photoreal, leafMask) {
-            return '<div class="wpc-door-canvas" id="wpc-door-preview-unit">' +
+            return '<div class="wpc-door-room-scene" aria-hidden="true">' +
+                '<div class="wpc-door-room-ceiling"></div>' +
+                '<div class="wpc-door-room-wall wpc-door-room-wall--back"></div>' +
+                '<div class="wpc-door-room-wall wpc-door-room-wall--left"></div>' +
+                '<div class="wpc-door-room-wall wpc-door-room-wall--right"></div>' +
+                '<div class="wpc-door-room-window"></div>' +
+                '<div class="wpc-door-room-floor"></div>' +
+                '<div class="wpc-door-room-trim"></div></div>' +
+                '<div class="wpc-door-canvas" id="wpc-door-preview-unit">' +
                 '<div class="wpc-door-photo-preset-wrap" id="wpc-door-photo-preset-wrap" aria-hidden="true">' +
                 '<img class="wpc-door-photo-preset-transom-cap" id="wpc-door-photo-preset-transom-cap" alt="" hidden loading="eager" decoding="async">' +
                 '<div class="wpc-door-photo-preset-stack" id="wpc-door-photo-preset-stack">' +

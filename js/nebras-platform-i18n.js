@@ -1,11 +1,11 @@
 /**
- * نبراس hrws276 — i18n: العربية فوراً · EN/ZH كسول عند تغيير اللغة
+ * نبراس hrws277 — i18n: العربية فوراً · EN/ZH كسول عند تغيير اللغة
  * يُحمَّل بعد nebras-platform.js (NEBRAS_BRAND_* · getNebrasBrand*)
  */
 (function(global) {
     'use strict';
 
-    var VER = 'hrws276';
+    var VER = 'hrws277';
     var localeInflight = Object.create(null);
     var localeLoaded = { ar: true };
 
@@ -130,14 +130,14 @@
                 doorDesignerDisabled: 'المصمم غير متاح حالياً.',
                 doorDesignerPendingData: 'تم حذف بيانات مصمم الأبواب. أرسل البيانات الجديدة بالترتيب لإعادة البناء.',
                 doorDesignerDataOnlyHint: 'مرحلة إدخال البيانات — المعاينة البصرية للنموذج لاحقاً. الألوان: 20 رولّة N- مستخرجة من كتالوج نبراس.',
-                doorDesigner3dHint: 'اسحبي للدوران 360° — يدور تلقائياً حتى تلمسيه — عجلة الفأرة للتكبير',
+                doorDesigner3dHint: 'غرفة واقعية + باب WPC — اللون يغيّر الباب والغرفة معاً — اسحبي 360°',
                 doorDesigner3dLoading: 'جاري تحميل النموذج ثلاثي الأبعاد…',
                 doorDesigner3dFail: 'تعذّر تحميل المعاينة ثلاثية الأبعاد. أعد تحميل الصفحة (Ctrl+F5) أو افتح الموقع عبر http://localhost:5500',
                 doorDesigner3dAria: 'معاينة باب WPC ثلاثي الأبعاد — قابلة للتدوير',
                 doorDesignerCompositorHint: 'اسحب للدوران 360° حول الباب — عجلة الفأرة للتقريب والتبعيد',
                 doorDesignerCompositorLoading: 'جاري تجميع طبقات التصميم…',
                 doorDesignerCompositorAria: 'معاينة باب ديناميكية بطبقات — أسلوب الاستوديو',
-                doorDesignerCanvasHint: 'كل خيار يغيّر الهيكل والمادة فعلياً — اللون من رولّات نبراس (20 لوناً)',
+                doorDesignerCanvasHint: 'غرفة واقعية + باب WPC حقيقي — كل اختيار يتغيّر فعلياً — اللون يتناسق مع الغرفة',
                 partnersSuccessSubtitle: 'شركاؤنا في النجاح',
                 lightboxOpenHint: 'اضغط للتكبير — عرض بالدقة الكاملة',
                 lightboxImageAlt: 'صورة',
