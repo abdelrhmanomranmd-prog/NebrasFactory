@@ -1129,3 +1129,52 @@ body.customer-portal-open #nebras-storefront > #branches {
     font-size: 0.82rem;
     text-decoration: none;
 }
+
+.cp-auth-tabs {
+    display: flex;
+    gap: 8px;
+    margin: 0 0 12px;
+}
+.cp-auth-tab {
+    flex: 1;
+    border: 1px solid #dce6f0;
+    border-radius: 10px;
+    background: #f7fafc;
+    color: #0d2840;
+    font-family: inherit;
+    font-weight: 700;
+    font-size: 0.82rem;
+    padding: 10px 12px;
+    cursor: pointer;
+}
+.cp-auth-tab.is-active {
+    background: linear-gradient(135deg, #155e94, #0d2840);
+    color: #fff;
+    border-color: transparent;
+}
+.cp-reg-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 10px;
+    text-align: start;
+}
+.cp-reg-field span {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #35556f;
+}
+.cp-reg-hint {
+    font-size: 0.76rem;
+    color: #5a7188;
+    margin: 4px 0 10px;
+    line-height: 1.5;
+}
+.cp-reg-type-fieldset {
+    margin: 8px 0 10px;
+    border: none;
+    padding: 0;
+}
+.cp-reg-type-fieldset .cp-customer-type-option {
+    margin-inline-end: 8px;
+}

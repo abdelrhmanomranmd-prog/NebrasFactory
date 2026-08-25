@@ -84,8 +84,21 @@ async function handlePortalLogin(body) {
     if (!url || !key) {
         return { code: 503, data: { ok: false, error: 'service_unavailable' } };
     }
-    const users = await sec.loadCustomerPortalUsers();
     const unLower = username.toLowerCase();
+    const requests = await sec.loadCustomerRegistrationRequests();
+    const pendingReq = requests.find(function(r) {
+        return r && r.status === 'pending' && String(r.username || '').toLowerCase() === unLower;
+    });
+    if (pendingReq) {
+        return { code: 403, data: { ok: false, error: 'pending_approval', message: 'طلب التسجيل قيد المراجعة — انتظر موافقة الإدارة.' } };
+    }
+    const rejectedReq = requests.find(function(r) {
+        return r && r.status === 'rejected' && String(r.username || '').toLowerCase() === unLower;
+    });
+    if (rejectedReq) {
+        return { code: 403, data: { ok: false, error: 'registration_rejected', message: rejectedReq.note || 'تم رفض طلب التسجيل.' } };
+    }
+    const users = await sec.loadCustomerPortalUsers();
     const user = users.find(function(u) {
         return u && u.isActive !== false && String(u.username || '').toLowerCase() === unLower;
     });

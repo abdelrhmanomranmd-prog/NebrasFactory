@@ -43,6 +43,7 @@
         erp_inventory: 'nebrasErpInventory',
         erp_orders: 'nebrasErpOrders',
         customer_portal_users: 'nebrasCustomerPortalUsers',
+        customer_registration_requests: 'nebrasCustomerRegistrationRequests',
         crm_customers: 'nebrasCrmCustomers',
         sales_data: 'nebrasSalesData',
         system_settings: 'nebrasSystemSettings',
@@ -560,7 +561,7 @@
         const sensPending = hasSensitiveCloudPending();
         if (sensPending && typeof global.persistNebrasCriticalStores === 'function') {
             const keys = [
-                'admin_users', 'customer_portal_users', 'customer_portal_audit', 'hr_employees',
+                'admin_users', 'customer_portal_users', 'customer_portal_audit', 'customer_registration_requests', 'hr_employees',
                 'crm_customers', 'crm_opportunities', 'legal_contracts', 'sales_quotes_inbox',
                 'erp_orders', 'erp_inventory', 'complaints', 'audit_logs',
                 'aluminum_systems', 'aluminum_estimates', 'aluminum_cut_jobs', 'aluminum_stock'
@@ -643,5 +644,14 @@
     }
     global.startNebrasCloudAutoSync = startNebrasCloudAutoSync;
     global.stopNebrasCloudAutoSync = stopNebrasCloudAutoSync;
+
+    if (typeof window !== 'undefined') {
+        window.addEventListener('nebras-admin-session', function() {
+            startNebrasCloudAutoSync();
+        });
+        window.addEventListener('nebras-admin-logout', function() {
+            stopNebrasCloudAutoSync();
+        });
+    }
 
 })(typeof window !== 'undefined' ? window : globalThis);

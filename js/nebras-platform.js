@@ -28873,6 +28873,11 @@
             }, set: function(v) {
                 if (typeof setCustomerPortalAuditFromCloud === 'function') setCustomerPortalAuditFromCloud(v);
             }},
+            { key: 'customer_registration_requests', get: function() {
+                return typeof getCustomerRegistrationRequests === 'function' ? getCustomerRegistrationRequests() : [];
+            }, set: function(v) {
+                if (typeof setCustomerRegistrationRequestsFromCloud === 'function') setCustomerRegistrationRequestsFromCloud(v);
+            }},
             { key: 'customer_order_journeys', get: function() {
                 return typeof getNebrasOrderJourneys === 'function' ? getNebrasOrderJourneys() : [];
             }, set: function(v) {

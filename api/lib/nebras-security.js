@@ -37,7 +37,7 @@ const PUBLIC_STORE_KEYS = [
 const SENSITIVE_STORE_KEYS = [
     'admin_users', 'admin_recovery_otp', 'admin_presence', 'audit_logs', 'analytics_governance',
     'sales_quotes_inbox', 'sales_data', 'quote_registry', 'callback_leads',
-    'customer_portal_users', 'customer_portal_audit', 'customer_order_journeys', 'customer_service',
+    'customer_portal_users', 'customer_portal_audit', 'customer_registration_requests', 'customer_order_journeys', 'customer_service',
     'complaints', 'erp_inventory', 'erp_orders', 'erp_production', 'erp_procurement', 'erp_purchases',
     'erp_transfers', 'erp_stock_transfers', 'sales_price_list', 'procurement_custom_depts',
     'hr_employees', 'hr_vehicles', 'hr_leave', 'hr_vehicle_tracking', 'hr_attendance',
@@ -148,6 +148,19 @@ async function loadCustomerPortalUsers() {
         return Array.isArray(payload) ? payload : [];
     } catch (err) {
         console.error('loadCustomerPortalUsers error:', err);
+        return [];
+    }
+}
+
+async function loadCustomerRegistrationRequests() {
+    try {
+        const { url, key } = supabaseServiceConfig();
+        if (!url || !key) return [];
+        const row = await fetchStoreRow(url, key, 'customer_registration_requests');
+        const payload = row && row.payload !== undefined ? row.payload : null;
+        return Array.isArray(payload) ? payload : [];
+    } catch (err) {
+        console.error('loadCustomerRegistrationRequests error:', err);
         return [];
     }
 }
@@ -428,7 +441,7 @@ const PERMISSION_STORE_EXACT = {
     branches: ['branches'],
     audit: ['audit_logs'],
     productMaster: ['site_products', 'sales_price_list'],
-    customerPortal: ['customer_portal_users', 'customer_portal_audit'],
+    customerPortal: ['customer_portal_users', 'customer_portal_audit', 'customer_registration_requests'],
     createCustomerUser: ['customer_portal_users'],
     orderJourney: ['customer_order_journeys'],
     storeCatalog: ['site_products']
@@ -604,6 +617,7 @@ module.exports = {
     ensureBuiltinAdminUsersPersisted,
     mergeBuiltinSeedUsers,
     loadCustomerPortalUsers,
+    loadCustomerRegistrationRequests,
     parseBody,
     getBearerToken,
     jsonRes,

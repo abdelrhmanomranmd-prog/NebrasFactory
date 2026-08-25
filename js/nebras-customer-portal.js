@@ -8,10 +8,13 @@
 
     const CP_USERS_KEY = 'nebrasCustomerPortalUsers';
     const CP_AUDIT_KEY = 'nebrasCustomerPortalAudit';
+    const CP_REG_REQUESTS_KEY = 'nebrasCustomerRegistrationRequests';
     const CP_SESSION_KEY = 'nebrasCustomerPortalSession';
 
     let customerPortalUsers = [];
     let customerPortalAudit = [];
+    let customerRegistrationRequests = [];
+    let cpGovView = 'users';
     let currentPortalCustomer = null;
     let cpEditorState = null;
     let cpDataReady = false;
@@ -93,6 +96,327 @@
             if (!Array.isArray(customerPortalAudit)) customerPortalAudit = [];
         } catch (e) { customerPortalAudit = []; }
         cpDataReady = true;
+    }
+
+    function loadCpRegRequests() {
+        try {
+            const raw = localStorage.getItem(CP_REG_REQUESTS_KEY);
+            customerRegistrationRequests = raw ? JSON.parse(raw) : [];
+            if (!Array.isArray(customerRegistrationRequests)) customerRegistrationRequests = [];
+        } catch (e) { customerRegistrationRequests = []; }
+    }
+
+    function saveCpRegRequestsLocal() {
+        try { localStorage.setItem(CP_REG_REQUESTS_KEY, JSON.stringify(customerRegistrationRequests)); } catch (e) { /* ignore */ }
+        if (typeof global.markLocalCloudMutationBatch === 'function') {
+            global.markLocalCloudMutationBatch(['customer_registration_requests']);
+        }
+    }
+
+    function setCustomerRegistrationRequestsFromCloud(v) {
+        customerRegistrationRequests = Array.isArray(v) ? v : [];
+        saveCpRegRequestsLocal();
+    }
+
+    async function hydrateCpRegRequestsFromCloud() {
+        if (typeof global.secureCloudPull !== 'function' || typeof global.getNebrasSecureToken !== 'function') return false;
+        if (!global.getNebrasSecureToken()) return false;
+        try {
+            const rows = await global.secureCloudPull(['customer_registration_requests']);
+            const row = (rows || []).find(function(r) { return r && r.store_key === 'customer_registration_requests'; });
+            if (row && Array.isArray(row.payload)) {
+                setCustomerRegistrationRequestsFromCloud(row.payload);
+                return true;
+            }
+        } catch (e) { console.warn('hydrateCpRegRequestsFromCloud:', e); }
+        return false;
+    }
+
+    async function persistCpRegRequestsToCloud(options) {
+        options = options || {};
+        if (typeof global.ensureNebrasCloudSessionReady === 'function') {
+            const sessionOk = await global.ensureNebrasCloudSessionReady({ promptReauth: options.promptReauth === true });
+            if (!sessionOk) return false;
+        }
+        if (typeof global.persistNebrasCriticalStores === 'function') {
+            return await global.persistNebrasCriticalStores(['customer_registration_requests'], {
+                showToast: !!options.showToast,
+                promptReauth: options.promptReauth === true
+            });
+        }
+        return false;
+    }
+
+    function getPendingRegistrationRequests() {
+        loadCpRegRequests();
+        return customerRegistrationRequests.filter(function(r) { return r && r.status === 'pending'; });
+    }
+
+    function filterCpRegRequestsForManager(list) {
+        const admin = resolveCpAdminUser();
+        if (!admin) return [];
+        if (typeof global.isMainGovernanceAdmin === 'function' && global.isMainGovernanceAdmin(admin)) return list.slice();
+        if (admin.role === 'sales_manager' || admin.role === 'branch_manager') {
+            const bid = admin.assignedBranchId != null ? String(admin.assignedBranchId) : '';
+            const city = normText(admin.assignedBranchCity);
+            return list.filter(function(r) {
+                if (!r) return false;
+                if (bid && r.branchId != null && String(r.branchId) === bid) return true;
+                if (city && normText(r.branchCity).indexOf(city) >= 0) return true;
+                return !r.branchId && !r.branchCity;
+            });
+        }
+        return [];
+    }
+
+    function switchCpGovView(view) {
+        cpGovView = view === 'registrations' ? 'registrations' : 'users';
+        renderCustomerPortalGovernancePanel();
+    }
+
+    function renderCpRegistrationApprovals() {
+        loadCpRegRequests();
+        const list = document.getElementById('cp-gov-list');
+        const stats = document.getElementById('cp-gov-stats');
+        const pending = filterCpRegRequestsForManager(getPendingRegistrationRequests());
+        if (stats) {
+            stats.innerHTML =
+                '<div class="erp-stat erp-stat--accent"><strong>' + pending.length + '</strong><span>طلبات بانتظار الموافقة</span></div>' +
+                '<div class="erp-stat"><strong>' + customerRegistrationRequests.filter(function(r) { return r && r.status === 'approved'; }).length + '</strong><span>تمت الموافقة</span></div>' +
+                '<div class="erp-stat"><strong>' + customerRegistrationRequests.filter(function(r) { return r && r.status === 'rejected'; }).length + '</strong><span>مرفوضة</span></div>';
+        }
+        if (!list) return;
+        if (!pending.length) {
+            list.innerHTML = '<p class="nebras-users-empty">لا طلبات تسجيل معلّقة — العملاء الجدد يظهرون هنا تلقائياً.</p>';
+            return;
+        }
+        list.innerHTML = pending.map(function(r) {
+            const ctype = r.customerType === CP_CUSTOMER_TYPE_CASH ? CP_CUSTOMER_TYPE_CASH : CP_CUSTOMER_TYPE_BUSINESS;
+            return '<article class="nebras-user-card cp-gov-card cp-reg-card">' +
+                '<header class="nebras-user-card-head">' +
+                    '<span class="nebras-user-avatar"><i class="fas fa-user-clock"></i></span>' +
+                    '<div><strong>' + esc(r.displayName || r.username) + '</strong><small>' + esc(r.username) + '</small></div>' +
+                    '<span class="cp-customer-type-badge cp-customer-type-badge--' + ctype + '">' + esc(getCpCustomerTypeLabel(ctype)) + '</span>' +
+                '</header>' +
+                (r.phone ? '<span class="nebras-user-branch"><i class="fas fa-mobile-screen"></i> ' + esc(r.phone) + '</span>' : '') +
+                (ctype === CP_CUSTOMER_TYPE_BUSINESS
+                    ? '<span class="nebras-user-branch"><i class="fas fa-building"></i> سجل: ' + esc(r.commercialRegistration || '—') + ' · ضريبي: ' + esc(r.taxId || '—') + '</span>'
+                    : '') +
+                '<span class="nebras-user-branch"><i class="fas fa-clock"></i> ' + esc((r.createdAt || '').slice(0, 16).replace('T', ' ')) + '</span>' +
+                '<footer class="nebras-user-card-foot">' +
+                    '<button class="nebras-user-act nebras-user-act--primary" onclick="approveCpRegistration(\'' + escAttr(r.id) + '\')"><i class="fas fa-check"></i> موافقة</button>' +
+                    '<button class="nebras-user-act nebras-user-act--danger" onclick="rejectCpRegistration(\'' + escAttr(r.id) + '\')"><i class="fas fa-xmark"></i> رفض</button>' +
+                '</footer></article>';
+        }).join('');
+    }
+
+    async function approveCpRegistration(requestId) {
+        if (!canManageCustomerPortalUsers()) {
+            alert('موافقة التسجيل — الإدارة الرئيسية ومدير المبيعات/مدير الفرع فقط.');
+            return;
+        }
+        loadCpRegRequests();
+        loadCpData();
+        const idx = customerRegistrationRequests.findIndex(function(r) { return r && String(r.id) === String(requestId); });
+        if (idx < 0) { alert('الطلب غير موجود.'); return; }
+        const req = customerRegistrationRequests[idx];
+        if (!req || req.status !== 'pending') { alert('الطلب ليس معلّقاً.'); return; }
+        if (!filterCpRegRequestsForManager([req]).length) {
+            alert('لا يمكنك الموافقة على طلب خارج فرعك.');
+            return;
+        }
+        const dup = customerPortalUsers.some(function(u) {
+            return u && String(u.username || '').toLowerCase() === String(req.username || '').toLowerCase();
+        });
+        if (dup) {
+            alert('اسم المستخدم موجود مسبقاً — رفضي الطلب أو عدّلي الاسم.');
+            return;
+        }
+        const admin = resolveCpAdminUser();
+        const usersSnapshot = JSON.parse(JSON.stringify(customerPortalUsers));
+        const requestsSnapshot = JSON.parse(JSON.stringify(customerRegistrationRequests));
+        const portalUser = {
+            id: 'CP-' + Date.now(),
+            username: req.username,
+            displayName: req.displayName || req.username,
+            phone: req.phone || '',
+            email: req.email || '',
+            password: req.password,
+            customerType: req.customerType || CP_CUSTOMER_TYPE_BUSINESS,
+            commercialRegistration: req.commercialRegistration || '',
+            taxId: req.taxId || '',
+            branchId: req.branchId || (admin && admin.assignedBranchId) || null,
+            branchCity: req.branchCity || (admin && admin.assignedBranchCity) || '',
+            portalAccess: Array.isArray(req.portalAccess) && req.portalAccess.length ? req.portalAccess.slice() : CP_DEFAULT_ACCESS.slice(),
+            isActive: true,
+            createdBy: admin ? admin.username : 'registration-approval',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        };
+        customerPortalUsers.push(portalUser);
+        customerRegistrationRequests[idx] = Object.assign({}, req, {
+            status: 'approved',
+            reviewedBy: admin ? admin.username : 'system',
+            reviewedAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        });
+        saveCpData();
+        saveCpRegRequestsLocal();
+        cpAudit('موافقة تسجيل عميل', req.username);
+        if (typeof addAuditLog === 'function') addAuditLog('موافقة تسجيل عميل', req.username + ' — ' + (req.displayName || ''));
+        const cloudOk = await persistCustomerPortalUsersToCloud({ showToast: false, verifyUsername: req.username });
+        const regOk = cloudOk ? await persistCpRegRequestsToCloud({ showToast: false }) : false;
+        if (!cloudOk || !regOk) {
+            customerPortalUsers.length = 0;
+            usersSnapshot.forEach(function(u) { customerPortalUsers.push(u); });
+            customerRegistrationRequests.length = 0;
+            requestsSnapshot.forEach(function(r) { customerRegistrationRequests.push(r); });
+            saveCpData();
+            saveCpRegRequestsLocal();
+            if (typeof global.showNebrasAdminToast === 'function') {
+                global.showNebrasAdminToast('⚠️ لم تُحفظ الموافقة في السحابة — أعيدي تسجيل الدخول ثم حاولي مرة أخرى', 'error');
+            }
+            renderCustomerPortalGovernancePanel();
+            return;
+        }
+        if (typeof global.showNebrasAdminToast === 'function') {
+            global.showNebrasAdminToast('✓ تمت الموافقة — حساب ' + req.username + ' جاهز للدخول', 'ok');
+        }
+        renderCustomerPortalGovernancePanel();
+    }
+
+    async function rejectCpRegistration(requestId) {
+        if (!canManageCustomerPortalUsers()) {
+            alert('رفض التسجيل — الإدارة الرئيسية ومدير المبيعات/مدير الفرع فقط.');
+            return;
+        }
+        const note = prompt('سبب الرفض (اختياري — يظهر للعميل):', '') || '';
+        loadCpRegRequests();
+        const idx = customerRegistrationRequests.findIndex(function(r) { return r && String(r.id) === String(requestId); });
+        if (idx < 0) { alert('الطلب غير موجود.'); return; }
+        const req = customerRegistrationRequests[idx];
+        if (!req || req.status !== 'pending') { alert('الطلب ليس معلّقاً.'); return; }
+        if (!filterCpRegRequestsForManager([req]).length) {
+            alert('لا يمكنك رفض طلب خارج فرعك.');
+            return;
+        }
+        const requestsSnapshot = JSON.parse(JSON.stringify(customerRegistrationRequests));
+        const admin = resolveCpAdminUser();
+        customerRegistrationRequests[idx] = Object.assign({}, req, {
+            status: 'rejected',
+            note: String(note).trim(),
+            reviewedBy: admin ? admin.username : 'system',
+            reviewedAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+        });
+        saveCpRegRequestsLocal();
+        cpAudit('رفض تسجيل عميل', req.username + (note ? ' — ' + note : ''));
+        if (typeof addAuditLog === 'function') addAuditLog('رفض تسجيل عميل', req.username);
+        const regOk = await persistCpRegRequestsToCloud({ showToast: true });
+        if (!regOk) {
+            customerRegistrationRequests.length = 0;
+            requestsSnapshot.forEach(function(r) { customerRegistrationRequests.push(r); });
+            saveCpRegRequestsLocal();
+            if (typeof global.showNebrasAdminToast === 'function') {
+                global.showNebrasAdminToast('⚠️ لم يُحفظ الرفض في السحابة', 'error');
+            }
+        }
+        renderCustomerPortalGovernancePanel();
+    }
+
+    function switchCpAuthTab(tab) {
+        const loginPane = document.getElementById('cp-auth-login');
+        const regPane = document.getElementById('cp-auth-register');
+        document.querySelectorAll('.cp-auth-tab').forEach(function(btn) {
+            btn.classList.toggle('is-active', btn.getAttribute('data-cp-tab') === tab);
+        });
+        if (loginPane) loginPane.hidden = tab !== 'login';
+        if (regPane) regPane.hidden = tab !== 'register';
+        const status = document.getElementById('cp-login-status');
+        if (status) status.textContent = '';
+    }
+
+    function syncCpRegisterTypeFields() {
+        const type = document.querySelector('input[name="cp-reg-type"]:checked');
+        const isCash = type && type.value === CP_CUSTOMER_TYPE_CASH;
+        const crWrap = document.getElementById('cp-reg-cr-wrap');
+        const taxWrap = document.getElementById('cp-reg-tax-wrap');
+        if (crWrap) crWrap.hidden = !!isCash;
+        if (taxWrap) taxWrap.hidden = !!isCash;
+    }
+
+    async function submitCustomerRegistration(ev) {
+        if (ev && ev.preventDefault) ev.preventDefault();
+        const status = document.getElementById('cp-login-status');
+        const displayName = String((document.getElementById('cp-reg-display') || {}).value || '').trim();
+        let username = String((document.getElementById('cp-reg-username') || {}).value || '').trim();
+        const password = String((document.getElementById('cp-reg-password') || {}).value || '').trim();
+        const phone = String((document.getElementById('cp-reg-phone') || {}).value || '').trim();
+        const email = String((document.getElementById('cp-reg-email') || {}).value || '').trim();
+        const typeEl = document.querySelector('input[name="cp-reg-type"]:checked');
+        const customerType = typeEl && typeEl.value === CP_CUSTOMER_TYPE_CASH ? CP_CUSTOMER_TYPE_CASH : CP_CUSTOMER_TYPE_BUSINESS;
+        const commercialRegistration = String((document.getElementById('cp-reg-cr') || {}).value || '').trim();
+        const taxId = String((document.getElementById('cp-reg-tax') || {}).value || '').trim();
+        const phoneNorm = normPhone(phone);
+        if (!displayName || displayName.length < 2) {
+            if (status) status.textContent = 'الاسم الكامل مطلوب.';
+            return;
+        }
+        if (!password || password.length < 6) {
+            if (status) status.textContent = 'كلمة المرور 6 أحرف على الأقل.';
+            return;
+        }
+        if (!phoneNorm || phoneNorm.length < 9) {
+            if (status) status.textContent = 'رقم الجوال مطلوب.';
+            return;
+        }
+        if (customerType === CP_CUSTOMER_TYPE_CASH && !username) username = 'c' + phoneNorm.slice(-8);
+        if (!username) {
+            if (status) status.textContent = 'اسم المستخدم مطلوب.';
+            return;
+        }
+        if (customerType === CP_CUSTOMER_TYPE_BUSINESS) {
+            if (!commercialRegistration) { if (status) status.textContent = 'السجل التجاري مطلوب للمؤسسات.'; return; }
+            if (!taxId) { if (status) status.textContent = 'الرقم الضريبي مطلوب للمؤسسات.'; return; }
+        }
+        if (status) status.textContent = 'جاري إرسال طلب التسجيل…';
+        try {
+            const res = await fetch('/api/nebras-visitor-intake', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    type: 'portal_register',
+                    data: {
+                        id: 'cpr-' + Date.now(),
+                        displayName: displayName,
+                        username: username,
+                        password: password,
+                        phone: phone,
+                        email: email,
+                        customerType: customerType,
+                        commercialRegistration: commercialRegistration,
+                        taxId: taxId
+                    }
+                })
+            });
+            const data = await res.json().catch(function() { return {}; });
+            if (!res.ok || !data.ok) {
+                const errMap = {
+                    username_taken: 'اسم المستخدم مستخدم — جرّبي تسجيل الدخول.',
+                    registration_pending: 'طلبك قيد المراجعة — انتظري موافقة الإدارة.',
+                    phone_pending: 'رقم الجوال مسجّل مسبقاً وبانتظار الموافقة.',
+                    cr_required: 'السجل التجاري مطلوب.',
+                    tax_required: 'الرقم الضريبي مطلوب.'
+                };
+                if (status) status.textContent = errMap[data.error] || data.message || 'تعذّر إرسال الطلب — حاولي لاحقاً.';
+                return;
+            }
+            if (status) status.textContent = '✓ تم إرسال طلب التسجيل — ستصلك رسالة عند الموافقة.';
+            switchCpAuthTab('login');
+        } catch (e) {
+            console.warn('submitCustomerRegistration:', e);
+            if (status) status.textContent = 'تعذّر الاتصال بالسيرفر — تحققي من الإنترنت.';
+        }
     }
 
     const CP_DEFAULT_ACCESS = ['quotes', 'orders', 'transfers', 'journeys'];
@@ -514,21 +838,30 @@
         }
         (async function() {
             let user = null;
+            let apiResult = null;
             if (typeof global.securePortalLogin === 'function') {
                 try {
-                    const api = await global.securePortalLogin(username, password);
-                    if (api && api.ok && api.user) {
+                    apiResult = await global.securePortalLogin(username, password);
+                    if (apiResult && apiResult.ok && apiResult.user) {
                         const idx = customerPortalUsers.findIndex(function(u) {
-                            return u && String(u.id) === String(api.user.id);
+                            return u && String(u.id) === String(apiResult.user.id);
                         });
                         if (idx >= 0) {
-                            customerPortalUsers[idx] = Object.assign({}, customerPortalUsers[idx], api.user);
+                            customerPortalUsers[idx] = Object.assign({}, customerPortalUsers[idx], apiResult.user);
                             user = customerPortalUsers[idx];
                         } else {
-                            user = api.user;
+                            user = apiResult.user;
                             customerPortalUsers.push(user);
                         }
                         saveCpData();
+                    } else if (apiResult && (apiResult.error === 'pending_approval' || apiResult.error === 'registration_rejected')) {
+                        if (status) {
+                            status.textContent = apiResult.message ||
+                                (apiResult.error === 'pending_approval'
+                                    ? 'طلب التسجيل قيد المراجعة — انتظري موافقة الإدارة.'
+                                    : 'تم رفض طلب التسجيل.');
+                        }
+                        return;
                     }
                 } catch (apiErr) { console.warn('portal API login:', apiErr); }
             }
@@ -1468,6 +1801,20 @@
                 openCustomerLoyaltyAnalytics();
             };
         }
+        const regBtn = root.querySelector('[data-cp-action="registrations"]');
+        if (regBtn) {
+            regBtn.onclick = function(ev) {
+                if (ev) ev.preventDefault();
+                switchCpGovView('registrations');
+            };
+        }
+        const usersBtn = root.querySelector('[data-cp-action="users-list"]');
+        if (usersBtn) {
+            usersBtn.onclick = function(ev) {
+                if (ev) ev.preventDefault();
+                switchCpGovView('users');
+            };
+        }
     }
 
     function showCpAdminSection(sectionId) {
@@ -1489,6 +1836,9 @@
             if (typeof hydrateCpUsersFromCloud === 'function') {
                 try { await hydrateCpUsersFromCloud(); } catch (e) { /* ignore */ }
             }
+            if (typeof hydrateCpRegRequestsFromCloud === 'function') {
+                try { await hydrateCpRegRequestsFromCloud(); } catch (e) { /* ignore */ }
+            }
             renderCustomerPortalGovernancePanel();
             bindCpGovernanceToolbar();
             showCpAdminSection('customer-portal-governance');
@@ -1496,6 +1846,10 @@
     }
 
     function renderCustomerPortalGovernancePanel() {
+        if (cpGovView === 'registrations') {
+            renderCpRegistrationApprovals();
+            return;
+        }
         loadCpData();
         const list = document.getElementById('cp-gov-list');
         const stats = document.getElementById('cp-gov-stats');
@@ -1669,6 +2023,7 @@
         });
         if (dup) { alert('اسم المستخدم مستخدم مسبقاً.'); return; }
         const admin = resolveCpAdminUser();
+        const usersSnapshot = JSON.parse(JSON.stringify(customerPortalUsers));
         const portalAccess = readCpPortalAccessFromEditor(cpEditorState.isEdit ? customerPortalUsers[cpEditorState.index] : null);
         const payload = {
             id: cpEditorState.id,
@@ -1721,14 +2076,11 @@
             verifyUsername: username
         });
         if (!cloudOk) {
-            if (cpEditorState.isEdit) {
-                /* keep editor open */
-            } else {
-                customerPortalUsers = customerPortalUsers.filter(function(u) { return u.id !== payload.id; });
-                saveCpData();
-            }
+            customerPortalUsers.length = 0;
+            usersSnapshot.forEach(function(u) { customerPortalUsers.push(u); });
+            saveCpData();
             if (typeof global.showNebrasAdminToast === 'function') {
-                global.showNebrasAdminToast('⚠️ حساب العميل محفوظ محلياً فقط — لن يعمل من جهاز آخر', 'error');
+                global.showNebrasAdminToast('⚠️ لم يُحفظ حساب العميل في السحابة — أعيدي تسجيل الدخول ثم احفظي مرة أخرى. (Accmaa-style: لا حفظ محلي بدون سحابة)', 'error');
             }
             renderCustomerPortalGovernancePanel();
             return;
@@ -1901,6 +2253,7 @@
     global.loginCustomerPortal = loginCustomerPortal;
     global.logoutCustomerPortal = logoutCustomerPortal;
     global.openCustomerPortalGovernance = openCustomerPortalGovernance;
+    global.renderCustomerPortalGovernancePanel = renderCustomerPortalGovernancePanel;
     global.openCustomerLoyaltyAnalytics = openCustomerLoyaltyAnalytics;
     global.openCpUserEditor = openCpUserEditor;
     global.cancelCpUserEditor = cancelCpUserEditor;
@@ -1940,7 +2293,16 @@
     global.getCustomerPortalAudit = function() { loadCpData(); return customerPortalAudit; };
     global.buildCustomerLoyaltyRankings = buildCustomerLoyaltyRankings;
     global.hydrateCpUsersFromCloud = hydrateCpUsersFromCloud;
+    global.hydrateCpRegRequestsFromCloud = hydrateCpRegRequestsFromCloud;
     global.setCustomerPortalUsersFromCloud = setCustomerPortalUsersFromCloud;
+    global.setCustomerRegistrationRequestsFromCloud = setCustomerRegistrationRequestsFromCloud;
+    global.getCustomerRegistrationRequests = function() { loadCpRegRequests(); return customerRegistrationRequests; };
+    global.switchCpAuthTab = switchCpAuthTab;
+    global.syncCpRegisterTypeFields = syncCpRegisterTypeFields;
+    global.submitCustomerRegistration = submitCustomerRegistration;
+    global.approveCpRegistration = approveCpRegistration;
+    global.rejectCpRegistration = rejectCpRegistration;
+    global.switchCpGovView = switchCpGovView;
     global.setCustomerPortalAuditFromCloud = setCustomerPortalAuditFromCloud;
     global.collectPortalCustomerData = collectPortalCustomerData;
     global.exportCustomerStatementPdf = exportCustomerStatementPdf;

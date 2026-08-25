@@ -17,6 +17,11 @@
         'showroom_gallery', 'visitor_analytics', 'sales_price_list'
     ];
 
+    const ADMIN_LIVE_KEYS = [
+        'customer_portal_users', 'customer_registration_requests', 'customer_portal_audit',
+        'admin_users', 'sales_quotes_inbox', 'callback_leads', 'hr_employees', 'crm_customers'
+    ];
+
     function getSupabaseClient() {
         if (typeof global.getNebrasSupabaseClient === 'function') return global.getNebrasSupabaseClient();
         if (global.supabaseClient) return global.supabaseClient;
@@ -36,6 +41,22 @@
         }
         const admin = typeof global.getNebrasCurrentAdmin === 'function' ? global.getNebrasCurrentAdmin() : null;
         if (!admin) return;
+        if (ADMIN_LIVE_KEYS.indexOf(storeKey) >= 0) {
+            if (storeKey === 'customer_portal_users' || storeKey === 'customer_registration_requests' || storeKey === 'customer_portal_audit') {
+                if (typeof global.renderCustomerPortalGovernancePanel === 'function') {
+                    try { global.renderCustomerPortalGovernancePanel(); } catch (e) { /* ignore */ }
+                }
+            }
+            if (storeKey === 'admin_users' && typeof global.displayUsers === 'function') {
+                try { global.displayUsers(); } catch (e) { /* ignore */ }
+            }
+            if (storeKey === 'sales_quotes_inbox' && typeof global.renderSalesQuotesInbox === 'function') {
+                try { global.renderSalesQuotesInbox(); } catch (e) { /* ignore */ }
+            }
+            if (storeKey === 'callback_leads' && typeof global.renderCallbackLeadsPanel === 'function') {
+                try { global.renderCallbackLeadsPanel(); } catch (e) { /* ignore */ }
+            }
+        }
         if (storeKey === 'dashboard_tiles' && typeof global.refreshAdminDashboardAfterGovernanceSync === 'function') {
             global.refreshAdminDashboardAfterGovernanceSync();
             return;
@@ -106,6 +127,7 @@
 
     global.NEBRAS_REALTIME_ENABLED = REALTIME_ENABLED;
     global.NEBRAS_REALTIME_PUBLIC_KEYS = PUBLIC_LIVE_KEYS;
+    global.NEBRAS_REALTIME_ADMIN_KEYS = ADMIN_LIVE_KEYS;
     global.startNebrasRealtimeSync = startNebrasRealtimeSync;
     global.stopNebrasRealtimeSync = stopNebrasRealtimeSync;
     global.getNebrasRealtimeLastAt = getNebrasRealtimeLastAt;

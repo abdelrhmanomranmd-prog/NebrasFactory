@@ -24,7 +24,7 @@
     const ODOO_WRITE_KEYS = [
         'admin_users', 'branches', 'system_settings', 'complaints', 'audit_logs', 'analytics_governance',
         'sales_quotes_inbox', 'sales_data', 'sales_price_list', 'quote_registry', 'callback_leads',
-        'customer_service', 'customer_portal_users', 'customer_portal_audit', 'customer_order_journeys',
+        'customer_service', 'customer_portal_users', 'customer_portal_audit', 'customer_registration_requests', 'customer_order_journeys',
         'erp_inventory', 'erp_orders', 'erp_production', 'erp_procurement', 'erp_purchases',
         'erp_transfers', 'erp_stock_transfers', 'procurement_custom_depts',
         'hr_employees', 'hr_vehicles', 'hr_leave', 'hr_vehicle_tracking', 'hr_attendance',

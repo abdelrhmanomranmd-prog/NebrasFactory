@@ -1,11 +1,11 @@
 /**
- * نبراس — تحميل كسول لوحدات الإدارات (hrws269)
+ * نبراس — تحميل كسول لوحدات الإدارات (hrws270)
  * فتح فوري + prefetch ذكي حسب الدور — بدون إثقال الزائر.
  */
 (function (global) {
     'use strict';
 
-    var VER = 'hrws269';
+    var VER = 'hrws270';
     var loaded = Object.create(null);
     var inflight = Object.create(null);
     var bundleDone = Object.create(null);
@@ -37,6 +37,7 @@
             'js/nebras-empire-hub.js'
         ],
         adminTools: [
+            'js/nebras-launch-health.js',
             'js/nebras-admin-ai.js',
             'js/nebras-site-database.js',
             'js/nebras-data-warehouse.js',

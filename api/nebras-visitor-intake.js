@@ -1,8 +1,9 @@
 const sec = require('./lib/nebras-security');
 const rate = require('./lib/nebras-rate-limit');
 
-const ALLOWED_TYPES = ['complaint', 'callback_lead'];
+const ALLOWED_TYPES = ['complaint', 'callback_lead', 'portal_register'];
 const MAX_CALLBACK_LEADS = 5000;
+const MAX_REGISTRATION_REQUESTS = 3000;
 
 function cleanStr(v, max) {
     return String(v == null ? '' : v).trim().slice(0, max || 500);
@@ -48,6 +49,87 @@ async function mergeComplaint(data) {
     const upsert = await sec.upsertStoreRows(url, key, [{ store_key: 'complaints', payload: current }]);
     if (!upsert || !upsert.ok) return { ok: false, error: 'upsert_failed', detail: upsert && upsert.detail };
     return { ok: true, id: id };
+}
+
+async function mergePortalRegister(data) {
+    const body = data && typeof data === 'object' ? data : null;
+    if (!body) return { ok: false, error: 'invalid_registration' };
+    const displayName = cleanStr(body.displayName, 120);
+    let username = cleanStr(body.username, 64).toLowerCase();
+    const password = cleanStr(body.password, 128);
+    const phone = cleanPhone(body.phone);
+    const email = cleanStr(body.email, 120);
+    const customerType = cleanStr(body.customerType, 16) === 'cash' ? 'cash' : 'business';
+    const commercialRegistration = cleanStr(body.commercialRegistration, 64);
+    const taxId = cleanStr(body.taxId, 64);
+    const phoneNorm = phone.replace(/\D/g, '').slice(-9);
+    if (!displayName || displayName.length < 2) return { ok: false, error: 'name_required' };
+    if (!password || password.length < 6) return { ok: false, error: 'password_required' };
+    if (!phoneNorm || phoneNorm.length < 9) return { ok: false, error: 'phone_required' };
+    if (customerType === 'cash' && !username) username = 'c' + phoneNorm.slice(-8);
+    if (!username || username.length < 3) return { ok: false, error: 'username_required' };
+    if (customerType === 'business') {
+        if (!commercialRegistration) return { ok: false, error: 'cr_required' };
+        if (!taxId) return { ok: false, error: 'tax_required' };
+    }
+
+    const { url, key, invalidKey } = sec.supabaseServiceConfig();
+    if (!url || !key) {
+        return {
+            ok: false,
+            error: invalidKey === 'non_ascii_service_key' ? 'invalid_service_key_encoding' : 'service_unavailable'
+        };
+    }
+
+    const portalUsers = await sec.loadCustomerPortalUsers();
+    const unLower = username.toLowerCase();
+    if (portalUsers.some(function(u) {
+        return u && String(u.username || '').toLowerCase() === unLower;
+    })) {
+        return { ok: false, error: 'username_taken' };
+    }
+
+    const requests = await sec.loadCustomerRegistrationRequests();
+    const pendingDup = requests.some(function(r) {
+        return r && r.status === 'pending' && String(r.username || '').toLowerCase() === unLower;
+    });
+    if (pendingDup) return { ok: false, error: 'registration_pending' };
+
+    const phoneDup = requests.some(function(r) {
+        return r && r.status === 'pending' &&
+            String(r.phone || '').replace(/\D/g, '').slice(-9) === phoneNorm;
+    });
+    if (phoneDup) return { ok: false, error: 'phone_pending' };
+
+    const entry = {
+        id: cleanStr(body.id, 64) || ('cpr-' + Date.now()),
+        status: 'pending',
+        username: username,
+        displayName: displayName,
+        password: sec.hashNebrasPasswordSync(password),
+        phone: phone,
+        email: email,
+        customerType: customerType,
+        commercialRegistration: customerType === 'business' ? commercialRegistration : '',
+        taxId: customerType === 'business' ? taxId : '',
+        branchId: body.branchId == null ? null : Number(body.branchId),
+        branchCity: cleanStr(body.branchCity, 120),
+        portalAccess: ['quotes', 'orders', 'transfers', 'journeys'],
+        note: '',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        reviewedBy: '',
+        reviewedAt: ''
+    };
+
+    let current = Array.isArray(requests) ? requests.slice() : [];
+    current = current.filter(function(r) { return r && r.id !== entry.id; });
+    current.unshift(entry);
+    if (current.length > MAX_REGISTRATION_REQUESTS) current = current.slice(0, MAX_REGISTRATION_REQUESTS);
+
+    const upsert = await sec.upsertStoreRows(url, key, [{ store_key: 'customer_registration_requests', payload: current }]);
+    if (!upsert || !upsert.ok) return { ok: false, error: 'upsert_failed', detail: upsert && upsert.detail };
+    return { ok: true, id: entry.id, status: 'pending' };
 }
 
 async function mergeCallbackLead(data) {
@@ -116,6 +198,7 @@ module.exports = async function handler(req, res) {
 
         let result;
         if (type === 'complaint') result = await mergeComplaint(body.data || body);
+        else if (type === 'portal_register') result = await mergePortalRegister(body.data || body);
         else result = await mergeCallbackLead(body.data || body);
 
         if (!result.ok) {

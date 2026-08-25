@@ -60,7 +60,7 @@
         branches: ['branches'],
         audit: ['audit_logs'],
         productMaster: ['site_products', 'sales_price_list'],
-        customerPortal: ['customer_portal_users', 'customer_portal_audit'],
+        customerPortal: ['customer_portal_users', 'customer_portal_audit', 'customer_registration_requests'],
         createCustomerUser: ['customer_portal_users'],
         orderJourney: ['customer_order_journeys'],
         storeCatalog: ['site_products']
@@ -449,7 +449,7 @@
             });
             const data = await res.json();
             if (!res.ok || !data.ok || !data.user) {
-                return { ok: false, error: data.error || 'login_failed' };
+                return { ok: false, error: data.error || 'login_failed', message: data.message || '' };
             }
             return data;
         } catch (e) {

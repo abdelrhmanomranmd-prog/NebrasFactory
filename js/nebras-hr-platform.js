@@ -229,8 +229,31 @@
             'hr_travel', 'hr_deductions', 'hr_advances', 'hr_vehicle_violations',
             'hr_notifications', 'hr_notif_settings', 'hr_email_queue', 'hr_shift_roster', 'hr_dept_activity'
         ];
+        const hrSnapshot = {
+            employees: JSON.parse(JSON.stringify(hrEmployees)),
+            vehicles: JSON.parse(JSON.stringify(hrVehicles)),
+            leave: JSON.parse(JSON.stringify(hrLeaveRequests)),
+            tracking: JSON.parse(JSON.stringify(hrVehicleTracking))
+        };
         if (global.NEBRAS_ODOO_WRITE_MODE && typeof global.nebrasOdooPersistKeys === 'function') {
             const cloudOk = await global.nebrasOdooPersistKeys(hrCloudKeys, { showToast: true, promptReauth: false });
+            if (!cloudOk) {
+                hrEmployees = hrSnapshot.employees;
+                hrVehicles = hrSnapshot.vehicles;
+                hrLeaveRequests = hrSnapshot.leave;
+                hrVehicleTracking = hrSnapshot.tracking;
+                try {
+                    localStorage.setItem(HR_EMP_KEY, JSON.stringify(hrEmployees));
+                    localStorage.setItem(HR_VEH_KEY, JSON.stringify(hrVehicles));
+                    localStorage.setItem(HR_LEAVE_KEY, JSON.stringify(hrLeaveRequests));
+                    localStorage.setItem(HR_TRACK_KEY, JSON.stringify(hrVehicleTracking));
+                } catch (err) { /* ignore */ }
+                if (typeof showNebrasAdminToast === 'function') {
+                    showNebrasAdminToast('⚠️ لم يُحفظ HR في السحابة — أعيدي المحاولة (Accmaa-style: لا حفظ محلي بدون سحابة)', 'error');
+                }
+                if (typeof updateCloudSafetyBanner === 'function') updateCloudSafetyBanner();
+                return;
+            }
             try {
                 localStorage.setItem(HR_EMP_KEY, JSON.stringify(hrEmployees));
                 localStorage.setItem(HR_VEH_KEY, JSON.stringify(hrVehicles));
@@ -268,8 +291,22 @@
                 showToast: true,
                 promptReauth: false
             });
-            if (!cloudOk && typeof showNebrasAdminToast === 'function') {
-                showNebrasAdminToast('⚠️ بيانات الموارد البشرية لم تُحفظ في السحابة — اضغطي «رفع الآن» أو أعيدي تسجيل الدخول', 'error');
+            if (!cloudOk) {
+                hrEmployees = hrSnapshot.employees;
+                hrVehicles = hrSnapshot.vehicles;
+                hrLeaveRequests = hrSnapshot.leave;
+                hrVehicleTracking = hrSnapshot.tracking;
+                try {
+                    localStorage.setItem(HR_EMP_KEY, JSON.stringify(hrEmployees));
+                    localStorage.setItem(HR_VEH_KEY, JSON.stringify(hrVehicles));
+                    localStorage.setItem(HR_LEAVE_KEY, JSON.stringify(hrLeaveRequests));
+                    localStorage.setItem(HR_TRACK_KEY, JSON.stringify(hrVehicleTracking));
+                } catch (err) { /* ignore */ }
+                if (typeof showNebrasAdminToast === 'function') {
+                    showNebrasAdminToast('⚠️ لم يُحفظ HR في السحابة — أعيدي تسجيل الدخول ثم احفظي (Accmaa-style)', 'error');
+                }
+            } else if (typeof showNebrasAdminToast === 'function') {
+                /* ok path keeps existing quiet behavior */
             }
             if (typeof updateCloudSafetyBanner === 'function') updateCloudSafetyBanner();
         }
