@@ -16786,18 +16786,33 @@
                 note: fieldVal('xfr-note'),
                 by: erpActor()
             };
+            const snapshot = {
+                transfers: JSON.parse(JSON.stringify(erpStockTransfers)),
+                inventory: JSON.parse(JSON.stringify(erpInventory))
+            };
             if (!applyStockTransferToInventory(transfer)) {
                 alert('الكمية غير متوفرة في المستودع المصدر.');
                 return;
             }
             erpStockTransfers.unshift(transfer);
-            saveSystemData();
-            renderErpStockTransferForm();
-            displayErpStockTransfers();
-            displayErpInventory();
-            renderErpHubPanel();
-            if (currentAdmin) renderDashboardCommandShell(currentAdmin);
-            addAuditLog('تحويل مخزون', sku + ': ' + fromWh + ' → ' + toWh + ' (' + qty + ')');
+            saveSystemData({ skipCloud: true, skipMutationMark: true });
+            persistErpStoresWithRollback(['erp_stock_transfers', 'erp_inventory'], function() {
+                erpStockTransfers = snapshot.transfers;
+                erpInventory = snapshot.inventory;
+            }).then(function(cloudOk) {
+                if (!cloudOk) {
+                    renderErpStockTransferForm();
+                    displayErpStockTransfers();
+                    displayErpInventory();
+                    return;
+                }
+                renderErpStockTransferForm();
+                displayErpStockTransfers();
+                displayErpInventory();
+                renderErpHubPanel();
+                if (currentAdmin) renderDashboardCommandShell(currentAdmin);
+                addAuditLog('تحويل مخزون', sku + ': ' + fromWh + ' → ' + toWh + ' (' + qty + ')');
+            });
         }
 
         function deleteErpStockTransfer(id) {
@@ -16898,13 +16913,17 @@
                 '<div class="erp-form-actions"><button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="addErpProductionEntry()"><i class="fas fa-plus"></i> تسجيل إنتاج اليوم</button></div>';
         }
 
-        function addErpProductionEntry() {
+        async function addErpProductionEntry() {
             if (!requirePermission('production')) return;
             ensureErpOperationsData();
             const product = fieldVal('prod-product');
             const qty = erpNum(fieldVal('prod-qty'));
             if (!product) { alert('يرجى إدخال اسم المنتج.'); return; }
             if (qty <= 0) { alert('يرجى إدخال كمية صحيحة.'); return; }
+            const snapshot = {
+                production: JSON.parse(JSON.stringify(erpProduction)),
+                inventory: JSON.parse(JSON.stringify(erpInventory))
+            };
             const entry = {
                 id: 'prod-' + Date.now(),
                 date: fieldVal('prod-date') || erpToday(),
@@ -16925,7 +16944,16 @@
                 entry.addedToStock = true;
             }
             erpProduction.unshift(entry);
-            saveSystemData();
+            saveSystemData({ skipCloud: true, skipMutationMark: true });
+            const cloudOk = await persistErpStoresWithRollback(['erp_production', 'erp_inventory'], function() {
+                erpProduction = snapshot.production;
+                erpInventory = snapshot.inventory;
+            });
+            if (!cloudOk) {
+                renderErpProductionForm();
+                displayErpProduction();
+                return;
+            }
             renderErpProductionForm();
             displayErpProduction();
             if (typeof displayErpInventory === 'function') displayErpInventory();
@@ -18781,16 +18809,9 @@
             }
 
             if (user) {
-                if (typeof ensureNebrasAdminCoreBundle === 'function') {
-                    try { await ensureNebrasAdminCoreBundle(); } catch (coreErr) { console.warn('adminCore bundle:', coreErr); }
+                if (typeof bootNebrasAdminSession === 'function') {
+                    try { await bootNebrasAdminSession(); } catch (bootErr) { console.warn('admin boot:', bootErr); }
                 }
-                if (typeof ensureNebrasAdminCss === 'function') {
-                    try { await ensureNebrasAdminCss(); } catch (cssErr) { console.warn('admin css:', cssErr); }
-                }
-                if (typeof ensureNebrasPortalBundle === 'function') {
-                    try { await ensureNebrasPortalBundle(); } catch (portalErr) { console.warn('portal bundle:', portalErr); }
-                }
-                bindAdminPlatformInits();
                 loadAdminBusinessCacheFromLocal();
                 if (typeof establishNebrasSecureSession === 'function') {
                     try {
@@ -28330,11 +28351,19 @@
             }
         }
 
-        function deleteComplaintEntry(complaintId) {
+        async function deleteComplaintEntry(complaintId) {
             if (!requirePermission('complaints')) return;
             if (!confirm('حذف الشكوى #' + complaintId + '؟')) return;
+            const snapshot = JSON.parse(JSON.stringify(complaints));
             delete complaints[complaintId];
-            saveSystemData();
+            saveSystemData({ skipCloud: true, skipMutationMark: true });
+            const cloudOk = await persistErpStoresWithRollback(['complaints'], function() {
+                complaints = snapshot;
+            });
+            if (!cloudOk) {
+                displayComplaints();
+                return;
+            }
             displayComplaints();
             addAuditLog('حذف شكوى', complaintId);
         }
@@ -30931,16 +30960,9 @@
             if (currentAdmin) return true;
             if (typeof hasNebrasSecureSession !== 'function' || !hasNebrasSecureSession()) return false;
             if (typeof verifyNebrasSecureSession !== 'function') return false;
-            if (typeof ensureNebrasAdminCoreBundle === 'function') {
-                try { await ensureNebrasAdminCoreBundle(); } catch (coreErr) { console.warn('adminCore bundle:', coreErr); }
+            if (typeof bootNebrasAdminSession === 'function') {
+                try { await bootNebrasAdminSession(); } catch (bootErr) { console.warn('admin boot:', bootErr); }
             }
-            if (typeof ensureNebrasAdminCss === 'function') {
-                try { await ensureNebrasAdminCss(); } catch (cssErr) { console.warn('admin css:', cssErr); }
-            }
-            if (typeof ensureNebrasPortalBundle === 'function') {
-                try { await ensureNebrasPortalBundle(); } catch (portalErr) { console.warn('portal bundle:', portalErr); }
-            }
-            bindAdminPlatformInits();
             loadAdminBusinessCacheFromLocal();
             const verified = await verifyNebrasSecureSession();
             if (!verified || !verified.ok || !verified.session) {
@@ -31325,7 +31347,7 @@
             }
         });
 
-        /* siteText → js/nebras-platform-i18n.js (hrws274) */
+        /* siteText → js/nebras-platform-i18n.js (hrws275 lazy ar/en/zh) */
         var siteText = (typeof window !== 'undefined' && window.siteText) ? window.siteText : { ar: {}, en: {}, zh: {} };
 
         function applyStaticUiTranslations(text) {
@@ -31450,8 +31472,11 @@
             }
         }
 
-        function setLanguage(lang, opts) {
+        async function setLanguage(lang, opts) {
             opts = opts || {};
+            if (typeof ensureNebrasLocale === 'function' && lang && lang !== 'ar') {
+                try { await ensureNebrasLocale(lang); } catch (locErr) { console.warn('locale load:', locErr); }
+            }
             const light = !!opts.light;
             const skipCatalog = !!opts.skipCatalog;
             currentLang = lang;

@@ -40,8 +40,8 @@ def main():
     print('HTTP /:', st, '| deploy:', v)
     if st != 200:
         issues.append('Homepage not 200')
-    if v != 'hrws274':
-        notes.append('Deploy tag is ' + v + ' (expected hrws274 if latest)')
+    if v != 'hrws275':
+        notes.append('Deploy tag is ' + v + ' (expected hrws275 if latest)')
 
     # assets linked
     refs = re.findall(r'(?:href|src)="((?:css|js)/[^"#?]+(?:\?v=[^"]+)?)"', html)
@@ -95,8 +95,11 @@ def main():
         ('erp_cloud_rollback', 'persistErpStoresWithRollback' in pl),
         ('portal_lazy', 'ensureNebrasPortalBundle' in open(os.path.join(ROOT, 'js/nebras-dept-lazy.js'), encoding='utf-8').read()),
         ('hq_complaints_queue', 'complaintsOpen' in pl),
-        ('platform_i18n_split', 'nebras-platform-i18n.js' in html and '__NEBRAS_I18N__' in open(os.path.join(ROOT, 'js/nebras-platform-i18n.js'), encoding='utf-8').read()),
+        ('platform_i18n_split', 'nebras-platform-i18n.js' in html and 'ensureNebrasLocale' in open(os.path.join(ROOT, 'js/nebras-platform-i18n.js'), encoding='utf-8').read()),
+        ('i18n_locale_lazy', os.path.isfile(os.path.join(ROOT, 'js/nebras-platform-i18n-en.js')) and 'ensureNebrasLocale' in open(os.path.join(ROOT, 'js/nebras-platform-i18n.js'), encoding='utf-8').read()),
+        ('admin_boot_unified', 'bootNebrasAdminSession' in open(os.path.join(ROOT, 'js/nebras-admin-boot.js'), encoding='utf-8').read() and 'nebras-admin-boot.js' in html),
         ('complaints_cloud_rollback', 'persistErpStoresWithRollback' in pl and 'async function setComplaintStatus' in pl),
+        ('erp_production_rollback', 'async function addErpProductionEntry' in pl),
     ]
     print('\nFeature flags:')
     for name, ok in flags:
