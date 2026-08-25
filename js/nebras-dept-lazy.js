@@ -1,11 +1,11 @@
 /**
- * نبراس — تحميل كسول لوحدات الإدارات (hrws275)
+ * نبراس — تحميل كسول لوحدات الإدارات (hrws276)
  * فتح فوري + prefetch ذكي حسب الدور — بدون إثقال الزائر.
  */
 (function (global) {
     'use strict';
 
-    var VER = 'hrws275';
+    var VER = 'hrws276';
     var loaded = Object.create(null);
     var inflight = Object.create(null);
     var bundleDone = Object.create(null);
@@ -51,7 +51,8 @@
             'js/nebras-mobile-app.js',
             'js/nebras-order-journey.js'
         ],
-        portal: ['js/nebras-customer-portal.js']
+        portal: ['js/nebras-customer-portal.js'],
+        platformAdminErp: ['js/nebras-platform-admin-erp.js']
     };
 
     /** ترتيب التحميل — الأخف أولاً؛ aluminum ثقيل (~2MB) دائماً آخر */
@@ -308,6 +309,7 @@
     global.prefetchNebrasAdminDepts = prefetchNebrasAdminDepts;
     global.ensureNebrasVisitorBundle = function() { return loadBundle('visitor'); };
     global.ensureNebrasPortalBundle = function() { return loadBundle('portal'); };
+    global.ensureNebrasPlatformAdminErp = function() { return loadBundle('platformAdminErp'); };
     global.ensureNebrasAdminCoreBundle = function() { return loadBundle('adminCore'); };
     global.__NEBRAS_DEPT_LAZY__ = VER;
 })(typeof window !== 'undefined' ? window : globalThis);

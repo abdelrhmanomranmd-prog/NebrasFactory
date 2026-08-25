@@ -40,8 +40,8 @@ def main():
     print('HTTP /:', st, '| deploy:', v)
     if st != 200:
         issues.append('Homepage not 200')
-    if v != 'hrws275':
-        notes.append('Deploy tag is ' + v + ' (expected hrws275 if latest)')
+    if v != 'hrws276':
+        notes.append('Deploy tag is ' + v + ' (expected hrws276 if latest)')
 
     # assets linked
     refs = re.findall(r'(?:href|src)="((?:css|js)/[^"#?]+(?:\?v=[^"]+)?)"', html)
@@ -68,6 +68,10 @@ def main():
     mob = mob_b.decode('utf-8', 'replace')
     _, cp_b = get('/js/nebras-customer-portal.js?v=' + v)
     cp = cp_b.decode('utf-8', 'replace')
+    _, erp_ui_b = get('/js/nebras-platform-admin-erp.js?v=' + v)
+    erp_ui = erp_ui_b.decode('utf-8', 'replace')
+    dept_lazy_src = open(os.path.join(ROOT, 'js/nebras-dept-lazy.js'), encoding='utf-8').read()
+    admin_boot_src = open(os.path.join(ROOT, 'js/nebras-admin-boot.js'), encoding='utf-8').read()
 
     flags = [
         ('SERVER_FIRST', 'NEBRAS_SERVER_FIRST_MODE = true' in pl),
@@ -97,9 +101,10 @@ def main():
         ('hq_complaints_queue', 'complaintsOpen' in pl),
         ('platform_i18n_split', 'nebras-platform-i18n.js' in html and 'ensureNebrasLocale' in open(os.path.join(ROOT, 'js/nebras-platform-i18n.js'), encoding='utf-8').read()),
         ('i18n_locale_lazy', os.path.isfile(os.path.join(ROOT, 'js/nebras-platform-i18n-en.js')) and 'ensureNebrasLocale' in open(os.path.join(ROOT, 'js/nebras-platform-i18n.js'), encoding='utf-8').read()),
-        ('admin_boot_unified', 'bootNebrasAdminSession' in open(os.path.join(ROOT, 'js/nebras-admin-boot.js'), encoding='utf-8').read() and 'nebras-admin-boot.js' in html),
+        ('admin_boot_unified', 'bootNebrasAdminSession' in admin_boot_src and 'nebras-admin-boot.js' in html),
         ('complaints_cloud_rollback', 'persistErpStoresWithRollback' in pl and 'async function setComplaintStatus' in pl),
-        ('erp_production_rollback', 'async function addErpProductionEntry' in pl),
+        ('erp_production_rollback', 'async function addErpProductionEntry' in erp_ui),
+        ('platform_admin_erp_lazy', 'platformAdminErp' in dept_lazy_src and 'ensureNebrasPlatformAdminErp' in dept_lazy_src and 'nebrasErpUiLazy' in pl and 'nebras-platform-admin-erp.js' not in html and '__NEBRAS_ERP_UI_LOADED__' in erp_ui),
     ]
     print('\nFeature flags:')
     for name, ok in flags:

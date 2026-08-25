@@ -1,5 +1,5 @@
 /**
- * نبراس hrws275 — siteText.en (lazy)
+ * نبراس hrws276 — siteText.en (lazy)
  */
 (function(global) {
     'use strict';

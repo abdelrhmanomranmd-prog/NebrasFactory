@@ -1,5 +1,5 @@
 /**
- * نبراس hrws275 — siteText.zh (lazy)
+ * نبراس hrws276 — siteText.zh (lazy)
  */
 (function(global) {
     'use strict';
