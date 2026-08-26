@@ -1877,15 +1877,60 @@
         function prepareDoorDesignerPure3dStage(stage) {
             if (!stage) return;
             stage.classList.remove(
-                'wpc-door-stage--studio-live', 'wpc-door-stage--keybab', 'wpc-door-stage--photo-preset',
+                'wpc-door-stage--studio', 'wpc-door-stage--studio-live', 'wpc-door-stage--keybab', 'wpc-door-stage--photo-preset',
                 'wpc-door-stage--photo-roll-active', 'wpc-door-stage--engine-3d-loading',
-                'wpc-door-stage--dynamic-render', 'wpc-door-stage--photoreal'
+                'wpc-door-stage--dynamic-render', 'wpc-door-stage--photoreal', 'wpc-door-stage--room-harmony'
             );
+            stage.classList.add('wpc-door-stage--room-3d');
             if (typeof clearDoorDesignerPhotoPreset === 'function') clearDoorDesignerPhotoPreset(stage);
             const fallback = document.getElementById('nebras-door-3d-fallback');
             if (fallback) fallback.classList.add('is-hidden');
             const svgOverlay = document.getElementById('wpc-door-svg-overlay');
             if (svgOverlay) svgOverlay.classList.remove('is-active');
+        }
+
+        /** استخراج ارتفاع/عرض أقصى من نص المقاس (كتalog WPC أو presets) */
+        function parseDoorDesignerSizeLabel(label) {
+            const text = String(label || '');
+            if (!text) return null;
+            const heightM = text.match(/(?:ارتفاع|H)\s*(\d{2,3})/i);
+            const widthM = text.match(/(?:عرض\s*حتى|W\s*up\s*to)\s*(\d{2,3})/i);
+            const leafM = text.match(/(\d{2,3})\s*[×x]\s*(\d+(?:\.\d+)?)\s*[×x]\s*(\d{2,3})/);
+            if (leafM) {
+                return {
+                    widthCm: Number(leafM[1]),
+                    thicknessCm: Number(leafM[2]),
+                    heightCm: Number(leafM[3])
+                };
+            }
+            const out = {};
+            if (heightM) out.heightCm = Number(heightM[1]);
+            if (widthM) out.maxWidthCm = Number(widthM[1]);
+            return Object.keys(out).length ? out : null;
+        }
+
+        function resolveDoorDesignerSizeFor3d(state, sizeObj) {
+            state = state || {};
+            let size = sizeObj ? Object.assign({}, sizeObj) : null;
+            if (!size) {
+                return { widthCm: 90, thicknessCm: 4.5, heightCm: 230 };
+            }
+            const parsed = parseDoorDesignerSizeLabel(size.labelAr || size.labelEn || '');
+            if (parsed) {
+                if (parsed.heightCm) size.heightCm = parsed.heightCm;
+                if (parsed.widthCm) size.widthCm = parsed.widthCm;
+                if (parsed.thicknessCm) size.thicknessCm = parsed.thicknessCm;
+                if (parsed.maxWidthCm) size.maxWidthCm = parsed.maxWidthCm;
+            }
+            if (!size.widthCm && size.maxWidthCm) {
+                size.widthCm = state.isDouble ? size.maxWidthCm : Math.min(size.maxWidthCm, 105);
+            }
+            if (!size.heightCm) size.heightCm = 230;
+            if (!size.thicknessCm) size.thicknessCm = 4.5;
+            if (state.isDouble && size.maxWidthCm && (!sizeObj.widthCm || String(sizeObj.id || '').indexOf('pm-size-') === 0)) {
+                size.widthCm = size.maxWidthCm;
+            }
+            return size;
         }
 
         function paintDoorDesignerLivePreview(root, stage, cfg, state, ui) {
@@ -15541,12 +15586,15 @@
                     const sizeKey = String(v.sizeAr || v.sizeEn || '').trim();
                     if (sizeKey && !seenSize[sizeKey]) {
                         seenSize[sizeKey] = true;
+                        const parsed = parseDoorDesignerSizeLabel(v.sizeAr || v.sizeEn || sizeKey);
                         sizes.push({
                             id: 'pm-size-' + sizes.length,
                             labelAr: sizeKey,
                             labelEn: v.sizeEn || sizeKey,
-                            widthCm: 90,
-                            heightCm: 210,
+                            widthCm: (parsed && parsed.widthCm) || (parsed && parsed.maxWidthCm ? Math.min(parsed.maxWidthCm, 105) : 90),
+                            heightCm: (parsed && parsed.heightCm) || 230,
+                            thicknessCm: (parsed && parsed.thicknessCm) || 4.5,
+                            maxWidthCm: parsed && parsed.maxWidthCm,
                             priceDelta: erpNum(v.price) > 0 ? Math.round(erpNum(v.price) * 0.05) : 0
                         });
                     }
@@ -23552,7 +23600,8 @@
                         }
                     }
                     const sizePick = state.size || pick('size');
-                    const sizeObj = (cfg.sizes || []).find(function(s) { return s && s.id === sizePick; }) || null;
+                    const sizeObjRaw = (cfg.sizes || []).find(function(s) { return s && s.id === sizePick; }) || null;
+                    const sizeObj = resolveDoorDesignerSizeFor3d(state, sizeObjRaw);
                     NebrasDoor3D.update({
                         state: state,
                         color: { hex: hexEarly, textureUrl: swatchUrlEarly, catalogIndex: isNaN(catIdxEarly) ? 0 : catIdxEarly },

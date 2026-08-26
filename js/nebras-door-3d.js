@@ -112,11 +112,19 @@
     /** مقاسات الباب بالمتر — متزامنة مع فتحة الغرفة (Max-style) */
     function computeDoorLayout(state, sizeObj) {
         state = state || {};
+        sizeObj = sizeObj || {};
         const jambW = 0.09;
         const headH = 0.09;
         const jambD = 0.16;
-        const W = Math.max(0.72, Math.min(1.2, (Number(sizeObj && sizeObj.widthCm) || 90) / 100));
-        const H = Math.max(1.9, Math.min(2.6, (Number(sizeObj && sizeObj.heightCm) || 230) / 100));
+        const heightCm = Number(sizeObj.heightCm) || 230;
+        const leafWm = Math.max(0.72, Math.min(1.2, (Number(sizeObj.widthCm) || 90) / 100));
+        let W = leafWm;
+        if (state.isDouble) {
+            W = Math.min(1.85, leafWm * 2 + 0.036);
+        } else if (sizeObj.maxWidthCm && !sizeObj.thicknessCm) {
+            W = Math.min(1.35, Number(sizeObj.maxWidthCm) / 100);
+        }
+        const H = Math.max(1.9, Math.min(2.6, heightCm / 100));
         const halfW = W / 2;
         const halfH = H / 2;
         let transomExtra = 0;
@@ -125,6 +133,7 @@
         const frameH = H + headH + transomExtra;
         const frontZ = ROOM_SPEC.RD / 2 - 0.04;
         const innerWallZ = frontZ - ROOM_SPEC.WALL_T / 2;
+        const wallFaceZ = frontZ + ROOM_SPEC.WALL_T / 2;
         return {
             W: W,
             H: H,
@@ -139,7 +148,8 @@
             floorY: halfH + 0.0355,
             frontZ: frontZ,
             innerWallZ: innerWallZ,
-            doorRootZ: innerWallZ + jambD / 2,
+            wallFaceZ: wallFaceZ,
+            doorRootZ: wallFaceZ - jambD / 2,
             openW: frameW + 0.05,
             openH: Math.min(ROOM_SPEC.RH - 0.12, frameH + 0.04)
         };
@@ -781,13 +791,17 @@
             if (!this.doorRoot || !layout) return;
             this.doorRoot.position.set(0, layout.floorY, layout.doorRootZ);
             this.doorRoot.scale.set(1, 1, 1);
-            const target = new THREE.Vector3(0, layout.floorY - layout.halfH * 0.12, layout.innerWallZ + 0.06);
+            const target = new THREE.Vector3(0, layout.floorY - layout.halfH * 0.12, layout.wallFaceZ - 0.02);
             if (this.controls) {
                 if (this.controls.target && this.controls.target.copy) {
                     this.controls.target.copy(target);
                 } else if (this.controls.target) {
                     this.controls.target = target;
                 }
+            }
+            if (this.camera) {
+                const camZ = layout.innerWallZ - 1.75;
+                this.camera.position.set(0, layout.floorY + 0.38, camZ);
             }
         }
 
@@ -900,7 +914,9 @@
             const H = layout.H;
             const halfW = layout.halfW;
             const halfH = layout.halfH;
-            // سماكة الضلفة من المقاس المختار — مكبّرة بصرياً ليظهر فرق 3.5 / 4.5 سم بوضوح
+            const jambD = layout.jambD;
+            const jambW = layout.jambW;
+            const headH = layout.headH;
             const thicknessCm = (sizeObj && Number(sizeObj.thicknessCm)) || 4.5;
             const leafT = Math.max(0.055, Math.min(0.12, thicknessCm * 0.021));
 
@@ -915,15 +931,10 @@
             const outerShape = state.outerShape || state.frame || 'outer-flat';
 
             const leafMat = makeWpcMaterial(base, map);
-            // الحلق بنفس الرولّة مع تعتيم خفيف جداً للعمق البصري — دون تشويه اللون
             const frameMat = makeWpcMaterial(shadeColor(base, -0.24), map, { roughness: 0.62, mapTint: 0xd4d4d4 });
             const archMat = makeWpcMaterial(shadeColor(base, -0.12), map, { roughness: 0.58, mapTint: 0xe8e8e8 });
             const hwMat = hardwareFinish(hardware);
 
-            /* الإطار الحقيقي — قائمتان + رأس + بروز أرشيتريف */
-            const jambD = 0.16;
-            const jambW = 0.09;
-            const headH = 0.09;
             const jambGeoSide = new THREE.BoxGeometry(jambW, H + headH, jambD);
             const jambL = new THREE.Mesh(jambGeoSide, frameMat);
             jambL.position.set(-halfW - jambW / 2, headH / 2 - 0.005, 0);
