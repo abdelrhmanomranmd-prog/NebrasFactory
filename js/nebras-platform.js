@@ -1874,6 +1874,20 @@
             tt.dataset.turntableBound = '1';
         }
 
+        function prepareDoorDesignerPure3dStage(stage) {
+            if (!stage) return;
+            stage.classList.remove(
+                'wpc-door-stage--studio-live', 'wpc-door-stage--keybab', 'wpc-door-stage--photo-preset',
+                'wpc-door-stage--photo-roll-active', 'wpc-door-stage--engine-3d-loading',
+                'wpc-door-stage--dynamic-render', 'wpc-door-stage--photoreal'
+            );
+            if (typeof clearDoorDesignerPhotoPreset === 'function') clearDoorDesignerPhotoPreset(stage);
+            const fallback = document.getElementById('nebras-door-3d-fallback');
+            if (fallback) fallback.classList.add('is-hidden');
+            const svgOverlay = document.getElementById('wpc-door-svg-overlay');
+            if (svgOverlay) svgOverlay.classList.remove('is-active');
+        }
+
         function paintDoorDesignerLivePreview(root, stage, cfg, state, ui) {
             if (!root || !stage || !state) return;
             function pick(group) { return getDoorDesignerPick(root, group); }
@@ -23529,6 +23543,7 @@
             if (isDoorDesigner3dMode(cfg) && isDoorDesigner3dEngineReady()) {
                 const viewport = document.getElementById('nebras-door-3d-viewport');
                 if (viewport) {
+                    prepareDoorDesignerPure3dStage(stage);
                     if (!NebrasDoor3D.isMounted(viewport)) {
                         if (NebrasDoor3D.mount(viewport)) {
                             const loading = document.getElementById('nebras-door-3d-loading');

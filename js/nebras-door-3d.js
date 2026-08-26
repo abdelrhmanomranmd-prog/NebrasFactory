@@ -107,8 +107,46 @@
         }
     }
 
-    function createOrbitControls(camera, domElement) {
-        const target = new THREE.Vector3(0, 1.12, 1.92);
+    const ROOM_SPEC = { RW: 5.6, RD: 5.0, RH: 2.88, WALL_T: 0.07 };
+
+    /** مقاسات الباب بالمتر — متزامنة مع فتحة الغرفة (Max-style) */
+    function computeDoorLayout(state, sizeObj) {
+        state = state || {};
+        const jambW = 0.09;
+        const headH = 0.09;
+        const jambD = 0.16;
+        const W = Math.max(0.72, Math.min(1.2, (Number(sizeObj && sizeObj.widthCm) || 90) / 100));
+        const H = Math.max(1.9, Math.min(2.6, (Number(sizeObj && sizeObj.heightCm) || 230) / 100));
+        const halfW = W / 2;
+        const halfH = H / 2;
+        let transomExtra = 0;
+        if (state.decor === 'transom' && !state.isSliding) transomExtra = 0.36;
+        const frameW = W + jambW * 2;
+        const frameH = H + headH + transomExtra;
+        const frontZ = ROOM_SPEC.RD / 2 - 0.04;
+        const innerWallZ = frontZ - ROOM_SPEC.WALL_T / 2;
+        return {
+            W: W,
+            H: H,
+            halfW: halfW,
+            halfH: halfH,
+            jambW: jambW,
+            headH: headH,
+            jambD: jambD,
+            frameW: frameW,
+            frameH: frameH,
+            transomExtra: transomExtra,
+            floorY: halfH + 0.0355,
+            frontZ: frontZ,
+            innerWallZ: innerWallZ,
+            doorRootZ: innerWallZ + jambD / 2,
+            openW: frameW + 0.05,
+            openH: Math.min(ROOM_SPEC.RH - 0.12, frameH + 0.04)
+        };
+    }
+
+    function createOrbitControls(camera, domElement, target) {
+        const tgt = target || new THREE.Vector3(0, 1.15, 2.35);
         if (OrbitControlsCtor) {
             const c = new OrbitControlsCtor(camera, domElement);
             c.enableDamping = true;
@@ -119,7 +157,7 @@
             c.minPolarAngle = 0.4;
             c.minAzimuthAngle = -1.05;
             c.maxAzimuthAngle = 1.05;
-            c.target = target;
+            c.target = tgt;
             if (c.autoRotate !== undefined) {
                 c.autoRotate = true;
                 c.autoRotateSpeed = 1.0;
@@ -127,7 +165,7 @@
             c.update();
             return c;
         }
-        return new NebrasSimpleOrbit(camera, domElement, target);
+        return new NebrasSimpleOrbit(camera, domElement, tgt);
     }
 
     const instances = new WeakMap();
@@ -420,8 +458,9 @@
             this.scene.background = new THREE.Color(0xe8e4de);
             this.scene.fog = new THREE.Fog(0xe8e4de, 5.5, 11);
 
-            this.camera = new THREE.PerspectiveCamera(42, w / h, 0.1, 40);
-            this.camera.position.set(0.12, 1.52, 0.55);
+            this.camera = new THREE.PerspectiveCamera(40, w / h, 0.1, 40);
+            this._defaultLayout = computeDoorLayout({}, { widthCm: 90, heightCm: 230 });
+            this.camera.position.set(0, this._defaultLayout.floorY + 0.38, this._defaultLayout.innerWallZ - 1.75);
 
             try {
                 this.renderer = new THREE.WebGLRenderer({
@@ -454,13 +493,13 @@
 
             this._setupEnvironment();
             this._setupLights();
-            this._buildPhotorealRoom();
+            this._buildPhotorealRoom(this._defaultLayout);
 
             this.doorRoot = new THREE.Group();
-            this.doorRoot.position.set(0, 1.18, 1.88);
+            this._alignDoorToRoom(this._defaultLayout);
             this.scene.add(this.doorRoot);
 
-            this.controls = createOrbitControls(this.camera, this.renderer.domElement);
+            this.controls = createOrbitControls(this.camera, this.renderer.domElement, new THREE.Vector3(0, this._defaultLayout.floorY - 0.08, this._defaultLayout.innerWallZ + 0.04));
             if (this.controls.addEventListener) {
                 let resumeTimer = 0;
                 this.controls.addEventListener('start', function() {
@@ -562,22 +601,22 @@
             this.scene.add(rim);
         }
 
-        _buildPhotorealRoom() {
+        _buildPhotorealRoom(layout) {
+            layout = layout || computeDoorLayout({}, { widthCm: 90, heightCm: 230 });
             const palette = deriveRoomPalette('#c4b8a8');
             const rg = new THREE.Group();
-            const RW = 5.6;
-            const RD = 5.0;
-            const RH = 2.88;
-            const openW = 1.14;
-            const openH = 2.38;
-            const frontZ = RD / 2 - 0.04;
+            const RW = ROOM_SPEC.RW;
+            const RD = ROOM_SPEC.RD;
+            const RH = ROOM_SPEC.RH;
 
             this.room = {
                 group: rg,
                 palette: palette,
                 materials: {},
                 textures: { floor: getNeutralWoodFloorTexture() },
-                frontZ: frontZ,
+                frontZ: layout.frontZ,
+                openingGroup: new THREE.Group(),
+                shadowBlob: null,
                 _accentSrc: null
             };
 
@@ -624,25 +663,10 @@
             right.receiveShadow = true;
             rg.add(right);
 
-            const frontMat = makeRoomSurfaceMaterial(palette.wall);
-            this.room.materials.wallFront = frontMat;
-
-            const sidePanelW = (RW - openW) / 2;
-            const frontL = new THREE.Mesh(new THREE.BoxGeometry(sidePanelW, RH, 0.07), frontMat);
-            frontL.position.set(-openW / 2 - sidePanelW / 2, RH / 2, frontZ);
-            frontL.castShadow = true;
-            frontL.receiveShadow = true;
-            rg.add(frontL);
-
-            const frontR = frontL.clone();
-            frontR.position.x = openW / 2 + sidePanelW / 2;
-            rg.add(frontR);
-
-            const lintelH = RH - openH;
-            const lintel = new THREE.Mesh(new THREE.BoxGeometry(openW + 0.14, lintelH, 0.07), frontMat);
-            lintel.position.set(0, openH + lintelH / 2, frontZ);
-            lintel.castShadow = true;
-            rg.add(lintel);
+            this.room.materials.wallFront = makeRoomSurfaceMaterial(palette.wall);
+            this.room.materials.beyond = makeRoomSurfaceMaterial(palette.beyond, { roughness: 0.98, envMapIntensity: 0 });
+            rg.add(this.room.openingGroup);
+            this._syncRoomOpening(layout);
 
             const trimMat = makeRoomSurfaceMaterial(palette.trim, { roughness: 0.72, envMapIntensity: 0.06 });
             this.room.materials.trim = trimMat;
@@ -651,19 +675,13 @@
                 { w: RW, x: 0, z: -RD / 2 + 0.04, ry: 0 },
                 { w: RD, x: -RW / 2 + 0.04, z: 0, ry: Math.PI / 2 },
                 { w: RD, x: RW / 2 - 0.04, z: 0, ry: Math.PI / 2 },
-                { w: RW, x: 0, z: frontZ + 0.02, ry: 0 }
+                { w: RW, x: 0, z: layout.frontZ + 0.02, ry: 0 }
             ].forEach(function(cfg) {
                 const sk = new THREE.Mesh(new THREE.BoxGeometry(cfg.w, skH, 0.025), trimMat);
                 sk.position.set(cfg.x, skH / 2, cfg.z);
                 if (cfg.ry) sk.rotation.y = cfg.ry;
                 rg.add(sk);
             });
-
-            const beyondMat = makeRoomSurfaceMaterial(palette.beyond, { roughness: 0.98, envMapIntensity: 0 });
-            this.room.materials.beyond = beyondMat;
-            const beyond = new THREE.Mesh(new THREE.PlaneGeometry(openW - 0.04, openH - 0.04), beyondMat);
-            beyond.position.set(0, openH / 2, frontZ - 0.12);
-            rg.add(beyond);
 
             const winMat = new THREE.MeshStandardMaterial({
                 color: 0xd8e8f8,
@@ -688,6 +706,60 @@
             winFrame.rotation.y = -Math.PI / 2;
             rg.add(winFrame);
 
+            this.scene.add(rg);
+            this.scene.background = palette.fog.clone();
+            if (this.scene.fog) this.scene.fog.color.copy(palette.fog);
+        }
+
+        _syncRoomOpening(layout) {
+            if (!this.room || !this.room.openingGroup) return;
+            const og = this.room.openingGroup;
+            const frontMat = this.room.materials.wallFront;
+            const RW = ROOM_SPEC.RW;
+            const RH = ROOM_SPEC.RH;
+            const frontZ = layout.frontZ;
+            const openW = layout.openW;
+            const openH = layout.openH;
+
+            const geosDisposed = new Set();
+            while (og.children.length) {
+                const child = og.children[0];
+                og.remove(child);
+                if (child.geometry && !geosDisposed.has(child.geometry)) {
+                    geosDisposed.add(child.geometry);
+                    child.geometry.dispose();
+                }
+            }
+            if (this.room.shadowBlob) {
+                this.room.group.remove(this.room.shadowBlob);
+                if (this.room.shadowBlob.geometry) this.room.shadowBlob.geometry.dispose();
+                if (this.room.shadowBlob.material) this.room.shadowBlob.material.dispose();
+                this.room.shadowBlob = null;
+            }
+
+            const sidePanelW = Math.max(0.35, (RW - openW) / 2);
+            const frontL = new THREE.Mesh(new THREE.BoxGeometry(sidePanelW, RH, ROOM_SPEC.WALL_T), frontMat);
+            frontL.position.set(-openW / 2 - sidePanelW / 2, RH / 2, frontZ);
+            frontL.castShadow = true;
+            frontL.receiveShadow = true;
+            og.add(frontL);
+
+            const frontR = frontL.clone();
+            frontR.position.x = openW / 2 + sidePanelW / 2;
+            og.add(frontR);
+
+            const lintelH = Math.max(0.18, RH - openH);
+            const lintel = new THREE.Mesh(new THREE.BoxGeometry(openW + 0.08, lintelH, ROOM_SPEC.WALL_T), frontMat);
+            lintel.position.set(0, openH + lintelH / 2, frontZ);
+            lintel.castShadow = true;
+            og.add(lintel);
+
+            const beyondMat = this.room.materials.beyond || makeRoomSurfaceMaterial(this.room.palette.beyond, { roughness: 0.98, envMapIntensity: 0 });
+            if (!this.room.materials.beyond) this.room.materials.beyond = beyondMat;
+            const beyond = new THREE.Mesh(new THREE.PlaneGeometry(openW - 0.06, openH - 0.04), beyondMat);
+            beyond.position.set(0, openH / 2, frontZ - ROOM_SPEC.WALL_T * 0.65);
+            og.add(beyond);
+
             const blobTex = makeCanvasTexture(256, 128, function(ctx, w, h) {
                 const grad = ctx.createRadialGradient(w / 2, h / 2, 4, w / 2, h / 2, w / 2);
                 grad.addColorStop(0, 'rgba(20,28,38,0.38)');
@@ -696,17 +768,27 @@
                 ctx.fillStyle = grad;
                 ctx.fillRect(0, 0, w, h);
             });
-            const blob = new THREE.Mesh(
-                new THREE.PlaneGeometry(2.4, 1.0),
+            this.room.shadowBlob = new THREE.Mesh(
+                new THREE.PlaneGeometry(openW * 1.05, 0.95),
                 new THREE.MeshBasicMaterial({ map: blobTex, transparent: true, depthWrite: false })
             );
-            blob.rotation.x = -Math.PI / 2;
-            blob.position.set(0, 0.012, frontZ - 0.05);
-            rg.add(blob);
+            this.room.shadowBlob.rotation.x = -Math.PI / 2;
+            this.room.shadowBlob.position.set(0, 0.012, frontZ - 0.06);
+            this.room.group.add(this.room.shadowBlob);
+        }
 
-            this.scene.add(rg);
-            this.scene.background = palette.fog.clone();
-            if (this.scene.fog) this.scene.fog.color.copy(palette.fog);
+        _alignDoorToRoom(layout) {
+            if (!this.doorRoot || !layout) return;
+            this.doorRoot.position.set(0, layout.floorY, layout.doorRootZ);
+            this.doorRoot.scale.set(1, 1, 1);
+            const target = new THREE.Vector3(0, layout.floorY - layout.halfH * 0.12, layout.innerWallZ + 0.06);
+            if (this.controls) {
+                if (this.controls.target && this.controls.target.copy) {
+                    this.controls.target.copy(target);
+                } else if (this.controls.target) {
+                    this.controls.target = target;
+                }
+            }
         }
 
         _applyRoomPalette(palette, rollMap) {
@@ -813,10 +895,11 @@
 
         _buildDoor(state, base, map, sizeObj) {
             const group = new THREE.Group();
-            const W = 0.92;   // فتحة الإطار الصافية
-            const H = 2.08;
-            const halfW = W / 2;
-            const halfH = H / 2;
+            const layout = computeDoorLayout(state, sizeObj);
+            const W = layout.W;
+            const H = layout.H;
+            const halfW = layout.halfW;
+            const halfH = layout.halfH;
             // سماكة الضلفة من المقاس المختار — مكبّرة بصرياً ليظهر فرق 3.5 / 4.5 سم بوضوح
             const thicknessCm = (sizeObj && Number(sizeObj.thicknessCm)) || 4.5;
             const leafT = Math.max(0.055, Math.min(0.12, thicknessCm * 0.021));
@@ -1171,21 +1254,21 @@
             const map = await loadTexture(texUrl, maxAniso);
             if (!this.doorRoot) return;
 
-            this._updateRoomFromRoll(base, map, texUrl);
-
             const size = payload.size || {};
+            const layout = computeDoorLayout(state, size);
+
+            this._updateRoomFromRoll(base, map, texUrl);
+            this._syncRoomOpening(layout);
+            this._alignDoorToRoom(layout);
+
             const stateKey = JSON.stringify(state) + '|' + JSON.stringify(size) + '|' + hex + '|' + texUrl;
             if (stateKey === this._lastDoorStateKey && this.doorGroup) return;
             this._lastDoorStateKey = stateKey;
 
             this._disposeDoorGroup();
-            // السماكة (3.5 / 4.5 سم) مبنية داخل هندسة الضلفة نفسها
             this.doorGroup = this._buildDoor(state, base, map, size);
             this.doorRoot.add(this.doorGroup);
 
-            const sx = (Number(size.widthCm) || 90) / 90;
-            const sy = (Number(size.heightCm) || 230) / 230;
-            this._scaleTarget = { x: sx, y: sy, z: 1 };
             this._lastState = state;
         }
 
