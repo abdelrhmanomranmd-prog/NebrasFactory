@@ -2834,6 +2834,12 @@
 .wpc-door-stage--photo-preset .wpc-door-photo-preset-stack {
     z-index: 2;
     filter: drop-shadow(0 30px 58px rgba(12, 18, 30, 0.28));
+    transform: scale(
+        calc(var(--door-zoom, 1) * var(--door-size-scale-x, 1)),
+        calc(var(--door-zoom, 1) * var(--door-size-scale-y, 1))
+    );
+    transform-origin: center center;
+    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .wpc-door-photo-preset-wrap.is-composite-transom {

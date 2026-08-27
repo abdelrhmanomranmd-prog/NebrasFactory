@@ -971,7 +971,7 @@
         }
 
         const DOOR_PHOTO_PRESET_ROOT = 'images/doors/presets/';
-        const DOOR_PHOTO_PRESET_CACHE = '281';
+        const DOOR_PHOTO_PRESET_CACHE = '282';
         /** صور أبواب المصنع الحقيقية في المعاينة — SVG احتياطي عند غياب الصورة */
         const DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS = true;
         let doorDesignerPreviewRaf = 0;
@@ -1387,7 +1387,28 @@
             'u-channel|u-classic|outer-flat|transom': DOOR_PHOTO_PRESET_ROOT + 'u-channel/u-classic/outer-flat-plain.png',
             'u-channel|u-classic|outer-curve|transom': DOOR_PHOTO_PRESET_ROOT + 'u-channel/u-classic/outer-curve-plain.png',
             'u-channel|u-glass|outer-flat|transom': DOOR_PHOTO_PRESET_ROOT + 'u-channel/u-glass/outer-flat-plain.png',
-            'u-channel|u-glass|outer-curve|transom': DOOR_PHOTO_PRESET_ROOT + 'u-channel/u-glass/outer-curve-plain.png'
+            'u-channel|u-glass|outer-curve|transom': DOOR_PHOTO_PRESET_ROOT + 'u-channel/u-glass/outer-curve-plain.png',
+            'edge-band|edge-steel|outer-flat|plain': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-steel/outer-flat-plain.png',
+            'edge-band|edge-steel|outer-curve|plain': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-steel/outer-curve-plain.png',
+            'edge-band|edge-classic|outer-flat|plain': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-classic/outer-flat-plain.png',
+            'edge-band|edge-classic|outer-curve|plain': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-classic/outer-curve-plain.png',
+            'edge-band|edge-glass|outer-flat|plain': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-glass/outer-flat-plain.png',
+            'edge-band|edge-glass|outer-curve|plain': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-glass/outer-curve-plain.png',
+            'lib|lib-flat|outer-flat|plain': DOOR_PHOTO_PRESET_ROOT + 'lib/lib-flat/outer-flat-plain.png',
+            'lib|lib-flat|outer-curve|plain': DOOR_PHOTO_PRESET_ROOT + 'lib/lib-flat/outer-curve-plain.png',
+            'lib|lib-glass|outer-flat|plain': DOOR_PHOTO_PRESET_ROOT + 'lib/lib-glass/outer-flat-plain.png',
+            'lib|lib-glass|outer-curve|plain': DOOR_PHOTO_PRESET_ROOT + 'lib/lib-glass/outer-curve-plain.png',
+            'lib|lib-steel|outer-flat|plain': DOOR_PHOTO_PRESET_ROOT + 'lib/lib-steel/outer-flat-plain.png',
+            'lib|lib-steel|outer-curve|plain': DOOR_PHOTO_PRESET_ROOT + 'lib/lib-steel/outer-curve-plain.png'
+        };
+
+        const DOOR_PHOTO_SURFACE_FOLDER = {
+            flat: 'edge-band/edge-1',
+            'u-plain': 'u-channel/u-plain',
+            'u-slats': 'u-channel/u-slats',
+            'u-classic': 'u-channel/u-classic',
+            'u-glass': 'u-channel/u-glass',
+            'full-glass': 'edge-band/edge-glass'
         };
 
         const DOOR_PHOTO_TRANSOM_CAP = {
@@ -1399,6 +1420,31 @@
             const base = normalizeMediaPath(path || '');
             if (!base) return '';
             return base + (base.indexOf('?') >= 0 ? '&' : '?') + 'v=' + DOOR_PHOTO_PRESET_CACHE;
+        }
+
+        function buildDoorPhotoPresetFromSurface(state) {
+            if (!state) return null;
+            const surface = state.surface || 'flat';
+            const folder = DOOR_PHOTO_SURFACE_FOLDER[surface];
+            if (!folder) return null;
+            const outer = state.outerShape === 'outer-curve' ? 'outer-curve' : 'outer-flat';
+            const decor = state.decor || 'plain';
+            const plainUrl = DOOR_PHOTO_PRESET_ROOT + folder + '/' + outer + '-plain.png';
+            if (decor === 'transom') {
+                if (surface.indexOf('u-') === 0) {
+                    return {
+                        url: plainUrl,
+                        mode: 'composite-transom',
+                        transomCap: outer === 'outer-curve' ? DOOR_PHOTO_TRANSOM_CAP.curve : DOOR_PHOTO_TRANSOM_CAP.flat
+                    };
+                }
+                if (folder === 'edge-band/edge-1') {
+                    return { url: DOOR_PHOTO_PRESET_ROOT + folder + '/decor-transom.png', mode: 'full', transomCap: '' };
+                }
+                const transomUrl = DOOR_PHOTO_PRESET_ROOT + folder + '/' + outer + '-transom.png';
+                return { url: transomUrl, mode: 'full', transomCap: '' };
+            }
+            return { url: plainUrl, mode: 'full', transomCap: '' };
         }
 
         function resolveDoorDesignerPhotoPreset(state) {
@@ -1431,7 +1477,7 @@
             if (DOOR_PHOTO_PRESET_MAP[plainKey]) {
                 return { url: DOOR_PHOTO_PRESET_MAP[plainKey], mode: 'full', transomCap: '' };
             }
-            return null;
+            return buildDoorPhotoPresetFromSurface(state);
         }
 
         function clearDoorDesignerPhotoPreset(stage) {
@@ -1980,11 +2026,18 @@
             if (DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS && preset && !skipPhotoPreset &&
                 applyDoorDesignerPhotoPreset(stage, preset, swatchUrl, hex, isRoll, state.decor, catalogIndex, state)) {
                 applyDoorRollColorFinish(stage, rollColor);
+                const size = state.size || pick('size');
+                applyWpcSvgSize(stage, size, cfg);
+                stage.classList.toggle('wpc-door-stage--double', state.isDouble && !state.isSliding);
+                stage.classList.toggle('wpc-door-stage--leaf-single', !state.isDouble);
+                stage.classList.toggle('wpc-door-stage--leaf-double', state.isDouble);
+                stage.classList.toggle('wpc-door-stage--sliding', state.isSliding);
+                stage.classList.toggle('wpc-door-stage--sliding-2', state.isSliding && state.isDouble);
+                stage.classList.toggle('wpc-door-stage--glass', state.surface === 'full-glass' || state.surface === 'u-glass');
                 syncDoorDesignerOptionStates(root);
                 const rollSuffixP = isRoll ? (' (' + (ui.doorDesignerRollTag || 'رولّة') + ')') : '';
                 const labelElP = document.getElementById('door-active-color-label');
                 if (labelElP) labelElP.textContent = code ? (code + ' — ' + colorName + rollSuffixP) : colorName;
-                const size = state.size || pick('size');
                 const specElP = document.getElementById('door-spec-label');
                 if (specElP) {
                     const sizeObjP = (cfg.sizes || []).find(function(s) { return s && s.id === size; }) || null;
