@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Wait until hrws285 is live on production."""
+"""Wait until hrws286 is live on production."""
 import re
 import sys
 import time
 import urllib.request
 
 SITE = 'https://www.nebrasplasticcompany.com'
-TARGET = 'hrws285'
+TARGET = 'hrws286'
 MAX_WAIT = 900
 INTERVAL = 15
 
@@ -29,7 +29,7 @@ def main():
                 print('OK —', TARGET, 'is live')
                 return 0
         except Exception as e:
-            print('check failed:', e)
+            print(f'check failed: {e}')
         time.sleep(INTERVAL)
     print('TIMEOUT waiting for', TARGET)
     return 1

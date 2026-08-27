@@ -971,7 +971,7 @@
         }
 
         const DOOR_PHOTO_PRESET_ROOT = 'images/doors/presets/';
-        const DOOR_PHOTO_PRESET_CACHE = '282';
+        const DOOR_PHOTO_PRESET_CACHE = '269';
         /** صور أبواب المصنع الحقيقية في المعاينة — SVG احتياطي عند غياب الصورة */
         const DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS = true;
         let doorDesignerPreviewRaf = 0;
@@ -1378,37 +1378,7 @@
             'sliding|slide-2|outer-flat|plain': DOOR_PHOTO_PRESET_ROOT + 'sliding/slide-2/outer-flat-transom.png',
             'sliding|slide-2|outer-curve|plain': DOOR_PHOTO_PRESET_ROOT + 'sliding/slide-2/outer-curve-transom.png',
             'sliding|slide-2|outer-flat|transom': DOOR_PHOTO_PRESET_ROOT + 'sliding/slide-2/outer-flat-plain.png',
-            'sliding|slide-2|outer-curve|transom': DOOR_PHOTO_PRESET_ROOT + 'sliding/slide-2/outer-curve-plain.png',
-            /* u-channel — تكسية علوية عبر composite-transom (plain + cap) */
-            'u-channel|u-plain|outer-flat|transom': DOOR_PHOTO_PRESET_ROOT + 'u-channel/u-plain/outer-flat-plain.png',
-            'u-channel|u-plain|outer-curve|transom': DOOR_PHOTO_PRESET_ROOT + 'u-channel/u-plain/outer-curve-plain.png',
-            'u-channel|u-slats|outer-flat|transom': DOOR_PHOTO_PRESET_ROOT + 'u-channel/u-slats/outer-flat-plain.png',
-            'u-channel|u-slats|outer-curve|transom': DOOR_PHOTO_PRESET_ROOT + 'u-channel/u-slats/outer-curve-plain.png',
-            'u-channel|u-classic|outer-flat|transom': DOOR_PHOTO_PRESET_ROOT + 'u-channel/u-classic/outer-flat-plain.png',
-            'u-channel|u-classic|outer-curve|transom': DOOR_PHOTO_PRESET_ROOT + 'u-channel/u-classic/outer-curve-plain.png',
-            'u-channel|u-glass|outer-flat|transom': DOOR_PHOTO_PRESET_ROOT + 'u-channel/u-glass/outer-flat-plain.png',
-            'u-channel|u-glass|outer-curve|transom': DOOR_PHOTO_PRESET_ROOT + 'u-channel/u-glass/outer-curve-plain.png',
-            'edge-band|edge-steel|outer-flat|plain': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-steel/outer-flat-plain.png',
-            'edge-band|edge-steel|outer-curve|plain': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-steel/outer-curve-plain.png',
-            'edge-band|edge-classic|outer-flat|plain': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-classic/outer-flat-plain.png',
-            'edge-band|edge-classic|outer-curve|plain': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-classic/outer-curve-plain.png',
-            'edge-band|edge-glass|outer-flat|plain': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-glass/outer-flat-plain.png',
-            'edge-band|edge-glass|outer-curve|plain': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-glass/outer-curve-plain.png',
-            'lib|lib-flat|outer-flat|plain': DOOR_PHOTO_PRESET_ROOT + 'lib/lib-flat/outer-flat-plain.png',
-            'lib|lib-flat|outer-curve|plain': DOOR_PHOTO_PRESET_ROOT + 'lib/lib-flat/outer-curve-plain.png',
-            'lib|lib-glass|outer-flat|plain': DOOR_PHOTO_PRESET_ROOT + 'lib/lib-glass/outer-flat-plain.png',
-            'lib|lib-glass|outer-curve|plain': DOOR_PHOTO_PRESET_ROOT + 'lib/lib-glass/outer-curve-plain.png',
-            'lib|lib-steel|outer-flat|plain': DOOR_PHOTO_PRESET_ROOT + 'lib/lib-steel/outer-flat-plain.png',
-            'lib|lib-steel|outer-curve|plain': DOOR_PHOTO_PRESET_ROOT + 'lib/lib-steel/outer-curve-plain.png'
-        };
-
-        const DOOR_PHOTO_SURFACE_FOLDER = {
-            flat: 'edge-band/edge-1',
-            'u-plain': 'u-channel/u-plain',
-            'u-slats': 'u-channel/u-slats',
-            'u-classic': 'u-channel/u-classic',
-            'u-glass': 'u-channel/u-glass',
-            'full-glass': 'edge-band/edge-glass'
+            'sliding|slide-2|outer-curve|transom': DOOR_PHOTO_PRESET_ROOT + 'sliding/slide-2/outer-curve-plain.png'
         };
 
         const DOOR_PHOTO_TRANSOM_CAP = {
@@ -1420,31 +1390,6 @@
             const base = normalizeMediaPath(path || '');
             if (!base) return '';
             return base + (base.indexOf('?') >= 0 ? '&' : '?') + 'v=' + DOOR_PHOTO_PRESET_CACHE;
-        }
-
-        function buildDoorPhotoPresetFromSurface(state) {
-            if (!state) return null;
-            const surface = state.surface || 'flat';
-            const folder = DOOR_PHOTO_SURFACE_FOLDER[surface];
-            if (!folder) return null;
-            const outer = state.outerShape === 'outer-curve' ? 'outer-curve' : 'outer-flat';
-            const decor = state.decor || 'plain';
-            const plainUrl = DOOR_PHOTO_PRESET_ROOT + folder + '/' + outer + '-plain.png';
-            if (decor === 'transom') {
-                if (surface.indexOf('u-') === 0) {
-                    return {
-                        url: plainUrl,
-                        mode: 'composite-transom',
-                        transomCap: outer === 'outer-curve' ? DOOR_PHOTO_TRANSOM_CAP.curve : DOOR_PHOTO_TRANSOM_CAP.flat
-                    };
-                }
-                if (folder === 'edge-band/edge-1') {
-                    return { url: DOOR_PHOTO_PRESET_ROOT + folder + '/decor-transom.png', mode: 'full', transomCap: '' };
-                }
-                const transomUrl = DOOR_PHOTO_PRESET_ROOT + folder + '/' + outer + '-transom.png';
-                return { url: transomUrl, mode: 'full', transomCap: '' };
-            }
-            return { url: plainUrl, mode: 'full', transomCap: '' };
         }
 
         function resolveDoorDesignerPhotoPreset(state) {
@@ -1468,16 +1413,7 @@
             const key = type + '|' + model + '|' + outer + '|' + decor;
             const direct = DOOR_PHOTO_PRESET_MAP[key];
             if (direct) return { url: direct, mode: 'full', transomCap: '' };
-            /* أقرب صورة مصنع — نفس النوع/الموديل بزاوية أخرى */
-            const altOuter = outer === 'outer-curve' ? 'outer-flat' : 'outer-curve';
-            const altKey = type + '|' + model + '|' + altOuter + '|' + decor;
-            if (DOOR_PHOTO_PRESET_MAP[altKey]) {
-                return { url: DOOR_PHOTO_PRESET_MAP[altKey], mode: 'full', transomCap: '' };
-            }
-            if (DOOR_PHOTO_PRESET_MAP[plainKey]) {
-                return { url: DOOR_PHOTO_PRESET_MAP[plainKey], mode: 'full', transomCap: '' };
-            }
-            return buildDoorPhotoPresetFromSurface(state);
+            return null;
         }
 
         function clearDoorDesignerPhotoPreset(stage) {
@@ -1647,16 +1583,10 @@
             defaultBase: NEBRAS_DOOR_PHOTO_DEFAULT,
             leafMask: NEBRAS_DOOR_LEAF_MASK,
             bases: {
-                'edge-band|edge-1': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-1/outer-flat-plain.png',
-                'edge-band|edge-2': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-2/outer-flat-plain.png',
-                'u-channel|u-plain': DOOR_PHOTO_PRESET_ROOT + 'u-channel/u-plain/outer-flat-plain.png',
-                'u-channel|u-slats': DOOR_PHOTO_PRESET_ROOT + 'u-channel/u-slats/outer-flat-plain.png',
-                'u-channel|u-classic': DOOR_PHOTO_PRESET_ROOT + 'u-channel/u-classic/outer-flat-plain.png',
-                'u-channel|u-glass': DOOR_PHOTO_PRESET_ROOT + 'u-channel/u-glass/outer-flat-plain.png',
-                'u-channel|default': DOOR_PHOTO_PRESET_ROOT + 'u-channel/u-plain/outer-flat-plain.png',
-                'sliding|slide-1': DOOR_PHOTO_PRESET_ROOT + 'sliding/slide-1/outer-flat-plain.png',
-                'sliding|slide-2': DOOR_PHOTO_PRESET_ROOT + 'sliding/slide-2/outer-flat-plain.png',
-                'sliding|default': DOOR_PHOTO_PRESET_ROOT + 'sliding/slide-1/outer-flat-plain.png'
+                'edge-band|edge-1': NEBRAS_DOOR_PHOTO_DEFAULT,
+                'edge-band|edge-2': NEBRAS_DOOR_PHOTO_DEFAULT,
+                'u-channel|default': NEBRAS_DOOR_PHOTO_DEFAULT,
+                'sliding|default': NEBRAS_DOOR_PHOTO_DEFAULT
             },
             overlays: {
                 'outer-curve': 'images/doors/overlays/outer-curve.svg',
@@ -1674,20 +1604,20 @@
 
         const DEFAULT_DOOR_DESIGNER = {
             enabled: true,
-            dataSeed: 'v27-photoreal-factory-photos',
+            dataSeed: 'v26-3d-studio-size-matrix',
             previewModelEnabled: true,
             useCompositorPreview: false,
-            use3dPreview: false,
-            introAr: 'استوديو «صمّم بابك» — صور حقيقية من مصنع نبراس لكل نوع باب WPC. اختر النموذج والديكور والرولّة — المعاينة فورية كما في المصنع.',
-            introEn: 'Design Your Door — real factory photos for each WPC door type. Pick model, decor, and roll colour — instant photoreal preview.',
-            introZh: '设计您的门 — 每种 WPC 门型使用工厂实拍图，选择型号、装饰与卷材色，即时真实预览。',
+            use3dPreview: true,
+            introAr: 'استوديو «صمّم بابك» — اختر نوع الباب، النموذج، الديكور الخارجي، التكسية العلوية، ورولّة اللون (N-1..21 بدون N-12).',
+            introEn: 'Design Your Door — pick door family, model, exterior decor (flat/curve), top cladding, and one of 20 NEBR roll colours.',
+            introZh: '设计您的门 — 选择门型、型号、外饰（平/弧）、顶部包覆及 20 种 NEBR 卷材色。',
             heroImageUrl: 'images/background-quality-managment.jpeg',
             sceneBackgroundUrl: 'images/background-quality-managment.jpeg',
             previewImageUrl: 'images/background-quality-managment.jpeg',
             doorBaseImageUrl: NEBRAS_DOOR_PHOTO_DEFAULT,
             layerManifest: DEFAULT_DOOR_LAYER_MANIFEST,
-            designCanvasMode: 'studio-live',
-            usePhotorealPreview: true,
+            designCanvasMode: '3d',
+            usePhotorealPreview: false,
             types: [
                 { id: 'edge-band', labelAr: 'باب إيدج باند فلات', labelEn: 'Edge-band flat door', labelZh: '封边平板门', icon: 'modern' },
                 { id: 'u-channel', labelAr: 'يو شانيل', labelEn: 'U-channel door', labelZh: 'U槽门', icon: 'classic' },
@@ -2026,18 +1956,11 @@
             if (DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS && preset && !skipPhotoPreset &&
                 applyDoorDesignerPhotoPreset(stage, preset, swatchUrl, hex, isRoll, state.decor, catalogIndex, state)) {
                 applyDoorRollColorFinish(stage, rollColor);
-                const size = state.size || pick('size');
-                applyWpcSvgSize(stage, size, cfg);
-                stage.classList.toggle('wpc-door-stage--double', state.isDouble && !state.isSliding);
-                stage.classList.toggle('wpc-door-stage--leaf-single', !state.isDouble);
-                stage.classList.toggle('wpc-door-stage--leaf-double', state.isDouble);
-                stage.classList.toggle('wpc-door-stage--sliding', state.isSliding);
-                stage.classList.toggle('wpc-door-stage--sliding-2', state.isSliding && state.isDouble);
-                stage.classList.toggle('wpc-door-stage--glass', state.surface === 'full-glass' || state.surface === 'u-glass');
                 syncDoorDesignerOptionStates(root);
                 const rollSuffixP = isRoll ? (' (' + (ui.doorDesignerRollTag || 'رولّة') + ')') : '';
                 const labelElP = document.getElementById('door-active-color-label');
                 if (labelElP) labelElP.textContent = code ? (code + ' — ' + colorName + rollSuffixP) : colorName;
+                const size = state.size || pick('size');
                 const specElP = document.getElementById('door-spec-label');
                 if (specElP) {
                     const sizeObjP = (cfg.sizes || []).find(function(s) { return s && s.id === size; }) || null;
@@ -22194,10 +22117,10 @@
             }
             if (cfg.enabled !== false) {
                 cfg.previewModelEnabled = true;
-                cfg.designCanvasMode = DEFAULT_DOOR_DESIGNER.designCanvasMode || 'studio-live';
-                cfg.use3dPreview = DEFAULT_DOOR_DESIGNER.use3dPreview === true;
-                cfg.useCompositorPreview = DEFAULT_DOOR_DESIGNER.useCompositorPreview === true;
-                cfg.usePhotorealPreview = DEFAULT_DOOR_DESIGNER.usePhotorealPreview !== false;
+                cfg.designCanvasMode = '3d';
+                cfg.use3dPreview = true;
+                cfg.useCompositorPreview = false;
+                cfg.usePhotorealPreview = false;
             } else if (cfg.previewModelEnabled == null) {
                 cfg.previewModelEnabled = DEFAULT_DOOR_DESIGNER.previewModelEnabled !== false;
             }
@@ -22692,12 +22615,12 @@
         }
 
         function buildDoorStudioLiveHtml(leafMask, hintText) {
-            const hint = hintText || 'صورة باب حقيقي من المصنع — اسحب 360° — اللون من رولّة WPC';
+            const hint = hintText || 'اسحب للدوران 360° — يدور تلقائياً — +/− للتكبير';
             return '<div class="wpc-door-turntable" id="wpc-door-turntable">' +
                 buildDoorDesignerLegacyCanvasHtml('', false, leafMask) +
                 '</div>' +
-                '<span class="nebras-door-3d-badge nebras-door-studio-badge">Factory Photo · 360°</span>' +
-                '<p class="nebras-door-3d-hint"><i class="fas fa-camera" aria-hidden="true"></i> ' + hint + '</p>';
+                '<span class="nebras-door-3d-badge nebras-door-studio-badge">Studio · 360°</span>' +
+                '<p class="nebras-door-3d-hint"><i class="fas fa-arrows-rotate" aria-hidden="true"></i> ' + hint + '</p>';
         }
 
         function buildDoorDesignerLegacyCanvasHtml(doorPhoto, photoreal, leafMask) {

@@ -411,6 +411,17 @@ html[dir="rtl"] .nebras-partners-track--reverse:not(.nebras-partners-track--stat
     }
 }
 
+/* Keep partners marquee animated for visitors (perf-lite otherwise freezes all motion) */
+body.perf-lite .nebras-partners-marquee--premium .nebras-partners-track:not(.nebras-partners-track--static) {
+    animation: nebras-partners-scroll 28s linear infinite !important;
+    animation-duration: 28s !important;
+    animation-iteration-count: infinite !important;
+}
+
+body.perf-lite .nebras-partners-track--reverse:not(.nebras-partners-track--static) {
+    animation-direction: reverse !important;
+}
+
 .dashboard-hub-intro {
     margin: 0 0 24px;
     padding: 20px 22px;
