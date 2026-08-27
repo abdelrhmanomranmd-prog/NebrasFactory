@@ -1,11 +1,11 @@
 /**
- * نبراس hrws288 — CSS الإدارة كسول (Accmaa-style)
+ * نبراس hrws289 — CSS الإدارة كسول (Accmaa-style)
  * الزائر: CSS storefront فقط · الإدارة: تحميل عند فتح لوحة الدخول أو الجلسة
  */
 (function(global) {
     'use strict';
 
-    var VER = 'hrws288';
+    var VER = 'hrws289';
     var loaded = false;
     var inflight = null;
 
@@ -40,6 +40,7 @@
         'css/58-wpc-cutting.css',
         'css/59-branch-empire-governance.css',
         'css/60-nebras-dashboard-premium.css',
+        'css/66-nebras-navy-white-artistry.css',
         'css/61-nebras-cloud-safety.css',
         'css/63-nebras-odoo-quiet.css'
     ];

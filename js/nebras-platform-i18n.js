@@ -1,11 +1,11 @@
 /**
- * نبراس hrws288 — i18n: العربية فوراً · EN/ZH كسول عند تغيير اللغة
+ * نبراس hrws289 — i18n: العربية فوراً · EN/ZH كسول عند تغيير اللغة
  * يُحمَّل بعد nebras-platform.js (NEBRAS_BRAND_* · getNebrasBrand*)
  */
 (function(global) {
     'use strict';
 
-    var VER = 'hrws288';
+    var VER = 'hrws289';
     var localeInflight = Object.create(null);
     var localeLoaded = { ar: true };
 
@@ -492,6 +492,34 @@
                 storeCardAccessoriesExcluded: 'بدون إكسسوار · استلام مصنع',
                 storeCardAddToCart: 'أضف للسلة',
                 storeCardViewDetails: 'تفاصيل المنتج',
+                storeDoorsWelcomeEyebrow: 'أبواب WPC جاهزة — مصنع نبراس',
+                storeDoorsWelcomeTitle: 'عالم أبواب نبراس — جودة WPC سعودية',
+                storeDoorsWelcomeSubtitle: 'أبواب جاهزة للتركيب — مقاومة للرطوبة والنمل الأبيض — تشكيلة فلات · U · Lib · سحب · وربعه.',
+                storeRawWelcomeEyebrow: 'WPC عضم — مصنع نبراس',
+                storeRawWelcomeTitle: 'قطاعات WPC عضم — جودة المصنع السعودي',
+                storeRawWelcomeSubtitle: 'قطاعات بدون تلبيس وملبسة — للورش والمصانع والمشاريع الكبيرة.',
+                storeBadgeFactory: 'مصنع سعودي',
+                storeBadgeSections: 'قطاعات WPC',
+                storeBadgeWarranty: 'ضمان مصنعي',
+                storeBadgeRollColors: 'كتالوج ألوان الرول',
+                storeBadgeInstall: 'تركيب أو استلام مصنع',
+                storeDoorRoomKicker: 'نساعدك تختار؟',
+                storeDoorRoomTitle: 'وين بتركّب الباب؟',
+                storeDoorRoomHint: 'اختر نوع المكان — نعرض لك الأبواب المناسبة من تشكيلة نبراس.',
+                storeDoorRoomFiltered: 'عرض: {label}',
+                storeDoorRoomClear: 'إلغاء',
+                storeCatalogResourcesTitle: 'كتalogات وملفات PDF — نبراس',
+                storeQuickPreviewTitle: 'معاينة سريعة',
+                storeQuickPreviewMore: 'المزيد من التفاصيل',
+                storeSpecBrand: 'العلامة',
+                storeSpecBrandVal: 'مصنع نبراس',
+                storeSpecMaterial: 'المادة',
+                storeSpecOrigin: 'المنشأ',
+                storeSpecOriginVal: 'المملكة العربية السعودية',
+                storeFeatureWater: 'مقاوم للرطوبة',
+                storeFeatureTermite: 'مقاوم للنمل الأبيض',
+                storeFeatureDurability: 'متانة عالية — WPC',
+                wpcStoreRollPickerHint: 'اختر لون الرولّة — المعاينة الحية تطبّق اللون على لوح الباب',
                 visitorQrTitle: 'شارك نبراس مع من تحب',
                 visitorQrLead: 'امسح الرمز أو حمّله وأرسله لصديق، مقاول، أو عميل — يصل مباشرة لموقع مصنع نبراس الرسمي.',
                 visitorQrShareHint: 'كل مشاركة = فرصة جديدة لنبراس — انشر الجودة السعودية',

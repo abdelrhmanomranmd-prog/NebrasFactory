@@ -1,0 +1,598 @@
+/* ═══ نبراس hrws289 — كحلي + أبيض · لمسات فنية · متجر أبواب ═══ */
+
+:root {
+    --nb-pattern-navy: rgba(13, 40, 64, 0.045);
+    --nb-surface: #ffffff;
+    --nb-navy: #0d2840;
+    --nb-navy-mid: #155e94;
+    --nb-gold: #c9a227;
+}
+
+/* ── خلفية نبراس — نمط هندسي خفيف (مثل الغملاس · صيغة نبراس) ── */
+body.platform-storefront,
+body.admin-session {
+    background-color: #f4f7fb;
+    background-image:
+        linear-gradient(135deg, var(--nb-pattern-navy) 12.5%, transparent 12.5%, transparent 50%, var(--nb-pattern-navy) 50%, var(--nb-pattern-navy) 62.5%, transparent 62.5%, transparent 100%),
+        linear-gradient(45deg, var(--nb-pattern-navy) 12.5%, transparent 12.5%, transparent 50%, var(--nb-pattern-navy) 50%, var(--nb-pattern-navy) 62.5%, transparent 62.5%, transparent 100%);
+    background-size: 28px 28px;
+    background-position: 0 0, 14px 14px;
+}
+
+body.admin-session #admin-dashboard.show {
+    background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.97) 0%, rgba(248, 251, 255, 0.98) 42%, rgba(241, 247, 252, 0.96) 100%),
+        url('/images/wpc-background.avif') center top / cover no-repeat fixed;
+    background-blend-mode: normal, soft-light;
+    position: relative;
+}
+
+body.admin-session #admin-dashboard.show::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.35;
+    background-image:
+        linear-gradient(135deg, var(--nb-pattern-navy) 12.5%, transparent 12.5%, transparent 50%, var(--nb-pattern-navy) 50%, var(--nb-pattern-navy) 62.5%, transparent 62.5%, transparent 100%),
+        linear-gradient(45deg, var(--nb-pattern-navy) 12.5%, transparent 12.5%, transparent 50%, var(--nb-pattern-navy) 50%, var(--nb-pattern-navy) 62.5%, transparent 62.5%, transparent 100%);
+    background-size: 32px 32px;
+    background-position: 0 0, 16px 16px;
+}
+
+body.admin-session #admin-dashboard.show > *:not(.celebration-deco-layer) {
+    position: relative;
+    z-index: 1;
+}
+
+/* ── داشبورد: كحلي + أبيض بدل الكحلي الكامل ── */
+.admin-dashboard .dashboard-partners-block {
+    background: var(--nb-surface) !important;
+    border: 1px solid rgba(13, 40, 64, 0.12) !important;
+    box-shadow: 0 18px 48px rgba(13, 40, 64, 0.08) !important;
+    border-top: 4px solid var(--nb-navy) !important;
+}
+
+.admin-dashboard .dashboard-partners-block h3,
+.admin-dashboard .dashboard-partners-block .dashboard-partners-subtitle {
+    color: var(--nb-navy) !important;
+}
+
+.admin-dashboard .dashboard-partners-block .scm-hint {
+    color: #64748b !important;
+}
+
+.dashboard-command-shell {
+    background: linear-gradient(145deg, #ffffff 0%, #f8fbff 55%, #ffffff 100%) !important;
+    border: 1px solid rgba(13, 40, 64, 0.1);
+    border-top: 4px solid var(--nb-navy);
+}
+
+.dashboard-command-shell-inner {
+    background: linear-gradient(90deg, var(--nb-navy) 0%, #155e94 100%);
+    color: #fff;
+    border-radius: calc(var(--nb-radius-xl, 22px) - 2px) calc(var(--nb-radius-xl, 22px) - 2px) 0 0;
+    padding: 18px 22px;
+    margin: -1px -1px 0;
+}
+
+.dashboard-command-brand strong,
+.dashboard-command-brand small {
+    color: #fff;
+}
+
+.dashboard-main-nav {
+    background: var(--nb-surface);
+    border: 1px solid rgba(13, 40, 64, 0.1);
+    border-radius: 16px;
+    padding: 8px;
+    box-shadow: 0 8px 24px rgba(13, 40, 64, 0.06);
+}
+
+.dashboard-main-nav button {
+    border-radius: 10px;
+    font-weight: 700;
+    color: var(--nb-navy);
+}
+
+.dashboard-main-nav button:hover {
+    background: rgba(13, 40, 64, 0.08);
+}
+
+.dashboard-hub-intro,
+.dashboard-company-identity,
+.dashboard-section-block,
+.erp-hub-panel,
+.platform-hub-panel {
+    background: var(--nb-surface);
+    border: 1px solid rgba(13, 40, 64, 0.08);
+    border-radius: 20px;
+    box-shadow: 0 10px 32px rgba(13, 40, 64, 0.06);
+}
+
+.admin-dashboard .dashboard-header h2 {
+    color: var(--nb-navy);
+}
+
+.admin-dashboard .quick-card {
+    background: var(--nb-surface);
+    border: 1px solid rgba(13, 40, 64, 0.1);
+    border-top: 3px solid var(--nb-navy-mid);
+    box-shadow: 0 12px 32px rgba(13, 40, 64, 0.07);
+}
+
+/* ── بوابة الزائر ── */
+.visitor-lane {
+    background: var(--nb-surface) !important;
+    border: 1px solid rgba(13, 40, 64, 0.1) !important;
+    border-top: 4px solid var(--nb-navy) !important;
+    box-shadow: 0 14px 36px rgba(13, 40, 64, 0.07) !important;
+}
+
+.visitor-lane--store {
+    border-top-color: var(--nb-navy-mid) !important;
+}
+
+.nebras-gateway {
+    position: relative;
+}
+
+.nebras-gateway-head .section-title h2 {
+    color: var(--nb-navy);
+}
+
+/* ── workspace متجر ── */
+.nebras-workspace {
+    background:
+        linear-gradient(165deg, rgba(255, 255, 255, 0.98) 0%, rgba(244, 248, 252, 0.96) 45%, rgba(255, 255, 255, 0.98) 100%),
+        url('/images/wpc-background.avif') center / cover no-repeat fixed !important;
+    background-blend-mode: normal, soft-light;
+}
+
+.workspace-pillar-btn--store.is-active,
+.workspace-pillar-btn--store:hover {
+    background: linear-gradient(135deg, var(--nb-navy), var(--nb-navy-mid)) !important;
+}
+
+/* ═══ متجر — hero ترحيبي للأبواب ═══ */
+.nebras-store-welcome-hero {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1fr minmax(220px, 36%);
+    gap: 0;
+    margin: 0 0 24px;
+    border-radius: 20px;
+    overflow: hidden;
+    min-height: 220px;
+    border: 1px solid rgba(13, 40, 64, 0.12);
+    box-shadow: 0 18px 48px rgba(13, 40, 64, 0.12);
+    background: var(--nb-navy);
+}
+
+.nebras-store-welcome-hero-media {
+    position: relative;
+    min-height: 220px;
+}
+
+.nebras-store-welcome-hero-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center center;
+    display: block;
+}
+
+.nebras-store-welcome-hero-media::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(90deg, rgba(13, 40, 64, 0.15) 0%, rgba(13, 40, 64, 0.55) 100%);
+}
+
+.nebras-store-welcome-hero-copy {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 10px;
+    padding: 28px 26px;
+    background: linear-gradient(160deg, var(--nb-navy) 0%, #155e94 100%);
+    color: #fff;
+}
+
+.nebras-store-welcome-eyebrow {
+    display: inline-flex;
+    align-self: flex-start;
+    padding: 4px 12px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(201, 162, 39, 0.45);
+    color: #fde68a;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.03em;
+}
+
+.nebras-store-welcome-title {
+    margin: 0;
+    font-size: clamp(1.25rem, 2.4vw, 1.65rem);
+    font-weight: 800;
+    line-height: 1.35;
+}
+
+.nebras-store-welcome-subtitle {
+    margin: 0;
+    font-size: 0.92rem;
+    line-height: 1.65;
+    color: rgba(255, 255, 255, 0.88);
+}
+
+.nebras-store-welcome-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 6px;
+}
+
+.nebras-store-welcome-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12);
+    font-size: 0.74rem;
+    font-weight: 700;
+}
+
+/* ═══ سيناريوهات الغرف — أين يُركّب الباب؟ ═══ */
+.nebras-store-room-world {
+    margin: 0 0 28px;
+    padding: 22px 20px 24px;
+    border-radius: 18px;
+    background: var(--nb-surface);
+    border: 1px solid rgba(13, 40, 64, 0.1);
+    box-shadow: 0 10px 28px rgba(13, 40, 64, 0.06);
+}
+
+.nebras-store-room-world-head {
+    margin-bottom: 16px;
+}
+
+.nebras-store-room-world-kicker {
+    display: block;
+    font-size: 0.76rem;
+    font-weight: 800;
+    color: var(--nb-navy-mid);
+    margin-bottom: 4px;
+}
+
+.nebras-store-room-world-title {
+    margin: 0 0 4px;
+    font-size: 1.15rem;
+    font-weight: 800;
+    color: var(--nb-navy);
+}
+
+.nebras-store-room-world-hint {
+    margin: 0;
+    font-size: 0.86rem;
+    color: #64748b;
+}
+
+.nebras-store-room-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 12px;
+}
+
+.nebras-store-room-tile {
+    position: relative;
+    display: block;
+    border: none;
+    padding: 0;
+    border-radius: 14px;
+    overflow: hidden;
+    cursor: pointer;
+    aspect-ratio: 4 / 3;
+    box-shadow: 0 8px 22px rgba(13, 40, 64, 0.12);
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.nebras-store-room-tile:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 32px rgba(13, 40, 64, 0.18);
+}
+
+.nebras-store-room-tile img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.nebras-store-room-tile::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 35%, rgba(13, 40, 64, 0.82) 100%);
+}
+
+.nebras-store-room-tile-label {
+    position: absolute;
+    inset-inline: 12px;
+    bottom: 12px;
+    z-index: 2;
+    color: #fff;
+    font-size: 0.88rem;
+    font-weight: 800;
+    text-align: start;
+    line-height: 1.35;
+}
+
+.nebras-store-room-active-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 14px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    background: rgba(21, 94, 148, 0.1);
+    color: var(--nb-navy);
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+.nebras-store-room-active-chip button {
+    border: none;
+    background: transparent;
+    color: var(--nb-navy-mid);
+    cursor: pointer;
+    font-weight: 800;
+}
+
+/* ═══ كتalogات PDF حقيقية ═══ */
+.nebras-store-catalog-resources {
+    margin: 0 0 24px;
+    padding: 20px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #fff 0%, #f8fbff 100%);
+    border: 1px solid rgba(13, 40, 64, 0.1);
+}
+
+.nebras-store-catalog-resources h3 {
+    margin: 0 0 12px;
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--nb-navy);
+}
+
+.nebras-store-catalog-resource-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.nebras-store-catalog-resource-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: #fff;
+    border: 1px solid rgba(13, 40, 64, 0.1);
+    color: var(--nb-navy);
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 0.88rem;
+    transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.nebras-store-catalog-resource-link:hover {
+    border-color: var(--nb-navy-mid);
+    background: rgba(21, 94, 148, 0.05);
+}
+
+.nebras-store-catalog-resource-link i {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: grid;
+    place-items: center;
+    background: rgba(13, 40, 64, 0.08);
+    color: #c41e3a;
+}
+
+/* ═══ معاينة سريعة للمنتج (Alghomlas-style) ═══ */
+.nebras-store-quick-preview {
+    position: fixed;
+    inset: 0;
+    z-index: 14000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: rgba(7, 21, 37, 0.72);
+    backdrop-filter: blur(6px);
+}
+
+.nebras-store-quick-preview[hidden] {
+    display: none !important;
+}
+
+.nebras-store-quick-preview-panel {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    width: min(960px, 96vw);
+    max-height: min(88vh, 720px);
+    border-radius: 20px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 28px 64px rgba(13, 40, 64, 0.28);
+}
+
+.nebras-store-quick-preview-media {
+    position: relative;
+    background: #f4f7fb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 280px;
+}
+
+.nebras-store-quick-preview-media img {
+    max-width: 100%;
+    max-height: min(88vh, 720px);
+    object-fit: contain;
+    cursor: zoom-in;
+}
+
+.nebras-store-quick-preview-zoom {
+    position: absolute;
+    bottom: 14px;
+    inset-inline-start: 14px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    background: rgba(13, 40, 64, 0.78);
+    color: #fff;
+    font-size: 0.72rem;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+}
+
+.nebras-store-quick-preview-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 22px 20px;
+    overflow-y: auto;
+}
+
+.nebras-store-quick-preview-tag {
+    align-self: flex-start;
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: rgba(21, 94, 148, 0.12);
+    color: var(--nb-navy-mid);
+    font-size: 0.72rem;
+    font-weight: 800;
+}
+
+.nebras-store-quick-preview-title {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 800;
+    color: var(--nb-navy);
+    line-height: 1.45;
+}
+
+.nebras-store-quick-preview-specs {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.nebras-store-quick-preview-specs li {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 0;
+    border-bottom: 1px solid rgba(13, 40, 64, 0.08);
+    font-size: 0.82rem;
+}
+
+.nebras-store-quick-preview-specs li span {
+    color: #64748b;
+}
+
+.nebras-store-quick-preview-specs li strong {
+    color: var(--nb-navy);
+    text-align: end;
+}
+
+.nebras-store-quick-preview-features {
+    margin: 0;
+    padding: 0 18px 0 0;
+    font-size: 0.8rem;
+    line-height: 1.65;
+    color: #475569;
+}
+
+.nebras-store-quick-preview-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: auto;
+}
+
+.nebras-store-quick-preview-close {
+    position: absolute;
+    top: 14px;
+    inset-inline-end: 14px;
+    z-index: 3;
+    width: 38px;
+    height: 38px;
+    border: none;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.92);
+    color: var(--nb-navy);
+    font-size: 1.2rem;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(13, 40, 64, 0.15);
+}
+
+.nebras-store-sku-preview-btn {
+    position: absolute;
+    top: 10px;
+    inset-inline-start: 10px;
+    z-index: 4;
+    width: 34px;
+    height: 34px;
+    border: none;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.92);
+    color: var(--nb-navy);
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(13, 40, 64, 0.14);
+    display: grid;
+    place-items: center;
+}
+
+.nebras-store-card-media {
+    position: relative;
+}
+
+.nebras-store-card-preview-btn {
+    position: absolute;
+    top: 10px;
+    inset-inline-start: 10px;
+    z-index: 4;
+    width: 34px;
+    height: 34px;
+    border: none;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.92);
+    color: var(--nb-navy);
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(13, 40, 64, 0.14);
+}
+
+@media (max-width: 820px) {
+    .nebras-store-welcome-hero {
+        grid-template-columns: 1fr;
+    }
+
+    .nebras-store-welcome-hero-media {
+        min-height: 180px;
+    }
+
+    .nebras-store-quick-preview-panel {
+        grid-template-columns: 1fr;
+        max-height: 92vh;
+        overflow-y: auto;
+    }
+}

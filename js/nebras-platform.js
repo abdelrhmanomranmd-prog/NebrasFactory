@@ -3500,6 +3500,222 @@
                 '</div></article>';
         }
 
+        const NEBRAS_DOOR_ROOM_SCENARIOS = [
+            { id: 'kitchen', labelAr: 'باب مطبخ', labelEn: 'Kitchen door', image: 'images/profile-2026/doors/doors-03.jpg', keywords: ['فلات', 'flat', 'lib', 'Lib', 'مطبخ'] },
+            { id: 'bedroom', labelAr: 'باب غرفة', labelEn: 'Bedroom door', image: 'images/profile-2026/doors/doors-04.jpg', keywords: ['غرفة', 'فلات', 'flat', 'u45', 'U45', 'u60'] },
+            { id: 'bathroom', labelAr: 'باب حمام', labelEn: 'Bathroom door', image: 'images/profile-2026/doors/doors-05.jpg', keywords: ['فلات', 'flat', 'lib', 'Lib', 'حمام'] },
+            { id: 'home', labelAr: 'باب منزل', labelEn: 'Home door', image: 'images/profile-2026/doors/doors-02.jpg', keywords: ['شقة', 'u45', 'U45', 'u60', 'U60', 'فلات'] },
+            { id: 'villa', labelAr: 'باب فيلا', labelEn: 'Villa door', image: 'images/profile-2026/doors/doors-01.jpg', keywords: ['فيلا', 'villa', 'u60', 'U60', 'ستانلس', 'steel', 'زجاج', 'glass', 'وربعه', 'محور'] }
+        ];
+
+        const NEBRAS_STORE_CATALOG_PDFS = [
+            { labelAr: 'البروفايل التعريفي لنبراس 2026', labelEn: 'Nebras company profile 2026', url: 'documents/nebras-company-profile-2026.pdf', icon: 'fa-file-pdf' }
+        ];
+
+        function isWpcDoorsProduct(product) {
+            return product && (product.id === 'prod-wpc' || product.id === 'prod-wpc-raw');
+        }
+
+        function variantMatchesDoorScenario(variant, scenario) {
+            if (!variant || !scenario || !scenario.keywords || !scenario.keywords.length) return true;
+            const hay = [variant.typeAr, variant.typeEn, variant.sizeAr, variant.sizeEn, variant.colorAr, variant.colorEn].join(' ').toLowerCase();
+            return scenario.keywords.some(function(k) { return hay.indexOf(String(k).toLowerCase()) >= 0; });
+        }
+
+        function getActiveDoorRoomScenario() {
+            const route = nebrasWorkspaceState && nebrasWorkspaceState.route;
+            return route && route.doorRoomScenario ? route.doorRoomScenario : null;
+        }
+
+        function clearStoreDoorRoomScenario() {
+            if (nebrasWorkspaceState && nebrasWorkspaceState.route) {
+                delete nebrasWorkspaceState.route.doorRoomScenario;
+            }
+        }
+
+        function openStoreDoorRoomScenario(productId, scenarioId, iconId) {
+            const product = siteProducts.find(function(p) { return p && p.id === productId; });
+            if (!product) return;
+            const subs = (product.storeSubCategories || []).filter(function(s) { return s && s.id; });
+            const installSub = subs.find(function(s) { return s.id === 'wpc-ready-install'; }) || subs[0];
+            const subId = installSub ? installSub.id : null;
+            if (!subId) {
+                openNebrasWorkspace({ pillar: 'store', view: 'product-sub-hub', productId: productId, iconId: iconId, doorRoomScenario: scenarioId });
+                return;
+            }
+            openNebrasWorkspace({ pillar: 'store', view: 'product-sub', productId: productId, subCategoryId: subId, iconId: iconId, doorRoomScenario: scenarioId });
+        }
+
+        function buildStoreWelcomeHeroHtml(product, lang, ui) {
+            if (!product || !isWpcDoorsProduct(product)) return '';
+            const isRaw = product.id === 'prod-wpc-raw';
+            const heroImg = isRaw
+                ? 'images/hero-slide-02-wpc-pvc.png'
+                : 'images/hero-slide-05-doors-showcase.png';
+            const eyebrow = isRaw
+                ? (ui.storeRawWelcomeEyebrow || 'WPC عضم — مصنع نبراس')
+                : (ui.storeDoorsWelcomeEyebrow || 'أبواب WPC جاهزة — مصنع نبراس');
+            const title = isRaw
+                ? (ui.storeRawWelcomeTitle || 'قطاعات WPC عضم — جودة المصنع السعودي')
+                : (ui.storeDoorsWelcomeTitle || 'عالم أبواب نبراس — جودة WPC سعودية');
+            const subtitle = isRaw
+                ? (ui.storeRawWelcomeSubtitle || 'قطاعات بدون تلبيس وملبسة — للورش والمصانع والمشاريع الكبيرة.')
+                : (ui.storeDoorsWelcomeSubtitle || 'أبواب جاهزة للتركيب — مقاومة للرطوبة والنمل الأبيض — تشكيلة فلات · U · Lib · سحب · وربعه.');
+            const badges = isRaw
+                ? [
+                    { icon: 'fa-industry', label: ui.storeBadgeFactory || 'مصنع سعودي' },
+                    { icon: 'fa-ruler-combined', label: ui.storeBadgeSections || 'قطاعات WPC' }
+                ]
+                : [
+                    { icon: 'fa-shield-alt', label: ui.storeBadgeWarranty || 'ضمان مصنعي' },
+                    { icon: 'fa-palette', label: ui.storeBadgeRollColors || 'كتالوج ألوان الرول' },
+                    { icon: 'fa-truck', label: ui.storeBadgeInstall || 'تركيب أو استلام مصنع' }
+                ];
+            const badgesHtml = badges.map(function(b) {
+                return '<span class="nebras-store-welcome-badge"><i class="fas ' + escapeHtmlAttr(b.icon) + '"></i> ' + escapeHtmlAttr(b.label) + '</span>';
+            }).join('');
+            return '<section class="nebras-store-welcome-hero" aria-label="' + escapeHtmlAttr(title) + '">' +
+                '<div class="nebras-store-welcome-hero-media">' +
+                '<img src="' + escapeHtmlAttr(heroImg) + '" alt="' + escapeHtmlAttr(title) + '" loading="eager" decoding="async">' +
+                '</div>' +
+                '<div class="nebras-store-welcome-hero-copy">' +
+                '<span class="nebras-store-welcome-eyebrow">' + escapeHtmlAttr(eyebrow) + '</span>' +
+                '<h2 class="nebras-store-welcome-title">' + escapeHtmlAttr(title) + '</h2>' +
+                '<p class="nebras-store-welcome-subtitle">' + escapeHtmlAttr(subtitle) + '</p>' +
+                '<div class="nebras-store-welcome-badges">' + badgesHtml + '</div>' +
+                '</div></section>';
+        }
+
+        function buildStoreDoorRoomScenariosHtml(product, lang, ui) {
+            if (!product || product.id !== 'prod-wpc') return '';
+            const pid = String(product.id).replace(/'/g, "\\'");
+            const iconId = nebrasWorkspaceState && nebrasWorkspaceState.route && nebrasWorkspaceState.route.iconId != null
+                ? nebrasWorkspaceState.route.iconId : 'null';
+            const tiles = NEBRAS_DOOR_ROOM_SCENARIOS.map(function(sc) {
+                const label = lang === 'en' ? (sc.labelEn || sc.labelAr) : sc.labelAr;
+                return '<button type="button" class="nebras-store-room-tile" onclick="openStoreDoorRoomScenario(\'' + pid + '\',\'' + sc.id + '\',' + iconId + ')">' +
+                    '<img src="' + escapeHtmlAttr(sc.image) + '" alt="' + escapeHtmlAttr(label) + '" loading="lazy" decoding="async">' +
+                    '<span class="nebras-store-room-tile-label">' + escapeHtmlAttr(label) + '</span></button>';
+            }).join('');
+            return '<section class="nebras-store-room-world" aria-labelledby="nebras-door-room-world-title">' +
+                '<div class="nebras-store-room-world-head">' +
+                '<span class="nebras-store-room-world-kicker">' + escapeHtmlAttr(ui.storeDoorRoomKicker || 'نساعدك تختار؟') + '</span>' +
+                '<h3 class="nebras-store-room-world-title" id="nebras-door-room-world-title">' + escapeHtmlAttr(ui.storeDoorRoomTitle || 'وين بتركّب الباب؟') + '</h3>' +
+                '<p class="nebras-store-room-world-hint">' + escapeHtmlAttr(ui.storeDoorRoomHint || 'اختر نوع المكان — نعرض لك الأبواب المناسبة من تشكيلة نبراس.') + '</p>' +
+                '</div>' +
+                '<div class="nebras-store-room-grid">' + tiles + '</div></section>';
+        }
+
+        function buildStoreCatalogResourcesHtml(lang, ui) {
+            const links = NEBRAS_STORE_CATALOG_PDFS.map(function(doc) {
+                const label = lang === 'en' ? (doc.labelEn || doc.labelAr) : doc.labelAr;
+                const url = resolveDisplayMediaUrl(doc.url);
+                return '<a class="nebras-store-catalog-resource-link" href="' + escapeHtmlAttr(url) + '" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">' +
+                    '<i class="fas ' + escapeHtmlAttr(doc.icon || 'fa-file-pdf') + '"></i>' +
+                    '<span>' + escapeHtmlAttr(label) + '</span></a>';
+            }).join('');
+            if (!links) return '';
+            return '<section class="nebras-store-catalog-resources">' +
+                '<h3><i class="fas fa-book-open"></i> ' + escapeHtmlAttr(ui.storeCatalogResourcesTitle || 'كتalogات وملفات PDF — نبراس') + '</h3>' +
+                '<div class="nebras-store-catalog-resource-list">' + links + '</div></section>';
+        }
+
+        function buildStoreDoorRoomActiveChipHtml(lang, ui) {
+            const scenarioId = getActiveDoorRoomScenario();
+            if (!scenarioId) return '';
+            const sc = NEBRAS_DOOR_ROOM_SCENARIOS.find(function(s) { return s.id === scenarioId; });
+            if (!sc) return '';
+            const label = lang === 'en' ? (sc.labelEn || sc.labelAr) : sc.labelAr;
+            const route = nebrasWorkspaceState.route || {};
+            const pid = String(route.productId || '').replace(/'/g, "\\'");
+            const iconId = route.iconId != null ? route.iconId : 'null';
+            return '<div class="nebras-store-room-active-chip">' +
+                '<i class="fas fa-filter"></i> ' + escapeHtmlAttr((ui.storeDoorRoomFiltered || 'عرض: {label}').replace('{label}', label)) +
+                '<button type="button" onclick="clearStoreDoorRoomScenario();openNebrasWorkspace({pillar:\'store\',view:\'product-sub\',productId:\'' + pid + '\',subCategoryId:\'' + escapeHtmlAttr(route.subCategoryId || '') + '\',iconId:' + iconId + '})">' +
+                escapeHtmlAttr(ui.storeDoorRoomClear || 'إلغاء') + '</button></div>';
+        }
+
+        function buildStoreSkuQuickPreviewSpecs(product, variant, lang, ui) {
+            const isEn = lang === 'en';
+            const rows = [];
+            const type = isEn ? (variant.typeEn || variant.typeAr) : (variant.typeAr || variant.typeEn);
+            const size = isEn ? (variant.sizeEn || variant.sizeAr) : (variant.sizeAr || variant.sizeEn);
+            const sku = String(variant.sku || variant.id || '').trim();
+            if (type) rows.push({ k: ui.variantTypeLabel || 'النوع', v: type });
+            if (size) rows.push({ k: ui.variantSizeLabel || 'المقاس', v: size });
+            if (sku) rows.push({ k: ui.storeCardSkuLabel || 'كود', v: sku });
+            rows.push({ k: ui.storeSpecBrand || 'العلامة', v: ui.storeSpecBrandVal || 'مصنع نبراس' });
+            rows.push({ k: ui.storeSpecMaterial || 'المادة', v: 'WPC' });
+            rows.push({ k: ui.storeSpecOrigin || 'المنشأ', v: ui.storeSpecOriginVal || 'المملكة العربية السعودية' });
+            const features = [
+                ui.storeFeatureWater || 'مقاوم للرطوبة',
+                ui.storeFeatureTermite || 'مقاوم للنمل الأبيض',
+                ui.storeFeatureDurability || 'متانة عالية — WPC'
+            ];
+            const specsHtml = rows.map(function(r) {
+                return '<li><span>' + escapeHtmlAttr(r.k) + '</span><strong>' + escapeHtmlAttr(r.v) + '</strong></li>';
+            }).join('');
+            const featHtml = features.map(function(f) { return '<li>' + escapeHtmlAttr(f) + '</li>'; }).join('');
+            return { specsHtml: specsHtml, featHtml: featHtml };
+        }
+
+        function openStoreSkuQuickPreview(productId, variantIndex) {
+            const product = siteProducts.find(function(p) { return p && p.id === productId; });
+            const variant = product && product.variants ? product.variants[variantIndex] : null;
+            if (!product || !variant) return;
+            const lang = currentLang || 'ar';
+            const ui = siteText[lang] || siteText.ar;
+            const box = document.getElementById('nebras-store-quick-preview');
+            if (!box) return;
+            const isWpc = productSupportsWpcRollColorPicker(product);
+            const baseImg = isWpc ? getWpcStoreSkuBaseImage(variant) : (variant.image || '');
+            const img = baseImg ? resolveDisplayMediaUrl(baseImg) : '';
+            const fullSrc = img ? mediaUrlForLightbox(baseImg) : '';
+            const isEn = lang === 'en';
+            const type = isEn ? (variant.typeEn || variant.typeAr) : (variant.typeAr || variant.typeEn);
+            const size = isEn ? (variant.sizeEn || variant.sizeAr) : (variant.sizeAr || variant.sizeEn);
+            const title = [type, size].filter(Boolean).join(' · ') || getLocalizedCatalogField(product, 'title', lang);
+            const meta = buildStoreSkuQuickPreviewSpecs(product, variant, lang, ui);
+            const pid = String(productId).replace(/'/g, "\\'");
+            const priceHtml = variant.price > 0
+                ? formatVariantPriceBlock(variant.price, lang)
+                : ('<span class="variant-price variant-price--request">' + escapeHtmlAttr(ui.catalogHubPriceOnRequest || 'عند الطلب') + '</span>');
+            const shopable = productHasShop(product) && variant.inStock !== false;
+            const cartBtn = shopable
+                ? '<button type="button" class="nebras-store-card-cart" onclick="addVariantIndexToCart(\'' + pid + '\',' + variantIndex + ',1);closeStoreSkuQuickPreview()"><i class="fas fa-cart-plus"></i> ' + escapeHtmlAttr(ui.storeCardAddToCart || 'أضف للسلة') + '</button>'
+                : '';
+            box.innerHTML = '<div class="nebras-store-quick-preview-panel" role="dialog" aria-modal="true">' +
+                '<button type="button" class="nebras-store-quick-preview-close" onclick="closeStoreSkuQuickPreview()" aria-label="' + escapeHtmlAttr(ui.closeLabel || 'إغلاق') + '">&times;</button>' +
+                '<div class="nebras-store-quick-preview-media">' +
+                (img ? ('<img src="' + escapeHtmlAttr(img) + '" data-full-src="' + escapeHtmlAttr(fullSrc || img) + '" alt="' + escapeHtmlAttr(title) + '" class="nebras-clickable-media">') : '<span><i class="fas fa-door-open"></i></span>') +
+                (img ? ('<button type="button" class="nebras-store-quick-preview-zoom" onclick="openNebrasMediaLightboxFromEl(this.previousElementSibling)"><i class="fas fa-search-plus"></i> ' + escapeHtmlAttr(ui.lightboxOpenHint || 'تكبير') + '</button>') : '') +
+                '</div>' +
+                '<div class="nebras-store-quick-preview-body">' +
+                '<span class="nebras-store-quick-preview-tag">' + escapeHtmlAttr(getStoreProductCategoryTag(productId, lang)) + '</span>' +
+                '<h3 class="nebras-store-quick-preview-title">' + escapeHtmlAttr(title) + '</h3>' +
+                '<ul class="nebras-store-quick-preview-specs">' + meta.specsHtml + '</ul>' +
+                '<ul class="nebras-store-quick-preview-features">' + meta.featHtml + '</ul>' +
+                '<div class="nebras-store-card-price-block">' + priceHtml + '</div>' +
+                '<div class="nebras-store-quick-preview-actions">' + cartBtn +
+                '<button type="button" class="nebras-store-card-cart nebras-store-card-cart--ghost" onclick="closeStoreSkuQuickPreview();openNebrasWorkspace({pillar:\'store\',view:\'product-sub\',productId:\'' + pid + '\',subCategoryId:\'' + escapeHtmlAttr(variant.subCategoryId || '') + '\'})">' +
+                '<i class="fas fa-external-link-alt"></i> ' + escapeHtmlAttr(ui.storeQuickPreviewMore || 'المزيد من التفاصيل') + '</button></div>' +
+                '</div></div>';
+            box.hidden = false;
+            box.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('nebras-quick-preview-open');
+            wireClickableMediaIn(box);
+        }
+
+        function closeStoreSkuQuickPreview() {
+            const box = document.getElementById('nebras-store-quick-preview');
+            if (box) {
+                box.hidden = true;
+                box.setAttribute('aria-hidden', 'true');
+                box.innerHTML = '';
+            }
+            document.body.classList.remove('nebras-quick-preview-open');
+        }
+
         function buildStoreSubCategoryHubHtml(product, lang, contextKey, options) {
             const opts = options || {};
             const ui = siteText[lang] || siteText.ar;
@@ -3513,7 +3729,10 @@
             const cards = groups.map(function(grp) {
                 return buildStoreSubCategoryHubCardHtml(product, grp, lang, ui, iconId);
             }).join('');
-            return '<div class="nebras-store-subhub nebras-store-subhub--premium" data-store-context="' + escapeHtmlAttr(contextKey || 'subhub') + '">' +
+            return buildStoreWelcomeHeroHtml(product, lang, ui) +
+                buildStoreDoorRoomScenariosHtml(product, lang, ui) +
+                buildStoreCatalogResourcesHtml(lang, ui) +
+                '<div class="nebras-store-subhub nebras-store-subhub--premium" data-store-context="' + escapeHtmlAttr(contextKey || 'subhub') + '">' +
                 '<header class="nebras-store-subhub-head">' +
                 '<h2 class="nebras-store-subhub-main-title">' + escapeHtmlAttr(title) + '</h2>' +
                 '<p class="nebras-store-subhub-subtitle">' + escapeHtmlAttr(ui.storeSubHubSubtitle || 'أقسام فرعية داخل المتجر — اختر القسم لعرض منتجاته') + '</p>' +
@@ -3527,7 +3746,12 @@
             ensureProductStoreSubCategories(product);
             const sub = getProductSubCategoryDef(product, subCategoryId);
             if (!sub) return '<p class="nebras-store-empty">' + escapeHtmlAttr(ui.workspaceProductMissing || 'القسم غير متوفر.') + '</p>';
-            const items = getVariantsGroupedForSubCategory(product, subCategoryId);
+            const itemsRaw = getVariantsGroupedForSubCategory(product, subCategoryId);
+            const scenarioId = getActiveDoorRoomScenario();
+            const scenarioDef = scenarioId ? NEBRAS_DOOR_ROOM_SCENARIOS.find(function(s) { return s.id === scenarioId; }) : null;
+            const items = scenarioDef
+                ? itemsRaw.filter(function(item) { return variantMatchesDoorScenario(item.variant, scenarioDef); })
+                : itemsRaw;
             const shopable = opts.showShopActions !== false && productHasShop(product);
             const subLabel = lang === 'en' ? (sub.labelEn || sub.labelAr) : (sub.labelAr || sub.labelEn);
             const subDesc = lang === 'en' ? (sub.descEn || sub.descAr) : (sub.descAr || sub.descEn);
@@ -3542,7 +3766,9 @@
             const cards = items.map(function(item) {
                 return buildVariantSkuCardHtml(product, item.variant, item.index, lang, shopable, ui);
             }).join('');
-            return backBtn +
+            return (isWpcDoorsProduct(product) ? buildStoreWelcomeHeroHtml(product, lang, ui) : '') +
+                buildStoreDoorRoomActiveChipHtml(lang, ui) +
+                backBtn +
                 '<section class="nebras-store-subcategory-page nebras-store-subcategory-page--premium" data-sub-id="' + escapeHtmlAttr(subCategoryId) + '">' +
                 '<header class="nebras-store-subsection-banner">' +
                 '<div class="nebras-store-subsection-banner-text">' +
@@ -5169,6 +5395,9 @@
                 (img ? ' nebras-store-sku-media--has-image' : '');
             const imgClass = 'nebras-store-sku-img nebras-clickable-media' + (isWpcReady ? ' nebras-store-sku-img--wpc' : '');
             const awaitingLabel = ui.storeSkuAwaitingImage || 'الصورة من لوحة إدارة المحتوى';
+            const previewBtn = img
+                ? ('<button type="button" class="nebras-store-sku-preview-btn" onclick="event.stopPropagation();openStoreSkuQuickPreview(\'' + pid + '\',' + idx + ')" title="' + escapeHtmlAttr(ui.storeQuickPreviewTitle || 'معاينة سريعة') + '" aria-label="' + escapeHtmlAttr(ui.storeQuickPreviewTitle || 'معاينة سريعة') + '"><i class="fas fa-eye"></i></button>')
+                : '';
             const media = isWpcReady && !baseImg
                 ? '<div class="nebras-store-sku-media nebras-store-sku-media--wpc-door nebras-store-sku-media--awaiting-image"><span class="nebras-store-sku-awaiting-image"><i class="fas fa-camera"></i> ' + escapeHtmlAttr(awaitingLabel) + '</span></div>'
                 : (img
@@ -5180,7 +5409,7 @@
                 ? (' class="nebras-store-sku-card nebras-store-sku-card--wpc-ready nebras-store-card--shop' + (compact ? ' nebras-store-sku-card--compact' : '') + '" data-product-id="' + escapeHtmlAttr(product.id) + '" data-variant-index="' + idx + '" data-selected-roll-index="0"')
                 : (' class="nebras-store-sku-card nebras-store-card--shop' + (compact ? ' nebras-store-sku-card--compact' : '') + '"');
             if (compact) {
-                return '<article' + cardAttrs + ' title="' + escapeHtmlAttr(label) + '">' + media +
+                return '<article' + cardAttrs + ' title="' + escapeHtmlAttr(label) + '">' + previewBtn + media +
                     '<div class="nebras-store-sku-body nebras-store-sku-body--compact">' +
                     '<div class="nebras-store-sku-price nebras-store-card-price-block">' + formatVariantPriceBlock(v.price, lang) + '</div>' +
                     addBtn +
@@ -5197,7 +5426,7 @@
             const rollPicker = (isWpcReady && variantSupportsWpcRollColorPicker(v) && baseImg)
                 ? buildWpcStoreRollPickerHtml(product.id, idx, lang, ui) : '';
             const displayTitle = [type, size].filter(Boolean).join(' · ') || label;
-            return '<article' + cardAttrs + '>' + media +
+            return '<article' + cardAttrs + '>' + previewBtn + media +
                 '<div class="nebras-store-sku-body nebras-store-card-body">' +
                 '<span class="nebras-store-card-tag">' + escapeHtmlAttr(categoryTag) + '</span>' +
                 '<strong class="nebras-store-sku-name nebras-store-card-title">' + escapeHtmlAttr(displayTitle) + '</strong>' +
@@ -5404,10 +5633,14 @@
                 ? '<button type="button" class="nebras-store-card-cart" onclick="event.stopPropagation();addVariantIndexToCart(\'' + String(item.productId).replace(/'/g, "\\'") + '\',' + item.variantIndex + ',1)"><i class="fas fa-cart-plus"></i> ' + escapeHtmlAttr(ui.storeCardAddToCart || ui.addVariantToCart || 'أضف للسلة') + '</button>'
                 : '<button type="button" class="nebras-store-card-cart nebras-store-card-cart--ghost" onclick="event.stopPropagation();' + onClick + '"><i class="fas fa-search-plus"></i> ' + escapeHtmlAttr(ui.storeCardViewDetails || ui.iconInnerOpenProduct || 'تفاصيل المنتج') + '</button>';
             const titleLine = modelLine || item.productTitle || item.title;
+            const previewBtn = item.image && item.variantIndex >= 0
+                ? ('<button type="button" class="nebras-store-card-preview-btn" onclick="event.stopPropagation();openStoreSkuQuickPreview(\'' + String(item.productId).replace(/'/g, "\\'") + '\',' + item.variantIndex + ')" title="' + escapeHtmlAttr(ui.storeQuickPreviewTitle || 'معاينة سريعة') + '" aria-label="' + escapeHtmlAttr(ui.storeQuickPreviewTitle || 'معاينة سريعة') + '"><i class="fas fa-eye"></i></button>')
+                : '';
             return '<article class="nebras-store-catalog-card nebras-store-catalog-card--premium nebras-store-card--shop" role="button" tabindex="0" onclick="' + onClick + '" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){' + onClick + '}">' +
                 '<span class="nebras-store-card-promo">' + escapeHtmlAttr(ui.storeCardFactoryBadge || 'مصنع نبراس') + '</span>' +
                 stockBadge +
                 '<span class="nebras-store-catalog-media nebras-store-card-media">' +
+                previewBtn +
                 (item.image
                     ? '<img class="nebras-clickable-media" src="' + escapeHtmlAttr(item.image) + '" data-full-src="' + escapeHtmlAttr(item.image) + '" alt="' + escapeHtmlAttr(titleLine) + '" loading="lazy" decoding="async" title="' + escapeHtmlAttr(ui.lightboxOpenHint || 'اضغط للتكبير') + '">'
                     : '<span class="nebras-store-catalog-placeholder"><i class="fas fa-box"></i></span>') +
@@ -30601,6 +30834,10 @@
         window.openStoreSubCategory = openStoreSubCategory;
         window.pickWpcStoreSkuRoll = pickWpcStoreSkuRoll;
         window.initWpcStoreSkuRollPickers = initWpcStoreSkuRollPickers;
+        window.openStoreDoorRoomScenario = openStoreDoorRoomScenario;
+        window.openStoreSkuQuickPreview = openStoreSkuQuickPreview;
+        window.closeStoreSkuQuickPreview = closeStoreSkuQuickPreview;
+        window.clearStoreDoorRoomScenario = clearStoreDoorRoomScenario;
         window.openProductFromWorkspaceHub = openProductFromWorkspaceHub;
         window.openCustomerComplaints = openCustomerComplaints;
         window.openBankAccountCard = openBankAccountCard;
