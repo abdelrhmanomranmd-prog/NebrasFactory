@@ -2908,11 +2908,11 @@
 
         /** منطقة تلوين الرولّة — clip-path على لوح الباب فقط */
         const WPC_DOOR_TINT_PROFILES = {
-            flat: { clip: '7% 13% 7% 13%' },
-            u: { clip: '6% 11% 6% 11%' },
-            lib: { clip: '7% 13% 7% 13%' },
-            'leaf-quarter': { clip: '6% 7% 6% 7%' },
-            sliding: { clip: '24% 5% 24% 5%' }
+            flat: { clip: '8% 14% 8% 14%', maskSize: '86% auto', maskPosition: 'center 50%' },
+            u: { clip: '7% 12% 7% 12%', maskSize: '84% auto', maskPosition: 'center 52%' },
+            lib: { clip: '8% 14% 8% 14%', maskSize: '86% auto', maskPosition: 'center 50%' },
+            'leaf-quarter': { clip: '6% 7% 6% 7%', maskSize: '78% auto', maskPosition: 'center 48%' },
+            sliding: { clip: '24% 5% 24% 5%', maskSize: '68% auto', maskPosition: 'center 46%' }
         };
 
         function getWpcDoorClipPath(variant) {
@@ -2962,9 +2962,44 @@
         function applyWpcDoorTintRegion(stack, profileKey) {
             if (!stack) return;
             const region = WPC_DOOR_TINT_PROFILES[profileKey] || WPC_DOOR_TINT_PROFILES.flat;
-            const clip = region.clip || '7% 13% 7% 13%';
+            const clip = region.clip || '8% 14% 8% 14%';
             stack.style.setProperty('--wpc-door-clip', clip);
             stack.setAttribute('data-tint-profile', profileKey || 'flat');
+        }
+
+        function clearWpcStoreDoorPanelLayer(panelLayer) {
+            if (!panelLayer) return;
+            panelLayer.style.backgroundColor = '';
+            panelLayer.style.backgroundImage = '';
+            panelLayer.style.backgroundSize = '';
+            panelLayer.style.backgroundPosition = '';
+            panelLayer.style.filter = '';
+            panelLayer.style.opacity = '0';
+            panelLayer.style.clipPath = '';
+            panelLayer.style.webkitClipPath = '';
+            panelLayer.style.webkitMaskImage = '';
+            panelLayer.style.maskImage = '';
+            panelLayer.style.webkitMaskSize = '';
+            panelLayer.style.maskSize = '';
+            panelLayer.style.webkitMaskPosition = '';
+            panelLayer.style.maskPosition = '';
+            panelLayer.style.mixBlendMode = '';
+        }
+
+        /** قناع بكسلي — يلوّن لوح الباب فقط دون الإطار/البرواز */
+        function applyWpcStoreDoorPanelMask(panelLayer, profileKey) {
+            if (!panelLayer) return;
+            const region = WPC_DOOR_TINT_PROFILES[profileKey] || WPC_DOOR_TINT_PROFILES.flat;
+            const maskUrl = resolveDisplayMediaUrl(NEBRAS_DOOR_LEAF_MASK);
+            const m = 'url("' + String(maskUrl || NEBRAS_DOOR_LEAF_MASK).replace(/"/g, '') + '")';
+            panelLayer.style.webkitMaskImage = m;
+            panelLayer.style.maskImage = m;
+            panelLayer.style.webkitMaskSize = region.maskSize || 'contain';
+            panelLayer.style.maskSize = region.maskSize || 'contain';
+            panelLayer.style.webkitMaskPosition = region.maskPosition || 'center center';
+            panelLayer.style.maskPosition = region.maskPosition || 'center center';
+            panelLayer.style.webkitMaskRepeat = 'no-repeat';
+            panelLayer.style.maskRepeat = 'no-repeat';
         }
 
         function resolveWpcCatalogPhotoForVariant(variant) {
@@ -3122,12 +3157,8 @@
             if (!baseSrc) {
                 img.style.filter = '';
                 if (stack) {
-                    stack.classList.remove('has-door-roll-tint', 'has-door-roll-tint--photo', 'has-door-roll-tint--clip-panel');
-                    if (panelLayer) {
-                        panelLayer.style.filter = '';
-                        panelLayer.style.backgroundImage = '';
-                        panelLayer.style.opacity = '0';
-                    }
+                    stack.classList.remove('has-door-roll-tint', 'has-door-roll-tint--photo', 'has-door-roll-tint--clip-panel', 'has-door-roll-tint--mask-panel');
+                    clearWpcStoreDoorPanelLayer(panelLayer);
                 }
                 card.classList.remove('is-roll-color-live');
                 card.removeAttribute('data-active-roll-hex');
@@ -3141,19 +3172,26 @@
             if (!roll) return;
             if (img.getAttribute('src') !== baseSrc) img.src = baseSrc;
             const rollFilter = isPhoto ? buildWpcStoreRollCssFilterForPhoto(roll.hex) : buildWpcStoreRollCssFilter(roll.hex);
-            if (stack && variant) applyWpcDoorTintRegion(stack, getWpcDoorTintProfile(variant));
+            const profileKey = variant ? getWpcDoorTintProfile(variant) : 'flat';
+            if (stack && variant) applyWpcDoorTintRegion(stack, profileKey);
             if (isPhoto && stack && panelLayer) {
                 img.style.filter = 'none';
                 img.style.transition = 'transform 0.35s ease';
-                const clip = variant ? getWpcDoorClipPath(variant) : (stack.style.getPropertyValue('--wpc-door-clip') || '7% 13% 7% 13%');
-                const displaySrc = resolveDisplayMediaUrl(baseSrc);
-                panelLayer.style.backgroundImage = 'url("' + displaySrc.replace(/"/g, '') + '")';
-                panelLayer.style.clipPath = 'inset(' + clip + ')';
-                panelLayer.style.webkitClipPath = 'inset(' + clip + ')';
-                panelLayer.style.filter = rollFilter;
+                clearWpcStoreDoorPanelLayer(panelLayer);
+                applyWpcStoreDoorPanelMask(panelLayer, profileKey);
+                const rollState = buildWpcStoreRollStateFromCatalog(roll, rollIdx);
+                const texPath = rollState.swatchUrl ? String(rollState.swatchUrl).split('?')[0] : '';
+                const texUrl = texPath ? resolveDisplayMediaUrl(texPath) : '';
+                const hex = roll.hex || '#b8bcc4';
+                panelLayer.style.backgroundColor = hex;
+                panelLayer.style.backgroundImage = texUrl ? ('url("' + texUrl.replace(/"/g, '') + '")') : 'none';
+                panelLayer.style.backgroundSize = 'cover';
+                panelLayer.style.backgroundPosition = 'center';
+                panelLayer.style.filter = 'contrast(1.08) saturate(1.12) brightness(0.94)';
                 panelLayer.style.opacity = '1';
-                stack.classList.add('has-door-roll-tint', 'has-door-roll-tint--clip-panel');
-                stack.classList.remove('has-door-roll-tint--panel-only', 'has-door-roll-tint--photo');
+                panelLayer.style.mixBlendMode = 'multiply';
+                stack.classList.add('has-door-roll-tint--mask-panel');
+                stack.classList.remove('has-door-roll-tint', 'has-door-roll-tint--clip-panel', 'has-door-roll-tint--panel-only', 'has-door-roll-tint--photo');
             } else {
                 img.style.transition = 'filter 0.38s ease, transform 0.38s ease';
                 img.style.filter = rollFilter;
