@@ -1,4 +1,4 @@
-/* ═══ نبراس hrws287 — بطاقات المتجر (Alghomlas-inspired · inside store only) ═══ */
+/* ═══ نبراس hrws288 — بطاقات المتجر (Alghomlas-inspired · inside store only) ═══ */
 
 .nebras-store-card--shop {
     --store-card-accent: #007a8c;
@@ -111,6 +111,63 @@
 .nebras-store-card-accessory--excluded {
     background: rgba(100, 116, 139, 0.12);
     color: #475569;
+}
+
+.nebras-store-card-media img.nebras-clickable-media {
+    cursor: zoom-in;
+}
+
+.nebras-store-card-media {
+    position: relative;
+}
+
+.nebras-store-card-media:has(img.nebras-clickable-media)::after {
+    content: '\f00e';
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    position: absolute;
+    bottom: 10px;
+    inset-inline-start: 10px;
+    width: 28px;
+    height: 28px;
+    border-radius: 999px;
+    background: rgba(13, 40, 64, 0.72);
+    color: #fff;
+    font-size: 0.72rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    z-index: 2;
+}
+
+.nebras-store-card-price-block .variant-price-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    margin-top: 4px;
+}
+
+.nebras-store-card-price-block .variant-price-ex {
+    font-size: 1.05rem;
+    font-weight: 800;
+    color: var(--store-card-price);
+}
+
+.nebras-store-card-price-block .variant-price-inc {
+    font-size: 0.92rem;
+    font-weight: 800;
+    color: var(--store-card-accent);
+}
+
+.nebras-store-card-price-block .variant-price-note {
+    font-size: 0.72rem;
+    color: rgba(35, 31, 30, 0.55);
+}
+
+.nebras-store-card-price-block .variant-price-vat-bridge {
+    font-size: 0.68rem;
+    color: rgba(35, 31, 30, 0.45);
 }
 
 .nebras-store-card-price-row {

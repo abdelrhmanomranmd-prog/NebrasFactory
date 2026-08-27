@@ -3113,16 +3113,22 @@
             const img = stack ? stack.querySelector('img.nebras-store-sku-img--wpc, img.nebras-store-sku-img') : card.querySelector('.nebras-store-sku-media img');
             if (!img) return;
             const baseSrc = img.getAttribute('data-base-src') || img.getAttribute('src') || '';
-            const rollPick = catalogIndex != null && !isNaN(catalogIndex);
-            if (baseSrc) {
-                img.src = baseSrc;
+            const isPhoto = isWpcCatalogPhotoPath(baseSrc);
+            const productId = card.getAttribute('data-product-id');
+            const variantIndex = parseInt(card.getAttribute('data-variant-index'), 10);
+            const product = productId ? siteProducts.find(function(p) { return p && p.id === productId; }) : null;
+            const variant = product && !isNaN(variantIndex) ? (product.variants || [])[variantIndex] : null;
+            const panelLayer = stack ? stack.querySelector('.nebras-store-sku-door-panel-color') : null;
+            if (!baseSrc) {
                 img.style.filter = '';
-                img.style.transition = '';
-            }
-            if (stack) {
-                stack.classList.remove('has-door-roll-tint', 'has-door-roll-tint--photo', 'has-door-roll-tint--clip-panel', 'has-door-roll-tint--panel-only');
-            }
-            if (!rollPick) {
+                if (stack) {
+                    stack.classList.remove('has-door-roll-tint', 'has-door-roll-tint--photo', 'has-door-roll-tint--clip-panel');
+                    if (panelLayer) {
+                        panelLayer.style.filter = '';
+                        panelLayer.style.backgroundImage = '';
+                        panelLayer.style.opacity = '0';
+                    }
+                }
                 card.classList.remove('is-roll-color-live');
                 card.removeAttribute('data-active-roll-hex');
                 card.removeAttribute('data-selected-roll-index');
@@ -3130,12 +3136,36 @@
                 return;
             }
             const colors = getNebrasColorCatalog();
-            const roll = colors[catalogIndex] || colors[0];
+            const rollIdx = catalogIndex != null && !isNaN(catalogIndex) ? catalogIndex : 0;
+            const roll = colors[rollIdx] || colors[0];
             if (!roll) return;
-            img.setAttribute('data-composed-roll', String(catalogIndex));
+            if (img.getAttribute('src') !== baseSrc) img.src = baseSrc;
+            const rollFilter = isPhoto ? buildWpcStoreRollCssFilterForPhoto(roll.hex) : buildWpcStoreRollCssFilter(roll.hex);
+            if (stack && variant) applyWpcDoorTintRegion(stack, getWpcDoorTintProfile(variant));
+            if (isPhoto && stack && panelLayer) {
+                img.style.filter = 'none';
+                img.style.transition = 'transform 0.35s ease';
+                const clip = variant ? getWpcDoorClipPath(variant) : (stack.style.getPropertyValue('--wpc-door-clip') || '7% 13% 7% 13%');
+                const displaySrc = resolveDisplayMediaUrl(baseSrc);
+                panelLayer.style.backgroundImage = 'url("' + displaySrc.replace(/"/g, '') + '")';
+                panelLayer.style.clipPath = 'inset(' + clip + ')';
+                panelLayer.style.webkitClipPath = 'inset(' + clip + ')';
+                panelLayer.style.filter = rollFilter;
+                panelLayer.style.opacity = '1';
+                stack.classList.add('has-door-roll-tint', 'has-door-roll-tint--clip-panel');
+                stack.classList.remove('has-door-roll-tint--panel-only', 'has-door-roll-tint--photo');
+            } else {
+                img.style.transition = 'filter 0.38s ease, transform 0.38s ease';
+                img.style.filter = rollFilter;
+                if (stack) {
+                    stack.classList.remove('has-door-roll-tint--clip-panel', 'has-door-roll-tint--panel-only');
+                    applyDoorRollTintToElements(stack, buildWpcStoreRollStateFromCatalog(roll, rollIdx));
+                }
+            }
+            img.setAttribute('data-composed-roll', String(rollIdx));
             card.classList.add('is-roll-color-live');
             card.setAttribute('data-active-roll-hex', roll.hex || '');
-            card.setAttribute('data-selected-roll-index', String(catalogIndex));
+            card.setAttribute('data-selected-roll-index', String(rollIdx));
         }
 
         function getProductPhotoWatermarkSettings() {
@@ -3181,6 +3211,7 @@
                 ' data-wpc-photo="' + (isPhoto ? '1' : '0') + '"' +
                 ' alt="' + escapeHtmlAttr(label) + '" loading="lazy" decoding="async"' +
                 ' title="' + escapeHtmlAttr(ui.lightboxOpenHint || 'اضغط للتكبير') + '">' +
+                (isPhoto ? '<div class="nebras-store-sku-door-panel-color" aria-hidden="true"></div>' : '') +
                 buildProductPhotoWatermarkHtml() +
                 '</div></div>';
         }
@@ -3188,7 +3219,7 @@
         function buildWpcStoreRollPickerHtml(productId, variantIndex, lang, ui) {
             const colors = getNebrasColorCatalog();
             const label = ui.wpcStoreRollPickerLabel || 'اختر لون الرولّة — معاينة حية على الباب';
-            const hint = ui.wpcStoreRollPickerHint || 'اختر لون الرولّة للطلب — الصورة ثابتة بدون طبقات';
+            const hint = ui.wpcStoreRollPickerHint || 'اختر لون الرولّة — المعاينة الحية تطبّق اللون على لوح الباب';
             const safePid = String(productId).replace(/'/g, "\\'");
             const swatches = colors.map(function(item, idx) {
                 const code = String(item.code || getRollCatalogCode(item.nebCode || getNebrasRollCodeByIndex(idx))).trim();
@@ -3249,7 +3280,8 @@
                 const variant = product && (product.variants || [])[variantIndex];
                 if (!variant || !getWpcStoreSkuBaseImage(variant)) return;
                 if (!variantSupportsWpcRollColorPicker(variant)) return;
-                applyWpcStoreSkuRollTint(card, null);
+                const startIdx = parseInt(card.getAttribute('data-selected-roll-index') || '0', 10);
+                applyWpcStoreSkuRollTint(card, isNaN(startIdx) ? 0 : startIdx);
             });
         }
 
@@ -5150,7 +5182,7 @@
             if (compact) {
                 return '<article' + cardAttrs + ' title="' + escapeHtmlAttr(label) + '">' + media +
                     '<div class="nebras-store-sku-body nebras-store-sku-body--compact">' +
-                    formatStoreCardPriceHtml(v.price, lang, ui) +
+                    '<div class="nebras-store-sku-price nebras-store-card-price-block">' + formatVariantPriceBlock(v.price, lang) + '</div>' +
                     addBtn +
                     '</div></article>';
             }
@@ -5173,7 +5205,7 @@
                 accessoryHtml +
                 (specs.length ? '<ul class="nebras-store-sku-specs nebras-store-card-specs">' + specs.join('') + '</ul>' : '') +
                 rollPicker +
-                formatStoreCardPriceHtml(v.price, lang, ui) +
+                '<div class="nebras-store-sku-price nebras-store-card-price-block">' + formatVariantPriceBlock(v.price, lang) + '</div>' +
                 addBtn +
                 '</div></article>';
         }
@@ -5365,7 +5397,9 @@
             const stockBadge = item.inStock
                 ? '<span class="nebras-store-card-stock nebras-store-card-stock--in">' + escapeHtmlAttr(ui.storeFilterInStock || 'متاح') + '</span>'
                 : '<span class="nebras-store-card-stock nebras-store-card-stock--out">' + escapeHtmlAttr(ui.storeFilterOutOfStock || 'غير متاح') + '</span>';
-            const priceHtml = formatStoreCardPriceHtml(item.price, lang, ui);
+            const priceHtml = item.price > 0
+                ? ('<div class="nebras-store-catalog-price nebras-store-card-price-block">' + formatVariantPriceBlock(item.price, lang) + '</div>')
+                : ('<span class="nebras-store-card-price nebras-store-card-price--request">' + escapeHtmlAttr(ui.catalogHubPriceOnRequest || 'عند الطلب') + '</span>');
             const cartBtn = item.shopEnabled && item.inStock && item.variantIndex >= 0
                 ? '<button type="button" class="nebras-store-card-cart" onclick="event.stopPropagation();addVariantIndexToCart(\'' + String(item.productId).replace(/'/g, "\\'") + '\',' + item.variantIndex + ',1)"><i class="fas fa-cart-plus"></i> ' + escapeHtmlAttr(ui.storeCardAddToCart || ui.addVariantToCart || 'أضف للسلة') + '</button>'
                 : '<button type="button" class="nebras-store-card-cart nebras-store-card-cart--ghost" onclick="event.stopPropagation();' + onClick + '"><i class="fas fa-search-plus"></i> ' + escapeHtmlAttr(ui.storeCardViewDetails || ui.iconInnerOpenProduct || 'تفاصيل المنتج') + '</button>';
@@ -5375,7 +5409,7 @@
                 stockBadge +
                 '<span class="nebras-store-catalog-media nebras-store-card-media">' +
                 (item.image
-                    ? '<img src="' + escapeHtmlAttr(item.image) + '" alt="' + escapeHtmlAttr(titleLine) + '" loading="lazy" decoding="async">'
+                    ? '<img class="nebras-clickable-media" src="' + escapeHtmlAttr(item.image) + '" data-full-src="' + escapeHtmlAttr(item.image) + '" alt="' + escapeHtmlAttr(titleLine) + '" loading="lazy" decoding="async" title="' + escapeHtmlAttr(ui.lightboxOpenHint || 'اضغط للتكبير') + '">'
                     : '<span class="nebras-store-catalog-placeholder"><i class="fas fa-box"></i></span>') +
                 '</span>' +
                 '<span class="nebras-store-catalog-body nebras-store-card-body">' +
@@ -22070,7 +22104,7 @@
             document.body.addEventListener('click', function(e) {
                 const img = e.target;
                 if (!img || img.tagName !== 'IMG' || !img.classList.contains('nebras-clickable-media')) return;
-                if (img.closest('button, .variant-add-btn, .nebras-store-sku-add-btn, .nebras-store-roll-swatch')) return;
+                if (img.closest('button, .variant-add-btn, .nebras-store-sku-add-btn, .nebras-store-roll-swatch, .nebras-store-card-cart')) return;
                 if (img.closest('.nebras-store-sku-media--awaiting-image, .nebras-store-sku-media--empty')) return;
                     e.preventDefault();
                     e.stopPropagation();
