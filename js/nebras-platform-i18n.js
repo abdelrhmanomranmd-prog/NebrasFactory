@@ -1,11 +1,11 @@
 /**
- * نبراس hrws280 — i18n: العربية فوراً · EN/ZH كسول عند تغيير اللغة
+ * نبراس hrws281 — i18n: العربية فوراً · EN/ZH كسول عند تغيير اللغة
  * يُحمَّل بعد nebras-platform.js (NEBRAS_BRAND_* · getNebrasBrand*)
  */
 (function(global) {
     'use strict';
 
-    var VER = 'hrws280';
+    var VER = 'hrws281';
     var localeInflight = Object.create(null);
     var localeLoaded = { ar: true };
 
@@ -67,7 +67,7 @@
                 heroStatYears: 'سنوات خبرة',
                 doorDesignerHardwareLabel: 'المقبض والقطاعات',
                 doorDesignerReset: 'إعادة الضبط',
-                doorDesignerCanvasHint: 'نموذج درفة WPC واقعي — كل خيار يستبدل السابق. «إعادة الضبط» ترجعك لنقطة الصفر.',
+                doorDesignerCanvasHint: 'صورة باب WPC حقيقي من مصنع نبراس — كل اختيار يبدّل الصورة فوراً — اللون من الرولّة يتناسق مع الغرفة',
                 doorDesignerStudioTitle: 'صمّم بابك',
                 doorDesignerAdvancedLabel: 'خيارات إضافية (أنواع، مقاس، مقبض…)',
                 adminLoginTitle: 'تسجيل دخول الإدارة',
@@ -102,8 +102,8 @@
                 iconOverlayClose: 'إغلاق',
                 companySocialSubtitle: 'تابعوا قنوات مصنع نبراس الرسمية.',
                 visitorQuickDoorDesigner: 'صمّم بابك مع نبراس',
-                doorDesignerHeroSub: 'استوديو تصميم WPC — نموذج ثلاثي الأبعاد 360° ومواد من كتالوج الألوان',
-                doorDesignerIntro: 'اختر نوع الباب (إيدج باند · يو شانيل · سحاب)، النموذج، الديكور الخارجي فلات/كيرف، التكسية العلوية، ورولّة اللون — معاينة فورية.',
+                doorDesignerHeroSub: 'استوديو تصميم WPC — صور حقيقية من المصنع + 20 رولّة لون',
+                doorDesignerIntro: 'اختر نوع الباب، النموذج، الديكور، التكسية، ورولّة اللون — معاينة فورية بصورة حقيقية من المصنع.',
                 doorDesignerPresetsLabel: 'نماذج جاهزة',
                 doorDesignerMechanismLabel: 'آلية الفتح',
                 doorDesignerLeafLabel: 'عدد الدلف',
@@ -130,14 +130,13 @@
                 doorDesignerDisabled: 'المصمم غير متاح حالياً.',
                 doorDesignerPendingData: 'تم حذف بيانات مصمم الأبواب. أرسل البيانات الجديدة بالترتيب لإعادة البناء.',
                 doorDesignerDataOnlyHint: 'مرحلة إدخال البيانات — المعاينة البصرية للنموذج لاحقاً. الألوان: 20 رولّة N- مستخرجة من كتالوج نبراس.',
-                doorDesigner3dHint: 'غرفة واقعية + باب WPC — اللون يغيّر الباب والغرفة معاً — اسحبي 360°',
+                doorDesigner3dHint: 'صورة باب حقيقي — اسحب 360° — اللون من رولّة WPC يتناسق مع الغرفة',
                 doorDesigner3dLoading: 'جاري تحميل النموذج ثلاثي الأبعاد…',
                 doorDesigner3dFail: 'تعذّر تحميل المعاينة ثلاثية الأبعاد. أعد تحميل الصفحة (Ctrl+F5) أو افتح الموقع عبر http://localhost:5500',
                 doorDesigner3dAria: 'معاينة باب WPC ثلاثي الأبعاد — قابلة للتدوير',
-                doorDesignerCompositorHint: 'اسحب للدوران 360° حول الباب — عجلة الفأرة للتقريب والتبعيد',
-                doorDesignerCompositorLoading: 'جاري تجميع طبقات التصميم…',
-                doorDesignerCompositorAria: 'معاينة باب ديناميكية بطبقات — أسلوب الاستوديو',
-                doorDesignerCanvasHint: 'غرفة واقعية + باب WPC حقيقي — كل اختيار يتغيّر فعلياً — اللون يتناسق مع الغرفة',
+                doorDesignerCompositorHint: 'صورة باب حقيقي — اسحب 360° — عجلة الفأرة للتقريب',
+                doorDesignerCompositorLoading: 'جاري تحميل صورة الباب من المصنع…',
+                doorDesignerCompositorAria: 'معاينة باب WPC بصورة مصنع حقيقية — قابلة للتدوير',
                 partnersSuccessSubtitle: 'شركاؤنا في النجاح',
                 lightboxOpenHint: 'اضغط للتكبير — عرض بالدقة الكاملة',
                 lightboxImageAlt: 'صورة',

@@ -971,7 +971,7 @@
         }
 
         const DOOR_PHOTO_PRESET_ROOT = 'images/doors/presets/';
-        const DOOR_PHOTO_PRESET_CACHE = '269';
+        const DOOR_PHOTO_PRESET_CACHE = '281';
         /** صور أبواب المصنع الحقيقية في المعاينة — SVG احتياطي عند غياب الصورة */
         const DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS = true;
         let doorDesignerPreviewRaf = 0;
@@ -1378,7 +1378,16 @@
             'sliding|slide-2|outer-flat|plain': DOOR_PHOTO_PRESET_ROOT + 'sliding/slide-2/outer-flat-transom.png',
             'sliding|slide-2|outer-curve|plain': DOOR_PHOTO_PRESET_ROOT + 'sliding/slide-2/outer-curve-transom.png',
             'sliding|slide-2|outer-flat|transom': DOOR_PHOTO_PRESET_ROOT + 'sliding/slide-2/outer-flat-plain.png',
-            'sliding|slide-2|outer-curve|transom': DOOR_PHOTO_PRESET_ROOT + 'sliding/slide-2/outer-curve-plain.png'
+            'sliding|slide-2|outer-curve|transom': DOOR_PHOTO_PRESET_ROOT + 'sliding/slide-2/outer-curve-plain.png',
+            /* u-channel — تكسية علوية عبر composite-transom (plain + cap) */
+            'u-channel|u-plain|outer-flat|transom': DOOR_PHOTO_PRESET_ROOT + 'u-channel/u-plain/outer-flat-plain.png',
+            'u-channel|u-plain|outer-curve|transom': DOOR_PHOTO_PRESET_ROOT + 'u-channel/u-plain/outer-curve-plain.png',
+            'u-channel|u-slats|outer-flat|transom': DOOR_PHOTO_PRESET_ROOT + 'u-channel/u-slats/outer-flat-plain.png',
+            'u-channel|u-slats|outer-curve|transom': DOOR_PHOTO_PRESET_ROOT + 'u-channel/u-slats/outer-curve-plain.png',
+            'u-channel|u-classic|outer-flat|transom': DOOR_PHOTO_PRESET_ROOT + 'u-channel/u-classic/outer-flat-plain.png',
+            'u-channel|u-classic|outer-curve|transom': DOOR_PHOTO_PRESET_ROOT + 'u-channel/u-classic/outer-curve-plain.png',
+            'u-channel|u-glass|outer-flat|transom': DOOR_PHOTO_PRESET_ROOT + 'u-channel/u-glass/outer-flat-plain.png',
+            'u-channel|u-glass|outer-curve|transom': DOOR_PHOTO_PRESET_ROOT + 'u-channel/u-glass/outer-curve-plain.png'
         };
 
         const DOOR_PHOTO_TRANSOM_CAP = {
@@ -1413,6 +1422,15 @@
             const key = type + '|' + model + '|' + outer + '|' + decor;
             const direct = DOOR_PHOTO_PRESET_MAP[key];
             if (direct) return { url: direct, mode: 'full', transomCap: '' };
+            /* أقرب صورة مصنع — نفس النوع/الموديل بزاوية أخرى */
+            const altOuter = outer === 'outer-curve' ? 'outer-flat' : 'outer-curve';
+            const altKey = type + '|' + model + '|' + altOuter + '|' + decor;
+            if (DOOR_PHOTO_PRESET_MAP[altKey]) {
+                return { url: DOOR_PHOTO_PRESET_MAP[altKey], mode: 'full', transomCap: '' };
+            }
+            if (DOOR_PHOTO_PRESET_MAP[plainKey]) {
+                return { url: DOOR_PHOTO_PRESET_MAP[plainKey], mode: 'full', transomCap: '' };
+            }
             return null;
         }
 
@@ -1583,10 +1601,16 @@
             defaultBase: NEBRAS_DOOR_PHOTO_DEFAULT,
             leafMask: NEBRAS_DOOR_LEAF_MASK,
             bases: {
-                'edge-band|edge-1': NEBRAS_DOOR_PHOTO_DEFAULT,
-                'edge-band|edge-2': NEBRAS_DOOR_PHOTO_DEFAULT,
-                'u-channel|default': NEBRAS_DOOR_PHOTO_DEFAULT,
-                'sliding|default': NEBRAS_DOOR_PHOTO_DEFAULT
+                'edge-band|edge-1': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-1/outer-flat-plain.png',
+                'edge-band|edge-2': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-2/outer-flat-plain.png',
+                'u-channel|u-plain': DOOR_PHOTO_PRESET_ROOT + 'u-channel/u-plain/outer-flat-plain.png',
+                'u-channel|u-slats': DOOR_PHOTO_PRESET_ROOT + 'u-channel/u-slats/outer-flat-plain.png',
+                'u-channel|u-classic': DOOR_PHOTO_PRESET_ROOT + 'u-channel/u-classic/outer-flat-plain.png',
+                'u-channel|u-glass': DOOR_PHOTO_PRESET_ROOT + 'u-channel/u-glass/outer-flat-plain.png',
+                'u-channel|default': DOOR_PHOTO_PRESET_ROOT + 'u-channel/u-plain/outer-flat-plain.png',
+                'sliding|slide-1': DOOR_PHOTO_PRESET_ROOT + 'sliding/slide-1/outer-flat-plain.png',
+                'sliding|slide-2': DOOR_PHOTO_PRESET_ROOT + 'sliding/slide-2/outer-flat-plain.png',
+                'sliding|default': DOOR_PHOTO_PRESET_ROOT + 'sliding/slide-1/outer-flat-plain.png'
             },
             overlays: {
                 'outer-curve': 'images/doors/overlays/outer-curve.svg',
@@ -1604,20 +1628,20 @@
 
         const DEFAULT_DOOR_DESIGNER = {
             enabled: true,
-            dataSeed: 'v26-3d-studio-size-matrix',
+            dataSeed: 'v27-photoreal-factory-photos',
             previewModelEnabled: true,
             useCompositorPreview: false,
-            use3dPreview: true,
-            introAr: 'استوديو «صمّم بابك» — اختر نوع الباب، النموذج، الديكور الخارجي، التكسية العلوية، ورولّة اللون (N-1..21 بدون N-12).',
-            introEn: 'Design Your Door — pick door family, model, exterior decor (flat/curve), top cladding, and one of 20 NEBR roll colours.',
-            introZh: '设计您的门 — 选择门型、型号、外饰（平/弧）、顶部包覆及 20 种 NEBR 卷材色。',
+            use3dPreview: false,
+            introAr: 'استوديو «صمّم بابك» — صور حقيقية من مصنع نبراس لكل نوع باب WPC. اختر النموذج والديكور والرولّة — المعاينة فورية كما في المصنع.',
+            introEn: 'Design Your Door — real factory photos for each WPC door type. Pick model, decor, and roll colour — instant photoreal preview.',
+            introZh: '设计您的门 — 每种 WPC 门型使用工厂实拍图，选择型号、装饰与卷材色，即时真实预览。',
             heroImageUrl: 'images/background-quality-managment.jpeg',
             sceneBackgroundUrl: 'images/background-quality-managment.jpeg',
             previewImageUrl: 'images/background-quality-managment.jpeg',
             doorBaseImageUrl: NEBRAS_DOOR_PHOTO_DEFAULT,
             layerManifest: DEFAULT_DOOR_LAYER_MANIFEST,
-            designCanvasMode: '3d',
-            usePhotorealPreview: false,
+            designCanvasMode: 'studio-live',
+            usePhotorealPreview: true,
             types: [
                 { id: 'edge-band', labelAr: 'باب إيدج باند فلات', labelEn: 'Edge-band flat door', labelZh: '封边平板门', icon: 'modern' },
                 { id: 'u-channel', labelAr: 'يو شانيل', labelEn: 'U-channel door', labelZh: 'U槽门', icon: 'classic' },
@@ -22117,10 +22141,10 @@
             }
             if (cfg.enabled !== false) {
                 cfg.previewModelEnabled = true;
-                cfg.designCanvasMode = '3d';
-                cfg.use3dPreview = true;
-                cfg.useCompositorPreview = false;
-                cfg.usePhotorealPreview = false;
+                cfg.designCanvasMode = DEFAULT_DOOR_DESIGNER.designCanvasMode || 'studio-live';
+                cfg.use3dPreview = DEFAULT_DOOR_DESIGNER.use3dPreview === true;
+                cfg.useCompositorPreview = DEFAULT_DOOR_DESIGNER.useCompositorPreview === true;
+                cfg.usePhotorealPreview = DEFAULT_DOOR_DESIGNER.usePhotorealPreview !== false;
             } else if (cfg.previewModelEnabled == null) {
                 cfg.previewModelEnabled = DEFAULT_DOOR_DESIGNER.previewModelEnabled !== false;
             }
@@ -22615,12 +22639,12 @@
         }
 
         function buildDoorStudioLiveHtml(leafMask, hintText) {
-            const hint = hintText || 'اسحب للدوران 360° — يدور تلقائياً — +/− للتكبير';
+            const hint = hintText || 'صورة باب حقيقي من المصنع — اسحب 360° — اللون من رولّة WPC';
             return '<div class="wpc-door-turntable" id="wpc-door-turntable">' +
                 buildDoorDesignerLegacyCanvasHtml('', false, leafMask) +
                 '</div>' +
-                '<span class="nebras-door-3d-badge nebras-door-studio-badge">Studio · 360°</span>' +
-                '<p class="nebras-door-3d-hint"><i class="fas fa-arrows-rotate" aria-hidden="true"></i> ' + hint + '</p>';
+                '<span class="nebras-door-3d-badge nebras-door-studio-badge">Factory Photo · 360°</span>' +
+                '<p class="nebras-door-3d-hint"><i class="fas fa-camera" aria-hidden="true"></i> ' + hint + '</p>';
         }
 
         function buildDoorDesignerLegacyCanvasHtml(doorPhoto, photoreal, leafMask) {

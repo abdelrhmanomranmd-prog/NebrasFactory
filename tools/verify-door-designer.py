@@ -62,10 +62,14 @@ def main():
     else:
         warn('images/rolls directory not found')
 
-    if 'applyDoorRoomHarmony' not in js:
-        err('applyDoorRoomHarmony missing — room colour sync broken')
+    if not re.search(r"designCanvasMode:\s*'studio-live'", js):
+        err('designCanvasMode is not studio-live — photoreal factory photos disabled')
+    if not re.search(r'use3dPreview:\s*false', js):
+        warn('use3dPreview is not false — 3D may override factory photos')
     if 'wpc-door-room-scene' not in css:
         err('wpc-door-room-scene CSS missing — 2D room backdrop broken')
+    if 'applyDoorRoomHarmony' not in js:
+        err('applyDoorRoomHarmony missing — room colour sync broken')
     door3d = os.path.join(ROOT, 'js', 'nebras-door-3d.js')
     if os.path.isfile(door3d):
         d3 = open(door3d, encoding='utf-8').read()
