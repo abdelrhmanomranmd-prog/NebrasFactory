@@ -2908,11 +2908,26 @@
 
         /** منطقة تلوين الرولّة — clip-path على لوح الباب فقط */
         const WPC_DOOR_TINT_PROFILES = {
-            flat: { clip: '8% 14% 8% 14%', maskSize: '86% auto', maskPosition: 'center 50%' },
-            u: { clip: '7% 12% 7% 12%', maskSize: '84% auto', maskPosition: 'center 52%' },
-            lib: { clip: '8% 14% 8% 14%', maskSize: '86% auto', maskPosition: 'center 50%' },
-            'leaf-quarter': { clip: '6% 7% 6% 7%', maskSize: '78% auto', maskPosition: 'center 48%' },
-            sliding: { clip: '24% 5% 24% 5%', maskSize: '68% auto', maskPosition: 'center 46%' }
+            flat: { clip: '11% 18% 11% 18%' },
+            u: { clip: '10% 16% 10% 16%' },
+            lib: { clip: '11% 18% 11% 18%' },
+            'leaf-quarter': { clip: '9% 12% 9% 12%' },
+            sliding: { clip: '26% 6% 26% 6%' }
+        };
+
+        const STORE_WELCOME_REAL_PHOTOS = {
+            'prod-wpc': [
+                'images/catalog/wpc-photos/by-sku-clean/WPC-RDY-FLAT-45-STD.png',
+                'images/catalog/wpc-photos/by-sku-clean/WPC-RDY-U45-STD.png',
+                'images/catalog/wpc-photos/by-sku-clean/WPC-RDY-FLAT-STEEL.png',
+                'images/catalog/wpc-photos/by-sku-clean/WPC-RDY-FLAT-GLASS.png'
+            ],
+            'prod-wpc-raw': [
+                'images/catalog/wpc-photos/08-bone-profile.png',
+                'images/catalog/wpc-photos/10-leaf-section.png',
+                'images/catalog/wpc-photos/20-raw-u-profile.png',
+                'images/catalog/wpc-photos/26-raw-clad-leaf.png'
+            ]
         };
 
         function getWpcDoorClipPath(variant) {
@@ -3061,10 +3076,16 @@
 
         function appendWpcSkuPhotoCacheBust(url) {
             const u = String(url || '').trim();
-            if (!u || u.indexOf('wpc-photos/by-sku/') < 0) return u;
+            if (!u || (u.indexOf('wpc-photos/by-sku/') < 0 && u.indexOf('wpc-photos/by-sku-clean/') < 0)) return u;
             const ver = (typeof window.NEBRAS_DEPLOY_TAG !== 'undefined' && window.NEBRAS_DEPLOY_TAG)
                 ? window.NEBRAS_DEPLOY_TAG : 'live';
             return u + (u.indexOf('?') >= 0 ? '&' : '?') + 'v=' + ver;
+        }
+
+        function preferWpcCleanSkuPhoto(path) {
+            const p = String(path || '').trim();
+            if (p.indexOf('/by-sku/') >= 0) return p.replace('/by-sku/', '/by-sku-clean/');
+            return p;
         }
 
         function getWpcStoreSkuBaseImage(variant) {
@@ -3072,7 +3093,7 @@
             const img = String(variant.image || '').trim();
             if (isAdminManagedProductImage(img)) return img;
             const resolved = resolveWpcCatalogPhotoForVariant(variant) || '';
-            return appendWpcSkuPhotoCacheBust(resolved);
+            return appendWpcSkuPhotoCacheBust(preferWpcCleanSkuPhoto(resolved));
         }
 
         function resolveWpcReadyCatalogImage(variant) {
@@ -3178,20 +3199,20 @@
                 img.style.filter = 'none';
                 img.style.transition = 'transform 0.35s ease';
                 clearWpcStoreDoorPanelLayer(panelLayer);
-                applyWpcStoreDoorPanelMask(panelLayer, profileKey);
-                const rollState = buildWpcStoreRollStateFromCatalog(roll, rollIdx);
-                const texPath = rollState.swatchUrl ? String(rollState.swatchUrl).split('?')[0] : '';
-                const texUrl = texPath ? resolveDisplayMediaUrl(texPath) : '';
-                const hex = roll.hex || '#b8bcc4';
-                panelLayer.style.backgroundColor = hex;
-                panelLayer.style.backgroundImage = texUrl ? ('url("' + texUrl.replace(/"/g, '') + '")') : 'none';
-                panelLayer.style.backgroundSize = 'cover';
-                panelLayer.style.backgroundPosition = 'center';
-                panelLayer.style.filter = 'contrast(1.08) saturate(1.12) brightness(0.94)';
-                panelLayer.style.opacity = '1';
-                panelLayer.style.mixBlendMode = 'multiply';
-                stack.classList.add('has-door-roll-tint--mask-panel');
-                stack.classList.remove('has-door-roll-tint', 'has-door-roll-tint--clip-panel', 'has-door-roll-tint--panel-only', 'has-door-roll-tint--photo');
+                const displaySrc = resolveDisplayMediaUrl(baseSrc);
+                const clip = getWpcDoorClipPath(variant) || (WPC_DOOR_TINT_PROFILES[profileKey] || WPC_DOOR_TINT_PROFILES.flat).clip;
+                panelLayer.style.backgroundImage = 'url("' + String(displaySrc).replace(/"/g, '') + '")';
+                panelLayer.style.backgroundSize = 'contain';
+                panelLayer.style.backgroundPosition = 'center center';
+                panelLayer.style.backgroundRepeat = 'no-repeat';
+                panelLayer.style.backgroundColor = 'transparent';
+                panelLayer.style.clipPath = 'inset(' + clip + ' round 2px)';
+                panelLayer.style.webkitClipPath = 'inset(' + clip + ' round 2px)';
+                panelLayer.style.filter = rollFilter;
+                panelLayer.style.opacity = '0.9';
+                panelLayer.style.mixBlendMode = 'color';
+                stack.classList.add('has-door-roll-tint--clip-panel');
+                stack.classList.remove('has-door-roll-tint', 'has-door-roll-tint--mask-panel', 'has-door-roll-tint--panel-only', 'has-door-roll-tint--photo');
             } else {
                 img.style.transition = 'filter 0.38s ease, transform 0.38s ease';
                 img.style.filter = rollFilter;
@@ -3587,9 +3608,7 @@
         function buildStoreWelcomeHeroHtml(product, lang, ui) {
             if (!product || !isWpcDoorsProduct(product)) return '';
             const isRaw = product.id === 'prod-wpc-raw';
-            const heroImg = isRaw
-                ? 'images/hero-slide-02-wpc-pvc.png'
-                : 'images/hero-slide-05-doors-showcase.png';
+            const photos = (STORE_WELCOME_REAL_PHOTOS[product.id] || STORE_WELCOME_REAL_PHOTOS['prod-wpc']).slice(0, 4);
             const eyebrow = isRaw
                 ? (ui.storeRawWelcomeEyebrow || 'WPC عضم — مصنع نبراس')
                 : (ui.storeDoorsWelcomeEyebrow || 'أبواب WPC جاهزة — مصنع نبراس');
@@ -3612,16 +3631,18 @@
             const badgesHtml = badges.map(function(b) {
                 return '<span class="nebras-store-welcome-badge"><i class="fas ' + escapeHtmlAttr(b.icon) + '"></i> ' + escapeHtmlAttr(b.label) + '</span>';
             }).join('');
-            return '<section class="nebras-store-welcome-hero" aria-label="' + escapeHtmlAttr(title) + '">' +
-                '<div class="nebras-store-welcome-hero-media">' +
-                '<img src="' + escapeHtmlAttr(heroImg) + '" alt="' + escapeHtmlAttr(title) + '" loading="eager" decoding="async">' +
-                '</div>' +
+            const mosaicHtml = photos.map(function(src, idx) {
+                return '<figure class="nebras-store-welcome-mosaic-item"><img src="' + escapeHtmlAttr(src) + '" alt="' + escapeHtmlAttr(title) + ' — ' + String(idx + 1) + '" loading="' + (idx === 0 ? 'eager' : 'lazy') + '" decoding="async"></figure>';
+            }).join('');
+            return '<section class="nebras-store-welcome-hero nebras-store-welcome-hero--real" aria-label="' + escapeHtmlAttr(title) + '">' +
                 '<div class="nebras-store-welcome-hero-copy">' +
                 '<span class="nebras-store-welcome-eyebrow">' + escapeHtmlAttr(eyebrow) + '</span>' +
                 '<h2 class="nebras-store-welcome-title">' + escapeHtmlAttr(title) + '</h2>' +
                 '<p class="nebras-store-welcome-subtitle">' + escapeHtmlAttr(subtitle) + '</p>' +
                 '<div class="nebras-store-welcome-badges">' + badgesHtml + '</div>' +
-                '</div></section>';
+                '</div>' +
+                '<div class="nebras-store-welcome-hero-mosaic" aria-hidden="true">' + mosaicHtml + '</div>' +
+                '</section>';
         }
 
         function buildStoreDoorRoomScenariosHtml(product, lang, ui) {
