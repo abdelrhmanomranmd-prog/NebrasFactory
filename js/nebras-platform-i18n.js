@@ -1,11 +1,11 @@
 /**
- * نبراس hrws282 — i18n: العربية فوراً · EN/ZH كسول عند تغيير اللغة
+ * نبراس hrws283 — i18n: العربية فوراً · EN/ZH كسول عند تغيير اللغة
  * يُحمَّل بعد nebras-platform.js (NEBRAS_BRAND_* · getNebrasBrand*)
  */
 (function(global) {
     'use strict';
 
-    var VER = 'hrws282';
+    var VER = 'hrws283';
     var localeInflight = Object.create(null);
     var localeLoaded = { ar: true };
 
@@ -18,6 +18,16 @@
                     store: '<i class="fas fa-store"></i> المتجر',
                     showroom: '<i class="fas fa-images"></i> المعرض',
                     platform: '<i class="fas fa-globe"></i> المنصة',
+                    worldWpcDoors: '<i class="fas fa-door-open"></i> عالم أبواب WPC',
+                    worldWpcReady: '<i class="fas fa-check-circle"></i> WPC جاهز',
+                    worldWpcRaw: '<i class="fas fa-industry"></i> WPC عضم',
+                    worldAluminum: '<i class="fas fa-border-all"></i> الألومنيوم',
+                    worldPvc: '<i class="fas fa-layer-group"></i> PVC',
+                    wpcDoors: '<i class="fas fa-door-open"></i> عالم أبواب WPC',
+                    wpcReady: '<i class="fas fa-check-circle"></i> WPC جاهز',
+                    wpcRaw: '<i class="fas fa-industry"></i> WPC عضم',
+                    aluminum: '<i class="fas fa-border-all"></i> الألومنيوم',
+                    pvc: '<i class="fas fa-layer-group"></i> PVC',
                     adminVisitor: '<i class="fas fa-user-shield"></i> الإدارة',
                     adminStaff: '<i class="fas fa-user-shield"></i> لوحة التحكم',
                     about: '<i class="fas fa-info-circle"></i> من نحن',
@@ -159,7 +169,38 @@
                 sectionTitle: 'منصة نبراس — هيكل عالمي',
                 sectionSubtitle: 'واجهة عامة (معرض ومتجر) ومركز قيادة داخلي — تحكم كامل من الإدارة دون تعديل الكود.',
                 quickServicesTitle: 'بوابة نبراس الرقمية',
-                quickServicesSubtitle: 'متجر إلكتروني · معرض منتجات · منصة المصنع — اختر القسم للدخول إلى الصفحة الداخلية.',
+                quickServicesSubtitle: 'متجر · معرض · منصة — اختر عالمك',
+                worldsShowcaseTitle: 'عوالم منتجات نبراس',
+                worldsShowcaseSubtitle: 'استمتع بتشكيلات WPC فاخرة — من المصنع مباشرة إلى مشروعك',
+                worldViewAll: 'عرض الكل',
+                worldAddToCart: 'أضف للسلة',
+                worldViewProduct: 'عرض المنتج',
+                worldPromoFactory: 'مصنع نبراس',
+                worldEmpty: 'استكشف هذا العالم للمنتجات.',
+                worldTagWpc: 'أبواب WPC',
+                worldTagReady: 'WPC جاهز',
+                worldTagRaw: 'WPC عضم',
+                worldTagAlu: 'ألومنيوم',
+                worldTagPvc: 'PVC',
+                doorsFaqTitle: 'أبرز الأسئلة عن أبواب WPC',
+                doorsFaqSubtitle: 'إذا لم تجد ما تبحث عنه، تواصل مع فريق المبيعات مباشرة',
+                wpcHubHeroTitle: 'عالم أبواب WPC — مصنع نبراس',
+                wpcHubHeroSub: 'صمّم بابك · اختر من الكatalog · اطلب عرض سعر — جودة مصنع سعودي',
+                wpcHubDesigner: 'صمّم بابك',
+                wpcHubDesignerDesc: 'معاينة صورة مصنع — كل اختيار يبدّل الصورة فوراً',
+                wpcHubReady: 'WPC جاهز',
+                wpcHubReadyDesc: 'أبواب جاهزة شامل تركيب أو استلام مصنع',
+                wpcHubRaw: 'WPC عضم',
+                wpcHubRawDesc: 'عضم ورشة — تكسية حسب الطلب',
+                wpcHubRolls: 'رولّات الألوان',
+                wpcHubRollsDesc: '20 رولّة WPC — N-1 إلى N-21',
+                wpcHubShowroom: 'معرض الصور',
+                wpcHubShowroomDesc: 'أبواب · خزائن · CNC · مشاريع NHC',
+                wpcHubCatalog: 'كتالوج الأبواب',
+                wpcHubCatalogDesc: 'الملف التعريفي وكتalog WPC',
+                wpcHubFeatured: 'منتجات مميزة',
+                wpcHubBrowseReady: 'تصفّح الجاهز',
+                wpcHubTag: 'أبواب WPC',
                 gatewayLaneStore: 'المتجر الإلكتروني',
                 gatewayLaneStoreHint: 'أبواب WPC والألومنيوم — أصناف، سلة، وعرض سعر',
                 gatewayLaneShowroom: 'معرض نبراس',

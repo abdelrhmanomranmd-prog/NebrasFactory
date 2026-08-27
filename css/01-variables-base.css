@@ -3,6 +3,11 @@
     --accent-blue: #00a8ff;
     --pvc-bg: url('/images/pvc-background.avif'); /* صورة الحبيبات */
     --wpc-bg: url('/images/wpc-background.avif'); /* صورة الأبواب */
+    --sf-bg: #ffffff;
+    --sf-bg-soft: #f4f7fa;
+    --sf-text: #231f1e;
+    --sf-accent: #007a8c;
+    --sf-navy: #0d2840;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }

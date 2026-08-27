@@ -1,0 +1,560 @@
+/* ═══ نبراس hrws283 — عوالم المتجر (Alghomlas-inspired · Nebras Factory) ═══ */
+
+:root {
+    --sf-bg: #ffffff;
+    --sf-bg-soft: #f4f7fa;
+    --sf-bg-section: #f8fafc;
+    --sf-text: #231f1e;
+    --sf-text-muted: rgba(35, 31, 30, 0.62);
+    --sf-accent: #007a8c;
+    --sf-accent-nebras: #00a8ff;
+    --sf-navy: #0d2840;
+    --sf-border: rgba(13, 40, 64, 0.1);
+    --sf-card-shadow: 0 16px 40px rgba(13, 40, 64, 0.08);
+    --sf-radius: 18px;
+    --sf-radius-sm: 12px;
+}
+
+body.platform-storefront:not(.admin-session) {
+    background: var(--sf-bg-soft);
+    color: var(--sf-text);
+}
+
+body.platform-storefront:not(.admin-session) #nebras-storefront {
+    background: var(--sf-bg-soft);
+}
+
+/* ── Worlds navigation chips (homepage) ── */
+.nebras-worlds-showcase {
+    margin: 0 4% 40px;
+    padding: 0;
+}
+
+.nebras-worlds-head {
+    text-align: center;
+    margin-bottom: 28px;
+}
+
+.nebras-worlds-head h2 {
+    margin: 0 0 8px;
+    font-size: clamp(1.35rem, 2.8vw, 1.85rem);
+    font-weight: 800;
+    color: var(--sf-navy);
+}
+
+.nebras-worlds-head p {
+    margin: 0;
+    color: var(--sf-text-muted);
+    font-size: 0.92rem;
+}
+
+.nebras-worlds-chips {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 36px;
+}
+
+.nebras-world-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 20px;
+    border-radius: 999px;
+    border: 1px solid var(--sf-border);
+    background: var(--sf-bg);
+    color: var(--sf-navy);
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+    box-shadow: 0 4px 14px rgba(13, 40, 64, 0.06);
+}
+
+.nebras-world-chip i {
+    color: var(--sf-accent);
+    font-size: 0.95rem;
+}
+
+.nebras-world-chip:hover,
+.nebras-world-chip.is-active {
+    transform: translateY(-2px);
+    background: linear-gradient(135deg, var(--sf-navy), #155e94);
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 12px 28px rgba(13, 40, 64, 0.22);
+}
+
+.nebras-world-chip.is-active i,
+.nebras-world-chip:hover i {
+    color: var(--sf-accent-nebras);
+}
+
+/* ── World section block (Alghomlas recipe) ── */
+.nebras-world-section {
+    margin-bottom: 44px;
+    padding: 28px 24px 32px;
+    border-radius: var(--sf-radius);
+    background: var(--sf-bg);
+    border: 1px solid var(--sf-border);
+    box-shadow: var(--sf-card-shadow);
+}
+
+.nebras-world-section-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.nebras-world-section-title-wrap h3 {
+    margin: 0 0 4px;
+    font-size: clamp(1.15rem, 2.2vw, 1.45rem);
+    font-weight: 800;
+    color: var(--sf-navy);
+}
+
+.nebras-world-section-tagline {
+    margin: 0;
+    font-size: 0.86rem;
+    color: var(--sf-text-muted);
+}
+
+.nebras-world-view-all {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 18px;
+    border-radius: 999px;
+    background: rgba(0, 122, 140, 0.08);
+    color: var(--sf-accent);
+    font-size: 0.84rem;
+    font-weight: 700;
+    text-decoration: none;
+    border: 1px solid rgba(0, 122, 140, 0.18);
+    transition: background 0.2s ease;
+}
+
+.nebras-world-view-all:hover {
+    background: rgba(0, 122, 140, 0.14);
+}
+
+.nebras-world-filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 22px;
+}
+
+.nebras-world-filter-chip {
+    padding: 8px 16px;
+    border-radius: 999px;
+    border: 1px solid var(--sf-border);
+    background: var(--sf-bg-section);
+    color: var(--sf-text);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.nebras-world-filter-chip:hover,
+.nebras-world-filter-chip.is-active {
+    background: var(--sf-navy);
+    color: #fff;
+    border-color: var(--sf-navy);
+}
+
+.nebras-world-products-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));
+    gap: 16px;
+}
+
+/* ── Alghomlas-style product card ── */
+.nebras-world-product-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    border-radius: var(--sf-radius-sm);
+    background: var(--sf-bg);
+    border: 1px solid var(--sf-border);
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    text-align: start;
+}
+
+.nebras-world-product-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 44px rgba(13, 40, 64, 0.12);
+}
+
+.nebras-world-product-promo {
+    position: absolute;
+    top: 10px;
+    inset-inline-start: 10px;
+    z-index: 2;
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: linear-gradient(135deg, #c41e3a, #a01830);
+    color: #fff;
+    font-size: 0.68rem;
+    font-weight: 800;
+}
+
+.nebras-world-product-media {
+    aspect-ratio: 3 / 4;
+    background: var(--sf-bg-section);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.nebras-world-product-media img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    padding: 12px;
+}
+
+.nebras-world-product-body {
+    padding: 14px 14px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+}
+
+.nebras-world-product-tag {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--sf-accent);
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+}
+
+.nebras-world-product-title {
+    font-size: 0.84rem;
+    font-weight: 700;
+    color: var(--sf-navy);
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.nebras-world-product-price-row {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: auto;
+}
+
+.nebras-world-product-price {
+    font-size: 1rem;
+    font-weight: 800;
+    color: var(--sf-navy);
+}
+
+.nebras-world-product-price-old {
+    font-size: 0.78rem;
+    color: var(--sf-text-muted);
+    text-decoration: line-through;
+}
+
+.nebras-world-product-cart {
+    margin-top: 10px;
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--sf-navy), #155e94);
+    color: #fff;
+    font-size: 0.82rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+}
+
+.nebras-world-product-cart:hover {
+    opacity: 0.92;
+}
+
+/* Store catalog cards — Alghomlas upgrade */
+.nebras-store-catalog-card--premium {
+    background: var(--sf-bg) !important;
+    border: 1px solid var(--sf-border) !important;
+    border-radius: var(--sf-radius-sm) !important;
+    box-shadow: 0 8px 24px rgba(13, 40, 64, 0.06) !important;
+}
+
+.nebras-store-catalog-card--premium .nebras-store-catalog-tag {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--sf-accent);
+    margin-bottom: 4px;
+}
+
+.nebras-store-catalog-card--premium .nebras-store-catalog-promo {
+    position: absolute;
+    top: 10px;
+    inset-inline-start: 10px;
+    z-index: 3;
+    padding: 3px 9px;
+    border-radius: 6px;
+    background: #c41e3a;
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 800;
+}
+
+/* ── WPC Doors Hub (workspace) ── */
+.nebras-wpc-doors-hub {
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+}
+
+.nebras-wpc-hub-hero {
+    padding: 28px 24px;
+    border-radius: var(--sf-radius);
+    background: linear-gradient(135deg, var(--sf-navy) 0%, #155e94 55%, #007a8c 100%);
+    color: #fff;
+    text-align: center;
+}
+
+.nebras-wpc-hub-hero h2 {
+    margin: 0 0 8px;
+    font-size: clamp(1.3rem, 2.5vw, 1.75rem);
+}
+
+.nebras-wpc-hub-hero p {
+    margin: 0 0 18px;
+    opacity: 0.9;
+    font-size: 0.92rem;
+}
+
+.nebras-wpc-hub-cta-row {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 10px;
+}
+
+.nebras-wpc-hub-cta {
+    padding: 12px 22px;
+    border-radius: 999px;
+    border: none;
+    font-weight: 700;
+    font-size: 0.88rem;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.nebras-wpc-hub-cta--primary {
+    background: #fff;
+    color: var(--sf-navy);
+}
+
+.nebras-wpc-hub-cta--ghost {
+    background: rgba(255, 255, 255, 0.14);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+.nebras-wpc-hub-cta:hover {
+    transform: translateY(-2px);
+}
+
+.nebras-wpc-hub-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
+    gap: 16px;
+}
+
+.nebras-wpc-hub-tile {
+    padding: 22px 20px;
+    border-radius: var(--sf-radius-sm);
+    background: var(--sf-bg);
+    border: 1px solid var(--sf-border);
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    text-align: start;
+}
+
+.nebras-wpc-hub-tile:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--sf-card-shadow);
+}
+
+.nebras-wpc-hub-tile i {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    background: rgba(0, 168, 255, 0.12);
+    color: var(--sf-accent-nebras);
+    font-size: 1.1rem;
+    margin-bottom: 12px;
+}
+
+.nebras-wpc-hub-tile h4 {
+    margin: 0 0 6px;
+    font-size: 1rem;
+    color: var(--sf-navy);
+}
+
+.nebras-wpc-hub-tile p {
+    margin: 0;
+    font-size: 0.8rem;
+    color: var(--sf-text-muted);
+    line-height: 1.45;
+}
+
+/* ── FAQ accordion ── */
+.nebras-doors-faq {
+    margin: 0 4% 48px;
+    padding: 32px 28px;
+    border-radius: var(--sf-radius);
+    background: var(--sf-bg);
+    border: 1px solid var(--sf-border);
+    box-shadow: var(--sf-card-shadow);
+}
+
+.nebras-doors-faq-head {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.nebras-doors-faq-head h2 {
+    margin: 0 0 6px;
+    font-size: clamp(1.2rem, 2.4vw, 1.55rem);
+    color: var(--sf-navy);
+}
+
+.nebras-doors-faq-head p {
+    margin: 0;
+    color: var(--sf-text-muted);
+    font-size: 0.88rem;
+}
+
+.nebras-faq-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    max-width: 820px;
+    margin: 0 auto;
+}
+
+.nebras-faq-item {
+    border: 1px solid var(--sf-border);
+    border-radius: var(--sf-radius-sm);
+    overflow: hidden;
+    background: var(--sf-bg-section);
+}
+
+.nebras-faq-q {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 16px 18px;
+    border: none;
+    background: transparent;
+    color: var(--sf-navy);
+    font-size: 0.92rem;
+    font-weight: 700;
+    text-align: start;
+    cursor: pointer;
+}
+
+.nebras-faq-q i {
+    color: var(--sf-accent);
+    transition: transform 0.25s ease;
+}
+
+.nebras-faq-item.is-open .nebras-faq-q i {
+    transform: rotate(180deg);
+}
+
+.nebras-faq-a {
+    display: none;
+    padding: 0 18px 16px;
+    font-size: 0.86rem;
+    color: var(--sf-text-muted);
+    line-height: 1.6;
+}
+
+.nebras-faq-item.is-open .nebras-faq-a {
+    display: block;
+}
+
+/* ── Workspace light mode (store / showroom) ── */
+body.nebras-workspace-active:not(.admin-session) .nebras-workspace {
+    background: var(--sf-bg-soft);
+}
+
+body.nebras-workspace-active:not(.admin-session) .workspace-shell {
+    background: transparent;
+}
+
+body.nebras-workspace-active:not(.admin-session) .workspace-topbar {
+    background: var(--sf-bg);
+    border-bottom: 1px solid var(--sf-border);
+    color: var(--sf-navy);
+}
+
+body.nebras-workspace-active:not(.admin-session) #workspace-main {
+    background: transparent;
+    color: var(--sf-text);
+}
+
+body.nebras-workspace-active:not(.admin-session) .nebras-store-layout {
+    background: transparent;
+}
+
+body.nebras-workspace-active:not(.admin-session) .nebras-store-sidebar {
+    background: var(--sf-bg);
+    border: 1px solid var(--sf-border);
+    border-radius: var(--sf-radius-sm);
+}
+
+body.nebras-workspace-active:not(.admin-session) .workspace-intro {
+    color: var(--sf-text-muted);
+}
+
+/* Nav worlds — desktop wrap */
+@media (max-width: 1200px) {
+    nav ul#nav-menu {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 768px) {
+    .nebras-worlds-showcase,
+    .nebras-doors-faq {
+        margin-inline: 3%;
+        padding-inline: 16px;
+    }
+
+    .nebras-world-section {
+        padding: 20px 16px 24px;
+    }
+
+    .nebras-world-products-row {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+    }
+}
