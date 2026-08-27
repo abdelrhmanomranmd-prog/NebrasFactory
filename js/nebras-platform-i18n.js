@@ -1,11 +1,11 @@
 /**
- * نبراس hrws286 — i18n: العربية فوراً · EN/ZH كسول عند تغيير اللغة
+ * نبراس hrws287 — i18n: العربية فوراً · EN/ZH كسول عند تغيير اللغة
  * يُحمَّل بعد nebras-platform.js (NEBRAS_BRAND_* · getNebrasBrand*)
  */
 (function(global) {
     'use strict';
 
-    var VER = 'hrws286';
+    var VER = 'hrws287';
     var localeInflight = Object.create(null);
     var localeLoaded = { ar: true };
 
@@ -486,6 +486,12 @@
                 storeSortPriceHigh: 'من الأعلى سعراً',
                 storeProductCount: '{n} منتج',
                 storeCatalogEmpty: 'لا منتجات تطابق الفلاتر الحالية.',
+                storeCardFactoryBadge: 'مصنع نبراس',
+                storeCardSkuLabel: 'كود',
+                storeCardAccessoriesIncluded: 'شامل الإكسسوار',
+                storeCardAccessoriesExcluded: 'بدون إكسسوار · استلام مصنع',
+                storeCardAddToCart: 'أضف للسلة',
+                storeCardViewDetails: 'تفاصيل المنتج',
                 visitorQrTitle: 'شارك نبراس مع من تحب',
                 visitorQrLead: 'امسح الرمز أو حمّله وأرسله لصديق، مقاول، أو عميل — يصل مباشرة لموقع مصنع نبراس الرسمي.',
                 visitorQrShareHint: 'كل مشاركة = فرصة جديدة لنبراس — انشر الجودة السعودية',
