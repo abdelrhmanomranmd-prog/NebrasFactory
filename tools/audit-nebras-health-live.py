@@ -40,8 +40,8 @@ def main():
     print('HTTP /:', st, '| deploy:', v)
     if st != 200:
         issues.append('Homepage not 200')
-    if v != 'hrws284':
-        notes.append('Deploy tag is ' + v + ' (expected hrws284 if latest)')
+    if v != 'hrws285':
+        notes.append('Deploy tag is ' + v + ' (expected hrws285 if latest)')
 
     # assets linked
     refs = re.findall(r'(?:href|src)="((?:css|js)/[^"#?]+(?:\?v=[^"]+)?)"', html)

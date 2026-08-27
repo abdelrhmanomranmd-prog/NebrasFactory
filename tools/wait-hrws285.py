@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Wait until hrws284 is live on production."""
+"""Wait until hrws285 is live on production."""
 import re
 import sys
 import time
 import urllib.request
 
 SITE = 'https://www.nebrasplasticcompany.com'
-TARGET = 'hrws284'
+TARGET = 'hrws285'
 MAX_WAIT = 900
 INTERVAL = 15
 
