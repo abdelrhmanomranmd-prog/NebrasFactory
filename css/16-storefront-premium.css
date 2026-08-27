@@ -377,7 +377,7 @@
     box-shadow: 0 -8px 32px rgba(13, 40, 64, 0.12);
     backdrop-filter: blur(14px);
     gap: 8px;
-    grid-template-columns: 1fr 1fr 1.2fr;
+    grid-template-columns: repeat(5, 1fr);
 }
 
 body.nebras-mobile-bar-active .nebras-mobile-commerce-bar {

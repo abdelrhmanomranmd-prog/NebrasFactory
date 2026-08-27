@@ -5314,7 +5314,15 @@
                 taglineZh: '设计 · 预览 · 报价 — 工厂直供',
                 productIds: ['prod-wpc', 'prod-wpc-raw'],
                 categoryTagAr: 'أبواب WPC',
-                route: { pillar: 'showroom', view: 'wpc-doors-hub' },
+                route: { pillar: 'showroom', view: 'world-hub', worldId: 'wpc-doors' },
+                hubTiles: [
+                    { icon: 'fa-pencil-ruler', titleAr: 'صمّم بابك', titleEn: 'Design your door', descAr: 'معاينة صورة مصنع حية', descEn: 'Live factory photo preview', action: 'door-designer' },
+                    { icon: 'fa-check-circle', titleAr: 'WPC جاهز', titleEn: 'Ready WPC', descAr: 'شامل تركيب أو استلام مصنع', descEn: 'Install or factory pickup', action: 'product:prod-wpc' },
+                    { icon: 'fa-industry', titleAr: 'WPC عضم', titleEn: 'Raw WPC', descAr: 'عضم ورشة — تكسية حسب الطلب', descEn: 'Workshop blanks', action: 'product:prod-wpc-raw' },
+                    { icon: 'fa-swatchbook', titleAr: 'رولّات الألوان', titleEn: 'Colour rolls', descAr: '20 رولّة WPC', descEn: '20 WPC rolls', action: 'color-rolls' },
+                    { icon: 'fa-images', titleAr: 'معرض الصور', titleEn: 'Photo gallery', descAr: 'أبواب · CNC · NHC', descEn: 'Doors · CNC · NHC', action: 'showroom' },
+                    { icon: 'fa-file-pdf', titleAr: 'الملف التعريفي', titleEn: 'Company profile', descAr: 'كتalog وPDF رسمي', descEn: 'Official catalog PDF', action: 'profile' }
+                ],
                 chips: [
                     { id: 'designer', labelAr: 'صمّم بابك', labelEn: 'Design your door', action: 'door-designer' },
                     { id: 'ready', labelAr: 'جاهز للتركيب', labelEn: 'Ready install', action: 'product:prod-wpc' },
@@ -5333,7 +5341,13 @@
                 taglineZh: '含配件成品门或工厂自提',
                 productIds: ['prod-wpc'],
                 categoryTagAr: 'WPC جاهز',
-                route: { pillar: 'store', view: 'product', productId: 'prod-wpc' },
+                route: { pillar: 'showroom', view: 'world-hub', worldId: 'wpc-ready' },
+                hubTiles: [
+                    { icon: 'fa-tools', titleAr: 'شامل تركيب', titleEn: 'With install', descAr: 'أبواب جاهزة + إكسسوار + تركيب', descEn: 'Doors + accessories + install', action: 'sub:prod-wpc:wpc-ready-install' },
+                    { icon: 'fa-warehouse', titleAr: 'استلام مصنع', titleEn: 'Factory pickup', descAr: 'بدون إكسسوار — استلام مباشر', descEn: 'No accessories — direct pickup', action: 'sub:prod-wpc:wpc-ready-supply' },
+                    { icon: 'fa-pencil-ruler', titleAr: 'صمّم مثل هذا', titleEn: 'Design similar', descAr: 'جرّب الشكل قبل الطلب', descEn: 'Try the look before ordering', action: 'door-designer' },
+                    { icon: 'fa-file-invoice-dollar', titleAr: 'عرض سعر', titleEn: 'Get quote', descAr: 'PDF A4 رسمي خلال ثوانٍ', descEn: 'Official A4 quote in seconds', action: 'quote' }
+                ],
                 chips: [
                     { id: 'install', labelAr: 'شامل تركيب', labelEn: 'With install', action: 'sub:prod-wpc:wpc-ready-install' },
                     { id: 'supply', labelAr: 'استلام مصنع', labelEn: 'Factory pickup', action: 'sub:prod-wpc:wpc-ready-supply' }
@@ -5350,7 +5364,13 @@
                 taglineZh: '工坊素坯 — 按规格包覆',
                 productIds: ['prod-wpc-raw'],
                 categoryTagAr: 'WPC عضم',
-                route: { pillar: 'store', view: 'product', productId: 'prod-wpc-raw' },
+                route: { pillar: 'showroom', view: 'world-hub', worldId: 'wpc-raw' },
+                hubTiles: [
+                    { icon: 'fa-cube', titleAr: 'عضم سادة', titleEn: 'Plain blank', descAr: 'ورشة وتشطيب حسب الطلب', descEn: 'Workshop finish to spec', action: 'product:prod-wpc-raw' },
+                    { icon: 'fa-paint-roller', titleAr: 'مع تكسية', titleEn: 'With cladding', descAr: 'تكسية WPC حسب لون الرولّة', descEn: 'WPC cladding by roll colour', action: 'product:prod-wpc-raw' },
+                    { icon: 'fa-swatchbook', titleAr: 'رولّات الألوان', titleEn: 'Colour rolls', descAr: '20 رولّة WPC', descEn: '20 WPC rolls', action: 'color-rolls' },
+                    { icon: 'fa-file-invoice-dollar', titleAr: 'عرض سعر', titleEn: 'Get quote', descAr: 'PDF A4 رسمي', descEn: 'Official A4 quote', action: 'quote' }
+                ],
                 chips: [
                     { id: 'bare', labelAr: 'عضم سادة', labelEn: 'Plain blank', action: 'product:prod-wpc-raw' },
                     { id: 'clad', labelAr: 'مع تكسية', labelEn: 'With cladding', action: 'product:prod-wpc-raw' }
@@ -5367,7 +5387,12 @@
                 taglineZh: '型材 · 截面 · 铝材方案',
                 productIds: ['prod-aluminum'],
                 categoryTagAr: 'ألومنيوم',
-                route: { pillar: 'store', view: 'product', productId: 'prod-aluminum' },
+                route: { pillar: 'showroom', view: 'world-hub', worldId: 'aluminum' },
+                hubTiles: [
+                    { icon: 'fa-border-all', titleAr: 'كتalog الألومنيوم', titleEn: 'Aluminum catalog', descAr: 'قطاعات · مقاطع · حلول', descEn: 'Profiles · sections · solutions', action: 'product:prod-aluminum' },
+                    { icon: 'fa-images', titleAr: 'معرض المشاريع', titleEn: 'Project gallery', descAr: 'صور من المصنع والمشاريع', descEn: 'Factory and project photos', action: 'showroom' },
+                    { icon: 'fa-file-invoice-dollar', titleAr: 'عرض سعر', titleEn: 'Get quote', descAr: 'PDF A4 رسمي', descEn: 'Official A4 quote', action: 'quote' }
+                ],
                 chips: []
             },
             {
@@ -5381,7 +5406,12 @@
                 taglineZh: 'PVC · 配件 · 配套产品',
                 productIds: ['prod-other'],
                 categoryTagAr: 'PVC',
-                route: { pillar: 'store', view: 'product', productId: 'prod-other' },
+                route: { pillar: 'showroom', view: 'world-hub', worldId: 'pvc' },
+                hubTiles: [
+                    { icon: 'fa-layer-group', titleAr: 'PVC والإكسسوارات', titleEn: 'PVC & accessories', descAr: 'منتجات مكمّلة للأبواب', descEn: 'Complementary door products', action: 'product:prod-other' },
+                    { icon: 'fa-store', titleAr: 'المتجر الكامل', titleEn: 'Full store', descAr: 'كل تصنيفات نبراس', descEn: 'All Nebras categories', action: 'catalog-all' },
+                    { icon: 'fa-file-invoice-dollar', titleAr: 'عرض سعر', titleEn: 'Get quote', descAr: 'PDF A4 رسمي', descEn: 'Official A4 quote', action: 'quote' }
+                ],
                 chips: []
             }
         ];
@@ -5416,6 +5446,23 @@
             }
             if (action === 'color-rolls') {
                 openNebrasWorkspace({ pillar: 'showroom', view: 'color-rolls' });
+                return;
+            }
+            if (action === 'quote') {
+                confirmAndOpenQuote();
+                return;
+            }
+            if (action === 'showroom') {
+                if (typeof openShowroomHub === 'function') openShowroomHub();
+                else openNebrasWorkspace({ pillar: 'showroom', view: 'catalog-hub' });
+                return;
+            }
+            if (action === 'profile') {
+                openNebrasWorkspace({ pillar: 'platform', view: 'company-profile' });
+                return;
+            }
+            if (action === 'catalog-all') {
+                openNebrasWorkspace({ pillar: 'store', view: 'catalog-all' });
                 return;
             }
             if (action.indexOf('product:') === 0) {
@@ -5498,6 +5545,7 @@
             const subEl = document.getElementById('nebras-worlds-subtitle');
             if (titleEl) titleEl.textContent = ui.worldsShowcaseTitle || 'عوالم منتجات نبراس';
             if (subEl) subEl.textContent = ui.worldsShowcaseSubtitle || 'استمتع بتشكيلات WPC فاخرة — من المصنع مباشرة إلى مشروعك';
+            renderNebrasWorldsOffersStrip();
         }
 
         function scrollToNebrasWorld(worldId, chipBtn) {
@@ -5532,40 +5580,123 @@
             if (sEl) sEl.textContent = ui.doorsFaqSubtitle || 'إذا لم تجد ما تبحث عنه، تواصل مع فريق المبيعات مباشرة';
         }
 
-        function buildWpcDoorsHubHtml(lang) {
+        function buildNebrasWorldHubTileOnclick(action) {
+            if (action === 'showroom') return 'openShowroomHub()';
+            if (action === 'profile') return 'openNebrasWorkspace({pillar:\'platform\',view:\'company-profile\'})';
+            return 'openNebrasWorldChipAction(\'' + escapeHtmlAttr(action) + '\')';
+        }
+
+        function getNebrasWorldHubCtas(world, lang, ui) {
+            const ctas = { primary: null, secondary: null };
+            if (world.id === 'wpc-doors') {
+                ctas.primary = { label: ui.visitorQuickDoorDesigner || 'صمّم بابك', icon: 'fa-pencil-ruler', action: 'door-designer' };
+                ctas.secondary = { label: ui.wpcHubBrowseReady || 'تصفّح الجاهز', icon: 'fa-store', action: 'product:prod-wpc' };
+            } else if (world.id === 'wpc-ready') {
+                ctas.primary = { label: ui.worldHubCtaInstall || 'شامل تركيب', icon: 'fa-tools', action: 'sub:prod-wpc:wpc-ready-install' };
+                ctas.secondary = { label: ui.worldHubCtaPickup || 'استلام مصنع', icon: 'fa-warehouse', action: 'sub:prod-wpc:wpc-ready-supply' };
+            } else if (world.productIds && world.productIds[0]) {
+                ctas.primary = { label: ui.worldHubCtaBrowse || 'تصفّح الكatalog', icon: 'fa-store', action: 'product:' + world.productIds[0] };
+                ctas.secondary = { label: ui.worldHubCtaQuote || 'عرض سعر', icon: 'fa-file-invoice-dollar', action: 'quote' };
+            }
+            return ctas;
+        }
+
+        function buildNebrasWorldHubHtml(worldId, lang) {
             lang = lang || currentLang || 'ar';
             const ui = siteText[lang] || siteText.ar;
-            const tiles = [
-                { icon: 'fa-pencil-ruler', title: ui.wpcHubDesigner || 'صمّم بابك', desc: ui.wpcHubDesignerDesc || 'معاينة صورة مصنع — كل اختيار يبدّل الصورة فوراً', action: 'door-designer' },
-                { icon: 'fa-check-circle', title: ui.wpcHubReady || 'WPC جاهز', desc: ui.wpcHubReadyDesc || 'أبواب جاهزة شامل تركيب أو استلام مصنع', action: 'product:prod-wpc' },
-                { icon: 'fa-industry', title: ui.wpcHubRaw || 'WPC عضم', desc: ui.wpcHubRawDesc || 'عضم ورشة — تكسية حسب الطلب', action: 'product:prod-wpc-raw' },
-                { icon: 'fa-swatchbook', title: ui.wpcHubRolls || 'رولّات الألوان', desc: ui.wpcHubRollsDesc || '20 رولّة WPC — N-1 إلى N-21', action: 'color-rolls' },
-                { icon: 'fa-images', title: ui.wpcHubShowroom || 'معرض الصور', desc: ui.wpcHubShowroomDesc || 'أبواب · خزائن · CNC · مشاريع NHC', action: 'showroom' },
-                { icon: 'fa-file-pdf', title: ui.wpcHubCatalog || 'كتالوج الأبواب', desc: ui.wpcHubCatalogDesc || 'حمّل كتالوج WPC الرسمي', action: 'profile' }
-            ];
-            const tileHtml = tiles.map(function(t) {
-                let onclick = 'openNebrasWorldChipAction(\'' + escapeHtmlAttr(t.action) + '\')';
-                if (t.action === 'showroom') onclick = 'openShowroomHub()';
-                if (t.action === 'profile') onclick = 'openNebrasWorkspace({pillar:\'platform\',view:\'company-profile\'})';
-                return '<button type="button" class="nebras-wpc-hub-tile" onclick="' + onclick + '"><i class="fas ' + escapeHtmlAttr(t.icon) + '"></i><h4>' + escapeHtmlAttr(t.title) + '</h4><p>' + escapeHtmlAttr(t.desc) + '</p></button>';
+            const world = NEBRAS_WORLDS.find(function(w) { return w.id === worldId; }) || NEBRAS_WORLDS[0];
+            const title = getNebrasWorldLabel(world, 'title', lang);
+            const tagline = getNebrasWorldLabel(world, 'tagline', lang);
+            const categoryTag = lang === 'en' ? (world.categoryTagEn || world.categoryTagAr || 'WPC') : (world.categoryTagAr || 'WPC');
+            const tiles = (world.hubTiles || []).map(function(t) {
+                const tileTitle = lang === 'en' ? (t.titleEn || t.titleAr) : (t.titleAr || t.titleEn);
+                const tileDesc = lang === 'en' ? (t.descEn || t.descAr) : (t.descAr || t.descEn);
+                const onclick = buildNebrasWorldHubTileOnclick(t.action || '');
+                return '<button type="button" class="nebras-wpc-hub-tile" onclick="' + onclick + '"><i class="fas ' + escapeHtmlAttr(t.icon || 'fa-circle') + '"></i><h4>' + escapeHtmlAttr(tileTitle) + '</h4><p>' + escapeHtmlAttr(tileDesc) + '</p></button>';
             }).join('');
-            const previewWorld = NEBRAS_WORLDS[0];
-            const previewCards = getNebrasWorldPreviewItems(previewWorld, lang, 4).map(function(it) {
-                return buildNebrasWorldProductCardHtml(it, lang, ui, ui.wpcHubTag || 'أبواب WPC');
+            const ctas = getNebrasWorldHubCtas(world, lang, ui);
+            const ctaRow = ctas.primary
+                ? '<div class="nebras-wpc-hub-cta-row">' +
+                    '<button type="button" class="nebras-wpc-hub-cta nebras-wpc-hub-cta--primary" onclick="' + buildNebrasWorldHubTileOnclick(ctas.primary.action) + '"><i class="fas ' + escapeHtmlAttr(ctas.primary.icon) + '"></i> ' + escapeHtmlAttr(ctas.primary.label) + '</button>' +
+                    (ctas.secondary ? '<button type="button" class="nebras-wpc-hub-cta nebras-wpc-hub-cta--ghost" onclick="' + buildNebrasWorldHubTileOnclick(ctas.secondary.action) + '"><i class="fas ' + escapeHtmlAttr(ctas.secondary.icon) + '"></i> ' + escapeHtmlAttr(ctas.secondary.label) + '</button>' : '') +
+                    '</div>'
+                : '';
+            const previewCards = getNebrasWorldPreviewItems(world, lang, 4).map(function(it) {
+                return buildNebrasWorldProductCardHtml(it, lang, ui, categoryTag);
             }).join('');
-            return '<div class="nebras-wpc-doors-hub">' +
+            return '<div class="nebras-wpc-doors-hub nebras-world-hub" data-world-id="' + escapeHtmlAttr(world.id) + '">' +
                 '<div class="nebras-wpc-hub-hero">' +
-                '<h2>' + escapeHtmlAttr(ui.wpcHubHeroTitle || 'عالم أبواب WPC — مصنع نبراس') + '</h2>' +
-                '<p>' + escapeHtmlAttr(ui.wpcHubHeroSub || 'صمّم بابك · اختر من الكatalog · اطلب عرض سعر — جودة مصنع سعودي') + '</p>' +
-                '<div class="nebras-wpc-hub-cta-row">' +
-                '<button type="button" class="nebras-wpc-hub-cta nebras-wpc-hub-cta--primary" onclick="openNebrasWorkspace({pillar:\'showroom\',view:\'door-designer\'})"><i class="fas fa-pencil-ruler"></i> ' + escapeHtmlAttr(ui.visitorQuickDoorDesigner || 'صمّم بابك') + '</button>' +
-                '<button type="button" class="nebras-wpc-hub-cta nebras-wpc-hub-cta--ghost" onclick="openNebrasWorkspace({pillar:\'store\',view:\'product\',productId:\'prod-wpc\'})"><i class="fas fa-store"></i> ' + escapeHtmlAttr(ui.wpcHubBrowseReady || 'تصفّح الجاهز') + '</button>' +
-                '</div></div>' +
-                '<div class="nebras-wpc-hub-grid">' + tileHtml + '</div>' +
+                '<h2>' + escapeHtmlAttr(title) + '</h2>' +
+                '<p>' + escapeHtmlAttr(tagline) + '</p>' +
+                ctaRow +
+                '</div>' +
+                (tiles ? '<div class="nebras-wpc-hub-grid">' + tiles + '</div>' : '') +
                 '<div class="nebras-world-section" style="margin:0">' +
                 '<div class="nebras-world-section-head"><div class="nebras-world-section-title-wrap"><h3>' + escapeHtmlAttr(ui.wpcHubFeatured || 'منتجات مميزة') + '</h3></div></div>' +
-                '<div class="nebras-world-products-row">' + previewCards + '</div></div>' +
+                '<div class="nebras-world-products-row">' + (previewCards || '<p style="color:rgba(35,31,30,0.6)">' + escapeHtmlAttr(ui.worldEmpty || 'استكشف هذا العالم للمنتجات.') + '</p>') + '</div></div>' +
                 '</div>';
+        }
+
+        function buildWpcDoorsHubHtml(lang) {
+            return buildNebrasWorldHubHtml('wpc-doors', lang);
+        }
+
+        function openNebrasWorldsSheet() {
+            const sheet = document.getElementById('nebras-worlds-sheet');
+            if (!sheet) return;
+            sheet.classList.add('is-open');
+            sheet.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('nebras-worlds-sheet-open');
+            renderNebrasWorldsSheet();
+        }
+
+        function closeNebrasWorldsSheet() {
+            const sheet = document.getElementById('nebras-worlds-sheet');
+            if (!sheet) return;
+            sheet.classList.remove('is-open');
+            sheet.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('nebras-worlds-sheet-open');
+        }
+
+        function renderNebrasWorldsSheet() {
+            const mount = document.getElementById('nebras-worlds-sheet-grid');
+            if (!mount) return;
+            const lang = currentLang || 'ar';
+            mount.innerHTML = NEBRAS_WORLDS.map(function(world) {
+                const title = getNebrasWorldLabel(world, 'title', lang);
+                const tagline = getNebrasWorldLabel(world, 'tagline', lang);
+                return '<button type="button" class="nebras-worlds-sheet-tile" onclick="closeNebrasWorldsSheet();openNebrasWorld(\'' + escapeHtmlAttr(world.id) + '\')">' +
+                    '<i class="fas ' + escapeHtmlAttr(world.icon) + '"></i>' +
+                    '<strong>' + escapeHtmlAttr(title) + '</strong>' +
+                    '<span>' + escapeHtmlAttr(tagline) + '</span></button>';
+            }).join('');
+            const titleEl = document.getElementById('nebras-worlds-sheet-title');
+            if (titleEl) {
+                const ui = siteText[lang] || siteText.ar;
+                titleEl.textContent = ui.worldsSheetTitle || 'عوالم منتجات نبراس';
+            }
+        }
+
+        function renderNebrasWorldsOffersStrip() {
+            const mount = document.getElementById('nebras-worlds-offers-strip');
+            if (!mount) return;
+            const lang = currentLang || 'ar';
+            const ui = siteText[lang] || siteText.ar;
+            const offers = [
+                { badge: ui.worldOfferBadge1 || 'مصنع مباشر', title: ui.worldOfferTitle1 || 'جودة WPC من نبراس', sub: ui.worldOfferSub1 || 'صمّم · اعرض · اطلب — بدون وسيط', action: 'wpc-doors' },
+                { badge: ui.worldOfferBadge2 || 'عرض سعر فوري', title: ui.worldOfferTitle2 || 'PDF A4 رسمي', sub: ui.worldOfferSub2 || 'خلال ثوانٍ من السلة أو المصمّم', action: 'quote' },
+                { badge: ui.worldOfferBadge3 || '20 رولّة', title: ui.worldOfferTitle3 || 'ألوان WPC', sub: ui.worldOfferSub3 || 'N-1 إلى N-21 — معاينة حية', action: 'color-rolls' }
+            ];
+            mount.innerHTML = offers.map(function(o) {
+                let onclick = 'openNebrasWorld(\'' + escapeHtmlAttr(o.action) + '\')';
+                if (o.action === 'quote') onclick = 'confirmAndOpenQuote()';
+                if (o.action === 'color-rolls') onclick = 'openNebrasWorldChipAction(\'color-rolls\')';
+                return '<button type="button" class="nebras-worlds-offer-card" onclick="' + onclick + '">' +
+                    '<span class="nebras-worlds-offer-badge">' + escapeHtmlAttr(o.badge) + '</span>' +
+                    '<strong>' + escapeHtmlAttr(o.title) + '</strong>' +
+                    '<span class="nebras-worlds-offer-sub">' + escapeHtmlAttr(o.sub) + '</span></button>';
+            }).join('');
+            mount.hidden = false;
         }
 
         function flattenProductsToCatalogItems(products, lang) {
@@ -17712,9 +17843,17 @@
                 ['hero-mobile-quote', confirmAndOpenQuote],
                 ['header-explore-btn', function() { openNebrasWorkspace({ pillar: 'store', view: 'catalog-all' }); }],
                 ['header-quote-btn', confirmAndOpenQuote],
-                ['mob-bar-store', function() { openNebrasWorkspace({ pillar: 'store', view: 'catalog-all' }); }],
+                ['mob-bar-home', function() {
+                    if (nebrasWorkspaceState.active) closeNebrasWorkspace();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }],
+                ['mob-bar-worlds', openNebrasWorldsSheet],
+                ['mob-bar-design', function() { openNebrasWorkspace({ pillar: 'showroom', view: 'door-designer' }); }],
                 ['mob-bar-cart', openCartDrawer],
-                ['mob-bar-quote', confirmAndOpenQuote],
+                ['mob-bar-account', function() {
+                    if (typeof window.openCustomerPortalLogin === 'function') window.openCustomerPortalLogin();
+                    else openNebrasWorkspace({ pillar: 'store', view: 'catalog-all' });
+                }],
                 ['top-open-cart-btn', openCartDrawer],
                 ['top-quote-btn', confirmAndOpenQuote],
                 ['top-call-sales-btn', function() { dialNumber(systemSettings.mainSalesPhone); }],
@@ -22176,9 +22315,11 @@
             if (designerBtn && text.gatewayDoorDesigner) {
                 designerBtn.innerHTML = '<i class="fas fa-pencil-ruler" aria-hidden="true"></i> ' + escapeHtmlAttr(text.gatewayDoorDesigner);
             }
-            setTxt('mob-bar-store-label', text.mobBarStore);
+            setTxt('mob-bar-home-label', text.mobBarHome);
+            setTxt('mob-bar-worlds-label', text.mobBarWorlds);
+            setTxt('mob-bar-design-label', text.mobBarDesign);
             setTxt('mob-bar-cart-label', text.mobBarCart);
-            setTxt('mob-bar-quote-label', text.mobBarQuote);
+            setTxt('mob-bar-account-label', text.mobBarAccount);
             const trustStrip = document.getElementById('nebras-trust-strip');
             if (trustStrip) trustStrip.setAttribute('aria-label', text.trustStripAria || 'مزايا مصنع نبراس');
         }
@@ -26365,6 +26506,10 @@
                     : '';
                 html = (detail ? '<p class="workspace-intro">' + escapeHtmlAttr(detail) + '</p>' : '') +
                     buildNebrasColorCollectionWorkspaceHtml();
+            } else if (route.view === 'world-hub' && route.worldId) {
+                const hubWorld = NEBRAS_WORLDS.find(function(w) { return w.id === route.worldId; });
+                title = hubWorld ? getNebrasWorldLabel(hubWorld, 'title', lang) : (ui.wpcHubHeroTitle || 'عالم منتجات نبراس');
+                html = buildNebrasWorldHubHtml(route.worldId, lang);
             } else if (route.view === 'wpc-doors-hub') {
                 title = ui.wpcHubHeroTitle || 'عالم أبواب WPC — مصنع نبراس';
                 html = buildWpcDoorsHubHtml(lang);
@@ -30375,31 +30520,31 @@
             if (navWorldWpcDoors) {
                 navWorldWpcDoors.addEventListener('click', function(event) {
                     event.preventDefault();
-                    openNebrasWorkspace({ pillar: 'showroom', view: 'wpc-doors-hub' });
+                    openNebrasWorld('wpc-doors');
                 });
             }
             if (navWorldWpcReady) {
                 navWorldWpcReady.addEventListener('click', function(event) {
                     event.preventDefault();
-                    openNebrasWorkspace({ pillar: 'store', view: 'product', productId: 'prod-wpc' });
+                    openNebrasWorld('wpc-ready');
                 });
             }
             if (navWorldWpcRaw) {
                 navWorldWpcRaw.addEventListener('click', function(event) {
                     event.preventDefault();
-                    openNebrasWorkspace({ pillar: 'store', view: 'product', productId: 'prod-wpc-raw' });
+                    openNebrasWorld('wpc-raw');
                 });
             }
             if (navWorldAluminum) {
                 navWorldAluminum.addEventListener('click', function(event) {
                     event.preventDefault();
-                    openNebrasWorkspace({ pillar: 'store', view: 'product', productId: 'prod-aluminum' });
+                    openNebrasWorld('aluminum');
                 });
             }
             if (navWorldPvc) {
                 navWorldPvc.addEventListener('click', function(event) {
                     event.preventDefault();
-                    openNebrasWorkspace({ pillar: 'store', view: 'product', productId: 'prod-other' });
+                    openNebrasWorld('pvc');
                 });
             }
             if (navShowroom) {
@@ -31134,6 +31279,8 @@
         window.openNebrasWorkspace = openNebrasWorkspace;
         window.openNebrasWorld = openNebrasWorld;
         window.openNebrasWorldChipAction = openNebrasWorldChipAction;
+        window.openNebrasWorldsSheet = openNebrasWorldsSheet;
+        window.closeNebrasWorldsSheet = closeNebrasWorldsSheet;
         window.scrollToNebrasWorld = scrollToNebrasWorld;
         window.toggleNebrasFaq = toggleNebrasFaq;
         window.openStoreCatalogManager = openStoreCatalogManager;

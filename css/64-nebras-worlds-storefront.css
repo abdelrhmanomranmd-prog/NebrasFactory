@@ -1,4 +1,4 @@
-/* ═══ نبراس hrws283 — عوالم المتجر (Alghomlas-inspired · Nebras Factory) ═══ */
+/* ═══ نبراس hrws284 — عوالم المتجر (Alghomlas-inspired · Nebras Factory) ═══ */
 
 :root {
     --sf-bg: #ffffff;
@@ -556,5 +556,167 @@ body.nebras-workspace-active:not(.admin-session) .workspace-intro {
     .nebras-world-products-row {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 10px;
+    }
+}
+
+/* ── Offers strip (homepage) ── */
+.nebras-worlds-offers {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
+    gap: 12px;
+    margin: 0 4% 20px;
+    padding: 0;
+}
+
+.nebras-worlds-offer-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    padding: 16px 18px;
+    border-radius: var(--sf-radius-sm);
+    border: 1px solid var(--sf-border);
+    background: linear-gradient(135deg, #fff 0%, #f0f9fb 100%);
+    cursor: pointer;
+    text-align: start;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.nebras-worlds-offer-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--sf-card-shadow);
+}
+
+.nebras-worlds-offer-badge {
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: #c41e3a;
+    color: #fff;
+    font-size: 0.62rem;
+    font-weight: 800;
+}
+
+.nebras-worlds-offer-card strong {
+    color: var(--sf-navy);
+    font-size: 0.92rem;
+}
+
+.nebras-worlds-offer-sub {
+    font-size: 0.78rem;
+    color: var(--sf-text-muted);
+}
+
+/* ── Mobile worlds sheet ── */
+.nebras-worlds-sheet {
+    position: fixed;
+    inset: 0;
+    z-index: 1200;
+    display: none;
+    pointer-events: none;
+}
+
+.nebras-worlds-sheet.is-open {
+    display: block;
+    pointer-events: auto;
+}
+
+.nebras-worlds-sheet-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(13, 40, 64, 0.45);
+    backdrop-filter: blur(4px);
+}
+
+.nebras-worlds-sheet-panel {
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    max-height: 78vh;
+    padding: 18px 16px calc(18px + env(safe-area-inset-bottom, 0px));
+    border-radius: 20px 20px 0 0;
+    background: var(--sf-bg);
+    box-shadow: 0 -12px 40px rgba(13, 40, 64, 0.18);
+    overflow-y: auto;
+}
+
+.nebras-worlds-sheet-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.nebras-worlds-sheet-head h2 {
+    margin: 0;
+    font-size: 1.05rem;
+    color: var(--sf-navy);
+}
+
+.nebras-worlds-sheet-close {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--sf-border);
+    background: var(--sf-bg-soft);
+    cursor: pointer;
+    color: var(--sf-navy);
+}
+
+.nebras-worlds-sheet-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+}
+
+.nebras-worlds-sheet-tile {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    grid-template-rows: auto auto;
+    gap: 2px 12px;
+    padding: 14px 16px;
+    border-radius: var(--sf-radius-sm);
+    border: 1px solid var(--sf-border);
+    background: var(--sf-bg-section);
+    cursor: pointer;
+    text-align: start;
+}
+
+.nebras-worlds-sheet-tile i {
+    grid-row: 1 / span 2;
+    align-self: center;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: rgba(0, 122, 140, 0.12);
+    color: var(--sf-accent);
+    font-size: 1rem;
+}
+
+.nebras-worlds-sheet-tile strong {
+    color: var(--sf-navy);
+    font-size: 0.9rem;
+}
+
+.nebras-worlds-sheet-tile span {
+    grid-column: 2;
+    font-size: 0.76rem;
+    color: var(--sf-text-muted);
+}
+
+body.nebras-worlds-sheet-open {
+    overflow: hidden;
+}
+
+.nebras-mobile-bar-btn--design {
+    color: var(--sf-accent, #007a8c);
+}
+
+@media (min-width: 768px) {
+    .nebras-worlds-sheet-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
 }

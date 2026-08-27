@@ -1,11 +1,11 @@
 /**
- * نبراس hrws283 — i18n: العربية فوراً · EN/ZH كسول عند تغيير اللغة
+ * نبراس hrws284 — i18n: العربية فوراً · EN/ZH كسول عند تغيير اللغة
  * يُحمَّل بعد nebras-platform.js (NEBRAS_BRAND_* · getNebrasBrand*)
  */
 (function(global) {
     'use strict';
 
-    var VER = 'hrws283';
+    var VER = 'hrws284';
     var localeInflight = Object.create(null);
     var localeLoaded = { ar: true };
 
@@ -201,6 +201,20 @@
                 wpcHubFeatured: 'منتجات مميزة',
                 wpcHubBrowseReady: 'تصفّح الجاهز',
                 wpcHubTag: 'أبواب WPC',
+                worldHubCtaInstall: 'شامل تركيب',
+                worldHubCtaPickup: 'استلام مصنع',
+                worldHubCtaBrowse: 'تصفّح الكatalog',
+                worldHubCtaQuote: 'عرض سعر',
+                worldsSheetTitle: 'عوالم منتجات نبراس',
+                worldOfferBadge1: 'مصنع مباشر',
+                worldOfferTitle1: 'جودة WPC من نبراس',
+                worldOfferSub1: 'صمّم · اعرض · اطلب — بدون وسيط',
+                worldOfferBadge2: 'عرض سعر فوري',
+                worldOfferTitle2: 'PDF A4 رسمي',
+                worldOfferSub2: 'خلال ثوانٍ من السلة أو المصمّم',
+                worldOfferBadge3: '20 رولّة',
+                worldOfferTitle3: 'ألوان WPC',
+                worldOfferSub3: 'N-1 إلى N-21 — معاينة حية',
                 gatewayLaneStore: 'المتجر الإلكتروني',
                 gatewayLaneStoreHint: 'أبواب WPC والألومنيوم — أصناف، سلة، وعرض سعر',
                 gatewayLaneShowroom: 'معرض نبراس',
@@ -238,9 +252,11 @@
                 trustItem4Sub: 'استمتع بتجربة فريدة',
                 gatewayExploreStore: 'استكشف المتجر الكامل',
                 gatewayDoorDesigner: 'صمّم بابك',
-                mobBarStore: 'المتجر',
+                mobBarHome: 'رئيسية',
+                mobBarWorlds: 'العوالم',
+                mobBarDesign: 'صمّم',
                 mobBarCart: 'السلة',
-                mobBarQuote: 'عرض سعر',
+                mobBarAccount: 'حساب',
                 storefrontProductsTitle: 'متجر نبراس الإلكتروني',
                 storefrontProductsSubtitle: 'تصفح المنتجات واطلب عرض السعر — كل صنف يفتح صفحة متجر داخلية.',
                 visitorQuickWpcRaw: 'أبواب WPC عضم',
