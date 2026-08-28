@@ -971,7 +971,7 @@
         }
 
         const DOOR_PHOTO_PRESET_ROOT = 'images/doors/presets/';
-        const DOOR_PHOTO_PRESET_CACHE = '269';
+        const DOOR_PHOTO_PRESET_CACHE = '270';
         /** صور أبواب المصنع الحقيقية في المعاينة — SVG احتياطي عند غياب الصورة */
         const DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS = true;
         let doorDesignerPreviewRaf = 0;
@@ -2562,15 +2562,19 @@
         let siteCustomSections = [];
         let sitePartners = [];
         let siteCertifications = [];
-        /** معرض نبراس — 5 أقسام + مشاريع NHC (تُدار بالكامل من الإدارة) */
+        /** معرض نبراس — أقسام منظمة + مشاريع NHC (تُدار بالكامل من الإدارة) */
         let showroomGallery = null;
         const SHOWROOM_GALLERY_SECTION_DEFS = [
-            { key: 'doors', icon: 'door-open', titleAr: 'أبواب نبراس', titleEn: 'Nebras Doors', introAr: 'تشكيلة أبواب نبراس — من الملف التعريفي الرسمي 2026', introEn: 'Nebras door collection — official 2026 profile', emptyKey: 'showroomDoorsEmpty' },
-            { key: 'cabinets', icon: 'archive', titleAr: 'خزائن نبراس', titleEn: 'Nebras Cabinets', introAr: 'خزائن وتشطيبات نبراس بتصاميم عصرية', introEn: 'Nebras cabinets and finishes', emptyKey: 'showroomCabinetsEmpty' },
-            { key: 'wpcDoors', icon: 'door-closed', titleAr: 'أبواب WPC', titleEn: 'WPC Doors', introAr: 'أبواب WPC — مقاومة للماء والمناخ السعودي', introEn: 'WPC doors — water & climate resistant', emptyKey: 'showroomWpcDoorsEmpty' },
-            { key: 'wpcCabinets', icon: 'boxes-stacked', titleAr: 'خزائن WPC', titleEn: 'WPC Cabinets', introAr: 'خزائن WPC عالية الجودة من مصنع نبراس', introEn: 'Premium WPC cabinets from Nebras', emptyKey: 'showroomWpcCabinetsEmpty' },
-            { key: 'cnc', icon: 'cogs', titleAr: 'قطع CNC', titleEn: 'CNC Parts', introAr: 'أعمال CNC بدقة عالية — تصنيع حسب الطلب', introEn: 'Precision CNC manufacturing', emptyKey: 'showroomCncEmpty' },
-            { key: 'projects', icon: 'building', titleAr: 'مشاريع واعتمادات NHC', titleEn: 'NHC Projects & Approvals', introAr: 'شركاء في أضخم مشاريع الإسكان الوطني', introEn: 'Partners in national housing megaprojects', emptyKey: 'showroomProjectsEmpty' }
+            { key: 'doors', icon: 'door-open', titleAr: 'أبواب نبراس', titleEn: 'Nebras Doors', introAr: 'تشكيلة أبواب نبراس — من الملف التعريفي الرسمي 2026', introEn: 'Nebras door collection — official 2026 profile', emptyKey: 'showroomDoorsEmpty', banner: 'images/profile-2026/doors/doors-01.jpg' },
+            { key: 'wpcDoors', icon: 'door-closed', titleAr: 'أبواب WPC', titleEn: 'WPC Doors', introAr: 'أبواب WPC — مقاومة للماء والمناخ السعودي', introEn: 'WPC doors — water & climate resistant', emptyKey: 'showroomWpcDoorsEmpty', banner: 'images/catalog/wpc-photos/by-sku-clean/WPC-RDY-FLAT-45-STD.png' },
+            { key: 'cabinets', icon: 'archive', titleAr: 'خزائن نبراس', titleEn: 'Nebras Cabinets', introAr: 'خزائن وتشطيبات نبراس بتصاميم عصرية', introEn: 'Nebras cabinets and finishes', emptyKey: 'showroomCabinetsEmpty', banner: 'images/profile-2026/cabinets/cabinets-04.jpg' },
+            { key: 'wpcCabinets', icon: 'boxes-stacked', titleAr: 'خزائن WPC', titleEn: 'WPC Cabinets', introAr: 'خزائن WPC عالية الجودة من مصنع نبراس', introEn: 'Premium WPC cabinets from Nebras', emptyKey: 'showroomWpcCabinetsEmpty', banner: 'images/profile-2026/gallery-extra/gallery-extra-16.jpg' },
+            { key: 'kitchens', icon: 'utensils', titleAr: 'مطابخ نبراس', titleEn: 'Nebras Kitchens', introAr: 'مطابخ ووحدات تخزين — صور حقيقية من تشكيلة نبراس', introEn: 'Kitchens and storage — real Nebras catalog photos', emptyKey: 'showroomKitchensEmpty', banner: 'images/profile-2026/cabinets/cabinets-11.jpg' },
+            { key: 'windows', icon: 'border-all', titleAr: 'شبابيك ونوافذ', titleEn: 'Windows & Openings', introAr: 'أبواب زجاج · علويات · شرائح — تشكيلة شبابيك نبراس', introEn: 'Glass doors, transoms, sliding panels', emptyKey: 'showroomWindowsEmpty', banner: 'images/profile-2026/doors/doors-02.jpg' },
+            { key: 'facades', icon: 'city', titleAr: 'واجهات وكلادينج', titleEn: 'Facades & Cladding', introAr: 'واجهات منحوتة · كلادينج · لوحات CNC', introEn: 'Carved facades, cladding, CNC panels', emptyKey: 'showroomFacadesEmpty', banner: 'images/profile-2026/cnc/cnc-06.jpg' },
+            { key: 'aluminum', icon: 'industry', titleAr: 'ألومنيوم نبراس', titleEn: 'Nebras Aluminum', introAr: 'بروفيلات · صفائح · زوايا — مقاسات حسب الطلب', introEn: 'Profiles, sheets, angles — custom sizes', emptyKey: 'showroomAluminumEmpty', banner: 'images/profile-2026/cnc/cnc-01.jpg' },
+            { key: 'cnc', icon: 'cogs', titleAr: 'قطع CNC', titleEn: 'CNC Parts', introAr: 'أعمال CNC بدقة عالية — تصنيع حسب الطلب', introEn: 'Precision CNC manufacturing', emptyKey: 'showroomCncEmpty', banner: 'images/profile-2026/cnc/cnc-03.jpg' },
+            { key: 'projects', icon: 'building', titleAr: 'مشاريع واعتمادات NHC', titleEn: 'NHC Projects & Approvals', introAr: 'شركاء في أضخم مشاريع الإسكان الوطني', introEn: 'Partners in national housing megaprojects', emptyKey: 'showroomProjectsEmpty', banner: 'images/projects/nhc/mashriqiyah-aerial.png' }
         ];
 
         function getShowroomGallerySectionKeys() {
@@ -2915,11 +2919,11 @@
         /** منطقة تلوين الرولّة — clip على لوح الباب فقط (مُعايرة لصور by-sku-clean 960×1200) */
         const WPC_CATALOG_PHOTO_PANEL_CLIP = '10.5% 18% 8.7% 18%';
         const WPC_DOOR_TINT_PROFILES = {
-            flat: { clip: WPC_CATALOG_PHOTO_PANEL_CLIP },
-            u: { clip: WPC_CATALOG_PHOTO_PANEL_CLIP },
-            lib: { clip: WPC_CATALOG_PHOTO_PANEL_CLIP },
-            'leaf-quarter': { clip: WPC_CATALOG_PHOTO_PANEL_CLIP },
-            sliding: { clip: WPC_CATALOG_PHOTO_PANEL_CLIP }
+            flat: { clip: '10.5% 18% 8.7% 18%' },
+            u: { clip: '11% 16.5% 9.5% 16.5%' },
+            lib: { clip: '10.5% 17.5% 8.7% 17.5%' },
+            'leaf-quarter': { clip: '10% 16% 8% 16%' },
+            sliding: { clip: '14% 11% 14% 11%' }
         };
 
         function parseWpcClipInset(clip) {
@@ -2967,6 +2971,13 @@
                 'images/catalog/wpc-photos/26-raw-clad-leaf.png'
             ]
         };
+
+        /** عوالم المتجر — تنقل داخلي بين الأبواب والألومنيوم وWPC عضم */
+        const NEBRAS_STORE_WORLDS = [
+            { productId: 'prod-wpc', labelAr: 'عالم الأبواب', labelEn: 'Doors World', icon: 'fa-door-open', banner: 'images/catalog/wpc-photos/by-sku-clean/WPC-RDY-FLAT-45-STD.png' },
+            { productId: 'prod-aluminum', labelAr: 'عالم الألومنيوم', labelEn: 'Aluminum World', icon: 'fa-industry', banner: 'images/profile-2026/cnc/cnc-01.jpg' },
+            { productId: 'prod-wpc-raw', labelAr: 'WPC عضم', labelEn: 'WPC Raw', icon: 'fa-door-closed', banner: 'images/catalog/wpc-photos/08-bone-profile.png' }
+        ];
 
         function getWpcDoorClipPath(variant) {
             const profile = getWpcDoorTintProfile(variant);
@@ -3703,7 +3714,28 @@
             if (!product) return '';
             if (isWpcDoorsProduct(product)) return buildStoreWelcomeHeroHtml(product, lang, ui);
             if (isAluminumProduct(product)) return buildStoreAluminumWelcomeHeroHtml(product, lang, ui);
+            if (product.id === 'prod-wpc-raw') return buildStoreWelcomeHeroHtml(product, lang, ui);
             return '';
+        }
+
+        function buildStoreWorldsNavHtml(activeProductId, lang, iconId) {
+            const ui = siteText[lang] || siteText.ar;
+            const iid = iconId != null ? iconId : 'null';
+            const cards = NEBRAS_STORE_WORLDS.map(function(w) {
+                const product = siteProducts.find(function(p) { return p && p.id === w.productId; });
+                if (!product || product.visible === false) return '';
+                const label = lang === 'en' ? (w.labelEn || w.labelAr) : w.labelAr;
+                const active = w.productId === activeProductId ? ' is-active' : '';
+                const pid = String(w.productId).replace(/'/g, "\\'");
+                const banner = resolveDisplayMediaUrl(w.banner);
+                return '<button type="button" class="nebras-store-worlds-nav-btn' + active + '" onclick="openStoreSubCategoryHub(\'' + pid + '\',' + iid + ')">' +
+                    '<span class="nebras-store-worlds-nav-media"><img src="' + escapeHtmlAttr(banner) + '" alt="" loading="lazy" decoding="async"></span>' +
+                    '<span class="nebras-store-worlds-nav-label"><i class="fas ' + escapeHtmlAttr(w.icon) + '"></i> ' + escapeHtmlAttr(label) + '</span></button>';
+            }).join('');
+            if (!cards) return '';
+            return '<nav class="nebras-store-worlds-nav" aria-label="' + escapeHtmlAttr(ui.storeWorldsNavLabel || 'عوالم المتجر') + '">' +
+                '<p class="nebras-store-worlds-nav-kicker"><i class="fas fa-th-large"></i> ' + escapeHtmlAttr(ui.storeWorldsNavKicker || 'عوالم نبراس — اختر المنتج') + '</p>' +
+                '<div class="nebras-store-worlds-nav-grid">' + cards + '</div></nav>';
         }
 
         function buildStoreAluminumWelcomeHeroHtml(product, lang, ui) {
@@ -3918,7 +3950,8 @@
             const cards = groups.map(function(grp) {
                 return buildStoreSubCategoryHubCardHtml(product, grp, lang, ui, iconId);
             }).join('');
-            return buildStoreProductWelcomeHeroHtml(product, lang, ui) +
+            return buildStoreWorldsNavHtml(product.id, lang, iconId) +
+                buildStoreProductWelcomeHeroHtml(product, lang, ui) +
                 buildStoreDoorRoomScenariosHtml(product, lang, ui) +
                 buildStoreCatalogResourcesHtml(lang, ui) +
                 '<div class="nebras-store-subhub nebras-store-subhub--premium" data-store-context="' + escapeHtmlAttr(contextKey || 'subhub') + '">' +
@@ -3960,7 +3993,8 @@
             const bannerHtml = bannerImg
                 ? ('<div class="nebras-store-subsection-banner-visual"><img src="' + escapeHtmlAttr(bannerImg) + '" alt="' + escapeHtmlAttr(subLabel) + '" loading="eager" decoding="async"></div>')
                 : '';
-            return buildStoreProductWelcomeHeroHtml(product, lang, ui) +
+            return buildStoreWorldsNavHtml(product.id, lang, iconId) +
+                buildStoreProductWelcomeHeroHtml(product, lang, ui) +
                 buildStoreDoorRoomActiveChipHtml(lang, ui) +
                 backBtn +
                 '<section class="nebras-store-subcategory-page nebras-store-subcategory-page--premium" data-sub-id="' + escapeHtmlAttr(subCategoryId) + '">' +
@@ -13673,14 +13707,42 @@
             const emptyKey = def && def.emptyKey ? def.emptyKey : 'showroomProductsEmpty';
             const emptyMsg = ui[emptyKey] || ui.showroomProductsEmpty || 'قريباً — صور المعرض.';
             const icon = def && def.icon ? def.icon : 'images';
+            const bannerPath = (def && def.banner) || (items[0] && items[0].imageUrl) || '';
+            const bannerHtml = bannerPath
+                ? ('<div class="showroom-hub-section-banner"><img src="' + escapeHtmlAttr(resolveDisplayMediaUrl(bannerPath)) + '" alt="' + escapeHtmlAttr(title) + '" loading="lazy" decoding="async"></div>')
+                : '';
             const grid = items.length
                 ? '<div class="showroom-gallery-grid">' + items.map(function(it) { return buildShowroomGalleryCardHtml(it, lang, ui); }).join('') + '</div>'
                 : '<p class="showroom-gallery-empty">' + escapeHtmlAttr(emptyMsg) + '</p>';
             return '<section class="showroom-hub-section showroom-hub-section--' + sectionKey + '" id="showroom-section-' + sectionKey + '">' +
+                bannerHtml +
                 '<div class="showroom-hub-section-head">' +
                 '<h3><i class="fas fa-' + icon + '"></i> ' + escapeHtmlAttr(title) + ' <span class="showroom-hub-section-count">' + items.length + '</span></h3>' +
                 (intro ? '<p class="showroom-hub-section-intro">' + escapeHtmlAttr(intro) + '</p>' : '') +
                 '</div>' + grid + '</section>';
+        }
+
+        function buildShowroomHubHeroHtml(lang) {
+            const ui = siteText[lang] || siteText.ar;
+            const photos = [
+                'images/profile-2026/doors/doors-01.jpg',
+                'images/profile-2026/cnc/cnc-01.jpg',
+                'images/profile-2026/cabinets/cabinets-11.jpg',
+                'images/profile-2026/cnc/cnc-06.jpg'
+            ];
+            const title = ui.showroomHubHeroTitle || 'معرض نبراس — صور منتجات حقيقية';
+            const subtitle = ui.showroomHubHeroSubtitle || 'أبواب · مطابخ · شبابيك · واجهات · ألومنيوم — من المصنع السعودي، بدون صور مولّدة.';
+            const mosaicHtml = photos.map(function(src, idx) {
+                return '<figure class="showroom-hub-hero-mosaic-item"><img src="' + escapeHtmlAttr(resolveDisplayMediaUrl(src)) + '" alt="' + escapeHtmlAttr(title) + ' — ' + String(idx + 1) + '" loading="' + (idx === 0 ? 'eager' : 'lazy') + '" decoding="async"></figure>';
+            }).join('');
+            return '<section class="showroom-hub-hero" aria-label="' + escapeHtmlAttr(title) + '">' +
+                '<div class="showroom-hub-hero-copy">' +
+                '<span class="showroom-hub-hero-eyebrow">' + escapeHtmlAttr(ui.showroomHubHeroEyebrow || 'معرض نبراس') + '</span>' +
+                '<h2 class="showroom-hub-hero-title">' + escapeHtmlAttr(title) + '</h2>' +
+                '<p class="showroom-hub-hero-subtitle">' + escapeHtmlAttr(subtitle) + '</p>' +
+                '</div>' +
+                '<div class="showroom-hub-hero-mosaic" aria-hidden="true">' + mosaicHtml + '</div>' +
+                '</section>';
         }
 
         function buildShowroomHubNavHtml(lang) {
@@ -13700,7 +13762,8 @@
             const ui = siteText[lang] || siteText.ar;
             ensureShowroomGallery();
             return '<div class="showroom-hub">' +
-                '<p class="workspace-intro showroom-hub-intro">' + escapeHtmlAttr(ui.showroomHubIntro || 'معرض نبراس — أبواب نبراس · خزائن نبراس · WPC · CNC · مشاريع NHC.') + '</p>' +
+                buildShowroomHubHeroHtml(lang) +
+                '<p class="workspace-intro showroom-hub-intro">' + escapeHtmlAttr(ui.showroomHubIntro || 'معرض نبراس — أبواب · مطابخ · شبابيك · واجهات · ألومنيوم · WPC · CNC · مشاريع NHC.') + '</p>' +
                 '<div class="showroom-hub-quick">' +
                 '<button type="button" class="workspace-action-btn" onclick="openNebrasWorkspace({pillar:\'showroom\',view:\'certifications\'})"><i class="fas fa-award"></i> ' + escapeHtmlAttr(ui.visitorQuickCertifications || 'اعتمادات وشهادات') + '</button>' +
                 '<button type="button" class="workspace-action-btn" onclick="openNebrasWorkspace({pillar:\'showroom\',view:\'color-rolls\'})"><i class="fas fa-swatchbook"></i> ' + escapeHtmlAttr(ui.visitorQuickColorRolls || 'كتالوج الألوان') + '</button>' +

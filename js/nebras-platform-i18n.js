@@ -1,11 +1,11 @@
 /**
- * نبراس hrws294 — i18n: العربية فوراً · EN/ZH كسول عند تغيير اللغة
+ * نبراس hrws295 — i18n: العربية فوراً · EN/ZH كسول عند تغيير اللغة
  * يُحمَّل بعد nebras-platform.js (NEBRAS_BRAND_* · getNebrasBrand*)
  */
 (function(global) {
     'use strict';
 
-    var VER = 'hrws294';
+    var VER = 'hrws295';
     var localeInflight = Object.create(null);
     var localeLoaded = { ar: true };
 
@@ -175,7 +175,12 @@
                 companyProfileTitle: 'البروفايل التعريفي لنبراس',
                 companyProfileIntro: 'البروفايل التعريفي الرسمي — عرض كامل 24 صفحة داخل الأيقونة مع تنزيل PDF — كل الأقسام مرتبطة بأيقونات الموقع.',
                 showroomHubTitle: 'استكشف معرض نبراس',
-                showroomHubIntro: 'معرض نبراس — أبواب نبراس · خزائن نبراس · أبواب WPC · خزائن WPC · قطع CNC · مشاريع NHC. اضغط على أي صورة للعرض بالدقة الكاملة.',
+                showroomHubIntro: 'معرض نبراس — أبواب · مطابخ · شبابيك · واجهات · ألومنيوم · WPC · CNC · مشاريع NHC. اضغط على أي صورة للعرض بالدقة الكاملة — صور منتجات حقيقية.',
+                storeWorldsNavLabel: 'عوالم المتجر',
+                storeWorldsNavKicker: 'عوالم نبراس — اختر المنتج',
+                showroomHubHeroTitle: 'معرض نبراس — صور منتجات حقيقية',
+                showroomHubHeroSubtitle: 'أبواب · مطابخ · شبابيك · واجهات · ألومنيوم — من المصنع السعودي، بدون صور مولّدة.',
+                showroomHubHeroEyebrow: 'معرض نبراس',
                 showroomDoorsEmpty: 'معرض أبواب نبراس — يُحمّل من الملف التعريفي 2026.',
                 showroomCabinetsEmpty: 'معرض خزائن نبراس — يُحمّل من الملف التعريفي 2026.',
                 showroomWpcDoorsEmpty: 'معرض أبواب WPC — يُحمّل من الملف التعريفي 2026.',

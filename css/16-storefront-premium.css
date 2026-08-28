@@ -1692,26 +1692,11 @@ body.nebras-mobile-bar-active.admin-session .nebras-mobile-commerce-bar {
 /* معاينة الرولّة — خبز Canvas على لوح الباب فقط (بدون تلوين مربع البطاقة) */
 .nebras-store-sku-door-stack.has-roll-composite-ready::after,
 .nebras-store-sku-door-stack.has-roll-composite-ready::before,
-.nebras-store-sku-door-stack.has-roll-pending::after {
+.nebras-store-sku-door-stack.has-roll-pending::after,
+.nebras-store-sku-door-stack.has-roll-pending::before {
     display: none !important;
     content: none !important;
-}
-
-.nebras-store-sku-door-stack.has-roll-pending::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 5;
-    pointer-events: none;
-    border-radius: 6px;
-    background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.22) 50%, transparent 65%);
-    background-size: 220% 100%;
-    animation: nebras-store-roll-shimmer 1.1s ease-in-out infinite;
-}
-
-@keyframes nebras-store-roll-shimmer {
-    0% { background-position: 120% 0; }
-    100% { background-position: -120% 0; }
+    animation: none !important;
 }
 
 .nebras-store-sku-img--wpc.has-roll-composite {

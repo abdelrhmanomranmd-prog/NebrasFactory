@@ -7,7 +7,7 @@
 
     const PROFILE_2026_SEED_VERSION = 9;
     const PROFILE_STORAGE_KEY = 'nebrasProfile2026SeedVersion';
-    const SHOWROOM_CATALOG_VERSION = 9;
+    const SHOWROOM_CATALOG_VERSION = 10;
     const SHOWROOM_CATALOG_STORAGE_KEY = 'nebrasShowroomCatalogVersion';
 
     function img(folder, n) {
@@ -60,7 +60,11 @@
                 serviceTitleInstall: 'ضمان وخدمة',
                 serviceTextInstall: 'ضمان 10 سنوات — أبواب WPC ضد الماء والنمل الأبيض. منتجات جاهزة لا تحتاج صبغاً أو سنفرة.',
                 partnersPublicSubtitle: 'معتمدون من NHC والشركة الوطنية للإسكان — شركاء في أضخم مشاريع الإسكان الوطني',
-                showroomHubIntro: 'معرض نبراس — أبواب نبراس · خزائن نبراس · أبواب WPC · خزائن WPC · قطع CNC · مشاريع NHC',
+                showroomHubIntro: 'معرض نبراس — أبواب · مطابخ · شبابيك · واجهات · ألومنيوم · WPC · CNC · مشاريع NHC — صور منتجات حقيقية من المصنع',
+                showroomKitchensEmpty: 'معرض مطابخ نبراس — يُحمّل من الملف التعريفي 2026.',
+                showroomWindowsEmpty: 'معرض شبابيك نبراس — يُحمّل من الملف التعريفي 2026.',
+                showroomFacadesEmpty: 'معرض واجهات وكلادينج نبراس — يُحمّل من الملف التعريفي 2026.',
+                showroomAluminumEmpty: 'معرض ألومنيوم نبراس — يُحمّل من الملف التعريفي 2026.',
                 showroomDoorsEmpty: 'معرض أبواب نبراس — يُحمّل من الملف التعريفي 2026.',
                 showroomCabinetsEmpty: 'معرض خزائن نبراس — يُحمّل من الملف التعريفي 2026.',
                 showroomWpcDoorsEmpty: 'معرض أبواب WPC — يُحمّل من الملف التعريفي 2026.',
@@ -79,7 +83,7 @@
                 gatewayLanePlatformHint: 'البروفايل التعريفي · فروع · حسابات بنكية · خدمات المصنع',
                 dashCompanyProfileTitle: 'البروفايل التعريفي لنبراس',
                 dashCompanyProfileText: 'عرض البروفايل الكامل داخل المنصة — 24 صفحة مع تنزيل PDF.',
-                dashShowroomText: 'استكشف معرض نبراس — أبواب · خزائن · WPC · CNC · مشاريع NHC.'
+                dashShowroomText: 'استكشف معرض نبراس — أبواب · مطابخ · شبابيك · واجهات · ألومنيوم · WPC · CNC · مشاريع NHC.'
             },
             en: {
                 pageDescription: 'Saudi WPC door manufacturer since 2018 — NHC · SASO · ISO approved supplier.',
@@ -96,7 +100,7 @@
                 trustItem2Sub: '100% local manufacturing',
                 aboutText1: 'A leading Saudi WPC door company — 7+ years of quality and innovation with a full factory in Qassim.',
                 aboutText2: 'Leadership in WPC aligned with Vision 2030 — highest quality standards and after-sales excellence.',
-                showroomHubIntro: 'Nebras Showroom — doors, cabinets, WPC, CNC, NHC projects',
+                showroomHubIntro: 'Nebras Showroom — doors, kitchens, windows, facades, aluminum, WPC, CNC, NHC — real factory product photos',
                 visitorQuickCompanyProfile: 'Full Company Profile 2026',
                 visitorQuickNebrasProfile: 'Nebras Company Profile',
                 visitorQuickBranches: 'Explore Nebras Branches',
@@ -318,6 +322,48 @@
         [galleryExtra(47), 'خزانة WPC تخزين ضيقة', 'WPC slim storage cabinet']
     ];
 
+    const SHOWROOM_KITCHENS_CATALOG = [
+        [img('cabinets', 11), 'خزانة مطبخ زاوية', 'Corner kitchen cabinet'],
+        [img('cabinets', 14), 'خزانة مطبخ بإطار ذهبي', 'Kitchen cabinet with gold trim'],
+        [img('cabinets', 18), 'خزانة تخزين مطبخ — مصنع', 'Factory kitchen storage unit'],
+        [galleryExtra(28), 'خزانة WPC مطبخ مدمجة', 'WPC built-in kitchen'],
+        [galleryExtra(41), 'خزانة WPC مطبخ علوية وسفلية', 'WPC upper and base kitchen'],
+        [galleryExtra(46), 'خزانة WPC مطبخ عصرية', 'WPC modern kitchen'],
+        [galleryExtra(47), 'خزانة WPC تخزين ضيقة', 'WPC slim kitchen storage'],
+        [img('cabinets', 10), 'وحدة تلفزيون رخامية', 'Marble TV wall unit']
+    ];
+
+    const SHOWROOM_WINDOWS_CATALOG = [
+        [img('doors', 2), 'باب زجاج مزدوج كلاسيك', 'Double classic glass door'],
+        [img('doors', 5), 'باب فلات مع علوية ثابتة', 'Flat door with transom'],
+        [img('doors', 7), 'باب يوتشانيل خشبي مع علوية', 'Wood U-channel door with transom'],
+        [galleryExtra(14), 'باب WPC زجاج ولوحات', 'WPC glass panel door'],
+        [galleryExtra(2), 'باب WPC كلاسيك لوحين', 'WPC two-panel classic door'],
+        [img('cnc', 14), 'قطع ستائر CNC', 'CNC decorative screen parts'],
+        [img('doors', 11), 'باب شرائح منزلق مزدوج', 'Double sliding slat door'],
+        [galleryExtra(5), 'باب WPC بعلوية ثابتة', 'WPC door with transom']
+    ];
+
+    const SHOWROOM_FACADES_CATALOG = [
+        [img('cnc', 6), 'واجهة منحوتة CNC', 'CNC carved facade panel'],
+        [img('cnc', 8), 'زخرفة واجهة CNC', 'CNC facade ornament'],
+        [img('cnc', 13), 'واجهة CNC بارزة', 'CNC raised relief facade'],
+        [img('cnc', 7), 'لوح ألواح CNC هندسي', 'CNC geometric panel'],
+        [img('cnc', 11), 'لوح جدار CNC ثلاثي', 'CNC 3D wall panel'],
+        [galleryExtra(30), 'خزانة WPC تخزين مصنع', 'WPC factory storage facade unit'],
+        [img('cnc', 2), 'لوح زخرفي CNC — أوراق ذهبية', 'CNC gold leaf relief panel']
+    ];
+
+    const SHOWROOM_ALUMINUM_CATALOG = [
+        [img('cnc', 1), 'بروفيل ألومنيوم قياسي', 'Standard aluminum profile'],
+        [img('cnc', 4), 'قطاع ألومنيوم U-channel', 'U-channel aluminum section'],
+        [img('cnc', 5), 'بروفيل إطار أبواب', 'Door frame aluminum profile'],
+        [img('cnc', 12), 'تخصيم ألومنيوم CNC', 'CNC aluminum cutting'],
+        [img('cnc', 14), 'كلادينج واجهات ألومنيوم', 'Aluminum facade cladding'],
+        [img('cnc', 9), 'قطع ديكور CNC للجدران', 'CNC wall decor parts'],
+        [img('cnc', 15), 'تشطيب CNC باب وخزانة', 'CNC door and cabinet finish']
+    ];
+
     const SHOWROOM_CNC_CATALOG = [
         [img('cnc', 2), 'لوح زخرفي CNC — أوراق ذهبية', 'CNC gold leaf relief panel'],
         [img('cnc', 3), 'نقش زخرفي CNC على WPC', 'CNC decorative WPC carving'],
@@ -448,6 +494,34 @@
             introEn: 'WPC cabinets, kitchens, and TV units — matched imagery only',
             items: buildCuratedItems('showroom-wpc-cabinets', SHOWROOM_WPC_CABINETS_CATALOG)
         };
+        showroomGallery.kitchens = {
+            titleAr: 'مطابخ نبراس',
+            titleEn: 'Nebras Kitchens',
+            introAr: 'مطابخ ووحدات تخزين — صور حقيقية من تشكيلة نبراس WPC والخزائن',
+            introEn: 'Kitchens and storage units — real Nebras WPC catalog photos',
+            items: buildCuratedItems('showroom-kitchens', SHOWROOM_KITCHENS_CATALOG)
+        };
+        showroomGallery.windows = {
+            titleAr: 'شبابيك ونوافذ',
+            titleEn: 'Windows & Openings',
+            introAr: 'أبواب زجاج · علويات ثابتة · شرائح منزلقة — تشكيلة شبابيك نبراس',
+            introEn: 'Glass doors, transoms, sliding panels — Nebras window collection',
+            items: buildCuratedItems('showroom-windows', SHOWROOM_WINDOWS_CATALOG)
+        };
+        showroomGallery.facades = {
+            titleAr: 'واجهات وكلادينج',
+            titleEn: 'Facades & Cladding',
+            introAr: 'واجهات منحوتة · كلادينج · لوحات CNC — تصنيع حسب المشروع',
+            introEn: 'Carved facades, cladding, CNC panels — project-based manufacturing',
+            items: buildCuratedItems('showroom-facades', SHOWROOM_FACADES_CATALOG)
+        };
+        showroomGallery.aluminum = {
+            titleAr: 'ألومنيوم نبراس',
+            titleEn: 'Nebras Aluminum',
+            introAr: 'بروفيلات · صفائح · زوايا · تخصيم — مقاسات حسب الطلب داخل المنصة',
+            introEn: 'Profiles, sheets, angles, cutting — custom sizes inside the platform',
+            items: buildCuratedItems('showroom-aluminum', SHOWROOM_ALUMINUM_CATALOG)
+        };
         showroomGallery.cnc = {
             titleAr: 'قطع CNC',
             titleEn: 'CNC Parts',
@@ -509,6 +583,10 @@
         const needsRepair = catalogStale || showroomHasGenericLabels() || showroomProjectsNeedFix() ||
             !showroomGallery.wpcDoors || !showroomGallery.wpcDoors.items || !showroomGallery.wpcDoors.items.length ||
             !showroomGallery.wpcCabinets || !showroomGallery.wpcCabinets.items || !showroomGallery.wpcCabinets.items.length ||
+            !showroomGallery.kitchens || !showroomGallery.kitchens.items || !showroomGallery.kitchens.items.length ||
+            !showroomGallery.windows || !showroomGallery.windows.items || !showroomGallery.windows.items.length ||
+            !showroomGallery.facades || !showroomGallery.facades.items || !showroomGallery.facades.items.length ||
+            !showroomGallery.aluminum || !showroomGallery.aluminum.items || !showroomGallery.aluminum.items.length ||
             !showroomGallery.doors || !showroomGallery.doors.items || showroomGallery.doors.items.length < 5;
         if (!needsRepair) return false;
         mergeShowroomGallery();

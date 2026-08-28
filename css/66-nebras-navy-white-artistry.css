@@ -1,4 +1,4 @@
-/* ═══ نبراس hrws294 — كحلي + أبيض · لمسات فنية · متجر أبواب ═══ */
+/* ═══ نبراس hrws295 — كحلي + أبيض · لمسات فنية · متجر أبواب ═══ */
 
 :root {
     --nb-pattern-navy: rgba(13, 40, 64, 0.045);
@@ -662,4 +662,166 @@ body.admin-session #admin-dashboard.show > *:not(.celebration-deco-layer) {
         max-height: 92vh;
         overflow-y: auto;
     }
+
+    .nebras-store-worlds-nav-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .showroom-hub-hero {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ═══ hrws295 — عوالم المتجر الداخلية ═══ */
+.nebras-store-worlds-nav {
+    margin: 0 0 20px;
+    padding: 16px 18px;
+    border-radius: 18px;
+    background: var(--nb-surface);
+    border: 1px solid rgba(13, 40, 64, 0.1);
+    box-shadow: 0 12px 32px rgba(13, 40, 64, 0.07);
+}
+
+.nebras-store-worlds-nav-kicker {
+    margin: 0 0 12px;
+    font-size: 0.82rem;
+    font-weight: 800;
+    color: var(--nb-navy-mid);
+    letter-spacing: 0.02em;
+}
+
+.nebras-store-worlds-nav-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.nebras-store-worlds-nav-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    padding: 0;
+    border: 2px solid rgba(13, 40, 64, 0.1);
+    border-radius: 14px;
+    background: #fff;
+    cursor: pointer;
+    overflow: hidden;
+    transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.nebras-store-worlds-nav-btn:hover {
+    transform: translateY(-2px);
+    border-color: rgba(21, 94, 148, 0.35);
+    box-shadow: 0 10px 24px rgba(13, 40, 64, 0.1);
+}
+
+.nebras-store-worlds-nav-btn.is-active {
+    border-color: var(--nb-navy);
+    box-shadow: 0 12px 28px rgba(13, 40, 64, 0.14);
+}
+
+.nebras-store-worlds-nav-media {
+    display: block;
+    min-height: 88px;
+    max-height: 110px;
+    overflow: hidden;
+    background: #f1f5f9;
+}
+
+.nebras-store-worlds-nav-media img {
+    width: 100%;
+    height: 100%;
+    min-height: 88px;
+    object-fit: cover;
+    object-position: center center;
+    display: block;
+}
+
+.nebras-store-worlds-nav-label {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 12px;
+    font-size: 0.88rem;
+    font-weight: 800;
+    color: var(--nb-navy);
+    background: linear-gradient(180deg, #fff 0%, #f8fbff 100%);
+}
+
+.nebras-store-worlds-nav-btn.is-active .nebras-store-worlds-nav-label {
+    background: linear-gradient(135deg, var(--nb-navy), var(--nb-navy-mid));
+    color: #fff;
+}
+
+/* ═══ hrws295 — hero معرض نبراس ═══ */
+.showroom-hub-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    gap: 0;
+    margin: 0 0 20px;
+    border-radius: 20px;
+    overflow: hidden;
+    min-height: 200px;
+    border: 1px solid rgba(13, 40, 64, 0.12);
+    box-shadow: 0 18px 48px rgba(13, 40, 64, 0.12);
+    background: linear-gradient(135deg, var(--nb-navy) 0%, #155e94 100%);
+}
+
+.showroom-hub-hero-copy {
+    padding: 24px 28px;
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.showroom-hub-hero-eyebrow {
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.85;
+    margin-bottom: 8px;
+}
+
+.showroom-hub-hero-title {
+    margin: 0 0 10px;
+    font-size: clamp(1.25rem, 2.4vw, 1.65rem);
+    line-height: 1.25;
+}
+
+.showroom-hub-hero-subtitle {
+    margin: 0;
+    font-size: 0.92rem;
+    line-height: 1.55;
+    opacity: 0.92;
+}
+
+.showroom-hub-hero-mosaic {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 8px;
+    padding: 14px;
+    background: linear-gradient(180deg, #f8fafc 0%, #eef3f8 100%);
+}
+
+.showroom-hub-hero-mosaic-item {
+    margin: 0;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid rgba(13, 40, 64, 0.08);
+    background: #fff;
+    min-height: 80px;
+}
+
+.showroom-hub-hero-mosaic-item img {
+    width: 100%;
+    height: 100%;
+    min-height: 80px;
+    object-fit: cover;
+    object-position: center center;
+    display: block;
 }

@@ -75,6 +75,42 @@
     border-top: 1px solid rgba(21, 94, 148, 0.12);
 }
 
+.showroom-hub-section-banner {
+    margin: 0 0 16px;
+    border-radius: 18px;
+    overflow: hidden;
+    min-height: 140px;
+    max-height: 240px;
+    border: 1px solid rgba(13, 40, 64, 0.1);
+    box-shadow: 0 14px 36px rgba(13, 40, 64, 0.1);
+}
+
+.showroom-hub-section-banner img {
+    width: 100%;
+    height: 100%;
+    min-height: 140px;
+    max-height: 240px;
+    object-fit: cover;
+    object-position: center center;
+    display: block;
+}
+
+.showroom-hub-section--aluminum .showroom-hub-section-head h3 {
+    color: #155e94;
+}
+
+.showroom-hub-section--kitchens .showroom-hub-section-head h3 {
+    color: #0d2840;
+}
+
+.showroom-hub-section--windows .showroom-hub-section-head h3 {
+    color: #1e4d78;
+}
+
+.showroom-hub-section--facades .showroom-hub-section-head h3 {
+    color: #2d6a9f;
+}
+
 .showroom-hub-section:first-of-type {
     border-top: none;
     padding-top: 8px;
