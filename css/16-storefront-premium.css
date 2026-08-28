@@ -1689,6 +1689,47 @@ body.nebras-mobile-bar-active.admin-session .nebras-mobile-commerce-bar {
     filter: none !important;
 }
 
+/* معاينة الرولّة — خبز Canvas (نفس مصمّم الأبواب) */
+.nebras-store-sku-door-stack.has-roll-texture:not(.has-roll-composite-ready)::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 3;
+    border-radius: 6px;
+    background-color: var(--door-roll-tint, #b8bcc4);
+    mix-blend-mode: color;
+    opacity: var(--door-roll-tint-opacity, 0.78);
+    pointer-events: none;
+    transition: opacity 0.28s ease;
+}
+
+.nebras-store-sku-door-stack.has-roll-composite-ready::after,
+.nebras-store-sku-door-stack.has-roll-composite-ready::before {
+    display: none !important;
+    content: none !important;
+}
+
+.nebras-store-sku-door-stack.has-roll-pending::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    pointer-events: none;
+    border-radius: 6px;
+    background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.22) 50%, transparent 65%);
+    background-size: 220% 100%;
+    animation: nebras-store-roll-shimmer 1.1s ease-in-out infinite;
+}
+
+@keyframes nebras-store-roll-shimmer {
+    0% { background-position: 120% 0; }
+    100% { background-position: -120% 0; }
+}
+
+.nebras-store-sku-img--wpc.has-roll-composite {
+    filter: contrast(1.02) saturate(1.04) !important;
+}
+
 .nebras-store-sku-door-panel-tint {
     display: none !important;
 }

@@ -3163,6 +3163,65 @@
             return base + ' sepia(0.08)';
         }
 
+        /** معاينة متجر — نفس خبز Canvas + نسيج الرولّة الحقيقي كمصمّم الأبواب */
+        function applyComposedRollToStoreSkuImg(img, stack, baseSrc, rollState) {
+            if (!img || !baseSrc || !rollState) return;
+            const hex = rollState.hex || '#b8bcc4';
+            const catIdx = rollState.catalogIndex != null ? rollState.catalogIndex : 0;
+            const isRoll = rollState.isRoll !== false;
+            const panelLayer = stack ? stack.querySelector('.nebras-store-sku-door-panel-color') : null;
+            const token = 'store-' + String(Date.now()) + '-' + catIdx + '-' + String(hex || '').replace('#', '');
+            img.setAttribute('data-roll-compose-token', token);
+            img.style.filter = 'none';
+            img.style.transition = 'opacity 0.32s ease, transform 0.35s ease';
+            if (panelLayer) clearWpcStoreDoorPanelLayer(panelLayer);
+            if (stack) {
+                stack.classList.remove('has-door-roll-tint--clip-panel', 'has-door-roll-tint--mask-panel', 'has-door-roll-tint--panel-only', 'has-door-roll-tint--photo', 'has-door-roll-tint');
+                stack.style.removeProperty('--door-roll-texture-url');
+            }
+            const baseDisplay = resolveDisplayMediaUrl(baseSrc);
+            if (!isRoll) {
+                img.src = baseDisplay;
+                img.setAttribute('data-full-src', baseDisplay);
+                img.classList.remove('has-roll-composite', 'has-roll-pending');
+                img.removeAttribute('data-roll-compose-token');
+                if (stack) stack.classList.remove('has-roll-composite-ready', 'has-roll-pending', 'has-roll-texture');
+                return;
+            }
+            if (!img.classList.contains('has-roll-composite')) img.src = baseDisplay;
+            img.classList.add('has-roll-pending');
+            img.classList.remove('has-roll-composite');
+            if (stack) {
+                stack.classList.add('has-roll-pending', 'has-roll-texture');
+                stack.classList.remove('has-roll-composite-ready');
+                applyRollBlendCssVars(stack, hex);
+                stack.style.setProperty('--door-roll-tint', hex);
+            }
+            const tex = resolveDoorRollTextureUrl(rollState.swatchUrl || getRollSwatchImageUrl(catIdx));
+            composeDoorPhotoWithRoll(baseSrc, tex, hex, catIdx, { useMask: true }).then(function(composed) {
+                if (!img.isConnected) return;
+                if (img.getAttribute('data-roll-compose-token') !== token) return;
+                if (composed) {
+                    img.src = composed;
+                    img.setAttribute('data-full-src', composed);
+                    img.classList.add('has-roll-composite');
+                    img.classList.remove('has-roll-pending');
+                    if (stack) {
+                        stack.classList.add('has-roll-composite-ready');
+                        stack.classList.remove('has-roll-pending');
+                    }
+                    return;
+                }
+                img.src = baseDisplay;
+                img.setAttribute('data-full-src', baseDisplay);
+                img.classList.remove('has-roll-pending', 'has-roll-composite');
+                if (stack) {
+                    stack.classList.remove('has-roll-pending', 'has-roll-composite-ready', 'has-roll-texture');
+                    applyDoorRollTintToElements(stack, rollState);
+                }
+            });
+        }
+
         function applyWpcStoreSkuRollTint(card, catalogIndex) {
             if (!card) return;
             const stack = card.querySelector('.nebras-store-sku-door-stack');
@@ -3177,8 +3236,10 @@
             const panelLayer = stack ? stack.querySelector('.nebras-store-sku-door-panel-color') : null;
             if (!baseSrc) {
                 img.style.filter = '';
+                img.classList.remove('has-roll-composite', 'has-roll-pending');
+                img.removeAttribute('data-roll-compose-token');
                 if (stack) {
-                    stack.classList.remove('has-door-roll-tint', 'has-door-roll-tint--photo', 'has-door-roll-tint--clip-panel', 'has-door-roll-tint--mask-panel');
+                    stack.classList.remove('has-door-roll-tint', 'has-door-roll-tint--photo', 'has-door-roll-tint--clip-panel', 'has-door-roll-tint--mask-panel', 'has-roll-composite-ready', 'has-roll-pending', 'has-roll-texture');
                     clearWpcStoreDoorPanelLayer(panelLayer);
                 }
                 card.classList.remove('is-roll-color-live');
@@ -3191,34 +3252,21 @@
             const rollIdx = catalogIndex != null && !isNaN(catalogIndex) ? catalogIndex : 0;
             const roll = colors[rollIdx] || colors[0];
             if (!roll) return;
-            if (img.getAttribute('src') !== baseSrc) img.src = baseSrc;
-            const rollFilter = isPhoto ? buildWpcStoreRollCssFilterForPhoto(roll.hex) : buildWpcStoreRollCssFilter(roll.hex);
+            const rollState = buildWpcStoreRollStateFromCatalog(roll, rollIdx);
             const profileKey = variant ? getWpcDoorTintProfile(variant) : 'flat';
             if (stack && variant) applyWpcDoorTintRegion(stack, profileKey);
-            if (isPhoto && stack && panelLayer) {
-                img.style.filter = 'none';
-                img.style.transition = 'transform 0.35s ease';
-                clearWpcStoreDoorPanelLayer(panelLayer);
-                const displaySrc = resolveDisplayMediaUrl(baseSrc);
-                const clip = getWpcDoorClipPath(variant) || (WPC_DOOR_TINT_PROFILES[profileKey] || WPC_DOOR_TINT_PROFILES.flat).clip;
-                panelLayer.style.backgroundImage = 'url("' + String(displaySrc).replace(/"/g, '') + '")';
-                panelLayer.style.backgroundSize = 'contain';
-                panelLayer.style.backgroundPosition = 'center center';
-                panelLayer.style.backgroundRepeat = 'no-repeat';
-                panelLayer.style.backgroundColor = 'transparent';
-                panelLayer.style.clipPath = 'inset(' + clip + ' round 2px)';
-                panelLayer.style.webkitClipPath = 'inset(' + clip + ' round 2px)';
-                panelLayer.style.filter = rollFilter;
-                panelLayer.style.opacity = '0.9';
-                panelLayer.style.mixBlendMode = 'color';
-                stack.classList.add('has-door-roll-tint--clip-panel');
-                stack.classList.remove('has-door-roll-tint', 'has-door-roll-tint--mask-panel', 'has-door-roll-tint--panel-only', 'has-door-roll-tint--photo');
+            if (isPhoto && stack) {
+                applyComposedRollToStoreSkuImg(img, stack, baseSrc, rollState);
             } else {
+                const rollFilter = buildWpcStoreRollCssFilter(roll.hex);
                 img.style.transition = 'filter 0.38s ease, transform 0.38s ease';
                 img.style.filter = rollFilter;
+                img.classList.remove('has-roll-composite', 'has-roll-pending');
+                img.removeAttribute('data-roll-compose-token');
                 if (stack) {
-                    stack.classList.remove('has-door-roll-tint--clip-panel', 'has-door-roll-tint--panel-only');
-                    applyDoorRollTintToElements(stack, buildWpcStoreRollStateFromCatalog(roll, rollIdx));
+                    stack.classList.remove('has-door-roll-tint--clip-panel', 'has-door-roll-tint--panel-only', 'has-roll-composite-ready', 'has-roll-pending', 'has-roll-texture');
+                    clearWpcStoreDoorPanelLayer(panelLayer);
+                    applyDoorRollTintToElements(stack, rollState);
                 }
             }
             img.setAttribute('data-composed-roll', String(rollIdx));
