@@ -1,5 +1,5 @@
 /**
- * نبراس — أدوات الأداء (Accmaa-style · hrws292)
+ * نبراس — أدوات الأداء (Accmaa-style · hrws293)
  * تأجيل العمل غير الحرج · perf-lite للجوال · فحص API خفيف
  */
 (function(global) {
