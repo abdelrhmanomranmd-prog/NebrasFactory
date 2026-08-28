@@ -5,7 +5,7 @@
 (function(global) {
     'use strict';
 
-    const PROFILE_2026_SEED_VERSION = 9;
+    const PROFILE_2026_SEED_VERSION = 10;
     const PROFILE_STORAGE_KEY = 'nebrasProfile2026SeedVersion';
     const SHOWROOM_CATALOG_VERSION = 12;
     const SHOWROOM_CATALOG_STORAGE_KEY = 'nebrasShowroomCatalogVersion';
@@ -69,7 +69,15 @@
                 serviceTitleInstall: 'ضمان وخدمة',
                 serviceTextInstall: 'ضمان 10 سنوات — أبواب WPC ضد الماء والنمل الأبيض. منتجات جاهزة لا تحتاج صبغاً أو سنفرة.',
                 partnersPublicSubtitle: 'معتمدون من NHC والشركة الوطنية للإسكان — شركاء في أضخم مشاريع الإسكان الوطني',
-                showroomHubIntro: 'معرض نبراس — أبواب · مطابخ · شبابيك · واجهات · ألومنيوم · WPC · CNC · مشاريع NHC — صور منتجات حقيقية من المصنع',
+                showroomHubIntro: 'معرض نبراس — أبواب · مطابخ · شبابيك · واجهات · ألومنيوم · WPC · CNC · مشاريع NHC — تشكيلة من المصنع السعودي',
+                sectionTitle: 'بوابة نبراس الرقمية',
+                sectionSubtitle: 'متجر · معرض · خدمات — جودة WPC سعودية معتمدة منذ 2018.',
+                quickServicesSubtitle: 'اكتشف منتجاتنا — أبواب WPC · ألومنيوم · معرض · فروع · عرض سعر.',
+                gatewayLaneShowroomHint: '10 أقسام: أبواب · مطابخ · شبابيك · واجهات · ألومنيوم · WPC · CNC',
+                storefrontProductsSubtitle: 'تصفّح التشكيلة واطلب عرض سعر — جودة مصنع نبراس السعودي.',
+                showroomHubHeroTitle: 'معرض نبراس — تشكيلة منتجاتنا',
+                showroomHubHeroSubtitle: 'أبواب · مطابخ · شبابيك · واجهات · ألومنيوم — من المصنع السعودي إلى مشروعك.',
+                wpcStoreRollPickerHint: 'اختر لون الرولّة — اللون يظهر على لوح الباب فقط',
                 showroomKitchensEmpty: 'معرض مطابخ نبراس — يُحمّل من الملف التعريفي 2026.',
                 showroomWindowsEmpty: 'معرض شبابيك نبراس — يُحمّل من الملف التعريفي 2026.',
                 showroomFacadesEmpty: 'معرض واجهات وكلادينج نبراس — يُحمّل من الملف التعريفي 2026.',

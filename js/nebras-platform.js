@@ -971,7 +971,7 @@
         }
 
         const DOOR_PHOTO_PRESET_ROOT = 'images/doors/presets/';
-        const DOOR_PHOTO_PRESET_CACHE = '271';
+        const DOOR_PHOTO_PRESET_CACHE = '272';
         /** صور أبواب المصنع الحقيقية في المعاينة — SVG احتياطي عند غياب الصورة */
         const DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS = true;
         let doorDesignerPreviewRaf = 0;
@@ -1250,11 +1250,11 @@
                     ctx.drawImage(base, 0, 0, w, h);
 
                     let panelMask = mask;
-                    if (panelClip && useMask && rollKey) {
+                    if (panelClip && useMask) {
                         panelMask = buildWpcCatalogPanelRectMask(w, h, panelClip);
                     }
 
-                    if (panelMask && useMask && rollKey) {
+                    if (panelMask && useMask && (rollKey || hexFallback)) {
                         const leafCanvas = document.createElement('canvas');
                         leafCanvas.width = outW;
                         leafCanvas.height = outH;
@@ -1275,7 +1275,7 @@
                         ctx.globalCompositeOperation = 'destination-in';
                         ctx.drawImage(panelMask, 0, 0, w, h);
                         ctx.restore();
-                    } else if (rollKey || hexFallback) {
+                    } else if (!panelMask && (rollKey || hexFallback)) {
                         paintRollLayer(ctx, w, h, roll);
                         ctx.globalCompositeOperation = 'multiply';
                         ctx.globalAlpha = profile.saturationGray > 0.5 ? 0.14 : 0.08;
@@ -2534,9 +2534,9 @@
             { id: 4, lane: 'platform', sortOrder: 21, titleKey: 'visitorQuickBankAccounts', title: 'حسابات بنكية', iconClass: 'fas fa-building-columns', visitorMode: 'browse', target: '#bank-accounts-section', backgroundImage: NEBRAS_BANK_MEDIA.wall, album: [NEBRAS_BANK_MEDIA.snb, NEBRAS_BANK_MEDIA.riyad, NEBRAS_BANK_MEDIA.alrajhi] },
             { id: 12, lane: 'platform', sortOrder: 22, titleKey: 'visitorQuickComplaints', title: 'استفسار الشكاوى', iconClass: 'fas fa-search', visitorMode: 'browse', openHandler: 'complaints-inquiry', target: '', backgroundImage: NEBRAS_STORE_ICON_MEDIA.complaintsBg, album: [NEBRAS_STORE_ICON_MEDIA.complaintsBg], textAr: 'قسم استفسارات وشكاوى العملاء — نستمع لاستفساراتكم لخدمة أفضل.' },
             { id: 13, lane: 'showroom', sortOrder: 28, titleKey: 'visitorQuickDoorDesigner', title: 'صمّم بابك مع نبراس', iconClass: 'fas fa-pencil-ruler', visitorMode: 'browse', openHandler: 'door-designer', target: '', backgroundImage: NEBRAS_SHOWROOM_ICON_MEDIA.doorDesignerBg, album: [NEBRAS_SHOWROOM_ICON_MEDIA.doorDesignerBg] },
-            { id: 19, lane: 'showroom', sortOrder: 27, titleKey: 'visitorQuickShowroom', title: 'استكشف معرض نبراس', iconClass: 'fas fa-images', visitorMode: 'browse', openHandler: 'showroom-hub', target: '', backgroundImage: 'images/profile-2026/hero-cover.jpg', album: ['images/profile-2026/doors/doors-01.jpg', 'images/profile-2026/cabinets/cabinets-01.jpg', 'images/profile-2026/cnc/cnc-01.jpg'], textAr: 'أبواب نبراس · خزائن نبراس · أبواب WPC · خزائن WPC · قطع CNC · مشاريع NHC — استكشف المعرض بجودة كاملة.' },
-            { id: 21, lane: 'platform', sortOrder: 16, titleKey: 'visitorQuickNebrasProfile', title: 'البروفايل التعريفي لنبراس', iconClass: 'fas fa-book-open', visitorMode: 'browse', openHandler: 'company-profile', target: '', backgroundImage: 'images/profile-2026/hero-cover.jpg', album: ['images/profile-2026/hero-cover.jpg', 'images/profile-2026/doors/doors-06.jpg'], textAr: 'البروفايل التعريفي الرسمي — عرض كامل 24 صفحة داخل الأيقونة مع تنزيل PDF. أبواب WPC · شهادات · فروع · ألوان.' },
-            { id: 20, lane: 'platform', sortOrder: 17, titleKey: 'visitorQuickCallback', title: 'نبراس يتصل بك', iconClass: 'fas fa-phone-volume', visitorMode: 'browse', openHandler: 'callback-concierge', target: '', backgroundImage: 'images/profile-2026/hero-cover.jpg', album: [], textAr: 'اترك اسمك وجوالك — فريق المبيعات أو خدمة العملاء يتصل بك ويفهم احتياجك. يظهر طلبك في الإدارة والفرع حسب مدينتك.' }
+            { id: 19, lane: 'showroom', sortOrder: 27, titleKey: 'visitorQuickShowroom', title: 'استكشف معرض نبراس', iconClass: 'fas fa-images', visitorMode: 'browse', openHandler: 'showroom-hub', target: '', backgroundImage: 'images/profile-2026/hero-cover.jpg', album: ['images/profile-2026/doors/doors-01.jpg', 'images/profile-2026/cabinets/cabinets-04.jpg', 'images/catalog/wpc-photos/by-sku-clean/WPC-RDY-FLAT-45-STD.png'], textAr: 'أبواب · مطابخ · شبابيك · واجهات · ألومنيوم · WPC · CNC — معرض منتجات نبراس بصور حقيقية.' },
+            { id: 21, lane: 'platform', sortOrder: 16, titleKey: 'visitorQuickNebrasProfile', title: 'البروفايل التعريفي لنبراس', iconClass: 'fas fa-book-open', visitorMode: 'browse', openHandler: 'company-profile', target: '', backgroundImage: 'images/profile-2026/hero-cover.jpg', album: ['images/profile-2026/hero-cover.jpg', 'images/profile-2026/doors/doors-06.jpg'], textAr: 'تعرّف على مصنع نبراس — 24 صفحة · أبواب WPC · شهادات · فروع · ألوان — مع تنزيل PDF.' },
+            { id: 20, lane: 'platform', sortOrder: 17, titleKey: 'visitorQuickCallback', title: 'نبراس يتصل بك', iconClass: 'fas fa-phone-volume', visitorMode: 'browse', openHandler: 'callback-concierge', target: '', backgroundImage: 'images/profile-2026/hero-cover.jpg', album: [], textAr: 'اترك اسمك وجوالك — فريق المبيعات يتصل بك ويفهم احتياجك خلال ساعات العمل.' }
         ];
 
         const SITE_PARTNERS_SEED_VERSION = 2;
@@ -3318,19 +3318,15 @@
             const rollState = buildWpcStoreRollStateFromCatalog(roll, rollIdx);
             const profileKey = variant ? getWpcDoorTintProfile(variant) : 'flat';
             if (stack && variant && !isPhoto) applyWpcDoorTintRegion(stack, profileKey);
-            if (isPhoto && stack) {
+            const isRaster = isPhoto || /\.(png|jpe?g|webp|avif)(\?|$)/i.test(String(baseSrc).split('?')[0]);
+            if (isRaster) {
                 applyComposedRollToStoreSkuImg(img, stack, baseSrc, rollState, variant);
-            } else {
-                const rollFilter = buildWpcStoreRollCssFilter(roll.hex);
-                img.style.transition = 'filter 0.38s ease, transform 0.38s ease';
-                img.style.filter = rollFilter;
+            } else if (stack) {
+                img.style.filter = 'none';
                 img.classList.remove('has-roll-composite', 'has-roll-pending');
-                img.removeAttribute('data-roll-compose-token');
-                if (stack) {
-                    stack.classList.remove('has-door-roll-tint--clip-panel', 'has-door-roll-tint--panel-only', 'has-roll-composite-ready', 'has-roll-pending', 'has-roll-texture');
-                    clearWpcStoreDoorPanelLayer(panelLayer);
-                    applyDoorRollTintToElements(stack, rollState);
-                }
+                stack.classList.add('has-door-roll-tint--clip-panel');
+                clearWpcStoreDoorPanelLayer(panelLayer);
+                applyDoorRollTintToElements(stack, rollState);
             }
             img.setAttribute('data-composed-roll', String(rollIdx));
             card.classList.add('is-roll-color-live');
@@ -3388,7 +3384,7 @@
         function buildWpcStoreRollPickerHtml(productId, variantIndex, lang, ui) {
             const colors = getNebrasColorCatalog();
             const label = ui.wpcStoreRollPickerLabel || 'اختر لون الرولّة — معاينة حية على الباب';
-            const hint = ui.wpcStoreRollPickerHint || 'اختر لون الرولّة — المعاينة تطبّق على لوح الباب فقط عند الاختيار';
+            const hint = ui.wpcStoreRollPickerHint || 'اختر لون الرولّة — اللون يظهر على لوح الباب فقط';
             const safePid = String(productId).replace(/'/g, "\\'");
             const swatches = colors.map(function(item, idx) {
                 const code = String(item.code || getRollCatalogCode(item.nebCode || getNebrasRollCodeByIndex(idx))).trim();
@@ -4486,11 +4482,11 @@
             { id: 'dash-empire-bridges', zone: 'quick', dashGroup: 'command', sortOrder: 0.97, iconClass: 'fas fa-link', titleAr: 'جسور الإمبراطورية', titleEn: 'Empire Bridges', textAr: 'Odoo-like — متجر · HR · CRM · مسار نبراس · محاسبة.', textEn: 'Department bridges.', handler: 'openNebrasEmpireBridges', permission: 'erp', visible: true },
             { id: 'dash-empire-hub', zone: 'quick', dashGroup: 'command', sortOrder: 0.98, iconClass: 'fas fa-crown', titleAr: 'إمبراطورية نبراس — مركز القيادة', titleEn: 'Nebras Empire HQ', textAr: 'الواجهة الخارجية · ERP · HR · Legal · فروع · شركاء — كل المنصة في مكان واحد.', textEn: 'Full empire command — external + internal platforms.', handler: 'openNebrasEmpireHub', permission: 'audit', visible: true },
             { id: 'dash-content', zone: 'quick', dashGroup: 'command', sortOrder: 1, iconClass: 'fas fa-pen-to-square', titleAr: 'إدارة محتوى الموقع', titleEn: 'Site Content', textAr: 'منتجات، بوابة الزائر، شركاء، شهادات — ديناميكي بالكامل.', textEn: 'Products, gateway icons, partners, certs — fully dynamic.', handler: 'openSiteContentManager', permission: 'content', visible: true },
-            { id: 'dash-store-catalog', zone: 'quick', dashGroup: 'command', sortOrder: 1.02, iconClass: 'fas fa-store', titleAr: 'المتجر الإلكتروني', titleEn: 'E-Store', textAr: 'رفع المنتجات — مقاس · نوع · سعر · صورة — تخزين ديناميكي.', textEn: 'Upload store products with variants.', handler: 'openStoreCatalogManager', permission: 'storeCatalog', visible: true },
+            { id: 'dash-store-catalog', zone: 'quick', dashGroup: 'command', sortOrder: 1.02, iconClass: 'fas fa-store', titleAr: 'المتجر الإلكتروني', titleEn: 'E-Store', textAr: 'رفع المنتجات — مقاس · نوع · سعر · صورة — تخزين ديناميكي.', textEn: 'Upload store products with variants.', cssClass: 'dashboard-tile-card--store-catalog', backgroundImage: 'images/catalog/wpc-photos/by-sku-clean/WPC-RDY-FLAT-45-STD.png', handler: 'openStoreCatalogManager', permission: 'storeCatalog', visible: true },
             { id: 'dash-visitor-payments', zone: 'quick', dashGroup: 'command', sortOrder: 1.015, iconClass: 'fas fa-wallet', titleAr: 'طرق الدفع للزائر', titleEn: 'Visitor Payments', textAr: 'تحضير المدفوع في السلة — النشر النهائي للإدارة الرئيسية فقط.', textEn: 'Cart payment methods — HQ publishes to live storefront.', cssClass: 'dashboard-tile-card--visitor-payments', handler: 'openVisitorPaymentsGovernance', permission: 'content', visible: true },
             { id: 'dash-about-pages', zone: 'quick', dashGroup: 'command', sortOrder: 2, iconClass: 'fas fa-building', titleAr: 'من نحن ورؤيتنا', titleEn: 'About & Vision', textAr: 'نصوص المصنع ووثائق الصفحات الداخلية.', textEn: 'Factory pages and documents.', handler: 'openAboutContentAdmin', permission: 'content', visible: true },
             { id: 'dash-certs', zone: 'quick', dashGroup: 'command', sortOrder: 3, iconClass: 'fas fa-award', titleAr: 'اعتمادات وشهادات', titleEn: 'Certifications', textAr: 'شهادات المعرض — صور وPDF.', textEn: 'Showroom certificates.', cssClass: 'dashboard-tile-card--certs', handler: 'openCertificationsHub', permission: 'content', visible: true },
-            { id: 'dash-showroom', zone: 'quick', dashGroup: 'command', sortOrder: 4, iconClass: 'fas fa-images', titleAr: 'معرض نبراس', titleEn: 'Nebras Showroom', textAr: '10 أقسام: أبواب · WPC · خزائن · مطابخ · شبابيك · واجهات · ألومنيوم · CNC · NHC.', textEn: '10 galleries: doors, WPC, cabinets, kitchens, windows, facades, aluminum, CNC, NHC.', handler: 'openShowroomHub', permission: 'content', visible: true },
+            { id: 'dash-showroom', zone: 'quick', dashGroup: 'command', sortOrder: 4, iconClass: 'fas fa-images', titleAr: 'معرض نبراس', titleEn: 'Nebras Showroom', textAr: '10 أقسام: أبواب · WPC · خزائن · مطابخ · شبابيك · واجهات · ألومنيوم · CNC · NHC.', textEn: '10 galleries: doors, WPC, cabinets, kitchens, windows, facades, aluminum, CNC, NHC.', cssClass: 'dashboard-tile-card--showroom', backgroundImage: 'images/profile-2026/doors/doors-03.jpg', handler: 'openShowroomHub', permission: 'content', visible: true },
             { id: 'dash-users', zone: 'quick', dashGroup: 'command', sortOrder: 4, iconClass: 'fas fa-users-cog', titleAr: 'المستخدمون والصلاحيات', titleEn: 'Users & RBAC', textAr: 'أدوار وصلاحيات كاملة للموقع.', textEn: 'Roles and full site permissions.', handler: 'openUserManagement', permission: 'users', visible: true },
             { id: 'dash-audit', zone: 'quick', dashGroup: 'command', sortOrder: 5, iconClass: 'fas fa-clipboard-check', titleAr: 'سجل العمليات', titleEn: 'Audit Log', textAr: 'تتبع كل إجراء إداري.', textEn: 'Track admin actions.', handler: 'openAuditLog', permission: 'audit', visible: true },
             { id: 'dash-sales', zone: 'quick', dashGroup: 'command', sortOrder: 6, iconClass: 'fas fa-chart-line', titleAr: 'المبيعات', titleEn: 'Sales', textAr: 'عروض الأسعار الواردة والمبيعات.', textEn: 'Quotes and sales.', handler: 'openSalesManagement', permission: 'sales', visible: true },
@@ -10180,7 +10176,7 @@
             { id: 'dash-content', publicEffect: 'منتجات المتجر · أيقونات الزوار · أقسام إضافية', handler: 'openSiteContentManager' },
             { id: 'dash-about-pages', publicEffect: 'بطاقات من نحن / رؤيتنا + محتوى داخلي', handler: 'openAboutContentAdmin' },
             { id: 'dash-certs', publicEffect: 'اعتمادات وشهادات في المعرض', handler: 'openCertificationsHub' },
-            { id: 'dash-showroom', publicEffect: 'معرض 5 أقسام + مشاريع NHC', handler: 'openShowroomHub' },
+            { id: 'dash-showroom', publicEffect: 'معرض 10 أقسام + مشاريع NHC', handler: 'openShowroomHub' },
             { id: 'dash-users', publicEffect: 'صلاحيات الدخول للإدارة', handler: 'openUserManagement' },
             { id: 'dash-audit', publicEffect: 'سجل العمليات الإدارية', handler: 'openAuditLog' },
             { id: 'dash-sales', publicEffect: 'عروض الأسعار الواردة من السلة', handler: 'openSalesManagement' },

@@ -1,11 +1,11 @@
 /**
- * نبراس hrws297 — i18n: العربية فوراً · EN/ZH كسول عند تغيير اللغة
+ * نبراس hrws298 — i18n: العربية فوراً · EN/ZH كسول عند تغيير اللغة
  * يُحمَّل بعد nebras-platform.js (NEBRAS_BRAND_* · getNebrasBrand*)
  */
 (function(global) {
     'use strict';
 
-    var VER = 'hrws297';
+    var VER = 'hrws298';
     var localeInflight = Object.create(null);
     var localeLoaded = { ar: true };
 
@@ -157,14 +157,14 @@
                 serviceTitleInstall: 'خدمات التركيب والضمان',
                 serviceTextInstall: 'خدماتنا الميدانية المتكاملة: من المقاسات إلى التسليم — فرق محترفة جاهزة لخدمتكم في كل خطوة.',
                 workspaceBranchesListBtn: 'قائمة الفروع والاتصال',
-                sectionTitle: 'منصة نبراس — هيكل عالمي',
-                sectionSubtitle: 'واجهة عامة (معرض ومتجر) ومركز قيادة داخلي — تحكم كامل من الإدارة دون تعديل الكود.',
+                sectionTitle: 'بوابة نبراس الرقمية',
+                sectionSubtitle: 'متجر · معرض · خدمات — جودة WPC سعودية معتمدة منذ 2018.',
                 quickServicesTitle: 'بوابة نبراس الرقمية',
-                quickServicesSubtitle: 'متجر إلكتروني · معرض منتجات · منصة المصنع — اختر القسم للدخول إلى الصفحة الداخلية.',
+                quickServicesSubtitle: 'اكتشف منتجاتنا — أبواب WPC · ألومنيوم · معرض · فروع · عرض سعر.',
                 gatewayLaneStore: 'المتجر الإلكتروني',
-                gatewayLaneStoreHint: 'أبواب WPC والألومنيوم — أصناف، سلة، وعرض سعر',
+                gatewayLaneStoreHint: 'أبواب WPC والألومنيوم — تشكيلة · سلة · عرض سعر',
                 gatewayLaneShowroom: 'معرض نبراس',
-                gatewayLaneShowroomHint: '5 أقسام: أبواب نبراس · خزائن نبراس · WPC · CNC · مشاريع NHC',
+                gatewayLaneShowroomHint: '10 أقسام: أبواب · مطابخ · شبابيك · واجهات · ألومنيوم · WPC · CNC',
                 visitorQuickShowroom: 'استكشف معرض نبراس',
                 visitorQuickCompanyProfile: 'الملف التعريفي الكامل 2026',
                 visitorQuickNebrasProfile: 'البروفايل التعريفي لنبراس',
@@ -178,18 +178,18 @@
                 showroomHubIntro: 'معرض نبراس — أبواب · مطابخ · شبابيك · واجهات · ألومنيوم · WPC · CNC · مشاريع NHC. اضغط على أي صورة للعرض بالدقة الكاملة — صور منتجات حقيقية.',
                 storeWorldsNavLabel: 'عوالم المتجر',
                 storeWorldsNavKicker: 'عوالم نبراس — اختر المنتج',
-                showroomHubHeroTitle: 'معرض نبراس — صور منتجات حقيقية',
-                showroomHubHeroSubtitle: 'أبواب · مطابخ · شبابيك · واجهات · ألومنيوم — من المصنع السعودي، بدون صور مولّدة.',
+                showroomHubHeroTitle: 'معرض نبراس — تشكيلة منتجاتنا',
+                showroomHubHeroSubtitle: 'أبواب · مطابخ · شبابيك · واجهات · ألومنيوم — من المصنع السعودي إلى مشروعك.',
                 showroomHubHeroEyebrow: 'معرض نبراس',
-                showroomDoorsEmpty: 'معرض أبواب نبراس — يُحمّل من الملف التعريفي 2026.',
-                showroomCabinetsEmpty: 'معرض خزائن نبراس — يُحمّل من الملف التعريفي 2026.',
-                showroomWpcDoorsEmpty: 'معرض أبواب WPC — يُحمّل من الملف التعريفي 2026.',
-                showroomWpcCabinetsEmpty: 'معرض خزائن WPC — يُحمّل من الملف التعريفي 2026.',
-                showroomCncEmpty: 'معرض قطع CNC — يُحمّل من الملف التعريفي 2026.',
-                showroomProductsEmpty: 'أضيفوا صور المعرض من إدارة المحتوى → معرض نبراس.',
-                showroomProjectsEmpty: 'مشاريع واعتمادات NHC — من الملف التعريفي 2026.',
+                showroomDoorsEmpty: 'تشكيلة أبواب نبراس — قريباً في المعرض.',
+                showroomCabinetsEmpty: 'تشكيلة خزائن نبراس — قريباً في المعرض.',
+                showroomWpcDoorsEmpty: 'تشكيلة أبواب WPC — قريباً في المعرض.',
+                showroomWpcCabinetsEmpty: 'تشكيلة خزائن WPC — قريباً في المعرض.',
+                showroomCncEmpty: 'أعمال CNC — قريباً في المعرض.',
+                showroomProductsEmpty: 'معرض نبراس — تشكيلة منتجاتنا قريباً.',
+                showroomProjectsEmpty: 'مشاريع واعتمادات NHC — شركاء في الإسكان الوطني.',
                 gatewayLanePlatform: 'منصة المصنع',
-                gatewayLanePlatformHint: 'فروع المملكة، حسابات بنكية، وخدمات',
+                gatewayLanePlatformHint: 'البروفايل · فروع · حسابات بنكية · خدمات المصنع',
                 trustStripAria: 'مزايا مصنع نبراس',
                 trustItem1Title: 'مصنع سعودي',
                 trustItem1Sub: 'بجودة عالمية وأسعار منافسة',
@@ -207,7 +207,7 @@
                 mobBarCart: 'السلة',
                 mobBarQuote: 'عرض سعر',
                 storefrontProductsTitle: 'متجر نبراس الإلكتروني',
-                storefrontProductsSubtitle: 'تصفح المنتجات واطلب عرض السعر — كل صنف يفتح صفحة متجر داخلية.',
+                storefrontProductsSubtitle: 'تصفّح التشكيلة واطلب عرض سعر — جودة مصنع نبراس السعودي.',
                 visitorQuickWpcRaw: 'أبواب WPC عضم',
                 visitorQuickWpcReady: 'أبواب WPC جاهزة',
                 visitorQuickAluminum: 'الألومنيوم',
@@ -524,7 +524,7 @@
                 storeFeatureWater: 'مقاوم للرطوبة',
                 storeFeatureTermite: 'مقاوم للنمل الأبيض',
                 storeFeatureDurability: 'متانة عالية — WPC',
-                wpcStoreRollPickerHint: 'اختر لون الرولّة — المعاينة الحية تطبّق اللون على لوح الباب',
+                wpcStoreRollPickerHint: 'اختر لون الرولّة — اللون يظهر على لوح الباب فقط',
                 visitorQrTitle: 'شارك نبراس مع من تحب',
                 visitorQrLead: 'امسح الرمز أو حمّله وأرسله لصديق، مقاول، أو عميل — يصل مباشرة لموقع مصنع نبراس الرسمي.',
                 visitorQrShareHint: 'كل مشاركة = فرصة جديدة لنبراس — انشر الجودة السعودية',
