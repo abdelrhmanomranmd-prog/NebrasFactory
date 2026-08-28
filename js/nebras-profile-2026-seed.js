@@ -7,7 +7,7 @@
 
     const PROFILE_2026_SEED_VERSION = 9;
     const PROFILE_STORAGE_KEY = 'nebrasProfile2026SeedVersion';
-    const SHOWROOM_CATALOG_VERSION = 10;
+    const SHOWROOM_CATALOG_VERSION = 12;
     const SHOWROOM_CATALOG_STORAGE_KEY = 'nebrasShowroomCatalogVersion';
 
     function img(folder, n) {
@@ -16,6 +16,15 @@
 
     function galleryExtra(n) {
         return 'images/profile-2026/gallery-extra/gallery-extra-' + String(n).padStart(2, '0') + '.jpg';
+    }
+
+    /** صورة SKU حقيقية — كتالogg WPC */
+    function wpcSkuClean(sku) {
+        return 'images/catalog/wpc-photos/by-sku-clean/' + sku + '.png';
+    }
+
+    function wpcRef(name) {
+        return 'images/catalog/wpc-photos/' + name;
     }
 
     const PROFILE_2026 = {
@@ -110,7 +119,7 @@
                 aboutTitle2: 'Excellence in Door Manufacturing',
                 dashCompanyProfileTitle: 'Nebras Company Profile',
                 dashCompanyProfileText: 'Full profile viewer with PDF download — 24 pages.',
-                dashShowroomText: 'Explore Nebras Showroom — doors, cabinets, WPC, CNC, NHC.'
+                dashShowroomText: 'Explore Nebras Showroom — doors, cabinets, WPC, kitchens, windows, facades, aluminum, CNC, NHC.'
             }
         },
         aboutPages: {
@@ -217,9 +226,6 @@
     }
 
     const SHOWROOM_DOORS_CATALOG = [
-        [img('cabinets', 1), 'باب قواطع حمامات WPC', 'WPC restroom partition doors'],
-        [img('cabinets', 2), 'باب قواطع حمامات بمؤشر LED', 'Partition doors with LED indicator'],
-        [img('cabinets', 3), 'باب قواطع حمامات بخشب', 'Wood-finish partition doors'],
         [img('doors', 1), 'باب كلاسيك ثنائي اللوح', 'Classic two-panel door'],
         [img('doors', 2), 'باب زجاج مزدوج كلاسيك', 'Double classic glass door'],
         [img('doors', 3), 'باب فلات أبيض', 'Flat white door'],
@@ -231,10 +237,21 @@
         [img('doors', 9), 'باب كلاسيك ثلاثي اللوح', 'Classic three-panel door'],
         [img('doors', 10), 'باب فلات خشبي بعلوية', 'Wood flat door with transom'],
         [img('doors', 11), 'باب شرائح منزلق مزدوج', 'Double sliding slat door'],
-        [img('doors', 12), 'باب سحاب خشبي مزدوج', 'Double wood sliding door']
+        [img('doors', 12), 'باب سحاب خشبي مزدوج', 'Double wood sliding door'],
+        [wpcSkuClean('WPC-RDY-FLAT-45-STD'), 'باب WPC فلات — تركيب شامل', 'WPC flat door — install kit'],
+        [wpcSkuClean('WPC-RDY-FLAT-STEEL'), 'باب WPC فلات — ديكور استانلس', 'WPC flat — stainless decor'],
+        [wpcSkuClean('WPC-RDY-FLAT-GLASS'), 'باب WPC فلات — ديكور زجاج', 'WPC flat — glass decor'],
+        [wpcSkuClean('WPC-RDY-U45-STD'), 'باب WPC U — 45ملم', 'WPC U-door 45mm'],
+        [wpcSkuClean('WPC-RDY-U60-GLASS'), 'باب WPC U — 60ملم زجاج', 'WPC U60 glass door'],
+        [wpcSkuClean('WPC-RDY-LIB40-STD'), 'باب WPC Lib — 40ملم', 'WPC Lib door 40mm'],
+        [wpcSkuClean('WPC-RDY-LQ-FLAT'), 'باب WPC ضلفة وربعه', 'WPC leaf & quarter'],
+        [wpcSkuClean('WPC-RDY-SLD-FLAT'), 'باب WPC سحاب فلات', 'WPC sliding flat door']
     ];
 
     const SHOWROOM_CABINETS_CATALOG = [
+        [img('cabinets', 1), 'قواطع حمامات WPC', 'WPC restroom partitions'],
+        [img('cabinets', 2), 'قواطع حمامات بمؤشر LED', 'Partition with LED indicator'],
+        [img('cabinets', 3), 'قواطع حمامات بخشب', 'Wood-finish partitions'],
         [img('cabinets', 4), 'خزانة ملابس كلاسيك رمادية', 'Classic grey wardrobe'],
         [img('cabinets', 5), 'خزانة ملابس بلون عاجي', 'Ivory wardrobe cabinet'],
         [img('cabinets', 6), 'خزانة ملابس فاخرة بزخارف', 'Premium decorative wardrobe'],
@@ -254,27 +271,28 @@
         [img('cabinets', 20), 'خزانة زاوية بأبواب زجاج', 'Corner glass-door wardrobe']
     ];
 
-    const SHOWROOM_WPC_DOORS_CATALOG = SHOWROOM_DOORS_CATALOG.map(function(row) {
-        return [row[0], 'باب WPC — ' + row[1], 'WPC door — ' + row[2]];
-    }).concat([
-        [galleryExtra(1), 'باب WPC داخلي كلاسيك أبيض', 'WPC classic white interior door'],
-        [galleryExtra(2), 'باب WPC كلاسيك لوحين', 'WPC two-panel classic door'],
-        [galleryExtra(3), 'باب WPC فلات عصري', 'WPC modern flat door'],
+    const SHOWROOM_WPC_DOORS_CATALOG = [
+        [wpcSkuClean('WPC-RDY-FLAT-45-STD'), 'باب WPC فلات — تركيب شامل', 'WPC flat — install'],
+        [wpcSkuClean('WPC-RDY-FLAT-STEEL'), 'باب WPC فلات — استانلس', 'WPC flat steel decor'],
+        [wpcSkuClean('WPC-RDY-FLAT-GLASS'), 'باب WPC فلات — زجاج', 'WPC flat glass'],
+        [wpcSkuClean('WPC-RDY-FLAT-CLS'), 'باب WPC فلات — كلاسيك', 'WPC flat classic'],
+        [wpcSkuClean('WPC-RDY-U45-STD'), 'باب WPC U45 — قياسي', 'WPC U45 standard'],
+        [wpcSkuClean('WPC-RDY-U45-STEEL'), 'باب WPC U45 — استانلس', 'WPC U45 steel'],
+        [wpcSkuClean('WPC-RDY-U60-STD'), 'باب WPC U60 — قياسي', 'WPC U60 standard'],
+        [wpcSkuClean('WPC-RDY-U60-GLASS'), 'باب WPC U60 — زجاج', 'WPC U60 glass'],
+        [wpcSkuClean('WPC-RDY-LIB40-STD'), 'باب WPC Lib — سادة', 'WPC Lib plain'],
+        [wpcSkuClean('WPC-RDY-LIB40-STEEL'), 'باب WPC Lib — استانلس', 'WPC Lib steel'],
+        [wpcSkuClean('WPC-RDY-LQ-FLAT'), 'باب WPC ضلفة وربعه — فلات', 'WPC LQ flat'],
+        [wpcSkuClean('WPC-RDY-LQ-U'), 'باب WPC ضلفة وربعه — U', 'WPC LQ U-style'],
+        [wpcSkuClean('WPC-RDY-SLD-FLAT'), 'باب WPC سحاب — فلات', 'WPC sliding flat'],
+        [wpcSkuClean('WPC-RDY-SLD-U'), 'باب WPC سحاب — U', 'WPC sliding U'],
+        [wpcSkuClean('WPC-SUP-FLAT-45-STD'), 'باب WPC فلات — توريد فقط', 'WPC flat supply only'],
+        [wpcSkuClean('WPC-SUP-U45-STD'), 'باب WPC U45 — توريد فقط', 'WPC U45 supply only'],
         [galleryExtra(4), 'باب WPC فلات حمام', 'WPC bathroom flat door'],
-        [galleryExtra(5), 'باب WPC بعلوية ثابتة', 'WPC door with transom'],
-        [galleryExtra(6), 'باب WPC يوتشانيل خشبي', 'WPC wood U-channel door'],
-        [galleryExtra(7), 'باب WPC يوتشانيل مع علوية', 'WPC U-channel with transom'],
-        [galleryExtra(8), 'باب WPC شرائح أفقية', 'WPC horizontal slat door'],
-        [galleryExtra(9), 'باب WPC كلاسيك ثلاثي', 'WPC three-panel classic door'],
-        [galleryExtra(10), 'باب WPC فلات خشبي', 'WPC wood flat door'],
-        [galleryExtra(11), 'باب WPC شرائح منزلق', 'WPC sliding slat door'],
-        [galleryExtra(12), 'باب WPC سحاب مزدوج', 'WPC double sliding door'],
-        [galleryExtra(13), 'باب WPC داخلي مفصلي', 'WPC hinged interior door'],
         [galleryExtra(14), 'باب WPC زجاج ولوحات', 'WPC glass panel door'],
-        [galleryExtra(15), 'باب WPC سادة فلات', 'WPC plain flat door'],
-        [galleryExtra(33), 'باب WPC منحوت كلاسيك', 'WPC carved classic door'],
-        [galleryExtra(40), 'باب WPC خشبي مزدوج', 'WPC double wood door']
-    ]);
+        [galleryExtra(11), 'باب WPC شرائح منزلق', 'WPC sliding slat door'],
+        [galleryExtra(12), 'باب WPC سحاب مزدوج', 'WPC double sliding door']
+    ];
 
     const SHOWROOM_WPC_CABINETS_CATALOG = [
         [galleryExtra(16), 'خزانة WPC ملابس كلاسيك رمادية', 'WPC classic grey wardrobe'],
@@ -326,22 +344,22 @@
         [img('cabinets', 11), 'خزانة مطبخ زاوية', 'Corner kitchen cabinet'],
         [img('cabinets', 14), 'خزانة مطبخ بإطار ذهبي', 'Kitchen cabinet with gold trim'],
         [img('cabinets', 18), 'خزانة تخزين مطبخ — مصنع', 'Factory kitchen storage unit'],
-        [galleryExtra(28), 'خزانة WPC مطبخ مدمجة', 'WPC built-in kitchen'],
-        [galleryExtra(41), 'خزانة WPC مطبخ علوية وسفلية', 'WPC upper and base kitchen'],
-        [galleryExtra(46), 'خزانة WPC مطبخ عصرية', 'WPC modern kitchen'],
-        [galleryExtra(47), 'خزانة WPC تخزين ضيقة', 'WPC slim kitchen storage'],
-        [img('cabinets', 10), 'وحدة تلفزيون رخامية', 'Marble TV wall unit']
+        [galleryExtra(28), 'مطبخ WPC مدمج', 'WPC built-in kitchen'],
+        [galleryExtra(41), 'مطبخ WPC علوي وسفلي', 'WPC upper and base kitchen'],
+        [galleryExtra(46), 'مطبخ WPC عصرية', 'WPC modern kitchen'],
+        [galleryExtra(47), 'تخزين مطبخ WPC ضيق', 'WPC slim kitchen storage'],
+        [galleryExtra(31), 'درج مطبخ WPC', 'WPC kitchen drawer bank']
     ];
 
     const SHOWROOM_WINDOWS_CATALOG = [
+        [wpcSkuClean('WPC-RDY-FLAT-GLASS'), 'باب WPC زجاج — فلات', 'WPC flat glass door'],
+        [wpcSkuClean('WPC-RDY-U60-GLASS'), 'باب WPC زجاج — U60', 'WPC U60 glass door'],
+        [wpcSkuClean('WPC-RDY-LIB40-GLASS'), 'باب WPC زجاج — Lib', 'WPC Lib glass prep'],
         [img('doors', 2), 'باب زجاج مزدوج كلاسيك', 'Double classic glass door'],
         [img('doors', 5), 'باب فلات مع علوية ثابتة', 'Flat door with transom'],
-        [img('doors', 7), 'باب يوتشانيل خشبي مع علوية', 'Wood U-channel door with transom'],
-        [galleryExtra(14), 'باب WPC زجاج ولوحات', 'WPC glass panel door'],
-        [galleryExtra(2), 'باب WPC كلاسيك لوحين', 'WPC two-panel classic door'],
-        [img('cnc', 14), 'قطع ستائر CNC', 'CNC decorative screen parts'],
+        [img('doors', 7), 'باب يوتشانيل مع علوية', 'U-channel with transom'],
         [img('doors', 11), 'باب شرائح منزلق مزدوج', 'Double sliding slat door'],
-        [galleryExtra(5), 'باب WPC بعلوية ثابتة', 'WPC door with transom']
+        [img('cnc', 14), 'ستائر وشبابيك CNC', 'CNC window screens']
     ];
 
     const SHOWROOM_FACADES_CATALOG = [
@@ -350,33 +368,31 @@
         [img('cnc', 13), 'واجهة CNC بارزة', 'CNC raised relief facade'],
         [img('cnc', 7), 'لوح ألواح CNC هندسي', 'CNC geometric panel'],
         [img('cnc', 11), 'لوح جدار CNC ثلاثي', 'CNC 3D wall panel'],
-        [galleryExtra(30), 'خزانة WPC تخزين مصنع', 'WPC factory storage facade unit'],
-        [img('cnc', 2), 'لوح زخرفي CNC — أوراق ذهبية', 'CNC gold leaf relief panel']
+        [img('cnc', 5), 'صفائح واجهات ACP', 'ACP facade sheets'],
+        [img('cnc', 2), 'لوح زخرفي — أوراق ذهبية', 'CNC gold leaf relief panel']
     ];
 
     const SHOWROOM_ALUMINUM_CATALOG = [
-        [img('cnc', 1), 'بروفيل ألومنيوم قياسي', 'Standard aluminum profile'],
-        [img('cnc', 4), 'قطاع ألومنيوم U-channel', 'U-channel aluminum section'],
-        [img('cnc', 5), 'بروفيل إطار أبواب', 'Door frame aluminum profile'],
+        [img('cnc', 1), 'ألواح وبروفيلات ACP', 'ACP panels and profiles'],
+        [img('cnc', 5), 'صفائح واجهات ألومنيوم', 'Aluminum facade sheets'],
+        [img('cnc', 6), 'كلادينج واجهات', 'Facade cladding panels'],
+        [img('cnc', 7), 'شبابيك — لوح هندسي', 'Window geometric panel'],
+        [img('cnc', 8), 'زخرفة واجهة', 'Facade ornament panel'],
+        [img('cnc', 9), 'قطع تشطيب حائط', 'Wall finishing parts'],
         [img('cnc', 12), 'تخصيم ألومنيوم CNC', 'CNC aluminum cutting'],
-        [img('cnc', 14), 'كلادينج واجهات ألومنيوم', 'Aluminum facade cladding'],
-        [img('cnc', 9), 'قطع ديكور CNC للجدران', 'CNC wall decor parts'],
-        [img('cnc', 15), 'تشطيب CNC باب وخزانة', 'CNC door and cabinet finish']
+        [img('cnc', 14), 'شبابيك وستائر ألومنيوم', 'Aluminum windows and screens'],
+        [img('cnc', 13), 'واجهة بارزة', 'Raised facade panel'],
+        [img('cnc', 4), 'قطاع U-channel', 'U-channel section']
     ];
 
     const SHOWROOM_CNC_CATALOG = [
         [img('cnc', 2), 'لوح زخرفي CNC — أوراق ذهبية', 'CNC gold leaf relief panel'],
         [img('cnc', 3), 'نقش زخرفي CNC على WPC', 'CNC decorative WPC carving'],
-        [img('cnc', 6), 'واجهة منحوتة CNC', 'CNC carved facade panel'],
-        [img('cnc', 7), 'لوح ألواح CNC هندسي', 'CNC geometric panel'],
-        [img('cnc', 8), 'زخرفة واجهة CNC', 'CNC facade ornament'],
-        [img('cnc', 9), 'قطع ديكور CNC للجدران', 'CNC wall decor parts'],
         [img('cnc', 10), 'حفر CNC على WPC', 'CNC engraving on WPC'],
-        [img('cnc', 11), 'لوح جدار CNC ثلاثي', 'CNC 3D wall panel'],
-        [img('cnc', 12), 'نقش عربي CNC', 'CNC Arabic pattern carving'],
-        [img('cnc', 13), 'واجهة CNC بارزة', 'CNC raised relief facade'],
-        [img('cnc', 14), 'قطع ستائر CNC', 'CNC decorative screen parts'],
-        [img('cnc', 15), 'تشطيب CNC باب وخزانة', 'CNC door and cabinet finish']
+        [img('cnc', 15), 'تشطيب CNC باب وخزانة', 'CNC door and cabinet finish'],
+        [wpcRef('07-classic-panel.png'), 'نقش كلاسيك WPC', 'WPC classic panel carving'],
+        [wpcRef('22-raw-decor-profile.png'), 'قطاع ديكور WPC', 'WPC decor profile section'],
+        [wpcRef('21-raw-frame-profile.png'), 'قطاع حلق WPC', 'WPC frame profile section']
     ];
 
     function persistShowroomGalleryLocal() {
@@ -518,8 +534,8 @@
         showroomGallery.aluminum = {
             titleAr: 'ألومنيوم نبراس',
             titleEn: 'Nebras Aluminum',
-            introAr: 'بروفيلات · صفائح · زوايا · تخصيم — مقاسات حسب الطلب داخل المنصة',
-            introEn: 'Profiles, sheets, angles, cutting — custom sizes inside the platform',
+            introAr: 'بروفيلات · صفائح · شبابيك · واجهات · مطابخ · تخصيم — السعر حسب المقاس داخل المنصة',
+            introEn: 'Profiles, sheets, windows, facades, kitchens, cutting — priced by size inside the platform',
             items: buildCuratedItems('showroom-aluminum', SHOWROOM_ALUMINUM_CATALOG)
         };
         showroomGallery.cnc = {

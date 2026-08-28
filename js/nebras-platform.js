@@ -2681,7 +2681,7 @@
             sortOrder: 2
         };
 
-        const WPC_RAW_CATALOG_VERSION = 6;
+        const WPC_RAW_CATALOG_VERSION = 7;
         const WPC_RAW_BARE_IMG = 'images/catalog/wpc-raw-bare/';
         const WPC_RAW_CLAD_IMG = 'images/catalog/wpc-raw-clad/';
 
@@ -2753,11 +2753,11 @@
         ];
 
         const DEFAULT_WPC_RAW_BARE_VARIANTS = WPC_RAW_BARE_ROWS.map(function(r) {
-            return buildWpcRawVariant('wpc-raw-bare', '', r[1], r[2], r[3], r[4], r[5], r[6], r[7]);
+            return buildWpcRawVariant('wpc-raw-bare', 'images/catalog/wpc-photos/by-sku-clean/' + r[2] + '.png', r[1], r[2], r[3], r[4], r[5], r[6], r[7]);
         });
 
         const DEFAULT_WPC_RAW_CLAD_VARIANTS = WPC_RAW_CLAD_ROWS.map(function(r) {
-            return buildWpcRawVariant('wpc-raw-clad', '', r[1], r[2], r[3], r[4], r[5], r[6], r[7]);
+            return buildWpcRawVariant('wpc-raw-clad', 'images/catalog/wpc-photos/by-sku-clean/' + r[2] + '.png', r[1], r[2], r[3], r[4], r[5], r[6], r[7]);
         });
 
         const WPC_RAW_CATALOG_ALL_VARIANTS = DEFAULT_WPC_RAW_BARE_VARIANTS.concat(DEFAULT_WPC_RAW_CLAD_VARIANTS);
@@ -2975,7 +2975,7 @@
         /** عوالم المتجر — تنقل داخلي بين الأبواب والألومنيوم وWPC عضم */
         const NEBRAS_STORE_WORLDS = [
             { productId: 'prod-wpc', labelAr: 'عالم الأبواب', labelEn: 'Doors World', icon: 'fa-door-open', banner: 'images/catalog/wpc-photos/by-sku-clean/WPC-RDY-FLAT-45-STD.png' },
-            { productId: 'prod-aluminum', labelAr: 'عالم الألومنيوم', labelEn: 'Aluminum World', icon: 'fa-industry', banner: 'images/profile-2026/cnc/cnc-01.jpg' },
+            { productId: 'prod-aluminum', labelAr: 'عالم الألومنيوم', labelEn: 'Aluminum World', icon: 'fa-industry', banner: 'images/profile-2026/cnc/cnc-14.jpg' },
             { productId: 'prod-wpc-raw', labelAr: 'WPC عضم', labelEn: 'WPC Raw', icon: 'fa-door-closed', banner: 'images/catalog/wpc-photos/08-bone-profile.png' }
         ];
 
@@ -3066,11 +3066,28 @@
             panelLayer.style.maskRepeat = 'no-repeat';
         }
 
+        function resolveWpcRawProfileRefPhoto(sku) {
+            const s = String(sku || '').toUpperCase();
+            if (/WPC-RAW-[BC]-L\d/.test(s)) return WPC_CATALOG_PHOTOS.leafSection;
+            if (/WPC-RAW-[BC]-SL/.test(s)) return WPC_CATALOG_PHOTOS.rawSlice;
+            if (/WPC-RAW-[BC]-F\d/.test(s)) return WPC_CATALOG_PHOTOS.rawFrame;
+            if (/WPC-RAW-[BC]-DJ/.test(s)) return WPC_CATALOG_PHOTOS.rawDecor;
+            if (/WPC-RAW-[BC]-DN/.test(s)) return WPC_CATALOG_PHOTOS.rawDecor;
+            if (/WPC-RAW-[BC]-DF/.test(s)) return WPC_CATALOG_PHOTOS.rawDecor;
+            if (/WPC-RAW-[BC]-U/.test(s)) return WPC_CATALOG_PHOTOS.rawUProfile;
+            if (/WPC-RAW-[BC]-EDGE/.test(s)) return WPC_CATALOG_PHOTOS.rawEdgeBand;
+            if (/WPC-RAW-[BC]-PVC/.test(s)) return WPC_CATALOG_PHOTOS.rawPvc;
+            if (/WPC-RAW-[BC]-MDF/.test(s)) return WPC_CATALOG_PHOTOS.mdf;
+            if (/WPC-RAW-C-/.test(s)) return WPC_CATALOG_PHOTOS.rawCladLeaf;
+            return WPC_CATALOG_PHOTOS.boneProfile;
+        }
+
         function resolveWpcCatalogPhotoForVariant(variant) {
             if (!variant) return '';
             const sku = String(variant.sku || '').toUpperCase();
             if (WPC_SKU_PHOTO_MAP[sku]) return WPC_SKU_PHOTO_MAP[sku];
             const sub = String(variant.subCategoryId || '');
+            if (sub === 'wpc-raw-bare' || sub === 'wpc-raw-clad') return resolveWpcRawProfileRefPhoto(sku);
             if (sub === 'wpc-ready-supply') return WPC_CATALOG_PHOTOS.noAccessory;
             if (sub === 'wpc-ready-install') return WPC_CATALOG_PHOTOS.withAccessory;
             return WPC_CATALOG_PHOTOS.boneProfile;
@@ -3664,11 +3681,11 @@
         }
 
         const NEBRAS_DOOR_ROOM_SCENARIOS = [
-            { id: 'kitchen', labelAr: 'باب مطبخ', labelEn: 'Kitchen door', image: 'images/profile-2026/doors/doors-03.jpg', keywords: ['فلات', 'flat', 'lib', 'Lib', 'مطبخ'] },
-            { id: 'bedroom', labelAr: 'باب غرفة', labelEn: 'Bedroom door', image: 'images/profile-2026/doors/doors-04.jpg', keywords: ['غرفة', 'فلات', 'flat', 'u45', 'U45', 'u60'] },
-            { id: 'bathroom', labelAr: 'باب حمام', labelEn: 'Bathroom door', image: 'images/profile-2026/doors/doors-05.jpg', keywords: ['فلات', 'flat', 'lib', 'Lib', 'حمام'] },
-            { id: 'home', labelAr: 'باب منزل', labelEn: 'Home door', image: 'images/profile-2026/doors/doors-02.jpg', keywords: ['شقة', 'u45', 'U45', 'u60', 'U60', 'فلات'] },
-            { id: 'villa', labelAr: 'باب فيلا', labelEn: 'Villa door', image: 'images/profile-2026/doors/doors-01.jpg', keywords: ['فيلا', 'villa', 'u60', 'U60', 'ستانلس', 'steel', 'زجاج', 'glass', 'وربعه', 'محور'] }
+            { id: 'kitchen', labelAr: 'باب مطبخ', labelEn: 'Kitchen door', image: 'images/catalog/wpc-photos/by-sku-clean/WPC-RDY-FLAT-45-STD.png', keywords: ['فلات', 'flat', 'lib', 'Lib', 'مطبخ'] },
+            { id: 'bedroom', labelAr: 'باب غرفة', labelEn: 'Bedroom door', image: 'images/catalog/wpc-photos/by-sku-clean/WPC-RDY-U45-STD.png', keywords: ['غرفة', 'فلات', 'flat', 'u45', 'U45', 'u60'] },
+            { id: 'bathroom', labelAr: 'باب حمام', labelEn: 'Bathroom door', image: 'images/catalog/wpc-photos/by-sku-clean/WPC-RDY-LIB40-STD.png', keywords: ['فلات', 'flat', 'lib', 'Lib', 'حمام'] },
+            { id: 'apartment', labelAr: 'باب شقة', labelEn: 'Apartment door', image: 'images/catalog/wpc-photos/by-sku-clean/WPC-RDY-FLAT-GLASS.png', keywords: ['شقة', 'flat', 'فلات', 'glass', 'زجاج', 'u45', 'U45'] },
+            { id: 'villa', labelAr: 'باب فيلا', labelEn: 'Villa door', image: 'images/catalog/wpc-photos/by-sku-clean/WPC-RDY-U60-GLASS.png', keywords: ['فيلا', 'villa', 'u60', 'U60', 'ستانلس', 'steel', 'زجاج', 'glass', 'وربعه', 'lq', 'LQ', 'سحب', 'sld'] }
         ];
 
         const NEBRAS_STORE_CATALOG_PDFS = [
@@ -3740,7 +3757,7 @@
         function buildStoreAluminumWelcomeHeroHtml(product, lang, ui) {
             const photos = STORE_ALUMINUM_REAL_PHOTOS.slice(0, 4);
             const title = ui.storeAluWelcomeTitle || 'عالم ألومنيوم نبراس — جودة المصنع السعودي';
-            const subtitle = ui.storeAluWelcomeSubtitle || 'بروفيلات · صفائح · زوايا · تخصيم — مقاسات حسب الطلب داخل المنصة.';
+            const subtitle = ui.storeAluWelcomeSubtitle || 'بروفيلات · صفائح · شبابيك · واجهات · مطابخ · تخصيم — مقاسات حسب الطلب داخل المنصة.';
             const eyebrow = ui.storeAluWelcomeEyebrow || 'ألومنيوم — مصنع نبراس';
             const badges = [
                 { icon: 'fa-industry', label: ui.storeBadgeFactory || 'مصنع سعودي' },
@@ -4151,6 +4168,7 @@
             let merged = 0;
             WPC_RAW_CATALOG_ALL_VARIANTS.forEach(function(def) {
                 const payload = Object.assign({}, def);
+                const seedImage = String(payload.image || '').trim();
                 delete payload.image;
                 const idx = raw.variants.findIndex(function(v) {
                     return v && (v.sku === payload.sku || v.id === payload.id);
@@ -4158,9 +4176,9 @@
                 if (idx >= 0) {
                     const prevImg = raw.variants[idx].image || '';
                     raw.variants[idx] = Object.assign({}, raw.variants[idx], payload);
-                    raw.variants[idx].image = isAdminManagedProductImage(prevImg) ? prevImg : '';
+                    raw.variants[idx].image = isAdminManagedProductImage(prevImg) ? prevImg : seedImage;
                 } else {
-                    payload.image = '';
+                    payload.image = seedImage;
                     raw.variants.push(payload);
                 }
                 merged++;
@@ -4233,7 +4251,7 @@
         function ensureAluminumSubCategoryDefs(alu) {
             if (!alu) return;
             if (!Array.isArray(alu.subCategories)) alu.subCategories = [];
-            [ALU_PROFILES_SUBCATEGORY, ALU_SHEETS_SUBCATEGORY, ALU_ANGLES_SUBCATEGORY].forEach(function(subDef) {
+            [ALU_PROFILES_SUBCATEGORY, ALU_SHEETS_SUBCATEGORY, ALU_ANGLES_SUBCATEGORY, ALU_WINDOWS_SUBCATEGORY, ALU_FACADES_SUBCATEGORY, ALU_KITCHENS_SUBCATEGORY].forEach(function(subDef) {
                 if (!alu.subCategories.some(function(s) { return s && s.id === subDef.id; })) {
                     alu.subCategories.push(Object.assign({}, subDef));
                 } else {
@@ -4282,6 +4300,9 @@
             const sub = String(variant.subCategoryId || '');
             if (sub === 'alu-sheets') return ALUMINUM_CATALOG_PHOTOS.sheet1;
             if (sub === 'alu-angles') return ALUMINUM_CATALOG_PHOTOS.angle1;
+            if (sub === 'alu-windows') return ALUMINUM_CATALOG_PHOTOS.window1;
+            if (sub === 'alu-facades') return ALUMINUM_CATALOG_PHOTOS.facade1;
+            if (sub === 'alu-kitchens') return ALUMINUM_CATALOG_PHOTOS.kitchen1;
             return ALUMINUM_CATALOG_PHOTOS.profile1;
         }
 
@@ -4308,7 +4329,10 @@
                 'prod-aluminum': {
                     'alu-profiles': ALUMINUM_CATALOG_PHOTOS.profile1,
                     'alu-sheets': ALUMINUM_CATALOG_PHOTOS.sheet1,
-                    'alu-angles': ALUMINUM_CATALOG_PHOTOS.angle1
+                    'alu-angles': ALUMINUM_CATALOG_PHOTOS.angle1,
+                    'alu-windows': ALUMINUM_CATALOG_PHOTOS.window1,
+                    'alu-facades': ALUMINUM_CATALOG_PHOTOS.facade1,
+                    'alu-kitchens': ALUMINUM_CATALOG_PHOTOS.kitchen1
                 }
             };
             const map = banners[productId] || {};
@@ -4328,24 +4352,29 @@
             return formatVariantPriceBlock(variant ? variant.price : 0, lang);
         }
 
-        /** أصناف الألومنيوم — صور مصنع حقيقية · السعر حسب المقاس داخل المنصة */
-        const ALUMINUM_CATALOG_VERSION = 2;
+        /** أصناف الألومنيوم — صور خط إنتاج · السعر حسب المقاس داخل المنصة */
+        const ALUMINUM_CATALOG_VERSION = 4;
         const ALUMINUM_CATALOG_PHOTOS = {
             profile1: 'images/profile-2026/cnc/cnc-01.jpg',
-            profile2: 'images/profile-2026/cnc/cnc-02.jpg',
-            profile3: 'images/profile-2026/cnc/cnc-03.jpg',
+            profile2: 'images/profile-2026/cnc/cnc-04.jpg',
+            profile3: 'images/profile-2026/cnc/cnc-09.jpg',
             sheet1: 'images/profile-2026/cnc/cnc-05.jpg',
             sheet2: 'images/profile-2026/cnc/cnc-06.jpg',
             angle1: 'images/profile-2026/cnc/cnc-08.jpg',
             angle2: 'images/profile-2026/cnc/cnc-09.jpg',
-            cutting: 'images/profile-2026/cnc/cnc-12.jpg',
-            facade: 'images/profile-2026/cnc/cnc-14.jpg'
+            window1: 'images/profile-2026/cnc/cnc-14.jpg',
+            window2: 'images/profile-2026/cnc/cnc-07.jpg',
+            facade1: 'images/profile-2026/cnc/cnc-06.jpg',
+            facade2: 'images/profile-2026/cnc/cnc-13.jpg',
+            kitchen1: 'images/profile-2026/cnc/cnc-11.jpg',
+            kitchen2: 'images/profile-2026/cnc/cnc-05.jpg',
+            cutting: 'images/profile-2026/cnc/cnc-12.jpg'
         };
         const STORE_ALUMINUM_REAL_PHOTOS = [
             ALUMINUM_CATALOG_PHOTOS.profile1,
             ALUMINUM_CATALOG_PHOTOS.sheet1,
-            ALUMINUM_CATALOG_PHOTOS.angle1,
-            ALUMINUM_CATALOG_PHOTOS.cutting
+            ALUMINUM_CATALOG_PHOTOS.window1,
+            ALUMINUM_CATALOG_PHOTOS.facade1
         ];
         const ALU_PROFILES_SUBCATEGORY = {
             id: 'alu-profiles',
@@ -4377,16 +4406,51 @@
             descEn: 'Angles, sections and aluminum cutting — sized inside the platform.',
             sortOrder: 3
         };
+        const ALU_WINDOWS_SUBCATEGORY = {
+            id: 'alu-windows',
+            labelAr: 'شبابيك ألومنيوم',
+            labelEn: 'Aluminum windows',
+            shortLabelAr: 'شبابيك',
+            shortLabelEn: 'Windows',
+            descAr: 'شبابيك وستائر ألومنيوم — مقاسات حسب الطلب داخل المنصة.',
+            descEn: 'Aluminum windows and screens — custom sizes inside the platform.',
+            sortOrder: 4
+        };
+        const ALU_FACADES_SUBCATEGORY = {
+            id: 'alu-facades',
+            labelAr: 'واجهات وكلادينج',
+            labelEn: 'Facades & cladding',
+            shortLabelAr: 'واجهات',
+            shortLabelEn: 'Facades',
+            descAr: 'كلادينج وواجهات ألومنيوم — تصنيع حسب المشروع.',
+            descEn: 'Aluminum cladding and facades — project-based manufacturing.',
+            sortOrder: 5
+        };
+        const ALU_KITCHENS_SUBCATEGORY = {
+            id: 'alu-kitchens',
+            labelAr: 'مطابخ ألومنيوم',
+            labelEn: 'Aluminum kitchens',
+            shortLabelAr: 'مطابخ',
+            shortLabelEn: 'Kitchens',
+            descAr: 'تشطيبات ومطابخ ألومنيوم — السعر حسب المقاس والتصميم.',
+            descEn: 'Aluminum kitchen systems — priced by size and design inside the platform.',
+            sortOrder: 6
+        };
         const DEFAULT_ALUMINUM_VARIANTS = [
             { id: 'alu-prof-6m', sku: 'ALU-PROF-6M', subCategoryId: 'alu-profiles', image: ALUMINUM_CATALOG_PHOTOS.profile1, typeAr: 'بروفيل ألومنيوم قياسي', typeEn: 'Standard aluminum profile', sizeAr: '6 م — حسب المقطع', sizeEn: '6 m — per section', colorAr: 'فضي / أبيض / أسود', colorEn: 'Silver / white / black', price: 0, inStock: true },
             { id: 'alu-prof-u', sku: 'ALU-PROF-U', subCategoryId: 'alu-profiles', image: ALUMINUM_CATALOG_PHOTOS.profile2, typeAr: 'بروفيل U-channel', typeEn: 'U-channel profile', sizeAr: 'حسب المقاس', sizeEn: 'Custom size', colorAr: 'فضي', colorEn: 'Silver', price: 0, inStock: true },
-            { id: 'alu-prof-frame', sku: 'ALU-PROF-FRM', subCategoryId: 'alu-profiles', image: ALUMINUM_CATALOG_PHOTOS.profile3, typeAr: 'إطار ألومنيوم للأبواب', typeEn: 'Door aluminum frame', sizeAr: 'حسب المقاس', sizeEn: 'Custom size', colorAr: 'فضي / أسود', colorEn: 'Silver / black', price: 0, inStock: true },
-            { id: 'alu-prof-facade', sku: 'ALU-PROF-FAC', subCategoryId: 'alu-profiles', image: ALUMINUM_CATALOG_PHOTOS.facade, typeAr: 'كلادينج واجهات', typeEn: 'Facade cladding profile', sizeAr: 'حسب المشروع', sizeEn: 'Per project', colorAr: 'متعدد', colorEn: 'Various', price: 0, inStock: true },
+            { id: 'alu-prof-fin', sku: 'ALU-PROF-FIN', subCategoryId: 'alu-profiles', image: ALUMINUM_CATALOG_PHOTOS.profile3, typeAr: 'قطاع تشطيب', typeEn: 'Finishing profile', sizeAr: 'حسب المقاس', sizeEn: 'Custom size', colorAr: 'فضي / أسود', colorEn: 'Silver / black', price: 0, inStock: true },
             { id: 'alu-sheet-122', sku: 'ALU-SHT-122', subCategoryId: 'alu-sheets', image: ALUMINUM_CATALOG_PHOTOS.sheet1, typeAr: 'صفائح ألومنيوم مركبة', typeEn: 'Composite aluminum sheet', sizeAr: '122 × 244 سم', sizeEn: '122×244 cm', colorAr: 'أبيض / فضي', colorEn: 'White / silver', price: 0, inStock: true },
             { id: 'alu-sheet-comp', sku: 'ALU-SHT-COMP', subCategoryId: 'alu-sheets', image: ALUMINUM_CATALOG_PHOTOS.sheet2, typeAr: 'لوح ACP للواجهات', typeEn: 'ACP facade panel', sizeAr: 'حسب المقاس', sizeEn: 'Custom size', colorAr: 'متعدد', colorEn: 'Various', price: 0, inStock: true },
             { id: 'alu-angle-40', sku: 'ALU-ANG-40', subCategoryId: 'alu-angles', image: ALUMINUM_CATALOG_PHOTOS.angle1, typeAr: 'زاوية ألومنيوم', typeEn: 'Aluminum angle', sizeAr: '40 × 40 مم', sizeEn: '40×40 mm', colorAr: 'طبيعي', colorEn: 'Natural', price: 0, inStock: true },
             { id: 'alu-angle-l', sku: 'ALU-ANG-L', subCategoryId: 'alu-angles', image: ALUMINUM_CATALOG_PHOTOS.angle2, typeAr: 'زاوية L-section', typeEn: 'L-section angle', sizeAr: 'حسب المقاس', sizeEn: 'Custom size', colorAr: 'فضي', colorEn: 'Silver', price: 0, inStock: true },
-            { id: 'alu-cutting-svc', sku: 'ALU-CUT', subCategoryId: 'alu-angles', image: ALUMINUM_CATALOG_PHOTOS.cutting, typeAr: 'تخصيم وتقطيع ألومنيوم', typeEn: 'Aluminum cutting service', sizeAr: 'حسب الطلب', sizeEn: 'On request', colorAr: '—', colorEn: '—', price: 0, inStock: true }
+            { id: 'alu-cutting-svc', sku: 'ALU-CUT', subCategoryId: 'alu-angles', image: ALUMINUM_CATALOG_PHOTOS.cutting, typeAr: 'تخصيم وتقطيع ألومنيوم', typeEn: 'Aluminum cutting service', sizeAr: 'حسب الطلب', sizeEn: 'On request', colorAr: '—', colorEn: '—', price: 0, inStock: true },
+            { id: 'alu-win-screen', sku: 'ALU-WIN-SCR', subCategoryId: 'alu-windows', image: ALUMINUM_CATALOG_PHOTOS.window1, typeAr: 'شبابيك وستائر ألومنيوم', typeEn: 'Aluminum window screens', sizeAr: 'حسب المقاس', sizeEn: 'Custom size', colorAr: 'فضي', colorEn: 'Silver', price: 0, inStock: true },
+            { id: 'alu-win-panel', sku: 'ALU-WIN-PNL', subCategoryId: 'alu-windows', image: ALUMINUM_CATALOG_PHOTOS.window2, typeAr: 'لوح شباك هندسي', typeEn: 'Geometric window panel', sizeAr: 'حسب الطلب', sizeEn: 'On request', colorAr: 'متعدد', colorEn: 'Various', price: 0, inStock: true },
+            { id: 'alu-fac-clad', sku: 'ALU-FAC-CLAD', subCategoryId: 'alu-facades', image: ALUMINUM_CATALOG_PHOTOS.facade1, typeAr: 'كلادينج واجهات', typeEn: 'Facade cladding', sizeAr: 'حسب المشروع', sizeEn: 'Per project', colorAr: 'متعدد', colorEn: 'Various', price: 0, inStock: true },
+            { id: 'alu-fac-relief', sku: 'ALU-FAC-REL', subCategoryId: 'alu-facades', image: ALUMINUM_CATALOG_PHOTOS.facade2, typeAr: 'واجهة بارزة', typeEn: 'Raised facade panel', sizeAr: 'حسب المشروع', sizeEn: 'Per project', colorAr: 'متعدد', colorEn: 'Various', price: 0, inStock: true },
+            { id: 'alu-kitchen-sys', sku: 'ALU-KIT-SYS', subCategoryId: 'alu-kitchens', image: ALUMINUM_CATALOG_PHOTOS.kitchen1, typeAr: 'نظام مطبخ ألومنيوم', typeEn: 'Aluminum kitchen system', sizeAr: 'حسب التصميم', sizeEn: 'Per design', colorAr: 'متعدد', colorEn: 'Various', price: 0, inStock: true },
+            { id: 'alu-kitchen-front', sku: 'ALU-KIT-FRT', subCategoryId: 'alu-kitchens', image: ALUMINUM_CATALOG_PHOTOS.kitchen2, typeAr: 'واجهات مطابخ ألومنيوم', typeEn: 'Aluminum kitchen fronts', sizeAr: 'حسب المقاس', sizeEn: 'Custom size', colorAr: 'فضي / أبيض', colorEn: 'Silver / white', price: 0, inStock: true }
         ];
 
         const DEFAULT_OTHER_VARIANTS = [
@@ -4397,7 +4461,7 @@
         const DEFAULT_SITE_PRODUCTS = [
             { id: 'prod-wpc-raw', sortOrder: 1, cssClass: 'card-wpc-raw', iconClass: 'fas fa-door-open', titleIcon: 'fas fa-industry', legacyKey: 'wpc-raw', titleAr: 'أبواب WPC عضم (للورش والمصانع)', titleEn: 'WPC Raw Doors (Workshops)', titleZh: 'WPC 毛坯门', textAr: 'أبواب WPC عضم غير ملبّسة وغير جاهزة — للورش والمصانع التي تكمل التشطيب والتركيب.', textEn: 'Unfinished WPC door leaves for workshops and factories.', textZh: '供车间加工的 WPC 毛坯门。', backgroundImage: 'wpc-background', album: ['images/catalog/wpc-photos/08-bone-profile.png', 'images/catalog/wpc-photos/10-leaf-section.png', 'images/catalog/wpc-photos/09-mdf.png'], target: '#products', action: 'shop', anchorId: 'products', visible: true, shopEnabled: true, variants: DEFAULT_WPC_RAW_VARIANTS },
             { id: 'prod-wpc', sortOrder: 2, cssClass: 'card-wpc', iconClass: 'fas fa-door-closed', titleIcon: 'fas fa-door-open', legacyKey: 'wpc', titleAr: 'أبواب WPC جاهزة للتركيب', titleEn: 'WPC Ready Doors', titleZh: 'WPC 成品门', textAr: 'أبواب WPC جاهزة للتركيب — تجمع بين فخامة المظهر وصمود البلاستيك للمنازل والمشاريع.', textEn: 'Ready-to-install WPC doors for homes and projects.', textZh: '即装型 WPC 门。', backgroundImage: 'wpc-background', album: ['images/catalog/wpc-photos/02-with-accessory.png', 'images/catalog/wpc-photos/07-classic-panel.png', 'images/catalog/wpc-photos/03-glass-leaf-quarter.png', 'images/catalog/wpc-photos/06-sliding-double-decor.png'], target: '#doors', action: 'shop', anchorId: 'doors', visible: true, shopEnabled: true, variants: DEFAULT_WPC_READY_VARIANTS },
-            { id: 'prod-aluminum', sortOrder: 3, cssClass: 'card-aluminum', iconClass: 'fas fa-industry', titleIcon: 'fas fa-cog', legacyKey: 'aluminum', titleAr: 'الألومنيوم', titleEn: 'Aluminum', titleZh: '铝制品', textAr: 'منتجات ألومنيوم متينة وتصميمات ذكية تناسب مشاريع البناء والتشطيب.', textEn: 'Durable aluminum for construction and finishing.', textZh: '适用于建筑与装修的耐用铝材。', backgroundImage: 'aluminum-background', album: ['images/profile-2026/cnc/cnc-01.jpg', 'images/profile-2026/cnc/cnc-05.jpg', 'images/profile-2026/cnc/cnc-08.jpg', 'images/profile-2026/cnc/cnc-12.jpg'], target: '#aluminum', action: 'shop', anchorId: 'aluminum', visible: true, shopEnabled: true, variants: DEFAULT_ALUMINUM_VARIANTS },
+            { id: 'prod-aluminum', sortOrder: 3, cssClass: 'card-aluminum', iconClass: 'fas fa-industry', titleIcon: 'fas fa-cog', legacyKey: 'aluminum', titleAr: 'الألومنيوم', titleEn: 'Aluminum', titleZh: '铝制品', textAr: 'منتجات ألومنيوم متينة وتصميمات ذكية تناسب مشاريع البناء والتشطيب.', textEn: 'Durable aluminum for construction and finishing.', textZh: '适用于建筑与装修的耐用铝材。', backgroundImage: 'aluminum-background', album: ['images/profile-2026/cnc/cnc-01.jpg', 'images/profile-2026/cnc/cnc-14.jpg', 'images/profile-2026/cnc/cnc-06.jpg', 'images/profile-2026/cnc/cnc-11.jpg'], target: '#aluminum', action: 'shop', anchorId: 'aluminum', visible: true, shopEnabled: true, variants: DEFAULT_ALUMINUM_VARIANTS },
             { id: 'prod-other', sortOrder: 4, cssClass: 'card-other-products', iconClass: 'fas fa-boxes', titleIcon: 'fas fa-boxes', legacyKey: 'otherProducts', titleAr: 'منتجات أخرى', titleEn: 'Other Products', titleZh: '其他产品', textAr: 'مجموعة متنوعة من المنتجات الإضافية والحلول المبتكرة.', textEn: 'A diverse range of additional products.', textZh: '多样化的附加产品与创新方案。', backgroundImage: 'background-other-products', album: ['images/background-other-products.jpeg'], target: '#products', visitorMode: 'shop', action: 'shop', anchorId: '', visible: true, shopEnabled: true, variants: DEFAULT_OTHER_VARIANTS },
             { id: 'prod-complaints', sortOrder: 5, cssClass: 'card-customer-complaints', iconClass: 'fas fa-search', titleIcon: 'fas fa-search', legacyKey: 'complaints', titleAr: 'استفسار عن الشكاوى', titleEn: 'Complaint Inquiry', titleZh: '投诉查询', textAr: 'تحقق من حالة شكواك بإدخال رقم الشكوى.', textEn: 'Check your complaint status with the complaint number.', textZh: '输入投诉编号查询处理状态。', backgroundImage: '', album: [], target: '', action: 'complaint', anchorId: '', visible: true }
         ];
@@ -4426,7 +4490,7 @@
             { id: 'dash-visitor-payments', zone: 'quick', dashGroup: 'command', sortOrder: 1.015, iconClass: 'fas fa-wallet', titleAr: 'طرق الدفع للزائر', titleEn: 'Visitor Payments', textAr: 'تحضير المدفوع في السلة — النشر النهائي للإدارة الرئيسية فقط.', textEn: 'Cart payment methods — HQ publishes to live storefront.', cssClass: 'dashboard-tile-card--visitor-payments', handler: 'openVisitorPaymentsGovernance', permission: 'content', visible: true },
             { id: 'dash-about-pages', zone: 'quick', dashGroup: 'command', sortOrder: 2, iconClass: 'fas fa-building', titleAr: 'من نحن ورؤيتنا', titleEn: 'About & Vision', textAr: 'نصوص المصنع ووثائق الصفحات الداخلية.', textEn: 'Factory pages and documents.', handler: 'openAboutContentAdmin', permission: 'content', visible: true },
             { id: 'dash-certs', zone: 'quick', dashGroup: 'command', sortOrder: 3, iconClass: 'fas fa-award', titleAr: 'اعتمادات وشهادات', titleEn: 'Certifications', textAr: 'شهادات المعرض — صور وPDF.', textEn: 'Showroom certificates.', cssClass: 'dashboard-tile-card--certs', handler: 'openCertificationsHub', permission: 'content', visible: true },
-            { id: 'dash-showroom', zone: 'quick', dashGroup: 'command', sortOrder: 4, iconClass: 'fas fa-images', titleAr: 'معرض نبراس', titleEn: 'Nebras Showroom', textAr: '5 أقسام: أبواب نبراس · خزائن نبراس · WPC · CNC · مشاريع NHC.', textEn: '5 galleries: doors, cabinets, WPC, CNC, NHC projects.', handler: 'openShowroomHub', permission: 'content', visible: true },
+            { id: 'dash-showroom', zone: 'quick', dashGroup: 'command', sortOrder: 4, iconClass: 'fas fa-images', titleAr: 'معرض نبراس', titleEn: 'Nebras Showroom', textAr: '10 أقسام: أبواب · WPC · خزائن · مطابخ · شبابيك · واجهات · ألومنيوم · CNC · NHC.', textEn: '10 galleries: doors, WPC, cabinets, kitchens, windows, facades, aluminum, CNC, NHC.', handler: 'openShowroomHub', permission: 'content', visible: true },
             { id: 'dash-users', zone: 'quick', dashGroup: 'command', sortOrder: 4, iconClass: 'fas fa-users-cog', titleAr: 'المستخدمون والصلاحيات', titleEn: 'Users & RBAC', textAr: 'أدوار وصلاحيات كاملة للموقع.', textEn: 'Roles and full site permissions.', handler: 'openUserManagement', permission: 'users', visible: true },
             { id: 'dash-audit', zone: 'quick', dashGroup: 'command', sortOrder: 5, iconClass: 'fas fa-clipboard-check', titleAr: 'سجل العمليات', titleEn: 'Audit Log', textAr: 'تتبع كل إجراء إداري.', textEn: 'Track admin actions.', handler: 'openAuditLog', permission: 'audit', visible: true },
             { id: 'dash-sales', zone: 'quick', dashGroup: 'command', sortOrder: 6, iconClass: 'fas fa-chart-line', titleAr: 'المبيعات', titleEn: 'Sales', textAr: 'عروض الأسعار الواردة والمبيعات.', textEn: 'Quotes and sales.', handler: 'openSalesManagement', permission: 'sales', visible: true },
