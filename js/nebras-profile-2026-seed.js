@@ -5,9 +5,9 @@
 (function(global) {
     'use strict';
 
-    const PROFILE_2026_SEED_VERSION = 11;
+    const PROFILE_2026_SEED_VERSION = 12;
     const PROFILE_STORAGE_KEY = 'nebrasProfile2026SeedVersion';
-    const SHOWROOM_CATALOG_VERSION = 13;
+    const SHOWROOM_CATALOG_VERSION = 14;
     const SHOWROOM_CATALOG_STORAGE_KEY = 'nebrasShowroomCatalogVersion';
 
     function img(folder, n) {
@@ -27,9 +27,9 @@
         return 'images/catalog/wpc-photos/' + name;
     }
 
-    /** placeholder صادق لأقسام الألومنيوم حتى جلسة تصوير مخصصة */
-    function aluImg() {
-        return 'images/aluminum-background.webp';
+    /** صور كتالوج الألومنيوم — قطاعات · شبابيك · أبواب · واجهات · مطابخ */
+    function aluCat(file) {
+        return 'images/catalog/aluminum/' + file;
     }
 
     const PROFILE_2026 = {
@@ -216,7 +216,8 @@
             companyAddressEn: 'Qassim · Unaizah · Industrial Zone · Zulfi Road Extension',
             heroBannerImageUrl: 'images/profile-2026/hero-cover.jpg',
             logoUrl: 'images/logo-nebras-mark.png',
-            showroomCatalogVersion: 13
+            showroomCatalogVersion: 14,
+            aluminumCatalogVersion: 6
         }
     };
 
@@ -393,14 +394,14 @@
     ];
 
     const SHOWROOM_ALUMINUM_CATALOG = [
-        [img('cnc', 9), 'باب زجاج بإطار ألومنيوم', 'Glass door — aluminum frame'],
-        [aluImg(), 'بروفيلات ألومنيوم — حسب المقاس', 'Aluminum profiles — custom size'],
-        [aluImg(), 'صفائح ACP للواجهات', 'ACP facade sheets'],
-        [aluImg(), 'شبابيك ألومنيوم — حسب الطلب', 'Aluminum windows — on request'],
-        [aluImg(), 'كلادينج واجهات ألومنيوم', 'Aluminum facade cladding'],
-        [aluImg(), 'مطابخ ألومنيوم — حسب التصميم', 'Aluminum kitchens — per design'],
-        [aluImg(), 'زوايا ومقاطع ألومنيوم', 'Aluminum angles & sections'],
-        [aluImg(), 'تخصيم ألومنيوم — داخل المنصة', 'Aluminum cutting — inside platform']
+        [aluCat('alu-profiles-collection.webp'), 'بروفيلات ألومنيوم — تشكيلة', 'Aluminum profiles collection'],
+        [aluCat('alu-profiles-angles.png'), 'زوايا ومقاطع ألومنيوم', 'Aluminum angles & sections'],
+        [aluCat('alu-sheet-acp.png'), 'صفائح ACP للواجهات', 'ACP facade sheets'],
+        [aluCat('alu-window-sliding.png'), 'شبابيك ألومنيوم منزلقة', 'Aluminum sliding windows'],
+        [aluCat('alu-door-factory.jpg'), 'باب زجاج بإطار ألومنيوم — مصنع', 'Factory aluminum-frame glass door'],
+        [aluCat('alu-door-glass.png'), 'باب ألومنيوم — واجهة فيلا', 'Aluminum entry door — villa'],
+        [aluCat('alu-facade-acp.png'), 'كلادينج واجهات ألومنيوم', 'Aluminum facade cladding'],
+        [aluCat('alu-kitchen-modern.png'), 'مطبخ ألومنيوم عصري', 'Modern aluminum kitchen']
     ];
 
     const SHOWROOM_CNC_CATALOG = [
@@ -554,8 +555,8 @@
         showroomGallery.aluminum = {
             titleAr: 'ألومنيوم نبراس',
             titleEn: 'Nebras Aluminum',
-            introAr: 'بروفيلات · شبابيك · واجهات · مطابخ — السعر حسب المقاس · بدون صور خزائن أو CNC',
-            introEn: 'Profiles, windows, facades, kitchens — priced by size · no cabinet/CNC mislabels',
+            introAr: 'قطاعات · شبابيك · أبواب · واجهات · مطابخ — صور كتالوج ألومنيوم نبراس',
+            introEn: 'Profiles, windows, doors, facades, kitchens — Nebras aluminum catalog',
             items: buildCuratedItems('showroom-aluminum', SHOWROOM_ALUMINUM_CATALOG)
         };
         showroomGallery.cnc = {
@@ -619,11 +620,8 @@
             if (!it) return true;
             const url = String(it.imageUrl || '');
             if (!url) return true;
-            if (url.indexOf('aluminum-background') >= 0 || url.indexOf('cnc-09') >= 0) return false;
-            if (/\/cnc\/cnc-/.test(url)) return true;
-            if (/\/cabinets\//.test(url)) return true;
-            if (/\/doors\//.test(url)) return true;
-            return false;
+            if (url.indexOf('images/catalog/aluminum/') === 0) return false;
+            return true;
         });
     }
 
