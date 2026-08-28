@@ -5,9 +5,9 @@
 (function(global) {
     'use strict';
 
-    const PROFILE_2026_SEED_VERSION = 10;
+    const PROFILE_2026_SEED_VERSION = 11;
     const PROFILE_STORAGE_KEY = 'nebrasProfile2026SeedVersion';
-    const SHOWROOM_CATALOG_VERSION = 12;
+    const SHOWROOM_CATALOG_VERSION = 13;
     const SHOWROOM_CATALOG_STORAGE_KEY = 'nebrasShowroomCatalogVersion';
 
     function img(folder, n) {
@@ -25,6 +25,11 @@
 
     function wpcRef(name) {
         return 'images/catalog/wpc-photos/' + name;
+    }
+
+    /** placeholder صادق لأقسام الألومنيوم حتى جلسة تصوير مخصصة */
+    function aluImg() {
+        return 'images/aluminum-background.webp';
     }
 
     const PROFILE_2026 = {
@@ -210,7 +215,8 @@
             companyAddressAr: 'القصيم · عنيزة · المنطقة الصناعية · امتداد طريق الزلفي',
             companyAddressEn: 'Qassim · Unaizah · Industrial Zone · Zulfi Road Extension',
             heroBannerImageUrl: 'images/profile-2026/hero-cover.jpg',
-            logoUrl: 'images/logo-nebras-mark.png'
+            logoUrl: 'images/logo-nebras-mark.png',
+            showroomCatalogVersion: 13
         }
     };
 
@@ -253,7 +259,9 @@
         [wpcSkuClean('WPC-RDY-U60-GLASS'), 'باب WPC U — 60ملم زجاج', 'WPC U60 glass door'],
         [wpcSkuClean('WPC-RDY-LIB40-STD'), 'باب WPC Lib — 40ملم', 'WPC Lib door 40mm'],
         [wpcSkuClean('WPC-RDY-LQ-FLAT'), 'باب WPC ضلفة وربعه', 'WPC leaf & quarter'],
-        [wpcSkuClean('WPC-RDY-SLD-FLAT'), 'باب WPC سحاب فلات', 'WPC sliding flat door']
+        [wpcSkuClean('WPC-RDY-SLD-FLAT'), 'باب WPC سحاب فلات', 'WPC sliding flat door'],
+        [img('cnc', 1), 'باب فاخر مزدوج — نقش CNC', 'Luxury double CNC-carved door'],
+        [img('cnc', 8), 'باب خشبي متعدد الألواح', 'Multi-panel wood finish door']
     ];
 
     const SHOWROOM_CABINETS_CATALOG = [
@@ -299,7 +307,10 @@
         [galleryExtra(4), 'باب WPC فلات حمام', 'WPC bathroom flat door'],
         [galleryExtra(14), 'باب WPC زجاج ولوحات', 'WPC glass panel door'],
         [galleryExtra(11), 'باب WPC شرائح منزلق', 'WPC sliding slat door'],
-        [galleryExtra(12), 'باب WPC سحاب مزدوج', 'WPC double sliding door']
+        [galleryExtra(12), 'باب WPC سحاب مزدوج', 'WPC double sliding door'],
+        [img('cnc', 10), 'باب WPC مزدوج بزجاج', 'WPC double door with glass inserts'],
+        [img('cnc', 11), 'باب WPC داخلي بزخارف', 'WPC decorative interior door'],
+        [img('cnc', 12), 'باب WPC عضم بإطار زخرفي', 'WPC door with ornate frame']
     ];
 
     const SHOWROOM_WPC_CABINETS_CATALOG = [
@@ -356,48 +367,49 @@
         [galleryExtra(41), 'مطبخ WPC علوي وسفلي', 'WPC upper and base kitchen'],
         [galleryExtra(46), 'مطبخ WPC عصرية', 'WPC modern kitchen'],
         [galleryExtra(47), 'تخزين مطبخ WPC ضيق', 'WPC slim kitchen storage'],
-        [galleryExtra(31), 'درج مطبخ WPC', 'WPC kitchen drawer bank']
+        [galleryExtra(31), 'درج مطبخ WPC', 'WPC kitchen drawer bank'],
+        [img('cnc', 13), 'مطبخ كلاسيك — مصنع', 'Classic kitchen unit — factory'],
+        [img('cnc', 15), 'مطبخ أبيض لامع بزاوية', 'High-gloss white corner kitchen']
     ];
 
     const SHOWROOM_WINDOWS_CATALOG = [
         [wpcSkuClean('WPC-RDY-FLAT-GLASS'), 'باب WPC زجاج — فلات', 'WPC flat glass door'],
         [wpcSkuClean('WPC-RDY-U60-GLASS'), 'باب WPC زجاج — U60', 'WPC U60 glass door'],
         [wpcSkuClean('WPC-RDY-LIB40-GLASS'), 'باب WPC زجاج — Lib', 'WPC Lib glass prep'],
+        [img('cnc', 9), 'باب زجاج بإطار ألومنيوم', 'Glass door — aluminum frame'],
         [img('doors', 2), 'باب زجاج مزدوج كلاسيك', 'Double classic glass door'],
         [img('doors', 5), 'باب فلات مع علوية ثابتة', 'Flat door with transom'],
         [img('doors', 7), 'باب يوتشانيل مع علوية', 'U-channel with transom'],
-        [img('doors', 11), 'باب شرائح منزلق مزدوج', 'Double sliding slat door'],
-        [img('cnc', 14), 'ستائر وشبابيك CNC', 'CNC window screens']
+        [img('doors', 11), 'باب شرائح منزلق مزدوج', 'Double sliding slat door']
     ];
 
     const SHOWROOM_FACADES_CATALOG = [
-        [img('cnc', 6), 'واجهة منحوتة CNC', 'CNC carved facade panel'],
-        [img('cnc', 8), 'زخرفة واجهة CNC', 'CNC facade ornament'],
-        [img('cnc', 13), 'واجهة CNC بارزة', 'CNC raised relief facade'],
-        [img('cnc', 7), 'لوح ألواح CNC هندسي', 'CNC geometric panel'],
-        [img('cnc', 11), 'لوح جدار CNC ثلاثي', 'CNC 3D wall panel'],
-        [img('cnc', 5), 'صفائح واجهات ACP', 'ACP facade sheets'],
-        [img('cnc', 2), 'لوح زخرفي — أوراق ذهبية', 'CNC gold leaf relief panel']
+        [img('cnc', 2), 'لوح زخرفي CNC — أوراق ذهبية', 'CNC gold leaf relief panel'],
+        [img('cnc', 3), 'أقواس حجرية CNC — معرض', 'CNC stone-textured arch panels'],
+        [img('cnc', 5), 'جدار CNC بإضاءة خلفية', 'CNC backlit wall panel'],
+        [img('cnc', 6), 'لوح جدار CNC موجي — MDF', 'CNC wavy MDF wall panel'],
+        [img('cnc', 7), 'لوح زهري CNC ذهبي', 'CNC gold floral wall panel'],
+        [img('cnc', 14), 'لوح جدار CNC عضوي', 'CNC organic wave wall panel']
     ];
 
     const SHOWROOM_ALUMINUM_CATALOG = [
-        [img('cnc', 1), 'ألواح وبروفيلات ACP', 'ACP panels and profiles'],
-        [img('cnc', 5), 'صفائح واجهات ألومنيوم', 'Aluminum facade sheets'],
-        [img('cnc', 6), 'كلادينج واجهات', 'Facade cladding panels'],
-        [img('cnc', 7), 'شبابيك — لوح هندسي', 'Window geometric panel'],
-        [img('cnc', 8), 'زخرفة واجهة', 'Facade ornament panel'],
-        [img('cnc', 9), 'قطع تشطيب حائط', 'Wall finishing parts'],
-        [img('cnc', 12), 'تخصيم ألومنيوم CNC', 'CNC aluminum cutting'],
-        [img('cnc', 14), 'شبابيك وستائر ألومنيوم', 'Aluminum windows and screens'],
-        [img('cnc', 13), 'واجهة بارزة', 'Raised facade panel'],
-        [img('cnc', 4), 'قطاع U-channel', 'U-channel section']
+        [img('cnc', 9), 'باب زجاج بإطار ألومنيوم', 'Glass door — aluminum frame'],
+        [aluImg(), 'بروفيلات ألومنيوم — حسب المقاس', 'Aluminum profiles — custom size'],
+        [aluImg(), 'صفائح ACP للواجهات', 'ACP facade sheets'],
+        [aluImg(), 'شبابيك ألومنيوم — حسب الطلب', 'Aluminum windows — on request'],
+        [aluImg(), 'كلادينج واجهات ألومنيوم', 'Aluminum facade cladding'],
+        [aluImg(), 'مطابخ ألومنيوم — حسب التصميم', 'Aluminum kitchens — per design'],
+        [aluImg(), 'زوايا ومقاطع ألومنيوم', 'Aluminum angles & sections'],
+        [aluImg(), 'تخصيم ألومنيوم — داخل المنصة', 'Aluminum cutting — inside platform']
     ];
 
     const SHOWROOM_CNC_CATALOG = [
         [img('cnc', 2), 'لوح زخرفي CNC — أوراق ذهبية', 'CNC gold leaf relief panel'],
-        [img('cnc', 3), 'نقش زخرفي CNC على WPC', 'CNC decorative WPC carving'],
-        [img('cnc', 10), 'حفر CNC على WPC', 'CNC engraving on WPC'],
-        [img('cnc', 15), 'تشطيب CNC باب وخزانة', 'CNC door and cabinet finish'],
+        [img('cnc', 3), 'أقواس حجرية CNC — معرض', 'CNC stone-textured arches'],
+        [img('cnc', 5), 'جدار CNC بإضاءة خلفية', 'CNC backlit wall panel'],
+        [img('cnc', 6), 'لوح جدار CNC موجي — MDF', 'CNC wavy MDF wall panel'],
+        [img('cnc', 7), 'لوح زهري CNC ذهبي', 'CNC gold floral panel'],
+        [img('cnc', 14), 'لوح جدار CNC عضوي', 'CNC organic wave panel'],
         [wpcRef('07-classic-panel.png'), 'نقش كلاسيك WPC', 'WPC classic panel carving'],
         [wpcRef('22-raw-decor-profile.png'), 'قطاع ديكور WPC', 'WPC decor profile section'],
         [wpcRef('21-raw-frame-profile.png'), 'قطاع حلق WPC', 'WPC frame profile section']
@@ -493,8 +505,8 @@
         showroomGallery.doors = {
             titleAr: 'أبواب نبراس',
             titleEn: 'Nebras Doors',
-            introAr: 'تشكيلة أبواب نبراس — أسماء مطابقة للصور من الملف التعريفي 2026',
-            introEn: 'Nebras doors — image-matched labels from 2026 profile',
+            introAr: 'أبواب حقيقية — كل صورة في مكانها الصحيح',
+            introEn: 'Real doors — each photo in its correct section',
             items: buildCuratedItems('showroom-doors', SHOWROOM_DOORS_CATALOG)
         };
         showroomGallery.cabinets = {
@@ -542,15 +554,15 @@
         showroomGallery.aluminum = {
             titleAr: 'ألومنيوم نبراس',
             titleEn: 'Nebras Aluminum',
-            introAr: 'بروفيلات · صفائح · شبابيك · واجهات · مطابخ · تخصيم — السعر حسب المقاس داخل المنصة',
-            introEn: 'Profiles, sheets, windows, facades, kitchens, cutting — priced by size inside the platform',
+            introAr: 'بروفيلات · شبابيك · واجهات · مطابخ — السعر حسب المقاس · بدون صور خزائن أو CNC',
+            introEn: 'Profiles, windows, facades, kitchens — priced by size · no cabinet/CNC mislabels',
             items: buildCuratedItems('showroom-aluminum', SHOWROOM_ALUMINUM_CATALOG)
         };
         showroomGallery.cnc = {
             titleAr: 'قطع CNC',
             titleEn: 'CNC Parts',
-            introAr: 'أعمال CNC وزخارف ولوحات — تصنيع حسب الطلب',
-            introEn: 'CNC panels, carvings, and decor — made to order',
+            introAr: 'لوحات ونقش CNC — تصنيع حسب الطلب',
+            introEn: 'CNC panels and carvings — made to order',
             items: buildCuratedItems('showroom-cnc', SHOWROOM_CNC_CATALOG)
         };
         showroomGallery.projects = {
@@ -600,11 +612,33 @@
         document.body.classList.add('nebras-profile-2026-theme');
     }
 
+    function showroomHasMisplacedAluminum() {
+        const items = (showroomGallery && showroomGallery.aluminum && showroomGallery.aluminum.items) || [];
+        if (!items.length) return true;
+        return items.some(function(it) {
+            if (!it) return true;
+            const url = String(it.imageUrl || '');
+            if (!url) return true;
+            if (url.indexOf('aluminum-background') >= 0 || url.indexOf('cnc-09') >= 0) return false;
+            if (/\/cnc\/cnc-/.test(url)) return true;
+            if (/\/cabinets\//.test(url)) return true;
+            if (/\/doors\//.test(url)) return true;
+            return false;
+        });
+    }
+
+    function shouldForceShowroomCatalogMerge() {
+        const serverVer = Number(systemSettings && systemSettings.showroomCatalogVersion) || 0;
+        return getStoredShowroomCatalogVersion() < SHOWROOM_CATALOG_VERSION ||
+            serverVer < SHOWROOM_CATALOG_VERSION ||
+            showroomHasMisplacedAluminum();
+    }
+
     function repairShowroomGallerySections() {
         if (typeof ensureShowroomGallery !== 'function' || typeof getShowroomGallerySectionKeys !== 'function') return false;
         ensureShowroomGallery();
-        const catalogStale = getStoredShowroomCatalogVersion() < SHOWROOM_CATALOG_VERSION;
-        const needsRepair = catalogStale || showroomHasGenericLabels() || showroomProjectsNeedFix() ||
+        const forceMerge = shouldForceShowroomCatalogMerge();
+        const needsRepair = forceMerge || showroomHasGenericLabels() || showroomProjectsNeedFix() ||
             !showroomGallery.wpcDoors || !showroomGallery.wpcDoors.items || !showroomGallery.wpcDoors.items.length ||
             !showroomGallery.wpcCabinets || !showroomGallery.wpcCabinets.items || !showroomGallery.wpcCabinets.items.length ||
             !showroomGallery.kitchens || !showroomGallery.kitchens.items || !showroomGallery.kitchens.items.length ||
@@ -614,6 +648,9 @@
             !showroomGallery.doors || !showroomGallery.doors.items || showroomGallery.doors.items.length < 5;
         if (!needsRepair) return false;
         mergeShowroomGallery();
+        if (systemSettings && typeof systemSettings === 'object') {
+            systemSettings.showroomCatalogVersion = SHOWROOM_CATALOG_VERSION;
+        }
         return true;
     }
 
@@ -646,6 +683,8 @@
 
     global.NEBRAS_PROFILE_2026 = PROFILE_2026;
     global.PROFILE_2026_SEED_VERSION = PROFILE_2026_SEED_VERSION;
+    global.NEBRAS_SHOWROOM_CATALOG_VERSION = SHOWROOM_CATALOG_VERSION;
     global.applyNebrasProfile2026Seed = applyNebrasProfile2026Seed;
     global.repairShowroomGallerySections = repairShowroomGallerySections;
+    global.shouldForceShowroomCatalogMerge = shouldForceShowroomCatalogMerge;
 })(typeof window !== 'undefined' ? window : globalThis);

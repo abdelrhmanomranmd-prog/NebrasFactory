@@ -2571,8 +2571,8 @@
             { key: 'wpcCabinets', icon: 'boxes-stacked', titleAr: 'خزائن WPC', titleEn: 'WPC Cabinets', introAr: 'خزائن WPC عالية الجودة من مصنع نبراس', introEn: 'Premium WPC cabinets from Nebras', emptyKey: 'showroomWpcCabinetsEmpty', banner: 'images/profile-2026/gallery-extra/gallery-extra-16.jpg' },
             { key: 'kitchens', icon: 'utensils', titleAr: 'مطابخ نبراس', titleEn: 'Nebras Kitchens', introAr: 'مطابخ ووحدات تخزين — صور حقيقية من تشكيلة نبراس', introEn: 'Kitchens and storage — real Nebras catalog photos', emptyKey: 'showroomKitchensEmpty', banner: 'images/profile-2026/cabinets/cabinets-11.jpg' },
             { key: 'windows', icon: 'border-all', titleAr: 'شبابيك ونوافذ', titleEn: 'Windows & Openings', introAr: 'أبواب زجاج · علويات · شرائح — تشكيلة شبابيك نبراس', introEn: 'Glass doors, transoms, sliding panels', emptyKey: 'showroomWindowsEmpty', banner: 'images/profile-2026/doors/doors-02.jpg' },
-            { key: 'facades', icon: 'city', titleAr: 'واجهات وكلادينج', titleEn: 'Facades & Cladding', introAr: 'واجهات منحوتة · كلادينج · لوحات CNC', introEn: 'Carved facades, cladding, CNC panels', emptyKey: 'showroomFacadesEmpty', banner: 'images/profile-2026/cnc/cnc-06.jpg' },
-            { key: 'aluminum', icon: 'industry', titleAr: 'ألومنيوم نبراس', titleEn: 'Nebras Aluminum', introAr: 'بروفيلات · صفائح · زوايا — مقاسات حسب الطلب', introEn: 'Profiles, sheets, angles — custom sizes', emptyKey: 'showroomAluminumEmpty', banner: 'images/profile-2026/cnc/cnc-01.jpg' },
+            { key: 'facades', icon: 'city', titleAr: 'واجهات وكلادينج', titleEn: 'Facades & Cladding', introAr: 'لوحات CNC للواجهات والجدران — بدون أبواب أو خزائن', introEn: 'CNC facade and wall panels only', emptyKey: 'showroomFacadesEmpty', banner: 'images/profile-2026/cnc/cnc-06.jpg' },
+            { key: 'aluminum', icon: 'industry', titleAr: 'ألومنيوم نبراس', titleEn: 'Nebras Aluminum', introAr: 'بروفيلات · شبابيك · واجهات · مطابخ — السعر حسب المقاس', introEn: 'Profiles, windows, facades, kitchens — priced by size', emptyKey: 'showroomAluminumEmpty', banner: 'images/aluminum-background.webp' },
             { key: 'cnc', icon: 'cogs', titleAr: 'قطع CNC', titleEn: 'CNC Parts', introAr: 'أعمال CNC بدقة عالية — تصنيع حسب الطلب', introEn: 'Precision CNC manufacturing', emptyKey: 'showroomCncEmpty', banner: 'images/profile-2026/cnc/cnc-03.jpg' },
             { key: 'projects', icon: 'building', titleAr: 'مشاريع واعتمادات NHC', titleEn: 'NHC Projects & Approvals', introAr: 'شركاء في أضخم مشاريع الإسكان الوطني', introEn: 'Partners in national housing megaprojects', emptyKey: 'showroomProjectsEmpty', banner: 'images/projects/nhc/mashriqiyah-aerial.png' }
         ];
@@ -2975,7 +2975,7 @@
         /** عوالم المتجر — تنقل داخلي بين الأبواب والألومنيوم وWPC عضم */
         const NEBRAS_STORE_WORLDS = [
             { productId: 'prod-wpc', labelAr: 'عالم الأبواب', labelEn: 'Doors World', icon: 'fa-door-open', banner: 'images/catalog/wpc-photos/by-sku-clean/WPC-RDY-FLAT-45-STD.png' },
-            { productId: 'prod-aluminum', labelAr: 'عالم الألومنيوم', labelEn: 'Aluminum World', icon: 'fa-industry', banner: 'images/profile-2026/cnc/cnc-14.jpg' },
+            { productId: 'prod-aluminum', labelAr: 'عالم الألومنيوم', labelEn: 'Aluminum World', icon: 'fa-industry', banner: 'images/aluminum-background.webp' },
             { productId: 'prod-wpc-raw', labelAr: 'WPC عضم', labelEn: 'WPC Raw', icon: 'fa-door-closed', banner: 'images/catalog/wpc-photos/08-bone-profile.png' }
         ];
 
@@ -4349,28 +4349,29 @@
         }
 
         /** أصناف الألومنيوم — صور خط إنتاج · السعر حسب المقاس داخل المنصة */
-        const ALUMINUM_CATALOG_VERSION = 4;
+        const ALUMINUM_CATALOG_VERSION = 5;
+        const ALU_CATALOG_PLACEHOLDER = 'images/aluminum-background.webp';
         const ALUMINUM_CATALOG_PHOTOS = {
-            profile1: 'images/profile-2026/cnc/cnc-01.jpg',
-            profile2: 'images/profile-2026/cnc/cnc-04.jpg',
-            profile3: 'images/profile-2026/cnc/cnc-09.jpg',
-            sheet1: 'images/profile-2026/cnc/cnc-05.jpg',
-            sheet2: 'images/profile-2026/cnc/cnc-06.jpg',
-            angle1: 'images/profile-2026/cnc/cnc-08.jpg',
-            angle2: 'images/profile-2026/cnc/cnc-09.jpg',
-            window1: 'images/profile-2026/cnc/cnc-14.jpg',
-            window2: 'images/profile-2026/cnc/cnc-07.jpg',
-            facade1: 'images/profile-2026/cnc/cnc-06.jpg',
-            facade2: 'images/profile-2026/cnc/cnc-13.jpg',
-            kitchen1: 'images/profile-2026/cnc/cnc-11.jpg',
-            kitchen2: 'images/profile-2026/cnc/cnc-05.jpg',
-            cutting: 'images/profile-2026/cnc/cnc-12.jpg'
+            profile1: ALU_CATALOG_PLACEHOLDER,
+            profile2: ALU_CATALOG_PLACEHOLDER,
+            profile3: ALU_CATALOG_PLACEHOLDER,
+            sheet1: ALU_CATALOG_PLACEHOLDER,
+            sheet2: ALU_CATALOG_PLACEHOLDER,
+            angle1: ALU_CATALOG_PLACEHOLDER,
+            angle2: ALU_CATALOG_PLACEHOLDER,
+            window1: 'images/profile-2026/cnc/cnc-09.jpg',
+            window2: ALU_CATALOG_PLACEHOLDER,
+            facade1: ALU_CATALOG_PLACEHOLDER,
+            facade2: ALU_CATALOG_PLACEHOLDER,
+            kitchen1: ALU_CATALOG_PLACEHOLDER,
+            kitchen2: ALU_CATALOG_PLACEHOLDER,
+            cutting: ALU_CATALOG_PLACEHOLDER
         };
         const STORE_ALUMINUM_REAL_PHOTOS = [
-            ALUMINUM_CATALOG_PHOTOS.profile1,
-            ALUMINUM_CATALOG_PHOTOS.sheet1,
             ALUMINUM_CATALOG_PHOTOS.window1,
-            ALUMINUM_CATALOG_PHOTOS.facade1
+            ALU_CATALOG_PLACEHOLDER,
+            ALU_CATALOG_PLACEHOLDER,
+            ALU_CATALOG_PLACEHOLDER
         ];
         const ALU_PROFILES_SUBCATEGORY = {
             id: 'alu-profiles',
@@ -4457,7 +4458,7 @@
         const DEFAULT_SITE_PRODUCTS = [
             { id: 'prod-wpc-raw', sortOrder: 1, cssClass: 'card-wpc-raw', iconClass: 'fas fa-door-open', titleIcon: 'fas fa-industry', legacyKey: 'wpc-raw', titleAr: 'أبواب WPC عضم (للورش والمصانع)', titleEn: 'WPC Raw Doors (Workshops)', titleZh: 'WPC 毛坯门', textAr: 'أبواب WPC عضم غير ملبّسة وغير جاهزة — للورش والمصانع التي تكمل التشطيب والتركيب.', textEn: 'Unfinished WPC door leaves for workshops and factories.', textZh: '供车间加工的 WPC 毛坯门。', backgroundImage: 'wpc-background', album: ['images/catalog/wpc-photos/08-bone-profile.png', 'images/catalog/wpc-photos/10-leaf-section.png', 'images/catalog/wpc-photos/09-mdf.png'], target: '#products', action: 'shop', anchorId: 'products', visible: true, shopEnabled: true, variants: DEFAULT_WPC_RAW_VARIANTS },
             { id: 'prod-wpc', sortOrder: 2, cssClass: 'card-wpc', iconClass: 'fas fa-door-closed', titleIcon: 'fas fa-door-open', legacyKey: 'wpc', titleAr: 'أبواب WPC جاهزة للتركيب', titleEn: 'WPC Ready Doors', titleZh: 'WPC 成品门', textAr: 'أبواب WPC جاهزة للتركيب — تجمع بين فخامة المظهر وصمود البلاستيك للمنازل والمشاريع.', textEn: 'Ready-to-install WPC doors for homes and projects.', textZh: '即装型 WPC 门。', backgroundImage: 'wpc-background', album: ['images/catalog/wpc-photos/02-with-accessory.png', 'images/catalog/wpc-photos/07-classic-panel.png', 'images/catalog/wpc-photos/03-glass-leaf-quarter.png', 'images/catalog/wpc-photos/06-sliding-double-decor.png'], target: '#doors', action: 'shop', anchorId: 'doors', visible: true, shopEnabled: true, variants: DEFAULT_WPC_READY_VARIANTS },
-            { id: 'prod-aluminum', sortOrder: 3, cssClass: 'card-aluminum', iconClass: 'fas fa-industry', titleIcon: 'fas fa-cog', legacyKey: 'aluminum', titleAr: 'الألومنيوم', titleEn: 'Aluminum', titleZh: '铝制品', textAr: 'منتجات ألومنيوم متينة وتصميمات ذكية تناسب مشاريع البناء والتشطيب.', textEn: 'Durable aluminum for construction and finishing.', textZh: '适用于建筑与装修的耐用铝材。', backgroundImage: 'aluminum-background', album: ['images/profile-2026/cnc/cnc-01.jpg', 'images/profile-2026/cnc/cnc-14.jpg', 'images/profile-2026/cnc/cnc-06.jpg', 'images/profile-2026/cnc/cnc-11.jpg'], target: '#aluminum', action: 'shop', anchorId: 'aluminum', visible: true, shopEnabled: true, variants: DEFAULT_ALUMINUM_VARIANTS },
+            { id: 'prod-aluminum', sortOrder: 3, cssClass: 'card-aluminum', iconClass: 'fas fa-industry', titleIcon: 'fas fa-cog', legacyKey: 'aluminum', titleAr: 'الألومنيوم', titleEn: 'Aluminum', titleZh: '铝制品', textAr: 'منتجات ألومنيوم متينة وتصميمات ذكية تناسب مشاريع البناء والتشطيب.', textEn: 'Durable aluminum for construction and finishing.', textZh: '适用于建筑与装修的耐用铝材。', backgroundImage: 'aluminum-background', album: ['images/aluminum-background.webp', 'images/profile-2026/cnc/cnc-09.jpg'], target: '#aluminum', action: 'shop', anchorId: 'aluminum', visible: true, shopEnabled: true, variants: DEFAULT_ALUMINUM_VARIANTS },
             { id: 'prod-other', sortOrder: 4, cssClass: 'card-other-products', iconClass: 'fas fa-boxes', titleIcon: 'fas fa-boxes', legacyKey: 'otherProducts', titleAr: 'منتجات أخرى', titleEn: 'Other Products', titleZh: '其他产品', textAr: 'مجموعة متنوعة من المنتجات الإضافية والحلول المبتكرة.', textEn: 'A diverse range of additional products.', textZh: '多样化的附加产品与创新方案。', backgroundImage: 'background-other-products', album: ['images/background-other-products.jpeg'], target: '#products', visitorMode: 'shop', action: 'shop', anchorId: '', visible: true, shopEnabled: true, variants: DEFAULT_OTHER_VARIANTS },
             { id: 'prod-complaints', sortOrder: 5, cssClass: 'card-customer-complaints', iconClass: 'fas fa-search', titleIcon: 'fas fa-search', legacyKey: 'complaints', titleAr: 'استفسار عن الشكاوى', titleEn: 'Complaint Inquiry', titleZh: '投诉查询', textAr: 'تحقق من حالة شكواك بإدخال رقم الشكوى.', textEn: 'Check your complaint status with the complaint number.', textZh: '输入投诉编号查询处理状态。', backgroundImage: '', album: [], target: '', action: 'complaint', anchorId: '', visible: true }
         ];
@@ -28802,6 +28803,10 @@
 
         function mergeShowroomGalleryFromCloud(incoming) {
             if (!incoming || typeof incoming !== 'object') return false;
+            const codeVer = (typeof global.NEBRAS_SHOWROOM_CATALOG_VERSION !== 'undefined')
+                ? Number(global.NEBRAS_SHOWROOM_CATALOG_VERSION) : 0;
+            const settingsVer = Number(systemSettings && systemSettings.showroomCatalogVersion) || 0;
+            if (codeVer && codeVer > settingsVer) return false;
             ensureShowroomGallery();
             const normalized = normalizeShowroomGallery(incoming);
             const local = showroomGallery;
@@ -29056,6 +29061,10 @@
             branchesData = (branchesData || []).map(normalizeBranchRecord);
             if (typeof applyNebrasProfile2026Seed === 'function') {
                 applyNebrasProfile2026Seed();
+            }
+            if (typeof repairShowroomGallerySections === 'function' &&
+                (typeof shouldForceShowroomCatalogMerge === 'function' ? shouldForceShowroomCatalogMerge() : true)) {
+                repairShowroomGallerySections();
             }
             ensureDefaultBankAccounts();
             if (!options.skipBuiltinSeeds) ensureSiteChromeDefaults();
