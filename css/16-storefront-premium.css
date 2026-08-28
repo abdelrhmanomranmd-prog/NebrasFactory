@@ -1659,6 +1659,18 @@ body.nebras-mobile-bar-active.admin-session .nebras-mobile-commerce-bar {
     content: none !important;
 }
 
+/* صور الكتالوج — الرولّة تُخبز في Canvas فقط · بدون طبقات CSS أو panel overlay */
+.nebras-store-sku-door-stack--photo::after,
+.nebras-store-sku-door-stack--photo::before,
+.nebras-store-sku-door-stack--photo.has-door-roll-tint::after,
+.nebras-store-sku-door-stack--photo.has-door-roll-tint::before,
+.nebras-store-sku-door-stack--photo .nebras-store-sku-door-panel-color {
+    display: none !important;
+    content: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+}
+
 .nebras-store-sku-door-panel-color {
     position: absolute;
     inset: 0;
@@ -1700,7 +1712,7 @@ body.nebras-mobile-bar-active.admin-session .nebras-mobile-commerce-bar {
 }
 
 .nebras-store-sku-img--wpc.has-roll-composite {
-    filter: contrast(1.02) saturate(1.04) !important;
+    filter: none !important;
 }
 
 .nebras-store-sku-img--wpc,
@@ -1730,13 +1742,6 @@ body.nebras-mobile-bar-active.admin-session .nebras-mobile-commerce-bar {
 
 .nebras-store-sku-door-panel-tint {
     display: none !important;
-}
-
-.nebras-store-sku-door-stack--photo.has-door-roll-tint::after {
-    inset: 3% 6% 3% 6%;
-    border-radius: 8px;
-    mix-blend-mode: soft-light;
-    opacity: var(--door-roll-tint-opacity, 0.55);
 }
 
 .nebras-store-sku-media--wpc-photo img.nebras-store-sku-img--wpc {

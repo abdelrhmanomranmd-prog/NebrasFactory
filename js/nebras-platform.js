@@ -971,7 +971,7 @@
         }
 
         const DOOR_PHOTO_PRESET_ROOT = 'images/doors/presets/';
-        const DOOR_PHOTO_PRESET_CACHE = '270';
+        const DOOR_PHOTO_PRESET_CACHE = '271';
         /** صور أبواب المصنع الحقيقية في المعاينة — SVG احتياطي عند غياب الصورة */
         const DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS = true;
         let doorDesignerPreviewRaf = 0;
@@ -3300,7 +3300,7 @@
             if (!roll) return;
             const rollState = buildWpcStoreRollStateFromCatalog(roll, rollIdx);
             const profileKey = variant ? getWpcDoorTintProfile(variant) : 'flat';
-            if (stack && variant) applyWpcDoorTintRegion(stack, profileKey);
+            if (stack && variant && !isPhoto) applyWpcDoorTintRegion(stack, profileKey);
             if (isPhoto && stack) {
                 applyComposedRollToStoreSkuImg(img, stack, baseSrc, rollState, variant);
             } else {
@@ -3364,7 +3364,6 @@
                 ' data-wpc-photo="' + (isPhoto ? '1' : '0') + '"' +
                 ' alt="' + escapeHtmlAttr(label) + '" loading="lazy" decoding="async"' +
                 ' title="' + escapeHtmlAttr(ui.lightboxOpenHint || 'اضغط للتكبير') + '">' +
-                (isPhoto ? '<div class="nebras-store-sku-door-panel-color" aria-hidden="true"></div>' : '') +
                 buildProductPhotoWatermarkHtml() +
                 '</div></div>';
         }
