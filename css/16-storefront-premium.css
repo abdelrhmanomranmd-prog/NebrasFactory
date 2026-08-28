@@ -1718,6 +1718,31 @@ body.nebras-mobile-bar-active.admin-session .nebras-mobile-commerce-bar {
     filter: contrast(1.02) saturate(1.04) !important;
 }
 
+.nebras-store-sku-img--wpc,
+.nebras-store-sku-media--alu-photo img {
+    opacity: 1 !important;
+    visibility: visible !important;
+    image-rendering: auto;
+}
+
+.nebras-store-sku-media--alu-photo img {
+    width: 100%;
+    height: 100%;
+    max-height: 220px;
+    object-fit: cover;
+    object-position: center center;
+    border-radius: 10px;
+}
+
+.variant-price--alu-size {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 700;
+    color: #155e94;
+    font-size: 0.88rem;
+}
+
 .nebras-store-sku-door-panel-tint {
     display: none !important;
 }

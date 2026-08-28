@@ -3361,7 +3361,7 @@
         function buildWpcStoreRollPickerHtml(productId, variantIndex, lang, ui) {
             const colors = getNebrasColorCatalog();
             const label = ui.wpcStoreRollPickerLabel || 'اختر لون الرولّة — معاينة حية على الباب';
-            const hint = ui.wpcStoreRollPickerHint || 'اختر لون الرولّة — المعاينة الحية تطبّق اللون على لوح الباب';
+            const hint = ui.wpcStoreRollPickerHint || 'اختر لون الرولّة — المعاينة تطبّق على لوح الباب فقط عند الاختيار';
             const safePid = String(productId).replace(/'/g, "\\'");
             const swatches = colors.map(function(item, idx) {
                 const code = String(item.code || getRollCatalogCode(item.nebCode || getNebrasRollCodeByIndex(idx))).trim();
@@ -3422,8 +3422,7 @@
                 const variant = product && (product.variants || [])[variantIndex];
                 if (!variant || !getWpcStoreSkuBaseImage(variant)) return;
                 if (!variantSupportsWpcRollColorPicker(variant)) return;
-                const startIdx = parseInt(card.getAttribute('data-selected-roll-index') || '0', 10);
-                applyWpcStoreSkuRollTint(card, isNaN(startIdx) ? 0 : startIdx);
+                card.setAttribute('data-selected-roll-index', card.getAttribute('data-selected-roll-index') || '0');
             });
         }
 
@@ -3546,6 +3545,10 @@
                 const hasClad = vars.some(function(v) { return v && v.subCategoryId === 'wpc-raw-clad'; });
                 return hasBare && hasClad;
             }
+            if (product.id === 'prod-aluminum') {
+                const vars = product.variants || [];
+                return vars.some(function(v) { return v && v.subCategoryId; });
+            }
             return false;
         }
 
@@ -3556,6 +3559,9 @@
             }
             if (product.id === 'prod-wpc-raw' && typeof seedWpcRawCatalog === 'function') {
                 seedWpcRawCatalog();
+            }
+            if (product.id === 'prod-aluminum' && typeof seedAluminumCatalog === 'function') {
+                seedAluminumCatalog();
             }
         }
 
@@ -3571,6 +3577,11 @@
             if (!sub && product.id === 'prod-wpc-raw') {
                 if (subCategoryId === 'wpc-raw-bare') sub = WPC_RAW_BARE_SUBCATEGORY;
                 if (subCategoryId === 'wpc-raw-clad') sub = WPC_RAW_CLAD_SUBCATEGORY;
+            }
+            if (!sub && product.id === 'prod-aluminum') {
+                if (subCategoryId === 'alu-profiles') sub = ALU_PROFILES_SUBCATEGORY;
+                if (subCategoryId === 'alu-sheets') sub = ALU_SHEETS_SUBCATEGORY;
+                if (subCategoryId === 'alu-angles') sub = ALU_ANGLES_SUBCATEGORY;
             }
             return sub || null;
         }
@@ -3616,13 +3627,13 @@
             const subDesc = lang === 'en' ? (sub.descEn || sub.descAr) : (sub.descAr || sub.descEn);
             const countLabel = (ui.storeSubProductCount || '{n} صنف').replace('{n}', String(grp.items.length));
             const prices = grp.items.map(function(it) { return Number(it.variant.price) || 0; }).filter(function(n) { return n > 0; });
-            const fromPrice = prices.length
-                ? ((ui.storeSubFromPrice || 'يبدأ من') + ' ' + formatSar(Math.min.apply(null, prices)) + '+')
-                : (ui.catalogHubPriceOnRequest || 'عند الطلب');
+            const fromPrice = isAluminumProduct(product)
+                ? (ui.storeAluPriceBySize || 'السعر حسب المقاس — يُحدد داخل المنصة')
+                : (prices.length
+                    ? ((ui.storeSubFromPrice || 'يبدأ من') + ' ' + formatSar(Math.min.apply(null, prices)) + '+')
+                    : (ui.catalogHubPriceOnRequest || 'عند الطلب'));
             const previewVariant = grp.items[0] && grp.items[0].variant;
-            const previewPath = previewVariant
-                ? getWpcStoreSkuBaseImage(previewVariant)
-                : resolveWpcSubCategoryHeroImage(product.id, grp.sub.id);
+            const previewPath = resolveStoreSubCategoryBannerImage(product.id, sub.id, previewVariant);
             const preview = previewPath ? resolveDisplayMediaUrl(previewPath) : '';
             const pid = String(product.id).replace(/'/g, "\\'");
             const sid = String(sub.id).replace(/'/g, "\\'");
@@ -3686,6 +3697,40 @@
                 return;
             }
             openNebrasWorkspace({ pillar: 'store', view: 'product-sub', productId: productId, subCategoryId: subId, iconId: iconId, doorRoomScenario: scenarioId });
+        }
+
+        function buildStoreProductWelcomeHeroHtml(product, lang, ui) {
+            if (!product) return '';
+            if (isWpcDoorsProduct(product)) return buildStoreWelcomeHeroHtml(product, lang, ui);
+            if (isAluminumProduct(product)) return buildStoreAluminumWelcomeHeroHtml(product, lang, ui);
+            return '';
+        }
+
+        function buildStoreAluminumWelcomeHeroHtml(product, lang, ui) {
+            const photos = STORE_ALUMINUM_REAL_PHOTOS.slice(0, 4);
+            const title = ui.storeAluWelcomeTitle || 'عالم ألومنيوم نبراس — جودة المصنع السعودي';
+            const subtitle = ui.storeAluWelcomeSubtitle || 'بروفيلات · صفائح · زوايا · تخصيم — مقاسات حسب الطلب داخل المنصة.';
+            const eyebrow = ui.storeAluWelcomeEyebrow || 'ألومنيوم — مصنع نبراس';
+            const badges = [
+                { icon: 'fa-industry', label: ui.storeBadgeFactory || 'مصنع سعودي' },
+                { icon: 'fa-ruler-combined', label: ui.storeAluBadgeSize || 'السعر حسب المقاس' },
+                { icon: 'fa-scissors', label: ui.storeAluBadgeCut || 'تخصيم داخل المنصة' }
+            ];
+            const badgesHtml = badges.map(function(b) {
+                return '<span class="nebras-store-welcome-badge"><i class="fas ' + escapeHtmlAttr(b.icon) + '"></i> ' + escapeHtmlAttr(b.label) + '</span>';
+            }).join('');
+            const mosaicHtml = photos.map(function(src, idx) {
+                return '<figure class="nebras-store-welcome-mosaic-item"><img src="' + escapeHtmlAttr(src) + '" alt="' + escapeHtmlAttr(title) + ' — ' + String(idx + 1) + '" loading="' + (idx === 0 ? 'eager' : 'lazy') + '" decoding="async"></figure>';
+            }).join('');
+            return '<section class="nebras-store-welcome-hero nebras-store-welcome-hero--real nebras-store-welcome-hero--alu" aria-label="' + escapeHtmlAttr(title) + '">' +
+                '<div class="nebras-store-welcome-hero-copy">' +
+                '<span class="nebras-store-welcome-eyebrow">' + escapeHtmlAttr(eyebrow) + '</span>' +
+                '<h2 class="nebras-store-welcome-title">' + escapeHtmlAttr(title) + '</h2>' +
+                '<p class="nebras-store-welcome-subtitle">' + escapeHtmlAttr(subtitle) + '</p>' +
+                '<div class="nebras-store-welcome-badges">' + badgesHtml + '</div>' +
+                '</div>' +
+                '<div class="nebras-store-welcome-hero-mosaic" aria-hidden="true">' + mosaicHtml + '</div>' +
+                '</section>';
         }
 
         function buildStoreWelcomeHeroHtml(product, lang, ui) {
@@ -3810,7 +3855,7 @@
             const box = document.getElementById('nebras-store-quick-preview');
             if (!box) return;
             const isWpc = productSupportsWpcRollColorPicker(product);
-            const baseImg = isWpc ? getWpcStoreSkuBaseImage(variant) : (variant.image || '');
+            const baseImg = isWpc ? getWpcStoreSkuBaseImage(variant) : (isAluminumProduct(product) ? getAluminumStoreSkuImage(variant) : (variant.image || ''));
             const img = baseImg ? resolveDisplayMediaUrl(baseImg) : '';
             const fullSrc = img ? mediaUrlForLightbox(baseImg) : '';
             const isEn = lang === 'en';
@@ -3819,9 +3864,11 @@
             const title = [type, size].filter(Boolean).join(' · ') || getLocalizedCatalogField(product, 'title', lang);
             const meta = buildStoreSkuQuickPreviewSpecs(product, variant, lang, ui);
             const pid = String(productId).replace(/'/g, "\\'");
-            const priceHtml = variant.price > 0
-                ? formatVariantPriceBlock(variant.price, lang)
-                : ('<span class="variant-price variant-price--request">' + escapeHtmlAttr(ui.catalogHubPriceOnRequest || 'عند الطلب') + '</span>');
+            const priceHtml = isAluminumProduct(product)
+                ? formatStoreVariantPriceBlock(product, variant, lang)
+                : (variant.price > 0
+                    ? formatVariantPriceBlock(variant.price, lang)
+                    : ('<span class="variant-price variant-price--request">' + escapeHtmlAttr(ui.catalogHubPriceOnRequest || 'عند الطلب') + '</span>'));
             const shopable = productHasShop(product) && variant.inStock !== false;
             const cartBtn = shopable
                 ? '<button type="button" class="nebras-store-card-cart" onclick="addVariantIndexToCart(\'' + pid + '\',' + variantIndex + ',1);closeStoreSkuQuickPreview()"><i class="fas fa-cart-plus"></i> ' + escapeHtmlAttr(ui.storeCardAddToCart || 'أضف للسلة') + '</button>'
@@ -3871,7 +3918,7 @@
             const cards = groups.map(function(grp) {
                 return buildStoreSubCategoryHubCardHtml(product, grp, lang, ui, iconId);
             }).join('');
-            return buildStoreWelcomeHeroHtml(product, lang, ui) +
+            return buildStoreProductWelcomeHeroHtml(product, lang, ui) +
                 buildStoreDoorRoomScenariosHtml(product, lang, ui) +
                 buildStoreCatalogResourcesHtml(lang, ui) +
                 '<div class="nebras-store-subhub nebras-store-subhub--premium" data-store-context="' + escapeHtmlAttr(contextKey || 'subhub') + '">' +
@@ -3908,10 +3955,16 @@
             const cards = items.map(function(item) {
                 return buildVariantSkuCardHtml(product, item.variant, item.index, lang, shopable, ui);
             }).join('');
-            return (isWpcDoorsProduct(product) ? buildStoreWelcomeHeroHtml(product, lang, ui) : '') +
+            const bannerPath = resolveStoreSubCategoryBannerImage(product.id, subCategoryId, items[0] && items[0].variant);
+            const bannerImg = bannerPath ? resolveDisplayMediaUrl(bannerPath) : '';
+            const bannerHtml = bannerImg
+                ? ('<div class="nebras-store-subsection-banner-visual"><img src="' + escapeHtmlAttr(bannerImg) + '" alt="' + escapeHtmlAttr(subLabel) + '" loading="eager" decoding="async"></div>')
+                : '';
+            return buildStoreProductWelcomeHeroHtml(product, lang, ui) +
                 buildStoreDoorRoomActiveChipHtml(lang, ui) +
                 backBtn +
                 '<section class="nebras-store-subcategory-page nebras-store-subcategory-page--premium" data-sub-id="' + escapeHtmlAttr(subCategoryId) + '">' +
+                bannerHtml +
                 '<header class="nebras-store-subsection-banner">' +
                 '<div class="nebras-store-subsection-banner-text">' +
                 '<h2 class="nebras-store-subcategory-title"><i class="fas fa-folder-open"></i> ' + escapeHtmlAttr(subLabel) + '</h2>' +
@@ -4135,11 +4188,172 @@
             return seedWpcReadyCatalog();
         }
 
-        /** أصناف الألومنيوم — شكل/نوع + مقاس + لون (تُدار بالكامل من الإدارة) */
+        function getAluminumCatalogStoredVersion() {
+            if (!systemSettings || typeof systemSettings !== 'object') return 0;
+            return Number(systemSettings.aluminumCatalogVersion) || 0;
+        }
+
+        function shouldSeedAluminumCatalog() {
+            return getAluminumCatalogStoredVersion() < ALUMINUM_CATALOG_VERSION;
+        }
+
+        function ensureAluminumSubCategoryDefs(alu) {
+            if (!alu) return;
+            if (!Array.isArray(alu.subCategories)) alu.subCategories = [];
+            [ALU_PROFILES_SUBCATEGORY, ALU_SHEETS_SUBCATEGORY, ALU_ANGLES_SUBCATEGORY].forEach(function(subDef) {
+                if (!alu.subCategories.some(function(s) { return s && s.id === subDef.id; })) {
+                    alu.subCategories.push(Object.assign({}, subDef));
+                } else {
+                    alu.subCategories.forEach(function(s) {
+                        if (s && s.id === subDef.id) Object.assign(s, subDef);
+                    });
+                }
+            });
+            alu.subCategories.sort(function(a, b) { return (a.sortOrder || 0) - (b.sortOrder || 0); });
+        }
+
+        function seedAluminumCatalog(force) {
+            const alu = (siteProducts || []).find(function(p) { return p && p.id === 'prod-aluminum'; });
+            if (!alu) return 0;
+            ensureAluminumSubCategoryDefs(alu);
+            if (!force && !shouldSeedAluminumCatalog()) return 0;
+            if (!Array.isArray(alu.variants)) alu.variants = [];
+            let merged = 0;
+            DEFAULT_ALUMINUM_VARIANTS.forEach(function(def) {
+                const payload = Object.assign({}, def);
+                const idx = alu.variants.findIndex(function(v) {
+                    return v && (v.sku === payload.sku || v.id === payload.id);
+                });
+                if (idx >= 0) {
+                    const prevImg = alu.variants[idx].image || '';
+                    alu.variants[idx] = Object.assign({}, alu.variants[idx], payload);
+                    if (!isAdminManagedProductImage(prevImg)) alu.variants[idx].image = payload.image || '';
+                } else {
+                    alu.variants.push(Object.assign({}, payload));
+                }
+                merged++;
+            });
+            if (!systemSettings || typeof systemSettings !== 'object') {
+                systemSettings = Object.assign({}, DEFAULT_SYSTEM_SETTINGS);
+            }
+            systemSettings.aluminumCatalogVersion = ALUMINUM_CATALOG_VERSION;
+            if (merged > 0) markCatalogSeedNeedsCloudSync();
+            return merged;
+        }
+
+        function getAluminumStoreSkuImage(variant) {
+            if (!variant) return '';
+            const img = String(variant.image || '').trim();
+            if (isAdminManagedProductImage(img)) return img;
+            if (img && !img.endsWith('.svg')) return img;
+            const sub = String(variant.subCategoryId || '');
+            if (sub === 'alu-sheets') return ALUMINUM_CATALOG_PHOTOS.sheet1;
+            if (sub === 'alu-angles') return ALUMINUM_CATALOG_PHOTOS.angle1;
+            return ALUMINUM_CATALOG_PHOTOS.profile1;
+        }
+
+        function resolveStoreSubCategoryBannerImage(productId, subCategoryId, previewVariant) {
+            if (previewVariant) {
+                if (productId === 'prod-wpc' || productId === 'prod-wpc-raw') {
+                    const p = getWpcStoreSkuBaseImage(previewVariant);
+                    if (p) return p;
+                }
+                if (productId === 'prod-aluminum') {
+                    const p = getAluminumStoreSkuImage(previewVariant);
+                    if (p) return p;
+                }
+            }
+            const banners = {
+                'prod-wpc': {
+                    'wpc-ready-install': 'images/catalog/wpc-photos/by-sku-clean/WPC-RDY-FLAT-45-STD.png',
+                    'wpc-ready-supply': 'images/catalog/wpc-photos/01-no-accessory.png'
+                },
+                'prod-wpc-raw': {
+                    'wpc-raw-bare': WPC_CATALOG_PHOTOS.boneProfile,
+                    'wpc-raw-clad': WPC_CATALOG_PHOTOS.rawCladLeaf
+                },
+                'prod-aluminum': {
+                    'alu-profiles': ALUMINUM_CATALOG_PHOTOS.profile1,
+                    'alu-sheets': ALUMINUM_CATALOG_PHOTOS.sheet1,
+                    'alu-angles': ALUMINUM_CATALOG_PHOTOS.angle1
+                }
+            };
+            const map = banners[productId] || {};
+            return map[subCategoryId] || resolveWpcSubCategoryHeroImage(productId, subCategoryId) || '';
+        }
+
+        function isAluminumProduct(product) {
+            return !!(product && product.id === 'prod-aluminum');
+        }
+
+        function formatStoreVariantPriceBlock(product, variant, lang) {
+            const ui = siteText[lang] || siteText.ar;
+            if (isAluminumProduct(product)) {
+                return '<span class="variant-price variant-price--alu-size"><i class="fas fa-ruler-combined"></i> ' +
+                    escapeHtmlAttr(ui.storeAluPriceBySize || 'السعر حسب المقاس — يُحدد داخل المنصة') + '</span>';
+            }
+            return formatVariantPriceBlock(variant ? variant.price : 0, lang);
+        }
+
+        /** أصناف الألومنيوم — صور مصنع حقيقية · السعر حسب المقاس داخل المنصة */
+        const ALUMINUM_CATALOG_VERSION = 2;
+        const ALUMINUM_CATALOG_PHOTOS = {
+            profile1: 'images/profile-2026/cnc/cnc-01.jpg',
+            profile2: 'images/profile-2026/cnc/cnc-02.jpg',
+            profile3: 'images/profile-2026/cnc/cnc-03.jpg',
+            sheet1: 'images/profile-2026/cnc/cnc-05.jpg',
+            sheet2: 'images/profile-2026/cnc/cnc-06.jpg',
+            angle1: 'images/profile-2026/cnc/cnc-08.jpg',
+            angle2: 'images/profile-2026/cnc/cnc-09.jpg',
+            cutting: 'images/profile-2026/cnc/cnc-12.jpg',
+            facade: 'images/profile-2026/cnc/cnc-14.jpg'
+        };
+        const STORE_ALUMINUM_REAL_PHOTOS = [
+            ALUMINUM_CATALOG_PHOTOS.profile1,
+            ALUMINUM_CATALOG_PHOTOS.sheet1,
+            ALUMINUM_CATALOG_PHOTOS.angle1,
+            ALUMINUM_CATALOG_PHOTOS.cutting
+        ];
+        const ALU_PROFILES_SUBCATEGORY = {
+            id: 'alu-profiles',
+            labelAr: 'بروفيلات ألومنيوم',
+            labelEn: 'Aluminum profiles',
+            shortLabelAr: 'بروفيلات',
+            shortLabelEn: 'Profiles',
+            descAr: 'قطاعات وبروفيلات ألومنيوم للواجهات والأبواب والشبابيك — مقاسات حسب الطلب.',
+            descEn: 'Aluminum profiles for facades, doors and windows — custom sizes.',
+            sortOrder: 1
+        };
+        const ALU_SHEETS_SUBCATEGORY = {
+            id: 'alu-sheets',
+            labelAr: 'صفائح ألومنيوم',
+            labelEn: 'Aluminum sheets',
+            shortLabelAr: 'صفائح',
+            shortLabelEn: 'Sheets',
+            descAr: 'صفائح مركبة وألواح ألومنيوم للتشطيب والواجهات.',
+            descEn: 'Composite sheets and aluminum panels for finishing.',
+            sortOrder: 2
+        };
+        const ALU_ANGLES_SUBCATEGORY = {
+            id: 'alu-angles',
+            labelAr: 'زوايا ومقاطع',
+            labelEn: 'Angles & sections',
+            shortLabelAr: 'زوايا',
+            shortLabelEn: 'Angles',
+            descAr: 'زوايا ومقاطع وتخصيم ألومنيوم — حسب المقاس من داخل المنصة.',
+            descEn: 'Angles, sections and aluminum cutting — sized inside the platform.',
+            sortOrder: 3
+        };
         const DEFAULT_ALUMINUM_VARIANTS = [
-            { id: 'alu-prof-6m', image: '', colorAr: 'فضي', colorEn: 'Silver', sizeAr: '6 م — بروفيل', sizeEn: '6 m profile', typeAr: 'بروفيل', typeEn: 'Profile', price: 0, sku: 'ALU-PROF-6M' },
-            { id: 'alu-sheet-122', image: '', colorAr: 'أبيض', colorEn: 'White', sizeAr: '122 × 244 سم', sizeEn: '122×244 cm', typeAr: 'صفائح', typeEn: 'Sheet', price: 0, sku: 'ALU-SHT-122' },
-            { id: 'alu-angle-40', image: '', colorAr: 'طبيعي', colorEn: 'Natural', sizeAr: '40 × 40 مم', sizeEn: '40×40 mm', typeAr: 'زاوية', typeEn: 'Angle', price: 0, sku: 'ALU-ANG-40' }
+            { id: 'alu-prof-6m', sku: 'ALU-PROF-6M', subCategoryId: 'alu-profiles', image: ALUMINUM_CATALOG_PHOTOS.profile1, typeAr: 'بروفيل ألومنيوم قياسي', typeEn: 'Standard aluminum profile', sizeAr: '6 م — حسب المقطع', sizeEn: '6 m — per section', colorAr: 'فضي / أبيض / أسود', colorEn: 'Silver / white / black', price: 0, inStock: true },
+            { id: 'alu-prof-u', sku: 'ALU-PROF-U', subCategoryId: 'alu-profiles', image: ALUMINUM_CATALOG_PHOTOS.profile2, typeAr: 'بروفيل U-channel', typeEn: 'U-channel profile', sizeAr: 'حسب المقاس', sizeEn: 'Custom size', colorAr: 'فضي', colorEn: 'Silver', price: 0, inStock: true },
+            { id: 'alu-prof-frame', sku: 'ALU-PROF-FRM', subCategoryId: 'alu-profiles', image: ALUMINUM_CATALOG_PHOTOS.profile3, typeAr: 'إطار ألومنيوم للأبواب', typeEn: 'Door aluminum frame', sizeAr: 'حسب المقاس', sizeEn: 'Custom size', colorAr: 'فضي / أسود', colorEn: 'Silver / black', price: 0, inStock: true },
+            { id: 'alu-prof-facade', sku: 'ALU-PROF-FAC', subCategoryId: 'alu-profiles', image: ALUMINUM_CATALOG_PHOTOS.facade, typeAr: 'كلادينج واجهات', typeEn: 'Facade cladding profile', sizeAr: 'حسب المشروع', sizeEn: 'Per project', colorAr: 'متعدد', colorEn: 'Various', price: 0, inStock: true },
+            { id: 'alu-sheet-122', sku: 'ALU-SHT-122', subCategoryId: 'alu-sheets', image: ALUMINUM_CATALOG_PHOTOS.sheet1, typeAr: 'صفائح ألومنيوم مركبة', typeEn: 'Composite aluminum sheet', sizeAr: '122 × 244 سم', sizeEn: '122×244 cm', colorAr: 'أبيض / فضي', colorEn: 'White / silver', price: 0, inStock: true },
+            { id: 'alu-sheet-comp', sku: 'ALU-SHT-COMP', subCategoryId: 'alu-sheets', image: ALUMINUM_CATALOG_PHOTOS.sheet2, typeAr: 'لوح ACP للواجهات', typeEn: 'ACP facade panel', sizeAr: 'حسب المقاس', sizeEn: 'Custom size', colorAr: 'متعدد', colorEn: 'Various', price: 0, inStock: true },
+            { id: 'alu-angle-40', sku: 'ALU-ANG-40', subCategoryId: 'alu-angles', image: ALUMINUM_CATALOG_PHOTOS.angle1, typeAr: 'زاوية ألومنيوم', typeEn: 'Aluminum angle', sizeAr: '40 × 40 مم', sizeEn: '40×40 mm', colorAr: 'طبيعي', colorEn: 'Natural', price: 0, inStock: true },
+            { id: 'alu-angle-l', sku: 'ALU-ANG-L', subCategoryId: 'alu-angles', image: ALUMINUM_CATALOG_PHOTOS.angle2, typeAr: 'زاوية L-section', typeEn: 'L-section angle', sizeAr: 'حسب المقاس', sizeEn: 'Custom size', colorAr: 'فضي', colorEn: 'Silver', price: 0, inStock: true },
+            { id: 'alu-cutting-svc', sku: 'ALU-CUT', subCategoryId: 'alu-angles', image: ALUMINUM_CATALOG_PHOTOS.cutting, typeAr: 'تخصيم وتقطيع ألومنيوم', typeEn: 'Aluminum cutting service', sizeAr: 'حسب الطلب', sizeEn: 'On request', colorAr: '—', colorEn: '—', price: 0, inStock: true }
         ];
 
         const DEFAULT_OTHER_VARIANTS = [
@@ -4150,7 +4364,7 @@
         const DEFAULT_SITE_PRODUCTS = [
             { id: 'prod-wpc-raw', sortOrder: 1, cssClass: 'card-wpc-raw', iconClass: 'fas fa-door-open', titleIcon: 'fas fa-industry', legacyKey: 'wpc-raw', titleAr: 'أبواب WPC عضم (للورش والمصانع)', titleEn: 'WPC Raw Doors (Workshops)', titleZh: 'WPC 毛坯门', textAr: 'أبواب WPC عضم غير ملبّسة وغير جاهزة — للورش والمصانع التي تكمل التشطيب والتركيب.', textEn: 'Unfinished WPC door leaves for workshops and factories.', textZh: '供车间加工的 WPC 毛坯门。', backgroundImage: 'wpc-background', album: ['images/catalog/wpc-photos/08-bone-profile.png', 'images/catalog/wpc-photos/10-leaf-section.png', 'images/catalog/wpc-photos/09-mdf.png'], target: '#products', action: 'shop', anchorId: 'products', visible: true, shopEnabled: true, variants: DEFAULT_WPC_RAW_VARIANTS },
             { id: 'prod-wpc', sortOrder: 2, cssClass: 'card-wpc', iconClass: 'fas fa-door-closed', titleIcon: 'fas fa-door-open', legacyKey: 'wpc', titleAr: 'أبواب WPC جاهزة للتركيب', titleEn: 'WPC Ready Doors', titleZh: 'WPC 成品门', textAr: 'أبواب WPC جاهزة للتركيب — تجمع بين فخامة المظهر وصمود البلاستيك للمنازل والمشاريع.', textEn: 'Ready-to-install WPC doors for homes and projects.', textZh: '即装型 WPC 门。', backgroundImage: 'wpc-background', album: ['images/catalog/wpc-photos/02-with-accessory.png', 'images/catalog/wpc-photos/07-classic-panel.png', 'images/catalog/wpc-photos/03-glass-leaf-quarter.png', 'images/catalog/wpc-photos/06-sliding-double-decor.png'], target: '#doors', action: 'shop', anchorId: 'doors', visible: true, shopEnabled: true, variants: DEFAULT_WPC_READY_VARIANTS },
-            { id: 'prod-aluminum', sortOrder: 3, cssClass: 'card-aluminum', iconClass: 'fas fa-industry', titleIcon: 'fas fa-cog', legacyKey: 'aluminum', titleAr: 'الألومنيوم', titleEn: 'Aluminum', titleZh: '铝制品', textAr: 'منتجات ألومنيوم متينة وتصميمات ذكية تناسب مشاريع البناء والتشطيب.', textEn: 'Durable aluminum for construction and finishing.', textZh: '适用于建筑与装修的耐用铝材。', backgroundImage: 'aluminum-background', album: ['images/aluminum-background.webp'], target: '#aluminum', action: 'shop', anchorId: 'aluminum', visible: true, shopEnabled: true, variants: DEFAULT_ALUMINUM_VARIANTS },
+            { id: 'prod-aluminum', sortOrder: 3, cssClass: 'card-aluminum', iconClass: 'fas fa-industry', titleIcon: 'fas fa-cog', legacyKey: 'aluminum', titleAr: 'الألومنيوم', titleEn: 'Aluminum', titleZh: '铝制品', textAr: 'منتجات ألومنيوم متينة وتصميمات ذكية تناسب مشاريع البناء والتشطيب.', textEn: 'Durable aluminum for construction and finishing.', textZh: '适用于建筑与装修的耐用铝材。', backgroundImage: 'aluminum-background', album: ['images/profile-2026/cnc/cnc-01.jpg', 'images/profile-2026/cnc/cnc-05.jpg', 'images/profile-2026/cnc/cnc-08.jpg', 'images/profile-2026/cnc/cnc-12.jpg'], target: '#aluminum', action: 'shop', anchorId: 'aluminum', visible: true, shopEnabled: true, variants: DEFAULT_ALUMINUM_VARIANTS },
             { id: 'prod-other', sortOrder: 4, cssClass: 'card-other-products', iconClass: 'fas fa-boxes', titleIcon: 'fas fa-boxes', legacyKey: 'otherProducts', titleAr: 'منتجات أخرى', titleEn: 'Other Products', titleZh: '其他产品', textAr: 'مجموعة متنوعة من المنتجات الإضافية والحلول المبتكرة.', textEn: 'A diverse range of additional products.', textZh: '多样化的附加产品与创新方案。', backgroundImage: 'background-other-products', album: ['images/background-other-products.jpeg'], target: '#products', visitorMode: 'shop', action: 'shop', anchorId: '', visible: true, shopEnabled: true, variants: DEFAULT_OTHER_VARIANTS },
             { id: 'prod-complaints', sortOrder: 5, cssClass: 'card-customer-complaints', iconClass: 'fas fa-search', titleIcon: 'fas fa-search', legacyKey: 'complaints', titleAr: 'استفسار عن الشكاوى', titleEn: 'Complaint Inquiry', titleZh: '投诉查询', textAr: 'تحقق من حالة شكواك بإدخال رقم الشكوى.', textEn: 'Check your complaint status with the complaint number.', textZh: '输入投诉编号查询处理状态。', backgroundImage: '', album: [], target: '', action: 'complaint', anchorId: '', visible: true }
         ];
@@ -5027,6 +5241,7 @@
                 if (!alu.variants || !alu.variants.length) alu.variants = cloneVariants(DEFAULT_ALUMINUM_VARIANTS);
                 if (alu.action === 'overlay' || !alu.action) alu.action = 'shop';
                 alu.shopEnabled = true;
+                seedAluminumCatalog();
             }
             const other = siteProducts.find(function(p) { return p.id === 'prod-other'; });
             if (other) {
@@ -5514,7 +5729,9 @@
             const rawImg = String(v.image || '').trim();
             const catalogPath = (product.id === 'prod-wpc' || product.id === 'prod-wpc-raw')
                 ? getWpcStoreSkuBaseImage(v)
-                : (isAdminManagedProductImage(rawImg) ? rawImg : '');
+                : (product.id === 'prod-aluminum'
+                    ? getAluminumStoreSkuImage(v)
+                    : (isAdminManagedProductImage(rawImg) ? rawImg : ''));
             const baseImg = isWpcReady
                 ? (catalogPath ? resolveDisplayMediaUrl(catalogPath) : '')
                 : (catalogPath ? resolveDisplayMediaUrl(catalogPath) : (isAdminManagedProductImage(rawImg) ? resolveDisplayMediaUrl(rawImg) : ''));
@@ -5533,6 +5750,7 @@
                 : (productHasShop(product) && !compact ? '<span class="nebras-store-sku-preview-only">' + escapeHtmlAttr(ui.variantPreviewOnly || 'للمعاينة') + '</span>' : '');
             const mediaClass = 'nebras-store-sku-media' +
                 (isWpcReady ? ' nebras-store-sku-media--wpc-door' : '') +
+                (isAluminumProduct(product) && img ? ' nebras-store-sku-media--alu-photo' : '') +
                 (isWpcReady || isVectorImg ? ' nebras-store-sku-media--vector' : '') +
                 (img ? ' nebras-store-sku-media--has-image' : '');
             const imgClass = 'nebras-store-sku-img nebras-clickable-media' + (isWpcReady ? ' nebras-store-sku-img--wpc' : '');
@@ -5553,7 +5771,7 @@
             if (compact) {
                 return '<article' + cardAttrs + ' title="' + escapeHtmlAttr(label) + '">' + previewBtn + media +
                     '<div class="nebras-store-sku-body nebras-store-sku-body--compact">' +
-                    '<div class="nebras-store-sku-price nebras-store-card-price-block">' + formatVariantPriceBlock(v.price, lang) + '</div>' +
+                    '<div class="nebras-store-sku-price nebras-store-card-price-block">' + formatStoreVariantPriceBlock(product, v, lang) + '</div>' +
                     addBtn +
                     '</div></article>';
             }
@@ -5576,7 +5794,7 @@
                 accessoryHtml +
                 (specs.length ? '<ul class="nebras-store-sku-specs nebras-store-card-specs">' + specs.join('') + '</ul>' : '') +
                 rollPicker +
-                '<div class="nebras-store-sku-price nebras-store-card-price-block">' + formatVariantPriceBlock(v.price, lang) + '</div>' +
+                '<div class="nebras-store-sku-price nebras-store-card-price-block">' + formatStoreVariantPriceBlock(product, v, lang) + '</div>' +
                 addBtn +
                 '</div></article>';
         }
