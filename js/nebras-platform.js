@@ -971,7 +971,7 @@
         }
 
         const DOOR_PHOTO_PRESET_ROOT = 'images/doors/presets/';
-        const DOOR_PHOTO_PRESET_CACHE = '303';
+        const DOOR_PHOTO_PRESET_CACHE = '304';
         const DOOR_PHOTO_COMPOSE_MAX_DIM = 1200;
         /** صور أبواب المصنع الحقيقية في المعاينة — SVG احتياطي عند غياب الصورة */
         const DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS = true;
@@ -1512,11 +1512,13 @@
                 }
                 if (img) {
                     img.src = baseSrc;
+                    img.style.filter = 'none';
                     img.classList.remove('has-roll-composite', 'has-roll-pending');
                 }
                 if (stack) stack.classList.remove('has-roll-composite-ready', 'has-roll-pending', 'has-roll-texture', 'has-door-roll-tint');
                 if (transomCap && transomCap.classList) {
                     transomCap.classList.remove('has-roll-texture', 'has-door-roll-tint', 'has-roll-composite');
+                    transomCap.style.filter = 'none';
                     transomCap.style.removeProperty('--door-cap-roll');
                 }
                 return;
@@ -1528,27 +1530,26 @@
                 rollImg.removeAttribute('src');
             }
 
-            if (transomCap && transomCap.src && !transomCap.hidden) {
-                transomCap.classList.remove('has-door-roll-tint', 'has-roll-texture');
-                transomCap.classList.add('has-roll-pending');
-                transomCap.style.removeProperty('--door-cap-roll');
+            const rollFilter = buildWpcStoreRollCssFilterForPhoto(hex || '#b8bcc4');
+            if (img) {
+                img.src = baseSrc;
+                img.style.transition = 'filter 0.38s ease, transform 0.35s ease';
+                img.style.filter = rollFilter;
+                img.classList.remove('has-roll-composite', 'has-roll-pending');
             }
-
-            applyComposedRollToPhotoPresetImg(img, baseSrc, rollUrl, hex, isRoll, idx, rollImg);
-
-            if (transomCap && transomCap.src && !transomCap.hidden && isRoll) {
-                const capBase = transomCap.getAttribute('data-door-base-src') || transomCap.src.split('?')[0];
-                const capToken = String(Date.now()) + '-cap-' + String(idx);
-                transomCap.setAttribute('data-roll-compose-token', capToken);
-                composeDoorPhotoWithRoll(capBase, tex, hex, idx).then(function(composed) {
-                    if (!transomCap.isConnected || transomCap.hidden) return;
-                    if (transomCap.getAttribute('data-roll-compose-token') !== capToken) return;
-                    if (composed) {
-                        transomCap.src = composed;
-                        transomCap.classList.add('has-roll-composite');
-                        transomCap.classList.remove('has-roll-pending');
-                    }
-                });
+            if (stack) {
+                stack.classList.add('has-door-roll-tint', 'has-roll-texture');
+                stack.classList.remove('has-roll-composite-ready', 'has-roll-pending');
+                stack.style.setProperty('--door-roll-tint', hex || '#b8bcc4');
+            }
+            if (wrap) {
+                wrap.classList.add('has-roll-texture');
+                wrap.style.setProperty('--door-roll-tint', hex || '#b8bcc4');
+            }
+            if (transomCap && transomCap.src && !transomCap.hidden) {
+                transomCap.style.filter = rollFilter;
+                transomCap.classList.add('has-roll-texture');
+                transomCap.classList.remove('has-roll-pending', 'has-roll-composite');
             }
         }
 
@@ -3374,7 +3375,7 @@
                 img.classList.remove('has-roll-composite', 'has-roll-pending');
                 img.removeAttribute('data-roll-compose-token');
                 if (stack) {
-                    stack.classList.remove('has-door-roll-tint', 'has-door-roll-tint--photo', 'has-door-roll-tint--clip-panel', 'has-door-roll-tint--mask-panel', 'has-roll-composite-ready', 'has-roll-pending', 'has-roll-texture');
+                    stack.classList.remove('has-door-roll-tint', 'has-door-roll-tint--photo', 'has-door-roll-tint--clip-panel', 'has-door-roll-tint--mask-panel', 'has-roll-composite-ready', 'has-roll-pending', 'has-roll-texture', 'has-roll-css-fallback');
                     clearWpcStoreDoorPanelLayer(panelLayer);
                 }
                 card.classList.remove('is-roll-color-live');
@@ -3387,18 +3388,34 @@
             const rollIdx = catalogIndex != null && !isNaN(catalogIndex) ? catalogIndex : 0;
             const roll = colors[rollIdx] || colors[0];
             if (!roll) return;
-            const rollState = buildWpcStoreRollStateFromCatalog(roll, rollIdx);
-            const profileKey = variant ? getWpcDoorTintProfile(variant) : 'flat';
-            if (stack && variant && !isPhoto) applyWpcDoorTintRegion(stack, profileKey);
-            const isRaster = isPhoto || /\.(png|jpe?g|webp|avif)(\?|$)/i.test(String(baseSrc).split('?')[0]);
-            if (isRaster) {
-                applyComposedRollToStoreSkuImg(img, stack, baseSrc, rollState, variant);
-            } else if (stack) {
+            if (String(img.getAttribute('data-base-src') || img.src || '').split('?')[0] !== String(baseSrc).split('?')[0]) {
+                img.src = resolveDisplayMediaUrl(baseSrc);
+            }
+            img.classList.remove('has-roll-composite', 'has-roll-pending');
+            img.removeAttribute('data-roll-compose-token');
+            const rollFilter = isPhoto ? buildWpcStoreRollCssFilterForPhoto(roll.hex) : buildWpcStoreRollCssFilter(roll.hex);
+            if (stack && variant) applyWpcDoorTintRegion(stack, getWpcDoorTintProfile(variant));
+            if (isPhoto && stack && panelLayer) {
                 img.style.filter = 'none';
-                img.classList.remove('has-roll-composite', 'has-roll-pending');
-                stack.classList.add('has-door-roll-tint--clip-panel');
-                clearWpcStoreDoorPanelLayer(panelLayer);
-                applyDoorRollTintToElements(stack, rollState);
+                img.style.transition = 'transform 0.35s ease';
+                const clip = variant ? getWpcDoorClipPath(variant) : (stack.style.getPropertyValue('--wpc-door-clip') || '7% 13% 7% 13%');
+                const displaySrc = resolveDisplayMediaUrl(baseSrc);
+                panelLayer.style.backgroundImage = 'url("' + displaySrc.replace(/"/g, '') + '")';
+                panelLayer.style.clipPath = 'inset(' + clip + ')';
+                panelLayer.style.webkitClipPath = 'inset(' + clip + ')';
+                panelLayer.style.filter = rollFilter;
+                panelLayer.style.opacity = '1';
+                panelLayer.style.mixBlendMode = 'normal';
+                stack.classList.add('has-door-roll-tint', 'has-door-roll-tint--clip-panel');
+                stack.classList.remove('has-door-roll-tint--panel-only', 'has-door-roll-tint--photo', 'has-roll-composite-ready', 'has-roll-pending', 'has-roll-texture', 'has-roll-css-fallback');
+            } else {
+                img.style.transition = 'filter 0.38s ease, transform 0.38s ease';
+                img.style.filter = rollFilter;
+                if (stack) {
+                    stack.classList.remove('has-door-roll-tint--clip-panel', 'has-door-roll-tint--panel-only', 'has-roll-composite-ready', 'has-roll-pending', 'has-roll-texture', 'has-roll-css-fallback');
+                    clearWpcStoreDoorPanelLayer(panelLayer);
+                    applyDoorRollTintToElements(stack, buildWpcStoreRollStateFromCatalog(roll, rollIdx));
+                }
             }
             img.setAttribute('data-composed-roll', String(rollIdx));
             card.classList.add('is-roll-color-live');
@@ -3829,7 +3846,7 @@
         }
 
         function buildStoreAluminumWelcomeHeroHtml(product, lang, ui) {
-            const photos = STORE_ALUMINUM_REAL_PHOTOS.slice(0, 4);
+            const photos = STORE_ALUMINUM_REAL_PHOTOS.slice(0, 8);
             const title = ui.storeAluWelcomeTitle || 'عالم ألومنيوم نبراس — جودة المصنع السعودي';
             const subtitle = ui.storeAluWelcomeSubtitle || 'بروفيلات · صفائح · شبابيك · واجهات · مطابخ · تخصيم — مقاسات حسب الطلب داخل المنصة.';
             const eyebrow = ui.storeAluWelcomeEyebrow || 'ألومنيوم — مصنع نبراس';
@@ -4483,11 +4500,111 @@
         };
         const STORE_ALUMINUM_REAL_PHOTOS = [
             ALUMINUM_CATALOG_PHOTOS.profile1,
+            ALUMINUM_CATALOG_PHOTOS.profile2,
             ALUMINUM_CATALOG_PHOTOS.window1,
+            ALUMINUM_CATALOG_PHOTOS.window3,
             ALUMINUM_CATALOG_PHOTOS.door1,
+            ALUMINUM_CATALOG_PHOTOS.door3,
+            ALUMINUM_CATALOG_PHOTOS.door4,
             ALUMINUM_CATALOG_PHOTOS.facade1,
-            ALUMINUM_CATALOG_PHOTOS.kitchen1
+            ALUMINUM_CATALOG_PHOTOS.facade3,
+            ALUMINUM_CATALOG_PHOTOS.kitchen1,
+            ALUMINUM_CATALOG_PHOTOS.kitchen3,
+            ALUMINUM_CATALOG_PHOTOS.accSet
         ];
+
+        /** ألوان تشطيب الألومنيوم — معاينة حية على الأبواب · الشبابيك · المطابخ · الواجهات */
+        const ALUMINUM_FINISH_COLORS = [
+            { id: 'silver', code: 'ALU-SLV', labelAr: 'فضي', labelEn: 'Silver', hex: '#c5c9cf' },
+            { id: 'white', code: 'ALU-WHT', labelAr: 'أبيض', labelEn: 'White', hex: '#f2f4f7' },
+            { id: 'black', code: 'ALU-BLK', labelAr: 'أسود', labelEn: 'Black', hex: '#2c3038' },
+            { id: 'bronze', code: 'ALU-BRZ', labelAr: 'برونزي', labelEn: 'Bronze', hex: '#9a7344' },
+            { id: 'champagne', code: 'ALU-CHM', labelAr: 'شampagne', labelEn: 'Champagne', hex: '#d8c9ad' },
+            { id: 'anthracite', code: 'ALU-ANT', labelAr: 'أنثراسايت', labelEn: 'Anthracite', hex: '#4d535c' },
+            { id: 'gold', code: 'ALU-GLD', labelAr: 'ذهبي', labelEn: 'Gold', hex: '#c9a227' },
+            { id: 'wood', code: 'ALU-WOD', labelAr: 'خشبي', labelEn: 'Wood effect', hex: '#8b6f4e' }
+        ];
+        function variantSupportsAluminumFinishPicker(variant) {
+            if (!variant) return false;
+            const sub = String(variant.subCategoryId || '');
+            return sub === 'alu-doors' || sub === 'alu-kitchens' || sub === 'alu-windows' || sub === 'alu-facades';
+        }
+
+        function buildAluminumFinishCssFilter(hex) {
+            return buildWpcStoreRollCssFilterForPhoto(hex);
+        }
+
+        function buildAluminumStoreFinishPickerHtml(productId, variantIndex, lang, ui) {
+            const label = ui.aluStoreFinishPickerLabel || 'اختر لون التشطيب — معاينة حية';
+            const hint = ui.aluStoreFinishPickerHint || 'اللون يظهر على الباب · الشباك · المطبخ · الواجهة';
+            const safePid = String(productId).replace(/'/g, "\\'");
+            const swatches = ALUMINUM_FINISH_COLORS.map(function(item, idx) {
+                const name = lang === 'en' ? (item.labelEn || item.labelAr) : (item.labelAr || item.labelEn);
+                const active = idx === 0 ? ' is-active' : '';
+                return '<button type="button" class="nebras-store-roll-swatch nebras-store-alu-finish-swatch' + active + '"' +
+                    ' data-finish-index="' + idx + '" data-finish-hex="' + escapeHtmlAttr(item.hex || '#ccc') + '"' +
+                    ' data-finish-name="' + escapeHtmlAttr(name) + '" data-finish-code="' + escapeHtmlAttr(item.code || '') + '"' +
+                    ' onclick="event.stopPropagation();pickAluminumStoreSkuFinish(\'' + safePid + '\',' + variantIndex + ',' + idx + ')"' +
+                    ' title="' + escapeHtmlAttr(item.code + ' — ' + name) + '" aria-label="' + escapeHtmlAttr(item.code + ' ' + name) + '">' +
+                    '<span class="nebras-store-roll-swatch-fallback" style="background-color:' + escapeHtmlAttr(item.hex || '#ccc') + '"></span>' +
+                    '<span class="nebras-store-roll-swatch-code">' + escapeHtmlAttr(item.code || '') + '</span></button>';
+            }).join('');
+            const first = ALUMINUM_FINISH_COLORS[0];
+            const firstName = first ? (lang === 'en' ? (first.labelEn || first.labelAr) : (first.labelAr || first.labelEn)) : '';
+            return '<div class="nebras-store-roll-picker nebras-store-roll-picker--alu-finish" data-alu-finish-picker="' + escapeHtmlAttr(productId + '-' + variantIndex) + '">' +
+                '<p class="nebras-store-roll-picker-label"><i class="fas fa-swatchbook"></i> ' + escapeHtmlAttr(label) + '</p>' +
+                '<p class="nebras-store-roll-picker-hint"><i class="fas fa-wand-magic-sparkles"></i> ' + escapeHtmlAttr(hint) + '</p>' +
+                '<div class="nebras-store-roll-swatches" role="listbox" aria-label="' + escapeHtmlAttr(label) + '">' + swatches + '</div>' +
+                '<p class="nebras-store-roll-picker-active" data-finish-active-label>' + escapeHtmlAttr((first ? first.code : '') + ' — ' + firstName) + '</p></div>';
+        }
+
+        function applyAluminumStoreSkuFinishTint(card, finishIndex) {
+            if (!card) return;
+            const img = card.querySelector('.nebras-store-sku-media--alu-photo img, .nebras-store-sku-media--has-image img.nebras-store-sku-img');
+            if (!img) return;
+            const baseSrc = img.getAttribute('data-base-src') || img.getAttribute('src') || '';
+            if (!baseSrc) return;
+            const idx = finishIndex != null && !isNaN(finishIndex) ? finishIndex : 0;
+            const finish = ALUMINUM_FINISH_COLORS[idx] || ALUMINUM_FINISH_COLORS[0];
+            if (!finish) return;
+            const baseDisplay = resolveDisplayMediaUrl(baseSrc);
+            if (String(img.src || '').split('?')[0] !== String(baseDisplay || '').split('?')[0]) {
+                img.src = baseDisplay;
+            }
+            img.style.transition = 'filter 0.38s ease, transform 0.35s ease';
+            img.style.filter = buildAluminumFinishCssFilter(finish.hex);
+            img.setAttribute('data-alu-finish-index', String(idx));
+            card.classList.add('is-alu-finish-live');
+            card.setAttribute('data-active-alu-finish-hex', finish.hex || '');
+            card.setAttribute('data-selected-finish-index', String(idx));
+        }
+
+        function pickAluminumStoreSkuFinish(productId, variantIndex, finishIndex) {
+            const card = document.querySelector('.nebras-store-sku-card[data-product-id="' + productId + '"][data-variant-index="' + variantIndex + '"]');
+            if (!card) return;
+            card.querySelectorAll('.nebras-store-alu-finish-swatch').forEach(function(btn) {
+                const idx = parseInt(btn.getAttribute('data-finish-index'), 10);
+                btn.classList.toggle('is-active', idx === finishIndex);
+            });
+            const activeBtn = card.querySelector('.nebras-store-alu-finish-swatch[data-finish-index="' + finishIndex + '"]');
+            const activeLabel = card.querySelector('[data-finish-active-label]');
+            if (activeBtn && activeLabel) {
+                const code = activeBtn.getAttribute('data-finish-code') || '';
+                const name = activeBtn.getAttribute('data-finish-name') || '';
+                activeLabel.textContent = code + ' — ' + name;
+            }
+            card.setAttribute('data-selected-finish-index', String(finishIndex));
+            applyAluminumStoreSkuFinishTint(card, finishIndex);
+        }
+
+        function initAluminumStoreFinishPickers(root) {
+            root = root || document;
+            root.querySelectorAll('.nebras-store-sku-card--alu-finish').forEach(function(card) {
+                const finishIdx = parseInt(card.getAttribute('data-selected-finish-index'), 10);
+                if (!isNaN(finishIdx)) applyAluminumStoreSkuFinishTint(card, finishIdx);
+            });
+        }
+
         const ALU_PROFILES_SUBCATEGORY = {
             id: 'alu-profiles',
             labelAr: 'بروفيلات ألومنيوم',
@@ -5971,6 +6088,7 @@
             const isEn = lang === 'en';
             const pid = String(product.id).replace(/'/g, "\\'");
             const isWpcReady = productSupportsWpcRollColorPicker(product);
+            const isAluFinish = isAluminumProduct(product) && variantSupportsAluminumFinishPicker(v);
             const rawImg = String(v.image || '').trim();
             const catalogPath = (product.id === 'prod-wpc' || product.id === 'prod-wpc-raw')
                 ? getWpcStoreSkuBaseImage(v)
@@ -5981,7 +6099,7 @@
                 ? (catalogPath ? resolveDisplayMediaUrl(catalogPath) : '')
                 : (catalogPath ? resolveDisplayMediaUrl(catalogPath) : (isAdminManagedProductImage(rawImg) ? resolveDisplayMediaUrl(rawImg) : ''));
             const img = baseImg;
-            const fullSrc = isWpcReady ? baseImg : (isAdminManagedProductImage(rawImg) ? mediaUrlForLightbox(rawImg) : '');
+            const fullSrc = isWpcReady ? baseImg : ((isAluminumProduct(product) || isAdminManagedProductImage(rawImg)) && catalogPath ? resolveDisplayMediaUrl(catalogPath) : (isAdminManagedProductImage(rawImg) ? mediaUrlForLightbox(rawImg) : ''));
             const isVectorImg = !isWpcReady && /\.svg(\?|$)/i.test(String(baseImg || ''));
             const color = isEn ? (v.colorEn || v.colorAr) : (v.colorAr || v.colorEn);
             const size = isEn ? (v.sizeEn || v.sizeAr) : (v.sizeAr || v.sizeEn);
@@ -6008,11 +6126,13 @@
                 : (img
                 ? (isWpcReady
                     ? buildWpcStoreSkuDoorMediaHtml(baseImg, label, fullSrc, ui, v)
-                    : ('<div class="' + mediaClass + '"><img class="' + imgClass + '" src="' + escapeHtmlAttr(img) + '" data-base-src="' + escapeHtmlAttr(baseImg) + '" data-full-src="' + escapeHtmlAttr(fullSrc || img) + '" alt="' + escapeHtmlAttr(label) + '" loading="lazy" decoding="async" title="' + escapeHtmlAttr(ui.lightboxOpenHint || 'اضغط للتكبير') + '">' + buildProductPhotoWatermarkHtml() + '</div>'))
+                    : ('<div class="' + mediaClass + '"><img class="' + imgClass + (isAluminumProduct(product) ? ' nebras-store-sku-img--alu' : '') + '" src="' + escapeHtmlAttr(img) + '" data-base-src="' + escapeHtmlAttr(catalogPath || baseImg) + '" data-full-src="' + escapeHtmlAttr(fullSrc || img) + '" alt="' + escapeHtmlAttr(label) + '" loading="lazy" decoding="async" title="' + escapeHtmlAttr(ui.lightboxOpenHint || 'اضغط للتكبير') + '">' + buildProductPhotoWatermarkHtml() + '</div>'))
                 : '<div class="nebras-store-sku-media nebras-store-sku-media--empty"><i class="fas fa-box-open"></i><span class="nebras-store-sku-awaiting-image">' + escapeHtmlAttr(awaitingLabel) + '</span></div>');
             const cardAttrs = isWpcReady
                 ? (' class="nebras-store-sku-card nebras-store-sku-card--wpc-ready nebras-store-card--shop' + (compact ? ' nebras-store-sku-card--compact' : '') + '" data-product-id="' + escapeHtmlAttr(product.id) + '" data-variant-index="' + idx + '" data-selected-roll-index="0"')
-                : (' class="nebras-store-sku-card nebras-store-card--shop' + (compact ? ' nebras-store-sku-card--compact' : '') + '"');
+                : (isAluFinish
+                    ? (' class="nebras-store-sku-card nebras-store-sku-card--alu-finish nebras-store-card--shop' + (compact ? ' nebras-store-sku-card--compact' : '') + '" data-product-id="' + escapeHtmlAttr(product.id) + '" data-variant-index="' + idx + '" data-selected-finish-index="0"')
+                    : (' class="nebras-store-sku-card nebras-store-card--shop' + (compact ? ' nebras-store-sku-card--compact' : '') + '"'));
             if (compact) {
                 return '<article' + cardAttrs + ' title="' + escapeHtmlAttr(label) + '">' + previewBtn + media +
                     '<div class="nebras-store-sku-body nebras-store-sku-body--compact">' +
@@ -6030,6 +6150,8 @@
                 : '';
             const rollPicker = (isWpcReady && variantSupportsWpcRollColorPicker(v) && baseImg)
                 ? buildWpcStoreRollPickerHtml(product.id, idx, lang, ui) : '';
+            const aluFinishPicker = (isAluFinish && img)
+                ? buildAluminumStoreFinishPickerHtml(product.id, idx, lang, ui) : '';
             const displayTitle = [type, size].filter(Boolean).join(' · ') || label;
             return '<article' + cardAttrs + '>' + previewBtn + media +
                 '<div class="nebras-store-sku-body nebras-store-card-body">' +
@@ -6039,6 +6161,7 @@
                 accessoryHtml +
                 (specs.length ? '<ul class="nebras-store-sku-specs nebras-store-card-specs">' + specs.join('') + '</ul>' : '') +
                 rollPicker +
+                aluFinishPicker +
                 '<div class="nebras-store-sku-price nebras-store-card-price-block">' + formatStoreVariantPriceBlock(product, v, lang) + '</div>' +
                 addBtn +
                 '</div></article>';
@@ -27132,6 +27255,7 @@
             applyWorkspaceTranslations();
             wireClickableMediaIn(main);
             initWpcStoreSkuRollPickers(main);
+            initAluminumStoreFinishPickers(main);
             if (main.querySelector('.nebras-bank-workspace, .bank-accounts-showcase')) {
                 hydrateBankAccountMedia(main);
             }
@@ -31490,7 +31614,9 @@
         window.openStoreSubCategoryHub = openStoreSubCategoryHub;
         window.openStoreSubCategory = openStoreSubCategory;
         window.pickWpcStoreSkuRoll = pickWpcStoreSkuRoll;
+        window.pickAluminumStoreSkuFinish = pickAluminumStoreSkuFinish;
         window.initWpcStoreSkuRollPickers = initWpcStoreSkuRollPickers;
+        window.initAluminumStoreFinishPickers = initAluminumStoreFinishPickers;
         window.openStoreDoorRoomScenario = openStoreDoorRoomScenario;
         window.openStoreSkuQuickPreview = openStoreSkuQuickPreview;
         window.closeStoreSkuQuickPreview = closeStoreSkuQuickPreview;

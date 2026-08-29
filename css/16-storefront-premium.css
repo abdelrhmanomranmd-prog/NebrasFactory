@@ -1659,28 +1659,25 @@ body.nebras-mobile-bar-active.admin-session .nebras-mobile-commerce-bar {
     content: none !important;
 }
 
-/* صور الكتالوج — الرولّة تُخبز في Canvas · fallback CSS عند الفشل */
+/* صور الكتالوج — تلوين CSS على لوح الباب (clip-panel) بدون Canvas */
 .nebras-store-sku-door-stack--photo::after,
 .nebras-store-sku-door-stack--photo::before,
 .nebras-store-sku-door-stack--photo.has-door-roll-tint::after,
-.nebras-store-sku-door-stack--photo.has-door-roll-tint::before,
-.nebras-store-sku-door-stack--photo .nebras-store-sku-door-panel-color {
+.nebras-store-sku-door-stack--photo.has-door-roll-tint::before {
     display: none !important;
     content: none !important;
+}
+
+.nebras-store-sku-door-stack--photo:not(.has-door-roll-tint--clip-panel) .nebras-store-sku-door-panel-color {
+    display: none !important;
     opacity: 0 !important;
     visibility: hidden !important;
 }
 
-.nebras-store-sku-door-stack--photo.has-roll-css-fallback .nebras-store-sku-door-panel-color {
+.nebras-store-sku-door-stack--photo.has-door-roll-tint--clip-panel .nebras-store-sku-door-panel-color {
     display: block !important;
     visibility: visible !important;
     opacity: 1 !important;
-}
-
-.nebras-store-sku-door-stack--photo.has-roll-css-fallback::after,
-.nebras-store-sku-door-stack--photo.has-roll-css-fallback::before {
-    display: none !important;
-    content: none !important;
 }
 
 .nebras-store-sku-door-panel-color {
@@ -1734,13 +1731,27 @@ body.nebras-mobile-bar-active.admin-session .nebras-mobile-commerce-bar {
     image-rendering: auto;
 }
 
-.nebras-store-sku-media--alu-photo img {
+.nebras-store-sku-media--alu-photo img,
+.nebras-store-sku-img--alu {
     width: 100%;
     height: 100%;
     max-height: 220px;
     object-fit: cover;
     object-position: center center;
     border-radius: 10px;
+    transition: filter 0.38s ease, transform 0.35s ease;
+    image-rendering: auto;
+}
+
+.nebras-store-roll-picker--alu-finish {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(21, 94, 148, 0.12);
+}
+
+.nebras-store-roll-picker--alu-finish .nebras-store-roll-swatch-fallback {
+    border-radius: 50%;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
 }
 
 .variant-price--alu-size {
