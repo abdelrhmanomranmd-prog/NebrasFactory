@@ -1659,7 +1659,7 @@ body.nebras-mobile-bar-active.admin-session .nebras-mobile-commerce-bar {
     content: none !important;
 }
 
-/* صور الكتالوج — الرولّة تُخبز في Canvas فقط · بدون طبقات CSS أو panel overlay */
+/* صور الكتالوج — الرولّة تُخبز في Canvas · fallback CSS عند الفشل */
 .nebras-store-sku-door-stack--photo::after,
 .nebras-store-sku-door-stack--photo::before,
 .nebras-store-sku-door-stack--photo.has-door-roll-tint::after,
@@ -1669,6 +1669,18 @@ body.nebras-mobile-bar-active.admin-session .nebras-mobile-commerce-bar {
     content: none !important;
     opacity: 0 !important;
     visibility: hidden !important;
+}
+
+.nebras-store-sku-door-stack--photo.has-roll-css-fallback .nebras-store-sku-door-panel-color {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+}
+
+.nebras-store-sku-door-stack--photo.has-roll-css-fallback::after,
+.nebras-store-sku-door-stack--photo.has-roll-css-fallback::before {
+    display: none !important;
+    content: none !important;
 }
 
 .nebras-store-sku-door-panel-color {
