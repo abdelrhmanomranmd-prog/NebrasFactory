@@ -5,9 +5,9 @@
 (function(global) {
     'use strict';
 
-    const PROFILE_2026_SEED_VERSION = 12;
+    const PROFILE_2026_SEED_VERSION = 13;
     const PROFILE_STORAGE_KEY = 'nebrasProfile2026SeedVersion';
-    const SHOWROOM_CATALOG_VERSION = 14;
+    const SHOWROOM_CATALOG_VERSION = 15;
     const SHOWROOM_CATALOG_STORAGE_KEY = 'nebrasShowroomCatalogVersion';
 
     function img(folder, n) {
@@ -27,9 +27,13 @@
         return 'images/catalog/wpc-photos/' + name;
     }
 
-    /** صور كتالوج الألومنيوم — قطاعات · شبابيك · أبواب · واجهات · مطابخ */
+    /** صور كتالوج الألومنيوم — by-sku · كل صورة = SKU واحد */
+    function aluSku(file) {
+        return 'images/catalog/aluminum/by-sku/' + file;
+    }
+
     function aluCat(file) {
-        return 'images/catalog/aluminum/' + file;
+        return aluSku(file);
     }
 
     const PROFILE_2026 = {
@@ -216,8 +220,8 @@
             companyAddressEn: 'Qassim · Unaizah · Industrial Zone · Zulfi Road Extension',
             heroBannerImageUrl: 'images/profile-2026/hero-cover.jpg',
             logoUrl: 'images/logo-nebras-mark.png',
-            showroomCatalogVersion: 14,
-            aluminumCatalogVersion: 6
+            showroomCatalogVersion: 15,
+            aluminumCatalogVersion: 7
         }
     };
 
@@ -394,14 +398,20 @@
     ];
 
     const SHOWROOM_ALUMINUM_CATALOG = [
-        [aluCat('alu-profiles-collection.webp'), 'بروفيلات ألومنيوم — تشكيلة', 'Aluminum profiles collection'],
-        [aluCat('alu-profiles-angles.png'), 'زوايا ومقاطع ألومنيوم', 'Aluminum angles & sections'],
-        [aluCat('alu-sheet-acp.png'), 'صفائح ACP للواجهات', 'ACP facade sheets'],
-        [aluCat('alu-window-sliding.png'), 'شبابيك ألومنيوم منزلقة', 'Aluminum sliding windows'],
-        [aluCat('alu-door-factory.jpg'), 'باب زجاج بإطار ألومنيوم — مصنع', 'Factory aluminum-frame glass door'],
-        [aluCat('alu-door-glass.png'), 'باب ألومنيوم — واجهة فيلا', 'Aluminum entry door — villa'],
-        [aluCat('alu-facade-acp.png'), 'كلادينج واجهات ألومنيوم', 'Aluminum facade cladding'],
-        [aluCat('alu-kitchen-modern.png'), 'مطبخ ألومنيوم عصري', 'Modern aluminum kitchen']
+        [aluSku('ALU-PROF-6M.webp'), 'بروفيل ألومنيوم قياسي 6م', 'Standard aluminum profile 6 m'],
+        [aluSku('ALU-PROF-U.png'), 'بروفيل U-channel', 'U-channel aluminum profile'],
+        [aluSku('ALU-PROF-FIN.png'), 'قطاع تشطيب ألومنيوم', 'Aluminum finishing trim profile'],
+        [aluSku('ALU-ANG-COL.png'), 'زوايا ومقاطع ألومنيوم', 'Aluminum angles & sections'],
+        [aluSku('ALU-SHT-122.png'), 'صفائح ACP 122×244 سم', 'ACP sheets 122×244 cm'],
+        [aluSku('ALU-WIN-SCR.png'), 'شبابيك ألومنيوم منزلقة', 'Aluminum sliding windows'],
+        [aluSku('ALU-WIN-PNL.png'), 'لوح شباك هندسي', 'Geometric aluminum window panel'],
+        [aluSku('ALU-DOR-FACT.jpg'), 'باب زجاج بإطار ألومنيوم — مصنع', 'Factory aluminum-frame glass door'],
+        [aluSku('ALU-DOR-GLASS.png'), 'باب ألومنيوم — واجهة فيلا', 'Aluminum villa entry door'],
+        [aluSku('ALU-DOR-SLD.png'), 'باب ألومنيوم منزلق', 'Aluminum sliding patio door'],
+        [aluSku('ALU-FAC-CLAD.png'), 'كلادينج واجهات ACP', 'ACP facade cladding'],
+        [aluSku('ALU-FAC-REL.png'), 'واجهة بارزة 3D', 'Raised 3D facade cladding'],
+        [aluSku('ALU-KIT-SYS.png'), 'نظام مطبخ ألومنيوم', 'Aluminum kitchen system'],
+        [aluSku('ALU-KIT-FRT.png'), 'واجهات مطابخ ألومنيوم', 'Aluminum kitchen cabinet fronts']
     ];
 
     const SHOWROOM_CNC_CATALOG = [
@@ -620,7 +630,7 @@
             if (!it) return true;
             const url = String(it.imageUrl || '');
             if (!url) return true;
-            if (url.indexOf('images/catalog/aluminum/') === 0) return false;
+            if (url.indexOf('images/catalog/aluminum/by-sku/') === 0) return false;
             return true;
         });
     }
