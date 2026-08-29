@@ -1,4 +1,4 @@
-/* ═══ نبراس hrws301 — كحلي + أبيض · لمسات فنية · متجر أبواب ═══ */
+/* ═══ نبراس hrws302 — كحلي + أبيض · لمسات فنية · متجر أبواب ═══ */
 
 :root {
     --nb-pattern-navy: rgba(13, 40, 64, 0.045);
@@ -672,7 +672,7 @@ body.admin-session #admin-dashboard.show > *:not(.celebration-deco-layer) {
     }
 }
 
-/* ═══ hrws301 — عوالم المتجر الداخلية ═══ */
+/* ═══ hrws302 — عوالم المتجر الداخلية ═══ */
 .nebras-store-worlds-nav {
     margin: 0 0 20px;
     padding: 16px 18px;
@@ -755,7 +755,7 @@ body.admin-session #admin-dashboard.show > *:not(.celebration-deco-layer) {
     color: #fff;
 }
 
-/* ═══ hrws301 — hero معرض نبراس ═══ */
+/* ═══ hrws302 — hero معرض نبراس ═══ */
 .showroom-hub-hero {
     display: grid;
     grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);

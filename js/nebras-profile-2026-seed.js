@@ -5,9 +5,9 @@
 (function(global) {
     'use strict';
 
-    const PROFILE_2026_SEED_VERSION = 13;
+    const PROFILE_2026_SEED_VERSION = 14;
     const PROFILE_STORAGE_KEY = 'nebrasProfile2026SeedVersion';
-    const SHOWROOM_CATALOG_VERSION = 15;
+    const SHOWROOM_CATALOG_VERSION = 16;
     const SHOWROOM_CATALOG_STORAGE_KEY = 'nebrasShowroomCatalogVersion';
 
     function img(folder, n) {
@@ -220,8 +220,8 @@
             companyAddressEn: 'Qassim · Unaizah · Industrial Zone · Zulfi Road Extension',
             heroBannerImageUrl: 'images/profile-2026/hero-cover.jpg',
             logoUrl: 'images/logo-nebras-mark.png',
-            showroomCatalogVersion: 15,
-            aluminumCatalogVersion: 7
+            showroomCatalogVersion: 16,
+            aluminumCatalogVersion: 8
         }
     };
 
@@ -400,18 +400,23 @@
     const SHOWROOM_ALUMINUM_CATALOG = [
         [aluSku('ALU-PROF-6M.webp'), 'بروفيل ألومنيوم قياسي 6م', 'Standard aluminum profile 6 m'],
         [aluSku('ALU-PROF-U.png'), 'بروفيل U-channel', 'U-channel aluminum profile'],
+        [aluSku('ALU-FRM-DOR.png'), 'إطار ألومنيوم للأبواب', 'Aluminum door frame profile'],
         [aluSku('ALU-PROF-FIN.png'), 'قطاع تشطيب ألومنيوم', 'Aluminum finishing trim profile'],
+        [aluSku('ALU-PROF-TSL.png'), 'بروفيل T-slot', 'T-slot aluminum profile'],
         [aluSku('ALU-ANG-COL.png'), 'زوايا ومقاطع ألومنيوم', 'Aluminum angles & sections'],
         [aluSku('ALU-SHT-122.png'), 'صفائح ACP 122×244 سم', 'ACP sheets 122×244 cm'],
         [aluSku('ALU-WIN-SCR.png'), 'شبابيك ألومنيوم منزلقة', 'Aluminum sliding windows'],
-        [aluSku('ALU-WIN-PNL.png'), 'لوح شباك هندسي', 'Geometric aluminum window panel'],
-        [aluSku('ALU-DOR-FACT.jpg'), 'باب زجاج بإطار ألومنيوم — مصنع', 'Factory aluminum-frame glass door'],
+        [aluSku('ALU-WIN-CASE.png'), 'شباك ألومنيوم قلاب', 'Aluminum casement window'],
         [aluSku('ALU-DOR-GLASS.png'), 'باب ألومنيوم — واجهة فيلا', 'Aluminum villa entry door'],
+        [aluSku('ALU-DOR-DBL.png'), 'باب ألومنيوم مزدوج', 'Aluminum double door'],
         [aluSku('ALU-DOR-SLD.png'), 'باب ألومنيوم منزلق', 'Aluminum sliding patio door'],
         [aluSku('ALU-FAC-CLAD.png'), 'كلادينج واجهات ACP', 'ACP facade cladding'],
-        [aluSku('ALU-FAC-REL.png'), 'واجهة بارزة 3D', 'Raised 3D facade cladding'],
+        [aluSku('ALU-FAC-CW.png'), 'واجهة Curtain Wall', 'Curtain wall facade'],
         [aluSku('ALU-KIT-SYS.png'), 'نظام مطبخ ألومنيوم', 'Aluminum kitchen system'],
-        [aluSku('ALU-KIT-FRT.png'), 'واجهات مطابخ ألومنيوم', 'Aluminum kitchen cabinet fronts']
+        [aluSku('ALU-KIT-ISL.png'), 'مطبخ ألومنيوم بجزيرة', 'Aluminum kitchen with island'],
+        [aluSku('ALU-ACC-SET.png'), 'إكسسوارات أبواب وشبابيك', 'Door & window hardware set'],
+        [aluSku('ALU-ACC-ROLLER.png'), 'رولات سحاب ألومنيوم', 'Aluminum sliding rollers'],
+        [aluSku('ALU-ACC-GASKET.png'), 'جوانات مطاط EPDM', 'EPDM gasket seals']
     ];
 
     const SHOWROOM_CNC_CATALOG = [
