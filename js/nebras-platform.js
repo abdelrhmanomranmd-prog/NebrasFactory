@@ -971,7 +971,7 @@
         }
 
         const DOOR_PHOTO_PRESET_ROOT = 'images/doors/presets/';
-        const DOOR_PHOTO_PRESET_CACHE = '304';
+        const DOOR_PHOTO_PRESET_CACHE = '305';
         const DOOR_PHOTO_COMPOSE_MAX_DIM = 1200;
         /** صور أبواب المصنع الحقيقية في المعاينة — SVG احتياطي عند غياب الصورة */
         const DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS = true;
@@ -1096,8 +1096,9 @@
             } else {
                 stage.style.removeProperty('--door-roll-texture-url');
             }
-            applyDoorRoomHarmony(stage, hex);
             const isPhotoPreset = stage.classList.contains('wpc-door-stage--photo-preset');
+            if (!isPhotoPreset) applyDoorRoomHarmony(stage, hex);
+            else stage.classList.remove('wpc-door-stage--room-harmony');
             if (!isPhotoPreset) {
                 applyDoorRollTintToElements(stage, rollState);
             }
@@ -1414,7 +1415,25 @@
             'sliding|slide-2|outer-flat|plain': DOOR_PHOTO_PRESET_ROOT + 'sliding/slide-2/outer-flat-transom.png',
             'sliding|slide-2|outer-curve|plain': DOOR_PHOTO_PRESET_ROOT + 'sliding/slide-2/outer-curve-transom.png',
             'sliding|slide-2|outer-flat|transom': DOOR_PHOTO_PRESET_ROOT + 'sliding/slide-2/outer-flat-plain.png',
-            'sliding|slide-2|outer-curve|transom': DOOR_PHOTO_PRESET_ROOT + 'sliding/slide-2/outer-curve-plain.png'
+            'sliding|slide-2|outer-curve|transom': DOOR_PHOTO_PRESET_ROOT + 'sliding/slide-2/outer-curve-plain.png',
+            'edge-band|edge-steel|outer-flat|plain': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-steel/outer-flat-plain.png',
+            'edge-band|edge-steel|outer-curve|plain': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-steel/outer-curve-plain.png',
+            'edge-band|edge-classic|outer-flat|plain': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-classic/outer-flat-plain.png',
+            'edge-band|edge-classic|outer-curve|plain': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-classic/outer-curve-plain.png',
+            'edge-band|edge-glass|outer-flat|plain': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-glass/outer-flat-plain.png',
+            'edge-band|edge-glass|outer-curve|plain': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-glass/outer-curve-plain.png',
+            'edge-band|edge-groove|outer-flat|plain': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-groove/outer-flat-plain.png',
+            'edge-band|edge-groove|outer-curve|plain': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-groove/outer-curve-plain.png',
+            'edge-band|edge-lq|outer-flat|plain': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-lq/outer-flat-plain.png',
+            'edge-band|edge-lq|outer-curve|plain': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-lq/outer-curve-plain.png',
+            'edge-band|edge-glass-strip|outer-flat|plain': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-glass-strip/outer-flat-plain.png',
+            'edge-band|edge-glass-strip|outer-curve|plain': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-glass-strip/outer-curve-plain.png',
+            'lib|lib-flat|outer-flat|plain': DOOR_PHOTO_PRESET_ROOT + 'lib/lib-flat/outer-flat-plain.png',
+            'lib|lib-flat|outer-curve|plain': DOOR_PHOTO_PRESET_ROOT + 'lib/lib-flat/outer-curve-plain.png',
+            'lib|lib-steel|outer-flat|plain': DOOR_PHOTO_PRESET_ROOT + 'lib/lib-steel/outer-flat-plain.png',
+            'lib|lib-steel|outer-curve|plain': DOOR_PHOTO_PRESET_ROOT + 'lib/lib-steel/outer-curve-plain.png',
+            'lib|lib-glass|outer-flat|plain': DOOR_PHOTO_PRESET_ROOT + 'lib/lib-glass/outer-flat-plain.png',
+            'lib|lib-glass|outer-curve|plain': DOOR_PHOTO_PRESET_ROOT + 'lib/lib-glass/outer-curve-plain.png'
         };
 
         const DOOR_PHOTO_TRANSOM_CAP = {
@@ -1641,7 +1660,7 @@
 
         const DEFAULT_DOOR_DESIGNER = {
             enabled: true,
-            dataSeed: 'v27-studio-live-photo-presets',
+            dataSeed: 'v28-studio-live-more-shapes',
             previewModelEnabled: true,
             useCompositorPreview: false,
             use3dPreview: false,
@@ -1658,15 +1677,25 @@
             types: [
                 { id: 'edge-band', labelAr: 'باب إيدج باند فلات', labelEn: 'Edge-band flat door', labelZh: '封边平板门', icon: 'modern' },
                 { id: 'u-channel', labelAr: 'يو شانيل', labelEn: 'U-channel door', labelZh: 'U槽门', icon: 'classic' },
+                { id: 'lib', labelAr: 'باب Lib', labelEn: 'Lib door', labelZh: 'Lib门', icon: 'classic' },
                 { id: 'sliding', labelAr: 'باب سحاب', labelEn: 'Sliding door', labelZh: '推拉门', icon: 'sliding' }
             ],
             models: [
                 { id: 'edge-1', typeId: 'edge-band', labelAr: 'دلفة واحدة', labelEn: 'Single leaf', labelZh: '单扇', config: { mechanism: 'hinged', leafCount: '1', surface: 'flat' } },
                 { id: 'edge-2', typeId: 'edge-band', labelAr: 'دلفتين', labelEn: 'Double leaves', labelZh: '双扇', config: { mechanism: 'hinged', leafCount: '2', surface: 'flat' } },
+                { id: 'edge-steel', typeId: 'edge-band', labelAr: 'فلات استانلس', labelEn: 'Flat stainless decor', labelZh: '不锈钢饰面', config: { mechanism: 'hinged', leafCount: '1', surface: 'flat' } },
+                { id: 'edge-classic', typeId: 'edge-band', labelAr: 'فلات كلاسيك', labelEn: 'Flat classic decor', labelZh: '经典饰面', config: { mechanism: 'hinged', leafCount: '1', surface: 'flat' } },
+                { id: 'edge-glass', typeId: 'edge-band', labelAr: 'فلات زجاج', labelEn: 'Flat glass decor', labelZh: '玻璃饰面', config: { mechanism: 'hinged', leafCount: '1', surface: 'flat', glassLayout: 'strip-tall' } },
+                { id: 'edge-groove', typeId: 'edge-band', labelAr: 'فلات شرائح', labelEn: 'Flat grooved', labelZh: '竖槽平板', config: { mechanism: 'hinged', leafCount: '1', surface: 'flat' } },
+                { id: 'edge-lq', typeId: 'edge-band', labelAr: 'ضلفة وربع', labelEn: 'Leaf and quarter', labelZh: '一门一带', config: { mechanism: 'hinged', leafCount: '2', surface: 'flat' } },
+                { id: 'edge-glass-strip', typeId: 'edge-band', labelAr: 'فلات شريط زجاج', labelEn: 'Flat glass strip', labelZh: '玻璃条', config: { mechanism: 'hinged', leafCount: '1', surface: 'flat', glassLayout: 'strip-tall' } },
                 { id: 'u-plain', typeId: 'u-channel', labelAr: 'يو شانيل سادة', labelEn: 'Plain U-channel', labelZh: '素面U槽', config: { mechanism: 'hinged', leafCount: '1', surface: 'u-plain' } },
                 { id: 'u-slats', typeId: 'u-channel', labelAr: 'يو شانيل شرائح', labelEn: 'Slatted U-channel', labelZh: '条板U槽', config: { mechanism: 'hinged', leafCount: '1', surface: 'u-slats' } },
                 { id: 'u-classic', typeId: 'u-channel', labelAr: 'يو شانيل كلاسيك', labelEn: 'Classic U-channel', labelZh: '经典U槽', config: { mechanism: 'hinged', leafCount: '1', surface: 'u-classic' } },
                 { id: 'u-glass', typeId: 'u-channel', labelAr: 'يو شانيل زجاج', labelEn: 'Glass U-channel', labelZh: '玻璃U槽', config: { mechanism: 'hinged', leafCount: '1', surface: 'u-glass', glassLayout: 'strips-5' } },
+                { id: 'lib-flat', typeId: 'lib', labelAr: 'Lib سادة', labelEn: 'Plain Lib', labelZh: '素面Lib', config: { mechanism: 'hinged', leafCount: '1', surface: 'flat' } },
+                { id: 'lib-steel', typeId: 'lib', labelAr: 'Lib استانلس', labelEn: 'Lib stainless', labelZh: '不锈钢Lib', config: { mechanism: 'hinged', leafCount: '1', surface: 'flat' } },
+                { id: 'lib-glass', typeId: 'lib', labelAr: 'Lib زجاج', labelEn: 'Lib glass', labelZh: '玻璃Lib', config: { mechanism: 'hinged', leafCount: '1', surface: 'flat', glassLayout: 'strip-tall' } },
                 { id: 'slide-1', typeId: 'sliding', labelAr: 'سحاب دلفة واحدة', labelEn: 'Single sliding leaf', labelZh: '单扇推拉', config: { mechanism: 'sliding', leafCount: '1', surface: 'flat' } },
                 { id: 'slide-2', typeId: 'sliding', labelAr: 'سحاب دلفتين', labelEn: 'Double sliding leaves', labelZh: '双扇推拉', config: { mechanism: 'sliding', leafCount: '2', surface: 'flat' } }
             ],
@@ -1799,27 +1828,16 @@
                 tt._nebrasTurntableDispose();
                 tt._nebrasTurntableDispose = null;
             }
-            let rotY = parseFloat(tt.dataset.turntableRotY || '-14') || -14;
-            // قوس أمامي فقط — الباب المسطّح لا يظهر كورقة رفيعة عند 90°
-            const ROT_MIN = -58;
-            const ROT_MAX = 58;
-            let spinDir = 1;
+            let rotY = parseFloat(tt.dataset.turntableRotY || '-12') || -12;
             let dragging = false;
             let lastX = 0;
-            const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
             const isMobileView = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
-            let autoSpin = !reduceMotion && !isMobileView;
-            let rafId = 0;
-            let visible = true;
-            if (typeof IntersectionObserver !== 'undefined') {
-                const visObs = new IntersectionObserver(function(entries) {
-                    visible = !!(entries[0] && entries[0].isIntersecting);
-                }, { threshold: 0.08 });
-                visObs.observe(tt);
-                tt._nebrasVisObs = visObs;
+            function wrapRot(deg) {
+                const n = ((deg + 180) % 360 + 360) % 360 - 180;
+                return n;
             }
             function applyRot() {
-                rotY = Math.max(ROT_MIN, Math.min(ROT_MAX, rotY));
+                rotY = wrapRot(rotY);
                 const deg = rotY + 'deg';
                 tt.style.setProperty('--turntable-rotate-y', deg);
                 stage.style.setProperty('--turntable-rotate-y', deg);
@@ -1833,18 +1851,13 @@
                 tt._nebrasDragStartX = e.clientX;
                 tt._nebrasDragStartY = e.clientY;
                 lastX = e.clientX;
-                autoSpin = false;
-                stopSpinLoop();
             }
             function onUp(e) {
                 dragging = false;
                 tt._nebrasDragPending = false;
-                autoSpin = !reduceMotion && !isMobileView;
                 if (tt.releasePointerCapture && e && e.pointerId !== undefined) {
                     try { tt.releasePointerCapture(e.pointerId); } catch (err) { /* ignore */ }
                 }
-                if (autoSpin && visible) startSpinLoop();
-                else stopSpinLoop();
             }
             function onMove(e) {
                 if (!tt._nebrasDragPending && !dragging) return;
@@ -1864,43 +1877,16 @@
                     }
                 }
                 if (!dragging) return;
-                rotY += (e.clientX - lastX) * 0.55;
+                rotY += (e.clientX - lastX) * 0.72;
                 lastX = e.clientX;
                 applyRot();
-            }
-            function startSpinLoop() {
-                if (rafId) return;
-                function tick() {
-                    if (autoSpin && !dragging && visible) {
-                        rotY += 0.3 * spinDir;
-                        if (rotY >= ROT_MAX - 1) spinDir = -1;
-                        if (rotY <= ROT_MIN + 1) spinDir = 1;
-                        applyRot();
-                        rafId = requestAnimationFrame(tick);
-                    } else {
-                        rafId = 0;
-                    }
-                }
-                rafId = requestAnimationFrame(tick);
-            }
-            function stopSpinLoop() {
-                if (rafId) {
-                    cancelAnimationFrame(rafId);
-                    rafId = 0;
-                }
             }
             tt.addEventListener('pointerdown', onDown);
             tt.addEventListener('pointerup', onUp);
             tt.addEventListener('pointercancel', onUp);
             tt.addEventListener('pointermove', onMove);
             tt.addEventListener('lostpointercapture', onUp);
-            if (autoSpin) startSpinLoop();
             tt._nebrasTurntableDispose = function() {
-                stopSpinLoop();
-                if (tt._nebrasVisObs) {
-                    tt._nebrasVisObs.disconnect();
-                    tt._nebrasVisObs = null;
-                }
                 tt.removeEventListener('pointerdown', onDown);
                 tt.removeEventListener('pointerup', onUp);
                 tt.removeEventListener('pointercancel', onUp);
@@ -3846,7 +3832,7 @@
         }
 
         function buildStoreAluminumWelcomeHeroHtml(product, lang, ui) {
-            const photos = STORE_ALUMINUM_REAL_PHOTOS.slice(0, 8);
+            const photos = STORE_ALUMINUM_REAL_PHOTOS.slice(0, 12);
             const title = ui.storeAluWelcomeTitle || 'عالم ألومنيوم نبراس — جودة المصنع السعودي';
             const subtitle = ui.storeAluWelcomeSubtitle || 'بروفيلات · صفائح · شبابيك · واجهات · مطابخ · تخصيم — مقاسات حسب الطلب داخل المنصة.';
             const eyebrow = ui.storeAluWelcomeEyebrow || 'ألومنيوم — مصنع نبراس';
@@ -4465,8 +4451,8 @@
             return formatVariantPriceBlock(variant ? variant.price : 0, lang);
         }
 
-        /** أصناف الألومنيوم — صورة SKU واحدة لكل منتج · by-sku · v8 يزيل الأصناف القديمة الخاطئة */
-        const ALUMINUM_CATALOG_VERSION = 8;
+        /** أصناف الألومنيوم — صورة SKU واحدة لكل منتج · by-sku · v9 معرض أبواب ومطابخ */
+        const ALUMINUM_CATALOG_VERSION = 9;
         const ALU_CATALOG_ROOT = 'images/catalog/aluminum/';
         function aluSkuImg(file) { return ALU_CATALOG_ROOT + 'by-sku/' + file; }
         const ALUMINUM_CATALOG_PHOTOS = {
@@ -4493,6 +4479,17 @@
             kitchen1: aluSkuImg('ALU-KIT-SYS.png'),
             kitchen2: aluSkuImg('ALU-KIT-FRT.png'),
             kitchen3: aluSkuImg('ALU-KIT-ISL.png'),
+            doorVilBlk: aluSkuImg('ALU-DOR-VIL-BLK.png'),
+            doorVilBrz: aluSkuImg('ALU-DOR-VIL-BRZ.png'),
+            doorPiv: aluSkuImg('ALU-DOR-PIV.png'),
+            doorDblGld: aluSkuImg('ALU-DOR-DBL-GLD.png'),
+            doorSldBlk: aluSkuImg('ALU-DOR-SLD-BLK.png'),
+            doorEntWod: aluSkuImg('ALU-DOR-ENT-WOD.png'),
+            kitchenWht: aluSkuImg('ALU-KIT-WHT.png'),
+            kitchenBlk: aluSkuImg('ALU-KIT-BLK.png'),
+            kitchenWod: aluSkuImg('ALU-KIT-WOD.png'),
+            kitchenLsh: aluSkuImg('ALU-KIT-LSH.png'),
+            kitchenGls: aluSkuImg('ALU-KIT-GLS.png'),
             accSet: aluSkuImg('ALU-ACC-SET.png'),
             accRoller: aluSkuImg('ALU-ACC-ROLLER.png'),
             accGasket: aluSkuImg('ALU-ACC-GASKET.png'),
@@ -4504,13 +4501,21 @@
             ALUMINUM_CATALOG_PHOTOS.window1,
             ALUMINUM_CATALOG_PHOTOS.window3,
             ALUMINUM_CATALOG_PHOTOS.door1,
+            ALUMINUM_CATALOG_PHOTOS.doorVilBlk,
+            ALUMINUM_CATALOG_PHOTOS.doorVilBrz,
+            ALUMINUM_CATALOG_PHOTOS.doorPiv,
+            ALUMINUM_CATALOG_PHOTOS.doorDblGld,
+            ALUMINUM_CATALOG_PHOTOS.doorSldBlk,
+            ALUMINUM_CATALOG_PHOTOS.doorEntWod,
             ALUMINUM_CATALOG_PHOTOS.door3,
             ALUMINUM_CATALOG_PHOTOS.door4,
             ALUMINUM_CATALOG_PHOTOS.facade1,
-            ALUMINUM_CATALOG_PHOTOS.facade3,
-            ALUMINUM_CATALOG_PHOTOS.kitchen1,
-            ALUMINUM_CATALOG_PHOTOS.kitchen3,
-            ALUMINUM_CATALOG_PHOTOS.accSet
+            ALUMINUM_CATALOG_PHOTOS.kitchenWht,
+            ALUMINUM_CATALOG_PHOTOS.kitchenBlk,
+            ALUMINUM_CATALOG_PHOTOS.kitchenWod,
+            ALUMINUM_CATALOG_PHOTOS.kitchenLsh,
+            ALUMINUM_CATALOG_PHOTOS.kitchenGls,
+            ALUMINUM_CATALOG_PHOTOS.kitchen3
         ];
 
         /** ألوان تشطيب الألومنيوم — معاينة حية على الأبواب · الشبابيك · المطابخ · الواجهات */
@@ -4703,12 +4708,23 @@
             { id: 'alu-door-fact', sku: 'ALU-DOR-FACT', subCategoryId: 'alu-doors', image: ALUMINUM_CATALOG_PHOTOS.door2, typeAr: 'باب زجاج بإطار ألومنيوم', typeEn: 'Aluminum-frame glass door', sizeAr: 'حسب الطلب', sizeEn: 'On request', colorAr: 'فضي', colorEn: 'Silver', price: 0, inStock: true },
             { id: 'alu-door-sld', sku: 'ALU-DOR-SLD', subCategoryId: 'alu-doors', image: ALUMINUM_CATALOG_PHOTOS.door3, typeAr: 'باب ألومنيوم منزلق', typeEn: 'Aluminum sliding door', sizeAr: 'حسب المقاس', sizeEn: 'Custom size', colorAr: 'فضي', colorEn: 'Silver', price: 0, inStock: true },
             { id: 'alu-door-dbl', sku: 'ALU-DOR-DBL', subCategoryId: 'alu-doors', image: ALUMINUM_CATALOG_PHOTOS.door4, typeAr: 'باب ألومنيوم مزدوج', typeEn: 'Aluminum double door', sizeAr: 'حسب المقاس', sizeEn: 'Custom size', colorAr: 'فضي', colorEn: 'Silver', price: 0, inStock: true },
+            { id: 'alu-door-vil-blk', sku: 'ALU-DOR-VIL-BLK', subCategoryId: 'alu-doors', image: ALUMINUM_CATALOG_PHOTOS.doorVilBlk, typeAr: 'باب فيلا ألومنيوم — أسود', typeEn: 'Villa aluminum door — black', sizeAr: 'حسب المقاس', sizeEn: 'Custom size', colorAr: 'أسود', colorEn: 'Black', price: 0, inStock: true },
+            { id: 'alu-door-vil-brz', sku: 'ALU-DOR-VIL-BRZ', subCategoryId: 'alu-doors', image: ALUMINUM_CATALOG_PHOTOS.doorVilBrz, typeAr: 'باب فيلا ألومنيوم — برونزي', typeEn: 'Villa aluminum door — bronze', sizeAr: 'حسب المقاس', sizeEn: 'Custom size', colorAr: 'برونزي', colorEn: 'Bronze', price: 0, inStock: true },
+            { id: 'alu-door-piv', sku: 'ALU-DOR-PIV', subCategoryId: 'alu-doors', image: ALUMINUM_CATALOG_PHOTOS.doorPiv, typeAr: 'باب بيفوت ألومنيوم', typeEn: 'Aluminum pivot door', sizeAr: 'حسب المقاس', sizeEn: 'Custom size', colorAr: 'شampagne', colorEn: 'Champagne', price: 0, inStock: true },
+            { id: 'alu-door-dbl-gld', sku: 'ALU-DOR-DBL-GLD', subCategoryId: 'alu-doors', image: ALUMINUM_CATALOG_PHOTOS.doorDblGld, typeAr: 'باب مزدوج ألومنيوم — ذهبي', typeEn: 'Aluminum double door — gold', sizeAr: 'حسب المقاس', sizeEn: 'Custom size', colorAr: 'ذهبي', colorEn: 'Gold', price: 0, inStock: true },
+            { id: 'alu-door-sld-blk', sku: 'ALU-DOR-SLD-BLK', subCategoryId: 'alu-doors', image: ALUMINUM_CATALOG_PHOTOS.doorSldBlk, typeAr: 'باب منزلق ألومنيوم — أسود', typeEn: 'Aluminum sliding door — black', sizeAr: 'حسب المقاس', sizeEn: 'Custom size', colorAr: 'أسود', colorEn: 'Black', price: 0, inStock: true },
+            { id: 'alu-door-ent-wod', sku: 'ALU-DOR-ENT-WOD', subCategoryId: 'alu-doors', image: ALUMINUM_CATALOG_PHOTOS.doorEntWod, typeAr: 'باب دخول ألومنيوم خشبي', typeEn: 'Wood-effect aluminum entry door', sizeAr: 'حسب المقاس', sizeEn: 'Custom size', colorAr: 'خشبي', colorEn: 'Wood', price: 0, inStock: true },
             { id: 'alu-fac-clad', sku: 'ALU-FAC-CLAD', subCategoryId: 'alu-facades', image: ALUMINUM_CATALOG_PHOTOS.facade1, typeAr: 'كلادينج واجهات', typeEn: 'Facade cladding', sizeAr: 'حسب المشروع', sizeEn: 'Per project', colorAr: 'متعدد', colorEn: 'Various', price: 0, inStock: true },
             { id: 'alu-fac-relief', sku: 'ALU-FAC-REL', subCategoryId: 'alu-facades', image: ALUMINUM_CATALOG_PHOTOS.facade2, typeAr: 'واجهة بارزة', typeEn: 'Raised facade panel', sizeAr: 'حسب المشروع', sizeEn: 'Per project', colorAr: 'متعدد', colorEn: 'Various', price: 0, inStock: true },
             { id: 'alu-fac-cw', sku: 'ALU-FAC-CW', subCategoryId: 'alu-facades', image: ALUMINUM_CATALOG_PHOTOS.facade3, typeAr: 'واجهة Curtain Wall', typeEn: 'Curtain wall facade', sizeAr: 'حسب المشروع', sizeEn: 'Per project', colorAr: 'فضي / زجاج', colorEn: 'Silver / glass', price: 0, inStock: true },
             { id: 'alu-kitchen-sys', sku: 'ALU-KIT-SYS', subCategoryId: 'alu-kitchens', image: ALUMINUM_CATALOG_PHOTOS.kitchen1, typeAr: 'نظام مطبخ ألومنيوم', typeEn: 'Aluminum kitchen system', sizeAr: 'حسب التصميم', sizeEn: 'Per design', colorAr: 'متعدد', colorEn: 'Various', price: 0, inStock: true },
             { id: 'alu-kitchen-front', sku: 'ALU-KIT-FRT', subCategoryId: 'alu-kitchens', image: ALUMINUM_CATALOG_PHOTOS.kitchen2, typeAr: 'واجهات مطابخ ألومنيوم', typeEn: 'Aluminum kitchen fronts', sizeAr: 'حسب المقاس', sizeEn: 'Custom size', colorAr: 'فضي / أبيض', colorEn: 'Silver / white', price: 0, inStock: true },
             { id: 'alu-kitchen-isl', sku: 'ALU-KIT-ISL', subCategoryId: 'alu-kitchens', image: ALUMINUM_CATALOG_PHOTOS.kitchen3, typeAr: 'مطبخ ألومنيوم بجزيرة', typeEn: 'Aluminum kitchen with island', sizeAr: 'حسب التصميم', sizeEn: 'Per design', colorAr: 'متعدد', colorEn: 'Various', price: 0, inStock: true },
+            { id: 'alu-kitchen-wht', sku: 'ALU-KIT-WHT', subCategoryId: 'alu-kitchens', image: ALUMINUM_CATALOG_PHOTOS.kitchenWht, typeAr: 'مطبخ ألومنيوم أبيض بدون مقابض', typeEn: 'Handleless white aluminum kitchen', sizeAr: 'حسب التصميم', sizeEn: 'Per design', colorAr: 'أبيض', colorEn: 'White', price: 0, inStock: true },
+            { id: 'alu-kitchen-blk', sku: 'ALU-KIT-BLK', subCategoryId: 'alu-kitchens', image: ALUMINUM_CATALOG_PHOTOS.kitchenBlk, typeAr: 'مطبخ ألومنيوم أسود بجزيرة', typeEn: 'Black aluminum kitchen with island', sizeAr: 'حسب التصميم', sizeEn: 'Per design', colorAr: 'أسود', colorEn: 'Black', price: 0, inStock: true },
+            { id: 'alu-kitchen-wod', sku: 'ALU-KIT-WOD', subCategoryId: 'alu-kitchens', image: ALUMINUM_CATALOG_PHOTOS.kitchenWod, typeAr: 'مطبخ ألومنيوم خشبي', typeEn: 'Wood-effect aluminum kitchen', sizeAr: 'حسب التصميم', sizeEn: 'Per design', colorAr: 'خشبي', colorEn: 'Wood', price: 0, inStock: true },
+            { id: 'alu-kitchen-lsh', sku: 'ALU-KIT-LSH', subCategoryId: 'alu-kitchens', image: ALUMINUM_CATALOG_PHOTOS.kitchenLsh, typeAr: 'مطبخ ألومنيوم شكل L', typeEn: 'L-shape aluminum kitchen', sizeAr: 'حسب التصميم', sizeEn: 'Per design', colorAr: 'شampagne', colorEn: 'Champagne', price: 0, inStock: true },
+            { id: 'alu-kitchen-gls', sku: 'ALU-KIT-GLS', subCategoryId: 'alu-kitchens', image: ALUMINUM_CATALOG_PHOTOS.kitchenGls, typeAr: 'مطبخ ألومنيوم واجهات زجاج', typeEn: 'Glass-front aluminum kitchen', sizeAr: 'حسب التصميم', sizeEn: 'Per design', colorAr: 'فضي / زجاج', colorEn: 'Silver / glass', price: 0, inStock: true },
             { id: 'alu-acc-set', sku: 'ALU-ACC-SET', subCategoryId: 'alu-accessories', image: ALUMINUM_CATALOG_PHOTOS.accSet, typeAr: 'مجموعة إكسسوارات أبواب', typeEn: 'Door hardware set', sizeAr: 'حسب النوع', sizeEn: 'By type', colorAr: 'فضي / أسود', colorEn: 'Silver / black', price: 0, inStock: true },
             { id: 'alu-acc-roller', sku: 'ALU-ACC-ROLLER', subCategoryId: 'alu-accessories', image: ALUMINUM_CATALOG_PHOTOS.accRoller, typeAr: 'رولات سحاب ألومنيوم', typeEn: 'Sliding door rollers', sizeAr: 'حسب المقاس', sizeEn: 'Custom size', colorAr: 'فضي', colorEn: 'Silver', price: 0, inStock: true },
             { id: 'alu-acc-gasket', sku: 'ALU-ACC-GASKET', subCategoryId: 'alu-accessories', image: ALUMINUM_CATALOG_PHOTOS.accGasket, typeAr: 'جوانات مطاط EPDM', typeEn: 'EPDM gasket seals', sizeAr: 'حسب المقطع', sizeEn: 'Per profile', colorAr: 'أسود', colorEn: 'Black', price: 0, inStock: true }
@@ -23159,7 +23175,7 @@
             if (!cfg.previewImageUrl) {
                 cfg.previewImageUrl = cfg.sceneBackgroundUrl || DEFAULT_DOOR_DESIGNER.previewImageUrl;
             }
-            const knownTypeIds = ['edge-band', 'u-channel', 'sliding'];
+            const knownTypeIds = ['edge-band', 'u-channel', 'lib', 'sliding'];
             if (!cfg.types.some(function(t) { return t && knownTypeIds.indexOf(t.id) !== -1; })) {
                 cfg.types = JSON.parse(JSON.stringify(DEFAULT_DOOR_DESIGNER.types));
             }
@@ -23707,7 +23723,7 @@
         }
 
         function buildDoorStudioLiveHtml(leafMask, hintText) {
-            const hint = hintText || 'اسحب للدوران 360° — يدور تلقائياً — +/− للتكبير';
+            const hint = hintText || 'اسحب النموزج لتدويره 360° — لا يتحرك تلقائياً';
             return '<div class="wpc-door-turntable" id="wpc-door-turntable">' +
                 buildDoorDesignerLegacyCanvasHtml('', false, leafMask) +
                 '</div>' +

@@ -5,9 +5,9 @@
 (function(global) {
     'use strict';
 
-    const PROFILE_2026_SEED_VERSION = 14;
+    const PROFILE_2026_SEED_VERSION = 15;
     const PROFILE_STORAGE_KEY = 'nebrasProfile2026SeedVersion';
-    const SHOWROOM_CATALOG_VERSION = 16;
+    const SHOWROOM_CATALOG_VERSION = 17;
     const SHOWROOM_CATALOG_STORAGE_KEY = 'nebrasShowroomCatalogVersion';
 
     function img(folder, n) {
@@ -220,8 +220,8 @@
             companyAddressEn: 'Qassim · Unaizah · Industrial Zone · Zulfi Road Extension',
             heroBannerImageUrl: 'images/profile-2026/hero-cover.jpg',
             logoUrl: 'images/logo-nebras-mark.png',
-            showroomCatalogVersion: 16,
-            aluminumCatalogVersion: 8
+            showroomCatalogVersion: 17,
+            aluminumCatalogVersion: 9
         }
     };
 
@@ -408,12 +408,23 @@
         [aluSku('ALU-WIN-SCR.png'), 'شبابيك ألومنيوم منزلقة', 'Aluminum sliding windows'],
         [aluSku('ALU-WIN-CASE.png'), 'شباك ألومنيوم قلاب', 'Aluminum casement window'],
         [aluSku('ALU-DOR-GLASS.png'), 'باب ألومنيوم — واجهة فيلا', 'Aluminum villa entry door'],
+        [aluSku('ALU-DOR-VIL-BLK.png'), 'باب فيلا ألومنيوم أسود', 'Black aluminum villa door'],
+        [aluSku('ALU-DOR-VIL-BRZ.png'), 'باب فيلا ألومنيوم برونزي', 'Bronze aluminum villa door'],
+        [aluSku('ALU-DOR-PIV.png'), 'باب بيفوت ألومنيوم', 'Aluminum pivot door'],
         [aluSku('ALU-DOR-DBL.png'), 'باب ألومنيوم مزدوج', 'Aluminum double door'],
+        [aluSku('ALU-DOR-DBL-GLD.png'), 'باب مزدوج ألومنيوم ذهبي', 'Gold aluminum double door'],
         [aluSku('ALU-DOR-SLD.png'), 'باب ألومنيوم منزلق', 'Aluminum sliding patio door'],
+        [aluSku('ALU-DOR-SLD-BLK.png'), 'باب منزلق ألومنيوم أسود', 'Black aluminum sliding door'],
+        [aluSku('ALU-DOR-ENT-WOD.png'), 'باب دخول ألومنيوم خشبي', 'Wood-effect aluminum entry'],
         [aluSku('ALU-FAC-CLAD.png'), 'كلادينج واجهات ACP', 'ACP facade cladding'],
         [aluSku('ALU-FAC-CW.png'), 'واجهة Curtain Wall', 'Curtain wall facade'],
         [aluSku('ALU-KIT-SYS.png'), 'نظام مطبخ ألومنيوم', 'Aluminum kitchen system'],
         [aluSku('ALU-KIT-ISL.png'), 'مطبخ ألومنيوم بجزيرة', 'Aluminum kitchen with island'],
+        [aluSku('ALU-KIT-WHT.png'), 'مطبخ ألومنيوم أبيض', 'White aluminum kitchen'],
+        [aluSku('ALU-KIT-BLK.png'), 'مطبخ ألومنيوم أسود', 'Black aluminum kitchen'],
+        [aluSku('ALU-KIT-WOD.png'), 'مطبخ ألومنيوم خشبي', 'Wood-effect aluminum kitchen'],
+        [aluSku('ALU-KIT-LSH.png'), 'مطبخ ألومنيوم شكل L', 'L-shape aluminum kitchen'],
+        [aluSku('ALU-KIT-GLS.png'), 'مطبخ ألومنيوم واجهات زجاج', 'Glass-front aluminum kitchen'],
         [aluSku('ALU-ACC-SET.png'), 'إكسسوارات أبواب وشبابيك', 'Door & window hardware set'],
         [aluSku('ALU-ACC-ROLLER.png'), 'رولات سحاب ألومنيوم', 'Aluminum sliding rollers'],
         [aluSku('ALU-ACC-GASKET.png'), 'جوانات مطاط EPDM', 'EPDM gasket seals']

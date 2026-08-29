@@ -2758,7 +2758,21 @@
 }
 
 .wpc-door-stage--studio-live.wpc-door-stage--photo-preset {
-    background: radial-gradient(ellipse 120% 85% at 50% 12%, #eef1f6 0%, #d8dee8 38%, #bcc5d2 72%, #a8b3c2 100%);
+    background: #eef1f4;
+}
+
+.wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-room-scene,
+.wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-room-ceiling,
+.wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-room-wall,
+.wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-room-window,
+.wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-room-floor,
+.wpc-door-stage--studio-live.wpc-door-stage--photo-preset .wpc-door-room-trim {
+    display: none !important;
+}
+
+.wpc-door-stage--studio-live.wpc-door-stage--photo-preset {
+    border: none;
+    box-shadow: none;
 }
 
 .wpc-door-stage--studio-live .wpc-door-turntable {
@@ -2932,17 +2946,17 @@
     width: auto;
     height: auto;
     object-fit: contain;
-    filter: drop-shadow(0 22px 48px rgba(0, 0, 0, 0.22));
+    filter: none;
     transition: opacity 0.32s ease, filter 0.32s ease;
 }
 
 .wpc-door-photo-preset-stack.has-roll-texture:not(.has-roll-composite-ready) .wpc-door-photo-preset-img {
-    filter: drop-shadow(0 22px 48px rgba(0, 0, 0, 0.22));
+    filter: none;
     opacity: 1;
 }
 
 .wpc-door-photo-preset-img.has-roll-composite {
-    filter: drop-shadow(0 24px 52px rgba(0, 0, 0, 0.24)) contrast(1.02) saturate(1.05);
+    filter: contrast(1.02) saturate(1.05);
 }
 
 .wpc-door-photo-preset-transom-cap.has-roll-texture::after {
@@ -2961,10 +2975,7 @@
 }
 
 .wpc-door-stage--photo-roll-tint .wpc-door-photo-preset-img {
-    filter: drop-shadow(0 22px 48px rgba(0, 0, 0, 0.22))
-        saturate(1.08)
-        contrast(1.03)
-        brightness(0.98);
+    filter: saturate(1.08) contrast(1.03) brightness(0.98);
 }
 
 .wpc-door-stage--photo-preset .wpc-door-keybab-textures,
