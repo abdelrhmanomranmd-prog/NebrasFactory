@@ -971,7 +971,7 @@
         }
 
         const DOOR_PHOTO_PRESET_ROOT = 'images/doors/presets/';
-        const DOOR_PHOTO_PRESET_CACHE = '310';
+        const DOOR_PHOTO_PRESET_CACHE = '311';
         const DOOR_PHOTO_COMPOSE_MAX_DIM = 1200;
         /** صور أبواب المصنع الحقيقية في المعاينة — SVG احتياطي عند غياب الصورة */
         const DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS = true;
@@ -1455,15 +1455,15 @@
             const decor = state.decor || 'plain';
             const transomKey = type + '|' + model + '|' + outer + '|transom';
             const plainKey = type + '|' + model + '|' + outer + '|plain';
-            if (decor === 'transom' && DOOR_PHOTO_PRESET_MAP[transomKey]) {
-                return { url: DOOR_PHOTO_PRESET_MAP[transomKey], mode: 'full', transomCap: '' };
-            }
             if (decor === 'transom' && DOOR_PHOTO_PRESET_MAP[plainKey]) {
                 return {
                     url: DOOR_PHOTO_PRESET_MAP[plainKey],
                     mode: 'live-transom',
                     transomCap: ''
                 };
+            }
+            if (decor === 'transom' && DOOR_PHOTO_PRESET_MAP[transomKey]) {
+                return { url: DOOR_PHOTO_PRESET_MAP[transomKey], mode: 'full', transomCap: '' };
             }
             const key = type + '|' + model + '|' + outer + '|' + decor;
             const direct = DOOR_PHOTO_PRESET_MAP[key];
@@ -1512,9 +1512,11 @@
                 '<div class="wpc-door-live-transom-unit">' +
                     '<div class="wpc-door-live-transom-post wpc-door-live-transom-post--left"></div>' +
                     '<div class="wpc-door-live-transom-mid">' +
-                        '<div class="wpc-door-live-transom-top"></div>' +
-                        '<div class="wpc-door-live-transom-panel"></div>' +
-                        '<div class="wpc-door-live-transom-rail"></div>' +
+                        '<div class="wpc-door-live-transom-panel">' +
+                            '<span class="wpc-door-live-transom-seam"></span>' +
+                            '<span class="wpc-door-live-transom-mark wpc-door-live-transom-mark--a"></span>' +
+                            '<span class="wpc-door-live-transom-mark wpc-door-live-transom-mark--b"></span>' +
+                        '</div>' +
                     '</div>' +
                     '<div class="wpc-door-live-transom-post wpc-door-live-transom-post--right"></div>' +
                 '</div>';
@@ -1535,9 +1537,10 @@
             liveEl.setAttribute('data-door-model', state.model || '');
             liveEl.setAttribute('data-door-outer', state.outerShape || 'outer-flat');
             liveEl.setAttribute('data-door-surface', state.surface || '');
+            liveEl.setAttribute('data-door-leaves', state.isDouble ? '2' : '1');
             liveEl.style.setProperty('--door-face', safe);
-            liveEl.style.setProperty('--door-light', shadeDoorHex(safe, 18));
-            liveEl.style.setProperty('--door-dark', shadeDoorHex(safe, -22));
+            liveEl.style.setProperty('--door-light', shadeDoorHex(safe, 8));
+            liveEl.style.setProperty('--door-dark', shadeDoorHex(safe, -8));
             liveEl.style.setProperty('--door-roll-tint', safe);
             liveEl.style.removeProperty('--live-transom-roll');
             liveEl.style.filter = isRoll ? (typeof buildWpcStoreRollCssFilterForPhoto === 'function' ? buildWpcStoreRollCssFilterForPhoto(safe) : 'none') : 'none';
@@ -23743,9 +23746,11 @@
                     '<div class="wpc-door-live-transom-unit">' +
                         '<div class="wpc-door-live-transom-post wpc-door-live-transom-post--left"></div>' +
                         '<div class="wpc-door-live-transom-mid">' +
-                            '<div class="wpc-door-live-transom-top"></div>' +
-                            '<div class="wpc-door-live-transom-panel"></div>' +
-                            '<div class="wpc-door-live-transom-rail"></div>' +
+                            '<div class="wpc-door-live-transom-panel">' +
+                                '<span class="wpc-door-live-transom-seam"></span>' +
+                                '<span class="wpc-door-live-transom-mark wpc-door-live-transom-mark--a"></span>' +
+                                '<span class="wpc-door-live-transom-mark wpc-door-live-transom-mark--b"></span>' +
+                            '</div>' +
                         '</div>' +
                         '<div class="wpc-door-live-transom-post wpc-door-live-transom-post--right"></div>' +
                     '</div>' +
@@ -29353,7 +29358,9 @@
         /** Three.js + محرك 3D + Compositor — تحميل عند فتح «صمّم بابك» فقط */
         function loadNebrasDoorDesignerEngines() {
             if (nebrasDoorEngineLoadPromise) return nebrasDoorEngineLoadPromise;
-            const ver = (typeof window.NEBRAS_DEPLOY_TAG !== 'undefined' && window.NEBRAS_DEPLOY_TAG) ? window.NEBRAS_DEPLOY_TAG : 'live';
+            const ver = (typeof window.NEBRAS_DEPLOY_TAG !== 'undefined' && window.NEBRAS_DEPLOY_TAG)
+                ? window.NEBRAS_DEPLOY_TAG
+                : ((document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws311');
             nebrasDoorEngineLoadPromise = loadNebrasThreeJs().then(function() {
                 return Promise.all([
                     loadNebrasScriptOnce('js/nebras-door-3d.js?v=' + ver),

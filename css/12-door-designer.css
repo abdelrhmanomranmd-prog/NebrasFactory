@@ -2861,11 +2861,13 @@
 
 .wpc-door-live-transom {
     display: none;
-    width: min(92%, 340px);
-    height: 92px;
-    z-index: 3;
+    width: 54%;
+    max-width: 186px;
+    height: 78px;
+    z-index: 4;
     pointer-events: none;
     flex: 0 0 auto;
+    margin: 0 auto -10px;
 }
 
 .wpc-door-photo-preset-wrap.is-live-transom .wpc-door-live-transom.is-active {
@@ -2877,17 +2879,23 @@
     width: 100%;
     height: 100%;
     overflow: hidden;
-    border-radius: 3px 3px 0 0;
-    box-shadow: 0 8px 18px rgba(13, 40, 64, 0.12);
+    border-radius: 2px 2px 0 0;
+    background: var(--door-face, #b8bcc4);
 }
 
 .wpc-door-live-transom-post {
-    width: 10.6%;
-    background-color: var(--door-dark, #6b7280);
-    background-image: none;
-    box-shadow:
-        inset -2px 0 5px rgba(0, 0, 0, 0.16),
-        inset 2px 0 4px rgba(255, 255, 255, 0.2);
+    width: 11%;
+    background-color: var(--door-face, #b8bcc4);
+    background-image: repeating-linear-gradient(
+        180deg,
+        rgba(255, 255, 255, 0.08) 0 7px,
+        transparent 7px 14px
+    );
+    box-shadow: inset -1px 0 0 rgba(0, 0, 0, 0.12);
+}
+
+.wpc-door-live-transom-post--right {
+    box-shadow: inset 1px 0 0 rgba(0, 0, 0, 0.12);
 }
 
 .wpc-door-live-transom-mid {
@@ -2897,49 +2905,88 @@
     min-width: 0;
 }
 
-.wpc-door-live-transom-top,
-.wpc-door-live-transom-rail {
-    height: 11px;
-    background-color: var(--door-dark, #6b7280);
-    background-image: none;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), inset 0 -1px 0 rgba(0, 0, 0, 0.18);
-}
-
 .wpc-door-live-transom-panel {
+    position: relative;
     flex: 1;
     background-color: var(--door-face, #b8bcc4);
-    background-image: none;
-    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+    background-image: repeating-linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.1) 0 6px,
+        transparent 6px 13px
+    );
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.16),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+}
+
+.wpc-door-live-transom-seam,
+.wpc-door-live-transom-mark {
+    display: none;
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 1px;
+    background: rgba(0, 0, 0, 0.16);
+    pointer-events: none;
+}
+
+.wpc-door-live-transom[data-door-leaves="2"] .wpc-door-live-transom-seam {
+    display: block;
+    left: 50%;
+}
+
+.wpc-door-live-transom[data-door-type="u-channel"] {
+    width: 56%;
 }
 
 .wpc-door-live-transom[data-door-type="u-channel"] .wpc-door-live-transom-post {
-    width: 12.2%;
+    width: 13%;
 }
 
-.wpc-door-live-transom[data-door-type="edge-band"] .wpc-door-live-transom-post,
 .wpc-door-live-transom[data-door-type="lib"] .wpc-door-live-transom-post {
-    width: 9.2%;
+    width: 12%;
+}
+
+.wpc-door-live-transom[data-door-model="edge-2"],
+.wpc-door-live-transom[data-door-model="edge-lq"] {
+    width: 64%;
+    max-width: 220px;
 }
 
 .wpc-door-live-transom[data-door-outer="outer-curve"] .wpc-door-live-transom-unit {
-    border-radius: 16px 16px 0 0;
+    border-radius: 14px 14px 0 0;
+}
+
+.wpc-door-live-transom[data-door-model="lib-flat"] .wpc-door-live-transom-mark,
+.wpc-door-live-transom[data-door-model="lib-steel"] .wpc-door-live-transom-mark,
+.wpc-door-live-transom[data-door-model="u-plain"] .wpc-door-live-transom-mark {
+    display: block;
+}
+
+.wpc-door-live-transom-mark--a { left: 33%; }
+.wpc-door-live-transom-mark--b { left: 66%; }
+
+.wpc-door-live-transom[data-door-model="u-slats"] .wpc-door-live-transom-panel {
+    background-image:
+        repeating-linear-gradient(90deg, transparent 0 18%, rgba(0, 0, 0, 0.12) 18% 20%),
+        repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.08) 0 6px, transparent 6px 13px);
 }
 
 .wpc-door-live-transom[data-door-model="u-classic"] .wpc-door-live-transom-panel {
-    margin: 5px 6px;
-    border-radius: 2px;
-    box-shadow:
-        inset 0 0 0 1px rgba(0, 0, 0, 0.18),
-        inset 0 10px 16px rgba(0, 0, 0, 0.08);
+    margin: 6px 7px;
+    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.14);
 }
 
-.wpc-door-live-transom[data-door-model="u-slats"] .wpc-door-live-transom-panel,
-.wpc-door-live-transom[data-door-model="u-plain"] .wpc-door-live-transom-panel {
-    background-image: repeating-linear-gradient(90deg, transparent 0 21%, rgba(0, 0, 0, 0.1) 21% 23%);
+.wpc-door-live-transom[data-door-model="edge-steel"] .wpc-door-live-transom-mark--a,
+.wpc-door-live-transom[data-door-model="lib-steel"] .wpc-door-live-transom-mark--a {
+    display: block;
+    left: 22%;
+    width: 3px;
+    background: linear-gradient(180deg, #e8edf2 0%, #9aa3ad 48%, #d5dbe2 100%);
 }
 
-.wpc-door-live-transom[data-door-model="u-glass"] .wpc-door-live-transom-panel {
-    box-shadow: inset 0 0 0 2px rgba(13, 40, 64, 0.16);
+.wpc-door-live-transom[data-door-model="lib-steel"] .wpc-door-live-transom-mark--b {
+    display: none;
 }
 
 .wpc-door-photo-preset-wrap.is-live-transom .wpc-door-photo-preset-stack {

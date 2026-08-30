@@ -929,6 +929,7 @@
             const glassPattern = state.glassPattern || 'clear';
             const hardware = state.hardware || 'lever-black';
             const outerShape = state.outerShape || state.frame || 'outer-flat';
+            const model = state.model || '';
 
             const leafMat = makeWpcMaterial(base, map);
             const frameMat = makeWpcMaterial(shadeColor(base, -0.24), map, { roughness: 0.62, mapTint: 0xd4d4d4 });
@@ -974,29 +975,23 @@
             threshold.position.set(0, -halfH - 0.018, 0.01);
             group.add(threshold);
 
-            /* التكسية العلوية MDF — لوحة + قوائم جانبية بنفس خامة الباب */
+            /* التكسية العلوية — نفس صيغة الباب: قوائم استمرار للحلق + لوحة بنفس الخامة */
             if (decor === 'transom' && !isSliding) {
-                const cladH = 0.46;
+                const cladH = 0.42;
                 const cladY = halfH + headH + cladH / 2;
-                const cladW = W + jambW * 2;
                 const postL = new THREE.Mesh(new THREE.BoxGeometry(jambW, cladH, jambD), frameMat);
                 postL.position.set(-halfW - jambW / 2, cladY, 0);
                 postL.castShadow = true;
                 const postR = new THREE.Mesh(new THREE.BoxGeometry(jambW, cladH, jambD), frameMat);
                 postR.position.set(halfW + jambW / 2, cladY, 0);
                 postR.castShadow = true;
-                const headCap = new THREE.Mesh(new THREE.BoxGeometry(cladW, 0.048, jambD), frameMat);
-                headCap.position.set(0, halfH + headH + cladH - 0.024, 0);
-                headCap.castShadow = true;
-                const seam = new THREE.Mesh(new THREE.BoxGeometry(cladW, 0.042, jambD + 0.012), archMat);
-                seam.position.set(0, halfH + headH + 0.02, 0.01);
                 const panel = new THREE.Mesh(
-                    new THREE.BoxGeometry(W - 0.012, cladH - 0.09, 0.055),
-                    makeWpcMaterial(shadeColor(base, 0.04), map)
+                    new THREE.BoxGeometry(W, cladH, jambD - 0.008),
+                    leafMat
                 );
-                panel.position.set(0, cladY, 0.012);
+                panel.position.set(0, cladY, 0);
                 panel.castShadow = true;
-                group.add(postL, postR, headCap, seam, panel);
+                group.add(postL, postR, panel);
             }
 
             /* الضلف */
@@ -1029,8 +1024,8 @@
 
                 if (withHardware) self._addHardware(pivot, detail, hardware, hwMat, isSliding);
                 if (!isSliding) self._addHinges(pivot, detail, leafH);
-                self._addSurfaceDetails(pivot, detail, surface, outerShape, base, map);
-                if (surface === 'u-glass' || surface === 'full-glass') {
+                self._addSurfaceDetails(pivot, detail, surface, outerShape, base, map, model);
+                if (surface === 'u-glass' || surface === 'full-glass' || model === 'lib-glass' || model === 'edge-glass' || model === 'edge-glass-strip') {
                     self._addGlass(pivot, detail, glassLayout, glassPattern);
                 }
                 return detail;
@@ -1169,11 +1164,12 @@
             pivot.add(cyl);
         }
 
-        _addSurfaceDetails(pivot, d, surface, outerShape, base, map) {
+        _addSurfaceDetails(pivot, d, surface, outerShape, base, map, model) {
             const cx = d.cx;
             const grooveMat = new THREE.MeshStandardMaterial({ color: 0x14181c, roughness: 0.92, transparent: true, opacity: 0.34 });
             const innerW = d.leafW - 0.16;
             const front = (d.leafT || 0.055) / 2 + 0.002;
+            model = model || '';
 
             function hGroove(y, w) {
                 const g = new THREE.Mesh(new THREE.BoxGeometry(w || innerW, 0.011, 0.004), grooveMat);
@@ -1210,6 +1206,17 @@
                     inset.position.set(cx, py, front + 0.009);
                     pivot.add(inset);
                 });
+            }
+
+            if (model === 'lib-flat' || model === 'lib-steel') {
+                vChannel(cx - innerW * 0.16);
+                vChannel(cx + innerW * 0.16);
+            }
+            if (model === 'edge-steel' || model === 'lib-steel') {
+                const steelMat = makeMetalMaterial(0xc8d0d8, { metalness: 0.86, roughness: 0.22 });
+                const strip = new THREE.Mesh(new THREE.BoxGeometry(0.018, 1.68, 0.006), steelMat);
+                strip.position.set(cx - d.dir * (d.leafW * 0.28), 0, front + 0.001);
+                pivot.add(strip);
             }
         }
 
