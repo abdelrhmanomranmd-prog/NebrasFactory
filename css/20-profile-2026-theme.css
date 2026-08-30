@@ -12,23 +12,21 @@
     --profile-bg-deep: #010d15;
 }
 
-/* خلفية الموقع بالكامل — نفس غلاف البروفايل */
+/* خلفية الموقع — شبكة بيضاء مثل الداشبورد (بدل الكحلي الكامل) */
 body.nebras-profile-2026-theme.platform-storefront {
-    background: linear-gradient(155deg, #010d15 0%, #031825 30%, var(--profile-navy) 60%, var(--profile-blue) 85%, var(--profile-blue-mid) 100%);
+    background-color: #f7f8fb;
+    background-image:
+        linear-gradient(135deg, rgba(13, 40, 64, 0.055) 12.5%, transparent 12.5%, transparent 50%, rgba(13, 40, 64, 0.055) 50%, rgba(13, 40, 64, 0.055) 62.5%, transparent 62.5%, transparent 100%),
+        linear-gradient(45deg, rgba(13, 40, 64, 0.055) 12.5%, transparent 12.5%, transparent 50%, rgba(13, 40, 64, 0.055) 50%, rgba(13, 40, 64, 0.055) 62.5%, transparent 62.5%, transparent 100%);
+    background-size: 22px 22px;
+    background-position: 0 0, 11px 11px;
     background-attachment: fixed;
-    color: rgba(255, 255, 255, 0.92);
+    color: #0d2840;
     min-height: 100vh;
 }
 
 body.nebras-profile-2026-theme.platform-storefront::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-    pointer-events: none;
-    background-image: radial-gradient(circle, rgba(26, 143, 168, 0.12) 1px, transparent 1px);
-    background-size: 32px 32px;
-    opacity: 0.65;
+    display: none;
 }
 
 body.nebras-profile-2026-theme #nebras-storefront,
@@ -43,24 +41,93 @@ body.nebras-profile-2026-theme .top-contact-bar {
 }
 
 body.nebras-profile-2026-theme header {
-    background: linear-gradient(155deg, var(--profile-bg-deep) 0%, #031825 28%, var(--profile-navy) 58%, var(--profile-blue) 88%, var(--profile-blue-mid) 100%);
+    background: transparent;
+    color: #0d2840;
+}
+
+body.nebras-profile-2026-theme .header-main-row {
+    background: rgba(247, 248, 251, 0.94);
+    box-shadow: 0 1px 0 rgba(13, 40, 64, 0.08);
+}
+
+body.nebras-profile-2026-theme .header-top-row {
+    border-bottom-color: rgba(13, 40, 64, 0.08);
 }
 
 body.nebras-profile-2026-theme .header-hero-band {
-    background: linear-gradient(160deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.03) 38%, rgba(6, 46, 68, 0.55) 100%);
-    border-color: rgba(212, 168, 66, 0.22);
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    background: transparent;
+    border-color: transparent;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+
+body.nebras-profile-2026-theme .header-campaign-title {
+    color: #0d2840;
+    text-shadow: none;
 }
 
 body.nebras-profile-2026-theme .header-campaign-headline {
-    background: linear-gradient(90deg, #fff 0%, var(--profile-gold-light) 120%);
-    -webkit-background-clip: text;
-    background-clip: text;
-    color: transparent;
+    background: none;
+    -webkit-background-clip: unset;
+    background-clip: unset;
+    color: #0d2840;
+}
+
+body.nebras-profile-2026-theme .header-campaign-tagline {
+    color: #475569;
+}
+
+body.nebras-profile-2026-theme .header-hero-divider {
+    background: linear-gradient(90deg, transparent 0%, rgba(13, 40, 64, 0.16) 20%, rgba(13, 40, 64, 0.16) 80%, transparent 100%);
+}
+
+body.nebras-profile-2026-theme .header-campaign-stats {
+    border-top-color: rgba(13, 40, 64, 0.1);
 }
 
 body.nebras-profile-2026-theme .header-stat strong {
-    color: var(--profile-gold-light);
+    color: #155e94;
+}
+
+body.nebras-profile-2026-theme .header-stat span {
+    color: #64748b;
+}
+
+body.nebras-profile-2026-theme .header-cta--ghost {
+    background: #fff;
+    color: #0d2840;
+    border-color: rgba(13, 40, 64, 0.22);
+}
+
+body.nebras-profile-2026-theme .header-cta--ghost:hover {
+    background: #f1f5f9;
+}
+
+body.nebras-profile-2026-theme header nav ul li a,
+body.nebras-profile-2026-theme header .lang-btn {
+    color: #0d2840;
+}
+
+body.nebras-profile-2026-theme header .lang-btn {
+    border-color: rgba(13, 40, 64, 0.28);
+}
+
+body.nebras-profile-2026-theme header .lang-btn:hover {
+    background: #0d2840;
+    color: #fff;
+}
+
+body.nebras-profile-2026-theme .header-showcase-chip {
+    color: #0d2840;
+    background: rgba(255, 255, 255, 0.92);
+    border-color: rgba(13, 40, 64, 0.12);
+}
+
+body.nebras-profile-2026-theme .header-showcase-card {
+    background: rgba(255, 255, 255, 0.92);
+    border-color: rgba(13, 40, 64, 0.1);
+    box-shadow: 0 8px 22px rgba(13, 40, 64, 0.08);
 }
 
 body.nebras-profile-2026-theme .nebras-trust-strip {
@@ -176,75 +243,57 @@ body.nebras-profile-2026-theme .nebras-brand-intro-tagline {
     color: rgba(255, 255, 255, 0.62);
 }
 
-/* أقسام الواجهة على الخلفية الداكنة */
+/* أقسام الواجهة على الشبكة البيضاء */
 body.nebras-profile-2026-theme .site-structure {
-    background: rgba(255, 255, 255, 0.04);
-    border: 1px solid rgba(26, 143, 168, 0.14);
+    background: rgba(255, 255, 255, 0.86);
+    border: 1px solid rgba(13, 40, 64, 0.1);
     border-radius: 20px;
-    backdrop-filter: blur(8px);
 }
 
-body.nebras-profile-2026-theme .section-title h2 {
-    color: #fff;
+body.nebras-profile-2026-theme .section-title h2,
+body.nebras-profile-2026-theme .site-custom-section:not(.site-custom-section--wpc-strengths) .section-title h2 {
+    color: #0d2840;
 }
 
-body.nebras-profile-2026-theme .section-title span {
-    color: rgba(255, 255, 255, 0.68);
+body.nebras-profile-2026-theme .section-title span,
+body.nebras-profile-2026-theme .site-custom-section:not(.site-custom-section--wpc-strengths) .section-title span {
+    color: #155e94;
 }
 
 body.nebras-profile-2026-theme .spotlight-card--about-who,
 body.nebras-profile-2026-theme .spotlight-card--about-vision {
-    border-color: rgba(26, 143, 168, 0.28);
-    background: rgba(255, 255, 255, 0.06);
-}
-
-body.nebras-profile-2026-theme .spotlight-card--about-who h3,
-body.nebras-profile-2026-theme .spotlight-card--about-vision h3 {
-    color: var(--profile-gold-light);
-}
-
-body.nebras-profile-2026-theme .spotlight-card--about-who p,
-body.nebras-profile-2026-theme .spotlight-card--about-vision p {
-    color: rgba(255, 255, 255, 0.78);
-}
-
-body.nebras-profile-2026-theme .site-custom-section:not(.site-custom-section--wpc-strengths) .section-title h2 {
-    color: #fff;
-}
-
-body.nebras-profile-2026-theme .site-custom-section:not(.site-custom-section--wpc-strengths) .section-title span {
-    color: rgba(255, 255, 255, 0.65);
+    border-color: rgba(13, 40, 64, 0.12);
 }
 
 body.nebras-profile-2026-theme .site-custom-section .visitor-icon-card {
-    border-color: rgba(26, 143, 168, 0.22);
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.1) 0%, rgba(6, 46, 68, 0.35) 100%);
-    color: #fff;
+    border-color: rgba(13, 40, 64, 0.12);
+    background: #fff;
+    color: #0d2840;
 }
 
 body.nebras-profile-2026-theme .site-custom-section .visitor-icon-card:hover {
-    border-color: rgba(212, 168, 66, 0.5);
-    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+    border-color: rgba(21, 94, 148, 0.35);
+    box-shadow: 0 12px 32px rgba(13, 40, 64, 0.1);
 }
 
 body.nebras-profile-2026-theme .site-custom-section .visitor-icon-card h3 {
-    color: #fff;
+    color: #0d2840;
 }
 
 body.nebras-profile-2026-theme .site-custom-section .visitor-icon-card p {
-    color: rgba(255, 255, 255, 0.72);
+    color: #475569;
 }
 
 body.nebras-profile-2026-theme .showroom-gallery-card,
 body.nebras-profile-2026-theme .cert-card-public {
-    border-color: rgba(26, 143, 168, 0.22);
-    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(13, 40, 64, 0.1);
+    background: #fff;
 }
 
 body.nebras-profile-2026-theme .site-footer {
-    background: rgba(1, 13, 21, 0.72);
-    border-top: 1px solid rgba(212, 168, 66, 0.2);
-    color: rgba(255, 255, 255, 0.82);
+    background: #0d2840;
+    border-top: 1px solid rgba(201, 162, 39, 0.28);
+    color: rgba(255, 255, 255, 0.88);
 }
 
 body.nebras-profile-2026-theme .site-footer-copyright {
@@ -252,27 +301,27 @@ body.nebras-profile-2026-theme .site-footer-copyright {
 }
 
 body.nebras-profile-2026-theme .nebras-site-clock {
-    color: var(--profile-teal-light);
+    color: #155e94;
 }
 
 body.nebras-profile-2026-theme .company-legal-bar {
-    background: rgba(255, 255, 255, 0.06);
-    border-color: rgba(26, 143, 168, 0.18);
-    color: rgba(255, 255, 255, 0.75);
+    background: rgba(255, 255, 255, 0.72);
+    border-color: rgba(13, 40, 64, 0.1);
+    color: #334155;
 }
 
 body.nebras-profile-2026-theme .product-card,
 body.nebras-profile-2026-theme .nebras-gateway-card {
-    background: rgba(255, 255, 255, 0.07);
-    border-color: rgba(26, 143, 168, 0.2);
+    background: #fff;
+    border-color: rgba(13, 40, 64, 0.1);
 }
 
 body.nebras-profile-2026-theme .product-card h3,
 body.nebras-profile-2026-theme .nebras-gateway-card h3 {
-    color: #fff;
+    color: #0d2840;
 }
 
 body.nebras-profile-2026-theme .product-card p,
 body.nebras-profile-2026-theme .nebras-gateway-card p {
-    color: rgba(255, 255, 255, 0.72);
+    color: #475569;
 }

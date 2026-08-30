@@ -18677,20 +18677,8 @@
                     try { await bootNebrasAdminSession({ withPortal: false, withErp: false }); } catch (bootErr) { console.warn('admin boot:', bootErr); }
                 }
                 loadAdminBusinessCacheFromLocal();
-                if (typeof establishNebrasSecureSession === 'function') {
-                    try {
-                        const sessOk = await establishNebrasSecureSession(username, password);
-                        if (sessOk) apiAuthenticated = true;
-                    } catch (e) { /* ignore */ }
-                }
                 if (!apiAuthenticated && typeof hasNebrasSecureSession === 'function' && hasNebrasSecureSession()) {
                     apiAuthenticated = true;
-                }
-                if (!apiAuthenticated) {
-                    console.warn('[Nebras] دخول محلي بدون جلسة API — البيانات الحساسة قد تكون محدودة.');
-                    if (typeof setAdminLoginStatus === 'function') {
-                        setAdminLoginStatus('تنبيه: جلسة السحابة غير متصلة — الحفظ قد يكون محلياً فقط. أعيدي المحاولة.', 'warn');
-                    }
                 }
                 if (user.isActive === false) {
                     if (typeof setAdminLoginStatus === 'function') setAdminLoginStatus(ui.adminLoginDisabled || 'هذا الحساب معطّل — تواصل مع الإدارة الرئيسية.', 'error');
@@ -18732,6 +18720,16 @@
                 closeAdminOverlay();
                 clearStuckInteractionBlockers();
                 showAdminDashboard(user);
+                if (!apiAuthenticated && typeof establishNebrasSecureSession === 'function') {
+                    establishNebrasSecureSession(username, password).then(function(sessOk) {
+                        if (sessOk && typeof startNebrasCloudAutoSync === 'function') startNebrasCloudAutoSync();
+                        else if (!sessOk && typeof showNebrasAdminToast === 'function') {
+                            showNebrasAdminToast('تنبيه: جلسة السحابة غير متصلة — أعيدي المحاولة إن فشل الحفظ.', 'warn');
+                        }
+                    }).catch(function(sessErr) {
+                        console.warn('secure session background:', sessErr);
+                    });
+                }
                 if (typeof bootNebrasAdminSession === 'function') {
                     bootNebrasAdminSession({ withPortal: true, withErp: true }).catch(function(deferErr) {
                         console.warn('admin boot deferred:', deferErr);
@@ -18766,7 +18764,7 @@
                         setLanguage(currentLang || 'ar', { light: true, skipCatalog: true });
                         setTimeout(function() {
                             try { setLanguage(currentLang || 'ar'); } catch (langFullErr) { console.warn('setLanguage full:', langFullErr); }
-                        }, 120);
+                        }, 2000);
                     }
                 } catch (langErr) {
                     console.error('setLanguage after login', langErr);

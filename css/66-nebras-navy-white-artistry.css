@@ -1,7 +1,7 @@
 /* ═══ نبراس hrws303 — كحلي + أبيض · لمسات فنية · متجر أبواب ═══ */
 
 :root {
-    --nb-pattern-navy: rgba(13, 40, 64, 0.045);
+    --nb-pattern-navy: rgba(13, 40, 64, 0.055);
     --nb-surface: #ffffff;
     --nb-navy: #0d2840;
     --nb-navy-mid: #155e94;
@@ -11,12 +11,13 @@
 /* ── خلفية نبراس — نمط هندسي خفيف (مثل الغملاس · صيغة نبراس) ── */
 body.platform-storefront,
 body.admin-session {
-    background-color: #f4f7fb;
+    background-color: #f7f8fb;
     background-image:
         linear-gradient(135deg, var(--nb-pattern-navy) 12.5%, transparent 12.5%, transparent 50%, var(--nb-pattern-navy) 50%, var(--nb-pattern-navy) 62.5%, transparent 62.5%, transparent 100%),
         linear-gradient(45deg, var(--nb-pattern-navy) 12.5%, transparent 12.5%, transparent 50%, var(--nb-pattern-navy) 50%, var(--nb-pattern-navy) 62.5%, transparent 62.5%, transparent 100%);
-    background-size: 28px 28px;
-    background-position: 0 0, 14px 14px;
+    background-size: 22px 22px;
+    background-position: 0 0, 11px 11px;
+    background-attachment: fixed;
 }
 
 body.admin-session #admin-dashboard.show {
