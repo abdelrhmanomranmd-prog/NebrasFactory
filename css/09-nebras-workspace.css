@@ -6,7 +6,7 @@ body.nebras-workspace-active {
 
 body.nebras-workspace-active .top-contact-bar,
 body.nebras-workspace-active .company-legal-bar,
-body.nebras-workspace-active header,
+body.nebras-workspace-active header:not(.workspace-topbar),
 body.nebras-workspace-active .nebras-official-verified-bar,
 body.nebras-workspace-active .nebras-trust-strip {
     display: none !important;

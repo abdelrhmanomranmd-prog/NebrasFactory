@@ -14,13 +14,14 @@ def fetch_text(path):
 
 def main():
     html = fetch_text('/')
-    js = fetch_text('/js/nebras-platform.js?v=hrws308')
-    ws = fetch_text('/css/09-nebras-workspace.css?v=hrws308')
-    door = fetch_text('/css/17-header-door-showcase.css?v=hrws308')
-    store = fetch_text('/css/16-storefront-premium.css?v=hrws308')
+    js = fetch_text('/js/nebras-platform.js?v=hrws309')
+    ws = fetch_text('/css/09-nebras-workspace.css?v=hrws309')
+    door = fetch_text('/css/17-header-door-showcase.css?v=hrws309')
+    store = fetch_text('/css/16-storefront-premium.css?v=hrws309')
 
     checks = {
-        'deploy_hrws308': 'data-nebras-deploy="hrws308"' in html,
+        'deploy_hrws309': 'data-nebras-deploy="hrws309"' in html,
+        'keep_workspace_topbar': 'header:not(.workspace-topbar)' in ws,
         'hide_header_in_workspace': 'display: none !important' in door and 'nebras-official-verified-bar' in door,
         'workspace_hides_verified': 'nebras-official-verified-bar' in ws,
         'kitchen_peninsula': 'ALU-KIT-PEN' in js,

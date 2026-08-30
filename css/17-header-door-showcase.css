@@ -4,7 +4,7 @@ body.nebras-door-interface-active .header-hero-rail--partners {
     display: none !important;
 }
 
-body.nebras-door-interface-active.nebras-workspace-active header,
+body.nebras-door-interface-active.nebras-workspace-active header:not(.workspace-topbar),
 body.nebras-door-interface-active.nebras-workspace-active .nebras-official-verified-bar,
 body.nebras-door-interface-active.nebras-workspace-active .nebras-trust-strip,
 body.nebras-door-interface-active.nebras-workspace-active .top-contact-bar,
