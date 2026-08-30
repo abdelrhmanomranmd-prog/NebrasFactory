@@ -1639,17 +1639,10 @@ body.nebras-mobile-bar-active.admin-session .nebras-mobile-commerce-bar {
     isolation: isolate;
 }
 
-.nebras-store-sku-door-stack.has-door-roll-tint::after {
-    content: '';
-    position: absolute;
-    inset: 4% 8% 4% 8%;
-    z-index: 2;
-    border-radius: 4px;
-    background-color: var(--door-roll-tint, #b8bcc4);
-    mix-blend-mode: color;
-    opacity: var(--door-roll-tint-opacity, 0.68);
-    pointer-events: none;
-    transition: background-color 0.38s ease, opacity 0.38s ease;
+.nebras-store-sku-door-stack.has-door-roll-tint::after,
+.nebras-store-sku-door-stack.has-door-roll-tint::before {
+    display: none !important;
+    content: none !important;
 }
 
 .nebras-store-sku-door-stack.has-door-roll-tint--panel-only::after,
@@ -1668,46 +1661,8 @@ body.nebras-mobile-bar-active.admin-session .nebras-mobile-commerce-bar {
     content: none !important;
 }
 
-.nebras-store-sku-door-stack--photo:not(.has-door-roll-tint--clip-panel) .nebras-store-sku-door-panel-color {
-    display: none !important;
-    opacity: 0 !important;
-    visibility: hidden !important;
-}
-
-.nebras-store-sku-door-stack--photo.has-door-roll-tint--clip-panel .nebras-store-sku-door-panel-color {
-    display: block !important;
-    visibility: visible !important;
-    opacity: 1 !important;
-}
-
 .nebras-store-sku-door-panel-color {
-    position: absolute;
-    inset: 0;
-    z-index: 3;
-    background-size: cover;
-    background-position: center center;
-    background-repeat: no-repeat;
-    opacity: 0;
-    pointer-events: none;
-    transition: background-color 0.38s ease, background-image 0.38s ease, filter 0.38s ease, opacity 0.25s ease;
-    will-change: filter, background-color;
-}
-
-.nebras-store-sku-door-stack.has-door-roll-tint--clip-panel .nebras-store-sku-door-panel-color,
-.nebras-store-sku-door-stack.has-door-roll-tint--mask-panel .nebras-store-sku-door-panel-color {
-    opacity: 1;
-    background-size: contain !important;
-    background-position: center center !important;
-    background-repeat: no-repeat !important;
-    mix-blend-mode: color;
-    image-rendering: auto;
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
-}
-
-.nebras-store-sku-door-stack.has-door-roll-tint--clip-panel img.nebras-store-sku-img--wpc,
-.nebras-store-sku-door-stack.has-door-roll-tint--mask-panel img.nebras-store-sku-img--wpc {
-    filter: none !important;
+    display: none !important;
 }
 
 /* معاينة الرولّة — خبز Canvas على لوح الباب فقط (بدون تلوين مربع البطاقة) */
@@ -1743,20 +1698,9 @@ body.nebras-mobile-bar-active.admin-session .nebras-mobile-commerce-bar {
     image-rendering: auto;
 }
 
-.nebras-store-sku-media.is-alu-finish-tinted {
-    position: relative;
-    isolation: isolate;
-}
-
 .nebras-store-sku-media.is-alu-finish-tinted::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: var(--alu-finish-hex, #c5c9cf);
-    mix-blend-mode: color;
-    opacity: 0.46;
-    pointer-events: none;
-    border-radius: inherit;
+    display: none !important;
+    content: none !important;
 }
 
 .nebras-store-roll-picker--alu-finish {

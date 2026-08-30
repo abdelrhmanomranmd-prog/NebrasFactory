@@ -2519,15 +2519,8 @@
 
 .wpc-door-leaf-texture.has-door-roll-tint.is-visible::before,
 .wpc-door-struct-texture.has-door-roll-tint.is-visible::before {
-    content: '';
-    position: absolute;
-    inset: 0;
-    border-radius: inherit;
-    z-index: 1;
-    background-color: var(--door-roll-tint, #b8bcc4);
-    mix-blend-mode: color;
-    opacity: var(--door-roll-tint-opacity, 0.9);
-    pointer-events: none;
+    display: none !important;
+    content: none !important;
 }
 
 .wpc-door-leaf-texture--flat.is-visible {
@@ -2891,9 +2884,7 @@
 .wpc-door-live-transom-post {
     width: 10.6%;
     background-color: var(--door-dark, #6b7280);
-    background-image: var(--live-transom-roll, none);
-    background-size: 320% 170%;
-    background-position: center;
+    background-image: none;
     box-shadow:
         inset -2px 0 5px rgba(0, 0, 0, 0.16),
         inset 2px 0 4px rgba(255, 255, 255, 0.2);
@@ -2910,19 +2901,14 @@
 .wpc-door-live-transom-rail {
     height: 11px;
     background-color: var(--door-dark, #6b7280);
-    background-image: var(--live-transom-roll, none);
-    background-size: 180% 240%;
-    background-position: center;
+    background-image: none;
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22), inset 0 -1px 0 rgba(0, 0, 0, 0.18);
 }
 
 .wpc-door-live-transom-panel {
     flex: 1;
     background-color: var(--door-face, #b8bcc4);
-    background-image: var(--live-transom-roll, none);
-    background-size: 100% 240%;
-    background-position: center top;
-    background-blend-mode: multiply;
+    background-image: none;
     box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
 }
 
@@ -2949,9 +2935,7 @@
 
 .wpc-door-live-transom[data-door-model="u-slats"] .wpc-door-live-transom-panel,
 .wpc-door-live-transom[data-door-model="u-plain"] .wpc-door-live-transom-panel {
-    background-image:
-        repeating-linear-gradient(90deg, transparent 0 21%, rgba(0, 0, 0, 0.1) 21% 23%),
-        var(--live-transom-roll, none);
+    background-image: repeating-linear-gradient(90deg, transparent 0 21%, rgba(0, 0, 0, 0.1) 21% 23%);
 }
 
 .wpc-door-live-transom[data-door-model="u-glass"] .wpc-door-live-transom-panel {
@@ -3013,20 +2997,23 @@
     isolation: isolate;
 }
 
-/* طبقة لون فورية — SVG احتياطي فقط؛ صورة المصنع تستخدم خبز Canvas */
-.wpc-door-photo-preset-stack.has-door-roll-tint:not(.has-roll-composite-ready)::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    z-index: 3;
-    background-color: var(--door-roll-tint, #b8bcc4);
-    mix-blend-mode: color;
-    opacity: var(--door-roll-tint-opacity, 0.82);
-    pointer-events: none;
+.wpc-door-photo-preset-stack.has-door-roll-tint::after,
+.wpc-door-photo-preset-stack.has-door-roll-tint::before,
+.wpc-door-photo-preset-transom-cap.has-roll-texture::after {
+    display: none !important;
+    content: none !important;
 }
 
-.wpc-door-stage--photo-preset .wpc-door-photo-preset-stack.has-door-roll-tint::after,
-.wpc-door-stage--photo-preset .wpc-door-photo-preset-stack.has-door-roll-tint::before {
+.wpc-door-stage--photo-preset .wpc-door-keybab-textures,
+.wpc-door-stage--photo-preset .wpc-door-roll-texture,
+.wpc-door-stage--photo-preset .wpc-door-panel-overlay,
+.wpc-door-stage--photo-preset .wpc-door-slats-overlay,
+.wpc-door-stage--photo-preset .wpc-door-uchannel-overlay,
+.wpc-door-stage--photo-preset .wpc-door-glass-strips-overlay,
+.wpc-door-stage--photo-preset .wpc-door-glass-grid-overlay,
+.wpc-door-stage--photo-preset .wpc-door-glass-tall-overlay,
+.wpc-door-stage--photo-preset .wpc-door-svg-overlay,
+.wpc-door-stage--photo-preset .wpc-door-photo-preset-roll {
     display: none !important;
 }
 

@@ -971,7 +971,7 @@
         }
 
         const DOOR_PHOTO_PRESET_ROOT = 'images/doors/presets/';
-        const DOOR_PHOTO_PRESET_CACHE = '308';
+        const DOOR_PHOTO_PRESET_CACHE = '310';
         const DOOR_PHOTO_COMPOSE_MAX_DIM = 1200;
         /** صور أبواب المصنع الحقيقية في المعاينة — SVG احتياطي عند غياب الصورة */
         const DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS = true;
@@ -1531,9 +1531,6 @@
             liveEl.setAttribute('aria-hidden', show ? 'false' : 'true');
             if (!show) return;
             const safe = hex || '#b8bcc4';
-            const url = isRoll ? resolveDoorRollTextureUrl(rollUrl) : '';
-            const absUrl = url ? doorDesignerMediaUrl(url.split('?')[0]) : '';
-            const bg = absUrl ? ('url("' + absUrl.replace(/"/g, '') + '")') : 'none';
             liveEl.setAttribute('data-door-type', state.type || '');
             liveEl.setAttribute('data-door-model', state.model || '');
             liveEl.setAttribute('data-door-outer', state.outerShape || 'outer-flat');
@@ -1542,9 +1539,9 @@
             liveEl.style.setProperty('--door-light', shadeDoorHex(safe, 18));
             liveEl.style.setProperty('--door-dark', shadeDoorHex(safe, -22));
             liveEl.style.setProperty('--door-roll-tint', safe);
-            liveEl.style.setProperty('--live-transom-roll', bg);
+            liveEl.style.removeProperty('--live-transom-roll');
             liveEl.style.filter = isRoll ? (typeof buildWpcStoreRollCssFilterForPhoto === 'function' ? buildWpcStoreRollCssFilterForPhoto(safe) : 'none') : 'none';
-            liveEl.classList.toggle('has-roll-texture', !!isRoll);
+            liveEl.classList.remove('has-roll-texture');
         }
 
         function ensurePhotoPresetStackDom() {
@@ -1570,33 +1567,12 @@
             const tex = rollUrl ? resolveDoorRollTextureUrl(rollUrl) : '';
 
             if (wrap) {
-                wrap.classList.toggle('has-roll-texture', !!isRoll);
-                wrap.classList.remove('has-door-roll-tint');
+                wrap.classList.remove('has-roll-texture', 'has-door-roll-tint');
                 wrap.style.setProperty('--door-roll-tint', hex || '#b8bcc4');
             }
             if (stack) {
-                stack.classList.toggle('has-roll-texture', !!isRoll);
-                stack.classList.remove('has-door-roll-tint');
-            }
-
-            if (!isRoll) {
-                if (rollImg) {
-                    rollImg.hidden = true;
-                    rollImg.classList.remove('is-active');
-                    rollImg.removeAttribute('src');
-                }
-                if (img) {
-                    img.src = baseSrc;
-                    img.style.filter = 'none';
-                    img.classList.remove('has-roll-composite', 'has-roll-pending');
-                }
-                if (stack) stack.classList.remove('has-roll-composite-ready', 'has-roll-pending', 'has-roll-texture', 'has-door-roll-tint');
-                if (transomCap && transomCap.classList) {
-                    transomCap.classList.remove('has-roll-texture', 'has-door-roll-tint', 'has-roll-composite');
-                    transomCap.style.filter = 'none';
-                    transomCap.style.removeProperty('--door-cap-roll');
-                }
-                return;
+                stack.classList.remove('has-roll-texture', 'has-door-roll-tint', 'has-roll-composite-ready', 'has-roll-pending');
+                stack.style.removeProperty('--door-roll-tint');
             }
 
             if (rollImg) {
@@ -1605,26 +1581,30 @@
                 rollImg.removeAttribute('src');
             }
 
+            if (!isRoll) {
+                if (img) {
+                    img.src = baseSrc;
+                    img.style.filter = 'none';
+                    img.classList.remove('has-roll-composite', 'has-roll-pending');
+                }
+                if (transomCap && transomCap.classList) {
+                    transomCap.classList.remove('has-roll-texture', 'has-door-roll-tint', 'has-roll-composite');
+                    transomCap.style.filter = 'none';
+                    transomCap.style.removeProperty('--door-cap-roll');
+                }
+                return;
+            }
+
             const rollFilter = buildWpcStoreRollCssFilterForPhoto(hex || '#b8bcc4');
             if (img) {
                 img.src = baseSrc;
-                img.style.transition = 'filter 0.38s ease, transform 0.35s ease';
+                img.style.transition = 'filter 0.32s ease';
                 img.style.filter = rollFilter;
                 img.classList.remove('has-roll-composite', 'has-roll-pending');
             }
-            if (stack) {
-                stack.classList.add('has-door-roll-tint', 'has-roll-texture');
-                stack.classList.remove('has-roll-composite-ready', 'has-roll-pending');
-                stack.style.setProperty('--door-roll-tint', hex || '#b8bcc4');
-            }
-            if (wrap) {
-                wrap.classList.add('has-roll-texture');
-                wrap.style.setProperty('--door-roll-tint', hex || '#b8bcc4');
-            }
             if (transomCap && transomCap.src && !transomCap.hidden) {
                 transomCap.style.filter = rollFilter;
-                transomCap.classList.add('has-roll-texture');
-                transomCap.classList.remove('has-roll-pending', 'has-roll-composite');
+                transomCap.classList.remove('has-roll-texture', 'has-roll-pending', 'has-roll-composite');
             }
         }
 
@@ -3299,38 +3279,18 @@
 
         /** معاينة متجر — CSS panel overlay عند فشل خبز Canvas */
         function applyWpcStoreRollCssPanelFallback(img, stack, baseSrc, rollState, variant) {
-            if (!img || !stack || !rollState) return;
+            if (!img || !rollState) return;
             const baseDisplay = resolveDisplayMediaUrl(baseSrc);
             img.src = baseDisplay;
             img.setAttribute('data-full-src', baseDisplay);
             img.setAttribute('data-base-src', baseSrc);
             img.classList.remove('has-roll-composite', 'has-roll-pending');
-            img.style.filter = 'none';
+            img.style.filter = buildWpcStoreRollCssFilterForPhoto(rollState.hex || '#b8bcc4');
             img.removeAttribute('data-roll-compose-token');
-            const profileKey = variant ? getWpcDoorTintProfile(variant) : 'flat';
-            applyWpcDoorTintRegion(stack, profileKey);
-            stack.classList.remove('has-roll-composite-ready', 'has-roll-pending');
-            stack.classList.add('has-door-roll-tint--mask-panel', 'has-roll-texture', 'has-roll-css-fallback');
-            let panelLayer = stack.querySelector('.nebras-store-sku-door-panel-color');
-            if (!panelLayer) {
-                panelLayer = document.createElement('div');
-                panelLayer.className = 'nebras-store-sku-door-panel-color';
-                stack.appendChild(panelLayer);
-            }
-            clearWpcStoreDoorPanelLayer(panelLayer);
-            applyWpcStoreDoorPanelMask(panelLayer, profileKey);
-            const tex = resolveDoorRollTextureUrl(rollState.swatchUrl || getRollSwatchImageUrl(rollState.catalogIndex != null ? rollState.catalogIndex : 0));
-            panelLayer.style.opacity = '1';
-            panelLayer.style.backgroundColor = rollState.hex || '#b8bcc4';
-            if (tex) {
-                panelLayer.style.backgroundImage = 'url("' + String(tex).replace(/"/g, '') + '")';
-                panelLayer.style.backgroundSize = 'cover';
-                panelLayer.style.mixBlendMode = 'multiply';
-            }
-            applyRollBlendCssVars(stack, rollState.hex || '#b8bcc4');
-            stack.style.setProperty('--door-roll-tint', rollState.hex || '#b8bcc4');
-            if (tex) {
-                stack.style.setProperty('--door-roll-texture-url', 'url("' + String(tex).replace(/"/g, '') + '")');
+            if (stack) {
+                stack.classList.remove('has-roll-composite-ready', 'has-roll-pending', 'has-door-roll-tint--mask-panel', 'has-roll-texture', 'has-roll-css-fallback', 'has-door-roll-tint');
+                const panelLayer = stack.querySelector('.nebras-store-sku-door-panel-color');
+                clearWpcStoreDoorPanelLayer(panelLayer);
             }
         }
 
@@ -3431,28 +3391,11 @@
             img.classList.remove('has-roll-composite', 'has-roll-pending');
             img.removeAttribute('data-roll-compose-token');
             const rollFilter = isPhoto ? buildWpcStoreRollCssFilterForPhoto(roll.hex) : buildWpcStoreRollCssFilter(roll.hex);
-            if (stack && variant) applyWpcDoorTintRegion(stack, getWpcDoorTintProfile(variant));
-            if (isPhoto && stack && panelLayer) {
-                img.style.filter = 'none';
-                img.style.transition = 'transform 0.35s ease';
-                const clip = variant ? getWpcDoorClipPath(variant) : (stack.style.getPropertyValue('--wpc-door-clip') || '7% 13% 7% 13%');
-                const displaySrc = resolveDisplayMediaUrl(baseSrc);
-                panelLayer.style.backgroundImage = 'url("' + displaySrc.replace(/"/g, '') + '")';
-                panelLayer.style.clipPath = 'inset(' + clip + ')';
-                panelLayer.style.webkitClipPath = 'inset(' + clip + ')';
-                panelLayer.style.filter = rollFilter;
-                panelLayer.style.opacity = '1';
-                panelLayer.style.mixBlendMode = 'normal';
-                stack.classList.add('has-door-roll-tint', 'has-door-roll-tint--clip-panel');
-                stack.classList.remove('has-door-roll-tint--panel-only', 'has-door-roll-tint--photo', 'has-roll-composite-ready', 'has-roll-pending', 'has-roll-texture', 'has-roll-css-fallback');
-            } else {
-                img.style.transition = 'filter 0.38s ease, transform 0.38s ease';
-                img.style.filter = rollFilter;
-                if (stack) {
-                    stack.classList.remove('has-door-roll-tint--clip-panel', 'has-door-roll-tint--panel-only', 'has-roll-composite-ready', 'has-roll-pending', 'has-roll-texture', 'has-roll-css-fallback');
-                    clearWpcStoreDoorPanelLayer(panelLayer);
-                    applyDoorRollTintToElements(stack, buildWpcStoreRollStateFromCatalog(roll, rollIdx));
-                }
+            img.style.transition = 'filter 0.32s ease';
+            img.style.filter = rollFilter;
+            if (stack) {
+                stack.classList.remove('has-door-roll-tint', 'has-door-roll-tint--clip-panel', 'has-door-roll-tint--mask-panel', 'has-door-roll-tint--panel-only', 'has-door-roll-tint--photo', 'has-roll-composite-ready', 'has-roll-pending', 'has-roll-texture', 'has-roll-css-fallback');
+                clearWpcStoreDoorPanelLayer(panelLayer);
             }
             img.setAttribute('data-composed-roll', String(rollIdx));
             card.classList.add('is-roll-color-live');
@@ -4627,13 +4570,13 @@
             if (String(img.src || '').split('?')[0] !== String(baseDisplay || '').split('?')[0]) {
                 img.src = baseDisplay;
             }
-            img.style.transition = 'filter 0.38s ease, transform 0.35s ease';
+            img.style.transition = 'filter 0.32s ease';
             img.style.filter = buildAluminumFinishCssFilter(finish.hex);
             img.setAttribute('data-alu-finish-index', String(idx));
             const media = img.closest('.nebras-store-sku-media');
             if (media) {
-                media.style.setProperty('--alu-finish-hex', finish.hex || '#c5c9cf');
-                media.classList.add('is-alu-finish-tinted');
+                media.classList.remove('is-alu-finish-tinted');
+                media.style.removeProperty('--alu-finish-hex');
             }
             card.classList.add('is-alu-finish-live');
             card.setAttribute('data-active-alu-finish-hex', finish.hex || '');
@@ -24216,9 +24159,13 @@
                 el.classList.toggle('is-visible', !!visible);
             }
             if (stage.classList.contains('wpc-door-stage--photo-preset')) {
-                [leafA, leafB, transom, mullion].forEach(function(el) {
-                    if (el) el.classList.remove('is-visible');
+                [leafA, leafB, transom, mullion, structLeft, structRight, structTop, structTopClad].forEach(function(el) {
+                    if (!el) return;
+                    el.classList.remove('is-visible', 'has-door-roll-tint');
+                    el.style.backgroundImage = 'none';
+                    el.style.filter = 'none';
                 });
+                return;
             }
             paintStruct(structLeft, true, -20);
             paintStruct(structRight, true, -20);
@@ -24230,6 +24177,10 @@
 
         function applyWpcKeybabLeafTextures(stage, state, swatchUrl, hex, isRoll) {
             if (!stage || !stage.classList.contains('wpc-door-stage--keybab')) return;
+            if (stage.classList.contains('wpc-door-stage--photo-preset')) {
+                applyWpcKeybabStructRollFinish(stage, state, swatchUrl, hex, isRoll);
+                return;
+            }
             const safe = hex || '#b8bcc4';
             const rollFinish = isRoll !== false;
             const url = rollFinish ? resolveDoorRollTextureUrl(swatchUrl) : '';
@@ -24324,11 +24275,15 @@
                 basePhoto.style.visibility = isDynamicRender ? 'hidden' : 'visible';
             }
 
-            if (isKeybab && !isPhotoPreset) {
+            if (isPhotoPreset) {
                 if (rollLayer) { rollLayer.style.opacity = '0'; rollLayer.style.backgroundImage = 'none'; }
                 if (colorLayer) { colorLayer.style.opacity = '0'; colorLayer.style.backgroundImage = 'none'; }
                 if (doorState) applyWpcKeybabLeafTextures(stage, doorState, swatchUrl, safe, rollOpts.isRoll);
-            } else if (!isPhotoPreset && rollOpts.isRoll && swatchUrl && targetLayer) {
+            } else if (isKeybab) {
+                if (rollLayer) { rollLayer.style.opacity = '0'; rollLayer.style.backgroundImage = 'none'; }
+                if (colorLayer) { colorLayer.style.opacity = '0'; colorLayer.style.backgroundImage = 'none'; }
+                if (doorState) applyWpcKeybabLeafTextures(stage, doorState, swatchUrl, safe, rollOpts.isRoll);
+            } else if (rollOpts.isRoll && swatchUrl && targetLayer) {
                 targetLayer.style.backgroundImage = 'url("' + swatchUrl.replace(/"/g, '') + '")';
                 targetLayer.style.backgroundSize = 'cover';
                 targetLayer.style.backgroundPosition = 'center';
