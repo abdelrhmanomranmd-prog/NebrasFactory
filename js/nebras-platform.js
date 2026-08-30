@@ -4458,8 +4458,8 @@
             return formatVariantPriceBlock(variant ? variant.price : 0, lang);
         }
 
-        /** أصناف الألومنيوم — أشكال مطابخ مختلفة + لون حي على الشكل · v10 */
-        const ALUMINUM_CATALOG_VERSION = 10;
+        /** أصناف الألومنيوم — أشكال مطابخ/أبواب/شبابيك/واجهات + تلوين على المنتج نفسه · v11 */
+        const ALUMINUM_CATALOG_VERSION = 11;
         const ALU_CATALOG_ROOT = 'images/catalog/aluminum/';
         function aluSkuImg(file) { return ALU_CATALOG_ROOT + 'by-sku/' + file; }
         const ALUMINUM_CATALOG_PHOTOS = {
@@ -4476,13 +4476,24 @@
             window1: aluSkuImg('ALU-WIN-SCR.png'),
             window2: aluSkuImg('ALU-WIN-PNL.png'),
             window3: aluSkuImg('ALU-WIN-CASE.png'),
+            windowSld2: aluSkuImg('ALU-WIN-SLD2.png'),
+            windowBay: aluSkuImg('ALU-WIN-BAY.png'),
+            windowFix: aluSkuImg('ALU-WIN-FIX.png'),
+            windowCor: aluSkuImg('ALU-WIN-COR.png'),
             door1: aluSkuImg('ALU-DOR-GLASS.png'),
             door2: aluSkuImg('ALU-DOR-FACT.jpg'),
             door3: aluSkuImg('ALU-DOR-SLD.png'),
             door4: aluSkuImg('ALU-DOR-DBL.png'),
+            doorFld: aluSkuImg('ALU-DOR-FLD.png'),
+            doorEnt: aluSkuImg('ALU-DOR-ENT.png'),
+            doorOff: aluSkuImg('ALU-DOR-OFF.png'),
+            doorPat: aluSkuImg('ALU-DOR-PAT.png'),
             facade1: aluSkuImg('ALU-FAC-CLAD.png'),
             facade2: aluSkuImg('ALU-FAC-REL.png'),
             facade3: aluSkuImg('ALU-FAC-CW.png'),
+            facadeGrid: aluSkuImg('ALU-FAC-GRID.png'),
+            facadeSun: aluSkuImg('ALU-FAC-SUN.png'),
+            facadePer: aluSkuImg('ALU-FAC-PER.png'),
             kitchen1: aluSkuImg('ALU-KIT-SYS.png'),
             kitchen2: aluSkuImg('ALU-KIT-FRT.png'),
             kitchen3: aluSkuImg('ALU-KIT-ISL.png'),
@@ -4496,6 +4507,10 @@
             kitchenGal: aluSkuImg('ALU-KIT-GAL.png'),
             kitchenLsh: aluSkuImg('ALU-KIT-LSH.png'),
             kitchenGls: aluSkuImg('ALU-KIT-GLS.png'),
+            kitchenIsd: aluSkuImg('ALU-KIT-ISD.png'),
+            kitchenPan: aluSkuImg('ALU-KIT-PAN.png'),
+            kitchenUop: aluSkuImg('ALU-KIT-UOP.png'),
+            kitchenUpg: aluSkuImg('ALU-KIT-UPG.png'),
             accSet: aluSkuImg('ALU-ACC-SET.png'),
             accRoller: aluSkuImg('ALU-ACC-ROLLER.png'),
             accGasket: aluSkuImg('ALU-ACC-GASKET.png'),
@@ -4522,7 +4537,22 @@
             ALUMINUM_CATALOG_PHOTOS.kitchenPen,
             ALUMINUM_CATALOG_PHOTOS.kitchenGal,
             ALUMINUM_CATALOG_PHOTOS.kitchenLsh,
-            ALUMINUM_CATALOG_PHOTOS.kitchenGls
+            ALUMINUM_CATALOG_PHOTOS.kitchenGls,
+            ALUMINUM_CATALOG_PHOTOS.kitchenIsd,
+            ALUMINUM_CATALOG_PHOTOS.kitchenPan,
+            ALUMINUM_CATALOG_PHOTOS.kitchenUop,
+            ALUMINUM_CATALOG_PHOTOS.kitchenUpg,
+            ALUMINUM_CATALOG_PHOTOS.windowSld2,
+            ALUMINUM_CATALOG_PHOTOS.windowBay,
+            ALUMINUM_CATALOG_PHOTOS.windowFix,
+            ALUMINUM_CATALOG_PHOTOS.windowCor,
+            ALUMINUM_CATALOG_PHOTOS.doorFld,
+            ALUMINUM_CATALOG_PHOTOS.doorEnt,
+            ALUMINUM_CATALOG_PHOTOS.doorOff,
+            ALUMINUM_CATALOG_PHOTOS.doorPat,
+            ALUMINUM_CATALOG_PHOTOS.facadeGrid,
+            ALUMINUM_CATALOG_PHOTOS.facadeSun,
+            ALUMINUM_CATALOG_PHOTOS.facadePer
         ];
 
         /** ألوان تشطيب الألومنيوم — معاينة حية على الأبواب · الشبابيك · المطابخ · الواجهات */
@@ -4531,7 +4561,7 @@
             { id: 'white', code: 'ALU-WHT', labelAr: 'أبيض', labelEn: 'White', hex: '#f2f4f7' },
             { id: 'black', code: 'ALU-BLK', labelAr: 'أسود', labelEn: 'Black', hex: '#2c3038' },
             { id: 'bronze', code: 'ALU-BRZ', labelAr: 'برونزي', labelEn: 'Bronze', hex: '#9a7344' },
-            { id: 'champagne', code: 'ALU-CHM', labelAr: 'شampagne', labelEn: 'Champagne', hex: '#d8c9ad' },
+            { id: 'champagne', code: 'ALU-CHM', labelAr: 'شمبانيا', labelEn: 'Champagne', hex: '#d8c9ad' },
             { id: 'anthracite', code: 'ALU-ANT', labelAr: 'أنثراسايت', labelEn: 'Anthracite', hex: '#4d535c' },
             { id: 'gold', code: 'ALU-GLD', labelAr: 'ذهبي', labelEn: 'Gold', hex: '#c9a227' },
             { id: 'wood', code: 'ALU-WOD', labelAr: 'خشبي', labelEn: 'Wood effect', hex: '#8b6f4e' }
@@ -4542,13 +4572,93 @@
             return sub === 'alu-doors' || sub === 'alu-kitchens' || sub === 'alu-windows' || sub === 'alu-facades';
         }
 
-        function buildAluminumFinishCssFilter(hex) {
-            return buildWpcStoreRollCssFilterForPhoto(hex);
+        const ALU_PRODUCT_RECOLOR_CACHE = {};
+        const ALU_PRODUCT_RECOLOR_MAX = 960;
+
+        function parseAluminumFinishRgb(hex) {
+            const raw = String(hex || '#c5c9cf').replace('#', '');
+            const full = raw.length === 3 ? raw.split('').map(function(c) { return c + c; }).join('') : raw;
+            const n = parseInt(full, 16);
+            if (isNaN(n)) return { r: 197, g: 201, b: 207 };
+            return { r: (n >> 16) & 255, g: (n >> 8) & 255, b: n & 255 };
+        }
+
+        /** تلوين لمعان المنتج فقط — بدون فلتر CSS وبدون طبقة فوق الصورة */
+        function recolorAluminumProductPixels(image, hex) {
+            const srcW = image.naturalWidth || image.width || 0;
+            const srcH = image.naturalHeight || image.height || 0;
+            if (!srcW || !srcH) return null;
+            const scale = Math.min(1, ALU_PRODUCT_RECOLOR_MAX / Math.max(srcW, srcH));
+            const w = Math.max(1, Math.round(srcW * scale));
+            const h = Math.max(1, Math.round(srcH * scale));
+            const canvas = document.createElement('canvas');
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+            if (!ctx) return null;
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            ctx.drawImage(image, 0, 0, w, h);
+            let frame;
+            try {
+                frame = ctx.getImageData(0, 0, w, h);
+            } catch (err) {
+                return null;
+            }
+            const px = frame.data;
+            const target = parseAluminumFinishRgb(hex);
+            const tLum = Math.max(8, 0.299 * target.r + 0.587 * target.g + 0.114 * target.b);
+            for (let i = 0; i < px.length; i += 4) {
+                const r = px[i];
+                const g = px[i + 1];
+                const b = px[i + 2];
+                const a = px[i + 3];
+                if (a < 10) continue;
+                const max = r > g ? (r > b ? r : b) : (g > b ? g : b);
+                const min = r < g ? (r < b ? r : b) : (g < b ? g : b);
+                const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+                const sat = max === 0 ? 0 : (max - min) / max;
+                if (lum > 214 && sat < 0.16) continue;
+                if (lum < 40 && sat < 0.14) continue;
+                if (sat > 0.34 && lum > 32 && lum < 228) continue;
+                if (b > r + 26 && b > g + 10 && sat > 0.16) continue;
+                if (g > r + 12 && g > b + 8 && sat > 0.16) continue;
+                if (r > g + 10 && r > b + 14 && sat > 0.2 && lum > 42 && lum < 188) continue;
+                const lumScale = lum / tLum;
+                let nr = target.r * lumScale;
+                let ng = target.g * lumScale;
+                let nb = target.b * lumScale;
+                const highlight = lum > 176 ? (lum - 176) / 79 : 0;
+                if (highlight > 0) {
+                    const keep = Math.min(0.42, highlight * 0.42);
+                    nr = nr * (1 - keep) + r * keep;
+                    ng = ng * (1 - keep) + g * keep;
+                    nb = nb * (1 - keep) + b * keep;
+                }
+                px[i] = nr < 0 ? 0 : nr > 255 ? 255 : nr;
+                px[i + 1] = ng < 0 ? 0 : ng > 255 ? 255 : ng;
+                px[i + 2] = nb < 0 ? 0 : nb > 255 ? 255 : nb;
+            }
+            ctx.putImageData(frame, 0, 0);
+            return canvas.toDataURL('image/png');
+        }
+
+        function composeAluminumProductFinish(baseSrc, hex) {
+            const key = String(baseSrc || '').split('?')[0] + '|' + String(hex || '').toLowerCase();
+            if (ALU_PRODUCT_RECOLOR_CACHE[key]) {
+                return Promise.resolve(ALU_PRODUCT_RECOLOR_CACHE[key]);
+            }
+            return loadDoorDesignerImage(baseSrc).then(function(image) {
+                const url = recolorAluminumProductPixels(image, hex);
+                if (!url) throw new Error('alu product recolor failed');
+                ALU_PRODUCT_RECOLOR_CACHE[key] = url;
+                return url;
+            });
         }
 
         function buildAluminumStoreFinishPickerHtml(productId, variantIndex, lang, ui) {
-            const label = ui.aluStoreFinishPickerLabel || 'اختر لون التشطيب — معاينة حية';
-            const hint = ui.aluStoreFinishPickerHint || 'اللون يتغيّر على نفس الشكل — كل مطبخ شكل مختلف';
+            const label = ui.aluStoreFinishPickerLabel || 'اختر لون التشطيب — يتغيّر على المنتج';
+            const hint = ui.aluStoreFinishPickerHint || 'اللون يتغيّر على المعدن نفسه — بدون طبقة فوق الصورة';
             const safePid = String(productId).replace(/'/g, "\\'");
             const swatches = ALUMINUM_FINISH_COLORS.map(function(item, idx) {
                 const name = lang === 'en' ? (item.labelEn || item.labelAr) : (item.labelAr || item.labelEn);
@@ -4580,11 +4690,9 @@
             const finish = ALUMINUM_FINISH_COLORS[idx] || ALUMINUM_FINISH_COLORS[0];
             if (!finish) return;
             const baseDisplay = resolveDisplayMediaUrl(baseSrc);
-            if (String(img.src || '').split('?')[0] !== String(baseDisplay || '').split('?')[0]) {
-                img.src = baseDisplay;
-            }
-            img.style.transition = 'filter 0.32s ease';
-            img.style.filter = buildAluminumFinishCssFilter(finish.hex);
+            img.style.filter = 'none';
+            img.style.imageRendering = 'auto';
+            img.style.transition = 'opacity 0.28s ease';
             img.setAttribute('data-alu-finish-index', String(idx));
             const media = img.closest('.nebras-store-sku-media');
             if (media) {
@@ -4594,6 +4702,21 @@
             card.classList.add('is-alu-finish-live');
             card.setAttribute('data-active-alu-finish-hex', finish.hex || '');
             card.setAttribute('data-selected-finish-index', String(idx));
+            const token = 'alu-fin-' + idx + '-' + String(finish.hex || '').toLowerCase();
+            img.setAttribute('data-alu-recolor-token', token);
+            if (idx === 0) {
+                img.src = baseDisplay;
+                return;
+            }
+            composeAluminumProductFinish(baseSrc, finish.hex).then(function(url) {
+                if (img.getAttribute('data-alu-recolor-token') !== token) return;
+                img.style.filter = 'none';
+                img.src = url;
+            }).catch(function() {
+                if (img.getAttribute('data-alu-recolor-token') !== token) return;
+                img.src = baseDisplay;
+                img.style.filter = 'none';
+            });
         }
 
         function pickAluminumStoreSkuFinish(productId, variantIndex, finishIndex) {
@@ -4716,19 +4839,30 @@
             { id: 'alu-win-screen', sku: 'ALU-WIN-SCR', subCategoryId: 'alu-windows', image: ALUMINUM_CATALOG_PHOTOS.window1, typeAr: 'شبابيك وستائر ألومنيوم', typeEn: 'Aluminum window screens', sizeAr: 'حسب المقاس', sizeEn: 'Custom size', colorAr: 'فضي', colorEn: 'Silver', price: 0, inStock: true },
             { id: 'alu-win-panel', sku: 'ALU-WIN-PNL', subCategoryId: 'alu-windows', image: ALUMINUM_CATALOG_PHOTOS.window2, typeAr: 'لوح شباك هندسي', typeEn: 'Geometric window panel', sizeAr: 'حسب الطلب', sizeEn: 'On request', colorAr: 'متعدد', colorEn: 'Various', price: 0, inStock: true },
             { id: 'alu-win-case', sku: 'ALU-WIN-CASE', subCategoryId: 'alu-windows', image: ALUMINUM_CATALOG_PHOTOS.window3, typeAr: 'شباك ألومنيوم قلاب', typeEn: 'Aluminum casement window', sizeAr: 'حسب المقاس', sizeEn: 'Custom size', colorAr: 'فضي', colorEn: 'Silver', price: 0, inStock: true },
+            { id: 'alu-win-sld2', sku: 'ALU-WIN-SLD2', subCategoryId: 'alu-windows', image: ALUMINUM_CATALOG_PHOTOS.windowSld2, typeAr: 'شباك ألومنيوم منزلق — ضلفتان', typeEn: 'Two-panel aluminum sliding window', sizeAr: 'حسب المقاس', sizeEn: 'Custom size', colorAr: 'فضي', colorEn: 'Silver', price: 0, inStock: true },
+            { id: 'alu-win-bay', sku: 'ALU-WIN-BAY', subCategoryId: 'alu-windows', image: ALUMINUM_CATALOG_PHOTOS.windowBay, typeAr: 'شباك باي ألومنيوم', typeEn: 'Aluminum bay window', sizeAr: 'حسب المقاس', sizeEn: 'Custom size', colorAr: 'فضي', colorEn: 'Silver', price: 0, inStock: true },
+            { id: 'alu-win-fix', sku: 'ALU-WIN-FIX', subCategoryId: 'alu-windows', image: ALUMINUM_CATALOG_PHOTOS.windowFix, typeAr: 'شباك ثابت كبير — Picture', typeEn: 'Fixed picture aluminum window', sizeAr: 'حسب المقاس', sizeEn: 'Custom size', colorAr: 'فضي', colorEn: 'Silver', price: 0, inStock: true },
+            { id: 'alu-win-cor', sku: 'ALU-WIN-COR', subCategoryId: 'alu-windows', image: ALUMINUM_CATALOG_PHOTOS.windowCor, typeAr: 'شباك زاوية ألومنيوم', typeEn: 'Aluminum corner window', sizeAr: 'حسب المقاس', sizeEn: 'Custom size', colorAr: 'فضي', colorEn: 'Silver', price: 0, inStock: true },
             { id: 'alu-door-glass', sku: 'ALU-DOR-GLASS', subCategoryId: 'alu-doors', image: ALUMINUM_CATALOG_PHOTOS.door1, typeAr: 'باب ألومنيوم — واجهة فيلا', typeEn: 'Aluminum villa entry door', sizeAr: 'حسب المقاس', sizeEn: 'Custom size', colorAr: 'فضي / أسود', colorEn: 'Silver / black', price: 0, inStock: true },
             { id: 'alu-door-fact', sku: 'ALU-DOR-FACT', subCategoryId: 'alu-doors', image: ALUMINUM_CATALOG_PHOTOS.door2, typeAr: 'باب زجاج بإطار ألومنيوم', typeEn: 'Aluminum-frame glass door', sizeAr: 'حسب الطلب', sizeEn: 'On request', colorAr: 'فضي', colorEn: 'Silver', price: 0, inStock: true },
             { id: 'alu-door-sld', sku: 'ALU-DOR-SLD', subCategoryId: 'alu-doors', image: ALUMINUM_CATALOG_PHOTOS.door3, typeAr: 'باب ألومنيوم منزلق', typeEn: 'Aluminum sliding door', sizeAr: 'حسب المقاس', sizeEn: 'Custom size', colorAr: 'فضي', colorEn: 'Silver', price: 0, inStock: true },
             { id: 'alu-door-dbl', sku: 'ALU-DOR-DBL', subCategoryId: 'alu-doors', image: ALUMINUM_CATALOG_PHOTOS.door4, typeAr: 'باب ألومنيوم مزدوج', typeEn: 'Aluminum double door', sizeAr: 'حسب المقاس', sizeEn: 'Custom size', colorAr: 'فضي', colorEn: 'Silver', price: 0, inStock: true },
             { id: 'alu-door-vil-blk', sku: 'ALU-DOR-VIL-BLK', subCategoryId: 'alu-doors', image: ALUMINUM_CATALOG_PHOTOS.doorVilBlk, typeAr: 'باب فيلا ألومنيوم — أسود', typeEn: 'Villa aluminum door — black', sizeAr: 'حسب المقاس', sizeEn: 'Custom size', colorAr: 'أسود', colorEn: 'Black', price: 0, inStock: true },
             { id: 'alu-door-vil-brz', sku: 'ALU-DOR-VIL-BRZ', subCategoryId: 'alu-doors', image: ALUMINUM_CATALOG_PHOTOS.doorVilBrz, typeAr: 'باب فيلا ألومنيوم — برونزي', typeEn: 'Villa aluminum door — bronze', sizeAr: 'حسب المقاس', sizeEn: 'Custom size', colorAr: 'برونزي', colorEn: 'Bronze', price: 0, inStock: true },
-            { id: 'alu-door-piv', sku: 'ALU-DOR-PIV', subCategoryId: 'alu-doors', image: ALUMINUM_CATALOG_PHOTOS.doorPiv, typeAr: 'باب بيفوت ألومنيوم', typeEn: 'Aluminum pivot door', sizeAr: 'حسب المقاس', sizeEn: 'Custom size', colorAr: 'شampagne', colorEn: 'Champagne', price: 0, inStock: true },
+            { id: 'alu-door-piv', sku: 'ALU-DOR-PIV', subCategoryId: 'alu-doors', image: ALUMINUM_CATALOG_PHOTOS.doorPiv, typeAr: 'باب بيفوت ألومنيوم', typeEn: 'Aluminum pivot door', sizeAr: 'حسب المقاس', sizeEn: 'Custom size', colorAr: 'شمبانيا', colorEn: 'Champagne', price: 0, inStock: true },
             { id: 'alu-door-dbl-gld', sku: 'ALU-DOR-DBL-GLD', subCategoryId: 'alu-doors', image: ALUMINUM_CATALOG_PHOTOS.doorDblGld, typeAr: 'باب مزدوج ألومنيوم — ذهبي', typeEn: 'Aluminum double door — gold', sizeAr: 'حسب المقاس', sizeEn: 'Custom size', colorAr: 'ذهبي', colorEn: 'Gold', price: 0, inStock: true },
             { id: 'alu-door-sld-blk', sku: 'ALU-DOR-SLD-BLK', subCategoryId: 'alu-doors', image: ALUMINUM_CATALOG_PHOTOS.doorSldBlk, typeAr: 'باب منزلق ألومنيوم — أسود', typeEn: 'Aluminum sliding door — black', sizeAr: 'حسب المقاس', sizeEn: 'Custom size', colorAr: 'أسود', colorEn: 'Black', price: 0, inStock: true },
             { id: 'alu-door-ent-wod', sku: 'ALU-DOR-ENT-WOD', subCategoryId: 'alu-doors', image: ALUMINUM_CATALOG_PHOTOS.doorEntWod, typeAr: 'باب دخول ألومنيوم خشبي', typeEn: 'Wood-effect aluminum entry door', sizeAr: 'حسب المقاس', sizeEn: 'Custom size', colorAr: 'خشبي', colorEn: 'Wood', price: 0, inStock: true },
+            { id: 'alu-door-fld', sku: 'ALU-DOR-FLD', subCategoryId: 'alu-doors', image: ALUMINUM_CATALOG_PHOTOS.doorFld, typeAr: 'باب ألومنيوم قابل للطي', typeEn: 'Aluminum bifold patio door', sizeAr: 'حسب المقاس', sizeEn: 'Custom size', colorAr: 'فضي', colorEn: 'Silver', price: 0, inStock: true },
+            { id: 'alu-door-ent', sku: 'ALU-DOR-ENT', subCategoryId: 'alu-doors', image: ALUMINUM_CATALOG_PHOTOS.doorEnt, typeAr: 'باب دخول ألومنيوم مع جوانب زجاج', typeEn: 'Aluminum entry door with sidelights', sizeAr: 'حسب المقاس', sizeEn: 'Custom size', colorAr: 'فضي', colorEn: 'Silver', price: 0, inStock: true },
+            { id: 'alu-door-off', sku: 'ALU-DOR-OFF', subCategoryId: 'alu-doors', image: ALUMINUM_CATALOG_PHOTOS.doorOff, typeAr: 'باب مكتب ألومنيوم — واجهة زجاج', typeEn: 'Aluminum office storefront door', sizeAr: 'حسب المقاس', sizeEn: 'Custom size', colorAr: 'فضي', colorEn: 'Silver', price: 0, inStock: true },
+            { id: 'alu-door-pat', sku: 'ALU-DOR-PAT', subCategoryId: 'alu-doors', image: ALUMINUM_CATALOG_PHOTOS.doorPat, typeAr: 'باب فناء ألومنيوم تكديس', typeEn: 'Aluminum stacking patio door', sizeAr: 'حسب المقاس', sizeEn: 'Custom size', colorAr: 'فضي', colorEn: 'Silver', price: 0, inStock: true },
             { id: 'alu-fac-clad', sku: 'ALU-FAC-CLAD', subCategoryId: 'alu-facades', image: ALUMINUM_CATALOG_PHOTOS.facade1, typeAr: 'كلادينج واجهات', typeEn: 'Facade cladding', sizeAr: 'حسب المشروع', sizeEn: 'Per project', colorAr: 'متعدد', colorEn: 'Various', price: 0, inStock: true },
             { id: 'alu-fac-relief', sku: 'ALU-FAC-REL', subCategoryId: 'alu-facades', image: ALUMINUM_CATALOG_PHOTOS.facade2, typeAr: 'واجهة بارزة', typeEn: 'Raised facade panel', sizeAr: 'حسب المشروع', sizeEn: 'Per project', colorAr: 'متعدد', colorEn: 'Various', price: 0, inStock: true },
             { id: 'alu-fac-cw', sku: 'ALU-FAC-CW', subCategoryId: 'alu-facades', image: ALUMINUM_CATALOG_PHOTOS.facade3, typeAr: 'واجهة Curtain Wall', typeEn: 'Curtain wall facade', sizeAr: 'حسب المشروع', sizeEn: 'Per project', colorAr: 'فضي / زجاج', colorEn: 'Silver / glass', price: 0, inStock: true },
+            { id: 'alu-fac-grid', sku: 'ALU-FAC-GRID', subCategoryId: 'alu-facades', image: ALUMINUM_CATALOG_PHOTOS.facadeGrid, typeAr: 'واجهة شبكة ACP', typeEn: 'ACP grid facade cladding', sizeAr: 'حسب المشروع', sizeEn: 'Per project', colorAr: 'فضي', colorEn: 'Silver', price: 0, inStock: true },
+            { id: 'alu-fac-sun', sku: 'ALU-FAC-SUN', subCategoryId: 'alu-facades', image: ALUMINUM_CATALOG_PHOTOS.facadeSun, typeAr: 'واجهة كاسرات شمس ألومنيوم', typeEn: 'Aluminum sunshade louver facade', sizeAr: 'حسب المشروع', sizeEn: 'Per project', colorAr: 'فضي', colorEn: 'Silver', price: 0, inStock: true },
+            { id: 'alu-fac-per', sku: 'ALU-FAC-PER', subCategoryId: 'alu-facades', image: ALUMINUM_CATALOG_PHOTOS.facadePer, typeAr: 'واجهة ألومنيوم مثقبة', typeEn: 'Perforated aluminum screen facade', sizeAr: 'حسب المشروع', sizeEn: 'Per project', colorAr: 'فضي', colorEn: 'Silver', price: 0, inStock: true },
             { id: 'alu-kitchen-sys', sku: 'ALU-KIT-SYS', subCategoryId: 'alu-kitchens', image: ALUMINUM_CATALOG_PHOTOS.kitchen1, typeAr: 'مطبخ خطي — جدار واحد', typeEn: 'Linear single-wall kitchen', sizeAr: 'حسب التصميم', sizeEn: 'Per design', colorAr: 'متعدد', colorEn: 'Various', price: 0, inStock: true },
             { id: 'alu-kitchen-front', sku: 'ALU-KIT-FRT', subCategoryId: 'alu-kitchens', image: ALUMINUM_CATALOG_PHOTOS.kitchen2, typeAr: 'واجهات أدراج ألومنيوم', typeEn: 'Aluminum drawer fronts', sizeAr: 'حسب المقاس', sizeEn: 'Custom size', colorAr: 'متعدد', colorEn: 'Various', price: 0, inStock: true },
             { id: 'alu-kitchen-isl', sku: 'ALU-KIT-ISL', subCategoryId: 'alu-kitchens', image: ALUMINUM_CATALOG_PHOTOS.kitchen3, typeAr: 'مطبخ حرف U مع جزيرة', typeEn: 'U-shape kitchen with island', sizeAr: 'حسب التصميم', sizeEn: 'Per design', colorAr: 'متعدد', colorEn: 'Various', price: 0, inStock: true },
@@ -4736,6 +4870,10 @@
             { id: 'alu-kitchen-gal', sku: 'ALU-KIT-GAL', subCategoryId: 'alu-kitchens', image: ALUMINUM_CATALOG_PHOTOS.kitchenGal, typeAr: 'مطبخ ممر — جداران متقابلان', typeEn: 'Galley kitchen', sizeAr: 'حسب التصميم', sizeEn: 'Per design', colorAr: 'متعدد', colorEn: 'Various', price: 0, inStock: true },
             { id: 'alu-kitchen-lsh', sku: 'ALU-KIT-LSH', subCategoryId: 'alu-kitchens', image: ALUMINUM_CATALOG_PHOTOS.kitchenLsh, typeAr: 'مطبخ حرف L', typeEn: 'L-shape kitchen', sizeAr: 'حسب التصميم', sizeEn: 'Per design', colorAr: 'متعدد', colorEn: 'Various', price: 0, inStock: true },
             { id: 'alu-kitchen-gls', sku: 'ALU-KIT-GLS', subCategoryId: 'alu-kitchens', image: ALUMINUM_CATALOG_PHOTOS.kitchenGls, typeAr: 'مطبخ خطي بواجهات زجاج', typeEn: 'Linear glass-front kitchen', sizeAr: 'حسب التصميم', sizeEn: 'Per design', colorAr: 'متعدد', colorEn: 'Various', price: 0, inStock: true },
+            { id: 'alu-kitchen-isd', sku: 'ALU-KIT-ISD', subCategoryId: 'alu-kitchens', image: ALUMINUM_CATALOG_PHOTOS.kitchenIsd, typeAr: 'مطبخ جزيرة مركزية', typeEn: 'Island-centric aluminum kitchen', sizeAr: 'حسب التصميم', sizeEn: 'Per design', colorAr: 'متعدد', colorEn: 'Various', price: 0, inStock: true },
+            { id: 'alu-kitchen-pan', sku: 'ALU-KIT-PAN', subCategoryId: 'alu-kitchens', image: ALUMINUM_CATALOG_PHOTOS.kitchenPan, typeAr: 'مطبخ بخزانة طويلة', typeEn: 'Tall-pantry aluminum kitchen', sizeAr: 'حسب التصميم', sizeEn: 'Per design', colorAr: 'متعدد', colorEn: 'Various', price: 0, inStock: true },
+            { id: 'alu-kitchen-uop', sku: 'ALU-KIT-UOP', subCategoryId: 'alu-kitchens', image: ALUMINUM_CATALOG_PHOTOS.kitchenUop, typeAr: 'مطبخ حرف U مفتوح', typeEn: 'Open U-shape aluminum kitchen', sizeAr: 'حسب التصميم', sizeEn: 'Per design', colorAr: 'متعدد', colorEn: 'Various', price: 0, inStock: true },
+            { id: 'alu-kitchen-upg', sku: 'ALU-KIT-UPG', subCategoryId: 'alu-kitchens', image: ALUMINUM_CATALOG_PHOTOS.kitchenUpg, typeAr: 'مطبخ بواجهات زجاج علوية', typeEn: 'Kitchen with glass upper cabinets', sizeAr: 'حسب التصميم', sizeEn: 'Per design', colorAr: 'متعدد', colorEn: 'Various', price: 0, inStock: true },
             { id: 'alu-acc-set', sku: 'ALU-ACC-SET', subCategoryId: 'alu-accessories', image: ALUMINUM_CATALOG_PHOTOS.accSet, typeAr: 'مجموعة إكسسوارات أبواب', typeEn: 'Door hardware set', sizeAr: 'حسب النوع', sizeEn: 'By type', colorAr: 'فضي / أسود', colorEn: 'Silver / black', price: 0, inStock: true },
             { id: 'alu-acc-roller', sku: 'ALU-ACC-ROLLER', subCategoryId: 'alu-accessories', image: ALUMINUM_CATALOG_PHOTOS.accRoller, typeAr: 'رولات سحاب ألومنيوم', typeEn: 'Sliding door rollers', sizeAr: 'حسب المقاس', sizeEn: 'Custom size', colorAr: 'فضي', colorEn: 'Silver', price: 0, inStock: true },
             { id: 'alu-acc-gasket', sku: 'ALU-ACC-GASKET', subCategoryId: 'alu-accessories', image: ALUMINUM_CATALOG_PHOTOS.accGasket, typeAr: 'جوانات مطاط EPDM', typeEn: 'EPDM gasket seals', sizeAr: 'حسب المقطع', sizeEn: 'Per profile', colorAr: 'أسود', colorEn: 'Black', price: 0, inStock: true }
@@ -4753,7 +4891,7 @@
         const DEFAULT_SITE_PRODUCTS = [
             { id: 'prod-wpc-raw', sortOrder: 1, cssClass: 'card-wpc-raw', iconClass: 'fas fa-door-open', titleIcon: 'fas fa-industry', legacyKey: 'wpc-raw', titleAr: 'أبواب WPC عضم (للورش والمصانع)', titleEn: 'WPC Raw Doors (Workshops)', titleZh: 'WPC 毛坯门', textAr: 'أبواب WPC عضم غير ملبّسة وغير جاهزة — للورش والمصانع التي تكمل التشطيب والتركيب.', textEn: 'Unfinished WPC door leaves for workshops and factories.', textZh: '供车间加工的 WPC 毛坯门。', backgroundImage: 'wpc-background', album: ['images/catalog/wpc-photos/08-bone-profile.png', 'images/catalog/wpc-photos/10-leaf-section.png', 'images/catalog/wpc-photos/09-mdf.png'], target: '#products', action: 'shop', anchorId: 'products', visible: true, shopEnabled: true, variants: DEFAULT_WPC_RAW_VARIANTS },
             { id: 'prod-wpc', sortOrder: 2, cssClass: 'card-wpc', iconClass: 'fas fa-door-closed', titleIcon: 'fas fa-door-open', legacyKey: 'wpc', titleAr: 'أبواب WPC جاهزة للتركيب', titleEn: 'WPC Ready Doors', titleZh: 'WPC 成品门', textAr: 'أبواب WPC جاهزة للتركيب — تجمع بين فخامة المظهر وصمود البلاستيك للمنازل والمشاريع.', textEn: 'Ready-to-install WPC doors for homes and projects.', textZh: '即装型 WPC 门。', backgroundImage: 'wpc-background', album: ['images/catalog/wpc-photos/02-with-accessory.png', 'images/catalog/wpc-photos/07-classic-panel.png', 'images/catalog/wpc-photos/03-glass-leaf-quarter.png', 'images/catalog/wpc-photos/06-sliding-double-decor.png'], target: '#doors', action: 'shop', anchorId: 'doors', visible: true, shopEnabled: true, variants: DEFAULT_WPC_READY_VARIANTS },
-            { id: 'prod-aluminum', sortOrder: 3, cssClass: 'card-aluminum', iconClass: 'fas fa-industry', titleIcon: 'fas fa-cog', legacyKey: 'aluminum', titleAr: 'الألومنيوم', titleEn: 'Aluminum', titleZh: '铝制品', textAr: 'منتجات ألومنيوم متينة وتصميمات ذكية تناسب مشاريع البناء والتشطيب.', textEn: 'Durable aluminum for construction and finishing.', textZh: '适用于建筑与装修的耐用铝材。', backgroundImage: 'aluminum-background', album: [aluSkuImg('ALU-PROF-6M.webp'), aluSkuImg('ALU-WIN-SCR.png'), aluSkuImg('ALU-DOR-GLASS.png'), aluSkuImg('ALU-FAC-CLAD.png'), aluSkuImg('ALU-KIT-SYS.png')], target: '#aluminum', action: 'shop', anchorId: 'aluminum', visible: true, shopEnabled: true, variants: DEFAULT_ALUMINUM_VARIANTS },
+            { id: 'prod-aluminum', sortOrder: 3, cssClass: 'card-aluminum', iconClass: 'fas fa-industry', titleIcon: 'fas fa-cog', legacyKey: 'aluminum', titleAr: 'الألومنيوم', titleEn: 'Aluminum', titleZh: '铝制品', textAr: 'منتجات ألومنيوم متينة وتصميمات ذكية تناسب مشاريع البناء والتشطيب.', textEn: 'Durable aluminum for construction and finishing.', textZh: '适用于建筑与装修的耐用铝材。', backgroundImage: 'aluminum-background', album: [aluSkuImg('ALU-PROF-6M.webp'), aluSkuImg('ALU-WIN-SLD2.png'), aluSkuImg('ALU-DOR-FLD.png'), aluSkuImg('ALU-FAC-GRID.png'), aluSkuImg('ALU-KIT-ISD.png')], target: '#aluminum', action: 'shop', anchorId: 'aluminum', visible: true, shopEnabled: true, variants: DEFAULT_ALUMINUM_VARIANTS },
             { id: 'prod-other', sortOrder: 4, cssClass: 'card-other-products', iconClass: 'fas fa-boxes', titleIcon: 'fas fa-boxes', legacyKey: 'otherProducts', titleAr: 'منتجات أخرى', titleEn: 'Other Products', titleZh: '其他产品', textAr: 'مجموعة متنوعة من المنتجات الإضافية والحلول المبتكرة.', textEn: 'A diverse range of additional products.', textZh: '多样化的附加产品与创新方案。', backgroundImage: 'background-other-products', album: ['images/background-other-products.jpeg'], target: '#products', visitorMode: 'shop', action: 'shop', anchorId: '', visible: true, shopEnabled: true, variants: DEFAULT_OTHER_VARIANTS },
             { id: 'prod-complaints', sortOrder: 5, cssClass: 'card-customer-complaints', iconClass: 'fas fa-search', titleIcon: 'fas fa-search', legacyKey: 'complaints', titleAr: 'استفسار عن الشكاوى', titleEn: 'Complaint Inquiry', titleZh: '投诉查询', textAr: 'تحقق من حالة شكواك بإدخال رقم الشكوى.', textEn: 'Check your complaint status with the complaint number.', textZh: '输入投诉编号查询处理状态。', backgroundImage: '', album: [], target: '', action: 'complaint', anchorId: '', visible: true }
         ];
@@ -29361,7 +29499,7 @@
             if (nebrasDoorEngineLoadPromise) return nebrasDoorEngineLoadPromise;
             const ver = (typeof window.NEBRAS_DEPLOY_TAG !== 'undefined' && window.NEBRAS_DEPLOY_TAG)
                 ? window.NEBRAS_DEPLOY_TAG
-                : ((document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws312');
+                : ((document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws313');
             nebrasDoorEngineLoadPromise = loadNebrasThreeJs().then(function() {
                 return Promise.all([
                     loadNebrasScriptOnce('js/nebras-door-3d.js?v=' + ver),
