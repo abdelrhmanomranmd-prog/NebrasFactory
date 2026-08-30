@@ -1743,6 +1743,22 @@ body.nebras-mobile-bar-active.admin-session .nebras-mobile-commerce-bar {
     image-rendering: auto;
 }
 
+.nebras-store-sku-media.is-alu-finish-tinted {
+    position: relative;
+    isolation: isolate;
+}
+
+.nebras-store-sku-media.is-alu-finish-tinted::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--alu-finish-hex, #c5c9cf);
+    mix-blend-mode: color;
+    opacity: 0.46;
+    pointer-events: none;
+    border-radius: inherit;
+}
+
 .nebras-store-roll-picker--alu-finish {
     margin-top: 10px;
     padding-top: 10px;

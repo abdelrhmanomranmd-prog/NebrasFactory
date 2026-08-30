@@ -1,57 +1,20 @@
-/* واجهة «صمّم بابك» — شريط هيدر مبسّط */
-
-body.nebras-door-interface-active .header-hero-band {
-    max-width: 100%;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    gap: clamp(12px, 2vw, 20px);
-}
+/* واجهة «صمّم بابك» — بدون هيدر عام فوق مساحة العمل */
 
 body.nebras-door-interface-active .header-hero-rail--partners {
     display: none !important;
 }
 
-body.nebras-door-interface-active .header-hero-rail--doors {
-    display: flex !important;
-}
-
-body.nebras-door-interface-active .header-hero-core {
-    flex: 1 1 auto;
-}
-
-body.nebras-door-interface-active.nebras-workspace-active {
-    --nebras-door-header-h: clamp(112px, 20vw, 140px);
-}
-
-body.nebras-door-interface-active.nebras-workspace-active header {
-    display: block !important;
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 1250;
-    margin: 0;
-}
-
-body.nebras-door-interface-active.nebras-workspace-active .header-main-row,
+body.nebras-door-interface-active.nebras-workspace-active header,
+body.nebras-door-interface-active.nebras-workspace-active .nebras-official-verified-bar,
+body.nebras-door-interface-active.nebras-workspace-active .nebras-trust-strip,
 body.nebras-door-interface-active.nebras-workspace-active .top-contact-bar,
 body.nebras-door-interface-active.nebras-workspace-active .company-legal-bar {
     display: none !important;
 }
 
 body.nebras-door-interface-active.nebras-workspace-active #nebras-workspace {
-    top: var(--nebras-door-header-h);
-    height: calc(100% - var(--nebras-door-header-h));
+    top: 0;
+    height: 100%;
     bottom: 0;
-}
-
-body.nebras-door-interface-active.nebras-workspace-active .header-top-row--campaign {
-    padding: 10px 4% 8px;
-}
-
-@media (max-width: 520px) {
-    body.nebras-door-interface-active.nebras-workspace-active {
-        --nebras-door-header-h: 104px;
-    }
+    z-index: 1300;
 }

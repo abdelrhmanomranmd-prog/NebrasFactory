@@ -1,11 +1,11 @@
 /**
- * نبراس hrws307 — boot موحّد للإدارة (Accmaa-style)
+ * نبراس hrws308 — boot موحّد للإدارة (Accmaa-style)
  * CSS · adminCore · portal · ERP UI · inits — ترتيب واحد دقيق
  */
 (function(global) {
     'use strict';
 
-    var VER = 'hrws307';
+    var VER = 'hrws308';
     var inflight = null;
 
     function bootNebrasAdminSession(options) {

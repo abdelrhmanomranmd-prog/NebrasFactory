@@ -7,7 +7,7 @@
 
     const PROFILE_2026_SEED_VERSION = 15;
     const PROFILE_STORAGE_KEY = 'nebrasProfile2026SeedVersion';
-    const SHOWROOM_CATALOG_VERSION = 17;
+    const SHOWROOM_CATALOG_VERSION = 18;
     const SHOWROOM_CATALOG_STORAGE_KEY = 'nebrasShowroomCatalogVersion';
 
     function img(folder, n) {
@@ -418,13 +418,13 @@
         [aluSku('ALU-DOR-ENT-WOD.png'), 'باب دخول ألومنيوم خشبي', 'Wood-effect aluminum entry'],
         [aluSku('ALU-FAC-CLAD.png'), 'كلادينج واجهات ACP', 'ACP facade cladding'],
         [aluSku('ALU-FAC-CW.png'), 'واجهة Curtain Wall', 'Curtain wall facade'],
-        [aluSku('ALU-KIT-SYS.png'), 'نظام مطبخ ألومنيوم', 'Aluminum kitchen system'],
-        [aluSku('ALU-KIT-ISL.png'), 'مطبخ ألومنيوم بجزيرة', 'Aluminum kitchen with island'],
-        [aluSku('ALU-KIT-WHT.png'), 'مطبخ ألومنيوم أبيض', 'White aluminum kitchen'],
-        [aluSku('ALU-KIT-BLK.png'), 'مطبخ ألومنيوم أسود', 'Black aluminum kitchen'],
-        [aluSku('ALU-KIT-WOD.png'), 'مطبخ ألومنيوم خشبي', 'Wood-effect aluminum kitchen'],
-        [aluSku('ALU-KIT-LSH.png'), 'مطبخ ألومنيوم شكل L', 'L-shape aluminum kitchen'],
-        [aluSku('ALU-KIT-GLS.png'), 'مطبخ ألومنيوم واجهات زجاج', 'Glass-front aluminum kitchen'],
+        [aluSku('ALU-KIT-SYS.png'), 'مطبخ خطي — جدار واحد', 'Linear single-wall kitchen'],
+        [aluSku('ALU-KIT-FRT.png'), 'واجهات أدراج ألومنيوم', 'Aluminum drawer fronts'],
+        [aluSku('ALU-KIT-ISL.png'), 'مطبخ حرف U مع جزيرة', 'U-shape kitchen with island'],
+        [aluSku('ALU-KIT-PEN.png'), 'مطبخ شبه جزيرة', 'Peninsula kitchen'],
+        [aluSku('ALU-KIT-GAL.png'), 'مطبخ ممر — جداران متقابلان', 'Galley kitchen'],
+        [aluSku('ALU-KIT-LSH.png'), 'مطبخ حرف L', 'L-shape kitchen'],
+        [aluSku('ALU-KIT-GLS.png'), 'مطبخ خطي بواجهات زجاج', 'Linear glass-front kitchen'],
         [aluSku('ALU-ACC-SET.png'), 'إكسسوارات أبواب وشبابيك', 'Door & window hardware set'],
         [aluSku('ALU-ACC-ROLLER.png'), 'رولات سحاب ألومنيوم', 'Aluminum sliding rollers'],
         [aluSku('ALU-ACC-GASKET.png'), 'جوانات مطاط EPDM', 'EPDM gasket seals']
