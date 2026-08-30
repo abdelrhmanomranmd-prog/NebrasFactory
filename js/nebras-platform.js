@@ -971,7 +971,7 @@
         }
 
         const DOOR_PHOTO_PRESET_ROOT = 'images/doors/presets/';
-        const DOOR_PHOTO_PRESET_CACHE = '312';
+        const DOOR_PHOTO_PRESET_CACHE = '315';
         const DOOR_PHOTO_COMPOSE_MAX_DIM = 1200;
         /** صور أبواب المصنع الحقيقية في المعاينة — SVG احتياطي عند غياب الصورة */
         const DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS = true;
@@ -1506,12 +1506,41 @@
                 '<div class="wpc-door-live-transom-mid">' +
                     '<div class="wpc-door-live-transom-panel">' +
                         '<span class="wpc-door-live-transom-seam"></span>' +
-                        '<span class="wpc-door-live-transom-mark wpc-door-live-transom-mark--a"></span>' +
-                        '<span class="wpc-door-live-transom-mark wpc-door-live-transom-mark--b"></span>' +
                     '</div>' +
                 '</div>' +
                 '<div class="wpc-door-live-transom-post wpc-door-live-transom-post--right"></div>' +
             '</div>';
+        }
+
+        /** مقاس التكسية العلوية — نفس شكل الفلات، ومكان الفتحة حسب صورة كل موديل */
+        const LIVE_TRANSOM_FIT = {
+            'edge-1': { top: 10.6, width: 48, height: 13.4, post: 11 },
+            'edge-2': { top: 10.5, width: 61.5, height: 12.6, post: 8.5 },
+            'edge-steel': { top: 9.0, width: 36.5, height: 10.8, post: 10 },
+            'edge-classic': { top: 10.8, width: 49, height: 13.2, post: 11 },
+            'edge-glass': { top: 10.6, width: 48, height: 13.4, post: 11 },
+            'edge-groove': { top: 10.6, width: 48, height: 13.4, post: 11 },
+            'edge-lq': { top: 8.6, width: 41, height: 11.2, post: 10 },
+            'edge-glass-strip': { top: 10.6, width: 48, height: 13.4, post: 11 },
+            'lib-flat': { top: 8.2, width: 39.5, height: 11.0, post: 10 },
+            'lib-steel': { top: 8.2, width: 39.5, height: 11.0, post: 10 },
+            'lib-glass': { top: 8.2, width: 39.5, height: 11.0, post: 10 },
+            'u-plain': { top: 10.4, width: 48.5, height: 13.2, post: 11 },
+            'u-slats': { top: 10.4, width: 48.5, height: 13.2, post: 11 },
+            'u-classic': { top: 10.4, width: 48.5, height: 13.2, post: 11 },
+            'u-glass': { top: 10.4, width: 48.5, height: 13.2, post: 11 }
+        };
+
+        function getLiveTransomFit(state) {
+            const model = state && state.model ? state.model : '';
+            const outer = state && state.outerShape ? state.outerShape : 'outer-flat';
+            const base = LIVE_TRANSOM_FIT[model] || { top: 10.6, width: 48, height: 13.4, post: 11 };
+            const fit = { top: base.top, width: base.width, height: base.height, post: base.post, radius: 2 };
+            if (outer === 'outer-curve') {
+                fit.radius = 14;
+                fit.top = +(fit.top + 0.35).toFixed(2);
+            }
+            return fit;
         }
 
         function ensureLiveTransomDom() {
@@ -1525,6 +1554,8 @@
                 node.id = 'wpc-door-live-transom';
                 node.hidden = true;
                 node.setAttribute('aria-hidden', 'true');
+            }
+            if (!node.querySelector('.wpc-door-live-transom-unit') || node.querySelector('.wpc-door-live-transom-mark')) {
                 node.innerHTML = liveTransomMarkup();
             }
             if (stack && node.parentNode !== stack) stack.appendChild(node);
@@ -1545,6 +1576,14 @@
             liveEl.setAttribute('data-door-outer', state.outerShape || 'outer-flat');
             liveEl.setAttribute('data-door-surface', state.surface || '');
             liveEl.setAttribute('data-door-leaves', state.isDouble ? '2' : '1');
+            const fit = getLiveTransomFit(state);
+            liveEl.style.top = fit.top + '%';
+            liveEl.style.width = fit.width + '%';
+            liveEl.style.height = fit.height + '%';
+            liveEl.style.left = '50%';
+            liveEl.style.transform = 'translateX(-50%)';
+            liveEl.style.setProperty('--live-transom-post', fit.post + '%');
+            liveEl.style.setProperty('--live-transom-radius', fit.radius + 'px');
             liveEl.style.setProperty('--door-face', safe);
             liveEl.style.setProperty('--door-light', shadeDoorHex(safe, 8));
             liveEl.style.setProperty('--door-dark', shadeDoorHex(safe, -8));
@@ -29559,7 +29598,7 @@
             if (nebrasDoorEngineLoadPromise) return nebrasDoorEngineLoadPromise;
             const ver = (typeof window.NEBRAS_DEPLOY_TAG !== 'undefined' && window.NEBRAS_DEPLOY_TAG)
                 ? window.NEBRAS_DEPLOY_TAG
-                : ((document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws314');
+                : ((document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws315');
             nebrasDoorEngineLoadPromise = loadNebrasThreeJs().then(function() {
                 return Promise.all([
                     loadNebrasScriptOnce('js/nebras-door-3d.js?v=' + ver),

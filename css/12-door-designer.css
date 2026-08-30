@@ -2879,12 +2879,13 @@
     width: 100%;
     height: 100%;
     overflow: hidden;
-    border-radius: 2px 2px 0 0;
+    border-radius: var(--live-transom-radius, 2px) var(--live-transom-radius, 2px) 0 0;
     background: var(--door-face, #b8bcc4);
 }
 
 .wpc-door-live-transom-post {
-    width: 11%;
+    width: var(--live-transom-post, 11%);
+    flex: 0 0 var(--live-transom-post, 11%);
     background-color: var(--door-face, #b8bcc4);
     background-image: repeating-linear-gradient(
         180deg,
@@ -2935,59 +2936,10 @@
     left: 50%;
 }
 
-.wpc-door-live-transom[data-door-type="u-channel"] {
-    width: 50%;
-    top: 10.2%;
-}
-
-.wpc-door-live-transom[data-door-type="u-channel"] .wpc-door-live-transom-post {
-    width: 13%;
-}
-
-.wpc-door-live-transom[data-door-type="lib"] .wpc-door-live-transom-post {
-    width: 12%;
-}
-
-.wpc-door-live-transom[data-door-model="edge-2"],
-.wpc-door-live-transom[data-door-model="edge-lq"] {
-    width: 58%;
-    top: 11%;
-}
-
-.wpc-door-live-transom[data-door-outer="outer-curve"] .wpc-door-live-transom-unit {
-    border-radius: 14px 14px 0 0;
-}
-
-.wpc-door-live-transom[data-door-model="lib-flat"] .wpc-door-live-transom-mark,
-.wpc-door-live-transom[data-door-model="lib-steel"] .wpc-door-live-transom-mark,
-.wpc-door-live-transom[data-door-model="u-plain"] .wpc-door-live-transom-mark {
-    display: block;
-}
-
-.wpc-door-live-transom-mark--a { left: 33%; }
-.wpc-door-live-transom-mark--b { left: 66%; }
-
-.wpc-door-live-transom[data-door-model="u-slats"] .wpc-door-live-transom-panel {
-    background-image:
-        repeating-linear-gradient(90deg, transparent 0 18%, rgba(0, 0, 0, 0.12) 18% 20%),
-        repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.08) 0 6px, transparent 6px 13px);
-}
-
-.wpc-door-live-transom[data-door-model="u-classic"] .wpc-door-live-transom-panel {
-    margin: 6px 7px;
-    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.14);
-}
-
-.wpc-door-live-transom[data-door-model="edge-steel"] .wpc-door-live-transom-mark--a,
-.wpc-door-live-transom[data-door-model="lib-steel"] .wpc-door-live-transom-mark--a {
-    display: block;
-    left: 22%;
-    width: 3px;
-    background: linear-gradient(180deg, #e8edf2 0%, #9aa3ad 48%, #d5dbe2 100%);
-}
-
-.wpc-door-live-transom[data-door-model="lib-steel"] .wpc-door-live-transom-mark--b {
-    display: none;
+.wpc-door-live-transom-mark,
+.wpc-door-live-transom-mark--a,
+.wpc-door-live-transom-mark--b {
+    display: none !important;
 }
 
 .wpc-door-photo-preset-wrap.is-live-transom .wpc-door-photo-preset-stack {
