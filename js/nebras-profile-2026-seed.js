@@ -7,7 +7,7 @@
 
     const PROFILE_2026_SEED_VERSION = 15;
     const PROFILE_STORAGE_KEY = 'nebrasProfile2026SeedVersion';
-    const SHOWROOM_CATALOG_VERSION = 19;
+    const SHOWROOM_CATALOG_VERSION = 20;
     const SHOWROOM_CATALOG_STORAGE_KEY = 'nebrasShowroomCatalogVersion';
 
     function img(folder, n) {
@@ -411,6 +411,9 @@
         [aluSku('ALU-WIN-BAY.png'), 'شباك باي ألومنيوم', 'Aluminum bay window'],
         [aluSku('ALU-WIN-FIX.png'), 'شباك ثابت كبير — Picture', 'Fixed picture aluminum window'],
         [aluSku('ALU-WIN-COR.png'), 'شباك زاوية ألومنيوم', 'Aluminum corner window'],
+        [aluSku('ALU-WIN-TIL.png'), 'شباك إمالة وفتح — Tilt & Turn', 'Aluminum tilt-and-turn window'],
+        [aluSku('ALU-WIN-ARC.png'), 'شباك ألومنيوم مقوّس', 'Arched aluminum window'],
+        [aluSku('ALU-WIN-MUL.png'), 'شباك ألومنيوم بتقسيمات', 'Multi-lite aluminum window'],
         [aluSku('ALU-DOR-GLASS.png'), 'باب ألومنيوم — واجهة فيلا', 'Aluminum villa entry door'],
         [aluSku('ALU-DOR-VIL-BLK.png'), 'باب فيلا ألومنيوم أسود', 'Black aluminum villa door'],
         [aluSku('ALU-DOR-VIL-BRZ.png'), 'باب فيلا ألومنيوم برونزي', 'Bronze aluminum villa door'],
@@ -424,11 +427,16 @@
         [aluSku('ALU-DOR-ENT.png'), 'باب دخول ألومنيوم مع جوانب زجاج', 'Aluminum entry door with sidelights'],
         [aluSku('ALU-DOR-OFF.png'), 'باب مكتب ألومنيوم — واجهة زجاج', 'Aluminum office storefront door'],
         [aluSku('ALU-DOR-PAT.png'), 'باب فناء ألومنيوم تكديس', 'Aluminum stacking patio door'],
+        [aluSku('ALU-DOR-FRN.png'), 'باب فرنسي ألومنيوم مزدوج', 'Aluminum French double doors'],
+        [aluSku('ALU-DOR-HID.png'), 'باب ألومنيوم مخفي الإطار', 'Flush hidden-frame aluminum door'],
+        [aluSku('ALU-DOR-TEL.png'), 'باب ألومنيوم تلسكوبي ثلاثي', 'Three-track telescopic aluminum door'],
         [aluSku('ALU-FAC-CLAD.png'), 'كلادينج واجهات ACP', 'ACP facade cladding'],
         [aluSku('ALU-FAC-CW.png'), 'واجهة Curtain Wall', 'Curtain wall facade'],
         [aluSku('ALU-FAC-GRID.png'), 'واجهة شبكة ACP', 'ACP grid facade cladding'],
         [aluSku('ALU-FAC-SUN.png'), 'واجهة كاسرات شمس ألومنيوم', 'Aluminum sunshade louver facade'],
         [aluSku('ALU-FAC-PER.png'), 'واجهة ألومنيوم مثقبة', 'Perforated aluminum screen facade'],
+        [aluSku('ALU-FAC-VER.png'), 'واجهة زعانف رأسية', 'Vertical aluminum fin facade'],
+        [aluSku('ALU-FAC-HEX.png'), 'واجهة ألومنيوم سداسية', 'Honeycomb aluminum facade screen'],
         [aluSku('ALU-KIT-SYS.png'), 'مطبخ خطي — جدار واحد', 'Linear single-wall kitchen'],
         [aluSku('ALU-KIT-FRT.png'), 'واجهات أدراج ألومنيوم', 'Aluminum drawer fronts'],
         [aluSku('ALU-KIT-ISL.png'), 'مطبخ حرف U مع جزيرة', 'U-shape kitchen with island'],
@@ -440,6 +448,10 @@
         [aluSku('ALU-KIT-PAN.png'), 'مطبخ بخزانة طويلة', 'Tall-pantry aluminum kitchen'],
         [aluSku('ALU-KIT-UOP.png'), 'مطبخ حرف U مفتوح', 'Open U-shape aluminum kitchen'],
         [aluSku('ALU-KIT-UPG.png'), 'مطبخ بواجهات زجاج علوية', 'Kitchen with glass upper cabinets'],
+        [aluSku('ALU-KIT-BAR.png'), 'مطبخ ببار إفطار', 'Breakfast-bar aluminum kitchen'],
+        [aluSku('ALU-KIT-MIN.png'), 'مطبخ مدمج صغير', 'Compact mini aluminum kitchen'],
+        [aluSku('ALU-KIT-OUT.png'), 'مطبخ ألومنيوم خارجي', 'Outdoor aluminum kitchen'],
+        [aluSku('ALU-KIT-CUR.png'), 'مطبخ جزيرة منحنية', 'Curved-island aluminum kitchen'],
         [aluSku('ALU-ACC-SET.png'), 'إكسسوارات أبواب وشبابيك', 'Door & window hardware set'],
         [aluSku('ALU-ACC-ROLLER.png'), 'رولات سحاب ألومنيوم', 'Aluminum sliding rollers'],
         [aluSku('ALU-ACC-GASKET.png'), 'جوانات مطاط EPDM', 'EPDM gasket seals']
