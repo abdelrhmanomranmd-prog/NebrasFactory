@@ -971,7 +971,7 @@
         }
 
         const DOOR_PHOTO_PRESET_ROOT = 'images/doors/presets/';
-        const DOOR_PHOTO_PRESET_CACHE = '305';
+        const DOOR_PHOTO_PRESET_CACHE = '307';
         const DOOR_PHOTO_COMPOSE_MAX_DIM = 1200;
         /** صور أبواب المصنع الحقيقية في المعاينة — SVG احتياطي عند غياب الصورة */
         const DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS = true;
@@ -1461,8 +1461,8 @@
             if (decor === 'transom' && DOOR_PHOTO_PRESET_MAP[plainKey]) {
                 return {
                     url: DOOR_PHOTO_PRESET_MAP[plainKey],
-                    mode: 'composite-transom',
-                    transomCap: outer === 'outer-curve' ? DOOR_PHOTO_TRANSOM_CAP.curve : DOOR_PHOTO_TRANSOM_CAP.flat
+                    mode: 'live-transom',
+                    transomCap: ''
                 };
             }
             const key = type + '|' + model + '|' + outer + '|' + decor;
@@ -1479,8 +1479,13 @@
             const img = document.getElementById('wpc-door-photo-preset-img');
             const rollImg = document.getElementById('wpc-door-photo-preset-roll');
             const transomCap = document.getElementById('wpc-door-photo-preset-transom-cap');
+            const liveTransom = document.getElementById('wpc-door-live-transom');
             if (wrap) {
-                wrap.classList.remove('is-active', 'is-composite-transom', 'has-roll-texture');
+                wrap.classList.remove('is-active', 'is-composite-transom', 'is-live-transom', 'has-roll-texture');
+            }
+            if (liveTransom) {
+                liveTransom.hidden = true;
+                liveTransom.classList.remove('is-active', 'has-roll-texture');
             }
             const stack = document.getElementById('wpc-door-photo-preset-stack');
             if (stack) stack.classList.remove('has-roll-texture');
@@ -1495,18 +1500,69 @@
             }
         }
 
+        function ensureLiveTransomDom() {
+            const wrap = document.getElementById('wpc-door-photo-preset-wrap');
+            if (!wrap || document.getElementById('wpc-door-live-transom')) return document.getElementById('wpc-door-live-transom');
+            const node = document.createElement('div');
+            node.className = 'wpc-door-live-transom';
+            node.id = 'wpc-door-live-transom';
+            node.hidden = true;
+            node.setAttribute('aria-hidden', 'true');
+            node.innerHTML =
+                '<div class="wpc-door-live-transom-unit">' +
+                    '<div class="wpc-door-live-transom-post wpc-door-live-transom-post--left"></div>' +
+                    '<div class="wpc-door-live-transom-mid">' +
+                        '<div class="wpc-door-live-transom-top"></div>' +
+                        '<div class="wpc-door-live-transom-panel"></div>' +
+                        '<div class="wpc-door-live-transom-rail"></div>' +
+                    '</div>' +
+                    '<div class="wpc-door-live-transom-post wpc-door-live-transom-post--right"></div>' +
+                '</div>';
+            const stack = document.getElementById('wpc-door-photo-preset-stack');
+            wrap.insertBefore(node, stack || wrap.firstChild);
+            return node;
+        }
+
+        function paintLiveTransom(liveEl, state, rollUrl, hex, isRoll) {
+            if (!liveEl) return;
+            const show = !!(state && state.decor === 'transom' && !state.isSliding);
+            liveEl.hidden = !show;
+            liveEl.classList.toggle('is-active', show);
+            liveEl.setAttribute('aria-hidden', show ? 'false' : 'true');
+            if (!show) return;
+            const safe = hex || '#b8bcc4';
+            const url = isRoll ? resolveDoorRollTextureUrl(rollUrl) : '';
+            const absUrl = url ? doorDesignerMediaUrl(url.split('?')[0]) : '';
+            const bg = absUrl ? ('url("' + absUrl.replace(/"/g, '') + '")') : 'none';
+            liveEl.setAttribute('data-door-type', state.type || '');
+            liveEl.setAttribute('data-door-model', state.model || '');
+            liveEl.setAttribute('data-door-outer', state.outerShape || 'outer-flat');
+            liveEl.setAttribute('data-door-surface', state.surface || '');
+            liveEl.style.setProperty('--door-face', safe);
+            liveEl.style.setProperty('--door-light', shadeDoorHex(safe, 18));
+            liveEl.style.setProperty('--door-dark', shadeDoorHex(safe, -22));
+            liveEl.style.setProperty('--door-roll-tint', safe);
+            liveEl.style.setProperty('--live-transom-roll', bg);
+            liveEl.style.filter = isRoll ? (typeof buildWpcStoreRollCssFilterForPhoto === 'function' ? buildWpcStoreRollCssFilterForPhoto(safe) : 'none') : 'none';
+            liveEl.classList.toggle('has-roll-texture', !!isRoll);
+        }
+
         function ensurePhotoPresetStackDom() {
             const wrap = document.getElementById('wpc-door-photo-preset-wrap');
-            if (!wrap || document.getElementById('wpc-door-photo-preset-stack')) return;
-            const img = document.getElementById('wpc-door-photo-preset-img');
-            const rollImg = document.getElementById('wpc-door-photo-preset-roll');
-            if (!img) return;
-            const stack = document.createElement('div');
-            stack.className = 'wpc-door-photo-preset-stack';
-            stack.id = 'wpc-door-photo-preset-stack';
-            wrap.insertBefore(stack, img);
-            stack.appendChild(img);
-            if (rollImg) stack.appendChild(rollImg);
+            if (!wrap) return;
+            if (!document.getElementById('wpc-door-photo-preset-stack')) {
+                const img = document.getElementById('wpc-door-photo-preset-img');
+                const rollImg = document.getElementById('wpc-door-photo-preset-roll');
+                if (img) {
+                    const stack = document.createElement('div');
+                    stack.className = 'wpc-door-photo-preset-stack';
+                    stack.id = 'wpc-door-photo-preset-stack';
+                    wrap.insertBefore(stack, img);
+                    stack.appendChild(img);
+                    if (rollImg) stack.appendChild(rollImg);
+                }
+            }
+            ensureLiveTransomDom();
         }
 
         function applyPhotoPresetRollTexture(wrap, stack, rollImg, img, baseSrc, rollUrl, hex, isRoll, catalogIndex, transomCap) {
@@ -1578,7 +1634,7 @@
             ensurePhotoPresetStackDom();
             stage.classList.remove('wpc-door-stage--dynamic-render', 'wpc-door-stage--photoreal', 'wpc-door-stage--engine-compositor', 'wpc-door-stage--engine-3d');
             stage.classList.add('wpc-door-stage--studio-live', 'wpc-door-stage--keybab', 'wpc-door-stage--photo-preset');
-            stage.classList.toggle('wpc-door-stage--photo-preset-transom', preset.mode === 'composite-transom');
+            stage.classList.toggle('wpc-door-stage--photo-preset-transom', preset.mode === 'live-transom' || preset.mode === 'composite-transom');
             stage.classList.toggle('wpc-door-stage--decor-transom', decor === 'transom');
             hideAllWpcPhotoDecorLayers();
             const keybab = document.getElementById('wpc-door-keybab-textures');
@@ -1592,9 +1648,11 @@
             const img = document.getElementById('wpc-door-photo-preset-img');
             const rollImg = document.getElementById('wpc-door-photo-preset-roll');
             const transomCap = document.getElementById('wpc-door-photo-preset-transom-cap');
+            const liveTransom = ensureLiveTransomDom();
             if (!wrap || !img) return false;
             wrap.classList.add('is-active');
-            wrap.classList.toggle('is-composite-transom', preset.mode === 'composite-transom');
+            wrap.classList.toggle('is-composite-transom', false);
+            wrap.classList.toggle('is-live-transom', preset.mode === 'live-transom');
             const baseSrc = doorPhotoPresetUrl(preset.url);
             const presetKey = state ? getDoorPhotoPresetStateKey(state) : '';
             img.onerror = function() {
@@ -1610,19 +1668,12 @@
             img.alt = '';
             img.setAttribute('data-door-base-src', baseSrc);
             if (transomCap) {
-                if (preset.mode === 'composite-transom' && preset.transomCap) {
-                    const capSrc = doorPhotoPresetUrl(preset.transomCap);
-                    transomCap.src = capSrc;
-                    transomCap.setAttribute('data-door-base-src', capSrc);
-                    transomCap.hidden = false;
-                    transomCap.classList.remove('has-roll-texture', 'has-door-roll-tint');
-                } else {
-                    transomCap.hidden = true;
-                    transomCap.classList.remove('has-roll-texture', 'has-roll-composite', 'has-door-roll-tint');
-                    transomCap.removeAttribute('data-door-base-src');
-                    transomCap.removeAttribute('src');
-                }
+                transomCap.hidden = true;
+                transomCap.classList.remove('has-roll-texture', 'has-roll-composite', 'has-door-roll-tint');
+                transomCap.removeAttribute('data-door-base-src');
+                transomCap.removeAttribute('src');
             }
+            paintLiveTransom(liveTransom, preset.mode === 'live-transom' ? state : null, rollUrl, hex, isRoll);
             applyPhotoPresetRollTexture(wrap, stack, rollImg, img, baseSrc, rollUrl, hex, isRoll, catalogIndex, transomCap);
             stage.classList.toggle('wpc-door-stage--photo-roll-active', !!isRoll);
             stage.style.setProperty('--door-roll-tint', hex || '#b8bcc4');
@@ -23741,6 +23792,17 @@
                 '<div class="wpc-door-canvas" id="wpc-door-preview-unit">' +
                 '<div class="wpc-door-photo-preset-wrap" id="wpc-door-photo-preset-wrap" aria-hidden="true">' +
                 '<img class="wpc-door-photo-preset-transom-cap" id="wpc-door-photo-preset-transom-cap" alt="" hidden loading="eager" decoding="async">' +
+                '<div class="wpc-door-live-transom" id="wpc-door-live-transom" hidden aria-hidden="true">' +
+                    '<div class="wpc-door-live-transom-unit">' +
+                        '<div class="wpc-door-live-transom-post wpc-door-live-transom-post--left"></div>' +
+                        '<div class="wpc-door-live-transom-mid">' +
+                            '<div class="wpc-door-live-transom-top"></div>' +
+                            '<div class="wpc-door-live-transom-panel"></div>' +
+                            '<div class="wpc-door-live-transom-rail"></div>' +
+                        '</div>' +
+                        '<div class="wpc-door-live-transom-post wpc-door-live-transom-post--right"></div>' +
+                    '</div>' +
+                '</div>' +
                 '<div class="wpc-door-photo-preset-stack" id="wpc-door-photo-preset-stack">' +
                 '<img class="wpc-door-photo-preset-img" id="wpc-door-photo-preset-img" alt="" loading="eager" decoding="async">' +
                 '<img class="wpc-door-photo-preset-roll" id="wpc-door-photo-preset-roll" alt="" hidden decoding="async">' +

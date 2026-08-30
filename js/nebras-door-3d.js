@@ -128,7 +128,7 @@
         const halfW = W / 2;
         const halfH = H / 2;
         let transomExtra = 0;
-        if (state.decor === 'transom' && !state.isSliding) transomExtra = 0.36;
+        if (state.decor === 'transom' && !state.isSliding) transomExtra = 0.48;
         const frameW = W + jambW * 2;
         const frameH = H + headH + transomExtra;
         const frontZ = ROOM_SPEC.RD / 2 - 0.04;
@@ -974,14 +974,29 @@
             threshold.position.set(0, -halfH - 0.018, 0.01);
             group.add(threshold);
 
-            /* التكسية العلوية (transom) */
+            /* التكسية العلوية MDF — لوحة + قوائم جانبية بنفس خامة الباب */
             if (decor === 'transom' && !isSliding) {
-                const transomPanel = new THREE.Mesh(new THREE.BoxGeometry(W + jambW * 2, 0.3, 0.07), makeWpcMaterial(shadeColor(base, 0.05), map));
-                transomPanel.position.set(0, halfH + headH + 0.15, 0.02);
-                transomPanel.castShadow = true;
-                const transomGlass = new THREE.Mesh(new THREE.BoxGeometry(W - 0.1, 0.18, 0.02), makeGlassMaterial(glassPattern));
-                transomGlass.position.set(0, halfH + headH + 0.15, 0.06);
-                group.add(transomPanel, transomGlass);
+                const cladH = 0.46;
+                const cladY = halfH + headH + cladH / 2;
+                const cladW = W + jambW * 2;
+                const postL = new THREE.Mesh(new THREE.BoxGeometry(jambW, cladH, jambD), frameMat);
+                postL.position.set(-halfW - jambW / 2, cladY, 0);
+                postL.castShadow = true;
+                const postR = new THREE.Mesh(new THREE.BoxGeometry(jambW, cladH, jambD), frameMat);
+                postR.position.set(halfW + jambW / 2, cladY, 0);
+                postR.castShadow = true;
+                const headCap = new THREE.Mesh(new THREE.BoxGeometry(cladW, 0.048, jambD), frameMat);
+                headCap.position.set(0, halfH + headH + cladH - 0.024, 0);
+                headCap.castShadow = true;
+                const seam = new THREE.Mesh(new THREE.BoxGeometry(cladW, 0.042, jambD + 0.012), archMat);
+                seam.position.set(0, halfH + headH + 0.02, 0.01);
+                const panel = new THREE.Mesh(
+                    new THREE.BoxGeometry(W - 0.012, cladH - 0.09, 0.055),
+                    makeWpcMaterial(shadeColor(base, 0.04), map)
+                );
+                panel.position.set(0, cladY, 0.012);
+                panel.castShadow = true;
+                group.add(postL, postR, headCap, seam, panel);
             }
 
             /* الضلف */
