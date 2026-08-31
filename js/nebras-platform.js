@@ -971,7 +971,7 @@
         }
 
         const DOOR_PHOTO_PRESET_ROOT = 'images/doors/presets/';
-        const DOOR_PHOTO_PRESET_CACHE = '319';
+        const DOOR_PHOTO_PRESET_CACHE = '320';
         const DOOR_PHOTO_COMPOSE_MAX_DIM = 1200;
         /** صور أبواب المصنع الحقيقية في المعاينة — SVG احتياطي عند غياب الصورة */
         const DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS = true;
@@ -1402,12 +1402,20 @@
             'edge-band|edge-2|outer-curve|transom': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-2/outer-curve-transom.png',
             'u-channel|u-plain|outer-flat|plain': DOOR_PHOTO_PRESET_ROOT + 'u-channel/u-plain/outer-flat-plain.png',
             'u-channel|u-plain|outer-curve|plain': DOOR_PHOTO_PRESET_ROOT + 'u-channel/u-plain/outer-curve-plain.png',
+            'u-channel|u-plain|outer-flat|transom': DOOR_PHOTO_PRESET_ROOT + 'u-channel/u-plain/outer-flat-transom.png',
+            'u-channel|u-plain|outer-curve|transom': DOOR_PHOTO_PRESET_ROOT + 'u-channel/u-plain/outer-curve-transom.png',
             'u-channel|u-slats|outer-flat|plain': DOOR_PHOTO_PRESET_ROOT + 'u-channel/u-slats/outer-flat-plain.png',
             'u-channel|u-slats|outer-curve|plain': DOOR_PHOTO_PRESET_ROOT + 'u-channel/u-slats/outer-curve-plain.png',
+            'u-channel|u-slats|outer-flat|transom': DOOR_PHOTO_PRESET_ROOT + 'u-channel/u-slats/outer-flat-transom.png',
+            'u-channel|u-slats|outer-curve|transom': DOOR_PHOTO_PRESET_ROOT + 'u-channel/u-slats/outer-curve-transom.png',
             'u-channel|u-classic|outer-flat|plain': DOOR_PHOTO_PRESET_ROOT + 'u-channel/u-classic/outer-flat-plain.png',
             'u-channel|u-classic|outer-curve|plain': DOOR_PHOTO_PRESET_ROOT + 'u-channel/u-classic/outer-curve-plain.png',
+            'u-channel|u-classic|outer-flat|transom': DOOR_PHOTO_PRESET_ROOT + 'u-channel/u-classic/outer-flat-transom.png',
+            'u-channel|u-classic|outer-curve|transom': DOOR_PHOTO_PRESET_ROOT + 'u-channel/u-classic/outer-curve-transom.png',
             'u-channel|u-glass|outer-flat|plain': DOOR_PHOTO_PRESET_ROOT + 'u-channel/u-glass/outer-flat-plain.png',
             'u-channel|u-glass|outer-curve|plain': DOOR_PHOTO_PRESET_ROOT + 'u-channel/u-glass/outer-curve-plain.png',
+            'u-channel|u-glass|outer-flat|transom': DOOR_PHOTO_PRESET_ROOT + 'u-channel/u-glass/outer-flat-transom.png',
+            'u-channel|u-glass|outer-curve|transom': DOOR_PHOTO_PRESET_ROOT + 'u-channel/u-glass/outer-curve-transom.png',
             'sliding|slide-1|outer-flat|plain': DOOR_PHOTO_PRESET_ROOT + 'sliding/slide-1/outer-flat-transom.png',
             'sliding|slide-1|outer-curve|plain': DOOR_PHOTO_PRESET_ROOT + 'sliding/slide-1/outer-curve-transom.png',
             'sliding|slide-1|outer-flat|transom': DOOR_PHOTO_PRESET_ROOT + 'sliding/slide-1/outer-flat-plain.png',
@@ -1418,22 +1426,40 @@
             'sliding|slide-2|outer-curve|transom': DOOR_PHOTO_PRESET_ROOT + 'sliding/slide-2/outer-curve-plain.png',
             'edge-band|edge-steel|outer-flat|plain': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-steel/outer-flat-plain.png',
             'edge-band|edge-steel|outer-curve|plain': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-steel/outer-curve-plain.png',
+            'edge-band|edge-steel|outer-flat|transom': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-steel/outer-flat-transom.png',
+            'edge-band|edge-steel|outer-curve|transom': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-steel/outer-curve-transom.png',
             'edge-band|edge-classic|outer-flat|plain': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-classic/outer-flat-plain.png',
             'edge-band|edge-classic|outer-curve|plain': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-classic/outer-curve-plain.png',
+            'edge-band|edge-classic|outer-flat|transom': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-classic/outer-flat-transom.png',
+            'edge-band|edge-classic|outer-curve|transom': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-classic/outer-curve-transom.png',
             'edge-band|edge-glass|outer-flat|plain': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-glass/outer-flat-plain.png',
             'edge-band|edge-glass|outer-curve|plain': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-glass/outer-curve-plain.png',
+            'edge-band|edge-glass|outer-flat|transom': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-glass/outer-flat-transom.png',
+            'edge-band|edge-glass|outer-curve|transom': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-glass/outer-curve-transom.png',
             'edge-band|edge-groove|outer-flat|plain': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-groove/outer-flat-plain.png',
             'edge-band|edge-groove|outer-curve|plain': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-groove/outer-curve-plain.png',
+            'edge-band|edge-groove|outer-flat|transom': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-groove/outer-flat-transom.png',
+            'edge-band|edge-groove|outer-curve|transom': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-groove/outer-curve-transom.png',
             'edge-band|edge-lq|outer-flat|plain': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-lq/outer-flat-plain.png',
             'edge-band|edge-lq|outer-curve|plain': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-lq/outer-curve-plain.png',
+            'edge-band|edge-lq|outer-flat|transom': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-lq/outer-flat-transom.png',
+            'edge-band|edge-lq|outer-curve|transom': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-lq/outer-curve-transom.png',
             'edge-band|edge-glass-strip|outer-flat|plain': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-glass-strip/outer-flat-plain.png',
             'edge-band|edge-glass-strip|outer-curve|plain': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-glass-strip/outer-curve-plain.png',
+            'edge-band|edge-glass-strip|outer-flat|transom': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-glass-strip/outer-flat-transom.png',
+            'edge-band|edge-glass-strip|outer-curve|transom': DOOR_PHOTO_PRESET_ROOT + 'edge-band/edge-glass-strip/outer-curve-transom.png',
             'lib|lib-flat|outer-flat|plain': DOOR_PHOTO_PRESET_ROOT + 'lib/lib-flat/outer-flat-plain.png',
             'lib|lib-flat|outer-curve|plain': DOOR_PHOTO_PRESET_ROOT + 'lib/lib-flat/outer-curve-plain.png',
+            'lib|lib-flat|outer-flat|transom': DOOR_PHOTO_PRESET_ROOT + 'lib/lib-flat/outer-flat-transom.png',
+            'lib|lib-flat|outer-curve|transom': DOOR_PHOTO_PRESET_ROOT + 'lib/lib-flat/outer-curve-transom.png',
             'lib|lib-steel|outer-flat|plain': DOOR_PHOTO_PRESET_ROOT + 'lib/lib-steel/outer-flat-plain.png',
             'lib|lib-steel|outer-curve|plain': DOOR_PHOTO_PRESET_ROOT + 'lib/lib-steel/outer-curve-plain.png',
+            'lib|lib-steel|outer-flat|transom': DOOR_PHOTO_PRESET_ROOT + 'lib/lib-steel/outer-flat-transom.png',
+            'lib|lib-steel|outer-curve|transom': DOOR_PHOTO_PRESET_ROOT + 'lib/lib-steel/outer-curve-transom.png',
             'lib|lib-glass|outer-flat|plain': DOOR_PHOTO_PRESET_ROOT + 'lib/lib-glass/outer-flat-plain.png',
-            'lib|lib-glass|outer-curve|plain': DOOR_PHOTO_PRESET_ROOT + 'lib/lib-glass/outer-curve-plain.png'
+            'lib|lib-glass|outer-curve|plain': DOOR_PHOTO_PRESET_ROOT + 'lib/lib-glass/outer-curve-plain.png',
+            'lib|lib-glass|outer-flat|transom': DOOR_PHOTO_PRESET_ROOT + 'lib/lib-glass/outer-flat-transom.png',
+            'lib|lib-glass|outer-curve|transom': DOOR_PHOTO_PRESET_ROOT + 'lib/lib-glass/outer-curve-transom.png'
         };
 
         const DOOR_PHOTO_TRANSOM_CAP = {
@@ -13941,13 +13967,16 @@
             const cycleSec = count * 3;
             const slideCls = 'nebras-mini-showcase-slide' + (variant === 'partners' ? ' nebras-mini-showcase-slide--logo' : '');
             const badgeIcon = variant === 'partners' ? 'fa-handshake' : 'fa-door-open';
-            const imgW = variant === 'partners' ? 84 : 92;
-            const imgH = variant === 'partners' ? 132 : 142;
+            const imgW = variant === 'partners' ? 168 : 440;
+            const imgH = variant === 'partners' ? 168 : 760;
+            const deploy = (document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws320';
             const slides = urls.map(function(src, i) {
                 const delay = -(cycleSec - 3) + (i * 3);
                 const loading = i === 0 ? 'eager' : 'lazy';
                 const fetchPri = i === 0 && variant === 'doors' ? ' fetchpriority="high"' : '';
-                return '<img class="' + slideCls + '" src="' + escapeHtmlAttr(normalizeMediaPath(src)) + '" alt="" width="' + imgW + '" height="' + imgH + '" loading="' + loading + '" decoding="async"' + fetchPri + ' style="animation-delay:' + delay + 's">';
+                const href = normalizeMediaPath(src);
+                const bust = href + (href.indexOf('?') >= 0 ? '&' : '?') + 'v=' + deploy;
+                return '<img class="' + slideCls + '" src="' + escapeHtmlAttr(bust) + '" alt="" width="' + imgW + '" height="' + imgH + '" loading="' + loading + '" decoding="async"' + fetchPri + ' style="animation-delay:' + delay + 's">';
             }).join('');
             return '<div class="nebras-mini-showcase-frame" role="img">' +
                 '<span class="nebras-mini-showcase-glow" aria-hidden="true"></span>' +
@@ -29603,7 +29632,7 @@
             if (nebrasDoorEngineLoadPromise) return nebrasDoorEngineLoadPromise;
             const ver = (typeof window.NEBRAS_DEPLOY_TAG !== 'undefined' && window.NEBRAS_DEPLOY_TAG)
                 ? window.NEBRAS_DEPLOY_TAG
-                : ((document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws319');
+                : ((document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws320');
             nebrasDoorEngineLoadPromise = loadNebrasThreeJs().then(function() {
                 return Promise.all([
                     loadNebrasScriptOnce('js/nebras-door-3d.js?v=' + ver),

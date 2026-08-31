@@ -1,15 +1,20 @@
-/* معاينة مصغّرة متحركة — أبواب / شركاء (نفس مقاس حركة الهيدر) */
+/* معاينة متحركة — أبواب / شركاء · الهيدر بحجم بطولي بدون بكسلة */
 
 .nebras-mini-showcase {
     flex: 0 0 auto;
-    --mini-showcase-w: clamp(64px, 11vw, 84px);
-    --mini-showcase-h: clamp(108px, 17vw, 132px);
+    --mini-showcase-w: clamp(72px, 12vw, 96px);
+    --mini-showcase-h: clamp(118px, 18vw, 148px);
     --cycle-duration: 18s;
 }
 
 .nebras-mini-showcase--hero {
-    --mini-showcase-w: clamp(72px, 14vw, 92px);
-    --mini-showcase-h: clamp(118px, 20vw, 142px);
+    --mini-showcase-w: clamp(148px, 20vw, 228px);
+    --mini-showcase-h: clamp(268px, 36vw, 400px);
+}
+
+.nebras-mini-showcase--stage {
+    --mini-showcase-w: clamp(168px, 24vw, 268px);
+    --mini-showcase-h: clamp(300px, 42vw, 460px);
 }
 
 .nebras-mini-showcase-frame {
@@ -83,8 +88,11 @@
     height: 100%;
     max-width: 100%;
     max-height: 100%;
-    object-fit: cover;
-    object-position: center top;
+    object-fit: contain;
+    object-position: center center;
+    image-rendering: auto;
+    -ms-interpolation-mode: bicubic;
+    background: #f4f7fb;
     opacity: 0;
     transform: translateZ(0);
     animation: nebrasMiniShowcaseFade var(--cycle-duration, 18s) ease-in-out infinite;
@@ -167,18 +175,30 @@
     50% { opacity: 1; }
 }
 
-/* —— الداشبورد: باب بجوار اسم الشركة —— */
+/* —— الداشبورد: باب بطولي بجانب هوية المصنع —— */
 .dashboard-company-identity {
     position: relative;
     overflow: hidden;
 }
 
 .dashboard-identity-hero {
-    display: flex;
-    align-items: flex-start;
-    gap: clamp(12px, 2.5vw, 20px);
-    margin-bottom: 12px;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: minmax(168px, 280px) minmax(0, 1fr);
+    align-items: center;
+    gap: clamp(16px, 3vw, 28px);
+    margin-bottom: 16px;
+}
+
+.dashboard-identity-hero .nebras-mini-showcase--stage {
+    justify-self: center;
+}
+
+.dashboard-identity-hero .nebras-mini-showcase-frame {
+    border-radius: 18px;
+    border-color: rgba(13, 40, 64, 0.28);
+    box-shadow:
+        0 18px 40px rgba(13, 40, 64, 0.18),
+        0 0 0 1px rgba(255, 255, 255, 0.4) inset;
 }
 
 .dashboard-identity-headcopy {
@@ -235,17 +255,24 @@ body.nebras-door-interface-active .header-hero-core .header-hero-divider {
 
 @media (max-width: 768px) {
     .nebras-mini-showcase {
-        --mini-showcase-w: 58px;
-        --mini-showcase-h: 96px;
+        --mini-showcase-w: 72px;
+        --mini-showcase-h: 118px;
     }
 
     .nebras-mini-showcase--hero {
-        --mini-showcase-w: 64px;
-        --mini-showcase-h: 104px;
+        --mini-showcase-w: 120px;
+        --mini-showcase-h: 210px;
+    }
+
+    .nebras-mini-showcase--stage {
+        --mini-showcase-w: 148px;
+        --mini-showcase-h: 260px;
     }
 
     .dashboard-identity-hero {
-        align-items: center;
+        grid-template-columns: 1fr;
+        justify-items: center;
+        text-align: center;
     }
 }
 

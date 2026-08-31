@@ -742,19 +742,19 @@ body.platform-erp-active { --platform-layer: erp; }
 .admin-session .platform-storefront-only { display: none; }
 
 .company-legal-bar {
-    background: linear-gradient(90deg, #071a2b, #0d2840);
-    color: #e8f4fc;
+    background: rgba(255, 255, 255, 0.08);
+    color: #f8fafc;
     padding: 10px 5%;
     font-size: 0.82rem;
     display: flex;
     flex-wrap: wrap;
     gap: 14px 22px;
     justify-content: center;
-    border-bottom: 1px solid rgba(0, 168, 255, 0.25);
+    border: 1px solid rgba(255, 255, 255, 0.14);
 }
 
-.company-legal-bar span { opacity: 0.95; }
-.company-legal-bar strong { color: #7dd3fc; }
+.company-legal-bar span { opacity: 1; color: #f8fafc; }
+.company-legal-bar strong { color: #e8c547; }
 
 .dashboard-company-identity {
     margin-bottom: 22px;
@@ -1707,11 +1707,12 @@ body.platform-erp-active { --platform-layer: erp; }
 .nebras-site-clock {
     text-align: center;
     font-size: 0.85rem;
-    opacity: 0.88;
+    opacity: 1;
     margin: 0 0 12px;
     padding: 8px 12px;
     border-radius: 8px;
-    background: rgba(13, 40, 64, 0.05);
+    color: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.08);
 }
 
 .cart-session-hint {

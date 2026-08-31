@@ -12,14 +12,11 @@
     --profile-bg-deep: #010d15;
 }
 
-/* خلفية الموقع — شبكة بيضاء مثل الداشبورد (بدل الكحلي الكامل) */
+/* خلفية الموقع — أبيض دافئ + كحلي خفيف، بدون شبكة مرقّعة */
 body.nebras-profile-2026-theme.platform-storefront {
-    background-color: #f7f8fb;
+    background-color: #f4f7fb;
     background-image:
-        linear-gradient(135deg, rgba(13, 40, 64, 0.055) 12.5%, transparent 12.5%, transparent 50%, rgba(13, 40, 64, 0.055) 50%, rgba(13, 40, 64, 0.055) 62.5%, transparent 62.5%, transparent 100%),
-        linear-gradient(45deg, rgba(13, 40, 64, 0.055) 12.5%, transparent 12.5%, transparent 50%, rgba(13, 40, 64, 0.055) 50%, rgba(13, 40, 64, 0.055) 62.5%, transparent 62.5%, transparent 100%);
-    background-size: 22px 22px;
-    background-position: 0 0, 11px 11px;
+        linear-gradient(180deg, #ffffff 0%, #f4f7fb 38%, #eef3f8 100%);
     background-attachment: fixed;
     color: #0d2840;
     min-height: 100vh;
@@ -341,23 +338,38 @@ body.nebras-profile-2026-theme .visitor-lane {
 }
 
 body.nebras-profile-2026-theme .site-footer {
-    background: #0d2840;
-    border-top: 1px solid rgba(201, 162, 39, 0.28);
-    color: rgba(255, 255, 255, 0.88);
+    background: linear-gradient(180deg, #0d2840 0%, #0a2034 100%);
+    border-top: 1px solid rgba(201, 162, 39, 0.38);
+    color: #ffffff;
 }
 
 body.nebras-profile-2026-theme .site-footer-copyright {
-    color: rgba(255, 255, 255, 0.78);
+    color: #ffffff;
+    font-weight: 800;
+    letter-spacing: 0.02em;
 }
 
 body.nebras-profile-2026-theme .nebras-site-clock {
-    color: #155e94;
+    color: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    opacity: 1;
 }
 
 body.nebras-profile-2026-theme .company-legal-bar {
-    background: rgba(255, 255, 255, 0.72);
-    border-color: rgba(13, 40, 64, 0.1);
-    color: #334155;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    color: #f8fafc;
+}
+
+body.nebras-profile-2026-theme .company-legal-bar span {
+    opacity: 1;
+    color: #f8fafc;
+}
+
+body.nebras-profile-2026-theme .company-legal-bar strong {
+    color: #e8c547;
+    font-weight: 800;
 }
 
 body.nebras-profile-2026-theme .product-card,

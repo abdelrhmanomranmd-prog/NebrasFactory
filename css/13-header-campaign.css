@@ -83,9 +83,9 @@
 
 .header-campaign-action-strip {
     display: grid;
-    grid-template-columns: auto 1fr;
-    align-items: end;
-    gap: clamp(10px, 2vw, 18px);
+    grid-template-columns: minmax(148px, 228px) 1fr;
+    align-items: center;
+    gap: clamp(14px, 2.4vw, 22px);
     margin-bottom: 4px;
 }
 
@@ -235,7 +235,10 @@
 }
 
 .header-showcase-card--doors {
-    border-color: rgba(56, 189, 248, 0.32);
+    border-color: rgba(56, 189, 248, 0.42);
+    padding: 8px;
+    border-radius: 18px;
+    background: rgba(6, 18, 32, 0.42);
 }
 
 @media (min-width: 901px) {

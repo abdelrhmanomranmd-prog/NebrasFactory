@@ -713,8 +713,9 @@ body.perf-lite .nebras-partners-track--reverse:not(.nebras-partners-track--stati
     margin: 32px 0 20px;
     padding: clamp(18px, 3vw, 26px);
     border-radius: 20px;
-    background: linear-gradient(145deg, rgba(13, 40, 64, 0.06) 0%, rgba(0, 168, 255, 0.05) 100%);
-    border: 1px solid rgba(21, 94, 148, 0.14);
+    background: #ffffff;
+    border: 1px solid rgba(13, 40, 64, 0.1);
+    border-top: 4px solid #0d2840;
     box-shadow: 0 12px 32px rgba(13, 40, 64, 0.08);
 }
 
