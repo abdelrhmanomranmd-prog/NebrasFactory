@@ -971,7 +971,7 @@
         }
 
         const DOOR_PHOTO_PRESET_ROOT = 'images/doors/presets/';
-        const DOOR_PHOTO_PRESET_CACHE = '318';
+        const DOOR_PHOTO_PRESET_CACHE = '319';
         const DOOR_PHOTO_COMPOSE_MAX_DIM = 1200;
         /** صور أبواب المصنع الحقيقية في المعاينة — SVG احتياطي عند غياب الصورة */
         const DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS = true;
@@ -1518,19 +1518,19 @@
         const LIVE_TRANSOM_FIT = {
             'edge-1': { top: 10.6, width: 48, height: 13.4, post: 11 },
             'edge-2': { top: 10.5, width: 61.5, height: 12.6, post: 8.5 },
-            'edge-steel': { top: 6.4, width: 68, height: 11.8, post: 10 },
-            'edge-classic': { top: 9.2, width: 56, height: 12.8, post: 11 },
-            'edge-glass': { top: 9.8, width: 52, height: 13.0, post: 11 },
-            'edge-groove': { top: 8.4, width: 54, height: 11.6, post: 9 },
-            'edge-lq': { top: 6.6, width: 70, height: 12.0, post: 10 },
-            'edge-glass-strip': { top: 6.6, width: 70, height: 12.0, post: 10 },
-            'lib-flat': { top: 6.2, width: 71, height: 12.4, post: 10 },
-            'lib-steel': { top: 6.2, width: 71, height: 12.4, post: 10 },
-            'lib-glass': { top: 6.2, width: 71, height: 12.4, post: 10 },
-            'u-plain': { top: 9.6, width: 54, height: 13.0, post: 11 },
-            'u-slats': { top: 9.6, width: 54, height: 13.0, post: 11 },
-            'u-classic': { top: 9.6, width: 54, height: 13.2, post: 11 },
-            'u-glass': { top: 9.6, width: 54, height: 13.0, post: 11 }
+            'edge-steel': { top: 7.8, width: 52, height: 11.6, post: 10 },
+            'edge-classic': { top: 9.2, width: 52, height: 12.6, post: 11 },
+            'edge-glass': { top: 9.8, width: 50, height: 12.8, post: 11 },
+            'edge-groove': { top: 8.8, width: 50, height: 11.4, post: 9 },
+            'edge-lq': { top: 7.6, width: 54, height: 11.8, post: 10 },
+            'edge-glass-strip': { top: 7.6, width: 54, height: 11.8, post: 10 },
+            'lib-flat': { top: 7.6, width: 54, height: 12.0, post: 10 },
+            'lib-steel': { top: 7.6, width: 54, height: 12.0, post: 10 },
+            'lib-glass': { top: 7.6, width: 54, height: 12.0, post: 10 },
+            'u-plain': { top: 9.6, width: 50, height: 12.8, post: 11 },
+            'u-slats': { top: 9.6, width: 50, height: 12.8, post: 11 },
+            'u-classic': { top: 9.6, width: 50, height: 13.0, post: 11 },
+            'u-glass': { top: 9.6, width: 50, height: 12.8, post: 11 }
         };
 
         function getLiveTransomFit(state) {
@@ -29603,7 +29603,7 @@
             if (nebrasDoorEngineLoadPromise) return nebrasDoorEngineLoadPromise;
             const ver = (typeof window.NEBRAS_DEPLOY_TAG !== 'undefined' && window.NEBRAS_DEPLOY_TAG)
                 ? window.NEBRAS_DEPLOY_TAG
-                : ((document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws318');
+                : ((document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws319');
             nebrasDoorEngineLoadPromise = loadNebrasThreeJs().then(function() {
                 return Promise.all([
                     loadNebrasScriptOnce('js/nebras-door-3d.js?v=' + ver),
