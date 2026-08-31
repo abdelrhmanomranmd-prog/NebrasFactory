@@ -971,7 +971,7 @@
         }
 
         const DOOR_PHOTO_PRESET_ROOT = 'images/doors/presets/';
-        const DOOR_PHOTO_PRESET_CACHE = '320';
+        const DOOR_PHOTO_PRESET_CACHE = '321';
         const DOOR_PHOTO_COMPOSE_MAX_DIM = 1200;
         /** صور أبواب المصنع الحقيقية في المعاينة — SVG احتياطي عند غياب الصورة */
         const DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS = true;
@@ -1486,11 +1486,7 @@
                     return { url: DOOR_PHOTO_PRESET_MAP[transomKey], mode: 'full', transomCap: '' };
                 }
                 if (DOOR_PHOTO_PRESET_MAP[plainKey]) {
-                    return {
-                        url: DOOR_PHOTO_PRESET_MAP[plainKey],
-                        mode: 'composite-transom',
-                        transomCap: outer === 'outer-curve' ? DOOR_PHOTO_TRANSOM_CAP.curve : DOOR_PHOTO_TRANSOM_CAP.flat
-                    };
+                    return { url: DOOR_PHOTO_PRESET_MAP[plainKey], mode: 'full', transomCap: '' };
                 }
             }
             const key = type + '|' + model + '|' + outer + '|' + decor;
@@ -3360,15 +3356,85 @@
             return base + ' sepia(0.08)';
         }
 
-        /** معاينة متجر — CSS panel overlay عند فشل خبز Canvas */
+        const WPC_STORE_RECOLOR_CACHE = {};
+        const WPC_STORE_RECOLOR_MAX = 960;
+
+        /** تلوين بيكسلات الباب فقط — خلفية الاستوديو والإطار تُترك */
+        function recolorWpcStoreProductPixels(image, hex) {
+            const srcW = image.naturalWidth || image.width || 0;
+            const srcH = image.naturalHeight || image.height || 0;
+            if (!srcW || !srcH) return null;
+            const scale = Math.min(1, WPC_STORE_RECOLOR_MAX / Math.max(srcW, srcH));
+            const w = Math.max(1, Math.round(srcW * scale));
+            const h = Math.max(1, Math.round(srcH * scale));
+            const canvas = document.createElement('canvas');
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+            if (!ctx) return null;
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+            ctx.drawImage(image, 0, 0, w, h);
+            let frame;
+            try {
+                frame = ctx.getImageData(0, 0, w, h);
+            } catch (err) {
+                return null;
+            }
+            const px = frame.data;
+            const bg = sampleAluminumStudioBackground(px, w, h);
+            const target = parseAluminumFinishRgb(hex);
+            const tLum = Math.max(8, 0.299 * target.r + 0.587 * target.g + 0.114 * target.b);
+            for (let i = 0; i < px.length; i += 4) {
+                const r = px[i];
+                const g = px[i + 1];
+                const b = px[i + 2];
+                const a = px[i + 3];
+                if (a < 10) continue;
+                const max = r > g ? (r > b ? r : b) : (g > b ? g : b);
+                const min = r < g ? (r < b ? r : b) : (g < b ? g : b);
+                const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+                const sat = max === 0 ? 0 : (max - min) / max;
+                const bgDist = Math.abs(r - bg.r) + Math.abs(g - bg.g) + Math.abs(b - bg.b);
+                if (bg.lum > 200 && lum > 218 && bgDist < 48) continue;
+                if (lum > 246 && sat < 0.08) continue;
+                if (lum < 24 && sat < 0.16) continue;
+                if (b > r + 30 && b > g + 14 && sat > 0.22 && lum > 70) continue;
+                const lumScale = lum / tLum;
+                const grain = 0.22;
+                let nr = target.r * lumScale * (1 - grain) + r * grain;
+                let ng = target.g * lumScale * (1 - grain) + g * grain;
+                let nb = target.b * lumScale * (1 - grain) + b * grain;
+                px[i] = nr < 0 ? 0 : nr > 255 ? 255 : nr;
+                px[i + 1] = ng < 0 ? 0 : ng > 255 ? 255 : ng;
+                px[i + 2] = nb < 0 ? 0 : nb > 255 ? 255 : nb;
+            }
+            ctx.putImageData(frame, 0, 0);
+            return canvas.toDataURL('image/jpeg', 0.93);
+        }
+
+        function composeWpcStoreProductColor(baseSrc, hex) {
+            const key = String(baseSrc || '').split('?')[0] + '|' + String(hex || '').toLowerCase() + '|wpc|' + DOOR_PHOTO_PRESET_CACHE;
+            if (WPC_STORE_RECOLOR_CACHE[key]) {
+                return Promise.resolve(WPC_STORE_RECOLOR_CACHE[key]);
+            }
+            return loadDoorDesignerImage(baseSrc).then(function(image) {
+                const url = recolorWpcStoreProductPixels(image, hex);
+                if (!url) throw new Error('wpc store recolor failed');
+                WPC_STORE_RECOLOR_CACHE[key] = url;
+                return url;
+            });
+        }
+
+        /** معاينة متجر — الصورة الأصلية فقط عند فشل الخبز (بدون فلتر CSS على المربع) */
         function applyWpcStoreRollCssPanelFallback(img, stack, baseSrc, rollState, variant) {
-            if (!img || !rollState) return;
+            if (!img) return;
             const baseDisplay = resolveDisplayMediaUrl(baseSrc);
             img.src = baseDisplay;
             img.setAttribute('data-full-src', baseDisplay);
-            img.setAttribute('data-base-src', baseSrc);
+            if (baseSrc) img.setAttribute('data-base-src', baseSrc);
             img.classList.remove('has-roll-composite', 'has-roll-pending');
-            img.style.filter = buildWpcStoreRollCssFilterForPhoto(rollState.hex || '#b8bcc4');
+            img.style.filter = 'none';
             img.removeAttribute('data-roll-compose-token');
             if (stack) {
                 stack.classList.remove('has-roll-composite-ready', 'has-roll-pending', 'has-door-roll-tint--mask-panel', 'has-roll-texture', 'has-roll-css-fallback', 'has-door-roll-tint');
@@ -3444,20 +3510,15 @@
             const img = stack ? stack.querySelector('img.nebras-store-sku-img--wpc, img.nebras-store-sku-img') : card.querySelector('.nebras-store-sku-media img');
             if (!img) return;
             const baseSrc = img.getAttribute('data-base-src') || img.getAttribute('src') || '';
-            const isPhoto = isWpcCatalogPhotoPath(baseSrc);
-            const productId = card.getAttribute('data-product-id');
-            const variantIndex = parseInt(card.getAttribute('data-variant-index'), 10);
-            const product = productId ? siteProducts.find(function(p) { return p && p.id === productId; }) : null;
-            const variant = product && !isNaN(variantIndex) ? (product.variants || [])[variantIndex] : null;
             const panelLayer = stack ? stack.querySelector('.nebras-store-sku-door-panel-color') : null;
+            img.style.filter = 'none';
+            if (stack) {
+                stack.classList.remove('has-door-roll-tint', 'has-door-roll-tint--photo', 'has-door-roll-tint--clip-panel', 'has-door-roll-tint--mask-panel', 'has-door-roll-tint--panel-only', 'has-roll-composite-ready', 'has-roll-pending', 'has-roll-texture', 'has-roll-css-fallback');
+                clearWpcStoreDoorPanelLayer(panelLayer);
+            }
             if (!baseSrc) {
-                img.style.filter = '';
                 img.classList.remove('has-roll-composite', 'has-roll-pending');
                 img.removeAttribute('data-roll-compose-token');
-                if (stack) {
-                    stack.classList.remove('has-door-roll-tint', 'has-door-roll-tint--photo', 'has-door-roll-tint--clip-panel', 'has-door-roll-tint--mask-panel', 'has-roll-composite-ready', 'has-roll-pending', 'has-roll-texture', 'has-roll-css-fallback');
-                    clearWpcStoreDoorPanelLayer(panelLayer);
-                }
                 card.classList.remove('is-roll-color-live');
                 card.removeAttribute('data-active-roll-hex');
                 card.removeAttribute('data-selected-roll-index');
@@ -3468,22 +3529,40 @@
             const rollIdx = catalogIndex != null && !isNaN(catalogIndex) ? catalogIndex : 0;
             const roll = colors[rollIdx] || colors[0];
             if (!roll) return;
-            if (String(img.getAttribute('data-base-src') || img.src || '').split('?')[0] !== String(baseSrc).split('?')[0]) {
-                img.src = resolveDisplayMediaUrl(baseSrc);
-            }
-            img.classList.remove('has-roll-composite', 'has-roll-pending');
-            img.removeAttribute('data-roll-compose-token');
-            const rollFilter = isPhoto ? buildWpcStoreRollCssFilterForPhoto(roll.hex) : buildWpcStoreRollCssFilter(roll.hex);
-            img.style.transition = 'filter 0.32s ease';
-            img.style.filter = rollFilter;
-            if (stack) {
-                stack.classList.remove('has-door-roll-tint', 'has-door-roll-tint--clip-panel', 'has-door-roll-tint--mask-panel', 'has-door-roll-tint--panel-only', 'has-door-roll-tint--photo', 'has-roll-composite-ready', 'has-roll-pending', 'has-roll-texture', 'has-roll-css-fallback');
-                clearWpcStoreDoorPanelLayer(panelLayer);
-            }
+            const baseDisplay = resolveDisplayMediaUrl(baseSrc);
+            const token = 'wpc-px-' + rollIdx + '-' + String(roll.hex || '').toLowerCase();
+            img.setAttribute('data-roll-compose-token', token);
             img.setAttribute('data-composed-roll', String(rollIdx));
             card.classList.add('is-roll-color-live');
             card.setAttribute('data-active-roll-hex', roll.hex || '');
             card.setAttribute('data-selected-roll-index', String(rollIdx));
+            if (rollIdx === 0) {
+                img.src = baseDisplay;
+                img.setAttribute('data-full-src', baseDisplay);
+                img.classList.remove('has-roll-composite', 'has-roll-pending');
+                return;
+            }
+            img.classList.add('has-roll-pending');
+            composeWpcStoreProductColor(baseSrc, roll.hex).then(function(url) {
+                if (!img.isConnected) return;
+                if (img.getAttribute('data-roll-compose-token') !== token) return;
+                img.style.filter = 'none';
+                img.src = url;
+                img.setAttribute('data-full-src', url);
+                img.classList.add('has-roll-composite');
+                img.classList.remove('has-roll-pending');
+                if (stack) {
+                    stack.classList.add('has-roll-composite-ready');
+                    stack.classList.remove('has-roll-pending');
+                }
+            }).catch(function() {
+                if (!img.isConnected) return;
+                if (img.getAttribute('data-roll-compose-token') !== token) return;
+                img.src = baseDisplay;
+                img.setAttribute('data-full-src', baseDisplay);
+                img.style.filter = 'none';
+                img.classList.remove('has-roll-pending', 'has-roll-composite');
+            });
         }
 
         function getProductPhotoWatermarkSettings() {
@@ -3838,8 +3917,8 @@
             { id: 'kitchen', labelAr: 'باب مطبخ', labelEn: 'Kitchen door', image: 'images/catalog/wpc-photos/by-sku-clean/WPC-RDY-FLAT-45-STD.png', keywords: ['فلات', 'flat', 'lib', 'Lib', 'مطبخ'] },
             { id: 'bedroom', labelAr: 'باب غرفة', labelEn: 'Bedroom door', image: 'images/catalog/wpc-photos/by-sku-clean/WPC-RDY-U45-STD.png', keywords: ['غرفة', 'فلات', 'flat', 'u45', 'U45', 'u60'] },
             { id: 'bathroom', labelAr: 'باب حمام', labelEn: 'Bathroom door', image: 'images/catalog/wpc-photos/by-sku-clean/WPC-RDY-LIB40-STD.png', keywords: ['فلات', 'flat', 'lib', 'Lib', 'حمام'] },
-            { id: 'apartment', labelAr: 'باب شقة', labelEn: 'Apartment door', image: 'images/catalog/wpc-photos/by-sku-clean/WPC-RDY-FLAT-GLASS.png', keywords: ['شقة', 'flat', 'فلات', 'glass', 'زجاج', 'u45', 'U45'] },
-            { id: 'villa', labelAr: 'باب فيلا', labelEn: 'Villa door', image: 'images/catalog/wpc-photos/by-sku-clean/WPC-RDY-U60-GLASS.png', keywords: ['فيلا', 'villa', 'u60', 'U60', 'ستانلس', 'steel', 'زجاج', 'glass', 'وربعه', 'lq', 'LQ', 'سحب', 'sld'] }
+            { id: 'apartment', labelAr: 'باب شقة', labelEn: 'Apartment door', image: 'images/doors/presets/edge-band/edge-1/outer-flat-plain.png', keywords: ['فلات عادي', 'flat plain', 'فلات سادة', 'Lib — 40ملم عادي', 'Lib door 40mm — plain', 'U — 45ملم عادي'] },
+            { id: 'villa', labelAr: 'باب فيلا', labelEn: 'Villa door', image: 'images/doors/presets/edge-band/edge-2/outer-flat-transom.png', keywords: ['وربعه', 'leaf & quarter', 'ضلفة وربع', '60ملم قياسي', '60mm — standard', '60ملم ديكور استانلس', '60ملم ديكور كلاسيك', '60ملم ديكور استيل'] }
         ];
 
         const NEBRAS_STORE_CATALOG_PDFS = [
@@ -3983,7 +4062,7 @@
             const tiles = NEBRAS_DOOR_ROOM_SCENARIOS.map(function(sc) {
                 const label = lang === 'en' ? (sc.labelEn || sc.labelAr) : sc.labelAr;
                 return '<button type="button" class="nebras-store-room-tile" onclick="openStoreDoorRoomScenario(\'' + pid + '\',\'' + sc.id + '\',' + iconId + ')">' +
-                    '<img src="' + escapeHtmlAttr(sc.image) + '" alt="' + escapeHtmlAttr(label) + '" loading="lazy" decoding="async">' +
+                    '<img src="' + escapeHtmlAttr(sc.image + '?v=' + DOOR_PHOTO_PRESET_CACHE) + '" alt="' + escapeHtmlAttr(label) + '" loading="lazy" decoding="async">' +
                     '<span class="nebras-store-room-tile-label">' + escapeHtmlAttr(label) + '</span></button>';
             }).join('');
             return '<section class="nebras-store-room-world" aria-labelledby="nebras-door-room-world-title">' +
@@ -13969,7 +14048,7 @@
             const badgeIcon = variant === 'partners' ? 'fa-handshake' : 'fa-door-open';
             const imgW = variant === 'partners' ? 168 : 440;
             const imgH = variant === 'partners' ? 168 : 760;
-            const deploy = (document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws320';
+            const deploy = (document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws321';
             const slides = urls.map(function(src, i) {
                 const delay = -(cycleSec - 3) + (i * 3);
                 const loading = i === 0 ? 'eager' : 'lazy';
@@ -29632,7 +29711,7 @@
             if (nebrasDoorEngineLoadPromise) return nebrasDoorEngineLoadPromise;
             const ver = (typeof window.NEBRAS_DEPLOY_TAG !== 'undefined' && window.NEBRAS_DEPLOY_TAG)
                 ? window.NEBRAS_DEPLOY_TAG
-                : ((document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws320');
+                : ((document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws321');
             nebrasDoorEngineLoadPromise = loadNebrasThreeJs().then(function() {
                 return Promise.all([
                     loadNebrasScriptOnce('js/nebras-door-3d.js?v=' + ver),
