@@ -2850,7 +2850,14 @@
     filter: drop-shadow(0 30px 58px rgba(12, 18, 30, 0.28));
 }
 
-.wpc-door-photo-preset-wrap.is-composite-transom,
+.wpc-door-photo-preset-wrap.is-composite-transom {
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: center;
+    padding-bottom: 2%;
+    gap: 0;
+}
+
 .wpc-door-photo-preset-wrap.is-live-transom {
     justify-content: center;
     align-items: center;
@@ -2858,20 +2865,10 @@
     gap: 0;
 }
 
-.wpc-door-live-transom {
-    display: none;
-    position: absolute;
-    top: 10.6%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 48%;
-    height: 13.4%;
-    z-index: 4;
-    pointer-events: none;
-}
-
+.wpc-door-live-transom,
+.wpc-door-photo-preset-wrap.is-live-transom .wpc-door-live-transom,
 .wpc-door-photo-preset-wrap.is-live-transom .wpc-door-live-transom.is-active {
-    display: block;
+    display: none !important;
 }
 
 .wpc-door-live-transom-unit {
@@ -2950,37 +2947,23 @@
 
 .wpc-door-photo-preset-transom-cap {
     display: none;
-    position: absolute;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
+    position: relative;
+    top: auto;
+    left: auto;
+    transform: none;
     width: min(92%, 340px);
-    max-height: 100%;
+    height: auto;
+    max-height: min(22vh, 168px);
     object-fit: contain;
-    object-position: center top;
-    z-index: 2;
-    filter: drop-shadow(0 12px 28px rgba(0, 0, 0, 0.12));
+    object-position: center bottom;
+    z-index: 3;
+    margin: 0;
+    filter: none;
     pointer-events: none;
 }
 
-.wpc-door-photo-preset-transom-cap.has-roll-texture {
-    position: absolute;
-}
-
-.wpc-door-photo-preset-transom-cap.has-roll-texture::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background-image: var(--door-cap-roll-url, none);
-    background-size: cover;
-    background-position: center;
-    mix-blend-mode: multiply;
-    opacity: 0.66;
-    pointer-events: none;
-}
-
-.wpc-door-photo-preset-wrap.is-composite-transom .wpc-door-photo-preset-transom-cap {
-    display: none !important;
+.wpc-door-photo-preset-wrap.is-composite-transom .wpc-door-photo-preset-transom-cap:not([hidden]) {
+    display: block;
 }
 
 .wpc-door-photo-preset-wrap.is-live-transom .wpc-door-photo-preset-transom-cap {

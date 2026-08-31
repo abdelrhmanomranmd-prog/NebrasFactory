@@ -971,7 +971,7 @@
         }
 
         const DOOR_PHOTO_PRESET_ROOT = 'images/doors/presets/';
-        const DOOR_PHOTO_PRESET_CACHE = '315';
+        const DOOR_PHOTO_PRESET_CACHE = '316';
         const DOOR_PHOTO_COMPOSE_MAX_DIM = 1200;
         /** صور أبواب المصنع الحقيقية في المعاينة — SVG احتياطي عند غياب الصورة */
         const DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS = true;
@@ -1437,8 +1437,8 @@
         };
 
         const DOOR_PHOTO_TRANSOM_CAP = {
-            flat: DOOR_PHOTO_PRESET_ROOT + 'u-channel/_shared/transom-cladding-flat.png',
-            curve: DOOR_PHOTO_PRESET_ROOT + 'u-channel/_shared/transom-cladding-curve.png'
+            flat: DOOR_PHOTO_PRESET_ROOT + 'u-channel/_shared/transom-cap-flat.png',
+            curve: DOOR_PHOTO_PRESET_ROOT + 'u-channel/_shared/transom-cap-curve.png'
         };
 
         function doorPhotoPresetUrl(path) {
@@ -1455,15 +1455,17 @@
             const decor = state.decor || 'plain';
             const transomKey = type + '|' + model + '|' + outer + '|transom';
             const plainKey = type + '|' + model + '|' + outer + '|plain';
-            if (decor === 'transom' && DOOR_PHOTO_PRESET_MAP[plainKey]) {
-                return {
-                    url: DOOR_PHOTO_PRESET_MAP[plainKey],
-                    mode: 'live-transom',
-                    transomCap: ''
-                };
-            }
-            if (decor === 'transom' && DOOR_PHOTO_PRESET_MAP[transomKey]) {
-                return { url: DOOR_PHOTO_PRESET_MAP[transomKey], mode: 'full', transomCap: '' };
+            if (decor === 'transom' && !state.isSliding) {
+                if (DOOR_PHOTO_PRESET_MAP[transomKey]) {
+                    return { url: DOOR_PHOTO_PRESET_MAP[transomKey], mode: 'full', transomCap: '' };
+                }
+                if (DOOR_PHOTO_PRESET_MAP[plainKey]) {
+                    return {
+                        url: DOOR_PHOTO_PRESET_MAP[plainKey],
+                        mode: 'composite-transom',
+                        transomCap: outer === 'outer-curve' ? DOOR_PHOTO_TRANSOM_CAP.curve : DOOR_PHOTO_TRANSOM_CAP.flat
+                    };
+                }
             }
             const key = type + '|' + model + '|' + outer + '|' + decor;
             const direct = DOOR_PHOTO_PRESET_MAP[key];
@@ -1563,34 +1565,12 @@
             return node;
         }
 
-        function paintLiveTransom(liveEl, state, rollUrl, hex, isRoll) {
+        function paintLiveTransom(liveEl) {
             if (!liveEl) return;
-            const show = !!(state && state.decor === 'transom' && !state.isSliding);
-            liveEl.hidden = !show;
-            liveEl.classList.toggle('is-active', show);
-            liveEl.setAttribute('aria-hidden', show ? 'false' : 'true');
-            if (!show) return;
-            const safe = hex || '#b8bcc4';
-            liveEl.setAttribute('data-door-type', state.type || '');
-            liveEl.setAttribute('data-door-model', state.model || '');
-            liveEl.setAttribute('data-door-outer', state.outerShape || 'outer-flat');
-            liveEl.setAttribute('data-door-surface', state.surface || '');
-            liveEl.setAttribute('data-door-leaves', state.isDouble ? '2' : '1');
-            const fit = getLiveTransomFit(state);
-            liveEl.style.top = fit.top + '%';
-            liveEl.style.width = fit.width + '%';
-            liveEl.style.height = fit.height + '%';
-            liveEl.style.left = '50%';
-            liveEl.style.transform = 'translateX(-50%)';
-            liveEl.style.setProperty('--live-transom-post', fit.post + '%');
-            liveEl.style.setProperty('--live-transom-radius', fit.radius + 'px');
-            liveEl.style.setProperty('--door-face', safe);
-            liveEl.style.setProperty('--door-light', shadeDoorHex(safe, 8));
-            liveEl.style.setProperty('--door-dark', shadeDoorHex(safe, -8));
-            liveEl.style.setProperty('--door-roll-tint', safe);
+            liveEl.hidden = true;
+            liveEl.classList.remove('is-active', 'has-roll-texture');
+            liveEl.setAttribute('aria-hidden', 'true');
             liveEl.style.removeProperty('--live-transom-roll');
-            liveEl.style.filter = isRoll ? (typeof buildWpcStoreRollCssFilterForPhoto === 'function' ? buildWpcStoreRollCssFilterForPhoto(safe) : 'none') : 'none';
-            liveEl.classList.remove('has-roll-texture');
         }
 
         function ensurePhotoPresetStackDom() {
@@ -1663,7 +1643,8 @@
             ensurePhotoPresetStackDom();
             stage.classList.remove('wpc-door-stage--dynamic-render', 'wpc-door-stage--photoreal', 'wpc-door-stage--engine-compositor', 'wpc-door-stage--engine-3d');
             stage.classList.add('wpc-door-stage--studio-live', 'wpc-door-stage--keybab', 'wpc-door-stage--photo-preset');
-            stage.classList.toggle('wpc-door-stage--photo-preset-transom', preset.mode === 'live-transom' || preset.mode === 'composite-transom');
+            const isCompositeTransom = preset.mode === 'composite-transom' && !!preset.transomCap;
+            stage.classList.toggle('wpc-door-stage--photo-preset-transom', isCompositeTransom);
             stage.classList.toggle('wpc-door-stage--decor-transom', decor === 'transom');
             hideAllWpcPhotoDecorLayers();
             const keybab = document.getElementById('wpc-door-keybab-textures');
@@ -1680,8 +1661,8 @@
             const liveTransom = ensureLiveTransomDom();
             if (!wrap || !img) return false;
             wrap.classList.add('is-active');
-            wrap.classList.toggle('is-composite-transom', false);
-            wrap.classList.toggle('is-live-transom', preset.mode === 'live-transom');
+            wrap.classList.toggle('is-composite-transom', isCompositeTransom);
+            wrap.classList.toggle('is-live-transom', false);
             const baseSrc = doorPhotoPresetUrl(preset.url);
             const presetKey = state ? getDoorPhotoPresetStateKey(state) : '';
             img.onerror = function() {
@@ -1701,12 +1682,22 @@
             img.setAttribute('data-door-base-src', baseSrc);
             if (presetKey) img.setAttribute('data-door-preset-key', presetKey);
             if (transomCap) {
-                transomCap.hidden = true;
                 transomCap.classList.remove('has-roll-texture', 'has-roll-composite', 'has-door-roll-tint');
-                transomCap.removeAttribute('data-door-base-src');
-                transomCap.removeAttribute('src');
+                if (isCompositeTransom) {
+                    const capSrc = doorPhotoPresetUrl(preset.transomCap);
+                    transomCap.hidden = false;
+                    transomCap.src = capSrc;
+                    transomCap.setAttribute('data-door-base-src', capSrc);
+                    if (stack && transomCap.parentNode !== wrap) {
+                        wrap.insertBefore(transomCap, stack);
+                    }
+                } else {
+                    transomCap.hidden = true;
+                    transomCap.removeAttribute('data-door-base-src');
+                    transomCap.removeAttribute('src');
+                }
             }
-            paintLiveTransom(liveTransom, preset.mode === 'live-transom' ? state : null, rollUrl, hex, isRoll);
+            paintLiveTransom(liveTransom);
             applyPhotoPresetRollTexture(wrap, stack, rollImg, img, baseSrc, rollUrl, hex, isRoll, catalogIndex, transomCap);
             stage.classList.toggle('wpc-door-stage--photo-roll-active', !!isRoll);
             stage.style.setProperty('--door-roll-tint', hex || '#b8bcc4');
@@ -29598,7 +29589,7 @@
             if (nebrasDoorEngineLoadPromise) return nebrasDoorEngineLoadPromise;
             const ver = (typeof window.NEBRAS_DEPLOY_TAG !== 'undefined' && window.NEBRAS_DEPLOY_TAG)
                 ? window.NEBRAS_DEPLOY_TAG
-                : ((document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws315');
+                : ((document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws316');
             nebrasDoorEngineLoadPromise = loadNebrasThreeJs().then(function() {
                 return Promise.all([
                     loadNebrasScriptOnce('js/nebras-door-3d.js?v=' + ver),
