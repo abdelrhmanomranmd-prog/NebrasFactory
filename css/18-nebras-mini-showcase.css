@@ -1,20 +1,21 @@
-/* معاينة متحركة — أبواب / شركاء · الهيدر بحجم بطولي بدون بكسلة */
+/* معاينة متحركة — صمّم بابك = شركاؤنا · الداشبورد أوضح بدون قص */
 
 .nebras-mini-showcase {
     flex: 0 0 auto;
-    --mini-showcase-w: clamp(72px, 12vw, 96px);
-    --mini-showcase-h: clamp(118px, 18vw, 148px);
+    --mini-showcase-w: clamp(88px, 13vw, 118px);
+    --mini-showcase-h: clamp(154px, 23vw, 206px);
     --cycle-duration: 18s;
 }
 
-.nebras-mini-showcase--hero {
-    --mini-showcase-w: clamp(176px, 26vw, 280px);
-    --mini-showcase-h: clamp(310px, 50vw, 500px);
+.nebras-mini-showcase--hero,
+.header-hero-rail .nebras-mini-showcase--partners {
+    --mini-showcase-w: clamp(88px, 13vw, 118px);
+    --mini-showcase-h: clamp(154px, 23vw, 206px);
 }
 
 .nebras-mini-showcase--stage {
-    --mini-showcase-w: clamp(196px, 28vw, 320px);
-    --mini-showcase-h: clamp(340px, 52vw, 540px);
+    --mini-showcase-w: clamp(108px, 14vw, 136px);
+    --mini-showcase-h: clamp(188px, 26vw, 236px);
 }
 
 .nebras-mini-showcase-frame {
@@ -70,7 +71,7 @@
 
 .nebras-mini-showcase-viewport {
     position: absolute;
-    inset: 4px;
+    inset: 7px;
     border-radius: 10px;
     overflow: hidden;
     z-index: 2;
@@ -95,7 +96,7 @@
     background: #f4f7fb;
     opacity: 0;
     transform: translateZ(0);
-    padding: 6px;
+    padding: 8px 7px;
     box-sizing: border-box;
     animation: nebrasMiniShowcaseFade var(--cycle-duration, 18s) ease-in-out infinite;
     -webkit-backface-visibility: hidden;
@@ -177,14 +178,14 @@
 /* —— الداشبورد: باب بطولي بجانب هوية المصنع —— */
 .dashboard-company-identity {
     position: relative;
-    overflow: hidden;
+    overflow: visible;
 }
 
 .dashboard-identity-hero {
     display: grid;
-    grid-template-columns: minmax(168px, 280px) minmax(0, 1fr);
+    grid-template-columns: minmax(120px, 148px) minmax(0, 1fr);
     align-items: center;
-    gap: clamp(16px, 3vw, 28px);
+    gap: clamp(14px, 2.4vw, 22px);
     margin-bottom: 16px;
 }
 
@@ -258,14 +259,15 @@ body.nebras-door-interface-active .header-hero-core .header-hero-divider {
         --mini-showcase-h: 118px;
     }
 
-    .nebras-mini-showcase--hero {
-        --mini-showcase-w: 120px;
-        --mini-showcase-h: 210px;
+    .nebras-mini-showcase--hero,
+    .header-hero-rail .nebras-mini-showcase--partners {
+        --mini-showcase-w: 88px;
+        --mini-showcase-h: 154px;
     }
 
     .nebras-mini-showcase--stage {
-        --mini-showcase-w: 148px;
-        --mini-showcase-h: 260px;
+        --mini-showcase-w: 108px;
+        --mini-showcase-h: 188px;
     }
 
     .dashboard-identity-hero {

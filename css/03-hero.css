@@ -5,7 +5,7 @@
 
 .hero.hero-real {
     position: relative;
-    min-height: min(88vh, 760px);
+    min-height: min(58vh, 520px);
     padding: 0;
     display: block;
     text-align: start;
@@ -34,7 +34,8 @@
     backface-visibility: hidden;
 }
 
-.hero-slide-img {
+.hero-slide-img,
+.hero-slide-video {
     display: block;
     width: 100%;
     height: 100%;
@@ -157,7 +158,7 @@
 .hero-content-wrap {
     position: relative;
     z-index: 2;
-    min-height: min(88vh, 760px);
+    min-height: min(58vh, 520px);
     display: flex;
     flex-direction: column;
     justify-content: flex-end;
@@ -331,8 +332,9 @@
 }
 
 @media (min-width: 769px) {
-    .hero-slide-img {
-        object-fit: cover;
+    .hero-slide-img,
+    .hero-slide-video {
+        object-fit: contain;
         object-position: center center;
     }
 
@@ -362,12 +364,13 @@
 
 @media (max-width: 768px) {
     .hero.hero-real {
-        min-height: min(94svh, 820px);
+        min-height: min(62svh, 560px);
     }
 
-    .hero-slide-img {
+    .hero-slide-img,
+    .hero-slide-video {
         object-fit: contain;
-        object-position: center top;
+        object-position: center center;
     }
 
     .hero.hero-real::before {
@@ -381,7 +384,7 @@
     }
 
     .hero-content-wrap {
-        min-height: min(94svh, 820px);
+        min-height: min(62svh, 560px);
         padding: 24px 5% 62px;
         justify-content: flex-end;
         align-items: center;
@@ -415,11 +418,11 @@
 
 @media (max-width: 480px) {
     .hero.hero-real {
-        min-height: min(92svh, 760px);
+        min-height: min(62svh, 560px);
     }
 
     .hero-content-wrap {
-        min-height: min(92svh, 760px);
+        min-height: min(62svh, 560px);
         padding: 20px 4.5% 58px;
     }
 }

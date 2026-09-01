@@ -192,7 +192,7 @@ body.nebras-profile-2026-theme .nebras-visitor-qr-lead {
 body.nebras-profile-2026-theme .logo-container {
     width: 76px;
     height: 76px;
-    padding: 10px;
+    padding: 0;
     border-radius: 50%;
     background:
         radial-gradient(circle at 38% 32%, #1a4a72 0%, #0d2840 62%, #081828 100%);
@@ -212,7 +212,8 @@ body.nebras-profile-2026-theme .site-logo-img {
     width: 100%;
     height: 100%;
     max-width: none;
-    object-fit: contain;
+    object-fit: cover;
+    object-position: center;
 }
 
 /* افتتاحية العلامة — نفس روح غلاف البروفايل */

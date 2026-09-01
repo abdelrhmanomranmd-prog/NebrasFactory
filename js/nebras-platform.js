@@ -3108,7 +3108,7 @@
         const NEBRAS_STORE_WORLDS = [
             { productId: 'prod-wpc', labelAr: 'عالم الأبواب', labelEn: 'Doors World', icon: 'fa-door-open', banner: 'images/catalog/wpc-photos/by-sku-clean/WPC-RDY-FLAT-45-STD.png' },
             { productId: 'prod-aluminum', labelAr: 'عالم الألومنيوم', labelEn: 'Aluminum World', icon: 'fa-industry', banner: 'images/catalog/aluminum/by-sku/ALU-PROF-6M.webp' },
-            { productId: 'prod-aluminum', subCategoryId: 'alu-facades', labelAr: 'عالم التكسيات', labelEn: 'Cladding World', icon: 'fa-border-all', banner: 'images/profile-2026/cnc/cnc-01.jpg' },
+            { productId: 'prod-aluminum', subCategoryId: 'alu-facades', labelAr: 'عالم التكسيات', labelEn: 'Cladding World', icon: 'fa-border-all', banner: 'images/profile-2026/cnc/cnc-06.jpg' },
             { productId: 'prod-wpc-raw', labelAr: 'WPC عضم', labelEn: 'WPC Raw', icon: 'fa-door-closed', banner: 'images/catalog/wpc-photos/08-bone-profile.png' }
         ];
 
@@ -14127,7 +14127,7 @@
             const badgeIcon = variant === 'partners' ? 'fa-handshake' : 'fa-door-open';
             const imgW = variant === 'partners' ? 168 : 440;
             const imgH = variant === 'partners' ? 168 : 760;
-            const deploy = (document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws324';
+            const deploy = (document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws325';
             const slides = urls.map(function(src, i) {
                 const delay = -(cycleSec - 3) + (i * 3);
                 const loading = i === 0 ? 'eager' : 'lazy';
@@ -22739,6 +22739,12 @@
             const activeClass = isActive ? ' is-active' : '';
             const loadAttr = idx === 0 ? 'eager' : 'lazy';
             const priority = idx === 0 ? ' fetchpriority="high"' : '';
+            const isVideo = NEBRAS_VIDEO_EXT_RE.test(String(slide.src || url || ''));
+            if (isVideo) {
+                return '<div class="hero-slide' + activeClass + '" data-slide="' + idx + '">' +
+                    '<video class="hero-slide-video" src="' + escapeHtmlAttr(url) + '" muted loop playsinline autoplay preload="' + (idx === 0 ? 'auto' : 'metadata') + '"' +
+                    ' aria-hidden="true"></video></div>';
+            }
             return '<div class="hero-slide' + activeClass + '" data-slide="' + idx + '">' +
                 '<img class="hero-slide-img" src="' + escapeHtmlAttr(url) + '" alt="" decoding="async" loading="' + loadAttr + '"' + priority +
                 ' onerror="this.onerror=null;this.src=\'' + fallback.replace(/'/g, '') + '\'">' +
@@ -29787,7 +29793,7 @@
             if (nebrasDoorEngineLoadPromise) return nebrasDoorEngineLoadPromise;
             const ver = (typeof window.NEBRAS_DEPLOY_TAG !== 'undefined' && window.NEBRAS_DEPLOY_TAG)
                 ? window.NEBRAS_DEPLOY_TAG
-                : ((document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws324');
+                : ((document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws325');
             nebrasDoorEngineLoadPromise = loadNebrasThreeJs().then(function() {
                 return Promise.all([
                     loadNebrasScriptOnce('js/nebras-door-3d.js?v=' + ver),
