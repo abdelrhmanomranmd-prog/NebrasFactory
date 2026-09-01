@@ -971,7 +971,7 @@
         }
 
         const DOOR_PHOTO_PRESET_ROOT = 'images/doors/presets/';
-        const DOOR_PHOTO_PRESET_CACHE = '322';
+        const DOOR_PHOTO_PRESET_CACHE = '323';
         const DOOR_PHOTO_COMPOSE_MAX_DIM = 1200;
         /** صور أبواب المصنع الحقيقية في المعاينة — SVG احتياطي عند غياب الصورة */
         const DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS = true;
@@ -1275,7 +1275,9 @@
                     ctx.drawImage(base, 0, 0, w, h);
 
                     let panelMask = mask;
-                    if (panelClip && useMask) {
+                    if (options.leafPixels) {
+                        panelMask = buildWpcStoreLeafPixelMask(base, w, h) || mask;
+                    } else if (panelClip && useMask) {
                         panelMask = buildWpcCatalogPanelRectMask(w, h, panelClip);
                     }
 
@@ -3098,6 +3100,7 @@
         const NEBRAS_STORE_WORLDS = [
             { productId: 'prod-wpc', labelAr: 'عالم الأبواب', labelEn: 'Doors World', icon: 'fa-door-open', banner: 'images/catalog/wpc-photos/by-sku-clean/WPC-RDY-FLAT-45-STD.png' },
             { productId: 'prod-aluminum', labelAr: 'عالم الألومنيوم', labelEn: 'Aluminum World', icon: 'fa-industry', banner: 'images/catalog/aluminum/by-sku/ALU-PROF-6M.webp' },
+            { productId: 'prod-aluminum', subCategoryId: 'alu-facades', labelAr: 'عالم التكسيات', labelEn: 'Cladding World', icon: 'fa-border-all', banner: 'images/profile-2026/cnc/cnc-01.jpg' },
             { productId: 'prod-wpc-raw', labelAr: 'WPC عضم', labelEn: 'WPC Raw', icon: 'fa-door-closed', banner: 'images/catalog/wpc-photos/08-bone-profile.png' }
         ];
 
@@ -3354,6 +3357,41 @@
         const WPC_STORE_RECOLOR_CACHE = {};
         const WPC_STORE_RECOLOR_MAX = 960;
 
+        /** هل البكسل لوح خشب الباب — بدون خلفية الاستوديو والإطار والمقبض */
+        function isWpcStoreLeafPixel(r, g, b, a, bg) {
+            if (a < 10) return false;
+            const max = r > g ? (r > b ? r : b) : (g > b ? g : b);
+            const min = r < g ? (r < b ? r : b) : (g < b ? g : b);
+            const lum = 0.299 * r + 0.587 * g + 0.114 * b;
+            const sat = max === 0 ? 0 : (max - min) / max;
+            const bgDist = Math.abs(r - bg.r) + Math.abs(g - bg.g) + Math.abs(b - bg.b);
+            if (bg.lum > 170 && lum > 198 && bgDist < 58) return false;
+            if (lum > 246 && sat < 0.08) return false;
+            if (lum < 28 && sat < 0.18) return false;
+            if (b > r + 28 && b > g + 12 && sat > 0.2 && lum > 64) return false;
+            return true;
+        }
+
+        function buildWpcStoreLeafPixelMask(base, w, h) {
+            const canvas = document.createElement('canvas');
+            canvas.width = w;
+            canvas.height = h;
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+            if (!ctx) return null;
+            ctx.drawImage(base, 0, 0, w, h);
+            let frame;
+            try { frame = ctx.getImageData(0, 0, w, h); } catch (err) { return null; }
+            const px = frame.data;
+            const bg = sampleAluminumStudioBackground(px, w, h);
+            for (let i = 0; i < px.length; i += 4) {
+                const on = isWpcStoreLeafPixel(px[i], px[i + 1], px[i + 2], px[i + 3], bg);
+                px[i] = px[i + 1] = px[i + 2] = on ? 255 : 0;
+                px[i + 3] = on ? 255 : 0;
+            }
+            ctx.putImageData(frame, 0, 0);
+            return canvas;
+        }
+
         /** تلوين بيكسلات الباب فقط — خلفية الاستوديو والإطار تُترك */
         function recolorWpcStoreProductPixels(image, hex) {
             const srcW = image.naturalWidth || image.width || 0;
@@ -3384,16 +3422,7 @@
                 const g = px[i + 1];
                 const b = px[i + 2];
                 const a = px[i + 3];
-                if (a < 10) continue;
-                const max = r > g ? (r > b ? r : b) : (g > b ? g : b);
-                const min = r < g ? (r < b ? r : b) : (g < b ? g : b);
-                const lum = 0.299 * r + 0.587 * g + 0.114 * b;
-                const sat = max === 0 ? 0 : (max - min) / max;
-                const bgDist = Math.abs(r - bg.r) + Math.abs(g - bg.g) + Math.abs(b - bg.b);
-                if (bg.lum > 200 && lum > 218 && bgDist < 48) continue;
-                if (lum > 246 && sat < 0.08) continue;
-                if (lum < 24 && sat < 0.16) continue;
-                if (b > r + 30 && b > g + 14 && sat > 0.22 && lum > 70) continue;
+                if (!isWpcStoreLeafPixel(r, g, b, a, bg)) continue;
                 const grain = 0.16;
                 let nr = (r / 255) * target.r * 1.08 * (1 - grain) + r * grain;
                 let ng = (g / 255) * target.g * 1.08 * (1 - grain) + g * grain;
@@ -3443,7 +3472,6 @@
             const catIdx = rollState.catalogIndex != null ? rollState.catalogIndex : 0;
             const isRoll = rollState.isRoll !== false;
             const panelLayer = stack ? stack.querySelector('.nebras-store-sku-door-panel-color') : null;
-            const panelClip = getWpcDoorClipPath(variant) || WPC_CATALOG_PHOTO_PANEL_CLIP;
             const token = 'store-' + String(Date.now()) + '-' + catIdx + '-' + String(hex || '').replace('#', '');
             img.setAttribute('data-roll-compose-token', token);
             img.style.filter = 'none';
@@ -3471,7 +3499,7 @@
                 stack.classList.remove('has-roll-composite-ready', 'has-roll-texture', 'has-roll-css-fallback');
             }
             const tex = resolveDoorRollTextureUrl(rollState.swatchUrl || getRollSwatchImageUrl(catIdx));
-            composeDoorPhotoWithRoll(baseSrc, tex, hex, catIdx, { useMask: true, clipInset: panelClip }).then(function(composed) {
+            composeDoorPhotoWithRoll(baseSrc, tex, hex, catIdx, { useMask: true, leafPixels: true }).then(function(composed) {
                 if (!img.isConnected) return;
                 if (img.getAttribute('data-roll-compose-token') !== token) return;
                 if (composed) {
@@ -3495,6 +3523,15 @@
                 if (img.getAttribute('data-roll-compose-token') !== token) return;
                 applyWpcStoreRollCssPanelFallback(img, stack, baseSrc, rollState, variant);
             });
+        }
+
+        function getStoreSkuCardVariant(card) {
+            if (!card) return null;
+            const pid = card.getAttribute('data-product-id');
+            const vi = parseInt(card.getAttribute('data-variant-index'), 10);
+            const product = (typeof siteProducts !== 'undefined' ? siteProducts : []).find(function(p) { return p && p.id === pid; });
+            if (!product || !product.variants || isNaN(vi)) return null;
+            return product.variants[vi] || null;
         }
 
         function applyWpcStoreSkuRollTint(card, catalogIndex) {
@@ -3523,39 +3560,25 @@
             const roll = colors[rollIdx] || colors[0];
             if (!roll) return;
             const baseDisplay = resolveDisplayMediaUrl(baseSrc);
-            const token = 'wpc-px-' + rollIdx + '-' + String(roll.hex || '').toLowerCase();
-            img.setAttribute('data-roll-compose-token', token);
-            img.setAttribute('data-composed-roll', String(rollIdx));
             card.classList.add('is-roll-color-live');
             card.setAttribute('data-active-roll-hex', roll.hex || '');
             card.setAttribute('data-selected-roll-index', String(rollIdx));
+            img.setAttribute('data-composed-roll', String(rollIdx));
             if (rollIdx === 0) {
                 img.src = baseDisplay;
                 img.setAttribute('data-full-src', baseDisplay);
                 img.classList.remove('has-roll-composite', 'has-roll-pending');
+                img.removeAttribute('data-roll-compose-token');
+                if (stack) stack.classList.remove('has-roll-pending', 'has-roll-composite-ready', 'has-roll-texture');
                 return;
             }
-            img.classList.add('has-roll-pending');
-            composeWpcStoreProductColor(baseSrc, roll.hex).then(function(url) {
-                if (!img.isConnected) return;
-                if (img.getAttribute('data-roll-compose-token') !== token) return;
-                img.style.filter = 'none';
-                img.src = url;
-                img.setAttribute('data-full-src', url);
-                img.classList.add('has-roll-composite');
-                img.classList.remove('has-roll-pending');
-                if (stack) {
-                    stack.classList.add('has-roll-composite-ready');
-                    stack.classList.remove('has-roll-pending');
-                }
-            }).catch(function() {
-                if (!img.isConnected) return;
-                if (img.getAttribute('data-roll-compose-token') !== token) return;
-                img.src = baseDisplay;
-                img.setAttribute('data-full-src', baseDisplay);
-                img.style.filter = 'none';
-                img.classList.remove('has-roll-pending', 'has-roll-composite');
-            });
+            const rollState = {
+                hex: roll.hex || '#b8bcc4',
+                catalogIndex: roll.catalogIndex != null ? roll.catalogIndex : rollIdx,
+                isRoll: true,
+                swatchUrl: roll.textureUrl || getRollSwatchImageUrl(roll.catalogIndex != null ? roll.catalogIndex : rollIdx)
+            };
+            applyComposedRollToStoreSkuImg(img, stack, baseSrc, rollState, getStoreSkuCardVariant(card));
         }
 
         function getProductPhotoWatermarkSettings() {
@@ -3602,14 +3625,13 @@
                 ' alt="' + escapeHtmlAttr(label) + '" loading="lazy" decoding="async"' +
                 ' title="' + escapeHtmlAttr(ui.lightboxOpenHint || 'اضغط للتكبير') + '">' +
                 buildProductPhotoWatermarkHtml() +
-                '<div class="nebras-store-sku-door-panel-color" aria-hidden="true"></div>' +
                 '</div></div>';
         }
 
         function buildWpcStoreRollPickerHtml(productId, variantIndex, lang, ui) {
             const colors = getNebrasColorCatalog();
             const label = ui.wpcStoreRollPickerLabel || 'اختر لون الرولّة — معاينة حية على الباب';
-            const hint = ui.wpcStoreRollPickerHint || 'اختر لون الرولّة — اللون يظهر على لوح الباب فقط';
+            const hint = ui.wpcStoreRollPickerHint || 'اختر لون الرولّة — نسيج الرولّة على خشب الباب نفسه';
             const safePid = String(productId).replace(/'/g, "\\'");
             const swatches = colors.map(function(item, idx) {
                 const code = String(item.code || getRollCatalogCode(item.nebCode || getNebrasRollCodeByIndex(idx))).trim();
@@ -3960,17 +3982,23 @@
             return '';
         }
 
-        function buildStoreWorldsNavHtml(activeProductId, lang, iconId) {
+        function buildStoreWorldsNavHtml(activeProductId, lang, iconId, activeSubId) {
             const ui = siteText[lang] || siteText.ar;
             const iid = iconId != null ? iconId : 'null';
             const cards = NEBRAS_STORE_WORLDS.map(function(w) {
                 const product = siteProducts.find(function(p) { return p && p.id === w.productId; });
                 if (!product || product.visible === false) return '';
                 const label = lang === 'en' ? (w.labelEn || w.labelAr) : w.labelAr;
-                const active = w.productId === activeProductId ? ' is-active' : '';
+                const isClad = !!w.subCategoryId;
+                const active = isClad
+                    ? (w.productId === activeProductId && activeSubId === w.subCategoryId ? ' is-active' : '')
+                    : (w.productId === activeProductId && activeSubId !== 'alu-facades' ? ' is-active' : '');
                 const pid = String(w.productId).replace(/'/g, "\\'");
                 const banner = resolveDisplayMediaUrl(w.banner);
-                return '<button type="button" class="nebras-store-worlds-nav-btn' + active + '" onclick="openStoreSubCategoryHub(\'' + pid + '\',' + iid + ')">' +
+                const click = isClad
+                    ? 'openStoreSubCategory(\'' + pid + '\',\'' + String(w.subCategoryId).replace(/'/g, "\\'") + '\',' + iid + ')'
+                    : 'openStoreSubCategoryHub(\'' + pid + '\',' + iid + ')';
+                return '<button type="button" class="nebras-store-worlds-nav-btn' + active + '" onclick="' + click + '">' +
                     '<span class="nebras-store-worlds-nav-media"><img src="' + escapeHtmlAttr(banner) + '" alt="" loading="lazy" decoding="async"></span>' +
                     '<span class="nebras-store-worlds-nav-label"><i class="fas ' + escapeHtmlAttr(w.icon) + '"></i> ' + escapeHtmlAttr(label) + '</span></button>';
             }).join('');
@@ -3978,6 +4006,50 @@
             return '<nav class="nebras-store-worlds-nav" aria-label="' + escapeHtmlAttr(ui.storeWorldsNavLabel || 'عوالم المتجر') + '">' +
                 '<p class="nebras-store-worlds-nav-kicker"><i class="fas fa-th-large"></i> ' + escapeHtmlAttr(ui.storeWorldsNavKicker || 'عوالم نبراس — اختر المنتج') + '</p>' +
                 '<div class="nebras-store-worlds-nav-grid">' + cards + '</div></nav>';
+        }
+
+        function buildStoreCladdingWelcomeHeroHtml(lang, ui) {
+            const photos = [
+                'images/profile-2026/cnc/cnc-01.jpg',
+                'images/profile-2026/cnc/cnc-03.jpg',
+                'images/profile-2026/cnc/cnc-06.jpg',
+                'images/profile-2026/cnc/cnc-08.jpg'
+            ];
+            const title = ui.storeCladWelcomeTitle || 'عالم تكسيات نبراس — ديكور جداري من المصنع';
+            const subtitle = ui.storeCladWelcomeSubtitle || 'تكسيات سادة · مضلعة · ألواح CNC · كلادينج واجهات — جودة نبراس السعودية للشرفات والفلل والمشاريع.';
+            const eyebrow = ui.storeCladWelcomeEyebrow || 'تكسيات نبراس';
+            const badges = [
+                { icon: 'fa-border-all', label: ui.storeCladBadgeWall || 'تكسية جدارية' },
+                { icon: 'fa-th-large', label: ui.storeCladBadgeCnc || 'ألواح CNC' },
+                { icon: 'fa-city', label: ui.storeCladBadgeFacade || 'كلادينج واجهات' },
+                { icon: 'fa-industry', label: ui.storeBadgeFactory || 'مصنع سعودي' }
+            ];
+            const badgesHtml = badges.map(function(b) {
+                return '<span class="nebras-store-welcome-badge"><i class="fas ' + escapeHtmlAttr(b.icon) + '"></i> ' + escapeHtmlAttr(b.label) + '</span>';
+            }).join('');
+            const mosaicHtml = photos.map(function(src, idx) {
+                return '<figure class="nebras-store-welcome-mosaic-item"><img src="' + escapeHtmlAttr(resolveDisplayMediaUrl(src)) + '" alt="' + escapeHtmlAttr(title) + '" loading="' + (idx === 0 ? 'eager' : 'lazy') + '" decoding="async"></figure>';
+            }).join('');
+            const families = [
+                { img: 'images/profile-2026/cnc/cnc-01.jpg', label: ui.storeCladFamPlain || 'تكسية سادة' },
+                { img: 'images/profile-2026/cnc/cnc-03.jpg', label: ui.storeCladFamRibbed || 'تكسية مضلعة' },
+                { img: 'images/profile-2026/cnc/cnc-06.jpg', label: ui.storeCladFamCnc || 'ألواح CNC' },
+                { img: 'images/profile-2026/cnc/cnc-11.jpg', label: ui.storeCladFamFacade || 'كلادينج واجهات' }
+            ];
+            const famHtml = families.map(function(f) {
+                return '<figure class="nebras-store-clad-family"><img src="' + escapeHtmlAttr(resolveDisplayMediaUrl(f.img)) + '" alt="' + escapeHtmlAttr(f.label) + '" loading="lazy" decoding="async"><figcaption>' + escapeHtmlAttr(f.label) + '</figcaption></figure>';
+            }).join('');
+            return '<section class="nebras-store-welcome-hero nebras-store-welcome-hero--real nebras-store-welcome-hero--clad" aria-label="' + escapeHtmlAttr(title) + '">' +
+                '<div class="nebras-store-welcome-hero-mosaic" aria-hidden="true">' + mosaicHtml + '</div>' +
+                '<div class="nebras-store-welcome-hero-copy">' +
+                '<span class="nebras-store-welcome-eyebrow">' + escapeHtmlAttr(eyebrow) + '</span>' +
+                '<h2 class="nebras-store-welcome-title">' + escapeHtmlAttr(title) + '</h2>' +
+                '<p class="nebras-store-welcome-subtitle">' + escapeHtmlAttr(subtitle) + '</p>' +
+                '<div class="nebras-store-welcome-badges">' + badgesHtml + '</div>' +
+                '</div></section>' +
+                '<nav class="nebras-store-clad-families" aria-label="' + escapeHtmlAttr(ui.storeCladFamiliesLabel || 'أقسام التكسيات') + '">' +
+                '<p class="nebras-store-clad-families-kicker">' + escapeHtmlAttr(ui.storeCladFamiliesKicker || 'ديكورات جدارية نبراس — اختاري النوع') + '</p>' +
+                '<div class="nebras-store-clad-families-grid">' + famHtml + '</div></nav>';
         }
 
         function buildStoreAluminumWelcomeHeroHtml(product, lang, ui) {
@@ -3997,14 +4069,13 @@
                 return '<figure class="nebras-store-welcome-mosaic-item"><img src="' + escapeHtmlAttr(src) + '" alt="' + escapeHtmlAttr(title) + ' — ' + String(idx + 1) + '" loading="' + (idx === 0 ? 'eager' : 'lazy') + '" decoding="async"></figure>';
             }).join('');
             return '<section class="nebras-store-welcome-hero nebras-store-welcome-hero--real nebras-store-welcome-hero--alu" aria-label="' + escapeHtmlAttr(title) + '">' +
+                '<div class="nebras-store-welcome-hero-mosaic" aria-hidden="true">' + mosaicHtml + '</div>' +
                 '<div class="nebras-store-welcome-hero-copy">' +
                 '<span class="nebras-store-welcome-eyebrow">' + escapeHtmlAttr(eyebrow) + '</span>' +
                 '<h2 class="nebras-store-welcome-title">' + escapeHtmlAttr(title) + '</h2>' +
                 '<p class="nebras-store-welcome-subtitle">' + escapeHtmlAttr(subtitle) + '</p>' +
                 '<div class="nebras-store-welcome-badges">' + badgesHtml + '</div>' +
-                '</div>' +
-                '<div class="nebras-store-welcome-hero-mosaic" aria-hidden="true">' + mosaicHtml + '</div>' +
-                '</section>';
+                '</div></section>';
         }
 
         function buildStoreWelcomeHeroHtml(product, lang, ui) {
@@ -4037,14 +4108,13 @@
                 return '<figure class="nebras-store-welcome-mosaic-item"><img src="' + escapeHtmlAttr(src) + '" alt="' + escapeHtmlAttr(title) + ' — ' + String(idx + 1) + '" loading="' + (idx === 0 ? 'eager' : 'lazy') + '" decoding="async"></figure>';
             }).join('');
             return '<section class="nebras-store-welcome-hero nebras-store-welcome-hero--real" aria-label="' + escapeHtmlAttr(title) + '">' +
+                '<div class="nebras-store-welcome-hero-mosaic" aria-hidden="true">' + mosaicHtml + '</div>' +
                 '<div class="nebras-store-welcome-hero-copy">' +
                 '<span class="nebras-store-welcome-eyebrow">' + escapeHtmlAttr(eyebrow) + '</span>' +
                 '<h2 class="nebras-store-welcome-title">' + escapeHtmlAttr(title) + '</h2>' +
                 '<p class="nebras-store-welcome-subtitle">' + escapeHtmlAttr(subtitle) + '</p>' +
                 '<div class="nebras-store-welcome-badges">' + badgesHtml + '</div>' +
-                '</div>' +
-                '<div class="nebras-store-welcome-hero-mosaic" aria-hidden="true">' + mosaicHtml + '</div>' +
-                '</section>';
+                '</div></section>';
         }
 
         function buildStoreDoorRoomScenariosHtml(product, lang, ui) {
@@ -4235,8 +4305,10 @@
             const bannerHtml = bannerImg
                 ? ('<div class="nebras-store-subsection-banner-visual"><img src="' + escapeHtmlAttr(bannerImg) + '" alt="' + escapeHtmlAttr(subLabel) + '" loading="eager" decoding="async"></div>')
                 : '';
-            return buildStoreWorldsNavHtml(product.id, lang, iconId) +
-                buildStoreProductWelcomeHeroHtml(product, lang, ui) +
+            return buildStoreWorldsNavHtml(product.id, lang, iconId, subCategoryId) +
+                (subCategoryId === 'alu-facades'
+                    ? buildStoreCladdingWelcomeHeroHtml(lang, ui)
+                    : buildStoreProductWelcomeHeroHtml(product, lang, ui)) +
                 buildStoreDoorRoomActiveChipHtml(lang, ui) +
                 backBtn +
                 '<section class="nebras-store-subcategory-page nebras-store-subcategory-page--premium" data-sub-id="' + escapeHtmlAttr(subCategoryId) + '">' +
@@ -4493,6 +4565,7 @@
             const p = String(imagePath || '').trim();
             if (!p) return true;
             if (p.indexOf('images/catalog/aluminum/by-sku/') === 0) return false;
+            if (p.indexOf('images/profile-2026/cnc/') === 0) return false;
             if (isAdminManagedProductImage(p)) return false;
             return true;
         }
@@ -4600,8 +4673,8 @@
             return formatVariantPriceBlock(variant ? variant.price : 0, lang);
         }
 
-        /** أصناف الألومنيوم — أشكال مطابخ/أبواب/شبابيك/واجهات + تلوين المعدن الفضي نفسه · v12 */
-        const ALUMINUM_CATALOG_VERSION = 12;
+        /** أصناف الألومنيوم — أشكال مطابخ/أبواب/شبابيك/تكسيات + تلوين المعدن الفضي نفسه · v13 */
+        const ALUMINUM_CATALOG_VERSION = 13;
         const ALU_CATALOG_ROOT = 'images/catalog/aluminum/';
         function aluSkuImg(file) { return ALU_CATALOG_ROOT + 'by-sku/' + file; }
         const ALUMINUM_CATALOG_PHOTOS = {
@@ -4987,12 +5060,12 @@
         };
         const ALU_FACADES_SUBCATEGORY = {
             id: 'alu-facades',
-            labelAr: 'واجهات وكلادينج',
-            labelEn: 'Facades & cladding',
-            shortLabelAr: 'واجهات',
-            shortLabelEn: 'Facades',
-            descAr: 'كلادينج وواجهات ألومنيوم — تصنيع حسب المشروع.',
-            descEn: 'Aluminum cladding and facades — project-based manufacturing.',
+            labelAr: 'تكسيات وديكورات جدارية',
+            labelEn: 'Wall cladding & facades',
+            shortLabelAr: 'تكسيات',
+            shortLabelEn: 'Cladding',
+            descAr: 'تكسيات جدارية سادة ومضلعة · ألواح CNC · كلادينج واجهات — تصنيع نبراس حسب المشروع.',
+            descEn: 'Plain and ribbed wall cladding, CNC panels and facade cladding — Nebras project manufacturing.',
             sortOrder: 6
         };
         const ALU_KITCHENS_SUBCATEGORY = {
@@ -5061,6 +5134,11 @@
             { id: 'alu-fac-per', sku: 'ALU-FAC-PER', subCategoryId: 'alu-facades', image: ALUMINUM_CATALOG_PHOTOS.facadePer, typeAr: 'واجهة ألومنيوم مثقبة', typeEn: 'Perforated aluminum screen facade', sizeAr: 'حسب المشروع', sizeEn: 'Per project', colorAr: 'فضي', colorEn: 'Silver', price: 0, inStock: true },
             { id: 'alu-fac-ver', sku: 'ALU-FAC-VER', subCategoryId: 'alu-facades', image: ALUMINUM_CATALOG_PHOTOS.facadeVer, typeAr: 'واجهة زعانف رأسية', typeEn: 'Vertical aluminum fin facade', sizeAr: 'حسب المشروع', sizeEn: 'Per project', colorAr: 'فضي', colorEn: 'Silver', price: 0, inStock: true },
             { id: 'alu-fac-hex', sku: 'ALU-FAC-HEX', subCategoryId: 'alu-facades', image: ALUMINUM_CATALOG_PHOTOS.facadeHex, typeAr: 'واجهة ألومنيوم سداسية', typeEn: 'Honeycomb aluminum facade screen', sizeAr: 'حسب المشروع', sizeEn: 'Per project', colorAr: 'فضي', colorEn: 'Silver', price: 0, inStock: true },
+            { id: 'alu-clad-plain', sku: 'ALU-CLAD-PLN', subCategoryId: 'alu-facades', image: 'images/profile-2026/cnc/cnc-01.jpg', typeAr: 'تكسية جدارية سادة — نبراس', typeEn: 'Nebras plain wall cladding', sizeAr: 'حسب المشروع', sizeEn: 'Per project', colorAr: 'خشب / حسب الكتالوج', colorEn: 'Wood / catalog', price: 0, inStock: true },
+            { id: 'alu-clad-rib', sku: 'ALU-CLAD-RIB', subCategoryId: 'alu-facades', image: 'images/profile-2026/cnc/cnc-03.jpg', typeAr: 'تكسية جدارية مضلعة — نبراس', typeEn: 'Nebras ribbed wall cladding', sizeAr: 'حسب المشروع', sizeEn: 'Per project', colorAr: 'خشب / حسب الكتالوج', colorEn: 'Wood / catalog', price: 0, inStock: true },
+            { id: 'alu-clad-cnc', sku: 'ALU-CLAD-CNC', subCategoryId: 'alu-facades', image: 'images/profile-2026/cnc/cnc-06.jpg', typeAr: 'ألواح CNC ديكور جداري — نبراس', typeEn: 'Nebras CNC decorative wall panels', sizeAr: 'حسب التصميم', sizeEn: 'Per design', colorAr: 'حسب الكتالوج', colorEn: 'Catalog finish', price: 0, inStock: true },
+            { id: 'alu-clad-art', sku: 'ALU-CLAD-ART', subCategoryId: 'alu-facades', image: 'images/profile-2026/cnc/cnc-08.jpg', typeAr: 'تكسية جدارية فنية CNC — نبراس', typeEn: 'Nebras artistic CNC wall cladding', sizeAr: 'حسب التصميم', sizeEn: 'Per design', colorAr: 'حسب الكتالوج', colorEn: 'Catalog finish', price: 0, inStock: true },
+            { id: 'alu-clad-feat', sku: 'ALU-CLAD-FEAT', subCategoryId: 'alu-facades', image: 'images/profile-2026/cnc/cnc-11.jpg', typeAr: 'جدار مميز CNC — فيلا ومشروع', typeEn: 'CNC feature wall — villa & project', sizeAr: 'حسب المشروع', sizeEn: 'Per project', colorAr: 'حسب الكتالوج', colorEn: 'Catalog finish', price: 0, inStock: true },
             { id: 'alu-kitchen-sys', sku: 'ALU-KIT-SYS', subCategoryId: 'alu-kitchens', image: ALUMINUM_CATALOG_PHOTOS.kitchen1, typeAr: 'مطبخ خطي — جدار واحد', typeEn: 'Linear single-wall kitchen', sizeAr: 'حسب التصميم', sizeEn: 'Per design', colorAr: 'متعدد', colorEn: 'Various', price: 0, inStock: true },
             { id: 'alu-kitchen-front', sku: 'ALU-KIT-FRT', subCategoryId: 'alu-kitchens', image: ALUMINUM_CATALOG_PHOTOS.kitchen2, typeAr: 'واجهات أدراج ألومنيوم', typeEn: 'Aluminum drawer fronts', sizeAr: 'حسب المقاس', sizeEn: 'Custom size', colorAr: 'متعدد', colorEn: 'Various', price: 0, inStock: true },
             { id: 'alu-kitchen-isl', sku: 'ALU-KIT-ISL', subCategoryId: 'alu-kitchens', image: ALUMINUM_CATALOG_PHOTOS.kitchen3, typeAr: 'مطبخ حرف U مع جزيرة', typeEn: 'U-shape kitchen with island', sizeAr: 'حسب التصميم', sizeEn: 'Per design', colorAr: 'متعدد', colorEn: 'Various', price: 0, inStock: true },
@@ -14041,7 +14119,7 @@
             const badgeIcon = variant === 'partners' ? 'fa-handshake' : 'fa-door-open';
             const imgW = variant === 'partners' ? 168 : 440;
             const imgH = variant === 'partners' ? 168 : 760;
-            const deploy = (document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws322';
+            const deploy = (document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws323';
             const slides = urls.map(function(src, i) {
                 const delay = -(cycleSec - 3) + (i * 3);
                 const loading = i === 0 ? 'eager' : 'lazy';
@@ -19027,9 +19105,6 @@
             }
 
             if (user) {
-                if (typeof bootNebrasAdminSession === 'function') {
-                    try { await bootNebrasAdminSession({ withPortal: false, withErp: false }); } catch (bootErr) { console.warn('admin boot:', bootErr); }
-                }
                 loadAdminBusinessCacheFromLocal();
                 if (!apiAuthenticated && typeof hasNebrasSecureSession === 'function' && hasNebrasSecureSession()) {
                     apiAuthenticated = true;
@@ -29704,7 +29779,7 @@
             if (nebrasDoorEngineLoadPromise) return nebrasDoorEngineLoadPromise;
             const ver = (typeof window.NEBRAS_DEPLOY_TAG !== 'undefined' && window.NEBRAS_DEPLOY_TAG)
                 ? window.NEBRAS_DEPLOY_TAG
-                : ((document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws322');
+                : ((document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws323');
             nebrasDoorEngineLoadPromise = loadNebrasThreeJs().then(function() {
                 return Promise.all([
                     loadNebrasScriptOnce('js/nebras-door-3d.js?v=' + ver),

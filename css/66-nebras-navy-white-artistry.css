@@ -151,12 +151,12 @@ body.admin-session #admin-dashboard.show > *:not(.celebration-deco-layer) {
 .nebras-store-welcome-hero {
     position: relative;
     display: grid;
-    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    grid-template-columns: minmax(0, 1.55fr) minmax(0, 0.78fr);
     gap: 0;
     margin: 0 0 24px;
     border-radius: 20px;
     overflow: hidden;
-    min-height: 220px;
+    min-height: 340px;
     border: 1px solid rgba(13, 40, 64, 0.12);
     box-shadow: 0 18px 48px rgba(13, 40, 64, 0.12);
     background: var(--nb-navy);
@@ -204,11 +204,20 @@ body.admin-session #admin-dashboard.show > *:not(.celebration-deco-layer) {
     border: 1px solid rgba(13, 40, 64, 0.08);
     box-shadow: 0 4px 14px rgba(13, 40, 64, 0.06);
     overflow: hidden;
-    min-height: 88px;
+    min-height: 148px;
 }
 
 .nebras-store-welcome-hero--alu .nebras-store-welcome-hero-copy {
     background: linear-gradient(160deg, #1a365d 0%, #2d6a9f 100%);
+}
+
+.nebras-store-welcome-hero--clad .nebras-store-welcome-hero-copy {
+    background: linear-gradient(160deg, #0d2840 0%, #1e4a6e 100%);
+}
+
+.nebras-store-welcome-hero--clad .nebras-store-welcome-hero-mosaic {
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
 }
 
 /* ── بانر الأقسام الفرعية (نمط الغملاس) ── */
@@ -248,11 +257,57 @@ body.admin-session #admin-dashboard.show > *:not(.celebration-deco-layer) {
 .nebras-store-welcome-mosaic-item img {
     width: 100%;
     height: 100%;
-    max-height: 120px;
+    max-height: 220px;
     object-fit: contain;
     object-position: center center;
     padding: 8px;
     image-rendering: auto;
+}
+
+.nebras-store-clad-families {
+    margin: 0 0 24px;
+    padding: 16px 18px 18px;
+    border-radius: 18px;
+    background: #fff;
+    border: 1px solid rgba(13, 40, 64, 0.1);
+    box-shadow: 0 12px 32px rgba(13, 40, 64, 0.07);
+}
+
+.nebras-store-clad-families-kicker {
+    margin: 0 0 12px;
+    font-size: 0.84rem;
+    font-weight: 800;
+    color: var(--nb-navy-mid);
+}
+
+.nebras-store-clad-families-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+}
+
+.nebras-store-clad-family {
+    margin: 0;
+    border-radius: 14px;
+    overflow: hidden;
+    border: 1px solid rgba(13, 40, 64, 0.1);
+    background: #f8fafc;
+}
+
+.nebras-store-clad-family img {
+    display: block;
+    width: 100%;
+    height: 132px;
+    object-fit: cover;
+    object-position: center;
+}
+
+.nebras-store-clad-family figcaption {
+    padding: 9px 10px;
+    font-size: 0.8rem;
+    font-weight: 800;
+    color: var(--nb-navy);
+    text-align: center;
 }
 
 .nebras-store-welcome-hero-copy {
@@ -662,7 +717,11 @@ body.admin-session #admin-dashboard.show > *:not(.celebration-deco-layer) {
     }
 
     .nebras-store-worlds-nav-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .nebras-store-clad-families-grid {
+        grid-template-columns: 1fr 1fr;
     }
 
     .showroom-hub-hero {
@@ -690,8 +749,8 @@ body.admin-session #admin-dashboard.show > *:not(.celebration-deco-layer) {
 
 .nebras-store-worlds-nav-grid {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
 }
 
 .nebras-store-worlds-nav-btn {
@@ -721,8 +780,8 @@ body.admin-session #admin-dashboard.show > *:not(.celebration-deco-layer) {
 
 .nebras-store-worlds-nav-media {
     display: block;
-    min-height: 88px;
-    max-height: 110px;
+    min-height: 148px;
+    max-height: 200px;
     overflow: hidden;
     background: #f1f5f9;
 }
@@ -730,9 +789,11 @@ body.admin-session #admin-dashboard.show > *:not(.celebration-deco-layer) {
 .nebras-store-worlds-nav-media img {
     width: 100%;
     height: 100%;
-    min-height: 88px;
-    object-fit: cover;
+    min-height: 148px;
+    object-fit: contain;
     object-position: center center;
+    padding: 10px;
+    background: #f8fafc;
     display: block;
 }
 

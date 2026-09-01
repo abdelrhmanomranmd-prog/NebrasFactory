@@ -41,7 +41,7 @@ body.nebras-profile-2026-theme header {
     background: transparent;
     color: #0d2840;
     isolation: isolate;
-    overflow: hidden;
+    overflow: visible;
 }
 
 body.nebras-profile-2026-theme .header-cinematic,
@@ -178,7 +178,7 @@ body.nebras-profile-2026-theme .nebras-visitor-qr-lead {
     color: rgba(6, 46, 68, 0.78);
 }
 
-/* شعار نبراس — الحرف الأبيض فقط بدون إطار أو خلفية */
+/* شعار نبراس — ميدالية كحلية بحلقة ذهبية، الحرف الأبيض واضح */
 .site-logo-img,
 .nebras-brand-intro-logo,
 .cph-cover-logo,
@@ -186,24 +186,33 @@ body.nebras-profile-2026-theme .nebras-visitor-qr-lead {
 .nebras-callback-modal-logo {
     background: none !important;
     border: none !important;
-    border-radius: 0 !important;
     box-shadow: none !important;
-    padding: 0 !important;
-}
-
-body.nebras-profile-2026-theme .site-logo-img {
-    filter: drop-shadow(0 4px 18px rgba(26, 143, 168, 0.35));
-    width: 68px;
-    height: 68px;
-    max-width: 68px;
 }
 
 body.nebras-profile-2026-theme .logo-container {
-    padding: 0;
-    border: none;
-    border-radius: 0;
-    background: transparent;
-    box-shadow: none;
+    width: 76px;
+    height: 76px;
+    padding: 10px;
+    border-radius: 50%;
+    background:
+        radial-gradient(circle at 38% 32%, #1a4a72 0%, #0d2840 62%, #081828 100%);
+    border: 2px solid #c9a227;
+    box-shadow:
+        0 8px 22px rgba(13, 40, 64, 0.22),
+        0 0 0 3px #ffffff,
+        0 0 0 4px rgba(201, 162, 39, 0.35);
+    overflow: hidden;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 4;
+}
+
+body.nebras-profile-2026-theme .site-logo-img {
+    filter: none;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    object-fit: contain;
 }
 
 /* افتتاحية العلامة — نفس روح غلاف البروفايل */
@@ -362,14 +371,32 @@ body.nebras-profile-2026-theme .company-legal-bar {
     color: #f8fafc;
 }
 
+body.nebras-profile-2026-theme #public-legal-bar.company-legal-bar {
+    background: #ffffff;
+    border: none;
+    border-bottom: 1px solid rgba(13, 40, 64, 0.12);
+    color: #0d2840 !important;
+    border-radius: 0;
+    margin: 0;
+}
+
 body.nebras-profile-2026-theme .company-legal-bar span {
     opacity: 1;
     color: #f8fafc;
 }
 
+body.nebras-profile-2026-theme #public-legal-bar.company-legal-bar span {
+    color: #0d2840 !important;
+    opacity: 1;
+}
+
 body.nebras-profile-2026-theme .company-legal-bar strong {
     color: #e8c547;
     font-weight: 800;
+}
+
+body.nebras-profile-2026-theme #public-legal-bar.company-legal-bar strong {
+    color: #0a2034 !important;
 }
 
 body.nebras-profile-2026-theme .product-card,

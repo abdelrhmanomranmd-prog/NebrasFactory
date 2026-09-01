@@ -1,16 +1,29 @@
 /**
- * نبراس hrws322 — boot موحّد للإدارة (Accmaa-style)
+ * نبراس hrws323 — boot موحّد للإدارة (Accmaa-style)
  * CSS · adminCore · portal · ERP UI · inits — ترتيب واحد دقيق
  */
 (function(global) {
     'use strict';
 
-    var VER = 'hrws322';
+    var VER = 'hrws323';
     var inflight = null;
+    var inflightPortal = false;
+    var inflightErp = false;
 
     function bootNebrasAdminSession(options) {
         options = options || {};
-        if (inflight) return inflight;
+        var wantPortal = options.withPortal !== false;
+        var wantErp = options.withErp !== false;
+        if (inflight) {
+            if ((wantPortal && !inflightPortal) || (wantErp && !inflightErp)) {
+                return inflight.then(function() {
+                    return bootNebrasAdminSession(options);
+                });
+            }
+            return inflight;
+        }
+        inflightPortal = wantPortal;
+        inflightErp = wantErp;
         inflight = (async function() {
             const tasks = [];
             if (typeof global.ensureNebrasAdminCss === 'function') {
@@ -52,7 +65,7 @@
     function prefetchNebrasAdminBoot() {
         if (typeof global.nebrasRunWhenIdle === 'function') {
             global.nebrasRunWhenIdle(function() {
-                bootNebrasAdminSession({ withPortal: false }).catch(function() { /* soft */ });
+                bootNebrasAdminSession({ withPortal: false, withErp: false }).catch(function() { /* soft */ });
             }, 600);
         }
     }

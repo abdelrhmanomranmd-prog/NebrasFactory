@@ -8,13 +8,13 @@
 }
 
 .nebras-mini-showcase--hero {
-    --mini-showcase-w: clamp(148px, 20vw, 228px);
-    --mini-showcase-h: clamp(268px, 36vw, 400px);
+    --mini-showcase-w: clamp(176px, 26vw, 280px);
+    --mini-showcase-h: clamp(310px, 50vw, 500px);
 }
 
 .nebras-mini-showcase--stage {
-    --mini-showcase-w: clamp(168px, 24vw, 268px);
-    --mini-showcase-h: clamp(300px, 42vw, 460px);
+    --mini-showcase-w: clamp(196px, 28vw, 320px);
+    --mini-showcase-h: clamp(340px, 52vw, 540px);
 }
 
 .nebras-mini-showcase-frame {
@@ -95,6 +95,8 @@
     background: #f4f7fb;
     opacity: 0;
     transform: translateZ(0);
+    padding: 6px;
+    box-sizing: border-box;
     animation: nebrasMiniShowcaseFade var(--cycle-duration, 18s) ease-in-out infinite;
     -webkit-backface-visibility: hidden;
     backface-visibility: hidden;
@@ -152,15 +154,12 @@
     @keyframes nebrasMiniShowcaseFade {
         0%, 100% {
             opacity: 0;
-            transform: scale(1.03) translateY(2px);
         }
         4%, 15% {
             opacity: 1;
-            transform: scale(1) translateY(0);
         }
         18%, 100% {
             opacity: 0;
-            transform: scale(0.99) translateY(-1px);
         }
     }
 }
