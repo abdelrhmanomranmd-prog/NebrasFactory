@@ -971,7 +971,7 @@
         }
 
         const DOOR_PHOTO_PRESET_ROOT = 'images/doors/presets/';
-        const DOOR_PHOTO_PRESET_CACHE = '321';
+        const DOOR_PHOTO_PRESET_CACHE = '322';
         const DOOR_PHOTO_COMPOSE_MAX_DIM = 1200;
         /** صور أبواب المصنع الحقيقية في المعاينة — SVG احتياطي عند غياب الصورة */
         const DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS = true;
@@ -1597,14 +1597,9 @@
 
         function paintFittedTransomCap(cap, state) {
             if (!cap) return;
-            const fit = getLiveTransomFit(state);
-            cap.style.top = fit.top + '%';
-            cap.style.left = '50%';
-            cap.style.width = fit.width + '%';
-            cap.style.height = fit.height + '%';
-            cap.style.transform = 'translateX(-50%)';
-            cap.style.borderRadius = fit.radius + 'px ' + fit.radius + 'px 0 0';
-            cap.style.setProperty('--transom-radius', fit.radius + 'px');
+            cap.hidden = true;
+            cap.removeAttribute('src');
+            cap.removeAttribute('style');
         }
 
         function ensurePhotoPresetStackDom() {
@@ -1677,7 +1672,7 @@
             ensurePhotoPresetStackDom();
             stage.classList.remove('wpc-door-stage--dynamic-render', 'wpc-door-stage--photoreal', 'wpc-door-stage--engine-compositor', 'wpc-door-stage--engine-3d');
             stage.classList.add('wpc-door-stage--studio-live', 'wpc-door-stage--keybab', 'wpc-door-stage--photo-preset');
-            const isCompositeTransom = preset.mode === 'composite-transom' && !!preset.transomCap;
+            const isCompositeTransom = false;
             stage.classList.toggle('wpc-door-stage--photo-preset-transom', isCompositeTransom);
             stage.classList.toggle('wpc-door-stage--decor-transom', decor === 'transom');
             hideAllWpcPhotoDecorLayers();
@@ -3384,7 +3379,6 @@
             const px = frame.data;
             const bg = sampleAluminumStudioBackground(px, w, h);
             const target = parseAluminumFinishRgb(hex);
-            const tLum = Math.max(8, 0.299 * target.r + 0.587 * target.g + 0.114 * target.b);
             for (let i = 0; i < px.length; i += 4) {
                 const r = px[i];
                 const g = px[i + 1];
@@ -3400,11 +3394,10 @@
                 if (lum > 246 && sat < 0.08) continue;
                 if (lum < 24 && sat < 0.16) continue;
                 if (b > r + 30 && b > g + 14 && sat > 0.22 && lum > 70) continue;
-                const lumScale = lum / tLum;
-                const grain = 0.22;
-                let nr = target.r * lumScale * (1 - grain) + r * grain;
-                let ng = target.g * lumScale * (1 - grain) + g * grain;
-                let nb = target.b * lumScale * (1 - grain) + b * grain;
+                const grain = 0.16;
+                let nr = (r / 255) * target.r * 1.08 * (1 - grain) + r * grain;
+                let ng = (g / 255) * target.g * 1.08 * (1 - grain) + g * grain;
+                let nb = (b / 255) * target.b * 1.08 * (1 - grain) + b * grain;
                 px[i] = nr < 0 ? 0 : nr > 255 ? 255 : nr;
                 px[i + 1] = ng < 0 ? 0 : ng > 255 ? 255 : ng;
                 px[i + 2] = nb < 0 ? 0 : nb > 255 ? 255 : nb;
@@ -14048,7 +14041,7 @@
             const badgeIcon = variant === 'partners' ? 'fa-handshake' : 'fa-door-open';
             const imgW = variant === 'partners' ? 168 : 440;
             const imgH = variant === 'partners' ? 168 : 760;
-            const deploy = (document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws321';
+            const deploy = (document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws322';
             const slides = urls.map(function(src, i) {
                 const delay = -(cycleSec - 3) + (i * 3);
                 const loading = i === 0 ? 'eager' : 'lazy';
@@ -29711,7 +29704,7 @@
             if (nebrasDoorEngineLoadPromise) return nebrasDoorEngineLoadPromise;
             const ver = (typeof window.NEBRAS_DEPLOY_TAG !== 'undefined' && window.NEBRAS_DEPLOY_TAG)
                 ? window.NEBRAS_DEPLOY_TAG
-                : ((document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws321');
+                : ((document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws322');
             nebrasDoorEngineLoadPromise = loadNebrasThreeJs().then(function() {
                 return Promise.all([
                     loadNebrasScriptOnce('js/nebras-door-3d.js?v=' + ver),

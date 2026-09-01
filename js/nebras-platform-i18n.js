@@ -1,11 +1,11 @@
 /**
- * نبراس hrws321 — i18n: العربية فوراً · EN/ZH كسول عند تغيير اللغة
+ * نبراس hrws322 — i18n: العربية فوراً · EN/ZH كسول عند تغيير اللغة
  * يُحمَّل بعد nebras-platform.js (NEBRAS_BRAND_* · getNebrasBrand*)
  */
 (function(global) {
     'use strict';
 
-    var VER = 'hrws321';
+    var VER = 'hrws322';
     var localeInflight = Object.create(null);
     var localeLoaded = { ar: true };
 
