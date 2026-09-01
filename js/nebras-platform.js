@@ -971,7 +971,7 @@
         }
 
         const DOOR_PHOTO_PRESET_ROOT = 'images/doors/presets/';
-        const DOOR_PHOTO_PRESET_CACHE = '323';
+        const DOOR_PHOTO_PRESET_CACHE = '324';
         const DOOR_PHOTO_COMPOSE_MAX_DIM = 1200;
         /** صور أبواب المصنع الحقيقية في المعاينة — SVG احتياطي عند غياب الصورة */
         const DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS = true;
@@ -1295,13 +1295,21 @@
                         lctx.globalCompositeOperation = 'source-over';
                         ctx.drawImage(leafCanvas, 0, 0, w, h);
 
-                        ctx.save();
-                        ctx.globalCompositeOperation = 'multiply';
-                        ctx.globalAlpha = profile.saturationGray > 0.5 ? 0.1 : 0.06;
-                        ctx.drawImage(base, 0, 0, w, h);
-                        ctx.globalCompositeOperation = 'destination-in';
-                        ctx.drawImage(panelMask, 0, 0, w, h);
-                        ctx.restore();
+                        const grainCanvas = document.createElement('canvas');
+                        grainCanvas.width = outW;
+                        grainCanvas.height = outH;
+                        const gctx = grainCanvas.getContext('2d');
+                        if (gctx) {
+                            gctx.scale(dpr, dpr);
+                            gctx.drawImage(base, 0, 0, w, h);
+                            gctx.globalCompositeOperation = 'destination-in';
+                            gctx.drawImage(panelMask, 0, 0, w, h);
+                            ctx.save();
+                            ctx.globalCompositeOperation = 'multiply';
+                            ctx.globalAlpha = profile.saturationGray > 0.5 ? 0.1 : 0.06;
+                            ctx.drawImage(grainCanvas, 0, 0, w, h);
+                            ctx.restore();
+                        }
                     } else if (!panelMask && (rollKey || hexFallback)) {
                         paintRollLayer(ctx, w, h, roll);
                         ctx.globalCompositeOperation = 'multiply';
@@ -14119,7 +14127,7 @@
             const badgeIcon = variant === 'partners' ? 'fa-handshake' : 'fa-door-open';
             const imgW = variant === 'partners' ? 168 : 440;
             const imgH = variant === 'partners' ? 168 : 760;
-            const deploy = (document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws323';
+            const deploy = (document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws324';
             const slides = urls.map(function(src, i) {
                 const delay = -(cycleSec - 3) + (i * 3);
                 const loading = i === 0 ? 'eager' : 'lazy';
@@ -29779,7 +29787,7 @@
             if (nebrasDoorEngineLoadPromise) return nebrasDoorEngineLoadPromise;
             const ver = (typeof window.NEBRAS_DEPLOY_TAG !== 'undefined' && window.NEBRAS_DEPLOY_TAG)
                 ? window.NEBRAS_DEPLOY_TAG
-                : ((document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws323');
+                : ((document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws324');
             nebrasDoorEngineLoadPromise = loadNebrasThreeJs().then(function() {
                 return Promise.all([
                     loadNebrasScriptOnce('js/nebras-door-3d.js?v=' + ver),
