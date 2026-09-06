@@ -1,11 +1,11 @@
 /**
- * نبراس hrws325 — i18n: العربية فوراً · EN/ZH كسول عند تغيير اللغة
+ * نبراس hrws326 — i18n: العربية فوراً · EN/ZH كسول عند تغيير اللغة
  * يُحمَّل بعد nebras-platform.js (NEBRAS_BRAND_* · getNebrasBrand*)
  */
 (function(global) {
     'use strict';
 
-    var VER = 'hrws325';
+    var VER = 'hrws326';
     var localeInflight = Object.create(null);
     var localeLoaded = { ar: true };
 
@@ -502,14 +502,14 @@
                 storeDoorsWelcomeSubtitle: 'أبواب جاهزة للتركيب — مقاومة للرطوبة والنمل الأبيض — تشكيلة فلات · U · Lib · سحب · وربعه.',
                 storeCladWelcomeEyebrow: 'تكسيات نبراس',
                 storeCladWelcomeTitle: 'عالم تكسيات نبراس — ديكور جداري من المصنع',
-                storeCladWelcomeSubtitle: 'تكسيات سادة · مضلعة · ألواح CNC · كلادينج واجهات — جودة نبراس السعودية للشرفات والفلل والمشاريع.',
-                storeCladBadgeWall: 'تكسية جدارية',
-                storeCladBadgeCnc: 'ألواح CNC',
-                storeCladBadgeFacade: 'كلادينج واجهات',
+                storeCladWelcomeSubtitle: 'تكسيات سادة · مضلعة · صفائح طينية · أرضيات خارجية — ألواح جدارية WPC من مصنع نبراس.',
+                storeCladBadgeWall: 'تكسية سادة',
+                storeCladBadgeCnc: 'تكسية مضلعة',
+                storeCladBadgeFacade: 'صفائح طينية',
                 storeCladFamPlain: 'تكسية سادة',
                 storeCladFamRibbed: 'تكسية مضلعة',
-                storeCladFamCnc: 'ألواح CNC',
-                storeCladFamFacade: 'كلادينج واجهات',
+                storeCladFamCnc: 'صفائح طينية',
+                storeCladFamFacade: 'أرضيات خارجية',
                 storeCladFamiliesLabel: 'أقسام التكسيات',
                 storeCladFamiliesKicker: 'ديكورات جدارية نبراس — اختاري النوع',
                 storeRawWelcomeEyebrow: 'WPC عضم — مصنع نبراس',

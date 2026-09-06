@@ -3108,7 +3108,7 @@
         const NEBRAS_STORE_WORLDS = [
             { productId: 'prod-wpc', labelAr: 'عالم الأبواب', labelEn: 'Doors World', icon: 'fa-door-open', banner: 'images/catalog/wpc-photos/by-sku-clean/WPC-RDY-FLAT-45-STD.png' },
             { productId: 'prod-aluminum', labelAr: 'عالم الألومنيوم', labelEn: 'Aluminum World', icon: 'fa-industry', banner: 'images/catalog/aluminum/by-sku/ALU-PROF-6M.webp' },
-            { productId: 'prod-aluminum', subCategoryId: 'alu-facades', labelAr: 'عالم التكسيات', labelEn: 'Cladding World', icon: 'fa-border-all', banner: 'images/profile-2026/cnc/cnc-06.jpg' },
+            { productId: 'prod-aluminum', subCategoryId: 'alu-facades', labelAr: 'عالم التكسيات', labelEn: 'Cladding World', icon: 'fa-border-all', banner: 'images/catalog/cladding/CLAD-PLN-OAK.png' },
             { productId: 'prod-wpc-raw', labelAr: 'WPC عضم', labelEn: 'WPC Raw', icon: 'fa-door-closed', banner: 'images/catalog/wpc-photos/08-bone-profile.png' }
         ];
 
@@ -4016,20 +4016,29 @@
                 '<div class="nebras-store-worlds-nav-grid">' + cards + '</div></nav>';
         }
 
+        const CLADDING_CATALOG_ROOT = 'images/catalog/cladding/';
+        const CLADDING_CATALOG_PHOTOS = {
+            plainOak: CLADDING_CATALOG_ROOT + 'CLAD-PLN-OAK.png',
+            plainWalnut: CLADDING_CATALOG_ROOT + 'CLAD-PLN-WALNUT.png',
+            ribbedCocoa: CLADDING_CATALOG_ROOT + 'CLAD-RIB-COCOA.png',
+            claySand: CLADDING_CATALOG_ROOT + 'CLAD-CLAY-SAND.png',
+            deckTeak: CLADDING_CATALOG_ROOT + 'CLAD-DECK-TEAK.png'
+        };
+
         function buildStoreCladdingWelcomeHeroHtml(lang, ui) {
             const photos = [
-                'images/profile-2026/cnc/cnc-01.jpg',
-                'images/profile-2026/cnc/cnc-03.jpg',
-                'images/profile-2026/cnc/cnc-06.jpg',
-                'images/profile-2026/cnc/cnc-08.jpg'
+                CLADDING_CATALOG_PHOTOS.plainOak,
+                CLADDING_CATALOG_PHOTOS.ribbedCocoa,
+                CLADDING_CATALOG_PHOTOS.claySand,
+                CLADDING_CATALOG_PHOTOS.deckTeak
             ];
             const title = ui.storeCladWelcomeTitle || 'عالم تكسيات نبراس — ديكور جداري من المصنع';
-            const subtitle = ui.storeCladWelcomeSubtitle || 'تكسيات سادة · مضلعة · ألواح CNC · كلادينج واجهات — جودة نبراس السعودية للشرفات والفلل والمشاريع.';
+            const subtitle = ui.storeCladWelcomeSubtitle || 'تكسيات سادة · مضلعة · صفائح طينية · أرضيات خارجية — ألواح جدارية WPC من مصنع نبراس.';
             const eyebrow = ui.storeCladWelcomeEyebrow || 'تكسيات نبراس';
             const badges = [
-                { icon: 'fa-border-all', label: ui.storeCladBadgeWall || 'تكسية جدارية' },
-                { icon: 'fa-th-large', label: ui.storeCladBadgeCnc || 'ألواح CNC' },
-                { icon: 'fa-city', label: ui.storeCladBadgeFacade || 'كلادينج واجهات' },
+                { icon: 'fa-border-all', label: ui.storeCladBadgeWall || 'تكسية سادة' },
+                { icon: 'fa-bars', label: ui.storeCladBadgeCnc || 'تكسية مضلعة' },
+                { icon: 'fa-th', label: ui.storeCladBadgeFacade || 'صفائح طينية' },
                 { icon: 'fa-industry', label: ui.storeBadgeFactory || 'مصنع سعودي' }
             ];
             const badgesHtml = badges.map(function(b) {
@@ -4039,10 +4048,10 @@
                 return '<figure class="nebras-store-welcome-mosaic-item"><img src="' + escapeHtmlAttr(resolveDisplayMediaUrl(src)) + '" alt="' + escapeHtmlAttr(title) + '" loading="' + (idx === 0 ? 'eager' : 'lazy') + '" decoding="async"></figure>';
             }).join('');
             const families = [
-                { img: 'images/profile-2026/cnc/cnc-01.jpg', label: ui.storeCladFamPlain || 'تكسية سادة' },
-                { img: 'images/profile-2026/cnc/cnc-03.jpg', label: ui.storeCladFamRibbed || 'تكسية مضلعة' },
-                { img: 'images/profile-2026/cnc/cnc-06.jpg', label: ui.storeCladFamCnc || 'ألواح CNC' },
-                { img: 'images/profile-2026/cnc/cnc-11.jpg', label: ui.storeCladFamFacade || 'كلادينج واجهات' }
+                { img: CLADDING_CATALOG_PHOTOS.plainOak, label: ui.storeCladFamPlain || 'تكسية سادة' },
+                { img: CLADDING_CATALOG_PHOTOS.ribbedCocoa, label: ui.storeCladFamRibbed || 'تكسية مضلعة' },
+                { img: CLADDING_CATALOG_PHOTOS.claySand, label: ui.storeCladFamCnc || 'صفائح طينية' },
+                { img: CLADDING_CATALOG_PHOTOS.deckTeak, label: ui.storeCladFamFacade || 'أرضيات خارجية' }
             ];
             const famHtml = families.map(function(f) {
                 return '<figure class="nebras-store-clad-family"><img src="' + escapeHtmlAttr(resolveDisplayMediaUrl(f.img)) + '" alt="' + escapeHtmlAttr(f.label) + '" loading="lazy" decoding="async"><figcaption>' + escapeHtmlAttr(f.label) + '</figcaption></figure>';
@@ -4288,7 +4297,13 @@
             ensureProductStoreSubCategories(product);
             const sub = getProductSubCategoryDef(product, subCategoryId);
             if (!sub) return '<p class="nebras-store-empty">' + escapeHtmlAttr(ui.workspaceProductMissing || 'القسم غير متوفر.') + '</p>';
-            const itemsRaw = getVariantsGroupedForSubCategory(product, subCategoryId);
+            let itemsRaw = getVariantsGroupedForSubCategory(product, subCategoryId);
+            if (subCategoryId === 'alu-facades') {
+                itemsRaw = itemsRaw.filter(function(item) {
+                    const sku = String((item && item.variant && item.variant.sku) || '').toUpperCase();
+                    return sku.indexOf('ALU-CLAD-') === 0;
+                });
+            }
             const scenarioId = getActiveDoorRoomScenario();
             const scenarioDef = scenarioId ? NEBRAS_DOOR_ROOM_SCENARIOS.find(function(s) { return s.id === scenarioId; }) : null;
             const items = scenarioDef
@@ -4573,6 +4588,7 @@
             const p = String(imagePath || '').trim();
             if (!p) return true;
             if (p.indexOf('images/catalog/aluminum/by-sku/') === 0) return false;
+            if (p.indexOf('images/catalog/cladding/') === 0) return false;
             if (p.indexOf('images/profile-2026/cnc/') === 0) return false;
             if (isAdminManagedProductImage(p)) return false;
             return true;
@@ -4627,7 +4643,7 @@
             if (sub === 'alu-angles') return ALUMINUM_CATALOG_PHOTOS.angle1;
             if (sub === 'alu-windows') return ALUMINUM_CATALOG_PHOTOS.window1;
             if (sub === 'alu-doors') return ALUMINUM_CATALOG_PHOTOS.door1;
-            if (sub === 'alu-facades') return ALUMINUM_CATALOG_PHOTOS.facade1;
+            if (sub === 'alu-facades') return CLADDING_CATALOG_PHOTOS.plainOak;
             if (sub === 'alu-kitchens') return ALUMINUM_CATALOG_PHOTOS.kitchen1;
             if (sub === 'alu-accessories') return ALUMINUM_CATALOG_PHOTOS.accSet;
             return ALUMINUM_CATALOG_PHOTOS.profile1;
@@ -4659,7 +4675,7 @@
                     'alu-angles': ALUMINUM_CATALOG_PHOTOS.angle1,
                     'alu-windows': ALUMINUM_CATALOG_PHOTOS.window1,
                     'alu-doors': ALUMINUM_CATALOG_PHOTOS.door1,
-                    'alu-facades': ALUMINUM_CATALOG_PHOTOS.facade1,
+                    'alu-facades': CLADDING_CATALOG_PHOTOS.plainOak,
                     'alu-kitchens': ALUMINUM_CATALOG_PHOTOS.kitchen1,
                     'alu-accessories': ALUMINUM_CATALOG_PHOTOS.accSet
                 }
@@ -4681,8 +4697,8 @@
             return formatVariantPriceBlock(variant ? variant.price : 0, lang);
         }
 
-        /** أصناف الألومنيوم — أشكال مطابخ/أبواب/شبابيك/تكسيات + تلوين المعدن الفضي نفسه · v13 */
-        const ALUMINUM_CATALOG_VERSION = 13;
+        /** أصناف الألومنيوم — أشكال مطابخ/أبواب/شبابيك/تكسيات جدارية WPC · v14 */
+        const ALUMINUM_CATALOG_VERSION = 14;
         const ALU_CATALOG_ROOT = 'images/catalog/aluminum/';
         function aluSkuImg(file) { return ALU_CATALOG_ROOT + 'by-sku/' + file; }
         const ALUMINUM_CATALOG_PHOTOS = {
@@ -5072,8 +5088,8 @@
             labelEn: 'Wall cladding & facades',
             shortLabelAr: 'تكسيات',
             shortLabelEn: 'Cladding',
-            descAr: 'تكسيات جدارية سادة ومضلعة · ألواح CNC · كلادينج واجهات — تصنيع نبراس حسب المشروع.',
-            descEn: 'Plain and ribbed wall cladding, CNC panels and facade cladding — Nebras project manufacturing.',
+            descAr: 'تكسيات جدارية سادة ومضلعة · صفائح طينية · أرضيات خارجية — ألواح WPC من مصنع نبراس.',
+            descEn: 'Plain and ribbed WPC wall cladding, clay sheets and outdoor decking — Nebras factory.',
             sortOrder: 6
         };
         const ALU_KITCHENS_SUBCATEGORY = {
@@ -5142,11 +5158,11 @@
             { id: 'alu-fac-per', sku: 'ALU-FAC-PER', subCategoryId: 'alu-facades', image: ALUMINUM_CATALOG_PHOTOS.facadePer, typeAr: 'واجهة ألومنيوم مثقبة', typeEn: 'Perforated aluminum screen facade', sizeAr: 'حسب المشروع', sizeEn: 'Per project', colorAr: 'فضي', colorEn: 'Silver', price: 0, inStock: true },
             { id: 'alu-fac-ver', sku: 'ALU-FAC-VER', subCategoryId: 'alu-facades', image: ALUMINUM_CATALOG_PHOTOS.facadeVer, typeAr: 'واجهة زعانف رأسية', typeEn: 'Vertical aluminum fin facade', sizeAr: 'حسب المشروع', sizeEn: 'Per project', colorAr: 'فضي', colorEn: 'Silver', price: 0, inStock: true },
             { id: 'alu-fac-hex', sku: 'ALU-FAC-HEX', subCategoryId: 'alu-facades', image: ALUMINUM_CATALOG_PHOTOS.facadeHex, typeAr: 'واجهة ألومنيوم سداسية', typeEn: 'Honeycomb aluminum facade screen', sizeAr: 'حسب المشروع', sizeEn: 'Per project', colorAr: 'فضي', colorEn: 'Silver', price: 0, inStock: true },
-            { id: 'alu-clad-plain', sku: 'ALU-CLAD-PLN', subCategoryId: 'alu-facades', image: 'images/profile-2026/cnc/cnc-01.jpg', typeAr: 'تكسية جدارية سادة — نبراس', typeEn: 'Nebras plain wall cladding', sizeAr: 'حسب المشروع', sizeEn: 'Per project', colorAr: 'خشب / حسب الكتالوج', colorEn: 'Wood / catalog', price: 0, inStock: true },
-            { id: 'alu-clad-rib', sku: 'ALU-CLAD-RIB', subCategoryId: 'alu-facades', image: 'images/profile-2026/cnc/cnc-03.jpg', typeAr: 'تكسية جدارية مضلعة — نبراس', typeEn: 'Nebras ribbed wall cladding', sizeAr: 'حسب المشروع', sizeEn: 'Per project', colorAr: 'خشب / حسب الكتالوج', colorEn: 'Wood / catalog', price: 0, inStock: true },
-            { id: 'alu-clad-cnc', sku: 'ALU-CLAD-CNC', subCategoryId: 'alu-facades', image: 'images/profile-2026/cnc/cnc-06.jpg', typeAr: 'ألواح CNC ديكور جداري — نبراس', typeEn: 'Nebras CNC decorative wall panels', sizeAr: 'حسب التصميم', sizeEn: 'Per design', colorAr: 'حسب الكتالوج', colorEn: 'Catalog finish', price: 0, inStock: true },
-            { id: 'alu-clad-art', sku: 'ALU-CLAD-ART', subCategoryId: 'alu-facades', image: 'images/profile-2026/cnc/cnc-08.jpg', typeAr: 'تكسية جدارية فنية CNC — نبراس', typeEn: 'Nebras artistic CNC wall cladding', sizeAr: 'حسب التصميم', sizeEn: 'Per design', colorAr: 'حسب الكتالوج', colorEn: 'Catalog finish', price: 0, inStock: true },
-            { id: 'alu-clad-feat', sku: 'ALU-CLAD-FEAT', subCategoryId: 'alu-facades', image: 'images/profile-2026/cnc/cnc-11.jpg', typeAr: 'جدار مميز CNC — فيلا ومشروع', typeEn: 'CNC feature wall — villa & project', sizeAr: 'حسب المشروع', sizeEn: 'Per project', colorAr: 'حسب الكتالوج', colorEn: 'Catalog finish', price: 0, inStock: true },
+            { id: 'alu-clad-plain', sku: 'ALU-CLAD-PLN', subCategoryId: 'alu-facades', image: CLADDING_CATALOG_PHOTOS.plainOak, typeAr: 'تكسية جدارية سادة — بلوط', typeEn: 'Plain WPC wall cladding — oak', sizeAr: '80 × 290 سم', sizeEn: '80 × 290 cm', colorAr: 'بلوط', colorEn: 'Oak', price: 0, inStock: true },
+            { id: 'alu-clad-rib', sku: 'ALU-CLAD-RIB', subCategoryId: 'alu-facades', image: CLADDING_CATALOG_PHOTOS.ribbedCocoa, typeAr: 'تكسية جدارية مضلعة — كاكاو', typeEn: 'Ribbed WPC wall cladding — cocoa', sizeAr: '12 × 290 سم', sizeEn: '12 × 290 cm', colorAr: 'كاكاو فاتح', colorEn: 'Light cocoa', price: 0, inStock: true },
+            { id: 'alu-clad-cnc', sku: 'ALU-CLAD-CNC', subCategoryId: 'alu-facades', image: CLADDING_CATALOG_PHOTOS.claySand, typeAr: 'صفائح طينية — أصفر سحابي', typeEn: 'Clay wall sheets — sandy yellow', sizeAr: '60 × 120 سم', sizeEn: '60 × 120 cm', colorAr: 'أصفر سحابي', colorEn: 'Cloud yellow', price: 0, inStock: true },
+            { id: 'alu-clad-art', sku: 'ALU-CLAD-ART', subCategoryId: 'alu-facades', image: CLADDING_CATALOG_PHOTOS.plainWalnut, typeAr: 'تكسية جدارية سادة — جوز', typeEn: 'Plain WPC wall cladding — walnut', sizeAr: '80 × 290 سم', sizeEn: '80 × 290 cm', colorAr: 'جوز', colorEn: 'Walnut', price: 0, inStock: true },
+            { id: 'alu-clad-feat', sku: 'ALU-CLAD-FEAT', subCategoryId: 'alu-facades', image: CLADDING_CATALOG_PHOTOS.deckTeak, typeAr: 'أرضيات خارجية WPC — تيك', typeEn: 'Outdoor WPC decking — teak', sizeAr: 'حسب المشروع', sizeEn: 'Per project', colorAr: 'تيك', colorEn: 'Teak', price: 0, inStock: true },
             { id: 'alu-kitchen-sys', sku: 'ALU-KIT-SYS', subCategoryId: 'alu-kitchens', image: ALUMINUM_CATALOG_PHOTOS.kitchen1, typeAr: 'مطبخ خطي — جدار واحد', typeEn: 'Linear single-wall kitchen', sizeAr: 'حسب التصميم', sizeEn: 'Per design', colorAr: 'متعدد', colorEn: 'Various', price: 0, inStock: true },
             { id: 'alu-kitchen-front', sku: 'ALU-KIT-FRT', subCategoryId: 'alu-kitchens', image: ALUMINUM_CATALOG_PHOTOS.kitchen2, typeAr: 'واجهات أدراج ألومنيوم', typeEn: 'Aluminum drawer fronts', sizeAr: 'حسب المقاس', sizeEn: 'Custom size', colorAr: 'متعدد', colorEn: 'Various', price: 0, inStock: true },
             { id: 'alu-kitchen-isl', sku: 'ALU-KIT-ISL', subCategoryId: 'alu-kitchens', image: ALUMINUM_CATALOG_PHOTOS.kitchen3, typeAr: 'مطبخ حرف U مع جزيرة', typeEn: 'U-shape kitchen with island', sizeAr: 'حسب التصميم', sizeEn: 'Per design', colorAr: 'متعدد', colorEn: 'Various', price: 0, inStock: true },
@@ -14127,7 +14143,7 @@
             const badgeIcon = variant === 'partners' ? 'fa-handshake' : 'fa-door-open';
             const imgW = variant === 'partners' ? 168 : 440;
             const imgH = variant === 'partners' ? 168 : 760;
-            const deploy = (document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws325';
+            const deploy = (document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws326';
             const slides = urls.map(function(src, i) {
                 const delay = -(cycleSec - 3) + (i * 3);
                 const loading = i === 0 ? 'eager' : 'lazy';
@@ -29793,7 +29809,7 @@
             if (nebrasDoorEngineLoadPromise) return nebrasDoorEngineLoadPromise;
             const ver = (typeof window.NEBRAS_DEPLOY_TAG !== 'undefined' && window.NEBRAS_DEPLOY_TAG)
                 ? window.NEBRAS_DEPLOY_TAG
-                : ((document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws325');
+                : ((document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws326');
             nebrasDoorEngineLoadPromise = loadNebrasThreeJs().then(function() {
                 return Promise.all([
                     loadNebrasScriptOnce('js/nebras-door-3d.js?v=' + ver),
