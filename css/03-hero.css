@@ -5,12 +5,12 @@
 
 .hero.hero-real {
     position: relative;
-    min-height: min(58vh, 520px);
-    padding: 0;
+    min-height: min(94vh, 960px);
+    padding: 0 0 18px;
     display: block;
     text-align: start;
     color: #fff;
-    overflow: hidden;
+    overflow: visible;
     background: #0a0a0a;
 }
 
@@ -58,7 +58,7 @@
 
 .hero-slide-dots {
     position: absolute;
-    bottom: 52px;
+    bottom: 22px;
     left: 50%;
     transform: translateX(-50%);
     z-index: 2;
@@ -340,7 +340,7 @@
 
     .hero-slide-dots {
         display: flex;
-        bottom: 58px;
+        bottom: 20px;
     }
 }
 
@@ -364,7 +364,8 @@
 
 @media (max-width: 768px) {
     .hero.hero-real {
-        min-height: min(62svh, 560px);
+        min-height: min(88svh, 760px);
+        padding-bottom: 12px;
     }
 
     .hero-slide-img,
@@ -384,7 +385,7 @@
     }
 
     .hero-content-wrap {
-        min-height: min(62svh, 560px);
+        min-height: min(78svh, 680px);
         padding: 24px 5% 62px;
         justify-content: flex-end;
         align-items: center;

@@ -23,8 +23,8 @@
     width: var(--mini-showcase-w);
     height: var(--mini-showcase-h);
     border-radius: 14px;
-    overflow: hidden;
-    contain: layout style paint;
+    overflow: visible;
+    contain: layout style;
     background: linear-gradient(165deg, #0a1e32 0%, #123a5c 55%, #0d2840 100%);
     border: 2px solid rgba(0, 168, 255, 0.45);
     box-shadow:

@@ -971,8 +971,8 @@
         }
 
         const DOOR_PHOTO_PRESET_ROOT = 'images/doors/presets/';
-        const DOOR_PHOTO_PRESET_CACHE = '324';
-        const DOOR_PHOTO_COMPOSE_MAX_DIM = 1200;
+        const DOOR_PHOTO_PRESET_CACHE = '327';
+        const DOOR_PHOTO_COMPOSE_MAX_DIM = 1800;
         /** صور أبواب المصنع الحقيقية في المعاينة — SVG احتياطي عند غياب الصورة */
         const DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS = true;
         let doorDesignerPreviewRaf = 0;
@@ -1213,39 +1213,54 @@
                 if (!roll) return;
                 const rw = roll.naturalWidth || roll.width || 256;
                 const rh = roll.naturalHeight || roll.height || 256;
+                const targetW = Math.max(180, Math.round(w * 0.36));
+                const scale = targetW / Math.max(1, rw);
+                const tw = Math.max(1, Math.round(rw * scale));
+                const th = Math.max(1, Math.round(rh * scale));
                 ctx.globalCompositeOperation = mode || 'multiply';
                 ctx.globalAlpha = alpha;
-                for (let ty = 0; ty < h + rh; ty += rh) {
-                    for (let tx = 0; tx < w + rw; tx += rw) {
-                        ctx.drawImage(roll, tx, ty, rw, rh);
+                for (let ty = 0; ty < h + th; ty += th) {
+                    for (let tx = 0; tx < w + tw; tx += tw) {
+                        ctx.drawImage(roll, tx, ty, tw, th);
                     }
                 }
                 ctx.globalAlpha = 1;
             }
 
-            function paintRollLayer(ctx, w, h, roll) {
+            function paintRollLayer(ctx, w, h, roll, basePhoto) {
                 ctx.globalCompositeOperation = 'source-over';
-                ctx.fillStyle = '#ffffff';
-                ctx.fillRect(0, 0, w, h);
+                if (basePhoto) {
+                    ctx.drawImage(basePhoto, 0, 0, w, h);
+                } else {
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, w, h);
+                }
                 ctx.globalCompositeOperation = 'saturation';
-                ctx.fillStyle = 'rgba(128,128,128,' + profile.saturationGray + ')';
+                ctx.fillStyle = 'rgba(128,128,128,' + (profile.saturationGray * (basePhoto ? 0.7 : 1)) + ')';
                 ctx.fillRect(0, 0, w, h);
                 if (roll) {
-                    tileRollTexture(ctx, roll, w, h, profile.multiplyAlpha, 'multiply');
-                    tileRollTexture(ctx, roll, w, h, profile.colorAlpha, 'color');
+                    tileRollTexture(ctx, roll, w, h, profile.multiplyAlpha * (basePhoto ? 0.5 : 1), 'multiply');
+                    tileRollTexture(ctx, roll, w, h, profile.colorAlpha * (basePhoto ? 0.68 : 1), 'color');
                 }
                 if (hexFallback) {
                     ctx.globalCompositeOperation = 'color';
                     ctx.fillStyle = hexFallback;
-                    ctx.globalAlpha = roll ? profile.hexBoost : 0.95;
+                    ctx.globalAlpha = roll ? (basePhoto ? profile.hexBoost * 0.78 : profile.hexBoost) : 0.9;
                     ctx.fillRect(0, 0, w, h);
                     ctx.globalAlpha = 1;
                 }
-                ctx.globalCompositeOperation = 'soft-light';
-                ctx.globalAlpha = 0.18;
-                ctx.fillStyle = roll ? '#ffffff' : hexFallback;
-                ctx.fillRect(0, 0, w, h);
-                ctx.globalAlpha = 1;
+                if (basePhoto) {
+                    ctx.globalCompositeOperation = 'overlay';
+                    ctx.globalAlpha = 0.26;
+                    ctx.drawImage(basePhoto, 0, 0, w, h);
+                    ctx.globalAlpha = 1;
+                } else {
+                    ctx.globalCompositeOperation = 'soft-light';
+                    ctx.globalAlpha = 0.18;
+                    ctx.fillStyle = roll ? '#ffffff' : hexFallback;
+                    ctx.fillRect(0, 0, w, h);
+                    ctx.globalAlpha = 1;
+                }
                 ctx.globalCompositeOperation = 'source-over';
             }
 
@@ -1289,37 +1304,16 @@
                         lctx.scale(dpr, dpr);
                         lctx.imageSmoothingEnabled = true;
                         lctx.imageSmoothingQuality = 'high';
-                        paintRollLayer(lctx, w, h, roll);
+                        paintRollLayer(lctx, w, h, roll, base);
                         lctx.globalCompositeOperation = 'destination-in';
                         lctx.drawImage(panelMask, 0, 0, w, h);
                         lctx.globalCompositeOperation = 'source-over';
                         ctx.drawImage(leafCanvas, 0, 0, w, h);
-
-                        const grainCanvas = document.createElement('canvas');
-                        grainCanvas.width = outW;
-                        grainCanvas.height = outH;
-                        const gctx = grainCanvas.getContext('2d');
-                        if (gctx) {
-                            gctx.scale(dpr, dpr);
-                            gctx.drawImage(base, 0, 0, w, h);
-                            gctx.globalCompositeOperation = 'destination-in';
-                            gctx.drawImage(panelMask, 0, 0, w, h);
-                            ctx.save();
-                            ctx.globalCompositeOperation = 'multiply';
-                            ctx.globalAlpha = profile.saturationGray > 0.5 ? 0.1 : 0.06;
-                            ctx.drawImage(grainCanvas, 0, 0, w, h);
-                            ctx.restore();
-                        }
                     } else if (!panelMask && (rollKey || hexFallback)) {
-                        paintRollLayer(ctx, w, h, roll);
-                        ctx.globalCompositeOperation = 'multiply';
-                        ctx.globalAlpha = profile.saturationGray > 0.5 ? 0.14 : 0.08;
-                        ctx.drawImage(base, 0, 0, w, h);
-                        ctx.globalAlpha = 1;
-                        ctx.globalCompositeOperation = 'source-over';
+                        paintRollLayer(ctx, w, h, roll, base);
                     }
 
-                    let out = canvas.toDataURL('image/jpeg', 0.9);
+                    let out = canvas.toDataURL('image/jpeg', 0.94);
                     if (!out || out.length < 64) out = canvas.toDataURL('image/png');
                     return out && out.length > 64 ? out : null;
                 } catch (err) {
@@ -4831,6 +4825,8 @@
         ];
         function variantSupportsAluminumFinishPicker(variant) {
             if (!variant) return false;
+            const sku = String(variant.sku || '').toUpperCase();
+            if (sku.indexOf('ALU-CLAD-') === 0) return false;
             const sub = String(variant.subCategoryId || '');
             return sub === 'alu-doors' || sub === 'alu-kitchens' || sub === 'alu-windows' || sub === 'alu-facades';
         }
@@ -12535,7 +12531,7 @@
         let cachedSiteLogoUrl = null;
 
         function getSiteLogoCandidateUrls() {
-            return ['images/logo-nebras-mark.png', 'images/logo-white.svg'].concat(buildUrlList(['logo', 'nebras-logo']));
+            return ['images/logo-nebras-watermark.png', 'images/logo-white.svg', 'images/logo-nebras-mark.png'].concat(buildUrlList(['logo', 'nebras-logo']));
         }
 
         function getSiteLogoUrlListAttr() {
@@ -12544,7 +12540,7 @@
 
         function getSiteLogoUrl() {
             const urls = getSiteLogoCandidateUrls();
-            return cachedSiteLogoUrl || urls[0] || 'images/logo-nebras-mark.png';
+            return cachedSiteLogoUrl || urls[0] || 'images/logo-nebras-watermark.png';
         }
 
         function resolveSiteLogoUrl(done) {
@@ -12561,7 +12557,7 @@
             const urls = getSiteLogoCandidateUrls();
             function tryNext(index) {
                 if (index >= urls.length) {
-                    const fallback = urls[0] || 'images/logo-nebras-mark.png';
+                    const fallback = urls[0] || 'images/logo-nebras-watermark.png';
                     if (typeof done === 'function') done(fallback);
                     return;
                 }
@@ -14143,7 +14139,7 @@
             const badgeIcon = variant === 'partners' ? 'fa-handshake' : 'fa-door-open';
             const imgW = variant === 'partners' ? 168 : 440;
             const imgH = variant === 'partners' ? 168 : 760;
-            const deploy = (document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws326';
+            const deploy = (document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws327';
             const slides = urls.map(function(src, i) {
                 const delay = -(cycleSec - 3) + (i * 3);
                 const loading = i === 0 ? 'eager' : 'lazy';
@@ -16562,7 +16558,7 @@
             const urls = getSiteLogoCandidateUrls();
             const listAttr = urls.join('|');
             resolveSiteLogoUrl(function(resolved) {
-                document.querySelectorAll('.site-logo-img').forEach(function(img) {
+                document.querySelectorAll('.site-logo-img, .nebras-brand-intro-logo').forEach(function(img) {
                     if (!urls.length) return;
                     img.setAttribute('data-src-list', listAttr);
                     img.setAttribute('data-src-idx', '0');
@@ -18435,8 +18431,10 @@
             const qrDownload = document.getElementById('dashboard-qr-download');
             const qrDownloadLabel = document.getElementById('dashboard-qr-download-label');
             const qrImg = document.getElementById('dashboard-qr-img');
-            if (titleEl) titleEl.innerHTML = '<i class="fas fa-link" aria-hidden="true"></i> ' + escapeHtmlAttr(t.dashboardOfficialTitle || 'الروابط الرسمية و QR الموقع');
+            if (titleEl) titleEl.innerHTML = '<i class="fas fa-link" aria-hidden="true"></i> ' + escapeHtmlAttr(t.dashboardOfficialTitle || 'الروابط الرسمية');
             if (hintEl) hintEl.textContent = t.dashboardOfficialHint || '';
+            const dashQrCard = document.getElementById('dashboard-qr-card');
+            if (dashQrCard) dashQrCard.hidden = true;
             if (copyEl) copyEl.textContent = t.dashboardCopyright || 'كل الحقوق محفوظة مع مصنع نبراس 2026';
             if (siteLink) {
                 siteLink.href = siteUrl;
@@ -19184,9 +19182,16 @@
                     });
                 }
                 if (typeof bootNebrasAdminSession === 'function') {
-                    bootNebrasAdminSession({ withPortal: true, withErp: true }).catch(function(deferErr) {
-                        console.warn('admin boot deferred:', deferErr);
-                    });
+                    const runAdminBoot = function() {
+                        bootNebrasAdminSession({ withPortal: true, withErp: true }).catch(function(deferErr) {
+                            console.warn('admin boot deferred:', deferErr);
+                        });
+                    };
+                    if (typeof requestIdleCallback === 'function') {
+                        requestIdleCallback(runAdminBoot, { timeout: 2800 });
+                    } else {
+                        setTimeout(runAdminBoot, 400);
+                    }
                 }
                 if (NEBRAS_SERVER_FIRST_MODE && supabaseClient) {
                     if (typeof scheduleHydrateGovernanceAfterLogin === 'function') {
@@ -29809,7 +29814,7 @@
             if (nebrasDoorEngineLoadPromise) return nebrasDoorEngineLoadPromise;
             const ver = (typeof window.NEBRAS_DEPLOY_TAG !== 'undefined' && window.NEBRAS_DEPLOY_TAG)
                 ? window.NEBRAS_DEPLOY_TAG
-                : ((document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws326');
+                : ((document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws327');
             nebrasDoorEngineLoadPromise = loadNebrasThreeJs().then(function() {
                 return Promise.all([
                     loadNebrasScriptOnce('js/nebras-door-3d.js?v=' + ver),
@@ -29970,6 +29975,7 @@
         let nebrasHydrateInFlight = null;
         let nebrasCloudHydrateInProgress = false;
         let nebrasHydrateAllowCloudPush = false;
+        let nebrasQueuedCloudSaveAfterHydrate = false;
 
         function isNebrasCloudHydrating() {
             return !!nebrasCloudHydrateInProgress;
@@ -30053,6 +30059,14 @@
             }).finally(function() {
                 setNebrasCloudHydrateGate(false);
                 nebrasHydrateInFlight = null;
+                if (nebrasQueuedCloudSaveAfterHydrate) {
+                    nebrasQueuedCloudSaveAfterHydrate = false;
+                    try {
+                        saveSystemData({ urgentCloud: true, showCloudToast: true, skipMutationMark: false });
+                    } catch (flushErr) {
+                        console.warn('post-hydrate queued save:', flushErr);
+                    }
+                }
             });
             return nebrasHydrateInFlight;
         }
@@ -30679,11 +30693,12 @@
             if (!localOk && currentAdmin && typeof showNebrasAdminToast === 'function') {
                 showNebrasAdminToast('تعذّر الحفظ المحلي — امسحي كاش المتصفح أو استخدمي نافذة عادية (ليس خاصاً)', 'error');
             }
-            if (!options.skipCloud) {
-                if (typeof isNebrasCloudHydrating === 'function' && isNebrasCloudHydrating()) {
-                    options.skipCloud = true;
-                    options.silentCloudFail = true;
+            if (typeof isNebrasCloudHydrating === 'function' && isNebrasCloudHydrating()) {
+                if (!options.skipMutationMark) {
+                    nebrasQueuedCloudSaveAfterHydrate = true;
                 }
+                options.skipCloud = true;
+                options.silentCloudFail = true;
             }
             if (!options.skipCloud && currentAdmin && typeof ensureNebrasCloudSessionForSave === 'function') {
                 ensureNebrasCloudSessionForSave({ promptReauth: false }).catch(function(sessErr) {

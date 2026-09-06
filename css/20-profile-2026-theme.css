@@ -178,7 +178,7 @@ body.nebras-profile-2026-theme .nebras-visitor-qr-lead {
     color: rgba(6, 46, 68, 0.78);
 }
 
-/* شعار نبراس — ميدالية كحلية بحلقة ذهبية، الحرف الأبيض واضح */
+/* شعار نبراس — علامة مائية بيضاء بدون برواز أو مربع كحلي */
 .site-logo-img,
 .nebras-brand-intro-logo,
 .cph-cover-logo,
@@ -190,30 +190,28 @@ body.nebras-profile-2026-theme .nebras-visitor-qr-lead {
 }
 
 body.nebras-profile-2026-theme .logo-container {
-    width: 76px;
-    height: 76px;
+    width: auto;
+    height: auto;
     padding: 0;
-    border-radius: 50%;
-    background:
-        radial-gradient(circle at 38% 32%, #1a4a72 0%, #0d2840 62%, #081828 100%);
-    border: 2px solid #c9a227;
-    box-shadow:
-        0 8px 22px rgba(13, 40, 64, 0.22),
-        0 0 0 3px #ffffff,
-        0 0 0 4px rgba(201, 162, 39, 0.35);
-    overflow: hidden;
+    border-radius: 0;
+    background: none;
+    border: none;
+    box-shadow: none;
+    overflow: visible;
     flex-shrink: 0;
     position: relative;
     z-index: 4;
 }
 
 body.nebras-profile-2026-theme .site-logo-img {
-    filter: none;
-    width: 100%;
-    height: 100%;
-    max-width: none;
-    object-fit: cover;
+    filter: drop-shadow(0 2px 8px rgba(0, 0, 0, 0.35));
+    width: 72px;
+    height: 72px;
+    max-width: 72px;
+    object-fit: contain;
     object-position: center;
+    opacity: 0.96;
+    background: none !important;
 }
 
 /* افتتاحية العلامة — نفس روح غلاف البروفايل */
@@ -245,7 +243,10 @@ body.nebras-profile-2026-theme .nebras-brand-intro-logo-ring {
 body.nebras-profile-2026-theme .nebras-brand-intro-logo-wrap img,
 body.nebras-profile-2026-theme .nebras-brand-intro-logo-ring img,
 body.nebras-profile-2026-theme .nebras-brand-intro-logo {
-    filter: drop-shadow(0 6px 32px rgba(212, 168, 66, 0.4));
+    filter: drop-shadow(0 4px 16px rgba(0, 0, 0, 0.35));
+    background: none !important;
+    border: none !important;
+    box-shadow: none !important;
 }
 
 body.nebras-profile-2026-theme .nebras-brand-intro-eyebrow {
