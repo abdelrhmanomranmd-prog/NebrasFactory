@@ -1,16 +1,18 @@
 /* قسم الترحيب — صورة حقيقية، النص فوق الأبواب (يمين الشاشة في العربية) */
 :root {
     --hero-banner-image: url('/images/hero-nebras-banner.png');
+    --nebras-chrome-h: 420px;
 }
 
 .hero.hero-real {
     position: relative;
-    min-height: min(94vh, 960px);
-    padding: 0 0 18px;
+    min-height: clamp(380px, calc(100dvh - var(--nebras-chrome-h, 420px)), 720px);
+    height: clamp(380px, calc(100dvh - var(--nebras-chrome-h, 420px)), 720px);
+    padding: 0;
     display: block;
     text-align: start;
     color: #fff;
-    overflow: visible;
+    overflow: hidden;
     background: #0a0a0a;
 }
 
@@ -364,8 +366,9 @@
 
 @media (max-width: 768px) {
     .hero.hero-real {
-        min-height: min(88svh, 760px);
-        padding-bottom: 12px;
+        min-height: clamp(320px, calc(100svh - var(--nebras-chrome-h, 360px)), 560px);
+        height: clamp(320px, calc(100svh - var(--nebras-chrome-h, 360px)), 560px);
+        padding-bottom: 0;
     }
 
     .hero-slide-img,

@@ -1,11 +1,11 @@
 /**
- * نبراس hrws327 — boot موحّد للإدارة (Accmaa-style)
+ * نبراس hrws328 — boot موحّد للإدارة (Accmaa-style)
  * CSS · adminCore · portal · ERP UI · inits — ترتيب واحد دقيق
  */
 (function(global) {
     'use strict';
 
-    var VER = 'hrws327';
+    var VER = 'hrws328';
     var inflight = null;
     var inflightPortal = false;
     var inflightErp = false;

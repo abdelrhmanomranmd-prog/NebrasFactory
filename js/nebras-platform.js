@@ -14139,7 +14139,7 @@
             const badgeIcon = variant === 'partners' ? 'fa-handshake' : 'fa-door-open';
             const imgW = variant === 'partners' ? 168 : 440;
             const imgH = variant === 'partners' ? 168 : 760;
-            const deploy = (document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws327';
+            const deploy = (document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws328';
             const slides = urls.map(function(src, i) {
                 const delay = -(cycleSec - 3) + (i * 3);
                 const loading = i === 0 ? 'eager' : 'lazy';
@@ -23228,6 +23228,28 @@
             setHeroDynamicHeadline(slide.headline, animateHeadline !== false);
         }
 
+        function syncNebrasChromeHeight() {
+            try {
+                if ((window.scrollY || 0) > 24) return;
+                const nodes = [
+                    document.getElementById('public-legal-bar'),
+                    document.querySelector('.top-contact-bar'),
+                    document.querySelector('header'),
+                    document.getElementById('nebras-official-verified-bar')
+                ];
+                let bottom = 0;
+                nodes.forEach(function(el) {
+                    if (!el || el.hasAttribute('hidden')) return;
+                    const r = el.getBoundingClientRect();
+                    if (r.height < 2) return;
+                    if (r.bottom > bottom) bottom = r.bottom;
+                });
+                if (bottom >= 180 && bottom <= 920) {
+                    document.documentElement.style.setProperty('--nebras-chrome-h', Math.round(bottom) + 'px');
+                }
+            } catch (chromeErr) { /* ignore */ }
+        }
+
         function initHeroSlideshow() {
             if (shouldDeferHeavySiteRender()) {
                 window.addEventListener('nebras-intro-finished', function() {
@@ -23271,6 +23293,7 @@
             heroSlideshowIndex = 0;
             setHeroDynamicHeadline(heroSlideshowSlides[0].headline, false);
             preloadHeroSlideImages(heroSlideshowSlides);
+            syncNebrasChromeHeight();
 
             if (prefersReducedMotionIntro()) return;
 
@@ -25862,6 +25885,7 @@
             intro.classList.add('is-leaving');
             document.body.classList.remove('nebras-intro-active');
             try { sessionStorage.setItem('nebrasIntroSeen', '1'); } catch (e) { /* ignore */ }
+            setTimeout(syncNebrasChromeHeight, 80);
             clearStuckInteractionBlockers();
             setTimeout(function() {
                 intro.hidden = true;
@@ -29814,7 +29838,7 @@
             if (nebrasDoorEngineLoadPromise) return nebrasDoorEngineLoadPromise;
             const ver = (typeof window.NEBRAS_DEPLOY_TAG !== 'undefined' && window.NEBRAS_DEPLOY_TAG)
                 ? window.NEBRAS_DEPLOY_TAG
-                : ((document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws327');
+                : ((document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws328');
             nebrasDoorEngineLoadPromise = loadNebrasThreeJs().then(function() {
                 return Promise.all([
                     loadNebrasScriptOnce('js/nebras-door-3d.js?v=' + ver),
@@ -31543,6 +31567,11 @@
             clearStuckInteractionBlockers();
             bindStorefrontCommerceClicks();
             bindNavPortalAndAdminLinks();
+            syncNebrasChromeHeight();
+        });
+        window.addEventListener('resize', function() {
+            if (typeof window.__nebrasChromeResizeT === 'number') clearTimeout(window.__nebrasChromeResizeT);
+            window.__nebrasChromeResizeT = setTimeout(syncNebrasChromeHeight, 120);
         });
 
         document.addEventListener('visibilitychange', function() {

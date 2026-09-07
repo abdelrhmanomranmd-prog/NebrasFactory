@@ -1,7 +1,7 @@
 /* هيدر موحّد — شريط كلاسيكي بعرض كامل بدون فراغات */
 
 .header-top-row--campaign {
-    padding: clamp(8px, 1.5vw, 14px) 4% clamp(10px, 2vw, 16px);
+    padding: 6px 4% 8px;
     border-bottom: none;
 }
 
@@ -14,7 +14,7 @@
     max-width: 1280px;
     margin-inline: auto;
     min-height: 0;
-    padding: clamp(16px, 2.6vw, 24px) clamp(16px, 3vw, 24px);
+    padding: 8px 14px;
     border-radius: 20px;
     background:
         linear-gradient(160deg, rgba(255, 255, 255, 0.11) 0%, rgba(255, 255, 255, 0.03) 38%, rgba(8, 28, 48, 0.55) 100%);
@@ -51,6 +51,12 @@
     text-align: start;
     font-size: clamp(1.05rem, 2.4vw, 1.55rem);
     line-height: 1.25;
+}
+
+.header-campaign-headline,
+.header-campaign-tagline,
+.header-hero-divider {
+    display: none;
 }
 
 .header-hero-divider {
@@ -153,9 +159,9 @@
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
-    gap: 10px 16px;
-    padding-top: 10px;
-    margin-top: 2px;
+    gap: 6px 12px;
+    padding-top: 4px;
+    margin-top: 0;
     border-top: 1px solid rgba(255, 255, 255, 0.14);
 }
 
