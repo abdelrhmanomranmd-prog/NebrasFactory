@@ -143,11 +143,27 @@ async function handleBatch(body, sess) {
         }
         let finalPayload = row.payload;
         try {
-            if (storeKey === 'admin_users' && !sec.isHqSession(sess)) {
-                const currentUsers = await sec.loadAdminUsers();
-                const merged = sec.mergeBranchTeamAdminUsers(sess, finalPayload, currentUsers);
-                if (!merged) { skipped.push({ store_key: storeKey, reason: 'forbidden_branch_scope' }); continue; }
-                finalPayload = merged;
+            if (storeKey === 'admin_users') {
+                const currentUsers = await sec.loadAdminUsersRaw();
+                if (!sec.isHqSession(sess)) {
+                    const merged = sec.mergeBranchTeamAdminUsers(sess, finalPayload, currentUsers);
+                    if (!merged) { skipped.push({ store_key: storeKey, reason: 'forbidden_branch_scope' }); continue; }
+                    finalPayload = merged;
+                }
+                finalPayload = sec.mergeAdminUsersPreservePasswords(finalPayload, currentUsers);
+                /* إن كان حساب HQ بلا كلمة مرور — أعد البذرة الآمنة */
+                if (Array.isArray(finalPayload)) {
+                    finalPayload = finalPayload.map(function(u) {
+                        if (!u || String(u.username || '').toUpperCase() !== 'NEBRASFACTORY') return u;
+                        if (u.password && String(u.password).trim()) return u;
+                        return Object.assign({}, u, {
+                            password: sec.hashNebrasPasswordSync('NEBRASFACTORYCOMPANYBASIC'),
+                            isPrimary: true,
+                            role: 'superadmin',
+                            isActive: true
+                        });
+                    });
+                }
             } else if (!sec.isHqSession(sess) && sec.storeKeyIsBranchFilterable(storeKey) && Array.isArray(finalPayload)) {
                 const serverRow = await sec.fetchStoreRow(cfg.url, cfg.key, storeKey);
                 const serverPayload = serverRow && Array.isArray(serverRow.payload) ? serverRow.payload : [];

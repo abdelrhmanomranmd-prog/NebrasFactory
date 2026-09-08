@@ -20853,8 +20853,13 @@
             atIso: now.toISOString()
         });
         if (auditLogs.length > AUDIT_LOG_MAX) auditLogs.length = AUDIT_LOG_MAX;
-        const hydrating = typeof isNebrasCloudHydrating === 'function' && isNebrasCloudHydrating();
-        saveSystemData({ skipCloud: hydrating, silentCloudFail: true });
+        /* حفظ مباشر: سجل التدقيق يُرفع للسيرفر — لا يُترك محلياً أثناء التحميل */
+        saveSystemData({
+            storeKeys: ['audit_logs'],
+            urgentCloud: true,
+            waitHydrate: true,
+            silentCloudFail: true
+        });
         if (typeof displayAuditLog === 'function') displayAuditLog();
     }
 
@@ -30759,7 +30764,18 @@
                 }
             }
             const silent = !!nebrasCloudPushSilent;
-            const rows = NEBRAS_CLOUD_STORE_SPECS.map(function(spec) {
+            let specs = NEBRAS_CLOUD_STORE_SPECS;
+            /* أداء: ارفع المفاتيح المتغيّرة فقط إن وُجدت — أسرع وأخف على السحابة */
+            if (typeof getPendingDirtyStoreKeys === 'function') {
+                const dirty = getPendingDirtyStoreKeys();
+                if (dirty && dirty.length) {
+                    const allow = {};
+                    dirty.forEach(function(k) { allow[k] = true; });
+                    const scoped = NEBRAS_CLOUD_STORE_SPECS.filter(function(s) { return s && allow[s.key]; });
+                    if (scoped.length) specs = scoped;
+                }
+            }
+            const rows = specs.map(function(spec) {
                 let payload = spec.get();
                 if (typeof slimNebrasCloudPayload === 'function') payload = slimNebrasCloudPayload(spec.key, payload);
                 if (typeof guardCloudPushRow === 'function') payload = guardCloudPushRow(spec.key, payload);
@@ -31222,8 +31238,11 @@
                         });
                     }
                     Promise.all([flushPromise, criticalPromise]).then(function(results) {
-                        const ok = !!(results[0] || results[1]);
-                        renderNebrasLiveCloudRibbon(ok ? 'ok' : 'warn');
+                        const flushOk = !!results[0];
+                        const criticalOk = !!results[1];
+                        /* عاجل: نجاح = تأكيد المفاتيح الحرجة. غير عاجل: أي مسار ناجح */
+                        const ok = options.urgentCloud ? criticalOk : (flushOk || criticalOk);
+                        renderNebrasLiveCloudRibbon(ok ? 'ok' : (flushOk ? 'warn' : 'warn'));
                         if (typeof updateCloudSafetyBanner === 'function') updateCloudSafetyBanner();
                         if (ok && (options.urgentCloud || options.showCloudToast) && typeof showNebrasAdminToast === 'function') {
                             if (!(typeof window !== 'undefined' && window.NEBRAS_ODOO_QUIET_UI)) {
@@ -31232,7 +31251,12 @@
                         }
                         if (!ok && typeof showNebrasAdminToast === 'function' && options.silentCloudFail !== true) {
                             if (!(typeof window !== 'undefined' && window.NEBRAS_ODOO_QUIET_UI && !options.showCloudToast)) {
-                                showNebrasAdminToast('⚠️ لم يُحفظ في السحابة — تحققي من الاتصال وأعيدي المحاولة', 'error');
+                                showNebrasAdminToast(
+                                    flushOk && options.urgentCloud
+                                        ? '⚠️ جزء عام رُفع — بيانات حساسة لم تُؤكَّد. أعيدي الحفظ.'
+                                        : '⚠️ لم يُحفظ في السحابة — تحققي من الاتصال وأعيدي المحاولة',
+                                    'error'
+                                );
                             }
                         }
                     });

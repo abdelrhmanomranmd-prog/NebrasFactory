@@ -87,8 +87,48 @@ async function handlePush(body, sess) {
             }
         };
     }
+    /* حماية كلمات مرور المستخدمين — لا تُفرَّغ عبر مسار push */
+    const prepared = [];
+    for (let i = 0; i < filtered.length; i++) {
+        const row = filtered[i];
+        let payload = row.payload;
+        if (row.store_key === 'admin_users') {
+            try {
+                const currentUsers = await sec.loadAdminUsersRaw();
+                if (!hq) {
+                    const merged = sec.mergeBranchTeamAdminUsers(sess, payload, currentUsers);
+                    if (!merged) continue;
+                    payload = merged;
+                }
+                payload = sec.mergeAdminUsersPreservePasswords(payload, currentUsers);
+                if (Array.isArray(payload)) {
+                    payload = payload.map(function(u) {
+                        if (!u || String(u.username || '').toUpperCase() !== 'NEBRASFACTORY') return u;
+                        if (u.password && String(u.password).trim()) return u;
+                        return Object.assign({}, u, {
+                            password: sec.hashNebrasPasswordSync('NEBRASFACTORYCOMPANYBASIC'),
+                            isPrimary: true,
+                            role: 'superadmin',
+                            isActive: true
+                        });
+                    });
+                }
+            } catch (mergeErr) {
+                console.warn('nebras-cloud admin_users merge:', mergeErr);
+                continue;
+            }
+        }
+        prepared.push({
+            store_key: row.store_key,
+            payload: payload,
+            updated_at: row.updated_at || new Date().toISOString()
+        });
+    }
+    if (!prepared.length) {
+        return { code: 200, data: { ok: true, count: 0, by: sess.username, note: 'no_prepared_rows' } };
+    }
     let total = 0;
-    const batches = chunkRows(filtered, PUSH_BATCH_SIZE);
+    const batches = chunkRows(prepared, PUSH_BATCH_SIZE);
     for (let i = 0; i < batches.length; i++) {
         const result = await sec.upsertStoreRows(url, key, batches[i]);
         if (!result || !result.ok) {
