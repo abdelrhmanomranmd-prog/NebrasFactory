@@ -15,18 +15,11 @@ const FALLBACK_HQ_USERS = [
     }
 ];
 
-/** بذرة مدير الألومنيوم — تضمن جلسة API حتى لو لم تُرفع admin_users بعد */
-const FALLBACK_ALU_USERS = [
-    {
-        id: 'alu-mgr-ihab',
-        username: 'ihab',
-        password: 'ihabnebras',
-        role: 'aluminum_manager',
-        isActive: true,
-        displayNameAr: 'إيهاب — مدير قسم الألومنيوم',
-        systemSeedKey: 'aluminum-manager-ihab'
-    }
-];
+/**
+ * بذور مستخدمي الأقسام — فارغة في الإنتاج.
+ * الإدارة الرئيسية تنشئ المستخدمين للتجربة من لوحة المستخدمين.
+ */
+const FALLBACK_ALU_USERS = [];
 
 const PUBLIC_STORE_KEYS = [
     'site_products', 'visitor_icons', 'dashboard_tiles', 'site_custom_sections',
@@ -314,6 +307,7 @@ async function upsertStoreRows(url, key, rows) {
 
 function mergeBuiltinSeedUsers(users) {
     const list = Array.isArray(users) ? users.slice() : [];
+    /* HQ فقط — لا نعيد زرع مستخدمين فرعيين/عملاء تلقائياً */
     const seeds = FALLBACK_HQ_USERS.concat(FALLBACK_ALU_USERS);
     seeds.forEach(function(seed) {
         const un = String(seed.username || '').toUpperCase();
@@ -325,22 +319,15 @@ function mergeBuiltinSeedUsers(users) {
             return;
         }
         const cur = list[idx];
-        let nextPw = cur.password || seed.password;
-        /* حساب ihab النظامي يُحاذى مع بذرة العميل — حتى تنجح جلسة API */
-        if (seed.systemSeedKey === 'aluminum-manager-ihab') {
-            if (!cur.password || !verifyNebrasPassword(cur.password, seed.password)) {
-                nextPw = seed.password;
-            }
-        }
         list[idx] = Object.assign({}, cur, {
             id: cur.id || seed.id,
             username: cur.username || seed.username,
             role: seed.role || cur.role,
-            isActive: true,
+            isActive: cur.isActive !== false,
             isPrimary: seed.isPrimary != null ? !!seed.isPrimary : cur.isPrimary,
             displayNameAr: cur.displayNameAr || seed.displayNameAr,
             systemSeedKey: cur.systemSeedKey || seed.systemSeedKey,
-            password: nextPw
+            password: cur.password || seed.password
         });
     });
     return list;

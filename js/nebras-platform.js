@@ -67,7 +67,7 @@
         const NEBRAS_SERVER_FIRST_MODE = true;
         /** إنتاج حي — بدون بذور تجريبية؛ الإدارة تضيف كل البيانات */
         const NEBRAS_PRODUCTION_LIVE_MODE = true;
-        const NEBRAS_CLIENT_RESET_TOKEN = 'prod-live-5';
+        const NEBRAS_CLIENT_RESET_TOKEN = 'prod-live-6';
         window.NEBRAS_PRODUCTION_LIVE_MODE = NEBRAS_PRODUCTION_LIVE_MODE;
 
         function shouldSeedBusinessDemoData() {
@@ -100,12 +100,16 @@
 
         const NEBRAS_BUILTIN_DEMO_ADMIN_IDS = ['demo-zaki-sales', 'seed-demo-admin'];
 
-        /** حسابات تجريبية مدمجة فقط — لا نمسح مستخدمين أنشأتها الإدارة الرئيسية (createdAt/createdBy) */
+        /** حسابات تجريبية/بذور نظامية فقط — لا نمسح مستخدمين أنشأتها الإدارة الرئيسية */
         function isBuiltinDemoAdminUser(u) {
             if (!u || isImmutablePrimaryAdmin(u)) return false;
             if (u.isBuiltinDemo === true) return true;
+            if (u.createdBy === 'system-seed') return true;
+            if (String(u.systemSeedKey || '') === 'aluminum-manager-ihab') return true;
+            if (String(u.id || '') === 'alu-mgr-ihab') return true;
             if (NEBRAS_BUILTIN_DEMO_ADMIN_IDS.indexOf(String(u.id || '')) >= 0) return true;
             const name = String(u.username || '').trim();
+            if (/^ihab$/i.test(name) && (u.createdBy === 'system-seed' || u.systemSeedKey)) return true;
             if (/^(TEST|SAMPLE|DEMO)(?:USER)?\d+$/i.test(name)) return true;
             if (/^(ZAKI|TEST|SAMPLE|DEMO)(?:USER)?\d*$/i.test(name) && !u.createdAt && !u.createdBy) return true;
             return false;
@@ -129,7 +133,8 @@
                     permissions: null
                 });
             }
-            if (typeof ensureAluminumManagerIhab === 'function') ensureAluminumManagerIhab();
+            /* الإنتاج: لا نعيد زرع ihab — الإدارة الرئيسية تنشئ المستخدمين للتجربة */
+            try { localStorage.removeItem('nebrasAluminumIhabSeedPending'); } catch (e) { /* ignore */ }
             enforceProductionBusinessCleanState();
         }
 
@@ -8385,11 +8390,15 @@
                 isActive: true
             });
         }
-        ensureAluminumManagerIhab();
+        /* لا نزرع مستخدمين فرعيين تلقائياً — الإدارة الرئيسية تضيفهم من لوحة المستخدمين */
     }
 
-    /** مستخدم قسم الألومنيوم — ihab / ihabnebras (تخصيمات) */
+    /** مستخدم قسم الألومنيوم — يُنشأ يدوياً من الإدارة الرئيسية في الإنتاج */
     function ensureAluminumManagerIhab() {
+        if (typeof NEBRAS_PRODUCTION_LIVE_MODE !== 'undefined' && NEBRAS_PRODUCTION_LIVE_MODE) {
+            try { localStorage.removeItem('nebrasAluminumIhabSeedPending'); } catch (e) { /* ignore */ }
+            return false;
+        }
         const un = 'ihab';
         const pw = 'ihabnebras';
         const idx = (adminUsers || []).findIndex(function(u) {
@@ -8433,6 +8442,10 @@
     }
 
     async function flushAluminumIhabUserToCloudIfNeeded() {
+        if (typeof NEBRAS_PRODUCTION_LIVE_MODE !== 'undefined' && NEBRAS_PRODUCTION_LIVE_MODE) {
+            try { localStorage.removeItem('nebrasAluminumIhabSeedPending'); } catch (e) { /* ignore */ }
+            return false;
+        }
         ensureAluminumManagerIhab();
         let pending = false;
         try { pending = localStorage.getItem('nebrasAluminumIhabSeedPending') === '1'; } catch (e) { pending = false; }
@@ -14203,7 +14216,7 @@
             const badgeIcon = variant === 'partners' ? 'fa-handshake' : 'fa-door-open';
             const imgW = variant === 'partners' ? 168 : 440;
             const imgH = variant === 'partners' ? 168 : 760;
-            const deploy = (document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws332';
+            const deploy = (document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws333';
             const slides = urls.map(function(src, i) {
                 const delay = -(cycleSec - 3) + (i * 3);
                 const loading = i === 0 ? 'eager' : 'lazy';
@@ -29917,7 +29930,7 @@
             if (nebrasDoorEngineLoadPromise) return nebrasDoorEngineLoadPromise;
             const ver = (typeof window.NEBRAS_DEPLOY_TAG !== 'undefined' && window.NEBRAS_DEPLOY_TAG)
                 ? window.NEBRAS_DEPLOY_TAG
-                : ((document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws332');
+                : ((document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws333');
             nebrasDoorEngineLoadPromise = loadNebrasThreeJs().then(function() {
                 return Promise.all([
                     loadNebrasScriptOnce('js/nebras-door-3d.js?v=' + ver),

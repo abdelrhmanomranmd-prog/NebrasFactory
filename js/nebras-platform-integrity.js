@@ -55,7 +55,7 @@
         sales_price_list: 'nebrasSalesPriceList'
     };
     const PRODUCTION_RESET_TOKEN_KEY = 'nebrasProductionResetToken';
-    const PRODUCTION_RESET_TOKEN_VALUE = 'prod-live-5';
+    const PRODUCTION_RESET_TOKEN_VALUE = 'prod-live-6';
     const PRODUCTION_LOCAL_PURGE_KEYS = [
         'nebrasAdminUsers', 'nebrasSiteProducts', 'nebrasDashboardTiles',
         'nebrasVisitorIcons', 'nebrasBranches', 'nebrasSystemSettings',
@@ -68,7 +68,9 @@
         'nebrasLegalContracts', 'nebrasCrmCustomers', 'nebrasCrmOpportunities', 'nebrasCrmActivities',
         'nebrasErpInventory', 'nebrasErpOrders', 'nebrasErpProduction', 'nebrasErpProcurement',
         'nebrasErpPurchases', 'nebrasSalesData', 'nebrasSalesPriceList', 'nebrasCustomerPortalUsers',
-        'nebrasCustomerPortalAudit', 'nebrasComplaints', 'nebrasAuditLogs', 'nebrasCallbackLeads',
+        'nebrasCustomerPortalAudit', 'nebrasCustomerRegistrationRequests', 'nebrasCustomerPortalSession',
+        'nebrasCustomerOrderJourneys', 'nebrasAluminumIhabSeedPending',
+        'nebrasComplaints', 'nebrasAuditLogs', 'nebrasCallbackLeads',
         'nebrasSalesQuotesInbox', 'nebrasCustomerService', 'nebrasCloudSnapshots',
         'nebrasLocalCloudMutationAt', 'nebrasSensitiveCloudPending', 'nebrasOdooSyncCursor'
     ];
