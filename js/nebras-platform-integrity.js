@@ -22,10 +22,10 @@
     const LOCAL_MUTATION_KEY = 'nebrasLocalCloudMutationAt';
     const SENSITIVE_PENDING_KEY = 'nebrasSensitiveCloudPending';
     const GOV_REVISION_KEY = 'nebrasGovernanceRevision';
-    /** مهلة قصيرة — بعد نجاح الرفع تُمسح العلامة فوراً؛ 25ث كحد أقصى للحماية */
-    const MUTATION_GRACE_MS = 25000;
-    /** مفاتيح المحتوى العام — سحابة أولاً بمهلة أقصر */
-    const PUBLIC_MUTATION_GRACE_MS = 8000;
+    /** مهلة أطول — حتى لا يمسح السحب الدوري تعديلات الإدارة قبل اكتمال الرفع */
+    const MUTATION_GRACE_MS = 120000;
+    /** مفاتيح المحتوى العام — 60ث حماية من سحب قديم */
+    const PUBLIC_MUTATION_GRACE_MS = 60000;
     const PUBLIC_LIVE_PULL_KEYS = [
         'site_products', 'visitor_icons', 'dashboard_tiles', 'site_custom_sections',
         'about_pages', 'system_settings', 'branches', 'site_partners', 'site_certifications',
@@ -55,7 +55,7 @@
         sales_price_list: 'nebrasSalesPriceList'
     };
     const PRODUCTION_RESET_TOKEN_KEY = 'nebrasProductionResetToken';
-    const PRODUCTION_RESET_TOKEN_VALUE = 'prod-live-7';
+    const PRODUCTION_RESET_TOKEN_VALUE = 'prod-live-8';
     const PRODUCTION_LOCAL_PURGE_KEYS = [
         'nebrasAdminUsers', 'nebrasSiteProducts', 'nebrasDashboardTiles',
         'nebrasVisitorIcons', 'nebrasBranches', 'nebrasSystemSettings',

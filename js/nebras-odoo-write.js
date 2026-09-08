@@ -256,7 +256,7 @@
         return (keys || []).slice();
     }
 
-    async function nebrasOdooPersistKeys(storeKeys, options) {
+        async function nebrasOdooPersistKeys(storeKeys, options) {
         options = options || {};
         storeKeys = (storeKeys && storeKeys.length) ? storeKeys : ODOO_WRITE_KEYS.slice();
         storeKeys = filterKeysForAdmin(storeKeys);
@@ -266,6 +266,10 @@
                 global.queueNebrasCloudSaveAfterHydrate();
             }
             return false;
+        }
+        /* انتظر تحميل حزمة الحفظ إن لزم */
+        if (typeof global.ensureNebrasAdminCoreBundle === 'function') {
+            try { await global.ensureNebrasAdminCoreBundle(); } catch (e) { /* ignore */ }
         }
         if (typeof global.ensureNebrasCloudSessionReady === 'function') {
             let sess = await global.ensureNebrasCloudSessionReady({ promptReauth: options.promptReauth === true });
@@ -352,20 +356,23 @@
         }
 
         if (ok) odooQuietOrb('ok');
-        else if (localOk) {
-            /* محلي نجح — لا نرعب المستخدم بـ«فشل الحفظ» إن كانت السحابة تُستعاد */
+        else {
+            /* لا نعتبر الحفظ المحلي نجاحاً — هذا كان يخفي فشل السيرفر عن الإدارة */
             if (!odooQuietOrb('error')) {
                 if (typeof global.renderNebrasLiveCloudRibbon === 'function') {
-                    global.renderNebrasLiveCloudRibbon('warn', 'محلي — جاري مزامنة السحابة');
+                    global.renderNebrasLiveCloudRibbon('error', 'فشل الرفع للسيرفر');
                 }
                 if (typeof global.renderNebrasCloudStatusOrb === 'function') {
-                    global.renderNebrasCloudStatusOrb('warn', 'محفوظ محلياً — المزامنة قادمة');
+                    global.renderNebrasCloudStatusOrb('error', '✗ لم يُحفظ على السيرفر الحي');
                 }
             }
-        } else if (!odooQuietOrb('error')) {
-            if (typeof global.renderNebrasLiveCloudRibbon === 'function') global.renderNebrasLiveCloudRibbon('error');
-            if (typeof global.renderNebrasCloudStatusOrb === 'function') {
-                global.renderNebrasCloudStatusOrb('error', '✗ فشل الحفظ');
+            if (!options.silentCloudFail && typeof global.showNebrasAdminToast === 'function') {
+                global.showNebrasAdminToast(
+                    localOk
+                        ? '✗ الحفظ على السيرفر فشل — التعديل محلي فقط ولن يظهر للأجهزة الأخرى. أعيدي تسجيل الدخول ثم احفظي.'
+                        : '✗ فشل الحفظ بالكامل — تحققي من الاتصال وأعيدي المحاولة',
+                    'error'
+                );
             }
         }
         if (typeof global.updateCloudSafetyBanner === 'function') global.updateCloudSafetyBanner();
@@ -380,10 +387,7 @@
                 'ok'
             );
         }
-        if (!ok && !options.silentCloudFail && showToast && typeof global.showNebrasAdminToast === 'function') {
-            global.showNebrasAdminToast('✗ لم يُحفظ على السيرفر — تحققي من الاتصال وأعيدي المحاولة', 'error');
-        }
-        return ok && localOk;
+        return ok;
     }
 
     function nebrasOdooSaveSystemData(options) {

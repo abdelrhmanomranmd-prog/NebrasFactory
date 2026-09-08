@@ -67,7 +67,7 @@
         const NEBRAS_SERVER_FIRST_MODE = true;
         /** إنتاج حي — بدون بذور تجريبية؛ الإدارة تضيف كل البيانات */
         const NEBRAS_PRODUCTION_LIVE_MODE = true;
-        const NEBRAS_CLIENT_RESET_TOKEN = 'prod-live-7';
+        const NEBRAS_CLIENT_RESET_TOKEN = 'prod-live-8';
         window.NEBRAS_PRODUCTION_LIVE_MODE = NEBRAS_PRODUCTION_LIVE_MODE;
 
         function shouldSeedBusinessDemoData() {
@@ -14216,7 +14216,7 @@
             const badgeIcon = variant === 'partners' ? 'fa-handshake' : 'fa-door-open';
             const imgW = variant === 'partners' ? 168 : 440;
             const imgH = variant === 'partners' ? 168 : 760;
-            const deploy = (document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws334';
+            const deploy = (document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws335';
             const slides = urls.map(function(src, i) {
                 const delay = -(cycleSec - 3) + (i * 3);
                 const loading = i === 0 ? 'eager' : 'lazy';
@@ -19269,17 +19269,27 @@
                 if (typeof startAdminPresenceHeartbeat === 'function') startAdminPresenceHeartbeat(user);
 
                 if (typeof establishNebrasSecureSession === 'function') {
-                    establishNebrasSecureSession(username, password).then(function(sessOk) {
+                    /* جلسة السحابة أولاً — بدونها أي حفظ يبدو ناجحاً محلياً ويفشل على السيرفر */
+                    const bootCore = (typeof ensureNebrasAdminCoreBundle === 'function')
+                        ? ensureNebrasAdminCoreBundle().catch(function() { return false; })
+                        : Promise.resolve(true);
+                    Promise.all([
+                        bootCore,
+                        establishNebrasSecureSession(username, password)
+                    ]).then(function(results) {
+                        const sessOk = !!results[1];
                         if (sessOk && typeof startNebrasCloudAutoSync === 'function') startNebrasCloudAutoSync();
                         else if (!sessOk && typeof showNebrasAdminToast === 'function') {
-                            showNebrasAdminToast('تنبيه: جلسة السحابة غير متصلة — أعيدي المحاولة إن فشل الحفظ.', 'warn');
+                            showNebrasAdminToast('تنبيه: جلسة السحابة غير متصلة — لن يُحفظ أي تعديل على السيرفر حتى تتصل.', 'error');
                         }
-                        /* الجلسة أولاً ثم السحب — حتى الحفظ الحي ينجح بعد الدخول */
                         if (NEBRAS_SERVER_FIRST_MODE && supabaseClient && typeof scheduleHydrateGovernanceAfterLogin === 'function') {
                             scheduleHydrateGovernanceAfterLogin();
                         }
                     }).catch(function(sessErr) {
                         console.warn('secure session background:', sessErr);
+                        if (typeof showNebrasAdminToast === 'function') {
+                            showNebrasAdminToast('تنبيه: تعذّر اتصال جلسة السحابة — أعيدي تسجيل الدخول.', 'error');
+                        }
                         if (NEBRAS_SERVER_FIRST_MODE && supabaseClient && typeof scheduleHydrateGovernanceAfterLogin === 'function') {
                             scheduleHydrateGovernanceAfterLogin();
                         }
@@ -29930,7 +29940,7 @@
             if (nebrasDoorEngineLoadPromise) return nebrasDoorEngineLoadPromise;
             const ver = (typeof window.NEBRAS_DEPLOY_TAG !== 'undefined' && window.NEBRAS_DEPLOY_TAG)
                 ? window.NEBRAS_DEPLOY_TAG
-                : ((document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws334');
+                : ((document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws335');
             nebrasDoorEngineLoadPromise = loadNebrasThreeJs().then(function() {
                 return Promise.all([
                     loadNebrasScriptOnce('js/nebras-door-3d.js?v=' + ver),

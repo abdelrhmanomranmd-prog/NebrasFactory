@@ -19,7 +19,10 @@ async function handlePull(req, sess) {
     const q = String(req.query.keys || '').trim();
     const since = String(req.query.since || '').trim();
     let keys = q ? q.split(',').map(function(k) { return k.trim(); }).filter(Boolean) : sec.SENSITIVE_STORE_KEYS.slice();
-    keys = keys.filter(function(k) { return sec.isSensitiveKey(k); });
+    /* HQ يسحب الحساس + العام عبر API — سابقاً العام كان يُرفض فيسبب «حفظ بدون قراءة» */
+    keys = keys.filter(function(k) {
+        return sec.isSensitiveKey(k) || sec.isPublicKey(k);
+    });
     keys = sec.keysAllowedForSession(sess, keys);
     if (!keys.length) return { code: 403, data: { ok: false, error: 'forbidden_keys' } };
     const { url, key, invalidKey } = sec.supabaseServiceConfig();

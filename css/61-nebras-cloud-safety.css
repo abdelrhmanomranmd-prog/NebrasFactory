@@ -36,18 +36,26 @@
 body.nebras-cloud-hydrating #admin-dashboard {
     position: relative;
 }
+/* أثناء التحميل: قفل كامل للداشبورد — لا تعديلات قبل اكتمال السحابة والجلسة */
 body.nebras-cloud-hydrating #admin-dashboard::before {
     content: '';
     position: absolute;
     inset: 0;
-    z-index: 40;
+    z-index: 90;
     pointer-events: auto;
-    background: rgba(248, 251, 255, 0.02);
+    background: rgba(248, 251, 255, 0.55);
     cursor: wait;
 }
-body.nebras-cloud-hydrating #admin-dashboard .dashboard-command-shell {
+body.nebras-cloud-hydrating #admin-dashboard .dashboard-command-shell,
+body.nebras-cloud-hydrating #admin-dashboard .admin-modal,
+body.nebras-cloud-hydrating #admin-dashboard .nebras-users-body,
+body.nebras-cloud-hydrating #admin-dashboard button,
+body.nebras-cloud-hydrating #admin-dashboard a.admin-action {
+    pointer-events: none !important;
+}
+body.nebras-cloud-hydrating #nebras-cloud-safety-banner {
     position: relative;
-    z-index: 41;
+    z-index: 91;
     pointer-events: auto;
 }
 .nebras-cloud-safety-btn {
