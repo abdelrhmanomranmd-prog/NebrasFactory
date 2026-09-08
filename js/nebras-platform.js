@@ -4632,17 +4632,13 @@
         }
 
         function aluminumCatalogNeedsRepair(alu) {
-            if (!alu || !Array.isArray(alu.variants)) return true;
-            const allowed = {};
-            DEFAULT_ALUMINUM_VARIANTS.forEach(function(def) {
-                if (def && def.sku) allowed[String(def.sku).toUpperCase()] = true;
+            if (!alu || !Array.isArray(alu.variants) || !alu.variants.length) return true;
+            const clad = alu.variants.filter(function(v) {
+                return v && String(v.sku || '').toUpperCase().indexOf('ALU-CLAD-') === 0;
             });
-            if (alu.variants.length !== DEFAULT_ALUMINUM_VARIANTS.length) return true;
-            return alu.variants.some(function(v) {
-                if (!v) return true;
-                const sku = String(v.sku || '').trim().toUpperCase();
-                if (!allowed[sku]) return true;
-                return isMisplacedAluminumProductImage(v.image);
+            if (!clad.length) return true;
+            return clad.some(function(v) {
+                return isMisplacedAluminumProductImage(v && v.image);
             });
         }
 
@@ -4650,17 +4646,47 @@
             const alu = (siteProducts || []).find(function(p) { return p && p.id === 'prod-aluminum'; });
             if (!alu) return 0;
             ensureAluminumSubCategoryDefs(alu);
-            const needsRepair = force || shouldSeedAluminumCatalog() || aluminumCatalogNeedsRepair(alu);
-            if (!needsRepair) return 0;
-            alu.variants = DEFAULT_ALUMINUM_VARIANTS.map(function(def) {
-                return Object.assign({}, def);
-            });
+            if (!Array.isArray(alu.variants)) alu.variants = [];
             if (!systemSettings || typeof systemSettings !== 'object') {
                 systemSettings = Object.assign({}, DEFAULT_SYSTEM_SETTINGS);
             }
-            systemSettings.aluminumCatalogVersion = ALUMINUM_CATALOG_VERSION;
-            markCatalogSeedNeedsCloudSync();
-            return alu.variants.length;
+
+            /* Force فقط من أدوات المطوّر — وإلا دمج ناعم حتى لا تُمسح تعديلات الإدارة الحية */
+            if (force === true) {
+                alu.variants = DEFAULT_ALUMINUM_VARIANTS.map(function(def) {
+                    return Object.assign({}, def);
+                });
+                systemSettings.aluminumCatalogVersion = ALUMINUM_CATALOG_VERSION;
+                markCatalogSeedNeedsCloudSync();
+                return alu.variants.length;
+            }
+
+            let changed = 0;
+            const bySku = {};
+            alu.variants.forEach(function(v) {
+                if (v && v.sku) bySku[String(v.sku).toUpperCase()] = v;
+            });
+            DEFAULT_ALUMINUM_VARIANTS.forEach(function(def) {
+                if (!def || !def.sku) return;
+                const sku = String(def.sku).toUpperCase();
+                if (!bySku[sku]) {
+                    alu.variants.push(Object.assign({}, def));
+                    bySku[sku] = alu.variants[alu.variants.length - 1];
+                    changed += 1;
+                    return;
+                }
+                if (sku.indexOf('ALU-CLAD-') === 0 && isMisplacedAluminumProductImage(bySku[sku].image)) {
+                    bySku[sku].image = def.image;
+                    if (def.typeAr) bySku[sku].typeAr = def.typeAr;
+                    if (def.typeEn) bySku[sku].typeEn = def.typeEn;
+                    changed += 1;
+                }
+            });
+            if (getAluminumCatalogStoredVersion() < ALUMINUM_CATALOG_VERSION) {
+                systemSettings.aluminumCatalogVersion = ALUMINUM_CATALOG_VERSION;
+                if (changed > 0) markCatalogSeedNeedsCloudSync();
+            }
+            return changed;
         }
 
         function getAluminumStoreSkuImage(variant) {
@@ -14177,7 +14203,7 @@
             const badgeIcon = variant === 'partners' ? 'fa-handshake' : 'fa-door-open';
             const imgW = variant === 'partners' ? 168 : 440;
             const imgH = variant === 'partners' ? 168 : 760;
-            const deploy = (document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws330';
+            const deploy = (document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws331';
             const slides = urls.map(function(src, i) {
                 const delay = -(cycleSec - 3) + (i * 3);
                 const loading = i === 0 ? 'eager' : 'lazy';
@@ -19235,9 +19261,22 @@
                         else if (!sessOk && typeof showNebrasAdminToast === 'function') {
                             showNebrasAdminToast('تنبيه: جلسة السحابة غير متصلة — أعيدي المحاولة إن فشل الحفظ.', 'warn');
                         }
+                        /* الجلسة أولاً ثم السحب — حتى الحفظ الحي ينجح بعد الدخول */
+                        if (NEBRAS_SERVER_FIRST_MODE && supabaseClient && typeof scheduleHydrateGovernanceAfterLogin === 'function') {
+                            scheduleHydrateGovernanceAfterLogin();
+                        }
                     }).catch(function(sessErr) {
                         console.warn('secure session background:', sessErr);
+                        if (NEBRAS_SERVER_FIRST_MODE && supabaseClient && typeof scheduleHydrateGovernanceAfterLogin === 'function') {
+                            scheduleHydrateGovernanceAfterLogin();
+                        }
                     });
+                } else if (NEBRAS_SERVER_FIRST_MODE && supabaseClient) {
+                    if (typeof scheduleHydrateGovernanceAfterLogin === 'function') {
+                        scheduleHydrateGovernanceAfterLogin();
+                    }
+                } else if (typeof startNebrasCloudAutoSync === 'function') {
+                    startNebrasCloudAutoSync();
                 }
 
                 if (typeof bootNebrasAdminSession === 'function') {
@@ -19253,18 +19292,10 @@
                     }
                 }
 
-                if (NEBRAS_SERVER_FIRST_MODE && supabaseClient) {
-                    if (typeof scheduleHydrateGovernanceAfterLogin === 'function') {
-                        scheduleHydrateGovernanceAfterLogin();
-                    }
-                } else if (typeof startNebrasCloudAutoSync === 'function') {
-                    startNebrasCloudAutoSync();
-                }
-
                 setTimeout(function() {
                     if (typeof flushCatalogSeedCloudSyncIfPending === 'function') flushCatalogSeedCloudSyncIfPending();
                     if (typeof flushAluminumIhabUserToCloudIfNeeded === 'function') flushAluminumIhabUserToCloudIfNeeded();
-                }, 3500);
+                }, 4500);
 
                 try {
                     if (typeof isStrictHrUser === 'function' && isStrictHrUser(user)) {
@@ -29886,7 +29917,7 @@
             if (nebrasDoorEngineLoadPromise) return nebrasDoorEngineLoadPromise;
             const ver = (typeof window.NEBRAS_DEPLOY_TAG !== 'undefined' && window.NEBRAS_DEPLOY_TAG)
                 ? window.NEBRAS_DEPLOY_TAG
-                : ((document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws330');
+                : ((document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws331');
             nebrasDoorEngineLoadPromise = loadNebrasThreeJs().then(function() {
                 return Promise.all([
                     loadNebrasScriptOnce('js/nebras-door-3d.js?v=' + ver),
@@ -30048,6 +30079,10 @@
         let nebrasCloudHydrateInProgress = false;
         let nebrasHydrateAllowCloudPush = false;
         let nebrasQueuedCloudSaveAfterHydrate = false;
+
+        function queueNebrasCloudSaveAfterHydrate() {
+            nebrasQueuedCloudSaveAfterHydrate = true;
+        }
 
         function isNebrasCloudHydrating() {
             return !!nebrasCloudHydrateInProgress;
@@ -30737,7 +30772,14 @@
                 currentAdmin && !options.skipCloud && !options.skipOdooWrite) {
                 if (options.urgentCloud !== false) options.urgentCloud = true;
                 if (!options.skipMutationMark) {
+                    if (typeof markLocalCloudMutationBatch === 'function') {
+                        markLocalCloudMutationBatch(NEBRAS_SAVE_STORE_KEYS);
+                    }
                     if (typeof markGovernanceRevision === 'function') markGovernanceRevision();
+                    if (typeof markSensitiveCloudPending === 'function') markSensitiveCloudPending();
+                }
+                if (typeof isNebrasCloudHydrating === 'function' && isNebrasCloudHydrating()) {
+                    if (!options.skipMutationMark) queueNebrasCloudSaveAfterHydrate();
                 }
                 window.nebrasOdooSaveSystemData(options);
                 return;
@@ -32306,6 +32348,7 @@
         window.persistNebrasCriticalStores = persistNebrasCriticalStores;
         window.flushPushToNebrasCloud = flushPushToNebrasCloud;
         window.isNebrasCloudHydrating = isNebrasCloudHydrating;
+        window.queueNebrasCloudSaveAfterHydrate = queueNebrasCloudSaveAfterHydrate;
         window.waitForNebrasCloudHydrate = waitForNebrasCloudHydrate;
         window.persistLocalGovernanceKeys = persistLocalGovernanceKeys;
         window.persistAnalyticsGovernanceLocal = persistAnalyticsGovernanceLocal;

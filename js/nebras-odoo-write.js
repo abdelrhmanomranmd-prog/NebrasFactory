@@ -262,6 +262,9 @@
         storeKeys = filterKeysForAdmin(storeKeys);
         if (!storeKeys.length) return true;
         if (typeof global.isNebrasCloudHydrating === 'function' && global.isNebrasCloudHydrating()) {
+            if (typeof global.queueNebrasCloudSaveAfterHydrate === 'function') {
+                global.queueNebrasCloudSaveAfterHydrate();
+            }
             return false;
         }
         if (typeof global.ensureNebrasCloudSessionReady === 'function') {
@@ -313,7 +316,15 @@
         options = options || {};
         if (typeof global.isNebrasCloudHydrating === 'function' && global.isNebrasCloudHydrating()) {
             nebrasOdooFlushLocalCache();
-            return true;
+            if (typeof global.queueNebrasCloudSaveAfterHydrate === 'function') {
+                global.queueNebrasCloudSaveAfterHydrate();
+            } else if (typeof global.markSensitiveCloudPending === 'function') {
+                global.markSensitiveCloudPending();
+            }
+            if (typeof global.renderNebrasCloudStatusOrb === 'function' && !global.NEBRAS_ODOO_QUIET_UI) {
+                global.renderNebrasCloudStatusOrb('warn', 'محفوظ محلياً — يُرفع بعد اكتمال تحميل السحابة');
+            }
+            return false;
         }
         if (typeof global.purgeDeprecatedVisitorIcons === 'function') global.purgeDeprecatedVisitorIcons();
         const keys = filterKeysForAdmin(options.storeKeys || ODOO_WRITE_KEYS.slice());

@@ -229,7 +229,7 @@
 
     async function secureApiLogin(username, password, options) {
         options = options || {};
-        const timeoutMs = options.timeoutMs != null ? Number(options.timeoutMs) : 2200;
+            const timeoutMs = options.timeoutMs != null ? Number(options.timeoutMs) : 5000;
         const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
         let timer = null;
         try {
