@@ -67,7 +67,7 @@
         const NEBRAS_SERVER_FIRST_MODE = true;
         /** إنتاج حي — بدون بذور تجريبية؛ الإدارة تضيف كل البيانات */
         const NEBRAS_PRODUCTION_LIVE_MODE = true;
-        const NEBRAS_CLIENT_RESET_TOKEN = 'prod-live-8';
+        const NEBRAS_CLIENT_RESET_TOKEN = 'prod-live-9';
         window.NEBRAS_PRODUCTION_LIVE_MODE = NEBRAS_PRODUCTION_LIVE_MODE;
 
         function shouldSeedBusinessDemoData() {
@@ -14216,7 +14216,7 @@
             const badgeIcon = variant === 'partners' ? 'fa-handshake' : 'fa-door-open';
             const imgW = variant === 'partners' ? 168 : 440;
             const imgH = variant === 'partners' ? 168 : 760;
-            const deploy = (document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws335';
+            const deploy = (document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws336';
             const slides = urls.map(function(src, i) {
                 const delay = -(cycleSec - 3) + (i * 3);
                 const loading = i === 0 ? 'eager' : 'lazy';
@@ -15848,8 +15848,10 @@
 
         const NEBRAS_LIVE_CLOUD_PRIORITY_KEYS = [
             'site_products', 'visitor_icons', 'showroom_gallery', 'site_partners', 'branches',
-            'site_certifications', 'about_pages', 'system_settings', 'dashboard_tiles', 'site_custom_sections'
+            'site_certifications', 'about_pages', 'system_settings', 'dashboard_tiles', 'site_custom_sections',
+            'admin_users', 'hr_employees', 'crm_customers', 'customer_portal_users'
         ];
+        window.NEBRAS_LIVE_CLOUD_PRIORITY_KEYS = NEBRAS_LIVE_CLOUD_PRIORITY_KEYS;
 
         function renderNebrasCloudStatusOrb(state, detail) {
             const wrap = document.getElementById('nebras-cloud-status-orb-wrap');
@@ -29940,7 +29942,7 @@
             if (nebrasDoorEngineLoadPromise) return nebrasDoorEngineLoadPromise;
             const ver = (typeof window.NEBRAS_DEPLOY_TAG !== 'undefined' && window.NEBRAS_DEPLOY_TAG)
                 ? window.NEBRAS_DEPLOY_TAG
-                : ((document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws335');
+                : ((document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws336');
             nebrasDoorEngineLoadPromise = loadNebrasThreeJs().then(function() {
                 return Promise.all([
                     loadNebrasScriptOnce('js/nebras-door-3d.js?v=' + ver),
@@ -30790,13 +30792,19 @@
 
         function saveSystemData(options) {
             options = options || {};
+            const saveKeys = (options.storeKeys && options.storeKeys.length)
+                ? options.storeKeys.slice()
+                : null;
             if (typeof window !== 'undefined' && window.NEBRAS_ODOO_WRITE_MODE &&
                 typeof window.nebrasOdooSaveSystemData === 'function' &&
                 currentAdmin && !options.skipCloud && !options.skipOdooWrite) {
                 if (options.urgentCloud !== false) options.urgentCloud = true;
                 if (!options.skipMutationMark) {
                     if (typeof markLocalCloudMutationBatch === 'function') {
-                        markLocalCloudMutationBatch(NEBRAS_SAVE_STORE_KEYS);
+                        /* علّم المفاتيح المتأثرة فقط — لا الـ 86 كلها */
+                        markLocalCloudMutationBatch(saveKeys || (options.urgentCloud
+                            ? (typeof NEBRAS_LIVE_CLOUD_PRIORITY_KEYS !== 'undefined' ? NEBRAS_LIVE_CLOUD_PRIORITY_KEYS : ['system_settings'])
+                            : ['system_settings']));
                     }
                     if (typeof markGovernanceRevision === 'function') markGovernanceRevision();
                     if (typeof markSensitiveCloudPending === 'function') markSensitiveCloudPending();
@@ -30812,7 +30820,7 @@
             }
             if (!options.skipMutationMark) {
                 if (typeof markLocalCloudMutationBatch === 'function') {
-                    markLocalCloudMutationBatch(NEBRAS_SAVE_STORE_KEYS);
+                    markLocalCloudMutationBatch(saveKeys || NEBRAS_LIVE_CLOUD_PRIORITY_KEYS || ['system_settings']);
                 }
                 if (typeof markGovernanceRevision === 'function') markGovernanceRevision();
                 if (typeof markSensitiveCloudPending === 'function') markSensitiveCloudPending();

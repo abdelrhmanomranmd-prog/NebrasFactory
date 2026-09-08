@@ -1,5 +1,5 @@
 ﻿/**
- * نبراس hrws335 — صحة السيرفر الحية (بدون بيانات حساسة)
+ * نبراس hrws336 — صحة السيرفر الحية (بدون بيانات حساسة)
  * GET /api/health → { ok, deploy hint, supabase, time }
  * GET /api/health?ping=1 → فحص خفيف بدون Supabase
  */
@@ -30,7 +30,7 @@ module.exports = async function handler(req, res) {
                 service: 'nebras-platform',
                 ping: true,
                 time: new Date().toISOString(),
-                upgrade: 'hrws335'
+                upgrade: 'hrws336'
             });
         }
 
@@ -68,7 +68,7 @@ module.exports = async function handler(req, res) {
                 sessionTtlMs: sec.SESSION_TTL_MS,
                 sensitiveKeyCount: Array.isArray(sec.SENSITIVE_STORE_KEYS) ? sec.SENSITIVE_STORE_KEYS.length : 0
             },
-            upgrade: 'hrws335'
+            upgrade: 'hrws336'
         };
         healthCache = payload;
         healthCacheAt = now;

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * نبراس — تكامل المنصة · حماية السحابة · لوحة الارتباط
  * يضمن: عدم مسح البيانات · نسخ احتياطي · خصوصية الأقسام · مراقبة الترابط
  */
@@ -55,7 +55,7 @@
         sales_price_list: 'nebrasSalesPriceList'
     };
     const PRODUCTION_RESET_TOKEN_KEY = 'nebrasProductionResetToken';
-    const PRODUCTION_RESET_TOKEN_VALUE = 'prod-live-8';
+    const PRODUCTION_RESET_TOKEN_VALUE = 'prod-live-9';
     const PRODUCTION_LOCAL_PURGE_KEYS = [
         'nebrasAdminUsers', 'nebrasSiteProducts', 'nebrasDashboardTiles',
         'nebrasVisitorIcons', 'nebrasBranches', 'nebrasSystemSettings',
@@ -231,6 +231,16 @@
         const now = Date.now();
         return Object.keys(localCloudMutations).some(function(k) {
             return (now - Number(localCloudMutations[k] || 0)) < MUTATION_GRACE_MS;
+        });
+    }
+
+    /** مفاتيح تغيّرت مؤخراً — للحفظ الحي بدون رفع المنصة كلها */
+    function getPendingDirtyStoreKeys(maxAgeMs) {
+        loadIntegrityData();
+        const now = Date.now();
+        const age = typeof maxAgeMs === 'number' ? maxAgeMs : MUTATION_GRACE_MS;
+        return Object.keys(localCloudMutations).filter(function(k) {
+            return k && (now - Number(localCloudMutations[k] || 0)) < age;
         });
     }
 
@@ -533,6 +543,7 @@
     global.markLocalCloudMutationBatch = markLocalCloudMutationBatch;
     global.clearLocalCloudMutations = clearLocalCloudMutations;
     global.hasPendingLocalCloudMutations = hasPendingLocalCloudMutations;
+    global.getPendingDirtyStoreKeys = getPendingDirtyStoreKeys;
     global.hasLocalCloudMutation = hasLocalCloudMutation;
     global.hasSensitiveCloudPending = hasSensitiveCloudPending;
     global.markSensitiveCloudPending = markSensitiveCloudPending;

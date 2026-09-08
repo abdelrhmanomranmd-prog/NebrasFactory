@@ -417,7 +417,7 @@
         if (!sessionOk) return { ok: false, error: 'no_session' };
         const token = getSecureToken();
         if (!token) return { ok: false, error: 'no_token' };
-        const chunkSize = 2;
+        const chunkSize = 16;
         const saved = [];
         try {
             for (let i = 0; i < rows.length; i += chunkSize) {

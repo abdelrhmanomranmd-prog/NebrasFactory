@@ -1,11 +1,11 @@
 ﻿/**
- * نبراس hrws335 — CSS الإدارة كسول (Accmaa-style)
+ * نبراس hrws336 — CSS الإدارة كسول (Accmaa-style)
  * الزائر: CSS storefront فقط · الإدارة: تحميل عند فتح لوحة الدخول أو الجلسة
  */
 (function(global) {
     'use strict';
 
-    var VER = 'hrws335';
+    var VER = 'hrws336';
     var loaded = false;
     var inflight = null;
 

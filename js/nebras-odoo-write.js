@@ -316,6 +316,29 @@
         return false;
     }
 
+    function resolveOdooSaveKeys(options) {
+        options = options || {};
+        if (options.storeKeys && options.storeKeys.length) {
+            return filterKeysForAdmin(options.storeKeys);
+        }
+        /* dirty-key فقط — مثل الأنظمة القوية: ارفع ما تغيّر */
+        if (typeof global.getPendingDirtyStoreKeys === 'function') {
+            const dirty = global.getPendingDirtyStoreKeys();
+            if (dirty && dirty.length) {
+                const allow = {};
+                ODOO_WRITE_KEYS.forEach(function(k) { allow[k] = true; });
+                const scoped = dirty.filter(function(k) { return allow[k]; });
+                if (scoped.length) return filterKeysForAdmin(scoped);
+            }
+        }
+        /* احتياط: مفاتيح المحتوى ذات الأولوية — لا ترفع ~77 مفتاحاً */
+        const priority = (typeof global.NEBRAS_LIVE_CLOUD_PRIORITY_KEYS !== 'undefined' &&
+            global.NEBRAS_LIVE_CLOUD_PRIORITY_KEYS && global.NEBRAS_LIVE_CLOUD_PRIORITY_KEYS.length)
+            ? global.NEBRAS_LIVE_CLOUD_PRIORITY_KEYS.slice()
+            : ['system_settings', 'site_products', 'branches', 'admin_users'];
+        return filterKeysForAdmin(priority);
+    }
+
     async function nebrasOdooSaveSystemDataCore(options) {
         options = options || {};
         if (typeof global.isNebrasCloudHydrating === 'function' && global.isNebrasCloudHydrating()) {
@@ -331,11 +354,15 @@
             return false;
         }
         if (typeof global.purgeDeprecatedVisitorIcons === 'function') global.purgeDeprecatedVisitorIcons();
-        const keys = filterKeysForAdmin(options.storeKeys || ODOO_WRITE_KEYS.slice());
+        const keys = resolveOdooSaveKeys(options);
+        if (!keys.length) {
+            nebrasOdooFlushLocalCache();
+            return true;
+        }
         if (!odooQuietOrb('saving')) {
             if (typeof global.renderNebrasLiveCloudRibbon === 'function') global.renderNebrasLiveCloudRibbon('saving');
             if (typeof global.renderNebrasCloudStatusOrb === 'function') {
-                global.renderNebrasCloudStatusOrb('saving', 'جاري الحفظ على السيرفر…');
+                global.renderNebrasCloudStatusOrb('saving', 'جاري الحفظ على السيرفر… (' + keys.length + ')');
             }
         }
 
