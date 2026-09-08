@@ -278,16 +278,17 @@
     function canAccessWpcCutting() {
         var admin = typeof currentAdmin !== 'undefined' ? currentAdmin : null;
         if (typeof isMainGovernanceAdmin === 'function' && isMainGovernanceAdmin(admin)) return true;
-        /* دفتر WPC منفصل — مدير الألومنيوم لا يفتحه حتى لو معه production */
+        /* دفتر WPC منفصل — مدير الألومنيوم لا يفتحه */
         if (admin && admin.role === 'aluminum_manager') return false;
         if (typeof isAluminumDepartmentAdmin === 'function' && isAluminumDepartmentAdmin(admin)) return false;
+        if (typeof canManage === 'function' && canManage('wpcCutting', admin)) return true;
         if (admin && (admin.role === 'wpc_manager' || admin.role === 'production_manager')) return true;
         if (typeof canManage === 'function' && canManage('production', admin)) return true;
         return false;
     }
     function requireWpcAccess(msg) {
         if (!canAccessWpcCutting()) {
-            alert(msg || 'تخصيمات WPC — لمدير الإنتاج أو الإدارة الرئيسية.');
+            alert(msg || 'تخصيمات أبواب WPC — تحتاج صلاحية «تخصيمات أبواب WPC» من الإدارة الرئيسية.');
             return false;
         }
         return true;

@@ -498,6 +498,16 @@ function keysAllowedByCustomPermissions(permissions, keys) {
                 if (k === 'erp_production' || k.indexOf('wpc_') === 0) allowed[k] = true;
             });
         }
+        if (perm === 'wpcCutting') {
+            keys.forEach(function(k) {
+                if (k.indexOf('wpc_') === 0) allowed[k] = true;
+            });
+        }
+        if (perm === 'aluminumCutting') {
+            keys.forEach(function(k) {
+                if (k.indexOf('aluminum_') === 0) allowed[k] = true;
+            });
+        }
         if (perm === 'hr') {
             keys.forEach(function(k) {
                 if (k.indexOf('hr_') === 0) allowed[k] = true;

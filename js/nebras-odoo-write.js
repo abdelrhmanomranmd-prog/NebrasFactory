@@ -262,10 +262,16 @@
         storeKeys = filterKeysForAdmin(storeKeys);
         if (!storeKeys.length) return true;
         if (typeof global.isNebrasCloudHydrating === 'function' && global.isNebrasCloudHydrating()) {
-            if (typeof global.queueNebrasCloudSaveAfterHydrate === 'function') {
+            /* حفظ مباشر: انتظر اكتمال التحميل ثم ارفع — لا تؤجّل صامتاً */
+            if (typeof global.waitForNebrasCloudHydrate === 'function') {
+                if (typeof global.renderNebrasCloudStatusOrb === 'function' && !global.NEBRAS_ODOO_QUIET_UI) {
+                    global.renderNebrasCloudStatusOrb('saving', 'انتظار السحابة ثم الحفظ المباشر…');
+                }
+                await global.waitForNebrasCloudHydrate();
+            } else if (typeof global.queueNebrasCloudSaveAfterHydrate === 'function') {
                 global.queueNebrasCloudSaveAfterHydrate();
+                return false;
             }
-            return false;
         }
         /* انتظر تحميل حزمة الحفظ إن لزم */
         if (typeof global.ensureNebrasAdminCoreBundle === 'function') {
@@ -285,7 +291,8 @@
         if (typeof global.persistNebrasCriticalStores !== 'function') return false;
         return global.persistNebrasCriticalStores(storeKeys, {
             showToast: options.showToast === true,
-            promptReauth: false
+            promptReauth: false,
+            waitHydrate: true
         });
     }
 
@@ -343,15 +350,15 @@
         options = options || {};
         if (typeof global.isNebrasCloudHydrating === 'function' && global.isNebrasCloudHydrating()) {
             nebrasOdooFlushLocalCache();
-            if (typeof global.queueNebrasCloudSaveAfterHydrate === 'function') {
-                global.queueNebrasCloudSaveAfterHydrate();
-            } else if (typeof global.markSensitiveCloudPending === 'function') {
-                global.markSensitiveCloudPending();
-            }
             if (typeof global.renderNebrasCloudStatusOrb === 'function' && !global.NEBRAS_ODOO_QUIET_UI) {
-                global.renderNebrasCloudStatusOrb('warn', 'محفوظ محلياً — يُرفع بعد اكتمال تحميل السحابة');
+                global.renderNebrasCloudStatusOrb('saving', 'انتظار اكتمال التحميل ثم الحفظ على السيرفر…');
             }
-            return false;
+            if (typeof global.waitForNebrasCloudHydrate === 'function') {
+                await global.waitForNebrasCloudHydrate();
+            } else if (typeof global.queueNebrasCloudSaveAfterHydrate === 'function') {
+                global.queueNebrasCloudSaveAfterHydrate();
+                return false;
+            }
         }
         if (typeof global.purgeDeprecatedVisitorIcons === 'function') global.purgeDeprecatedVisitorIcons();
         const keys = resolveOdooSaveKeys(options);
@@ -362,7 +369,7 @@
         if (!odooQuietOrb('saving')) {
             if (typeof global.renderNebrasLiveCloudRibbon === 'function') global.renderNebrasLiveCloudRibbon('saving');
             if (typeof global.renderNebrasCloudStatusOrb === 'function') {
-                global.renderNebrasCloudStatusOrb('saving', 'جاري الحفظ على السيرفر… (' + keys.length + ')');
+                global.renderNebrasCloudStatusOrb('saving', 'جاري الحفظ على السيرفر الحي… (' + keys.length + ')');
             }
         }
 
@@ -396,7 +403,7 @@
             if (!options.silentCloudFail && typeof global.showNebrasAdminToast === 'function') {
                 global.showNebrasAdminToast(
                     localOk
-                        ? '✗ الحفظ على السيرفر فشل — التعديل محلي فقط ولن يظهر للأجهزة الأخرى. أعيدي تسجيل الدخول ثم احفظي.'
+                        ? '✗ الحفظ على السيرفر فشل — التعديل لن يظهر للأجهزة الأخرى. أعيدي المحاولة.'
                         : '✗ فشل الحفظ بالكامل — تحققي من الاتصال وأعيدي المحاولة',
                     'error'
                 );

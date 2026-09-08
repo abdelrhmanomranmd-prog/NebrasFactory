@@ -185,6 +185,7 @@
 
     function canAccessAluminumCutting() {
         if (typeof isMainGovernanceAdmin === 'function' && isMainGovernanceAdmin()) return true;
+        if (typeof canManage === 'function' && canManage('aluminumCutting')) return true;
         if (typeof canManage === 'function' && canManage('aluminum')) return true;
         const admin = typeof currentAdmin !== 'undefined' ? currentAdmin : null;
         return !!(admin && admin.role === 'aluminum_manager');
@@ -197,7 +198,7 @@
     }
     function requireAluAccess(msg) {
         if (!canAccessAluminumCutting()) {
-            alert(msg || 'تخصيمات الألومنيوم — لمدير قسم الألومنيوم أو الإدارة الرئيسية.');
+            alert(msg || 'تخصيمات الألومنيوم — تحتاج صلاحية «تخصيمات الألومنيوم» من الإدارة الرئيسية.');
             return false;
         }
         return true;
