@@ -5280,6 +5280,7 @@
             { id: 'dash-legal-platform', zone: 'quick', dashGroup: 'command', sortOrder: 1.06, iconClass: 'fas fa-scale-balanced', titleAr: 'Legal — الشؤون القانونية', titleEn: 'Nebras Legal', textAr: 'عقود · قضايا · امتثال · PDPL · اتفاقيات شراكة — نبراس والشركات الشريكة.', textEn: 'Contracts, cases, compliance, PDPL — group & partners.', handler: 'openLegalPlatform', permission: 'legal', visible: true },
             { id: 'dash-accounting-platform', zone: 'quick', dashGroup: 'command', sortOrder: 1.065, iconClass: 'fas fa-calculator', titleAr: 'Accounting — قسم الحسابات', titleEn: 'Nebras Accounting', textAr: 'تحويلات · مبيعات · مشتريات · ربحية · تقارير PDF — المقر والفروع.', textEn: 'Transfers, sales, purchases, PDF reports.', handler: 'openAccountingPlatform', permission: 'accounting', visible: true },
             { id: 'dash-platform-integration', zone: 'quick', dashGroup: 'command', sortOrder: 0.9, iconClass: 'fas fa-network-wired', titleAr: 'تكامل المنصة', titleEn: 'Platform Integration', textAr: 'ترابط الأقسام · الفروع · السحابة · حماية البيانات.', textEn: 'Departments, branches, cloud safety.', handler: 'openPlatformIntegrationHub', permission: 'audit', visible: true },
+            { id: 'dash-cloud-health', zone: 'quick', dashGroup: 'command', sortOrder: 0.91, iconClass: 'fas fa-cloud', titleAr: 'صحة السحابة', titleEn: 'Cloud Health', textAr: 'تشخيص حي · جلسة · مفاتيح معلّقة · تأكيد الحفظ على السيرفر.', textEn: 'Live cloud diagnostics and confirmed saves.', handler: 'openCloudGovernance', permission: 'users', superadminOnly: true, visible: true },
             { id: 'dash-admin-ai', zone: 'quick', dashGroup: 'command', sortOrder: 0.95, iconClass: 'fas fa-robot', titleAr: 'مساعد Claude السحابي', titleEn: 'Claude AI Cloud', textAr: 'ذكاء اصطناعي متقدم للإدارة الرئيسية — متجر · مستخدمون · سحابة · حوكمة.', textEn: 'HQ cloud AI assistant.', handler: 'openNebrasAdminAi', permission: 'users', superadminOnly: true, visible: true },
             { id: 'dash-data-warehouse', zone: 'quick', dashGroup: 'command', sortOrder: 0.96, iconClass: 'fas fa-database', titleAr: 'مستودع البيانات', titleEn: 'Data Warehouse', textAr: 'استخراج Excel · PDF — كل التخزين الديناميكي.', textEn: 'Export all dynamic storage.', handler: 'openNebrasDataWarehouse', permission: 'audit', visible: true },
             { id: 'dash-empire-bridges', zone: 'quick', dashGroup: 'command', sortOrder: 0.97, iconClass: 'fas fa-link', titleAr: 'جسور الإمبراطورية', titleEn: 'Empire Bridges', textAr: 'Odoo-like — متجر · HR · CRM · مسار نبراس · محاسبة.', textEn: 'Department bridges.', handler: 'openNebrasEmpireBridges', permission: 'erp', visible: true },
@@ -26923,31 +26924,142 @@
             return { count: count, label: label };
         }
 
+        function getNebrasCloudStoreLocalMeta(storeKey) {
+            try {
+                const spec = (typeof NEBRAS_CLOUD_STORE_SPECS !== 'undefined' ? NEBRAS_CLOUD_STORE_SPECS : [])
+                    .find(function(s) { return s.key === storeKey; });
+                if (!spec || typeof getCloudStorePayloadMeta !== 'function') return null;
+                return getCloudStorePayloadMeta(spec);
+            } catch (e) { return null; }
+        }
+        window.getNebrasCloudStoreLocalMeta = getNebrasCloudStoreLocalMeta;
+
         function renderCloudGovernancePanel() {
             const summary = document.getElementById('cloud-governance-summary');
             const list = document.getElementById('cloud-governance-stores');
+            const board = document.getElementById('cloud-health-board');
             if (!summary || !list) return;
             const connected = !!supabaseClient;
-            const erpKeys = ['erp_inventory', 'erp_orders', 'erp_production', 'erp_purchases', 'erp_transfers', 'erp_stock_transfers', 'sales_price_list', 'sales_data', 'customer_service', 'hr_employees', 'hr_vehicles', 'hr_leave', 'hr_vehicle_tracking', 'hr_attendance', 'hr_documents', 'hr_payroll', 'hr_travel', 'hr_deductions', 'hr_notifications', 'hr_notif_settings', 'hr_email_queue', 'hr_shift_roster'];
+            const snap = (typeof NebrasCloudDiag !== 'undefined' && NebrasCloudDiag.getSnapshot)
+                ? NebrasCloudDiag.getSnapshot()
+                : null;
+            const health = snap && snap.health;
+            const hydrating = !!(typeof isNebrasCloudHydrating === 'function' && isNebrasCloudHydrating());
+            const hasToken = !!(typeof getNebrasSecureToken === 'function' && getNebrasSecureToken());
+            const dirtyN = snap ? snap.dirtyCount : 0;
+            const deploy = (document.body && document.body.getAttribute('data-nebras-deploy')) || '—';
+            const healthOk = !!(health && health.ok);
+            const scoreHint = healthOk && hasToken && !hydrating && dirtyN === 0 ? '100%' :
+                (healthOk && hasToken ? 'جاهز جزئياً' : 'يحتاج فحص');
+
             summary.innerHTML =
-                '<div class="erp-stat' + (connected ? ' erp-stat--ok' : ' erp-stat--danger') + '"><strong>' + (connected ? 'متصل' : 'محلي') + '</strong><span>Supabase</span></div>' +
-                '<div class="erp-stat"><strong>' + NEBRAS_CLOUD_STORE_SPECS.length + '</strong><span>مخازن بيانات</span></div>' +
+                '<div class="erp-stat' + (healthOk ? ' erp-stat--ok' : ' erp-stat--danger') + '"><strong>' + (healthOk ? 'OK' : 'DOWN') + '</strong><span>API / Supabase</span></div>' +
+                '<div class="erp-stat' + (hasToken ? ' erp-stat--ok' : ' erp-stat--warn') + '"><strong>' + (hasToken ? 'آمنة' : 'لا') + '</strong><span>جلسة سحابة</span></div>' +
+                '<div class="erp-stat' + (hydrating ? ' erp-stat--warn' : ' erp-stat--ok') + '"><strong>' + (hydrating ? 'تحميل…' : 'مكتمل') + '</strong><span>Hydrate</span></div>' +
+                '<div class="erp-stat' + (dirtyN ? ' erp-stat--warn' : ' erp-stat--ok') + '"><strong>' + dirtyN + '</strong><span>مفاتيح معلّقة</span></div>' +
+                '<div class="erp-stat"><strong>' + escapeHtmlAttr(deploy) + '</strong><span>Deploy</span></div>' +
+                '<div class="erp-stat"><strong>' + escapeHtmlAttr(scoreHint) + '</strong><span>جاهزية</span></div>' +
                 '<div class="erp-stat"><strong>' + (nebrasLastCloudSaveAt ? formatNebrasDateTime(nebrasLastCloudSaveAt, 'ar') : '—') + '</strong><span>آخر رفع</span></div>' +
-                '<div class="erp-stat"><strong>' + (nebrasLastCloudLoadAt ? formatNebrasDateTime(nebrasLastCloudLoadAt, 'ar') : '—') + '</strong><span>آخر تحميل</span></div>';
-            list.innerHTML = NEBRAS_CLOUD_STORE_SPECS.map(function(spec) {
+                '<div class="erp-stat"><strong>' + (connected ? 'عميل متصل' : 'محلي') + '</strong><span>Supabase client</span></div>';
+
+            if (board) {
+                const critical = (snap && snap.critical) || [];
+                const events = (snap && snap.events) || [];
+                const issues = [];
+                if (!healthOk) issues.push('السيرفر أو Supabase غير جاهز — راجعي Vercel / المفاتيح');
+                if (!hasToken) issues.push('لا جلسة سحابة — سجّلي دخول الإدارة من جديد');
+                if (hydrating) issues.push('جاري تحميل السحابة — لا تعتمدي حفظاً قبل اكتماله');
+                if (dirtyN) issues.push(dirtyN + ' مفتاح معلّق — اضغطي «رفع المعلّق الآن»');
+                if (snap && snap.pendingSensitive) issues.push('رفع حسّاس معلّق');
+
+                board.innerHTML =
+                    '<section class="cloud-health-card">' +
+                    '<h3><i class="fas fa-heartbeat"></i> حالة لحظية</h3>' +
+                    '<ul class="cloud-health-issues">' +
+                    (issues.length
+                        ? issues.map(function(x) { return '<li class="is-warn">' + escapeHtmlAttr(x) + '</li>'; }).join('')
+                        : '<li class="is-ok">✓ لا توجد مشاكل ظاهرة — السحابة جاهزة للعمل</li>') +
+                    '</ul>' +
+                    (health ? ('<p class="cloud-health-meta">upgrade: <strong>' + escapeHtmlAttr(String(health.upgrade || '—')) +
+                        '</strong> · sensitive keys: <strong>' + escapeHtmlAttr(String((health.capacity && health.capacity.sensitiveKeyCount) || '—')) +
+                        '</strong> · reachable: <strong>' + (health.supabase && health.supabase.reachable ? 'نعم' : 'لا') + '</strong></p>') : '') +
+                    '</section>' +
+                    '<section class="cloud-health-card">' +
+                    '<h3><i class="fas fa-key"></i> مفاتيح حرجة</h3>' +
+                    '<div class="cloud-critical-grid">' +
+                    critical.map(function(row) {
+                        const st = row.status;
+                        const local = row.local;
+                        const cls = !st ? 'is-idle' : (st.ok ? 'is-ok' : 'is-bad');
+                        const label = !st ? 'بدون حدث' : (st.ok ? 'OK' : 'فشل');
+                        return '<article class="cloud-critical-chip ' + cls + '">' +
+                            '<strong>' + escapeHtmlAttr(row.key) + '</strong>' +
+                            '<span>' + escapeHtmlAttr(label) + (local && local.label ? (' · ' + escapeHtmlAttr(local.label)) : '') + '</span>' +
+                            '</article>';
+                    }).join('') +
+                    '</div></section>' +
+                    '<section class="cloud-health-card">' +
+                    '<h3><i class="fas fa-list"></i> آخر أحداث السحابة</h3>' +
+                    '<div class="cloud-event-log">' +
+                    (events.length ? events.slice(0, 18).map(function(ev) {
+                        return '<div class="cloud-event cloud-event--' + escapeHtmlAttr(ev.type) + '">' +
+                            '<time>' + escapeHtmlAttr(String(ev.at || '').replace('T', ' ').slice(0, 19)) + '</time>' +
+                            '<span>' + escapeHtmlAttr(ev.detail || '') + '</span></div>';
+                    }).join('') : '<p class="cloud-health-meta">لا أحداث بعد — اضغطي «تشخيص كامل الآن».</p>') +
+                    '</div></section>';
+            }
+
+            const erpKeys = ['erp_inventory', 'erp_orders', 'erp_production', 'erp_purchases', 'erp_transfers', 'erp_stock_transfers', 'sales_price_list', 'sales_data', 'customer_service', 'hr_employees', 'hr_vehicles', 'hr_leave', 'hr_vehicle_tracking', 'hr_attendance', 'hr_documents', 'hr_payroll', 'hr_travel', 'hr_deductions', 'hr_notifications', 'hr_notif_settings', 'hr_email_queue', 'hr_shift_roster'];
+            list.innerHTML = '<h3 class="cloud-stores-title">كل مخازن المنصة</h3>' + NEBRAS_CLOUD_STORE_SPECS.map(function(spec) {
                 const meta = getCloudStorePayloadMeta(spec);
                 const isErp = erpKeys.indexOf(spec.key) >= 0;
+                const ks = (typeof NebrasCloudDiag !== 'undefined' && NebrasCloudDiag.getKeyStatus)
+                    ? NebrasCloudDiag.getKeyStatus(spec.key) : null;
+                const kBadge = ks
+                    ? ('<span class="cloud-store-badge ' + (ks.ok ? 'cloud-store-badge--ok' : 'cloud-store-badge--bad') + '">' + (ks.ok ? 'آخر حدث OK' : 'آخر حدث فشل') + '</span>')
+                    : '';
                 return '<article class="erp-row cloud-store-row">' +
                     '<div class="erp-row-main"><strong>' + escapeHtmlAttr(spec.key) + '</strong>' +
-                        '<span class="erp-row-tags"><span class="cloud-store-badge' + (isErp ? ' cloud-store-badge--erp' : '') + '">' + escapeHtmlAttr(meta.label) + '</span></span>' +
+                        '<span class="erp-row-tags"><span class="cloud-store-badge' + (isErp ? ' cloud-store-badge--erp' : '') + '">' + escapeHtmlAttr(meta.label) + '</span>' + kBadge + '</span>' +
                     '</div></article>';
             }).join('');
+        }
+
+        async function nebrasCloudDiagRunAndRender() {
+            if (!requireMainGovernanceAdmin()) return;
+            if (typeof NebrasCloudDiag === 'undefined' || !NebrasCloudDiag.runFullDiagnose) {
+                alert('وحدة التشخيص لم تُحمَّل بعد — أعيدي فتح اللوحة بعد ثانية.');
+                return;
+            }
+            if (typeof showNebrasAdminToast === 'function') showNebrasAdminToast('جاري تشخيص السحابة…', 'ok');
+            const result = await NebrasCloudDiag.runFullDiagnose();
+            renderCloudGovernancePanel();
+            if (typeof showNebrasAdminToast === 'function') {
+                showNebrasAdminToast(
+                    (result.score >= 90 ? '✓ ' : '⚠️ ') + 'جاهزية السحابة ' + result.score + '% — ' + result.verdict,
+                    result.score >= 70 ? 'ok' : 'error'
+                );
+            }
+        }
+
+        async function nebrasCloudDiagFlushAndRender() {
+            if (!requireMainGovernanceAdmin()) return;
+            if (typeof NebrasCloudDiag !== 'undefined' && NebrasCloudDiag.flushPendingNow) {
+                await NebrasCloudDiag.flushPendingNow();
+            } else if (typeof syncPushToNebrasCloudNow === 'function') {
+                await syncPushToNebrasCloudNow();
+                return;
+            }
+            renderCloudGovernancePanel();
         }
 
         function openCloudGovernance() {
             if (!requireMainGovernanceAdmin('الحوكمة السحابية متاحة للإدارة الرئيسية فقط.')) return;
             renderCloudGovernancePanel();
             revealPlatformLayer('cloud-governance');
+            if (typeof NebrasCloudDiag !== 'undefined' && NebrasCloudDiag.fetchLiveHealth) {
+                NebrasCloudDiag.fetchLiveHealth(true).then(function() { renderCloudGovernancePanel(); }).catch(function() {});
+            }
         }
 
         async function syncPushToNebrasCloudNow() {
@@ -30213,6 +30325,9 @@
         function scheduleHydrateGovernanceAfterLogin() {
             if (nebrasHydrateInFlight) return nebrasHydrateInFlight;
             setNebrasCloudHydrateGate(true);
+            if (typeof nebrasCloudDiagLog === 'function') {
+                nebrasCloudDiagLog('info', 'بدء تحميل البيانات من السحابة', { code: 'hydrate_start' });
+            }
             if (typeof renderNebrasCloudStatusOrb === 'function') {
                 renderNebrasCloudStatusOrb('saving', 'جاري تحميل البيانات من السحابة…');
             }
@@ -30708,11 +30823,21 @@
         async function persistNebrasCriticalStores(storeKeys, options) {
             options = options || {};
             if (nebrasCloudHydrateInProgress && !nebrasHydrateAllowCloudPush) {
-                const needsUsers = Array.isArray(storeKeys) && storeKeys.indexOf('admin_users') >= 0;
-                if (options.waitHydrate || options.allowDuringHydrate || needsUsers) {
+                const criticalWait = Array.isArray(storeKeys) && storeKeys.some(function(k) {
+                    return k === 'admin_users' || k === 'site_products' || k === 'system_settings' ||
+                        k === 'hr_employees' || k === 'customer_portal_users' || k === 'wpc_estimates' ||
+                        k === 'aluminum_estimates' || k.indexOf('erp_') === 0;
+                });
+                if (options.waitHydrate || options.allowDuringHydrate || criticalWait) {
+                    if (typeof nebrasCloudDiagLog === 'function') {
+                        nebrasCloudDiagLog('info', 'انتظار اكتمال تحميل السحابة قبل الرفع', { keys: storeKeys, code: 'wait_hydrate' });
+                    }
                     await waitForNebrasCloudHydrate();
                 } else {
                     queueNebrasCloudSaveAfterHydrate();
+                    if (typeof nebrasCloudDiagLog === 'function') {
+                        nebrasCloudDiagLog('warn', 'رفع مؤجّل حتى انتهاء التحميل', { keys: storeKeys, code: 'queued_after_hydrate', ok: false });
+                    }
                     return false;
                 }
             }
@@ -30729,6 +30854,9 @@
                     sessionOk = await ensureNebrasCloudSessionForSave({ promptReauth: true });
                 }
                 if (!sessionOk) {
+                    if (typeof nebrasCloudDiagLog === 'function') {
+                        nebrasCloudDiagLog('error', 'لا جلسة سحابة — فشل الرفع', { keys: storeKeys, ok: false, code: 'no_session' });
+                    }
                     if (options.showToast && typeof showNebrasAdminToast === 'function') {
                         showNebrasAdminToast('⚠️ لا جلسة سحابة — أعيدي تسجيل الدخول ثم احفظي مرة أخرى', 'error');
                     }
@@ -30786,13 +30914,29 @@
                 if (!ok) console.warn('persistNebrasCriticalStores fallback push failed:', result);
             }
             }
-            if (!ok) return false;
+            if (!ok) {
+                if (typeof nebrasCloudDiagLog === 'function') {
+                    nebrasCloudDiagLog('error', 'فشل رفع مفاتيح حرجة للسحابة', {
+                        keys: rows.map(function(r) { return r.store_key; }),
+                        ok: false,
+                        code: 'persist_fail'
+                    });
+                }
+                return false;
+            }
             nebrasCloudSynced = true;
             nebrasLastCloudSaveAt = new Date();
             if (typeof clearLocalCloudMutations === 'function') {
                 clearLocalCloudMutations(rows.map(function(r) { return r.store_key; }));
             }
             if (typeof clearSensitiveCloudPending === 'function') clearSensitiveCloudPending();
+            if (typeof nebrasCloudDiagLog === 'function') {
+                nebrasCloudDiagLog('ok', 'تم تأكيد الرفع على السيرفر (' + rows.length + ' مفتاح)', {
+                    keys: rows.map(function(r) { return r.store_key; }),
+                    ok: true,
+                    code: 'persist_ok'
+                });
+            }
             if (options.showToast && typeof showNebrasAdminToast === 'function') {
                 showNebrasAdminToast('✓ تم الحفظ في السحابة — متاح لكل الأجهزة', 'ok');
             }
@@ -32614,6 +32758,9 @@
         window.changeAdminCredentialsByOldPassword = changeAdminCredentialsByOldPassword;
         window.openCloudGovernance = openCloudGovernance;
         window.syncPushToNebrasCloudNow = syncPushToNebrasCloudNow;
+        window.nebrasCloudDiagRunAndRender = nebrasCloudDiagRunAndRender;
+        window.nebrasCloudDiagFlushAndRender = nebrasCloudDiagFlushAndRender;
+        window.renderCloudGovernancePanel = renderCloudGovernancePanel;
         window.reconcileHqBusinessDataToCloud = reconcileHqBusinessDataToCloud;
         window.syncLoadFromNebrasCloudNow = syncLoadFromNebrasCloudNow;
         window.openLinkedOmsOrderFromQuote = openLinkedOmsOrderFromQuote;

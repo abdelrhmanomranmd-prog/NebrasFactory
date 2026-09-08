@@ -1,11 +1,11 @@
 ﻿/**
- * نبراس — تحميل كسول لوحدات الإدارات (hrws338)
+ * نبراس — تحميل كسول لوحدات الإدارات (hrws339)
  * فتح فوري + prefetch ذكي حسب الدور — بدون إثقال الزائر.
  */
 (function (global) {
     'use strict';
 
-    var VER = 'hrws338';
+    var VER = 'hrws339';
     var loaded = Object.create(null);
     var inflight = Object.create(null);
     var bundleDone = Object.create(null);
@@ -16,7 +16,8 @@
     var BUNDLES = {
         adminCore: [
             'js/nebras-odoo-write.js',
-            'js/nebras-cloud-safety.js'
+            'js/nebras-cloud-safety.js',
+            'js/nebras-cloud-diagnostics.js'
         ],
         aluminum: ['js/nebras-aluminum-cutting.js'],
         wpc: ['js/nebras-wpc-cutting.js'],
