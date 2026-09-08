@@ -1,4 +1,4 @@
-        const SUPABASE_URL = 'https://oedldllrjavofpeaputz.supabase.co';
+﻿        const SUPABASE_URL = 'https://oedldllrjavofpeaputz.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_bt6rlHxu_pjc1xpkKEWOcg_HZ43JMR0';
         let supabaseClient = null;
         function ensureNebrasSupabaseClient() {
@@ -67,7 +67,7 @@
         const NEBRAS_SERVER_FIRST_MODE = true;
         /** إنتاج حي — بدون بذور تجريبية؛ الإدارة تضيف كل البيانات */
         const NEBRAS_PRODUCTION_LIVE_MODE = true;
-        const NEBRAS_CLIENT_RESET_TOKEN = 'prod-live-6';
+        const NEBRAS_CLIENT_RESET_TOKEN = 'prod-live-7';
         window.NEBRAS_PRODUCTION_LIVE_MODE = NEBRAS_PRODUCTION_LIVE_MODE;
 
         function shouldSeedBusinessDemoData() {
@@ -14216,7 +14216,7 @@
             const badgeIcon = variant === 'partners' ? 'fa-handshake' : 'fa-door-open';
             const imgW = variant === 'partners' ? 168 : 440;
             const imgH = variant === 'partners' ? 168 : 760;
-            const deploy = (document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws333';
+            const deploy = (document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws334';
             const slides = urls.map(function(src, i) {
                 const delay = -(cycleSec - 3) + (i * 3);
                 const loading = i === 0 ? 'eager' : 'lazy';
@@ -29930,7 +29930,7 @@
             if (nebrasDoorEngineLoadPromise) return nebrasDoorEngineLoadPromise;
             const ver = (typeof window.NEBRAS_DEPLOY_TAG !== 'undefined' && window.NEBRAS_DEPLOY_TAG)
                 ? window.NEBRAS_DEPLOY_TAG
-                : ((document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws333');
+                : ((document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws334');
             nebrasDoorEngineLoadPromise = loadNebrasThreeJs().then(function() {
                 return Promise.all([
                     loadNebrasScriptOnce('js/nebras-door-3d.js?v=' + ver),

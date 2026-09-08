@@ -65,6 +65,24 @@ def wipe_rows():
         ('crm_audit', []),
         ('customer_service', []),
         ('admin_presence', {}),
+        # موظفون / تشغيل — بداية من الصفر (ليست حسابات دخول، لكن بيانات موظفين)
+        ('hr_employees', []),
+        ('hr_vehicles', []),
+        ('hr_leave', []),
+        ('hr_vehicle_tracking', []),
+        ('hr_attendance', []),
+        ('hr_documents', []),
+        ('hr_payroll', []),
+        ('hr_companies', []),
+        ('hr_gps_positions', []),
+        ('hr_travel', []),
+        ('hr_deductions', []),
+        ('hr_advances', []),
+        ('hr_vehicle_violations', []),
+        ('callback_leads', []),
+        ('complaints', {}),
+        ('sales_data', []),
+        ('sales_quotes_inbox', []),
     ]
     return [{'store_key': k, 'payload': p} for k, p in rows]
 
@@ -96,7 +114,7 @@ def main():
         ok_count += res.get('count', len(chunk))
         print('OK batch', i // batch_size + 1, 'keys:', [r['store_key'] for r in chunk])
 
-    keys = 'admin_users,customer_portal_users,crm_customers,customer_registration_requests'
+    keys = 'admin_users,customer_portal_users,crm_customers,customer_registration_requests,hr_employees,callback_leads'
     code, pull = api('GET', '/api/nebras-cloud?action=pull&keys=' + keys, token=token)
     summary = {}
     users = []
@@ -116,10 +134,11 @@ def main():
     if names != ['NEBRASFACTORY']:
         print('FAIL: expected only NEBRASFACTORY, got', names)
         return 1
-    if summary.get('customer_portal_users', 0) or summary.get('crm_customers', 0):
-        print('FAIL: customers not empty', summary)
-        return 1
-    print('RESULT: USERS/CUSTOMERS WIPED —', ok_count, 'keys · HQ only')
+    for k in ('customer_portal_users', 'crm_customers', 'hr_employees', 'callback_leads'):
+        if summary.get(k, 0):
+            print('FAIL: not empty', k, summary.get(k))
+            return 1
+    print('RESULT: FRESH START OK — HQ only · no customers · no employees')
     return 0
 
 

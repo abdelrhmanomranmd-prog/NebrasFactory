@@ -55,7 +55,7 @@
         sales_price_list: 'nebrasSalesPriceList'
     };
     const PRODUCTION_RESET_TOKEN_KEY = 'nebrasProductionResetToken';
-    const PRODUCTION_RESET_TOKEN_VALUE = 'prod-live-6';
+    const PRODUCTION_RESET_TOKEN_VALUE = 'prod-live-7';
     const PRODUCTION_LOCAL_PURGE_KEYS = [
         'nebrasAdminUsers', 'nebrasSiteProducts', 'nebrasDashboardTiles',
         'nebrasVisitorIcons', 'nebrasBranches', 'nebrasSystemSettings',
