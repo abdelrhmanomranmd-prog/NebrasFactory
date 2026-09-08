@@ -125,3 +125,83 @@
 .nebras-users-body .erp-empty {
     color: #4a5a6a !important;
 }
+
+/* ── داشبورد: قنوات · مناسبات · أزرار primary (منع نص مبكسل/خافت) ── */
+.dashboard-channels-panel,
+.dashboard-occasion-panel {
+    color: #0d2840;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+.dashboard-channels-panel h3,
+.dashboard-occasion-panel h3 {
+    color: #0d2840 !important;
+}
+
+.dashboard-channels-hint,
+.dashboard-occasion-status {
+    color: #243746 !important;
+    opacity: 1 !important;
+    font-size: 0.98rem;
+    line-height: 1.65;
+    font-weight: 600;
+}
+
+.dashboard-channels-list li,
+.dashboard-channels-list small {
+    color: #0d2840;
+    opacity: 1;
+}
+
+#admin-dashboard button.primary,
+.admin-dashboard button.primary,
+.dashboard-channels-edit-btn,
+#dashboard-occasion-edit-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    max-width: 320px;
+    width: auto;
+    min-height: 44px;
+    padding: 12px 18px;
+    margin: 4px 0 0;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-family: inherit;
+    font-size: 0.98rem;
+    font-weight: 800;
+    letter-spacing: 0;
+    line-height: 1.35;
+    color: #fff !important;
+    -webkit-text-fill-color: #fff !important;
+    background: linear-gradient(135deg, #0d2840 0%, #155e94 100%) !important;
+    box-shadow: 0 8px 20px rgba(13, 40, 64, 0.18);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+}
+
+#admin-dashboard button.primary:hover,
+.admin-dashboard button.primary:hover,
+.dashboard-channels-edit-btn:hover,
+#dashboard-occasion-edit-btn:hover {
+    filter: brightness(1.06);
+}
+
+.dashboard-channels-panel .status,
+.dashboard-occasion-panel .status {
+    color: #0d2840 !important;
+}
+
+.erp-hub-panel,
+.platform-hub-panel {
+    color: #0d2840;
+}
+
+.erp-hub-panel .erp-badge-main {
+    color: #0d2840 !important;
+    -webkit-text-fill-color: #0d2840 !important;
+    background: rgba(13, 40, 64, 0.08) !important;
+}

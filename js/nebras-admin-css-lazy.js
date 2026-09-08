@@ -1,11 +1,11 @@
 /**
- * نبراس hrws331 — CSS الإدارة كسول (Accmaa-style)
+ * نبراس hrws332 — CSS الإدارة كسول (Accmaa-style)
  * الزائر: CSS storefront فقط · الإدارة: تحميل عند فتح لوحة الدخول أو الجلسة
  */
 (function(global) {
     'use strict';
 
-    var VER = 'hrws331';
+    var VER = 'hrws332';
     var loaded = false;
     var inflight = null;
 
@@ -42,7 +42,9 @@
         'css/60-nebras-dashboard-premium.css',
         'css/66-nebras-navy-white-artistry.css',
         'css/61-nebras-cloud-safety.css',
-        'css/63-nebras-odoo-quiet.css'
+        'css/63-nebras-odoo-quiet.css',
+        /* أخيراً: وضوح النص بعد أي إعادة تحميل لثيم السطح الفاتح */
+        'css/53-platform-text-readability.css'
     ];
 
     function withVer(href) {
