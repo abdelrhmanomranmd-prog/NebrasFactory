@@ -1589,3 +1589,64 @@ body.alu-platform-open #admin-dashboard {
 
 /* hrws214 warehouse */
 .alu-cut-form-card .fa-warehouse { color: var(--alu-accent, #155e94); }
+
+/* hrws337 — حفظ حي للتخصيمات */
+#aluminum-cutting .alu-live-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-inline-start: 8px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 800;
+    background: rgba(21, 94, 148, 0.12);
+    color: #0d4a73;
+    border: 1px solid rgba(21, 94, 148, 0.25);
+}
+#aluminum-cutting .alu-live-badge.is-ok { background: rgba(30, 132, 73, 0.16); color: #146c43; }
+#aluminum-cutting .alu-live-badge.is-warn { background: rgba(201, 162, 39, 0.18); color: #7a5a00; }
+
+/* hrws337 — شبكة رسوم احترافية */
+#aluminum-cutting .alu-draw-grid--pro {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+}
+#aluminum-cutting .alu-draw-panel h5 {
+    margin: 0 0 8px;
+    font-size: 0.92rem;
+    color: #0d2840;
+}
+#aluminum-cutting .alu-draw-panel .alu-elev-card {
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid rgba(13, 40, 64, 0.12);
+    padding: 8px;
+}
+#aluminum-cutting .alu-geo-summary {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 8px 0 12px;
+    font-size: 0.9rem;
+}
+@media (max-width: 1100px) {
+    #aluminum-cutting .alu-draw-grid--pro { grid-template-columns: 1fr; }
+}
+
+#aluminum-cutting .alu-live-badge.is-saving {
+    background: rgba(21, 94, 148, 0.14);
+    color: #0d4a73;
+    border-color: rgba(21, 94, 148, 0.3);
+}
+#aluminum-cutting .alu-draw-pair--live {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: stretch;
+}
+#aluminum-cutting .alu-draw-pair--live .alu-elev-card {
+    flex: 1 1 180px;
+    min-width: 0;
+}

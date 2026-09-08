@@ -743,3 +743,56 @@ body.wpc-platform-open { overflow: hidden; }
         grid-template-columns: 1fr;
     }
 }
+
+/* hrws337 — رسوم احترافية + حفظ حي */
+#wpc-cutting .wpc-draw-grid--pro {
+    display: grid;
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.8fr) minmax(0, 1fr);
+    gap: 14px;
+}
+#wpc-cutting .wpc-draw-panel--elev .wpc-elev-svg {
+    width: 100%;
+    min-height: 380px;
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid rgba(13, 40, 64, 0.12);
+}
+#wpc-cutting .wpc-section-svg {
+    width: 100%;
+    min-height: 320px;
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid rgba(13, 40, 64, 0.12);
+}
+#wpc-cutting .wpc-live-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-inline-start: 8px;
+    padding: 6px 12px;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    font-weight: 800;
+    background: rgba(26, 107, 74, 0.12);
+    color: #146c43;
+    border: 1px solid rgba(26, 107, 74, 0.25);
+}
+#wpc-cutting .wpc-live-badge.is-ok { background: rgba(30, 132, 73, 0.16); color: #146c43; }
+#wpc-cutting .wpc-live-badge.is-warn { background: rgba(201, 162, 39, 0.18); color: #7a5a00; }
+@media (max-width: 1100px) {
+    #wpc-cutting .wpc-draw-grid--pro { grid-template-columns: 1fr; }
+}
+
+#wpc-cutting .wpc-live-badge.is-saving {
+    background: rgba(26, 107, 74, 0.14);
+    color: #146c43;
+    border-color: rgba(26, 107, 74, 0.3);
+}
+#wpc-cutting .wpc-draw-grid--est-pro {
+    display: grid;
+    grid-template-columns: minmax(0, 1.3fr) minmax(0, 0.7fr) minmax(0, 1fr);
+    gap: 12px;
+}
+@media (max-width: 1100px) {
+    #wpc-cutting .wpc-draw-grid--est-pro { grid-template-columns: 1fr; }
+}

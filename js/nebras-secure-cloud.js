@@ -32,6 +32,8 @@
         'aluminum_profiles', 'aluminum_systems', 'aluminum_estimates', 'aluminum_cut_jobs',
         'aluminum_cut_settings', 'aluminum_accessories', 'aluminum_glass', 'aluminum_wire',
         'aluminum_colors', 'aluminum_remnants', 'aluminum_stock', 'aluminum_audit',
+        'wpc_models', 'wpc_estimates', 'wpc_cut_jobs', 'wpc_cut_settings',
+        'wpc_accessories', 'wpc_remnants', 'wpc_cut_audit',
         'nebras_cloud_snapshots', 'nebras_platform_integrity'
     ];
 
@@ -85,6 +87,11 @@
                     }
                 });
             }
+            if (perm === 'production') {
+                keys.forEach(function(k) {
+                    if (k === 'erp_production' || k.indexOf('wpc_') === 0) allowed[k] = true;
+                });
+            }
             if (perm === 'hr') {
                 keys.forEach(function(k) {
                     if (k.indexOf('hr_') === 0) allowed[k] = true;
@@ -103,7 +110,7 @@
     }
 
     function managerMayAccessKey(k) {
-        const prefixes = ['erp_', 'sales_', 'quote_', 'customer_', 'crm_', 'hr_', 'legal_', 'procurement', 'complaints', 'callback_', 'audit_'];
+        const prefixes = ['erp_', 'sales_', 'quote_', 'customer_', 'crm_', 'hr_', 'legal_', 'aluminum_', 'wpc_', 'procurement', 'complaints', 'callback_', 'audit_'];
         const exact = [
             'complaints', 'callback_leads', 'audit_logs', 'sales_quotes_inbox', 'quote_registry',
             'customer_order_journeys', 'customer_service', 'customer_portal_users', 'customer_portal_audit',
@@ -138,7 +145,8 @@
                     k.indexOf('sales_') === 0 || k.indexOf('quote_') === 0 || k === 'audit_logs';
             }
             if (role === 'wpc_manager' || role === 'production_manager') {
-                return k.indexOf('erp_') === 0 || k.indexOf('sales_') === 0 || k.indexOf('quote_') === 0 || k === 'audit_logs';
+                return k.indexOf('erp_') === 0 || k.indexOf('wpc_') === 0 ||
+                    k.indexOf('sales_') === 0 || k.indexOf('quote_') === 0 || k === 'audit_logs';
             }
             if (role === 'accountant' || role === 'accounting_manager') {
                 return k.indexOf('erp_') === 0 || k.indexOf('sales_') === 0 || k === 'audit_logs' || k.indexOf('procurement') >= 0;

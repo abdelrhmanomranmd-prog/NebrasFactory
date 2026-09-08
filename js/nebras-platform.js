@@ -6282,8 +6282,6 @@
                 openNebrasAdminAi: function() { return isMainGovernanceAdmin(admin); },
                 openCloudGovernance: function() { return isMainGovernanceAdmin(admin); },
                 openSystemSettings: function() { return isMainGovernanceAdmin(admin); },
-                openWpcProductionDepartment: function() { return canManage('production', admin); },
-                openAluminumDepartment: function() { return canManage('aluminum', admin); },
                 openHrPlatform: function() {
                     return typeof canAccessHrPlatform === 'function' ? canAccessHrPlatform(admin) : canManage('hr', admin);
                 },
@@ -6308,8 +6306,19 @@
                 openAluminumQuoteBuilder: function() { return canManage('aluminum', admin) || canManage('quotes', admin); },
                 openAluminumCutting: function() { return canManage('aluminum', admin) || (admin && admin.role === 'aluminum_manager'); },
                 openAluminumDepartment: function() { return canManage('aluminum', admin) || (admin && admin.role === 'aluminum_manager'); },
-                openWpcQuoteBuilder: function() { return canManage('production', admin) || canManage('quotes', admin); },
+                openWpcQuoteBuilder: function() {
+                    if (admin && admin.role === 'aluminum_manager') return false;
+                    if (typeof isAluminumDepartmentAdmin === 'function' && isAluminumDepartmentAdmin(admin)) return false;
+                    return canManage('production', admin) || canManage('quotes', admin);
+                },
                 openWpcCutting: function() {
+                    if (admin && admin.role === 'aluminum_manager') return false;
+                    if (typeof isAluminumDepartmentAdmin === 'function' && isAluminumDepartmentAdmin(admin)) return false;
+                    return canManage('production', admin) || (admin && (admin.role === 'wpc_manager' || admin.role === 'production_manager'));
+                },
+                openWpcProductionDepartment: function() {
+                    if (admin && admin.role === 'aluminum_manager') return false;
+                    if (typeof isAluminumDepartmentAdmin === 'function' && isAluminumDepartmentAdmin(admin)) return false;
                     return canManage('production', admin) || (admin && (admin.role === 'wpc_manager' || admin.role === 'production_manager'));
                 },
                 openBranchTeamManagement: function() { return canManageBranchTeam(admin); },
@@ -18829,6 +18838,12 @@
             admin = admin || currentAdmin;
             if (!admin) return false;
             if (isMainGovernanceAdmin(admin)) return true;
+            const handler = String(tile.handler || '');
+            /* ظهور بلاطات التخصيم حسب الدفتر الفعلي لا مجرد production/aluminum */
+            if (handler === 'openWpcCutting' || handler === 'openWpcProductionDepartment' || handler === 'openWpcQuoteBuilder' ||
+                handler === 'openAluminumCutting' || handler === 'openAluminumDepartment') {
+                return typeof canRunDashboardHandler === 'function' ? canRunDashboardHandler(handler, admin) : canManage(tile.permission, admin);
+            }
             const perm = String(tile.permission || '');
             if (perm === 'createCustomerUser' || tile.id === 'dash-create-customer-portal') {
                 return typeof window.canCreateCustomerPortalUser === 'function' && window.canCreateCustomerPortalUser(admin);
@@ -19512,8 +19527,8 @@
                 { roles: ['store_manager'], icon: 'fas fa-store', label: 'المتجر الإلكتروني', handler: 'openStoreCatalogManager', perm: 'storeCatalog' },
                 { roles: ['aluminum_manager', 'sales_manager', 'branch_manager'], icon: 'fas fa-industry', label: 'قسم الألومنيوم', handler: 'openAluminumDepartment', perm: 'aluminum' },
                 { roles: ['superadmin', 'manager'], icon: 'fas fa-scissors', label: 'التخصيمات', handler: 'openAluminumCutting', perm: 'aluminum' },
+                { roles: ['superadmin', 'manager', 'wpc_manager', 'production_manager'], icon: 'fas fa-ruler-combined', label: 'تخصيمات WPC', handler: 'openWpcCutting', perm: 'production' },
                 { roles: ['wpc_manager', 'production_manager'], icon: 'fas fa-door-closed', label: 'إنتاج WPC', handler: 'openWpcProductionDepartment', perm: 'production' },
-                { roles: ['wpc_manager', 'production_manager'], icon: 'fas fa-ruler-combined', label: 'تخصيمات WPC', handler: 'openWpcCutting', perm: 'production' },
                 { roles: ['branch_manager', 'sales_manager'], icon: 'fas fa-store', label: 'لوحة الفرع', handler: 'openBranchCommandCenter', perm: null },
                 { roles: ['hr'], icon: 'fas fa-people-roof', label: 'منصة الموارد البشرية', handler: 'openHrPlatform', perm: 'hr' },
                 { roles: ['hr'], icon: 'fas fa-shield-halved', label: 'أمان حسابي', handler: 'openAccountSecurity', perm: null },
@@ -19553,7 +19568,9 @@
                 if (item.handler === 'openExecutiveReports' && !canViewExecutiveReports()) return;
                 if (item.handler === 'openProductMasterHub' && !isMainGovernanceAdmin()) return;
                 if (item.handler === 'openAluminumDepartment' && !canManage('aluminum') && !isMainGovernanceAdmin()) return;
-                if (item.handler === 'openWpcProductionDepartment' && !canManage('production') && !isMainGovernanceAdmin()) return;
+                if (item.handler === 'openAluminumCutting' && !canRunDashboardHandler('openAluminumCutting', currentAdmin)) return;
+                if (item.handler === 'openWpcCutting' && !canRunDashboardHandler('openWpcCutting', currentAdmin)) return;
+                if (item.handler === 'openWpcProductionDepartment' && !canRunDashboardHandler('openWpcProductionDepartment', currentAdmin)) return;
                 if (item.handler === 'openBranchCommandCenter' && !canAccessBranchCommandCenter()) return;
                 if (item.handler === 'openHrPlatform' && typeof canAccessHrPlatform === 'function' && !canAccessHrPlatform()) return;
                 if (item.handler === 'openLegalPlatform' && typeof canAccessLegalPlatform === 'function' && !canAccessLegalPlatform()) return;

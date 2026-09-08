@@ -1,11 +1,11 @@
 ﻿/**
- * نبراس — تحميل كسول لوحدات الإدارات (hrws336)
+ * نبراس — تحميل كسول لوحدات الإدارات (hrws337)
  * فتح فوري + prefetch ذكي حسب الدور — بدون إثقال الزائر.
  */
 (function (global) {
     'use strict';
 
-    var VER = 'hrws336';
+    var VER = 'hrws337';
     var loaded = Object.create(null);
     var inflight = Object.create(null);
     var bundleDone = Object.create(null);
@@ -188,7 +188,7 @@
         var admin = typeof global.currentAdmin !== 'undefined' ? global.currentAdmin : null;
         var role = admin && admin.role ? admin.role : '';
         if (role === 'aluminum_manager') {
-            return ['aluminum', 'wpc'];
+            return ['aluminum'];
         }
         if (role === 'wpc_manager' || role === 'production_manager') {
             return ['wpc', 'crm'];

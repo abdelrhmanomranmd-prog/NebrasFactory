@@ -276,10 +276,14 @@
     }
 
     function canAccessWpcCutting() {
-        if (typeof isMainGovernanceAdmin === 'function' && isMainGovernanceAdmin()) return true;
-        if (typeof canManage === 'function' && canManage('production')) return true;
         var admin = typeof currentAdmin !== 'undefined' ? currentAdmin : null;
-        return !!(admin && (admin.role === 'wpc_manager' || admin.role === 'production_manager'));
+        if (typeof isMainGovernanceAdmin === 'function' && isMainGovernanceAdmin(admin)) return true;
+        /* دفتر WPC منفصل — مدير الألومنيوم لا يفتحه حتى لو معه production */
+        if (admin && admin.role === 'aluminum_manager') return false;
+        if (typeof isAluminumDepartmentAdmin === 'function' && isAluminumDepartmentAdmin(admin)) return false;
+        if (admin && (admin.role === 'wpc_manager' || admin.role === 'production_manager')) return true;
+        if (typeof canManage === 'function' && canManage('production', admin)) return true;
+        return false;
     }
     function requireWpcAccess(msg) {
         if (!canAccessWpcCutting()) {
@@ -954,12 +958,43 @@
     async function persistWpcCuttingCloud(keys) {
         persistWpcCuttingLocal();
         keys = keys || ['wpc_models', 'wpc_estimates', 'wpc_cut_jobs', 'wpc_cut_settings', 'wpc_accessories', 'wpc_remnants', 'wpc_cut_audit'];
+        if (typeof markLocalCloudMutationBatch === 'function') markLocalCloudMutationBatch(keys);
         if (typeof persistNebrasCriticalStores === 'function') {
             try {
                 return await persistNebrasCriticalStores(keys, { silent: true, showToast: false, promptReauth: false });
             } catch (e) { console.warn('wpc cloud persist', e); }
         }
         return false;
+    }
+
+    var wpcAutosaveTimer = null;
+    function setWpcLiveBadge(state, text) {
+        var badge = document.getElementById('wpc-live-save-badge');
+        if (!badge) return;
+        var icons = {
+            idle: 'fa-cloud-upload-alt',
+            saving: 'fa-spinner fa-spin',
+            ok: 'fa-check',
+            warn: 'fa-exclamation-triangle'
+        };
+        badge.className = 'wpc-live-badge' + (state === 'ok' ? ' is-ok' : (state === 'warn' ? ' is-warn' : (state === 'saving' ? ' is-saving' : '')));
+        badge.innerHTML = '<i class="fas ' + (icons[state] || icons.idle) + '"></i> ' + (text || 'حفظ حي تلقائي');
+    }
+    function scheduleWpcLiveAutosave() {
+        if (!wpcEstimateDraft) return;
+        clearTimeout(wpcAutosaveTimer);
+        setWpcLiveBadge('saving', 'جاري الحفظ الحي…');
+        wpcAutosaveTimer = setTimeout(function() {
+            if (!wpcEstimateDraft) return;
+            wpcEstimateDraft.updatedAt = new Date().toISOString();
+            wpcEstimateDraft.totalsSnapshot = computeWpcEstimateTotals(wpcEstimateDraft);
+            var idx = wpcEstimates.findIndex(function(e) { return e.id === wpcEstimateDraft.id; });
+            if (idx >= 0) wpcEstimates[idx] = JSON.parse(JSON.stringify(wpcEstimateDraft));
+            else wpcEstimates.push(JSON.parse(JSON.stringify(wpcEstimateDraft)));
+            persistWpcCuttingCloud(['wpc_estimates']).then(function(ok) {
+                setWpcLiveBadge(ok ? 'ok' : 'warn', ok ? 'محفوظ حي على السيرفر' : 'محلي — أعيدي الحفظ');
+            });
+        }, 1400);
     }
 
     function getWpcModels() { return wpcModels; }
@@ -1040,25 +1075,91 @@
             inner += '<text x="' + (viewW / 2) + '" y="18" text-anchor="middle" font-size="12" font-weight="800" fill="' + navy + '">' + wEsc(shape.nameAr) + ' — منظر أمامي</text>';
             inner += '<text x="' + (viewW / 2) + '" y="32" text-anchor="middle" font-size="10" fill="' + accent + '">عمق: ' + Dmm + ' مم</text>';
         } else {
-            var frameT2 = Math.max(5, Math.min(16, Math.round(Math.min(fw, fh) * 0.038)));
+            /* باب WPC — رسم هندسي تفصيلي (حلق · ضلف · مفصلات · مقبض · عتب) */
+            var jamb = Math.max(6, Math.min(18, Math.round(Math.min(fw, fh) * 0.042)));
             var leaves2 = Math.max(1, geo.leaves || 1);
-            inner += '<rect x="' + ox + '" y="' + oy + '" width="' + fw + '" height="' + fh + '" fill="#f8fafc" stroke="' + navy + '" stroke-width="2.2" rx="2"/>';
-            inner += '<rect x="' + (ox + frameT2) + '" y="' + (oy + frameT2) + '" width="' + Math.max(1, fw - frameT2 * 2) + '" height="' + Math.max(1, fh - frameT2 * 2) + '" fill="#fff" stroke="' + accent + '" stroke-width="1.4"/>';
-            var leafPxW = (fw - frameT2 * 2) / leaves2;
+            var leafGap = Math.max(1.5, 3 * scale);
+            var hingeSide = String(item.hingeSide || item.openSide || 'right').toLowerCase();
+            if (hingeSide !== 'left' && hingeSide !== 'right') hingeSide = 'right';
+            /* إطار خارجي (الحلق) */
+            inner += '<rect x="' + ox + '" y="' + oy + '" width="' + fw + '" height="' + fh + '" fill="#e8eef4" stroke="' + navy + '" stroke-width="2.4" rx="1"/>';
+            /* فراغ التركيب */
+            inner += '<rect x="' + (ox + 2) + '" y="' + (oy + 2) + '" width="' + Math.max(1, fw - 4) + '" height="' + Math.max(1, fh - 4) + '" fill="none" stroke="rgba(13,40,64,0.25)" stroke-width="0.8" stroke-dasharray="3 2"/>';
+            /* الحلق الداخلي */
+            inner += '<rect x="' + (ox + jamb) + '" y="' + (oy + jamb) + '" width="' + Math.max(1, fw - jamb * 2) + '" height="' + Math.max(1, fh - jamb * 2) + '" fill="#fbfcfd" stroke="' + accent + '" stroke-width="1.6"/>';
+            var usableW = fw - jamb * 2 - leafGap * (leaves2 - 1);
+            var leafPxW = usableW / leaves2;
+            var transomPx = geo.transomH > 0 ? Math.max(8, geo.transomH * scale) : 0;
             for (var lj = 0; lj < leaves2; lj++) {
-                var ljx = ox + frameT2 + lj * leafPxW;
-                inner += '<rect x="' + (ljx + 4) + '" y="' + (oy + frameT2 + 4) + '" width="' + Math.max(1, leafPxW - 8) + '" height="' + Math.max(1, fh - frameT2 * 2 - 8) + '" fill="rgba(26,107,74,0.1)" stroke="' + accent + '" stroke-width="1.2"/>';
+                var ljx = ox + jamb + lj * (leafPxW + leafGap);
+                var leafY = oy + jamb + (transomPx ? transomPx + 2 : 0);
+                var leafH = Math.max(1, fh - jamb * 2 - (transomPx ? transomPx + 2 : 0));
+                /* الضلفة */
+                inner += '<rect x="' + ljx + '" y="' + leafY + '" width="' + Math.max(1, leafPxW) + '" height="' + leafH + '" fill="url(#wpcLeafGrad)" stroke="' + accent + '" stroke-width="1.3" rx="1"/>';
+                /* حشوة داخلية */
+                var inset = Math.max(4, leafPxW * 0.08);
+                inner += '<rect x="' + (ljx + inset) + '" y="' + (leafY + inset) + '" width="' + Math.max(1, leafPxW - inset * 2) + '" height="' + Math.max(1, leafH - inset * 2) + '" fill="rgba(26,107,74,0.08)" stroke="rgba(26,107,74,0.35)" stroke-width="1"/>';
+                /* مفصلات */
+                var hx = hingeSide === 'left' ? (ljx + 5) : (ljx + leafPxW - 5);
+                var hCount = leafH > 120 ? 3 : 2;
+                for (var hi = 0; hi < hCount; hi++) {
+                    var hy = leafY + leafH * ((hi + 1) / (hCount + 1));
+                    inner += '<rect x="' + (hx - 3) + '" y="' + (hy - 7) + '" width="6" height="14" rx="1" fill="' + gold + '" stroke="' + navy + '" stroke-width="0.6"/>';
+                }
+                /* مقبض */
+                var handleX = hingeSide === 'left' ? (ljx + leafPxW - inset - 6) : (ljx + inset + 6);
+                var handleY = leafY + leafH * 0.48;
+                inner += '<rect x="' + (handleX - 2) + '" y="' + (handleY - 14) + '" width="4" height="28" rx="2" fill="' + navy + '"/>';
+                inner += '<circle cx="' + handleX + '" cy="' + (handleY - 14) + '" r="2.2" fill="' + gold + '"/>';
+                inner += '<circle cx="' + handleX + '" cy="' + (handleY + 14) + '" r="2.2" fill="' + gold + '"/>';
             }
-            if (geo.transomH > 0) {
-                var th = geo.transomH * scale;
-                inner += '<rect x="' + (ox + frameT2) + '" y="' + (oy + frameT2) + '" width="' + Math.max(1, fw - frameT2 * 2) + '" height="' + th + '" fill="rgba(56,189,248,0.2)" stroke="#38bdf8" stroke-width="1"/>';
+            if (transomPx > 0) {
+                inner += '<rect x="' + (ox + jamb) + '" y="' + (oy + jamb) + '" width="' + Math.max(1, fw - jamb * 2) + '" height="' + transomPx + '" fill="rgba(56,189,248,0.18)" stroke="#38bdf8" stroke-width="1.2"/>';
+                inner += '<text x="' + (ox + fw / 2) + '" y="' + (oy + jamb + transomPx / 2 + 4) + '" text-anchor="middle" font-size="9" fill="' + navy + '">عتب / ضلفة علوية</text>';
             }
-            inner += dimH(ox, ox + fw, oy + fh + 18, Wmm + ' مم');
-            inner += dimV(oy, oy + fh, ox - 14, Hmm + ' مم');
-            inner += '<text x="' + (viewW / 2) + '" y="18" text-anchor="middle" font-size="12" font-weight="800" fill="' + navy + '">' + wEsc(shape.nameAr) + ' — ارتفاع</text>';
-            inner += '<text x="' + (viewW / 2) + '" y="32" text-anchor="middle" font-size="10" fill="' + accent + '">لوح: ' + (geo.leafW || '—') + '×' + (geo.leafH || '—') + ' مم</text>';
+            /* عتبة سفلية */
+            inner += '<rect x="' + ox + '" y="' + (oy + fh - Math.max(3, jamb * 0.55)) + '" width="' + fw + '" height="' + Math.max(3, jamb * 0.55) + '" fill="' + navy + '" opacity="0.85"/>';
+            inner += dimH(ox, ox + fw, oy + fh + 20, Wmm + ' مم عرض');
+            inner += dimV(oy, oy + fh, ox - 16, Hmm + ' مم ارتفاع');
+            if (geo.leafW && geo.leafH) {
+                inner += '<text x="' + (viewW / 2) + '" y="' + (viewH - 8) + '" text-anchor="middle" font-size="10" fill="' + accent + '">لوح الضلفة: ' + geo.leafW + ' × ' + geo.leafH + ' مم · ضلف: ' + leaves2 + '</text>';
+            }
+            inner += '<text x="' + (viewW / 2) + '" y="16" text-anchor="middle" font-size="12" font-weight="800" fill="' + navy + '">' + wEsc(shape.nameAr) + ' — رسم ارتفاع هندسي</text>';
         }
-        return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + viewW + ' ' + viewH + '" class="wpc-elev-svg" role="img" aria-label="رسم هندسي">' + inner + '</svg>';
+        var defs = '<defs><linearGradient id="wpcLeafGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#f3faf6"/><stop offset="100%" stop-color="#e2f0e8"/></linearGradient></defs>';
+        return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + viewW + ' ' + viewH + '" class="wpc-elev-svg" role="img" aria-label="رسم هندسي لباب WPC">' + defs + inner + '</svg>';
+    }
+
+    function wpcDrawSectionSideSvg(item, opts) {
+        opts = opts || {};
+        var Hmm = Math.max(100, wNum(item.heightMm) || 2100);
+        var Dmm = Math.max(60, wNum(item.depthMm) || wNum(DEFAULT_DEDUCTIONS.jambDepthMm) || 120);
+        var viewW = opts.viewW || 280;
+        var viewH = opts.viewH || 340;
+        var margin = 40;
+        var scale = Math.min((viewW - margin * 2) / Dmm, (viewH - margin * 2) / Hmm);
+        var fd = Dmm * scale;
+        var fh = Hmm * scale;
+        var ox = (viewW - fd) / 2;
+        var oy = margin * 0.6;
+        var navy = '#0d2840';
+        var accent = '#1a6b4a';
+        var gold = '#c9a227';
+        var leafT = Math.max(6, Math.min(fd * 0.35, 18));
+        var jambT = Math.max(4, fd * 0.18);
+        var inner = '';
+        inner += '<text x="' + (viewW / 2) + '" y="16" text-anchor="middle" font-size="12" font-weight="800" fill="' + navy + '">مقطع جانبي</text>';
+        /* الجدار */
+        inner += '<rect x="' + (ox - 10) + '" y="' + oy + '" width="8" height="' + fh + '" fill="#cbd5e1"/>';
+        /* الحلق */
+        inner += '<rect x="' + ox + '" y="' + oy + '" width="' + jambT + '" height="' + fh + '" fill="#94a3b8" stroke="' + navy + '" stroke-width="1"/>';
+        /* الضلفة */
+        inner += '<rect x="' + (ox + jambT + 2) + '" y="' + (oy + 8) + '" width="' + leafT + '" height="' + Math.max(1, fh - 16) + '" fill="' + accent + '" opacity="0.35" stroke="' + accent + '" stroke-width="1.2"/>';
+        /* اتجاه الفتح */
+        inner += '<path d="M' + (ox + jambT + leafT + 4) + ' ' + (oy + fh * 0.45) + ' Q' + (ox + fd - 4) + ' ' + (oy + fh * 0.35) + ' ' + (ox + fd - 2) + ' ' + (oy + fh * 0.55) + '" fill="none" stroke="' + gold + '" stroke-width="1.4" stroke-dasharray="3 2"/>';
+        inner += '<text x="' + (viewW / 2) + '" y="' + (oy + fh + 18) + '" text-anchor="middle" font-size="10" fill="' + navy + '">عمق: ' + Dmm + ' مم</text>';
+        inner += '<text x="12" y="' + (oy + fh / 2) + '" font-size="10" fill="' + navy + '" transform="rotate(-90 12 ' + (oy + fh / 2) + ')">' + Hmm + ' مم</text>';
+        return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + viewW + ' ' + viewH + '" class="wpc-section-svg" role="img" aria-label="مقطع جانبي">' + inner + '</svg>';
     }
 
     var wpc3dState = { rotX: -12, rotY: 28 };
@@ -1116,13 +1217,16 @@
     function renderWpcDrawings() {
         var item = wpcGetPreviewItem();
         var shape = resolveItemShape(item);
-        var svg = wpcDrawElevationSvg(item);
+        var svg = wpcDrawElevationSvg(item, { viewW: 460, viewH: 420 });
+        var section = wpcDrawSectionSideSvg(item, { viewW: 260, viewH: 420 });
         var html3d = wpcDraw3dPreviewHtml(item, { uid: 'wpc3d-main' });
-        return '<div class="wpc-cut-form-card"><h4><i class="fas fa-drafting-compass"></i> رسومات هندسية ومعاينة 3D</h4>' +
-            '<p class="wpc-cut-note">أبواب · خزائن · أدراج — مقاسات من محرك التخصيم مباشرة (Stolcad/PowerPVC).</p></div>' +
-            '<div class="wpc-draw-grid">' +
-            '<section class="wpc-draw-panel"><h5><i class="fas fa-ruler-combined"></i> منظر أمامي (SVG)</h5>' + svg + '</section>' +
-            '<section class="wpc-draw-panel"><h5><i class="fas fa-cube"></i> معاينة ثلاثية الأبعاد</h5>' + html3d + '</section></div>' +
+        return '<div class="wpc-cut-form-card"><h4><i class="fas fa-drafting-compass"></i> رسومات هندسية احترافية + 3D</h4>' +
+            '<p class="wpc-cut-note">ارتفاع · مقطع جانبي · معاينة حية — تتحدث تلقائياً مع كل تغيير مقاس (مثل برامج التخصيم).</p>' +
+            '<span class="wpc-live-badge" id="wpc-draw-live"><i class="fas fa-bolt"></i> رسم حي</span></div>' +
+            '<div class="wpc-draw-grid wpc-draw-grid--pro">' +
+            '<section class="wpc-draw-panel wpc-draw-panel--elev"><h5><i class="fas fa-ruler-combined"></i> ارتفاع أمامي</h5>' + svg + '</section>' +
+            '<section class="wpc-draw-panel"><h5><i class="fas fa-cut"></i> مقطع جانبي</h5>' + section + '</section>' +
+            '<section class="wpc-draw-panel"><h5><i class="fas fa-cube"></i> معاينة 3D</h5>' + html3d + '</section></div>' +
             '<div class="wpc-cut-form-card"><h5>ملخص الهندسة</h5>' +
             '<div class="wpc-geo-summary">' +
             '<span>النوع: <strong>' + wEsc(shape.nameAr) + '</strong></span> ' +
@@ -1427,8 +1531,9 @@
             (!isCabinet ? '<article><small>صافي</small><strong>' + (geo.innerClearW || '—') + '×' + (geo.innerClearH || '—') + '</strong></article>' : '') +
             '<article class="wpc-geo-highlight"><small>' + (shapeInfo.drawers ? 'درج' : (isCabinet ? 'باب' : 'لوح')) + '</small><strong>' + (geo.leafW || '—') + '×' + (geo.leafH || '—') + '</strong></article>' +
             '</div></div>' +
-            '<div class="wpc-draw-grid wpc-draw-grid--inline">' +
-            '<section class="wpc-draw-panel"><h5><i class="fas fa-ruler-combined"></i> رسم هندسي</h5>' + wpcDrawElevationSvg(item, { viewW: 360, viewH: 300 }) + '</section>' +
+            '<div class="wpc-draw-grid wpc-draw-grid--inline wpc-draw-grid--est-pro">' +
+            '<section class="wpc-draw-panel"><h5><i class="fas fa-ruler-combined"></i> ارتفاع أمامي</h5>' + wpcDrawElevationSvg(item, { viewW: 340, viewH: 300 }) + '</section>' +
+            '<section class="wpc-draw-panel"><h5><i class="fas fa-cut"></i> مقطع جانبي</h5>' + wpcDrawSectionSideSvg(item, { viewW: 200, viewH: 300 }) + '</section>' +
             '<section class="wpc-draw-panel"><h5><i class="fas fa-cube"></i> معاينة 3D</h5>' + wpcDraw3dPreviewHtml(item, { uid: 'wpc3d-est' }) + '</section></div>' + blockHtml + warnHtml +
             '<div class="wpc-cut-form-card"><h4>سلسلة المعادلات</h4><ol class="wpc-formula-steps">' + (formulaHtml || '<li>—</li>') + '</ol></div>' +
             '<div class="wpc-cut-form-card"><h4>قائمة القص للورشة</h4>' +
@@ -1436,7 +1541,8 @@
             '<tbody>' + (panelRows + linearRows || '<tr><td colspan="6">—</td></tr>') + '</tbody></table>' +
             '<p><strong>الإجمالي: ' + totals.total + ' ' + wpcSettings.currencyLabel + '</strong></p></div>' +
             '<div class="erp-form-actions">' +
-            '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="saveWpcEstimateDraft()"><i class="fas fa-save"></i> حفظ (بعد التدقيق)</button>' +
+            '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="saveWpcEstimateDraft()"><i class="fas fa-save"></i> حفظ معتمد</button>' +
+            '<span class="wpc-live-badge" id="wpc-live-save-badge"><i class="fas fa-cloud-upload-alt"></i> حفظ حي تلقائي</span>' +
             '<button type="button" class="nebras-users-btn" onclick="setWpcCutTab(\'audit\')"><i class="fas fa-microscope"></i> تدقيق</button>' +
             '<button type="button" class="nebras-users-btn" onclick="printWpcCutReport()"><i class="fas fa-print"></i> قائمة قص</button>' +
             '<button type="button" class="nebras-users-btn" onclick="runWpcCutJobFromDraft()"><i class="fas fa-scissors"></i> تخطيط ألواح</button></div>';
@@ -1465,9 +1571,13 @@
         clearTimeout(wpcRenderDebounce);
         if (immediate) {
             renderWpcCuttingPanel();
+            scheduleWpcLiveAutosave();
             return;
         }
-        wpcRenderDebounce = setTimeout(renderWpcCuttingPanel, 300);
+        wpcRenderDebounce = setTimeout(function() {
+            renderWpcCuttingPanel();
+            scheduleWpcLiveAutosave();
+        }, 300);
     }
 
     function renderWpcModels() {
@@ -1476,7 +1586,7 @@
                 '<span>' + wEsc(m.family) + ' · ' + (m.parts || []).length + ' قطع</span></div></article>';
         }).join('');
         return '<div class="wpc-cut-form-card"><h4><i class="fas fa-door-closed"></i> موديلات WPC</h4>' +
-            '<p class="wpc-cut-note">كتalog نبراس: فلات · يو 60 · ليب · سحاب — مع قطع وتخصيمات لكل موديل.</p>' + rows + '</div>';
+            '<p class="wpc-cut-note">كتالوج نبراس: فلات · يو 60 · ليب · سحاب — مع قطع وتخصيمات لكل موديل.</p>' + rows + '</div>';
     }
 
     function renderWpcDeductions() {

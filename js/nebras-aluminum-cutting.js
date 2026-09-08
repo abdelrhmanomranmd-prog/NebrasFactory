@@ -637,6 +637,7 @@
             'aluminum_cut_settings', 'aluminum_accessories', 'aluminum_glass', 'aluminum_wire',
             'aluminum_colors', 'aluminum_remnants', 'aluminum_stock', 'aluminum_audit'
         ];
+        if (typeof markLocalCloudMutationBatch === 'function') markLocalCloudMutationBatch(keys);
         if (typeof persistNebrasCriticalStores === 'function') {
             try {
                 return await persistNebrasCriticalStores(keys, {
@@ -647,6 +648,47 @@
             } catch (e) { console.warn('aluminum cloud persist', e); }
         }
         return false;
+    }
+
+    var aluAutosaveTimer = null;
+    function setAluLiveBadge(state, text) {
+        const badge = document.getElementById('alu-live-save-badge');
+        if (!badge) return;
+        const icons = {
+            idle: 'fa-cloud-upload-alt',
+            saving: 'fa-spinner fa-spin',
+            ok: 'fa-check',
+            warn: 'fa-exclamation-triangle'
+        };
+        badge.className = 'alu-live-badge' + (state === 'ok' ? ' is-ok' : (state === 'warn' ? ' is-warn' : (state === 'saving' ? ' is-saving' : '')));
+        badge.innerHTML = '<i class="fas ' + (icons[state] || icons.idle) + '"></i> ' + (text || 'حفظ حي تلقائي');
+    }
+    function scheduleAluLiveAutosave() {
+        if (!aluEstimateDraft) return;
+        clearTimeout(aluAutosaveTimer);
+        setAluLiveBadge('saving', 'جاري الحفظ الحي…');
+        aluAutosaveTimer = setTimeout(function() {
+            if (!aluEstimateDraft) return;
+            try { syncEstimateDraftFields(); } catch (e) { /* ignore */ }
+            if (!(aluEstimateDraft.items || []).length) {
+                setAluLiveBadge('idle', 'أضيفي بنداً ليُحفظ حياً');
+                return;
+            }
+            const totals = computeEstimateTotals(aluEstimateDraft);
+            aluEstimateDraft.totalsSnapshot = {
+                barsEstimate: totals.barsEstimate,
+                subtotal: totals.subtotal,
+                total: totals.total,
+                glassAreaM2: totals.glassAreaM2
+            };
+            aluEstimateDraft.updatedAt = new Date().toISOString();
+            const copy = JSON.parse(JSON.stringify(aluEstimateDraft));
+            const idx = aluEstimates.findIndex(function(e) { return e.id === copy.id; });
+            if (idx >= 0) aluEstimates[idx] = copy; else aluEstimates.push(copy);
+            persistAluminumCuttingCloud(['aluminum_estimates']).then(function(ok) {
+                setAluLiveBadge(ok ? 'ok' : 'warn', ok ? 'محفوظ حي على السيرفر' : 'محلي — أعيدي الحفظ');
+            });
+        }, 1400);
     }
 
     /* —— Cloud adapters —— */
@@ -1829,6 +1871,7 @@
             items: [
                 { id: 'systems', icon: 'fas fa-bars-staggered', label: 'إعدادات القطاعات' },
                 { id: 'deductions', icon: 'fas fa-sliders', label: 'التخصيمات' },
+                { id: 'drawings', icon: 'fas fa-drafting-compass', label: 'رسومات / تفاصيل' },
                 { id: 'accessories', icon: 'fas fa-puzzle-piece', label: 'إكسسوارات ومعادلات' },
                 { id: 'materials', icon: 'fas fa-layer-group', label: 'زجاج / سلك / ألوان' }
             ]
@@ -2021,6 +2064,7 @@
         if (aluActiveTab === 'dashboard') body = renderAluDashboard();
         else if (aluActiveTab === 'estimates') body = renderAluEstimatesList();
         else if (aluActiveTab === 'estimate') body = renderAluEstimateEditor();
+        else if (aluActiveTab === 'drawings') body = renderAluDrawings();
         else if (aluActiveTab === 'systems') body = renderAluSystems();
         else if (aluActiveTab === 'deductions') body = renderAluDeductions();
         else if (aluActiveTab === 'accessories') body = renderAluAccessories();
@@ -2717,6 +2761,89 @@
             '<rect width="100%" height="100%" fill="#fff"/>' + inner + '</svg>';
     }
 
+    function aluDrawSideSectionSvg(item, opts) {
+        opts = opts || {};
+        const Hmm = Math.max(100, aluNum(item.heightMm) || 1400);
+        const shape = resolveItemShape(item);
+        const found = findSystem(item.profileSystemId, shape.family === 'facade' ? 'facade' : (shape.family === 'sliding' ? 'sliding' : 'hinged'));
+        const d = dOf(found.system);
+        const frameDepth = Math.max(40, aluNum(d.frameDepthMm) || aluNum(d.frameSightMm) || 70);
+        const sashDepth = Math.max(20, aluNum(d.sashDepthMm) || Math.round(frameDepth * 0.55));
+        const viewW = opts.viewW || 260;
+        const viewH = opts.viewH || 360;
+        const margin = 36;
+        const scale = Math.min((viewW - margin * 2) / Math.max(frameDepth + 24, 80), (viewH - margin * 2) / Hmm);
+        const fd = frameDepth * scale;
+        const fh = Hmm * scale;
+        const ox = (viewW - fd) / 2;
+        const oy = margin * 0.7;
+        const navy = '#0d2840';
+        const accent = '#155e94';
+        const gold = '#c9a227';
+        const sashT = Math.max(5, sashDepth * scale * 0.55);
+        let inner = '';
+        inner += '<text x="' + (viewW / 2) + '" y="16" text-anchor="middle" font-size="12" font-weight="800" fill="' + navy + '">مقطع جانبي</text>';
+        /* جدار */
+        inner += '<rect x="' + (ox - 12) + '" y="' + oy + '" width="10" height="' + fh + '" fill="#cbd5e1"/>';
+        /* حلق */
+        inner += '<rect x="' + ox + '" y="' + oy + '" width="' + Math.max(4, fd * 0.28) + '" height="' + fh + '" fill="#94a3b8" stroke="' + navy + '" stroke-width="1"/>';
+        /* ضرفة/باكيت */
+        if (!shape.isFixed) {
+            inner += '<rect x="' + (ox + fd * 0.32) + '" y="' + (oy + 6) + '" width="' + sashT + '" height="' + Math.max(1, fh - 12) + '" fill="' + accent + '" opacity="0.32" stroke="' + accent + '" stroke-width="1.2"/>';
+            /* قوس فتح */
+            inner += '<path d="M' + (ox + fd * 0.32 + sashT + 3) + ' ' + (oy + fh * 0.42) +
+                ' Q' + (ox + fd + 8) + ' ' + (oy + fh * 0.32) + ' ' + (ox + fd + 6) + ' ' + (oy + fh * 0.58) +
+                '" fill="none" stroke="' + gold + '" stroke-width="1.3" stroke-dasharray="3 2"/>';
+        } else {
+            inner += '<rect x="' + (ox + fd * 0.35) + '" y="' + (oy + 4) + '" width="' + Math.max(4, fd * 0.2) + '" height="' + Math.max(1, fh - 8) + '" fill="rgba(56,189,248,0.25)" stroke="' + accent + '" stroke-width="1"/>';
+        }
+        /* زجاج */
+        inner += '<rect x="' + (ox + fd * 0.55) + '" y="' + (oy + fh * 0.12) + '" width="3" height="' + Math.max(1, fh * 0.7) + '" fill="rgba(56,189,248,0.55)"/>';
+        inner += '<text x="' + (viewW / 2) + '" y="' + (oy + fh + 18) + '" text-anchor="middle" font-size="10" fill="' + navy + '">عمق حلق ≈ ' + frameDepth + ' مم</text>';
+        inner += '<text x="12" y="' + (oy + fh / 2) + '" font-size="10" fill="' + navy + '" transform="rotate(-90 12 ' + (oy + fh / 2) + ')">' + Hmm + ' مم</text>';
+        return '<svg class="alu-section-side-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + viewW + ' ' + viewH + '" width="' + viewW + '" height="' + viewH + '" role="img" aria-label="مقطع جانبي ألومنيوم">' +
+            '<rect width="100%" height="100%" fill="#ffffff"/>' + inner + '</svg>';
+    }
+
+    function aluGetPreviewItem() {
+        if (aluEstimateDraft && aluEstimateDraft.items && aluEstimateDraft.items.length) return aluEstimateDraft.items[0];
+        const est = aluEstimates[aluEstimates.length - 1];
+        if (est && est.items && est.items.length) return est.items[0];
+        return {
+            shape: 'hinged1', widthMm: 1200, heightMm: 1400, qty: 1,
+            profileSystemId: (aluSystems[0] || {}).id,
+            glassId: (aluGlass[0] || {}).id,
+            handleHeightMm: 900
+        };
+    }
+
+    function renderAluDrawings() {
+        const item = aluGetPreviewItem();
+        const shape = resolveItemShape(item);
+        const elev = aluDrawElevationSvg(item, { viewW: 420, viewH: 380 });
+        const side = aluDrawSideSectionSvg(item, { viewW: 240, viewH: 380 });
+        const glass = aluDrawGlassNestSvg(item, { viewW: 300, viewH: 200 });
+        const section = aluDrawProfileSectionSvg(item, { viewW: 300, viewH: 160 });
+        const built = shapeCutsWithMeta(item, 0);
+        const ticket = aluDrawCutTicketSvg(built.cuts || [], { viewW: 520, max: 12 });
+        return '<div class="alu-cut-form-card"><h4><i class="fas fa-drafting-compass"></i> رسومات هندسية احترافية</h4>' +
+            '<p class="alu-cut-note">ارتفاع · مقطع جانبي · زجاج · قطاع · تذكرة قص — تتحدث مع المقايسة (حفظ حي تلقائي).</p>' +
+            '<span class="alu-live-badge" id="alu-draw-live"><i class="fas fa-bolt"></i> رسم حي</span></div>' +
+            '<div class="alu-draw-grid alu-draw-grid--pro">' +
+            '<section class="alu-draw-panel"><h5><i class="fas fa-ruler-combined"></i> ارتفاع أمامي</h5><div class="alu-elev-card">' + elev + '</div></section>' +
+            '<section class="alu-draw-panel"><h5><i class="fas fa-cut"></i> مقطع جانبي</h5><div class="alu-elev-card">' + side + '</div></section>' +
+            '<section class="alu-draw-panel"><h5><i class="fas fa-border-all"></i> تقطيع زجاج</h5><div class="alu-elev-card">' + glass + '</div></section>' +
+            '<section class="alu-draw-panel"><h5><i class="fas fa-layer-group"></i> مقطع قطاع</h5><div class="alu-elev-card">' + section + '</div></section>' +
+            '</div>' +
+            '<div class="alu-elev-card alu-cut-ticket-card" style="margin-top:14px">' + ticket + '</div>' +
+            '<div class="alu-cut-form-card"><h5>ملخص الهندسة</h5>' +
+            '<div class="alu-geo-summary">' +
+            '<span>النوع: <strong>' + aluEsc(shape.nameAr) + '</strong></span> ' +
+            '<span>خارجي: <strong>' + aluNum(item.widthMm) + '×' + aluNum(item.heightMm) + '</strong> مم</span></div>' +
+            aluFormulaStripHtml(item) +
+            '<button type="button" class="nebras-users-btn" onclick="setAluCutTab(\'estimate\')"><i class="fas fa-edit"></i> تعديل المقاسات</button></div>';
+    }
+
     function aluFormulaStripHtml(item) {
         const steps = buildFormulaSteps(item);
         return '<div class="alu-formula-strip" role="note"><strong><i class="fas fa-square-root-variable"></i> معادلات البند</strong><ul>' +
@@ -2815,23 +2942,23 @@
             '<h4><i class="fas fa-ruler-combined"></i> مقايسة — إضافة بنود</h4>' +
             warnHtml +
             '<div class="erp-form-grid">' +
-            '<label class="nebras-field"><span>مرجع</span><input type="text" id="alu-est-ref" value="' + aluEsc(d.ref) + '"></label>' +
-            '<label class="nebras-field"><span>العميل</span><input type="text" id="alu-est-customer" value="' + aluEsc(d.customerName) + '"></label>' +
-            '<label class="nebras-field"><span>المشروع</span><input type="text" id="alu-est-project" value="' + aluEsc(d.projectName) + '"></label>' +
-            '<label class="nebras-field"><span>هاتف</span><input type="tel" id="alu-est-phone" value="' + aluEsc(d.customerPhone || '') + '" placeholder="05xxxxxxxx"></label>' +
-            '<label class="nebras-field"><span>تاريخ التسليم</span><input type="date" id="alu-est-delivery" value="' + aluEsc(d.deliveryDate || '') + '"></label>' +
-            '<label class="nebras-field"><span>نوع الدهان</span><select id="alu-est-paint">' +
+            '<label class="nebras-field"><span>مرجع</span><input type="text" id="alu-est-ref" value="' + aluEsc(d.ref) + '" oninput="scheduleAluLiveAutosave()"></label>' +
+            '<label class="nebras-field"><span>العميل</span><input type="text" id="alu-est-customer" value="' + aluEsc(d.customerName) + '" oninput="scheduleAluLiveAutosave()"></label>' +
+            '<label class="nebras-field"><span>المشروع</span><input type="text" id="alu-est-project" value="' + aluEsc(d.projectName) + '" oninput="scheduleAluLiveAutosave()"></label>' +
+            '<label class="nebras-field"><span>هاتف</span><input type="tel" id="alu-est-phone" value="' + aluEsc(d.customerPhone || '') + '" placeholder="05xxxxxxxx" oninput="scheduleAluLiveAutosave()"></label>' +
+            '<label class="nebras-field"><span>تاريخ التسليم</span><input type="date" id="alu-est-delivery" value="' + aluEsc(d.deliveryDate || '') + '" onchange="scheduleAluLiveAutosave()"></label>' +
+            '<label class="nebras-field"><span>نوع الدهان</span><select id="alu-est-paint" onchange="scheduleAluLiveAutosave()">' +
             Object.keys(PAINT_TYPES).map(function (k) {
                 return '<option value="' + k + '"' + ((d.paintType || 'none') === k ? ' selected' : '') + '>' + PAINT_TYPES[k].nameAr +
                     (PAINT_TYPES[k].perKg ? (' (+' + PAINT_TYPES[k].perKg + '/كغ)') : '') + '</option>';
             }).join('') + '</select></label>' +
-            '<label class="nebras-field"><span>سعر إكسسوار</span><select id="alu-est-pricemode">' +
+            '<label class="nebras-field"><span>سعر إكسسوار</span><select id="alu-est-pricemode" onchange="scheduleAluLiveAutosave()">' +
             '<option value="purchase"' + (d.priceMode !== 'sell' ? ' selected' : '') + '>شراء</option>' +
             '<option value="sell"' + (d.priceMode === 'sell' ? ' selected' : '') + '>بيع</option></select></label>' +
-            '<label class="nebras-field"><span>عود مم</span><input type="number" id="alu-est-stock" value="' + aluNum(d.stockBarMm || aluSettings.stockBarMm) + '"></label>' +
-            '<label class="nebras-field"><span>منشار مم</span><input type="number" id="alu-est-kerf" value="' + aluNum(d.kerfMm != null ? d.kerfMm : aluSettings.kerfMm) + '" step="0.1"></label>' +
-            '<label class="nebras-field"><span>تعديل وزن %</span><input type="number" id="alu-est-wadj" value="' + aluNum(d.weightAdjustPct) + '" step="1" placeholder="-10 أخف"></label>' +
-            '<label class="nebras-field"><span>أجور / وحدة</span><input type="number" id="alu-est-labor" value="' + aluNum(d.laborPerUnit) + '"></label>' +
+            '<label class="nebras-field"><span>عود مم</span><input type="number" id="alu-est-stock" value="' + aluNum(d.stockBarMm || aluSettings.stockBarMm) + '" oninput="scheduleAluLiveAutosave()"></label>' +
+            '<label class="nebras-field"><span>منشار مم</span><input type="number" id="alu-est-kerf" value="' + aluNum(d.kerfMm != null ? d.kerfMm : aluSettings.kerfMm) + '" step="0.1" oninput="scheduleAluLiveAutosave()"></label>' +
+            '<label class="nebras-field"><span>تعديل وزن %</span><input type="number" id="alu-est-wadj" value="' + aluNum(d.weightAdjustPct) + '" step="1" placeholder="-10 أخف" oninput="scheduleAluLiveAutosave()"></label>' +
+            '<label class="nebras-field"><span>أجور / وحدة</span><input type="number" id="alu-est-labor" value="' + aluNum(d.laborPerUnit) + '" oninput="scheduleAluLiveAutosave()"></label>' +
             '</div>' +
             '<div class="alu-cut-subcard"><h5>إضافة بند من الأشكال الجاهزة</h5>' +
             '<input type="hidden" id="alu-op-edit-idx" value="">' +
@@ -2895,6 +3022,7 @@
             '</div>' +
             '<div class="erp-form-actions">' +
             '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="saveAluEstimate()"><i class="fas fa-save"></i> حفظ</button>' +
+            '<span class="alu-live-badge" id="alu-live-save-badge"><i class="fas fa-cloud-upload-alt"></i> حفظ حي تلقائي</span>' +
             '<button type="button" class="nebras-users-btn" onclick="sendAluEstimateToCutting()"><i class="fas fa-scissors"></i> إرسال للتقطيع</button>' +
             '<button type="button" class="nebras-users-btn" onclick="printAluEstimateReport()"><i class="fas fa-print"></i> طباعة</button>' +
             '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="printAluImagesReport()"><i class="fas fa-image"></i> تقرير الصور والرسومات</button>' +
@@ -2998,8 +3126,11 @@
             draft.bayRows = draft.freehand.bayRows;
         }
         const meta = resolveItemShape(draft);
-        box.innerHTML = '<div class="alu-elev-card">' + aluDrawElevationSvg(draft, { viewW: 340, viewH: 280 }) +
-            '</div><p class="alu-cut-note">معاينة: ' + aluEsc(meta.nameAr) + ' · زجاج ناتج من التخصيمات يُحسب عند الإضافة.</p>';
+        box.innerHTML = '<div class="alu-draw-pair alu-draw-pair--live">' +
+            '<div class="alu-elev-card">' + aluDrawElevationSvg(draft, { viewW: 320, viewH: 280 }) + '</div>' +
+            '<div class="alu-elev-card">' + aluDrawSideSectionSvg(draft, { viewW: 200, viewH: 280 }) + '</div>' +
+            '</div><p class="alu-cut-note">معاينة حية: ' + aluEsc(meta.nameAr) + ' — ارتفاع + مقطع · الزجاج يُحسب عند الإضافة.</p>';
+        scheduleAluLiveAutosave();
     }
 
     function readAluItemFromForm() {
@@ -3078,6 +3209,7 @@
             row.id = aluId('op');
             aluEstimateDraft.items.push(row);
         }
+        scheduleAluLiveAutosave();
         renderAluminumCuttingPanel();
     }
 
@@ -3127,6 +3259,7 @@
     function removeAluItem(i) {
         if (!aluEstimateDraft || !aluEstimateDraft.items) return;
         aluEstimateDraft.items.splice(i, 1);
+        scheduleAluLiveAutosave();
         renderAluminumCuttingPanel();
     }
 
@@ -4798,6 +4931,7 @@
     global.clearAluItemForm = clearAluItemForm;
     global.toggleAluBayFields = toggleAluBayFields;
     global.refreshAluFreehandPreview = refreshAluFreehandPreview;
+    global.scheduleAluLiveAutosave = scheduleAluLiveAutosave;
     global.aluReadPartImage = aluReadPartImage;
     global.resolveItemShape = resolveItemShape;
     global.explainAluEstimateFormulas = explainEstimateFormulas;
