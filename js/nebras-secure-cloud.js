@@ -227,12 +227,22 @@
         return '';
     }
 
-    async function secureApiLogin(username, password) {
+    async function secureApiLogin(username, password, options) {
+        options = options || {};
+        const timeoutMs = options.timeoutMs != null ? Number(options.timeoutMs) : 2200;
+        const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+        let timer = null;
         try {
+            if (ctrl && timeoutMs > 0) {
+                timer = setTimeout(function() {
+                    try { ctrl.abort(); } catch (abortErr) { /* ignore */ }
+                }, timeoutMs);
+            }
             const res = await fetch(apiBase() + '/api/nebras-auth?action=login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: username, password: password })
+                body: JSON.stringify({ username: username, password: password }),
+                signal: ctrl ? ctrl.signal : undefined
             });
             const data = await res.json();
             if (!res.ok || !data.ok || !data.token) {
@@ -242,7 +252,9 @@
             return data;
         } catch (e) {
             console.warn('secureApiLogin failed:', e);
-            return { ok: false, error: 'network_error' };
+            return { ok: false, error: (e && e.name === 'AbortError') ? 'timeout' : 'network_error' };
+        } finally {
+            if (timer) clearTimeout(timer);
         }
     }
 

@@ -971,8 +971,8 @@
         }
 
         const DOOR_PHOTO_PRESET_ROOT = 'images/doors/presets/';
-        const DOOR_PHOTO_PRESET_CACHE = '327';
-        const DOOR_PHOTO_COMPOSE_MAX_DIM = 1800;
+        const DOOR_PHOTO_PRESET_CACHE = '329';
+        const DOOR_PHOTO_COMPOSE_MAX_DIM = 1400;
         /** صور أبواب المصنع الحقيقية في المعاينة — SVG احتياطي عند غياب الصورة */
         const DOOR_DESIGNER_LIVE_USE_PHOTO_PRESETS = true;
         let doorDesignerPreviewRaf = 0;
@@ -1213,17 +1213,16 @@
                 if (!roll) return;
                 const rw = roll.naturalWidth || roll.width || 256;
                 const rh = roll.naturalHeight || roll.height || 256;
-                const targetW = Math.max(180, Math.round(w * 0.36));
+                /* بلاطة كبيرة ناعمة — تمنع بكسلة البلاط الصغير على الحائط/الضلفة */
+                const targetW = Math.max(Math.round(w * 0.92), Math.round(rw * 1.15));
                 const scale = targetW / Math.max(1, rw);
                 const tw = Math.max(1, Math.round(rw * scale));
                 const th = Math.max(1, Math.round(rh * scale));
                 ctx.globalCompositeOperation = mode || 'multiply';
                 ctx.globalAlpha = alpha;
-                for (let ty = 0; ty < h + th; ty += th) {
-                    for (let tx = 0; tx < w + tw; tx += tw) {
-                        ctx.drawImage(roll, tx, ty, tw, th);
-                    }
-                }
+                const ox = Math.round((w - tw) / 2);
+                const oy = Math.round((h - th) / 2);
+                ctx.drawImage(roll, ox, oy, tw, th);
                 ctx.globalAlpha = 1;
             }
 
@@ -1232,36 +1231,42 @@
                 if (basePhoto) {
                     ctx.drawImage(basePhoto, 0, 0, w, h);
                 } else {
-                    ctx.fillStyle = '#ffffff';
+                    ctx.fillStyle = '#d8d0c4';
                     ctx.fillRect(0, 0, w, h);
-                }
-                ctx.globalCompositeOperation = 'saturation';
-                ctx.fillStyle = 'rgba(128,128,128,' + (profile.saturationGray * (basePhoto ? 0.7 : 1)) + ')';
-                ctx.fillRect(0, 0, w, h);
-                if (roll) {
-                    tileRollTexture(ctx, roll, w, h, profile.multiplyAlpha * (basePhoto ? 0.5 : 1), 'multiply');
-                    tileRollTexture(ctx, roll, w, h, profile.colorAlpha * (basePhoto ? 0.68 : 1), 'color');
                 }
                 if (hexFallback) {
                     ctx.globalCompositeOperation = 'color';
                     ctx.fillStyle = hexFallback;
-                    ctx.globalAlpha = roll ? (basePhoto ? profile.hexBoost * 0.78 : profile.hexBoost) : 0.9;
+                    ctx.globalAlpha = roll ? 0.72 : 0.88;
                     ctx.fillRect(0, 0, w, h);
                     ctx.globalAlpha = 1;
                 }
+                if (roll) {
+                    tileRollTexture(ctx, roll, w, h, 0.38, 'multiply');
+                    tileRollTexture(ctx, roll, w, h, 0.42, 'soft-light');
+                }
                 if (basePhoto) {
-                    ctx.globalCompositeOperation = 'overlay';
-                    ctx.globalAlpha = 0.26;
+                    ctx.globalCompositeOperation = 'luminosity';
+                    ctx.globalAlpha = 0.34;
                     ctx.drawImage(basePhoto, 0, 0, w, h);
-                    ctx.globalAlpha = 1;
-                } else {
-                    ctx.globalCompositeOperation = 'soft-light';
-                    ctx.globalAlpha = 0.18;
-                    ctx.fillStyle = roll ? '#ffffff' : hexFallback;
-                    ctx.fillRect(0, 0, w, h);
                     ctx.globalAlpha = 1;
                 }
                 ctx.globalCompositeOperation = 'source-over';
+            }
+
+            function intersectMaskCanvases(a, b, w, h) {
+                if (!a) return b || null;
+                if (!b) return a;
+                const canvas = document.createElement('canvas');
+                canvas.width = w;
+                canvas.height = h;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) return a;
+                ctx.drawImage(a, 0, 0, w, h);
+                ctx.globalCompositeOperation = 'destination-in';
+                ctx.drawImage(b, 0, 0, w, h);
+                ctx.globalCompositeOperation = 'source-over';
+                return canvas;
             }
 
             function bake(base, roll, mask, panelClip) {
@@ -1275,23 +1280,23 @@
                         w = Math.max(1, Math.round(w * shrink));
                         h = Math.max(1, Math.round(h * shrink));
                     }
-                    const dpr = Math.min(typeof window !== 'undefined' && window.devicePixelRatio ? window.devicePixelRatio : 1, 1.5);
-                    const outW = Math.round(w * dpr);
-                    const outH = Math.round(h * dpr);
+                    const dpr = 1;
+                    const outW = w;
+                    const outH = h;
 
                     const canvas = document.createElement('canvas');
                     canvas.width = outW;
                     canvas.height = outH;
                     const ctx = canvas.getContext('2d');
                     if (!ctx) return null;
-                    ctx.scale(dpr, dpr);
                     ctx.imageSmoothingEnabled = true;
                     ctx.imageSmoothingQuality = 'high';
                     ctx.drawImage(base, 0, 0, w, h);
 
                     let panelMask = mask;
                     if (options.leafPixels) {
-                        panelMask = buildWpcStoreLeafPixelMask(base, w, h) || mask;
+                        const leafMask = buildWpcStoreLeafPixelMask(base, w, h);
+                        panelMask = intersectMaskCanvases(mask, leafMask, w, h) || leafMask || mask;
                     } else if (panelClip && useMask) {
                         panelMask = buildWpcCatalogPanelRectMask(w, h, panelClip);
                     }
@@ -1301,7 +1306,6 @@
                         leafCanvas.width = outW;
                         leafCanvas.height = outH;
                         const lctx = leafCanvas.getContext('2d');
-                        lctx.scale(dpr, dpr);
                         lctx.imageSmoothingEnabled = true;
                         lctx.imageSmoothingQuality = 'high';
                         paintRollLayer(lctx, w, h, roll, base);
@@ -1309,11 +1313,14 @@
                         lctx.drawImage(panelMask, 0, 0, w, h);
                         lctx.globalCompositeOperation = 'source-over';
                         ctx.drawImage(leafCanvas, 0, 0, w, h);
-                    } else if (!panelMask && (rollKey || hexFallback)) {
+                    } else if (!panelMask && (rollKey || hexFallback) && options.allowFullPaint) {
                         paintRollLayer(ctx, w, h, roll, base);
+                    } else if (!panelMask && (rollKey || hexFallback)) {
+                        /* بدون قناع صالح — لا نلوّن الصورة كاملة (سبب البكسلة على الحائط) */
+                        return null;
                     }
 
-                    let out = canvas.toDataURL('image/jpeg', 0.94);
+                    let out = canvas.toDataURL('image/jpeg', 0.93);
                     if (!out || out.length < 64) out = canvas.toDataURL('image/png');
                     return out && out.length > 64 ? out : null;
                 } catch (err) {
@@ -3357,20 +3364,27 @@
         }
 
         const WPC_STORE_RECOLOR_CACHE = {};
-        const WPC_STORE_RECOLOR_MAX = 960;
+        const WPC_STORE_RECOLOR_MAX = 1280;
 
         /** هل البكسل لوح خشب الباب — بدون خلفية الاستوديو والإطار والمقبض */
         function isWpcStoreLeafPixel(r, g, b, a, bg) {
-            if (a < 10) return false;
+            if (a < 18) return false;
             const max = r > g ? (r > b ? r : b) : (g > b ? g : b);
             const min = r < g ? (r < b ? r : b) : (g < b ? g : b);
             const lum = 0.299 * r + 0.587 * g + 0.114 * b;
             const sat = max === 0 ? 0 : (max - min) / max;
             const bgDist = Math.abs(r - bg.r) + Math.abs(g - bg.g) + Math.abs(b - bg.b);
-            if (bg.lum > 170 && lum > 198 && bgDist < 58) return false;
-            if (lum > 246 && sat < 0.08) return false;
-            if (lum < 28 && sat < 0.18) return false;
-            if (b > r + 28 && b > g + 12 && sat > 0.2 && lum > 64) return false;
+            /* استوديو رمادي فاتح — أي بكسل قريب من الخلفية ليس لوحاً */
+            if (bgDist < 42) return false;
+            if (bg.lum > 150 && lum > 175 && bgDist < 78) return false;
+            if (lum > 236 && sat < 0.12) return false;
+            if (lum < 34 && sat < 0.22) return false;
+            /* مقبض/شريط معدني داكن */
+            if (lum < 55 && sat < 0.28) return false;
+            if (b > r + 22 && b > g + 10 && sat > 0.16 && lum > 55) return false;
+            /* لوح الخشب: دفء خفيف أو رمادي خشبي مشبع قليلاً */
+            const warm = (r + g) / 2 - b;
+            if (warm < -8 && sat < 0.12 && lum > 120) return false;
             return true;
         }
 
@@ -3385,8 +3399,28 @@
             try { frame = ctx.getImageData(0, 0, w, h); } catch (err) { return null; }
             const px = frame.data;
             const bg = sampleAluminumStudioBackground(px, w, h);
+            const mark = new Uint8Array(w * h);
+            for (let y = 0; y < h; y++) {
+                for (let x = 0; x < w; x++) {
+                    const i = (y * w + x) * 4;
+                    mark[y * w + x] = isWpcStoreLeafPixel(px[i], px[i + 1], px[i + 2], px[i + 3], bg) ? 1 : 0;
+                }
+            }
+            /* تآكل خفيف — يشيل بقع الحائط الخاطئة (سبب البكسلة البيضاء) */
+            const cleaned = new Uint8Array(w * h);
+            for (let y = 1; y < h - 1; y++) {
+                for (let x = 1; x < w - 1; x++) {
+                    let n = 0;
+                    for (let dy = -1; dy <= 1; dy++) {
+                        for (let dx = -1; dx <= 1; dx++) {
+                            n += mark[(y + dy) * w + (x + dx)];
+                        }
+                    }
+                    cleaned[y * w + x] = n >= 6 ? 1 : 0;
+                }
+            }
             for (let i = 0; i < px.length; i += 4) {
-                const on = isWpcStoreLeafPixel(px[i], px[i + 1], px[i + 2], px[i + 3], bg);
+                const on = cleaned[i / 4];
                 px[i] = px[i + 1] = px[i + 2] = on ? 255 : 0;
                 px[i + 3] = on ? 255 : 0;
             }
@@ -3425,10 +3459,10 @@
                 const b = px[i + 2];
                 const a = px[i + 3];
                 if (!isWpcStoreLeafPixel(r, g, b, a, bg)) continue;
-                const grain = 0.16;
-                let nr = (r / 255) * target.r * 1.08 * (1 - grain) + r * grain;
-                let ng = (g / 255) * target.g * 1.08 * (1 - grain) + g * grain;
-                let nb = (b / 255) * target.b * 1.08 * (1 - grain) + b * grain;
+                const grain = 0.22;
+                let nr = (r / 255) * target.r * 1.05 * (1 - grain) + r * grain;
+                let ng = (g / 255) * target.g * 1.05 * (1 - grain) + g * grain;
+                let nb = (b / 255) * target.b * 1.05 * (1 - grain) + b * grain;
                 px[i] = nr < 0 ? 0 : nr > 255 ? 255 : nr;
                 px[i + 1] = ng < 0 ? 0 : ng > 255 ? 255 : ng;
                 px[i + 2] = nb < 0 ? 0 : nb > 255 ? 255 : nb;
@@ -3467,7 +3501,7 @@
             }
         }
 
-        /** معاينة متجر — خبز Canvas + نسيج الرولّة على لوح الباب فقط (بدون الإطار) */
+        /** معاينة متجر — لون الرولّة على لوح الباب فقط (بيكسلات الخشب) بدون طبقة فوق الصورة */
         function applyComposedRollToStoreSkuImg(img, stack, baseSrc, rollState, variant) {
             if (!img || !baseSrc || !rollState) return;
             const hex = rollState.hex || '#b8bcc4';
@@ -3500,8 +3534,7 @@
                 stack.classList.add('has-roll-pending');
                 stack.classList.remove('has-roll-composite-ready', 'has-roll-texture', 'has-roll-css-fallback');
             }
-            const tex = resolveDoorRollTextureUrl(rollState.swatchUrl || getRollSwatchImageUrl(catIdx));
-            composeDoorPhotoWithRoll(baseSrc, tex, hex, catIdx, { useMask: true, leafPixels: true }).then(function(composed) {
+            const finish = function(composed) {
                 if (!img.isConnected) return;
                 if (img.getAttribute('data-roll-compose-token') !== token) return;
                 if (composed) {
@@ -3520,6 +3553,11 @@
                     return;
                 }
                 applyWpcStoreRollCssPanelFallback(img, stack, baseSrc, rollState, variant);
+            };
+            /* مسار نظيف: تلوين بيكسلات اللوح فقط — الحائط والإطار والمقبض ثابتة */
+            composeWpcStoreProductColor(baseSrc, hex).then(finish).catch(function() {
+                const tex = resolveDoorRollTextureUrl(rollState.swatchUrl || getRollSwatchImageUrl(catIdx));
+                return composeDoorPhotoWithRoll(baseSrc, tex, hex, catIdx, { useMask: true, leafPixels: true }).then(finish);
             }).catch(function() {
                 if (!img.isConnected) return;
                 if (img.getAttribute('data-roll-compose-token') !== token) return;
@@ -14139,7 +14177,7 @@
             const badgeIcon = variant === 'partners' ? 'fa-handshake' : 'fa-door-open';
             const imgW = variant === 'partners' ? 168 : 440;
             const imgH = variant === 'partners' ? 168 : 760;
-            const deploy = (document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws328';
+            const deploy = (document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws329';
             const slides = urls.map(function(src, i) {
                 const delay = -(cycleSec - 3) + (i * 3);
                 const loading = i === 0 ? 'eager' : 'lazy';
@@ -19111,19 +19149,22 @@
             let user = null;
             let apiAuthenticated = false;
 
+            /* Accmaa-style: دخول محلي فوري — API بمهلة قصيرة ثم جلسة سحابة في الخلفية */
+            if (typeof resolveAdminLoginUser === 'function') {
+                user = resolveAdminLoginUser(username, password);
+            }
+
             if (typeof secureApiLogin === 'function') {
                 try {
-                    const apiLogin = await secureApiLogin(username, password);
-                    if (apiLogin && apiLogin.user) {
+                    const apiLogin = await secureApiLogin(username, password, { timeoutMs: user ? 1600 : 3200 });
+                    if (apiLogin && apiLogin.ok && apiLogin.user) {
                         apiAuthenticated = true;
                         if (typeof mergeApiAdminUser === 'function') mergeApiAdminUser(apiLogin.user);
                         user = apiLogin.user;
+                    } else if (apiLogin && apiLogin.ok && apiLogin.token && user) {
+                        apiAuthenticated = true;
                     }
                 } catch (e) { console.warn('API login', e); }
-            }
-
-            if (!user && typeof resolveAdminLoginUser === 'function') {
-                user = resolveAdminLoginUser(username, password);
             }
 
             if (user) {
@@ -29838,7 +29879,7 @@
             if (nebrasDoorEngineLoadPromise) return nebrasDoorEngineLoadPromise;
             const ver = (typeof window.NEBRAS_DEPLOY_TAG !== 'undefined' && window.NEBRAS_DEPLOY_TAG)
                 ? window.NEBRAS_DEPLOY_TAG
-                : ((document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws328');
+                : ((document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws329');
             nebrasDoorEngineLoadPromise = loadNebrasThreeJs().then(function() {
                 return Promise.all([
                     loadNebrasScriptOnce('js/nebras-door-3d.js?v=' + ver),
