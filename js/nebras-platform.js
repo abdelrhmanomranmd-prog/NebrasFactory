@@ -14177,7 +14177,7 @@
             const badgeIcon = variant === 'partners' ? 'fa-handshake' : 'fa-door-open';
             const imgW = variant === 'partners' ? 168 : 440;
             const imgH = variant === 'partners' ? 168 : 760;
-            const deploy = (document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws329';
+            const deploy = (document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws330';
             const slides = urls.map(function(src, i) {
                 const delay = -(cycleSec - 3) + (i * 3);
                 const loading = i === 0 ? 'eager' : 'lazy';
@@ -19136,6 +19136,12 @@
             const loginBtn = document.getElementById('admin-login-btn');
             const ui = siteText[currentLang || 'ar'] || siteText.ar;
 
+            function restoreLoginBtn() {
+                if (!loginBtn) return;
+                loginBtn.disabled = false;
+                if (loginBtn.dataset.prevText) loginBtn.textContent = loginBtn.dataset.prevText;
+            }
+
             if (!username || !password) {
                 if (typeof setAdminLoginStatus === 'function') setAdminLoginStatus(ui.adminLoginEmpty || 'يرجى إدخال اسم المستخدم وكلمة المرور.', 'error');
                 return;
@@ -19146,73 +19152,84 @@
                 loginBtn.dataset.prevText = loginBtn.textContent || '';
                 loginBtn.textContent = ui.adminLoginBusy || 'جاري الدخول…';
             }
-            let user = null;
-            let apiAuthenticated = false;
 
-            /* Accmaa-style: دخول محلي فوري — API بمهلة قصيرة ثم جلسة سحابة في الخلفية */
+            /* Accmaa-style: دخول محلي فوري — لا ننتظر السحابة لفتح الداشبورد */
+            let user = null;
             if (typeof resolveAdminLoginUser === 'function') {
                 user = resolveAdminLoginUser(username, password);
             }
 
-            if (typeof secureApiLogin === 'function') {
+            /* بدون مستخدم محلي فقط ننتظر API بمهلة قصيرة */
+            if (!user && typeof secureApiLogin === 'function') {
                 try {
-                    const apiLogin = await secureApiLogin(username, password, { timeoutMs: user ? 1600 : 3200 });
+                    const apiLogin = await secureApiLogin(username, password, { timeoutMs: 2800 });
                     if (apiLogin && apiLogin.ok && apiLogin.user) {
-                        apiAuthenticated = true;
                         if (typeof mergeApiAdminUser === 'function') mergeApiAdminUser(apiLogin.user);
                         user = apiLogin.user;
-                    } else if (apiLogin && apiLogin.ok && apiLogin.token && user) {
-                        apiAuthenticated = true;
                     }
                 } catch (e) { console.warn('API login', e); }
             }
 
-            if (user) {
+            if (!user) {
+                if (typeof setAdminLoginStatus === 'function') setAdminLoginStatus(ui.adminLoginFail || 'بيانات الدخول غير صحيحة. حاول مرة أخرى.', 'error');
+                addAuditLog('محاولة دخول فاشلة', 'اسم مستخدم: ' + username);
+                restoreLoginBtn();
+                return;
+            }
+
+            if (user.isActive === false) {
+                if (typeof setAdminLoginStatus === 'function') setAdminLoginStatus(ui.adminLoginDisabled || 'هذا الحساب معطّل — تواصل مع الإدارة الرئيسية.', 'error');
+                addAuditLog('محاولة دخول معطّل', user.username + ' — حساب معطّل');
+                restoreLoginBtn();
+                return;
+            }
+
+            try {
                 loadAdminBusinessCacheFromLocal();
-                if (!apiAuthenticated && typeof hasNebrasSecureSession === 'function' && hasNebrasSecureSession()) {
-                    apiAuthenticated = true;
-                }
-                if (user.isActive === false) {
-                    if (typeof setAdminLoginStatus === 'function') setAdminLoginStatus(ui.adminLoginDisabled || 'هذا الحساب معطّل — تواصل مع الإدارة الرئيسية.', 'error');
-                    addAuditLog('محاولة دخول معطّل', user.username + ' — حساب معطّل');
-                    if (loginBtn) loginBtn.disabled = false;
-                    return;
-                }
-                if (isMainGovernanceAdmin(user)) {
-                    user.isPrimary = true;
-                    user.role = 'superadmin';
-                    user.permissions = null;
-                }
-                const loginNow = new Date().toISOString();
-                const uidx = adminUsers.findIndex(function(u) { return u.id === user.id; });
-                if (uidx >= 0) {
-                    adminUsers[uidx] = Object.assign({}, adminUsers[uidx], user, { lastLoginAt: loginNow, lastSeenAt: loginNow, isActive: true });
-                    user = adminUsers[uidx];
-                }
-                currentAdmin = user;
-                nebrasLastLoginPassword = password;
+            } catch (cacheErr) { console.warn('admin cache:', cacheErr); }
+
+            if (isMainGovernanceAdmin(user)) {
+                user.isPrimary = true;
+                user.role = 'superadmin';
+                user.permissions = null;
+            }
+            const loginNow = new Date().toISOString();
+            const uidx = adminUsers.findIndex(function(u) { return u.id === user.id; });
+            if (uidx >= 0) {
+                adminUsers[uidx] = Object.assign({}, adminUsers[uidx], user, { lastLoginAt: loginNow, lastSeenAt: loginNow, isActive: true });
+                user = adminUsers[uidx];
+            }
+            currentAdmin = user;
+            nebrasLastLoginPassword = password;
+            try {
+                if (password) sessionStorage.setItem('nebrasLoginPwCache', password);
+            } catch (pwCacheErr) { /* ignore */ }
+            persistAdminUiSession(user);
+            if (typeof syncAdminSessionClass === 'function') syncAdminSessionClass();
+
+            if (typeof setAdminLoginStatus === 'function') setAdminLoginStatus(ui.adminLoginOk || 'تم تسجيل الدخول بنجاح.', 'ok');
+            if (typeof showNebrasAdminToast === 'function') {
+                showNebrasAdminToast('مرحباً ' + user.username + ' — ' + getRoleLabel(user.role), 'ok');
+            }
+            closeAdminOverlay();
+            clearStuckInteractionBlockers();
+            showAdminDashboard(user);
+            if (typeof scrollToAdminDashboard === 'function') scrollToAdminDashboard();
+            restoreLoginBtn();
+
+            /* كل الشبكة / ERP / المزامنة بعد فتح الواجهة فوراً */
+            setTimeout(function() {
                 try {
-                    if (password) sessionStorage.setItem('nebrasLoginPwCache', password);
-                } catch (pwCacheErr) { /* ignore */ }
-                persistAdminUiSession(user);
-                if (typeof syncAdminSessionClass === 'function') syncAdminSessionClass();
-                if (typeof initNebrasCloudSafety === 'function') {
-                    try { initNebrasCloudSafety(); } catch (csErr) { console.warn('Cloud safety init:', csErr); }
-                }
-                if (typeof startNebrasRealtimeSync === 'function') {
-                    try { startNebrasRealtimeSync(); } catch (rtErr) { console.warn('Realtime shadow:', rtErr); }
-                }
+                    if (typeof initNebrasCloudSafety === 'function') initNebrasCloudSafety();
+                } catch (csErr) { console.warn('Cloud safety init:', csErr); }
+                try {
+                    if (typeof startNebrasRealtimeSync === 'function') startNebrasRealtimeSync();
+                } catch (rtErr) { console.warn('Realtime shadow:', rtErr); }
                 try { window.dispatchEvent(new CustomEvent('nebras-admin-session', { detail: { username: user.username } })); } catch (sessEv) { /* ignore */ }
-                saveSystemData({ skipCloud: true, skipMutationMark: true });
+                try { saveSystemData({ skipCloud: true, skipMutationMark: true }); } catch (saveErr) { console.warn('login save:', saveErr); }
                 if (typeof startAdminPresenceHeartbeat === 'function') startAdminPresenceHeartbeat(user);
-                if (typeof setAdminLoginStatus === 'function') setAdminLoginStatus(ui.adminLoginOk || 'تم تسجيل الدخول بنجاح.', 'ok');
-                if (typeof showNebrasAdminToast === 'function') {
-                    showNebrasAdminToast('مرحباً ' + user.username + ' — ' + getRoleLabel(user.role), 'ok');
-                }
-                closeAdminOverlay();
-                clearStuckInteractionBlockers();
-                showAdminDashboard(user);
-                if (!apiAuthenticated && typeof establishNebrasSecureSession === 'function') {
+
+                if (typeof establishNebrasSecureSession === 'function') {
                     establishNebrasSecureSession(username, password).then(function(sessOk) {
                         if (sessOk && typeof startNebrasCloudAutoSync === 'function') startNebrasCloudAutoSync();
                         else if (!sessOk && typeof showNebrasAdminToast === 'function') {
@@ -19222,6 +19239,7 @@
                         console.warn('secure session background:', sessErr);
                     });
                 }
+
                 if (typeof bootNebrasAdminSession === 'function') {
                     const runAdminBoot = function() {
                         bootNebrasAdminSession({ withPortal: true, withErp: true }).catch(function(deferErr) {
@@ -19229,11 +19247,12 @@
                         });
                     };
                     if (typeof requestIdleCallback === 'function') {
-                        requestIdleCallback(runAdminBoot, { timeout: 2800 });
+                        requestIdleCallback(runAdminBoot, { timeout: 3200 });
                     } else {
-                        setTimeout(runAdminBoot, 400);
+                        setTimeout(runAdminBoot, 600);
                     }
                 }
+
                 if (NEBRAS_SERVER_FIRST_MODE && supabaseClient) {
                     if (typeof scheduleHydrateGovernanceAfterLogin === 'function') {
                         scheduleHydrateGovernanceAfterLogin();
@@ -19241,17 +19260,12 @@
                 } else if (typeof startNebrasCloudAutoSync === 'function') {
                     startNebrasCloudAutoSync();
                 }
-                if (typeof nebrasStorageHealthReport === 'function' && !(typeof window !== 'undefined' && window.NEBRAS_ODOO_QUIET_UI)) {
-                    const sh = nebrasStorageHealthReport();
-                    if (sh.warn && typeof showNebrasAdminToast === 'function') {
-                        showNebrasAdminToast('تنبيه تخزين محلي: ' + Math.round(sh.totalBytes / 1024) + ' KB — البيانات الأساسية في السحابة.', 'warn');
-                    }
-                }
-                if (typeof scrollToAdminDashboard === 'function') scrollToAdminDashboard();
+
                 setTimeout(function() {
                     if (typeof flushCatalogSeedCloudSyncIfPending === 'function') flushCatalogSeedCloudSyncIfPending();
                     if (typeof flushAluminumIhabUserToCloudIfNeeded === 'function') flushAluminumIhabUserToCloudIfNeeded();
                 }, 3500);
+
                 try {
                     if (typeof isStrictHrUser === 'function' && isStrictHrUser(user)) {
                         setLanguage(currentLang || 'ar', { light: true, skipCatalog: true });
@@ -19270,14 +19284,7 @@
                     if (typeof window.renderHrPlatformPanelSafe === 'function') window.renderHrPlatformPanelSafe();
                 }
                 addAuditLog('تسجيل دخول', 'دخول ناجح — ' + user.username + ' (' + getRoleLabel(user.role) + ')');
-            } else {
-                if (typeof setAdminLoginStatus === 'function') setAdminLoginStatus(ui.adminLoginFail || 'بيانات الدخول غير صحيحة. حاول مرة أخرى.', 'error');
-                addAuditLog('محاولة دخول فاشلة', 'اسم مستخدم: ' + username);
-            }
-            if (loginBtn) {
-                loginBtn.disabled = false;
-                if (loginBtn.dataset.prevText) loginBtn.textContent = loginBtn.dataset.prevText;
-            }
+            }, 0);
         }
 
         /** تخصيص لوحة التحكم حسب الدور — المرحلة 3 */
@@ -29879,7 +29886,7 @@
             if (nebrasDoorEngineLoadPromise) return nebrasDoorEngineLoadPromise;
             const ver = (typeof window.NEBRAS_DEPLOY_TAG !== 'undefined' && window.NEBRAS_DEPLOY_TAG)
                 ? window.NEBRAS_DEPLOY_TAG
-                : ((document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws329');
+                : ((document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws330');
             nebrasDoorEngineLoadPromise = loadNebrasThreeJs().then(function() {
                 return Promise.all([
                     loadNebrasScriptOnce('js/nebras-door-3d.js?v=' + ver),
