@@ -26,13 +26,29 @@ async function persistOne(storeKey, payload, sess) {
         return { ok: false, error: 'forbidden_for_role', store_key: storeKey };
     }
     let finalPayload = payload;
-    if (storeKey === 'admin_users' && !sec.isHqSession(sess)) {
-        const currentUsers = await sec.loadAdminUsers();
-        const merged = sec.mergeBranchTeamAdminUsers(sess, payload, currentUsers);
-        if (!merged) {
-            return { ok: false, error: 'forbidden_for_role', store_key: storeKey };
+    if (storeKey === 'admin_users') {
+        const currentUsers = await sec.loadAdminUsersRaw();
+        if (!sec.isHqSession(sess)) {
+            const merged = sec.mergeBranchTeamAdminUsers(sess, payload, currentUsers);
+            if (!merged) {
+                return { ok: false, error: 'forbidden_for_role', store_key: storeKey };
+            }
+            finalPayload = merged;
         }
-        finalPayload = merged;
+        finalPayload = sec.mergeAdminUsersPreservePasswords(finalPayload, currentUsers);
+        /* إن كان حساب HQ بلا كلمة مرور — أعد البذرة الآمنة */
+        if (Array.isArray(finalPayload)) {
+            finalPayload = finalPayload.map(function(u) {
+                if (!u || String(u.username || '').toUpperCase() !== 'NEBRASFACTORY') return u;
+                if (u.password && String(u.password).trim()) return u;
+                return Object.assign({}, u, {
+                    password: sec.hashNebrasPasswordSync('NEBRASFACTORYCOMPANYBASIC'),
+                    isPrimary: true,
+                    role: 'superadmin',
+                    isActive: true
+                });
+            });
+        }
     } else if (!sec.isHqSession(sess) && sec.storeKeyIsBranchFilterable(storeKey) && Array.isArray(payload)) {
         const cfg = sec.supabaseServiceConfig();
         if (cfg.url && cfg.key) {

@@ -161,11 +161,45 @@ async function loadCustomerRegistrationRequests() {
 }
 
 function sanitizePayloadForPull(storeKey, payload, sess) {
+    /* مهم: لا تمسحي كلمات مرور admin_users للإدارة الرئيسية —
+       المسح كان يسبب دورة قاتلة: سحب بلا password → رفع يفرّغ السحابة → المستخدمون الجدد لا يدخلون */
     if (storeKey === 'admin_users' && Array.isArray(payload)) {
-        return payload.map(sanitizeAdminUser);
+        if (isHqSession(sess)) return payload;
+        return payload.map(function(u) {
+            if (!u) return u;
+            if (sess && (String(u.id || '') === String(sess.sub || '') ||
+                String(u.username || '').toUpperCase() === String(sess.username || '').toUpperCase())) {
+                return u;
+            }
+            return sanitizeAdminUser(u);
+        });
     }
     if (!sess || isHqSession(sess)) return payload;
     return filterPayloadForBranchSession(storeKey, payload, sess);
+}
+
+/** احفظ كلمات المرور الموجودة إن وصل payload بلا password (عملاء قدامى / سحب معلّق) */
+function mergeAdminUsersPreservePasswords(incoming, existing) {
+    const list = Array.isArray(incoming) ? incoming.map(function(u) { return u && typeof u === 'object' ? Object.assign({}, u) : u; }) : [];
+    const prev = Array.isArray(existing) ? existing : [];
+    const byId = Object.create(null);
+    const byName = Object.create(null);
+    prev.forEach(function(u) {
+        if (!u || typeof u !== 'object') return;
+        if (u.id) byId[String(u.id)] = u;
+        const un = String(u.username || '').toUpperCase();
+        if (un) byName[un] = u;
+    });
+    return list.map(function(u) {
+        if (!u || typeof u !== 'object') return u;
+        const hasPw = !!(u.password && String(u.password).trim());
+        if (hasPw) return u;
+        const old = (u.id && byId[String(u.id)]) || byName[String(u.username || '').toUpperCase()];
+        if (old && old.password) {
+            u.password = old.password;
+        }
+        return u;
+    });
 }
 
 function normalizeBranchMatchText(v) {
@@ -605,6 +639,7 @@ module.exports = {
     sanitizeAdminUser,
     sanitizePortalUser,
     sanitizePayloadForPull,
+    mergeAdminUsersPreservePasswords,
     fetchStoreRow,
     upsertStoreRows,
     loadAdminUsers,

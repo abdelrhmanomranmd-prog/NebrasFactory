@@ -42,22 +42,15 @@ body.nebras-cloud-hydrating #admin-dashboard::before {
     position: absolute;
     inset: 0;
     z-index: 90;
-    pointer-events: auto;
-    background: rgba(248, 251, 255, 0.55);
-    cursor: wait;
-}
-body.nebras-cloud-hydrating #admin-dashboard .dashboard-command-shell,
-body.nebras-cloud-hydrating #admin-dashboard .admin-modal,
-body.nebras-cloud-hydrating #admin-dashboard .nebras-users-body,
-body.nebras-cloud-hydrating #admin-dashboard button,
-body.nebras-cloud-hydrating #admin-dashboard a.admin-action {
-    pointer-events: none !important;
+    pointer-events: none; /* لا نقتل اللوحة بالكامل — كان يجعل المنصة تبدو ميتة */
+    background: rgba(248, 251, 255, 0.28);
 }
 body.nebras-cloud-hydrating #nebras-cloud-safety-banner {
     position: relative;
     z-index: 91;
     pointer-events: auto;
 }
+/* أزلنا قفل pointer-events عن الأزرار — التعديل مسموح مع تحذير التحميل */
 .nebras-cloud-safety-btn {
     font-family: inherit;
     font-size: 0.78rem;

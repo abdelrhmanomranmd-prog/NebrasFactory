@@ -29961,7 +29961,13 @@
                 }
                 const exAt = new Date(existing.updatedAt || existing.createdAt || 0).getTime();
                 const inAt = new Date(item.updatedAt || item.createdAt || 0).getTime();
-                byKey[k] = inAt >= exAt ? Object.assign({}, existing, item) : existing;
+                let merged = inAt >= exAt ? Object.assign({}, existing, item) : existing;
+                /* admin_users: لا تستبدلي كلمة مرور موجودة بفارغ من سحب معلّق */
+                if (storeKey === 'admin_users' && merged && !(merged.password && String(merged.password).trim()) &&
+                    existing && existing.password) {
+                    merged = Object.assign({}, merged, { password: existing.password });
+                }
+                byKey[k] = merged;
             });
             spec.set(Object.keys(byKey).map(function(k) { return byKey[k]; }));
         }
@@ -30291,6 +30297,7 @@
         let nebrasCloudHydrateInProgress = false;
         let nebrasHydrateAllowCloudPush = false;
         let nebrasQueuedCloudSaveAfterHydrate = false;
+        let nebrasHydrateHardUnlockTimer = null;
 
         function queueNebrasCloudSaveAfterHydrate() {
             nebrasQueuedCloudSaveAfterHydrate = true;
@@ -30308,6 +30315,24 @@
             return Promise.resolve(false);
         }
 
+        function forceUnlockNebrasCloudHydrate(reason) {
+            setNebrasCloudHydrateGate(false);
+            if (nebrasHydrateHardUnlockTimer) {
+                clearTimeout(nebrasHydrateHardUnlockTimer);
+                nebrasHydrateHardUnlockTimer = null;
+            }
+            if (typeof nebrasCloudDiagLog === 'function') {
+                nebrasCloudDiagLog('warn', 'فتح قفل التحميل — ' + (reason || 'يدوي'), {
+                    ok: false,
+                    code: 'hydrate_force_unlock'
+                });
+            }
+            if (typeof showNebrasAdminToast === 'function') {
+                showNebrasAdminToast('✓ تم فتح اللوحة — يمكنك العمل. المزامنة تكمل في الخلفية.', 'ok');
+            }
+            if (typeof updateCloudSafetyBanner === 'function') updateCloudSafetyBanner();
+        }
+
         function setNebrasCloudHydrateGate(active) {
             nebrasCloudHydrateInProgress = !!active;
             document.body.classList.toggle('nebras-cloud-hydrating', !!active);
@@ -30315,8 +30340,20 @@
             if (banner && active) {
                 banner.hidden = false;
                 banner.className = 'nebras-cloud-safety-banner nebras-cloud-safety-banner--hydrating admin-only-ui';
-                banner.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <strong>جاري تحميل البيانات من السحابة</strong> — انتظر حتى يكتمل التحميل. لن يُسمح بأي تعديل قبل اكتمال البيانات 100%.';
+                banner.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <strong>جاري تحميل البيانات من السحابة</strong> — يمكنك الانتظار أو فتح اللوحة للعمل.' +
+                    ' <button type="button" class="nebras-cloud-safety-btn" onclick="forceUnlockNebrasCloudHydrate(\'banner\')">فتح اللوحة الآن</button>';
+                if (nebrasHydrateHardUnlockTimer) clearTimeout(nebrasHydrateHardUnlockTimer);
+                /* أقصى قفل 18 ثانية — بعدها اللوحة تُفتح تلقائياً (كانت تبدو ميتة) */
+                nebrasHydrateHardUnlockTimer = setTimeout(function() {
+                    if (nebrasCloudHydrateInProgress) {
+                        forceUnlockNebrasCloudHydrate('timeout-18s');
+                    }
+                }, 18000);
             } else if (!active && typeof updateCloudSafetyBanner === 'function') {
+                if (nebrasHydrateHardUnlockTimer) {
+                    clearTimeout(nebrasHydrateHardUnlockTimer);
+                    nebrasHydrateHardUnlockTimer = null;
+                }
                 updateCloudSafetyBanner();
             }
         }
@@ -30337,6 +30374,12 @@
                 deferHeavy: true
             }).then(function(ok) {
                 setNebrasCloudHydrateGate(false);
+                if (typeof nebrasCloudDiagLog === 'function') {
+                    nebrasCloudDiagLog(ok ? 'ok' : 'warn', ok ? 'اكتمل تحميل السحابة' : 'تحميل سحابة جزئي', {
+                        ok: !!ok,
+                        code: ok ? 'hydrate_ok' : 'hydrate_partial'
+                    });
+                }
                 if (currentAdmin && typeof refreshAdminDashboardAfterGovernanceSync === 'function') {
                     refreshAdminDashboardAfterGovernanceSync({ scheduleHealth: true });
                 } else if (currentAdmin && typeof renderDashboardCommandShell === 'function') {
@@ -32606,6 +32649,7 @@
         window.persistNebrasCriticalStores = persistNebrasCriticalStores;
         window.flushPushToNebrasCloud = flushPushToNebrasCloud;
         window.isNebrasCloudHydrating = isNebrasCloudHydrating;
+        window.forceUnlockNebrasCloudHydrate = forceUnlockNebrasCloudHydrate;
         window.queueNebrasCloudSaveAfterHydrate = queueNebrasCloudSaveAfterHydrate;
         window.waitForNebrasCloudHydrate = waitForNebrasCloudHydrate;
         window.persistLocalGovernanceKeys = persistLocalGovernanceKeys;
