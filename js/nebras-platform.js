@@ -18826,11 +18826,21 @@
             admin = admin || currentAdmin;
             if (!admin) return false;
             if (isMainGovernanceAdmin(admin)) return true;
+            const roleDefaults = rolePermissions[admin.role] || [];
+            /* صلاحيات مخصّصة غير فارغة — مع ضمان ألا نخسر صلاحيات الدور الأساسية إذا كانت القائمة ناقصة بالخطأ */
             if (Array.isArray(admin.permissions) && admin.permissions.length) {
-                return admin.permissions.indexOf(permissionKey) >= 0;
+                if (admin.permissions.indexOf(permissionKey) >= 0) return true;
+                /* مندوب: أي صلاحية ضمن دور sales_rep تبقى إن وُجدت في التعريف حتى لو حُذفت من القائمة المخزّنة جزئياً */
+                if (admin.role === 'sales_rep' && roleDefaults.indexOf(permissionKey) >= 0 &&
+                    admin.permissions.indexOf('quotes') >= 0) {
+                    /* لا توسّعي تلقائياً — فقط إن القائمة تبدو مقصوصة قسراً (quotes فقط) */
+                    if (admin.permissions.length === 1 && admin.permissions[0] === 'quotes') {
+                        return roleDefaults.indexOf(permissionKey) >= 0;
+                    }
+                }
+                return false;
             }
-            const allowed = rolePermissions[admin.role] || [];
-            return allowed.indexOf(permissionKey) >= 0;
+            return roleDefaults.indexOf(permissionKey) >= 0;
         }
 
         function dashboardTilePassesPermission(tile, admin) {
@@ -19248,6 +19258,9 @@
                 user.isPrimary = true;
                 user.role = 'superadmin';
                 user.permissions = null;
+            } else if (user.role === 'sales_rep' && Array.isArray(user.permissions) &&
+                user.permissions.length === 1 && user.permissions[0] === 'quotes') {
+                user.permissions = (rolePermissions.sales_rep || ['quotes', 'createCustomerUser']).slice();
             }
             const loginNow = new Date().toISOString();
             const uidx = adminUsers.findIndex(function(u) { return u.id === user.id; });
@@ -20748,13 +20761,29 @@
     function normalizeAdminUserRecord(user, index) {
         const role = user && allowedRoles.includes(String(user.role || '').toLowerCase()) ? String(user.role).toLowerCase() : 'manager';
         const isPrimary = !!(user && isImmutablePrimaryAdmin(user));
-        let perms = Array.isArray(user && user.permissions) ? user.permissions.filter(Boolean) : null;
-        if (role === 'sales_rep' && !isPrimary) perms = ['quotes'];
+        /* صلاحيات الدور من التعريف — لا نقصّ مندوب المبيعات إلى quotes فقط (كانت تخفي بلاطات الداشبورد) */
+        let perms = null;
+        if (isPrimary) {
+            perms = null;
+        } else if (Array.isArray(user && user.permissions) && user.permissions.length) {
+            perms = user.permissions.filter(Boolean);
+            /* إصلاح مخزون قديم: مندوب مقصوص إلى quotes فقط → أعد صلاحيات الدور */
+            if (role === 'sales_rep' && perms.length === 1 && perms[0] === 'quotes') {
+                const roleDef = (rolePermissions[role] || []).slice();
+                if (roleDef.length > 1) perms = roleDef;
+            }
+        } else if (user && user.permissions === null) {
+            perms = null; /* null = استخدم صلاحيات الدور الافتراضية */
+        } else {
+            perms = (rolePermissions[role] || []).slice();
+        }
         const now = new Date().toISOString();
+        const existingPw = user && user.password ? String(user.password) : '';
         return {
             id: user && user.id ? user.id : 'user-' + Date.now() + '-' + index,
             username: user && user.username ? user.username : 'user' + (index + 1),
-            password: user && user.password ? user.password : 'ChangeMe123',
+            /* لا تخترعي كلمة مرور وهمية — تكسّر دخول المستخدم بعد السحب من السحابة */
+            password: existingPw || (isPrimary ? 'NEBRASFACTORYCOMPANYBASIC' : ''),
             role: role,
             permissions: perms,
             assignedBranchCity: (user && user.assignedBranchCity) ? String(user.assignedBranchCity).trim() : '',
@@ -28369,6 +28398,13 @@
 
         async function persistAdminUsersToCloud(options) {
             options = options || {};
+            /* انتظر اكتمال تحميل السحابة — وإلا يفشل الحفظ ويختفي المستخدم من الواجهة */
+            if (typeof waitForNebrasCloudHydrate === 'function' && typeof isNebrasCloudHydrating === 'function' && isNebrasCloudHydrating()) {
+                if (typeof showNebrasAdminToast === 'function') {
+                    showNebrasAdminToast('⏳ انتظري اكتمال تحميل السحابة ثم يُحفظ المستخدم…', 'ok');
+                }
+                await waitForNebrasCloudHydrate();
+            }
             if (typeof ensureNebrasCloudSessionForSave === 'function') {
                 let sessionOk = await ensureNebrasCloudSessionForSave({ promptReauth: false });
                 if (!sessionOk) {
@@ -28379,19 +28415,33 @@
             let cloudOk = false;
             if (typeof persistNebrasCriticalStores === 'function') {
                 cloudOk = await persistNebrasCriticalStores(['admin_users'], {
-                    showToast: !!options.showToast,
-                    promptReauth: options.promptReauth !== false
+                    showToast: false,
+                    promptReauth: options.promptReauth !== false,
+                    waitHydrate: true,
+                    allowDuringHydrate: true
                 });
             }
             if (!cloudOk && typeof flushPushToNebrasCloud === 'function') {
-                cloudOk = await flushPushToNebrasCloud({ showCloudToast: !!options.showToast });
+                cloudOk = await flushPushToNebrasCloud({ showCloudToast: false });
             }
             if (!cloudOk) return false;
             if (options.verifyUsernameAbsent) {
-                return await verifyAdminUserAbsentFromCloud(options.verifyUsernameAbsent);
+                let absent = await verifyAdminUserAbsentFromCloud(options.verifyUsernameAbsent);
+                if (!absent) {
+                    await new Promise(function(r) { setTimeout(r, 900); });
+                    absent = await verifyAdminUserAbsentFromCloud(options.verifyUsernameAbsent);
+                }
+                if (!absent) return false;
+            } else if (options.verifyUsername) {
+                let exists = await verifyAdminUserExistsInCloud(options.verifyUsername);
+                if (!exists) {
+                    await new Promise(function(r) { setTimeout(r, 900); });
+                    exists = await verifyAdminUserExistsInCloud(options.verifyUsername);
+                }
+                if (!exists) return false;
             }
-            if (options.verifyUsername) {
-                return await verifyAdminUserExistsInCloud(options.verifyUsername);
+            if (options.showToast && typeof showNebrasAdminToast === 'function') {
+                showNebrasAdminToast('✓ تم حفظ المستخدمين في السحابة — متاح لكل الأجهزة', 'ok');
             }
             return true;
         }
@@ -28446,7 +28496,15 @@
                 alert('يرجى إدخال جوال مندوب المبيعات — يظهر للعميل في بوابته.');
                 return;
             }
-            const usersSnapshot = JSON.parse(JSON.stringify(adminUsers));
+            /* صلاحيات الدور كاملة إن كانت القائمة فارغة أو مقصوصة بالخطأ */
+            let savePerms = Array.isArray(st.permissions) ? st.permissions.slice() : [];
+            if (!st.isPrimary) {
+                const roleDefPerms = (rolePermissions[st.role] || []).slice();
+                if (!savePerms.length) savePerms = roleDefPerms;
+                else if (st.role === 'sales_rep' && savePerms.length === 1 && savePerms[0] === 'quotes' && roleDefPerms.indexOf('createCustomerUser') >= 0) {
+                    savePerms = roleDefPerms;
+                }
+            }
             if (st.isEdit) {
                 const existing = adminUsers[st.index] || {};
                 adminUsers[st.index] = Object.assign({}, existing, {
@@ -28454,10 +28512,10 @@
                     username: username,
                     password: password,
                     role: st.isPrimary ? 'superadmin' : st.role,
-                    permissions: st.isPrimary ? null : st.permissions.slice(),
+                    permissions: st.isPrimary ? null : savePerms,
                     assignedBranchCity: st.isPrimary ? '' : st.assignedBranchCity,
                     assignedBranchId: st.isPrimary ? null : (st.assignedBranchId || resolveBranchIdByCity(st.assignedBranchCity)),
-                    hrScopeBranchId: st.isPrimary ? '' : (st.permissions.indexOf('hr') >= 0 ? (st.hrScopeBranchId || st.assignedBranchId || resolveBranchIdByCity(st.assignedBranchCity) || '') : (st.role === 'hr' ? (st.hrScopeBranchId || '') : '')),
+                    hrScopeBranchId: st.isPrimary ? '' : (savePerms.indexOf('hr') >= 0 ? (st.hrScopeBranchId || st.assignedBranchId || resolveBranchIdByCity(st.assignedBranchCity) || '') : (st.role === 'hr' ? (st.hrScopeBranchId || '') : '')),
                     hrScopeDepartmentKey: st.isPrimary || st.role !== 'hr' ? '' : (st.hrScopeDepartmentKey || ''),
                     hrScopeCompanyId: st.isPrimary || st.role !== 'hr' ? '' : (st.hrScopeCompanyId || ''),
                     legalScopeCompanyId: st.isPrimary || st.role !== 'legal' ? '' : (st.legalScopeCompanyId || ''),
@@ -28471,10 +28529,10 @@
                 const nowIso = new Date().toISOString();
                 adminUsers.push({
                     id: id, username: username, password: password,
-                    role: st.role, permissions: st.permissions.slice(),
+                    role: st.role, permissions: savePerms,
                     assignedBranchCity: st.assignedBranchCity,
                     assignedBranchId: st.assignedBranchId || resolveBranchIdByCity(st.assignedBranchCity),
-                    hrScopeBranchId: st.permissions.indexOf('hr') >= 0 ? (st.hrScopeBranchId || st.assignedBranchId || resolveBranchIdByCity(st.assignedBranchCity) || '') : (st.role === 'hr' ? (st.hrScopeBranchId || '') : ''),
+                    hrScopeBranchId: savePerms.indexOf('hr') >= 0 ? (st.hrScopeBranchId || st.assignedBranchId || resolveBranchIdByCity(st.assignedBranchCity) || '') : (st.role === 'hr' ? (st.hrScopeBranchId || '') : ''),
                     hrScopeDepartmentKey: st.role === 'hr' ? (st.hrScopeDepartmentKey || '') : '',
                     hrScopeCompanyId: st.role === 'hr' ? (st.hrScopeCompanyId || '') : '',
                     legalScopeCompanyId: st.role === 'legal' ? (st.legalScopeCompanyId || '') : '',
@@ -28486,13 +28544,13 @@
                 addAuditLog('إضافة مستخدم', 'تمت إضافة ' + username + ' بدور ' + getRoleLabel(st.role));
             }
             saveSystemData({ skipCloud: true });
+            displayUsers();
             const cloudOk = await persistAdminUsersToCloud({ showToast: true, verifyUsername: username });
             if (!cloudOk) {
-                adminUsers.length = 0;
-                usersSnapshot.forEach(function(u) { adminUsers.push(u); });
-                saveSystemData({ skipCloud: true });
+                /* لا تراجعي الحذف المحلي — المستخدم يبقى ظاهراً ويُعاد الرفع */
+                if (typeof queueNebrasCloudSaveAfterHydrate === 'function') queueNebrasCloudSaveAfterHydrate();
                 if (typeof showNebrasAdminToast === 'function') {
-                    showNebrasAdminToast('⚠️ لم يُحفظ المستخدم في السحابة — أعيدي تسجيل الدخول ثم احفظي مرة أخرى. (Accmaa-style: لا حفظ محلي بدون سحابة)', 'error');
+                    showNebrasAdminToast('⚠️ المستخدم ظاهر محلياً — تعذّر تأكيد السحابة الآن. سيُعاد الرفع تلقائياً. لا تحذفي ولا تعيدي الإنشاء.', 'error');
                 }
                 displayUsers();
                 return;
@@ -30649,7 +30707,15 @@
         /** رفع فوري لمفاتيح حرجة — مستخدمون، موارد بشرية، إلخ */
         async function persistNebrasCriticalStores(storeKeys, options) {
             options = options || {};
-            if (nebrasCloudHydrateInProgress && !nebrasHydrateAllowCloudPush) return false;
+            if (nebrasCloudHydrateInProgress && !nebrasHydrateAllowCloudPush) {
+                const needsUsers = Array.isArray(storeKeys) && storeKeys.indexOf('admin_users') >= 0;
+                if (options.waitHydrate || options.allowDuringHydrate || needsUsers) {
+                    await waitForNebrasCloudHydrate();
+                } else {
+                    queueNebrasCloudSaveAfterHydrate();
+                    return false;
+                }
+            }
             if (!Array.isArray(storeKeys) || !storeKeys.length) return false;
             /* لا ترفعي مفاتيح ممنوعة للدور — كانت تسبب فشل الحفظ بالكامل */
             if (typeof keysAllowedForNebrasAdmin === 'function' && currentAdmin) {
