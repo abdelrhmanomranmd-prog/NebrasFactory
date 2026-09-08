@@ -28686,12 +28686,28 @@
             }
             saveSystemData({ skipCloud: true });
             displayUsers();
-            const cloudOk = await persistAdminUsersToCloud({ showToast: true, verifyUsername: username });
+            const cloudOk = await persistAdminUsersToCloud({
+                showToast: true,
+                verifyUsername: username,
+                waitHydrate: true,
+                allowDuringHydrate: false
+            });
             if (!cloudOk) {
-                /* لا تراجعي الحذف المحلي — المستخدم يبقى ظاهراً ويُعاد الرفع */
+                /* لا تراجعي — أعد الرفع فوراً على السيرفر (بدون اعتبار المحلي نجاحاً) */
+                if (typeof persistNebrasCriticalStores === 'function') {
+                    try {
+                        await persistNebrasCriticalStores(['admin_users'], {
+                            waitHydrate: true,
+                            showToast: false,
+                            promptReauth: true
+                        });
+                    } catch (retryErr) {
+                        console.warn('admin_users direct retry:', retryErr);
+                    }
+                }
                 if (typeof queueNebrasCloudSaveAfterHydrate === 'function') queueNebrasCloudSaveAfterHydrate();
                 if (typeof showNebrasAdminToast === 'function') {
-                    showNebrasAdminToast('⚠️ المستخدم ظاهر محلياً — تعذّر تأكيد السحابة الآن. سيُعاد الرفع تلقائياً. لا تحذفي ولا تعيدي الإنشاء.', 'error');
+                    showNebrasAdminToast('✗ لم يُحفظ المستخدم على السيرفر الحي بعد — أعيدي الحفظ أو انتظري ثانية ثم حاوِلي.', 'error');
                 }
                 displayUsers();
                 return;
@@ -30732,7 +30748,16 @@
         }
 
         async function pushToNebrasCloudCore() {
-            if (nebrasCloudHydrateInProgress && !nebrasHydrateAllowCloudPush) return false;
+            if (nebrasCloudHydrateInProgress && !nebrasHydrateAllowCloudPush) {
+                if (NEBRAS_DIRECT_SERVER_SAVE) {
+                    if (typeof nebrasCloudDiagLog === 'function') {
+                        nebrasCloudDiagLog('info', 'رفع كامل: انتظار التحميل ثم الحفظ المباشر', { code: 'push_wait_hydrate' });
+                    }
+                    await waitForNebrasCloudHydrate();
+                } else {
+                    return false;
+                }
+            }
             const silent = !!nebrasCloudPushSilent;
             const rows = NEBRAS_CLOUD_STORE_SPECS.map(function(spec) {
                 let payload = spec.get();
