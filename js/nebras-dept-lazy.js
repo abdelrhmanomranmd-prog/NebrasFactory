@@ -1,11 +1,11 @@
 ﻿/**
- * نبراس — تحميل كسول لوحدات الإدارات (hrws343)
+ * نبراس — تحميل كسول لوحدات الإدارات (hrws344)
  * فتح فوري + prefetch ذكي حسب الدور — بدون إثقال الزائر.
  */
 (function (global) {
     'use strict';
 
-    var VER = 'hrws343';
+    var VER = 'hrws344';
     var loaded = Object.create(null);
     var inflight = Object.create(null);
     var bundleDone = Object.create(null);
@@ -188,11 +188,23 @@
     function adminPrefetchQueue() {
         var admin = typeof global.currentAdmin !== 'undefined' ? global.currentAdmin : null;
         var role = admin && admin.role ? admin.role : '';
+        var can = typeof global.canManage === 'function' ? global.canManage : null;
         if (role === 'aluminum_manager') {
             return ['aluminum'];
         }
         if (role === 'wpc_manager' || role === 'production_manager') {
             return ['wpc', 'crm'];
+        }
+        /* صلاحيات التخصيم المنفصلة — حمّل الدفتر المطلوب فقط */
+        if (can) {
+            var wantsAlu = can('aluminumCutting', admin) || can('aluminum', admin);
+            var wantsWpc = can('wpcCutting', admin);
+            if (wantsAlu && !wantsWpc && role !== 'superadmin' && role !== 'manager') {
+                return ['aluminum'];
+            }
+            if (wantsWpc && !wantsAlu && role !== 'superadmin' && role !== 'manager') {
+                return ['wpc', 'crm'];
+            }
         }
         if (role === 'superadmin' || role === 'manager') {
             return PREFETCH_LIGHT.concat(PREFETCH_HEAVY);

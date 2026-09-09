@@ -962,7 +962,12 @@
         if (typeof markLocalCloudMutationBatch === 'function') markLocalCloudMutationBatch(keys);
         if (typeof persistNebrasCriticalStores === 'function') {
             try {
-                return await persistNebrasCriticalStores(keys, { silent: true, showToast: false, promptReauth: false });
+                return await persistNebrasCriticalStores(keys, {
+                    silent: true,
+                    showToast: false,
+                    promptReauth: false,
+                    waitHydrate: true
+                });
             } catch (e) { console.warn('wpc cloud persist', e); }
         }
         return false;
@@ -970,16 +975,18 @@
 
     var wpcAutosaveTimer = null;
     function setWpcLiveBadge(state, text) {
-        var badge = document.getElementById('wpc-live-save-badge');
-        if (!badge) return;
         var icons = {
             idle: 'fa-cloud-upload-alt',
             saving: 'fa-spinner fa-spin',
             ok: 'fa-check',
             warn: 'fa-exclamation-triangle'
         };
-        badge.className = 'wpc-live-badge' + (state === 'ok' ? ' is-ok' : (state === 'warn' ? ' is-warn' : (state === 'saving' ? ' is-saving' : '')));
-        badge.innerHTML = '<i class="fas ' + (icons[state] || icons.idle) + '"></i> ' + (text || 'حفظ حي تلقائي');
+        var html = '<i class="fas ' + (icons[state] || icons.idle) + '"></i> ' + (text || 'حفظ حي تلقائي');
+        var cls = 'wpc-live-badge' + (state === 'ok' ? ' is-ok' : (state === 'warn' ? ' is-warn' : (state === 'saving' ? ' is-saving' : '')));
+        Array.prototype.forEach.call(document.querySelectorAll('.wpc-live-badge'), function(badge) {
+            badge.className = cls;
+            badge.innerHTML = html;
+        });
     }
     function scheduleWpcLiveAutosave() {
         if (!wpcEstimateDraft) return;
@@ -1543,7 +1550,7 @@
             '<p><strong>الإجمالي: ' + totals.total + ' ' + wpcSettings.currencyLabel + '</strong></p></div>' +
             '<div class="erp-form-actions">' +
             '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="saveWpcEstimateDraft()"><i class="fas fa-save"></i> حفظ معتمد</button>' +
-            '<span class="wpc-live-badge" id="wpc-live-save-badge"><i class="fas fa-cloud-upload-alt"></i> حفظ حي تلقائي</span>' +
+            '<span class="wpc-live-badge"><i class="fas fa-cloud-upload-alt"></i> حفظ حي تلقائي</span>' +
             '<button type="button" class="nebras-users-btn" onclick="setWpcCutTab(\'audit\')"><i class="fas fa-microscope"></i> تدقيق</button>' +
             '<button type="button" class="nebras-users-btn" onclick="printWpcCutReport()"><i class="fas fa-print"></i> قائمة قص</button>' +
             '<button type="button" class="nebras-users-btn" onclick="runWpcCutJobFromDraft()"><i class="fas fa-scissors"></i> تخطيط ألواح</button></div>';

@@ -644,7 +644,8 @@
                 return await persistNebrasCriticalStores(keys, {
                     silent: true,
                     showToast: false,
-                    promptReauth: false
+                    promptReauth: false,
+                    waitHydrate: true
                 });
             } catch (e) { console.warn('aluminum cloud persist', e); }
         }
@@ -653,16 +654,18 @@
 
     var aluAutosaveTimer = null;
     function setAluLiveBadge(state, text) {
-        const badge = document.getElementById('alu-live-save-badge');
-        if (!badge) return;
         const icons = {
             idle: 'fa-cloud-upload-alt',
             saving: 'fa-spinner fa-spin',
             ok: 'fa-check',
             warn: 'fa-exclamation-triangle'
         };
-        badge.className = 'alu-live-badge' + (state === 'ok' ? ' is-ok' : (state === 'warn' ? ' is-warn' : (state === 'saving' ? ' is-saving' : '')));
-        badge.innerHTML = '<i class="fas ' + (icons[state] || icons.idle) + '"></i> ' + (text || 'حفظ حي تلقائي');
+        const html = '<i class="fas ' + (icons[state] || icons.idle) + '"></i> ' + (text || 'حفظ حي تلقائي');
+        const cls = 'alu-live-badge' + (state === 'ok' ? ' is-ok' : (state === 'warn' ? ' is-warn' : (state === 'saving' ? ' is-saving' : '')));
+        Array.prototype.forEach.call(document.querySelectorAll('.alu-live-badge'), function(badge) {
+            badge.className = cls;
+            badge.innerHTML = html;
+        });
     }
     function scheduleAluLiveAutosave() {
         if (!aluEstimateDraft) return;
@@ -3023,7 +3026,7 @@
             '</div>' +
             '<div class="erp-form-actions">' +
             '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="saveAluEstimate()"><i class="fas fa-save"></i> حفظ</button>' +
-            '<span class="alu-live-badge" id="alu-live-save-badge"><i class="fas fa-cloud-upload-alt"></i> حفظ حي تلقائي</span>' +
+            '<span class="alu-live-badge"><i class="fas fa-cloud-upload-alt"></i> حفظ حي تلقائي</span>' +
             '<button type="button" class="nebras-users-btn" onclick="sendAluEstimateToCutting()"><i class="fas fa-scissors"></i> إرسال للتقطيع</button>' +
             '<button type="button" class="nebras-users-btn" onclick="printAluEstimateReport()"><i class="fas fa-print"></i> طباعة</button>' +
             '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="printAluImagesReport()"><i class="fas fa-image"></i> تقرير الصور والرسومات</button>' +
