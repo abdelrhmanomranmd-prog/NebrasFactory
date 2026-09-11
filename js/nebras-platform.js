@@ -32934,6 +32934,7 @@
         window.persistNebrasCriticalStores = persistNebrasCriticalStores;
         window.flushPushToNebrasCloud = flushPushToNebrasCloud;
         window.isNebrasCloudHydrating = isNebrasCloudHydrating;
+        window.isNebrasHydratePriorityReady = isNebrasHydratePriorityReady;
         window.forceUnlockNebrasCloudHydrate = forceUnlockNebrasCloudHydrate;
         window.queueNebrasCloudSaveAfterHydrate = queueNebrasCloudSaveAfterHydrate;
         window.waitForNebrasCloudHydrate = waitForNebrasCloudHydrate;
