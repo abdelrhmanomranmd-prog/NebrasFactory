@@ -20548,11 +20548,18 @@
                 } else if (typeof window.verifyNebrasLaunchHealth === 'function') {
                     setTimeout(window.verifyNebrasLaunchHealth, 500);
                 }
-                /* ادفع بلاطات HQ المستعادة للسحابة حتى لا تختفي على الأجهزة الأخرى */
+                /* ادفع بلاطات HQ المستعادة للسحابة بعد التحميل — بدون انتظار يبطئ الدخول */
                 if (typeof persistNebrasCriticalStores === 'function') {
-                    persistNebrasCriticalStores(['dashboard_tiles'], {
-                        silent: true, showToast: false, waitHydrate: true
-                    }).catch(function() { /* ignore */ });
+                    const pushTiles = function() {
+                        persistNebrasCriticalStores(['dashboard_tiles'], {
+                            silent: true, showToast: false, waitHydrate: false, allowDuringHydrate: true
+                        }).catch(function() { /* ignore */ });
+                    };
+                    if (typeof waitForNebrasCloudHydrate === 'function') {
+                        waitForNebrasCloudHydrate().then(pushTiles).catch(pushTiles);
+                    } else {
+                        setTimeout(pushTiles, 1200);
+                    }
                 }
             }
         }
@@ -28684,10 +28691,13 @@
 
         async function persistAdminUsersToCloud(options) {
             options = options || {};
-            /* انتظر اكتمال تحميل السحابة — وإلا يفشل الحفظ ويختفي المستخدم من الواجهة */
-            if (typeof waitForNebrasCloudHydrate === 'function' && typeof isNebrasCloudHydrating === 'function' && isNebrasCloudHydrating()) {
+            /* بعد موجة الأولوية لا نمنع حفظ المستخدمين أثناء باقي التحميل */
+            const priorityReady = typeof isNebrasHydratePriorityReady === 'function'
+                ? isNebrasHydratePriorityReady()
+                : !isNebrasCloudHydrating();
+            if (!priorityReady && typeof waitForNebrasCloudHydrate === 'function' && typeof isNebrasCloudHydrating === 'function' && isNebrasCloudHydrating()) {
                 if (typeof showNebrasAdminToast === 'function') {
-                    showNebrasAdminToast('⏳ انتظري اكتمال تحميل السحابة ثم يُحفظ المستخدم…', 'ok');
+                    showNebrasAdminToast('⏳ جاري تجهيز حسابات السحابة… ثوانٍ', 'ok');
                 }
                 await waitForNebrasCloudHydrate();
             }
@@ -28703,7 +28713,7 @@
                 cloudOk = await persistNebrasCriticalStores(['admin_users'], {
                     showToast: false,
                     promptReauth: options.promptReauth !== false,
-                    waitHydrate: true,
+                    waitHydrate: !priorityReady,
                     allowDuringHydrate: true
                 });
             }
@@ -30488,6 +30498,7 @@
         let nebrasHydrateAllowCloudPush = false;
         let nebrasQueuedCloudSaveAfterHydrate = false;
         let nebrasHydrateHardUnlockTimer = null;
+        let nebrasHydratePriorityReady = false;
 
         function queueNebrasCloudSaveAfterHydrate() {
             nebrasQueuedCloudSaveAfterHydrate = true;
@@ -30495,6 +30506,10 @@
 
         function isNebrasCloudHydrating() {
             return !!nebrasCloudHydrateInProgress;
+        }
+
+        function isNebrasHydratePriorityReady() {
+            return !!nebrasHydratePriorityReady || !nebrasCloudHydrateInProgress;
         }
 
         function waitForNebrasCloudHydrate() {
@@ -30533,12 +30548,12 @@
                 banner.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <strong>جاري تحميل البيانات من السحابة</strong> — يمكنك الانتظار أو فتح اللوحة للعمل.' +
                     ' <button type="button" class="nebras-cloud-safety-btn" onclick="forceUnlockNebrasCloudHydrate(\'banner\')">فتح اللوحة الآن</button>';
                 if (nebrasHydrateHardUnlockTimer) clearTimeout(nebrasHydrateHardUnlockTimer);
-                /* أقصى قفل 18 ثانية — بعدها اللوحة تُفتح تلقائياً (كانت تبدو ميتة) */
+                /* أقصى قفل 8 ثوانٍ بعد تسريع السحب الدفعي */
                 nebrasHydrateHardUnlockTimer = setTimeout(function() {
                     if (nebrasCloudHydrateInProgress) {
-                        forceUnlockNebrasCloudHydrate('timeout-18s');
+                        forceUnlockNebrasCloudHydrate('timeout-8s');
                     }
-                }, 18000);
+                }, 8000);
             } else if (!active && typeof updateCloudSafetyBanner === 'function') {
                 if (nebrasHydrateHardUnlockTimer) {
                     clearTimeout(nebrasHydrateHardUnlockTimer);
@@ -30548,22 +30563,50 @@
             }
         }
 
-        /** تحميل السحابة في الخلفية — لوحة فورية + بيانات كاملة بترتيب آمن (سحب ثم رفع) */
+        /** تحميل السحابة في الخلفية — موجة أولوية للمستخدمين ثم الباقي */
         function scheduleHydrateGovernanceAfterLogin() {
             if (nebrasHydrateInFlight) return nebrasHydrateInFlight;
             setNebrasCloudHydrateGate(true);
+            nebrasHydratePriorityReady = false;
             if (typeof nebrasCloudDiagLog === 'function') {
                 nebrasCloudDiagLog('info', 'بدء تحميل البيانات من السحابة', { code: 'hydrate_start' });
             }
             if (typeof renderNebrasCloudStatusOrb === 'function') {
                 renderNebrasCloudStatusOrb('saving', 'جاري تحميل البيانات من السحابة…');
             }
-            nebrasHydrateInFlight = hydrateGovernanceFromServerAfterLogin({
-                background: true,
-                skipInit: true,
-                deferHeavy: true
-            }).then(function(ok) {
+            nebrasHydrateInFlight = (async function() {
+                try {
+                    if (typeof secureCloudPull === 'function' && typeof applyNebrasCloudRow === 'function') {
+                        const pri = await secureCloudPull([
+                            'admin_users', 'system_settings', 'branches', 'dashboard_tiles'
+                        ]);
+                        (pri || []).forEach(function(row) {
+                            if (!row || !row.store_key) return;
+                            applyNebrasCloudRow(row.store_key, row.payload, row.updated_at);
+                        });
+                        try { persistLocalGovernanceKeys(); } catch (e) { /* ignore */ }
+                        nebrasHydratePriorityReady = true;
+                        if (currentAdmin && typeof refreshCurrentAdminFromStore === 'function') {
+                            try { refreshCurrentAdminFromStore(); } catch (e2) { /* ignore */ }
+                        }
+                        if (typeof nebrasCloudDiagLog === 'function') {
+                            nebrasCloudDiagLog('ok', 'موجة أولوية جاهزة (مستخدمون + إعدادات)', {
+                                ok: true, code: 'hydrate_priority_ok', rows: (pri || []).length
+                            });
+                        }
+                    }
+                } catch (priErr) {
+                    console.warn('Priority hydrate:', priErr);
+                    nebrasHydratePriorityReady = true;
+                }
+                return hydrateGovernanceFromServerAfterLogin({
+                    background: true,
+                    skipInit: true,
+                    deferHeavy: true
+                });
+            })().then(function(ok) {
                 setNebrasCloudHydrateGate(false);
+                nebrasHydratePriorityReady = true;
                 if (typeof nebrasCloudDiagLog === 'function') {
                     nebrasCloudDiagLog(ok ? 'ok' : 'warn', ok ? 'اكتمل تحميل السحابة' : 'تحميل سحابة جزئي', {
                         ok: !!ok,
@@ -30602,6 +30645,7 @@
                 return ok;
             }).catch(function(hydrateErr) {
                 console.warn('Background cloud hydrate:', hydrateErr);
+                nebrasHydratePriorityReady = true;
                 if (typeof renderNebrasCloudStatusOrb === 'function') {
                     renderNebrasCloudStatusOrb('warn', '⚠️ تحميل جزئي — أعيدي تحميل الصفحة');
                 }

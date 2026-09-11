@@ -19,7 +19,7 @@
     ];
 
     const SYNC_CURSOR_KEY = 'nebrasOdooSyncCursor';
-    const DELTA_INTERVAL_MS = 22000;
+    const DELTA_INTERVAL_MS = 32000;
 
     const ODOO_WRITE_KEYS = [
         'admin_users', 'branches', 'system_settings', 'complaints', 'audit_logs', 'analytics_governance',

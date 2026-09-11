@@ -625,7 +625,9 @@
     function startNebrasCloudAutoSync() {
         if (cloudAutoSyncTimer) return;
         nebrasFlushCloudIfAdmin();
-        nebrasPullCloudIfAdmin();
+        /* مع وضع Odoo: السحب عبر delta فقط — نمنع حلقة pull مزدوجة تبطئ السحابة */
+        const odooMode = !!(typeof global !== 'undefined' && global.NEBRAS_ODOO_WRITE_MODE);
+        if (!odooMode) nebrasPullCloudIfAdmin();
         function scheduleSyncLoop() {
             if (cloudAutoSyncTimer) clearInterval(cloudAutoSyncTimer);
             cloudAutoSyncTimer = setInterval(function() {
@@ -634,6 +636,7 @@
             }, adminCloudSyncIntervalMs());
         }
         function schedulePullLoop() {
+            if (odooMode) return;
             if (cloudAutoPullTimer) clearInterval(cloudAutoPullTimer);
             cloudAutoPullTimer = setInterval(function() {
                 if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;

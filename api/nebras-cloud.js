@@ -5,7 +5,7 @@ function requireSession(req) {
 }
 
 const MAX_CLOUD_PAYLOAD_BYTES = 6 * 1024 * 1024;
-const PUSH_BATCH_SIZE = 8;
+const PUSH_BATCH_SIZE = 20;
 
 function chunkRows(rows, size) {
     const out = [];
@@ -36,23 +36,18 @@ async function handlePull(req, sess) {
             }
         };
     }
+    const byKey = await sec.fetchStoreRows(url, key, keys, since || '');
     const rows = [];
-    for (let i = 0; i < keys.length; i++) {
-        const row = await sec.fetchStoreRow(url, key, keys[i]);
-        if (row && row.payload !== null && row.payload !== undefined) {
-            if (since && row.updated_at) {
-                try {
-                    if (new Date(row.updated_at) <= new Date(since)) continue;
-                } catch (sinceErr) { /* include row */ }
-            }
-            rows.push({
-                store_key: keys[i],
-                payload: sec.sanitizePayloadForPull(keys[i], row.payload, sess),
-                updated_at: row.updated_at || null
-            });
-        }
-    }
-    return { code: 200, data: { ok: true, rows: rows, by: sess.username } };
+    keys.forEach(function(storeKey) {
+        const row = byKey[storeKey];
+        if (!row || row.payload === null || row.payload === undefined) return;
+        rows.push({
+            store_key: storeKey,
+            payload: sec.sanitizePayloadForPull(storeKey, row.payload, sess),
+            updated_at: row.updated_at || null
+        });
+    });
+    return { code: 200, data: { ok: true, rows: rows, by: sess.username, batched: true } };
 }
 
 async function handlePush(body, sess) {

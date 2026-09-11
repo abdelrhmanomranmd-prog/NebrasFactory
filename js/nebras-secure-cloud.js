@@ -300,7 +300,7 @@
         const admin = getCurrentAdminUser();
         const scoped = admin ? filterCloudRowsForAdminSession(rows, admin) : rows.slice();
         if (!scoped.length) return { ok: true, count: 0, note: 'no_allowed_rows' };
-        const batchSize = 8;
+        const batchSize = 20;
         let pushed = 0;
         try {
             for (let i = 0; i < scoped.length; i += batchSize) {

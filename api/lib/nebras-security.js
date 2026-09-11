@@ -309,6 +309,55 @@ async function fetchStoreRow(url, key, storeKey) {
     }
 }
 
+/** سحب دفعة واحدة — يقلّل زمن الـ hydrate من عشرات الطلبات إلى بضعة طلبات */
+async function fetchStoreRows(url, key, storeKeys, since) {
+    const keys = (storeKeys || []).filter(Boolean);
+    if (!keys.length) return {};
+    const byKey = Object.create(null);
+    const CHUNK = 40;
+    for (let i = 0; i < keys.length; i += CHUNK) {
+        const chunk = keys.slice(i, i + CHUNK);
+        const inList = chunk.map(function(k) {
+            return '"' + String(k).replace(/"/g, '') + '"';
+        }).join(',');
+        let qs = 'store_key=in.(' + inList + ')&select=store_key,payload,updated_at';
+        if (since) {
+            try {
+                const iso = new Date(since).toISOString();
+                qs += '&updated_at=gt.' + encodeURIComponent(iso);
+            } catch (sinceErr) { /* ignore since */ }
+        }
+        try {
+            const res = await fetch(
+                url + '/rest/v1/nebras_data_store?' + qs,
+                { headers: supabaseHeaders(key) }
+            );
+            if (!res.ok) {
+                const errText = await res.text().catch(function() { return ''; });
+                console.error('fetchStoreRows failed:', res.status, errText.slice(0, 200));
+                /* fallback: مفتاح بمفتاح لهذه الدفعة فقط */
+                for (let j = 0; j < chunk.length; j++) {
+                    const one = await fetchStoreRow(url, key, chunk[j]);
+                    if (one) byKey[chunk[j]] = one;
+                }
+                continue;
+            }
+            const rows = await res.json();
+            (rows || []).forEach(function(row) {
+                if (!row || !row.store_key) return;
+                byKey[row.store_key] = { payload: row.payload, updated_at: row.updated_at || null };
+            });
+        } catch (err) {
+            console.error('fetchStoreRows error:', err);
+            for (let j = 0; j < chunk.length; j++) {
+                const one = await fetchStoreRow(url, key, chunk[j]);
+                if (one) byKey[chunk[j]] = one;
+            }
+        }
+    }
+    return byKey;
+}
+
 async function upsertStoreRows(url, key, rows) {
     if (!url || !key || !rows || !rows.length) return { ok: false, error: 'rows_required' };
     try {
@@ -651,6 +700,7 @@ module.exports = {
     sanitizePayloadForPull,
     mergeAdminUsersPreservePasswords,
     fetchStoreRow,
+    fetchStoreRows,
     upsertStoreRows,
     loadAdminUsers,
     loadAdminUsersRaw,
