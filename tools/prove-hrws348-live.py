@@ -51,8 +51,7 @@ for r in pulled.get('rows') or []:
 probe='hrws348-'+str(int(time.time()))
 settings['_save_probe_348']=probe
 code,batch=api('POST','/api/nebras-governance-persist',{'action':'batch','rows':[{'store_key':'system_settings','payload':settings}]},token=tok)
-ok('settings_batch', code==200 and batch.get('ok') and Number:=batch.get('count',0) or batch.get('count') , str(batch.get('count')))
-# fix Number syntax - python doesn't have :=
+ok('settings_batch', code==200 and batch.get('ok'), str(batch.get('error')))
 ok('settings_count', (batch.get('count') or 0) >= 1, str(batch.get('count')))
 code,back=api('GET','/api/nebras-cloud?'+urllib.parse.urlencode({'action':'pull','keys':'system_settings'}),token=tok)
 got=None
