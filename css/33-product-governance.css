@@ -152,3 +152,128 @@
     color: #6a7888;
     font-size: 0.72rem;
 }
+
+
+/* —— مكتب الأسعار والصور (Product Master Desk) —— */
+.pm-desk-filter {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 12px 18px;
+    margin: 0 0 14px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, rgba(13, 40, 64, 0.06), rgba(0, 168, 255, 0.06));
+    border: 1px solid rgba(13, 40, 64, 0.1);
+}
+.pm-desk-filter label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-weight: 700;
+    color: #0d2840;
+    font-size: 0.86rem;
+}
+.pm-desk-filter select {
+    min-width: 220px;
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1px solid rgba(13, 40, 64, 0.18);
+    font: inherit;
+}
+.pm-desk-hint {
+    margin: 0;
+    flex: 1 1 220px;
+    font-size: 0.82rem;
+    color: #334155;
+    line-height: 1.45;
+}
+.pm-desk-table-scroll {
+    overflow: auto;
+    max-height: min(68vh, 820px);
+    border-radius: 14px;
+    border: 1px solid rgba(13, 40, 64, 0.1);
+    background: #fff;
+}
+.product-master-table--desk th:first-child,
+.product-master-table--desk td.pm-col-thumb {
+    width: 76px;
+    text-align: center;
+}
+.pm-product-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px 12px;
+}
+.pm-product-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+.pm-thumb-btn {
+    width: 58px;
+    height: 58px;
+    padding: 0;
+    border-radius: 12px;
+    border: 1.5px solid rgba(13, 40, 64, 0.16);
+    background: #f1f5f9;
+    overflow: hidden;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.pm-thumb-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(13, 40, 64, 0.18);
+    border-color: rgba(0, 168, 255, 0.55);
+}
+.pm-thumb-btn img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    background: #fff;
+}
+.pm-thumb-btn--empty {
+    color: #0d2840;
+    font-size: 1.1rem;
+}
+.pm-price-edit {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.pm-price-edit input[type="number"] {
+    width: 110px;
+    padding: 8px 10px;
+    border-radius: 10px;
+    border: 1.5px solid rgba(13, 40, 64, 0.2);
+    font: inherit;
+    font-weight: 700;
+}
+.pm-price-edit input[type="number"]:focus {
+    outline: none;
+    border-color: #00a8ff;
+    box-shadow: 0 0 0 3px rgba(0, 168, 255, 0.18);
+}
+.pm-save-btn {
+    width: 36px;
+    height: 36px;
+    border: none;
+    border-radius: 10px;
+    background: linear-gradient(135deg, #0d2840, #123a5c);
+    color: #fff;
+    cursor: pointer;
+}
+.pm-save-btn:hover { filter: brightness(1.08); }
+.pm-price-inc, .pm-status {
+    display: block;
+    margin-top: 4px;
+    font-size: 0.72rem;
+    color: #64748b;
+}
+.pm-status { color: #059669; font-weight: 700; }
+.pm-variant-row:hover td { background: rgba(0, 168, 255, 0.04); }
+@media (max-width: 900px) {
+    .pm-price-edit input[type="number"] { width: 88px; }
+    .pm-thumb-btn { width: 48px; height: 48px; }
+}
