@@ -61,7 +61,7 @@
                 { id: 'store', icon: 'fa-store', label: 'المتجر' },
                 { id: 'showroom', icon: 'fa-images', label: 'المعرض' },
                 { id: 'account', icon: 'fa-gauge-high', label: 'لوحتي' },
-                { id: 'quote', icon: 'fa-file-invoice-dollar', label: 'عروضي', primary: true }
+                { id: 'callback', icon: 'fa-phone-volume', label: 'اتصلي بي', primary: true }
             ];
         }
         if (persona === 'rep') {
@@ -87,7 +87,7 @@
             { id: 'store', icon: 'fa-store', label: 'المتجر' },
             { id: 'showroom', icon: 'fa-images', label: 'المعرض' },
             { id: 'account', icon: 'fa-user-circle', label: 'حسابي' },
-            { id: 'quote', icon: 'fa-file-invoice-dollar', label: 'عرض سعر', primary: true }
+            { id: 'callback', icon: 'fa-phone-volume', label: 'اتصلي بي', primary: true }
         ];
     }
 
@@ -177,8 +177,28 @@
             setActiveTab('account');
             return;
         }
+        /* الزائر لا ينشئ عرض سعر — يحوَّل لطلب اتصال */
+        if (typeof global.canCreateOfficialQuote === 'function' && !global.canCreateOfficialQuote()) {
+            if (typeof global.openNebrasCallbackConcierge === 'function') {
+                global.openNebrasCallbackConcierge();
+            } else if (typeof global.redirectVisitorQuoteToStaff === 'function') {
+                global.redirectVisitorQuoteToStaff();
+            }
+            setActiveTab('callback');
+            return;
+        }
         if (typeof global.confirmAndOpenQuote === 'function') global.confirmAndOpenQuote();
         setActiveTab('quote');
+    }
+
+    function appOpenCallback() {
+        appCloseOverlays();
+        if (typeof global.openNebrasCallbackConcierge === 'function') {
+            global.openNebrasCallbackConcierge();
+        } else if (typeof global.redirectVisitorQuoteToStaff === 'function') {
+            global.redirectVisitorQuoteToStaff();
+        }
+        setActiveTab('callback');
     }
 
     function appOpenRepQuotes() {
@@ -260,6 +280,7 @@
             case 'showroom': appOpenShowroom(); break;
             case 'account': appOpenAccount(); break;
             case 'quote': appOpenQuote(); break;
+            case 'callback': appOpenCallback(); break;
             case 'quotes': appOpenRepQuotes(); break;
             case 'customers': appOpenNewCustomer(); break;
             case 'panel': appOpenStaffPanel(); break;

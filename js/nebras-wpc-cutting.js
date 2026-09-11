@@ -306,7 +306,10 @@
     }
 
     function seedWpcDefaults() {
-        if (wpcModels.length) return;
+        if (wpcModels.length) {
+            ensureWpcProModels();
+            return;
+        }
         wpcModels = [
             {
                 id: 'wpc-nebras-flat',
@@ -372,6 +375,53 @@
                 active: true
             },
             {
+                id: 'wpc-nebras-flat-classic',
+                nameAr: 'نبراس — فلات كلاسيك CNC',
+                family: 'flat',
+                style: 'flat',
+                deductions: Object.assign({}, DEFAULT_DEDUCTIONS, { cncMarginMm: 55 }),
+                parts: [
+                    { id: 'wfc-leaf', role: 'leaf', nameAr: 'لوح كلاسيك CNC', sku: 'WPC-CL-LEAF', pricePerM2: 105, thicknessMm: 40, active: true },
+                    { id: 'wfc-frh', role: 'frame_h', nameAr: 'إطار أفقي', sku: 'WPC-CL-FRH', pricePerM: 48, thicknessMm: 40, active: true },
+                    { id: 'wfc-frv', role: 'frame_v', nameAr: 'إطار رأسي', sku: 'WPC-CL-FRV', pricePerM: 48, thicknessMm: 40, active: true },
+                    { id: 'wfc-jmb', role: 'jamb', nameAr: 'حلق', sku: 'WPC-CL-JMB', pricePerM: 40, thicknessMm: 40, active: true },
+                    { id: 'wfc-cnc', role: 'cnc_panel', nameAr: 'نقش CNC', sku: 'WPC-CL-CNC', pricePerM2: 125, thicknessMm: 18, active: true },
+                    { id: 'wfc-lock', role: 'lock_block', nameAr: 'بلوک قفل', sku: 'WPC-CL-LOCK', pricePerUnit: 12, active: true }
+                ],
+                active: true
+            },
+            {
+                id: 'wpc-nebras-flat-glass',
+                nameAr: 'نبراس — فلات زجاج',
+                family: 'flat',
+                style: 'flat',
+                deductions: Object.assign({}, DEFAULT_DEDUCTIONS, { glassInsetMm: 80, glassDeductionMm: 40 }),
+                parts: [
+                    { id: 'wfg-leaf', role: 'leaf', nameAr: 'لوح فلات زجاج', sku: 'WPC-GL-LEAF', pricePerM2: 98, thicknessMm: 40, active: true },
+                    { id: 'wfg-frh', role: 'frame_h', nameAr: 'إطار أفقي', sku: 'WPC-GL-FRH', pricePerM: 48, thicknessMm: 40, active: true },
+                    { id: 'wfg-frv', role: 'frame_v', nameAr: 'إطار رأسي', sku: 'WPC-GL-FRV', pricePerM: 48, thicknessMm: 40, active: true },
+                    { id: 'wfg-jmb', role: 'jamb', nameAr: 'حلق', sku: 'WPC-GL-JMB', pricePerM: 40, thicknessMm: 40, active: true },
+                    { id: 'wfg-fill', role: 'filler', nameAr: 'حشو زجاج', sku: 'WPC-GL-FILL', pricePerM2: 55, thicknessMm: 18, active: true },
+                    { id: 'wfg-lock', role: 'lock_block', nameAr: 'بلوک قفل', sku: 'WPC-GL-LOCK', pricePerUnit: 12, active: true }
+                ],
+                active: true
+            },
+            {
+                id: 'wpc-nebras-double',
+                nameAr: 'نبراس — مزدوج مفصلي',
+                family: 'hinged',
+                style: 'flat',
+                deductions: Object.assign({}, DEFAULT_DEDUCTIONS, { meetingGapMm: 4 }),
+                parts: [
+                    { id: 'wd-leaf', role: 'leaf', nameAr: 'لوح مزدوج', sku: 'WPC-DB-LEAF', pricePerM2: 90, thicknessMm: 40, active: true },
+                    { id: 'wd-frh', role: 'frame_h', nameAr: 'إطار أفقي', sku: 'WPC-DB-FRH', pricePerM: 46, thicknessMm: 40, active: true },
+                    { id: 'wd-frv', role: 'frame_v', nameAr: 'إطار رأسي', sku: 'WPC-DB-FRV', pricePerM: 46, thicknessMm: 40, active: true },
+                    { id: 'wd-jmb', role: 'jamb', nameAr: 'حلق', sku: 'WPC-DB-JMB', pricePerM: 39, thicknessMm: 40, active: true },
+                    { id: 'wd-lock', role: 'lock_block', nameAr: 'بلوک قفل', sku: 'WPC-DB-LOCK', pricePerUnit: 14, active: true }
+                ],
+                active: true
+            },
+            {
                 id: 'wpc-nebras-cabinet',
                 nameAr: 'نبراس — خزائن WPC',
                 family: 'cabinet',
@@ -389,6 +439,7 @@
                 active: true
             }
         ];
+        ensureWpcProModels();
         if (!wpcAccessories.length) {
             wpcAccessories = [
                 { id: 'acc-hinge', nameAr: 'مفصلات (3 حبات)', code: 'HNG-3', pricePerUnit: 45, perDoor: true },
@@ -397,6 +448,50 @@
                 { id: 'acc-glass', nameAr: 'زجاج سيكوريت 6مم', code: 'GLS-6', pricePerM2: 120, perDoor: false }
             ];
         }
+    }
+
+    function ensureWpcProModels() {
+        var need = ['wpc-nebras-flat-classic', 'wpc-nebras-flat-glass', 'wpc-nebras-double'];
+        var catalog = {
+            'wpc-nebras-flat-classic': {
+                id: 'wpc-nebras-flat-classic', nameAr: 'نبراس — فلات كلاسيك CNC', family: 'flat', style: 'flat',
+                deductions: Object.assign({}, DEFAULT_DEDUCTIONS, { cncMarginMm: 55 }),
+                parts: [
+                    { id: 'wfc-leaf', role: 'leaf', nameAr: 'لوح كلاسيك CNC', sku: 'WPC-CL-LEAF', pricePerM2: 105, thicknessMm: 40, active: true },
+                    { id: 'wfc-frh', role: 'frame_h', nameAr: 'إطار أفقي', sku: 'WPC-CL-FRH', pricePerM: 48, thicknessMm: 40, active: true },
+                    { id: 'wfc-frv', role: 'frame_v', nameAr: 'إطار رأسي', sku: 'WPC-CL-FRV', pricePerM: 48, thicknessMm: 40, active: true },
+                    { id: 'wfc-jmb', role: 'jamb', nameAr: 'حلق', sku: 'WPC-CL-JMB', pricePerM: 40, thicknessMm: 40, active: true },
+                    { id: 'wfc-cnc', role: 'cnc_panel', nameAr: 'نقش CNC', sku: 'WPC-CL-CNC', pricePerM2: 125, thicknessMm: 18, active: true },
+                    { id: 'wfc-lock', role: 'lock_block', nameAr: 'بلوک قفل', sku: 'WPC-CL-LOCK', pricePerUnit: 12, active: true }
+                ], active: true
+            },
+            'wpc-nebras-flat-glass': {
+                id: 'wpc-nebras-flat-glass', nameAr: 'نبراس — فلات زجاج', family: 'flat', style: 'flat',
+                deductions: Object.assign({}, DEFAULT_DEDUCTIONS, { glassInsetMm: 80, glassDeductionMm: 40 }),
+                parts: [
+                    { id: 'wfg-leaf', role: 'leaf', nameAr: 'لوح فلات زجاج', sku: 'WPC-GL-LEAF', pricePerM2: 98, thicknessMm: 40, active: true },
+                    { id: 'wfg-frh', role: 'frame_h', nameAr: 'إطار أفقي', sku: 'WPC-GL-FRH', pricePerM: 48, thicknessMm: 40, active: true },
+                    { id: 'wfg-frv', role: 'frame_v', nameAr: 'إطار رأسي', sku: 'WPC-GL-FRV', pricePerM: 48, thicknessMm: 40, active: true },
+                    { id: 'wfg-jmb', role: 'jamb', nameAr: 'حلق', sku: 'WPC-GL-JMB', pricePerM: 40, thicknessMm: 40, active: true },
+                    { id: 'wfg-fill', role: 'filler', nameAr: 'حشو زجاج', sku: 'WPC-GL-FILL', pricePerM2: 55, thicknessMm: 18, active: true },
+                    { id: 'wfg-lock', role: 'lock_block', nameAr: 'بلوک قفل', sku: 'WPC-GL-LOCK', pricePerUnit: 12, active: true }
+                ], active: true
+            },
+            'wpc-nebras-double': {
+                id: 'wpc-nebras-double', nameAr: 'نبراس — مزدوج مفصلي', family: 'hinged', style: 'flat',
+                deductions: Object.assign({}, DEFAULT_DEDUCTIONS, { meetingGapMm: 4 }),
+                parts: [
+                    { id: 'wd-leaf', role: 'leaf', nameAr: 'لوح مزدوج', sku: 'WPC-DB-LEAF', pricePerM2: 90, thicknessMm: 40, active: true },
+                    { id: 'wd-frh', role: 'frame_h', nameAr: 'إطار أفقي', sku: 'WPC-DB-FRH', pricePerM: 46, thicknessMm: 40, active: true },
+                    { id: 'wd-frv', role: 'frame_v', nameAr: 'إطار رأسي', sku: 'WPC-DB-FRV', pricePerM: 46, thicknessMm: 40, active: true },
+                    { id: 'wd-jmb', role: 'jamb', nameAr: 'حلق', sku: 'WPC-DB-JMB', pricePerM: 39, thicknessMm: 40, active: true },
+                    { id: 'wd-lock', role: 'lock_block', nameAr: 'بلوک قفل', sku: 'WPC-DB-LOCK', pricePerUnit: 14, active: true }
+                ], active: true
+            }
+        };
+        need.forEach(function(id) {
+            if (!wpcModels.some(function(m) { return m.id === id; })) wpcModels.push(catalog[id]);
+        });
     }
 
     function normalizeModelDeductions(model) {
@@ -1170,47 +1265,200 @@
         return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + viewW + ' ' + viewH + '" class="wpc-section-svg" role="img" aria-label="مقطع جانبي">' + inner + '</svg>';
     }
 
-    var wpc3dState = { rotX: -12, rotY: 28 };
+    var wpc3dState = { rotX: -14, rotY: 32, drag: null };
+
+    function wpc3dLeafFaceHtml(shape, leafW, leafH) {
+        var style = shape.style || shape.family || 'flat';
+        var parts = '';
+        var inset = Math.max(6, Math.round(Math.min(leafW, leafH) * 0.07));
+        var iw = Math.max(8, leafW - inset * 2);
+        var ih = Math.max(8, leafH - inset * 2);
+        if (shape.hasGlass) {
+            parts += '<div class="wpc-3d-panel wpc-3d-panel--glass" style="inset:' + inset + 'px">' +
+                '<div class="wpc-3d-glass-grid"></div></div>';
+        } else if (shape.hasCnc || style === 'u60') {
+            var rows = style === 'u60' ? 3 : 4;
+            var rh = Math.floor((ih - 8) / rows);
+            for (var r = 0; r < rows; r++) {
+                parts += '<div class="wpc-3d-groove" style="top:' + (inset + 4 + r * rh) + 'px;left:' + inset + 'px;width:' + iw + 'px;height:' + Math.max(10, rh - 6) + 'px"></div>';
+            }
+        } else if (style === 'lib') {
+            parts += '<div class="wpc-3d-panel wpc-3d-panel--lib" style="inset:' + inset + 'px">' +
+                '<span class="wpc-3d-lib-rail wpc-3d-lib-rail--v"></span>' +
+                '<span class="wpc-3d-lib-rail wpc-3d-lib-rail--h"></span></div>';
+        } else if (style === 'sliding' || shape.family === 'sliding') {
+            parts += '<div class="wpc-3d-panel wpc-3d-panel--sliding" style="inset:' + inset + 'px">' +
+                '<span class="wpc-3d-sash-line"></span></div>';
+        } else {
+            parts += '<div class="wpc-3d-panel wpc-3d-panel--flat" style="inset:' + inset + 'px"></div>';
+        }
+        return parts;
+    }
 
     function wpcDraw3dPreviewHtml(item, opts) {
         opts = opts || {};
         var shape = resolveItemShape(item);
+        var model = findModel(item.modelId) || wpcModels[0] || {};
         var W = Math.max(100, wNum(item.widthMm) || 900);
         var H = Math.max(100, wNum(item.heightMm) || 2100);
-        var D = shape.family === 'cabinet' ? Math.max(100, wNum(item.depthMm) || 600) : Math.max(80, wNum(DEFAULT_DEDUCTIONS.jambDepthMm) || 120);
+        var D = shape.family === 'cabinet'
+            ? Math.max(100, wNum(item.depthMm) || 600)
+            : Math.max(70, wNum((model.deductions && model.deductions.jambDepthMm) || DEFAULT_DEDUCTIONS.jambDepthMm) || 120);
         var maxDim = Math.max(W, H, D);
-        var sc = Math.min(180 / maxDim, 0.22);
+        var sc = Math.min(210 / maxDim, 0.26);
         var pw = Math.round(W * sc);
         var ph = Math.round(H * sc);
-        var pd = Math.round(D * sc);
+        var pd = Math.max(14, Math.round(D * sc));
         var uid = opts.uid || 'wpc3d-' + Date.now();
-        var isCab = shape.family === 'cabinet';
-        var label = shape.nameAr + (isCab ? ' · ' + D + 'مم عمق' : '');
+        var leaves = Math.max(1, shape.leaves || 1);
+        if (shape.drawers) leaves = 0;
+        var jamb = Math.max(5, Math.round(Math.min(pw, ph) * 0.055));
+        var hingeSide = String(item.hingeSide || item.openSide || 'right').toLowerCase();
+        if (hingeSide !== 'left' && hingeSide !== 'right') hingeSide = 'right';
+        var styleClass = 'wpc-3d-door--' + (shape.style || shape.family || 'flat');
+        var label = (model.nameAr || shape.nameAr) + (shape.family === 'cabinet' ? ' · عمق ' + D + 'مم' : '');
+
+        var inner = '';
+        if (shape.family === 'cabinet') {
+            var cabInner = '';
+            if (shape.drawers) {
+                var dc = Math.max(2, Math.round(wNum(item.drawerCount) || 4));
+                for (var di = 0; di < dc; di++) {
+                    cabInner += '<div class="wpc-3d-drawer" style="top:' + (8 + di * (100 / dc)) + '%;height:' + (100 / dc - 3) + '%"></div>';
+                }
+            } else {
+                var cabLeaves = Math.max(1, leaves || 1);
+                for (var ci = 0; ci < cabLeaves; ci++) {
+                    cabInner += '<div class="wpc-3d-cab-leaf" style="width:' + (100 / cabLeaves) + '%;left:' + (ci * 100 / cabLeaves) + '%">' +
+                        '<span class="wpc-3d-handle wpc-3d-handle--cab"></span></div>';
+                }
+            }
+            inner =
+                '<div class="wpc-3d-cabinet" style="width:' + pw + 'px;height:' + ph + 'px;transform:translateZ(' + (pd / 2) + 'px)">' +
+                '<div class="wpc-3d-cab-body">' + cabInner + '</div></div>' +
+                '<div class="wpc-3d-face wpc-3d-cab-side wpc-3d-cab-side--l" style="width:' + pd + 'px;height:' + ph + 'px;transform:rotateY(-90deg) translateZ(' + (pw / 2) + 'px)"></div>' +
+                '<div class="wpc-3d-face wpc-3d-cab-side wpc-3d-cab-side--r" style="width:' + pd + 'px;height:' + ph + 'px;transform:rotateY(90deg) translateZ(' + (pw / 2) + 'px)"></div>';
+        } else {
+            var leafGap = Math.max(2, Math.round(3 * sc * 4));
+            var usableW = Math.max(10, pw - jamb * 2 - leafGap * Math.max(0, leaves - 1));
+            var leafW = Math.round(usableW / leaves);
+            var leafH = Math.max(10, ph - jamb * 2);
+            var leafDepth = Math.max(8, Math.round(pd * 0.42));
+            var leavesHtml = '';
+            for (var li = 0; li < leaves; li++) {
+                var lx = jamb + li * (leafW + leafGap);
+                var faceDecor = wpc3dLeafFaceHtml(shape, leafW, leafH);
+                var handleLeft = hingeSide === 'left' ? (leafW - 14) : 8;
+                var hingeLeft = hingeSide === 'left' ? 3 : (leafW - 7);
+                var hinges = '';
+                var hCount = leafH > 140 ? 3 : 2;
+                for (var hi = 0; hi < hCount; hi++) {
+                    var hy = Math.round(leafH * ((hi + 1) / (hCount + 1)) - 8);
+                    hinges += '<span class="wpc-3d-hinge" style="top:' + hy + 'px;left:' + hingeLeft + 'px"></span>';
+                }
+                leavesHtml +=
+                    '<div class="wpc-3d-leaf" style="width:' + leafW + 'px;height:' + leafH + 'px;left:' + lx + 'px;top:' + jamb + 'px;transform:translateZ(' + (leafDepth / 2 + 1) + 'px)">' +
+                    '<div class="wpc-3d-leaf-front">' + faceDecor +
+                    '<span class="wpc-3d-handle" style="left:' + handleLeft + 'px;top:46%"></span>' +
+                    hinges +
+                    '</div>' +
+                    '<div class="wpc-3d-leaf-edge wpc-3d-leaf-edge--r" style="width:' + leafDepth + 'px;height:' + leafH + 'px;transform:rotateY(90deg) translateZ(' + (leafW / 2) + 'px)"></div>' +
+                    '<div class="wpc-3d-leaf-edge wpc-3d-leaf-edge--l" style="width:' + leafDepth + 'px;height:' + leafH + 'px;transform:rotateY(-90deg) translateZ(' + (leafW / 2) + 'px)"></div>' +
+                    '</div>';
+            }
+            var thresholdH = Math.max(4, Math.round(jamb * 0.55));
+            inner =
+                '<div class="wpc-3d-door ' + styleClass + '" style="width:' + pw + 'px;height:' + ph + 'px">' +
+                '<div class="wpc-3d-frame-face" style="width:' + pw + 'px;height:' + ph + 'px;transform:translateZ(' + (pd / 2) + 'px)">' +
+                '<div class="wpc-3d-jamb"></div>' +
+                leavesHtml +
+                '<div class="wpc-3d-threshold" style="height:' + thresholdH + 'px"></div>' +
+                '</div>' +
+                '<div class="wpc-3d-face wpc-3d-frame-side wpc-3d-frame-side--l" style="width:' + pd + 'px;height:' + ph + 'px;transform:rotateY(-90deg) translateZ(' + (pw / 2) + 'px)"></div>' +
+                '<div class="wpc-3d-face wpc-3d-frame-side wpc-3d-frame-side--r" style="width:' + pd + 'px;height:' + ph + 'px;transform:rotateY(90deg) translateZ(' + (pw / 2) + 'px)"></div>' +
+                '<div class="wpc-3d-face wpc-3d-frame-top" style="width:' + pw + 'px;height:' + pd + 'px;transform:rotateX(90deg) translateZ(' + (ph / 2) + 'px)"></div>' +
+                '<div class="wpc-3d-face wpc-3d-frame-bot" style="width:' + pw + 'px;height:' + pd + 'px;transform:rotateX(-90deg) translateZ(' + (ph / 2) + 'px)"></div>' +
+                '</div>';
+        }
+
+        setTimeout(function() { wpcBind3dDrag(uid); }, 40);
+
         return '<div class="wpc-3d-wrap" id="' + uid + '-wrap">' +
             '<div class="wpc-3d-toolbar">' +
-            '<button type="button" class="nebras-users-btn wpc-3d-btn" onclick="wpcRotate3d(-1,0,\'' + uid + '\')"><i class="fas fa-rotate-left"></i></button>' +
-            '<button type="button" class="nebras-users-btn wpc-3d-btn" onclick="wpcRotate3d(1,0,\'' + uid + '\')"><i class="fas fa-rotate-right"></i></button>' +
-            '<button type="button" class="nebras-users-btn wpc-3d-btn" onclick="wpcRotate3d(0,-1,\'' + uid + '\')"><i class="fas fa-arrow-up"></i></button>' +
-            '<button type="button" class="nebras-users-btn wpc-3d-btn" onclick="wpcRotate3d(0,1,\'' + uid + '\')"><i class="fas fa-arrow-down"></i></button>' +
+            '<button type="button" class="nebras-users-btn wpc-3d-btn" onclick="wpcRotate3d(-1,0,\'' + uid + '\')" title="يسار"><i class="fas fa-rotate-left"></i></button>' +
+            '<button type="button" class="nebras-users-btn wpc-3d-btn" onclick="wpcRotate3d(1,0,\'' + uid + '\')" title="يمين"><i class="fas fa-rotate-right"></i></button>' +
+            '<button type="button" class="nebras-users-btn wpc-3d-btn" onclick="wpcRotate3d(0,-1,\'' + uid + '\')" title="أعلى"><i class="fas fa-arrow-up"></i></button>' +
+            '<button type="button" class="nebras-users-btn wpc-3d-btn" onclick="wpcRotate3d(0,1,\'' + uid + '\')" title="أسفل"><i class="fas fa-arrow-down"></i></button>' +
+            '<button type="button" class="nebras-users-btn wpc-3d-btn" onclick="wpcReset3d(\'' + uid + '\')" title="إعادة"><i class="fas fa-compress"></i></button>' +
+            '<span class="wpc-3d-hint"><i class="fas fa-hand-pointer"></i> اسحبي للدوران</span>' +
             '</div>' +
-            '<div class="wpc-3d-stage" id="' + uid + '-stage">' +
+            '<div class="wpc-3d-stage" id="' + uid + '-stage" data-uid="' + uid + '">' +
+            '<div class="wpc-3d-floor"></div>' +
             '<div class="wpc-3d-scene" id="' + uid + '" style="transform:rotateX(' + wpc3dState.rotX + 'deg) rotateY(' + wpc3dState.rotY + 'deg)">' +
-            '<div class="wpc-3d-face wpc-3d-front" style="width:' + pw + 'px;height:' + ph + 'px;transform:translateZ(' + (pd / 2) + 'px)"><span>' + wEsc(label) + '</span></div>' +
-            '<div class="wpc-3d-face wpc-3d-back" style="width:' + pw + 'px;height:' + ph + 'px;transform:rotateY(180deg) translateZ(' + (pd / 2) + 'px)"></div>' +
-            '<div class="wpc-3d-face wpc-3d-left" style="width:' + pd + 'px;height:' + ph + 'px;transform:rotateY(-90deg) translateZ(' + (pw / 2) + 'px)"></div>' +
-            '<div class="wpc-3d-face wpc-3d-right" style="width:' + pd + 'px;height:' + ph + 'px;transform:rotateY(90deg) translateZ(' + (pw / 2) + 'px)"></div>' +
-            '<div class="wpc-3d-face wpc-3d-top" style="width:' + pw + 'px;height:' + pd + 'px;transform:rotateX(90deg) translateZ(' + (ph / 2) + 'px)"></div>' +
-            '<div class="wpc-3d-face wpc-3d-bottom" style="width:' + pw + 'px;height:' + pd + 'px;transform:rotateX(-90deg) translateZ(' + (ph / 2) + 'px)"></div>' +
+            inner +
             '</div></div>' +
-            '<p class="wpc-3d-dims">' + W + ' × ' + H + ' × ' + D + ' مم</p></div>';
+            '<p class="wpc-3d-dims"><strong>' + wEsc(label) + '</strong><br>' + W + ' × ' + H + ' × ' + D + ' مم</p></div>';
+    }
+
+    function wpcApply3dTransform(uid) {
+        var el = document.getElementById(uid);
+        if (el) el.style.transform = 'rotateX(' + wpc3dState.rotX + 'deg) rotateY(' + wpc3dState.rotY + 'deg)';
     }
 
     function wpcRotate3d(dYaw, dPitch, uid) {
         wpc3dState.rotY += dYaw * 18;
         wpc3dState.rotX += dPitch * 12;
-        wpc3dState.rotX = Math.max(-60, Math.min(30, wpc3dState.rotX));
-        var el = document.getElementById(uid);
-        if (el) el.style.transform = 'rotateX(' + wpc3dState.rotX + 'deg) rotateY(' + wpc3dState.rotY + 'deg)';
+        wpc3dState.rotX = Math.max(-55, Math.min(28, wpc3dState.rotX));
+        wpcApply3dTransform(uid);
+    }
+
+    function wpcReset3d(uid) {
+        wpc3dState.rotX = -14;
+        wpc3dState.rotY = 32;
+        wpcApply3dTransform(uid);
+    }
+
+    function wpcBind3dDrag(uid) {
+        var stage = document.getElementById(uid + '-stage');
+        var scene = document.getElementById(uid);
+        if (!stage || !scene || stage.dataset.dragBound === '1') return;
+        stage.dataset.dragBound = '1';
+        var dragging = false;
+        var lastX = 0;
+        var lastY = 0;
+        function onDown(e) {
+            dragging = true;
+            var pt = e.touches ? e.touches[0] : e;
+            lastX = pt.clientX;
+            lastY = pt.clientY;
+            scene.style.transition = 'none';
+            stage.classList.add('is-dragging');
+            e.preventDefault();
+        }
+        function onMove(e) {
+            if (!dragging) return;
+            var pt = e.touches ? e.touches[0] : e;
+            var dx = pt.clientX - lastX;
+            var dy = pt.clientY - lastY;
+            lastX = pt.clientX;
+            lastY = pt.clientY;
+            wpc3dState.rotY += dx * 0.45;
+            wpc3dState.rotX -= dy * 0.35;
+            wpc3dState.rotX = Math.max(-55, Math.min(28, wpc3dState.rotX));
+            wpcApply3dTransform(uid);
+        }
+        function onUp() {
+            if (!dragging) return;
+            dragging = false;
+            scene.style.transition = '';
+            stage.classList.remove('is-dragging');
+        }
+        stage.addEventListener('mousedown', onDown);
+        stage.addEventListener('touchstart', onDown, { passive: false });
+        window.addEventListener('mousemove', onMove);
+        window.addEventListener('touchmove', onMove, { passive: false });
+        window.addEventListener('mouseup', onUp);
+        window.addEventListener('touchend', onUp);
     }
 
     function wpcGetPreviewItem() {
@@ -1797,6 +2045,8 @@
     global.printWpcSheetPlan = printWpcSheetPlan;
     global.exportWpcCutCsv = exportWpcCutCsv;
     global.wpcRotate3d = wpcRotate3d;
+    global.wpcReset3d = wpcReset3d;
+    global.wpcBind3dDrag = wpcBind3dDrag;
     global.wpcDrawElevationSvg = wpcDrawElevationSvg;
     global.wpcDraw3dPreviewHtml = wpcDraw3dPreviewHtml;
     global.buildWpcDoorCuts = buildWpcDoorCuts;

@@ -2019,3 +2019,24 @@ body.nebras-mobile-bar-active.admin-session .nebras-mobile-commerce-bar {
         margin-top: 8px;
     }
 }
+
+/* hrws345: ⁄—÷ «·”⁄— «·—”„Ì ··„ÊŸ›Ì‰ ›ﬁÿ */
+body.nebras-quote-staff-only #cart-request-quote-btn,
+body.nebras-quote-staff-only #cart-preview-quote-btn,
+body.nebras-quote-staff-only #cart-download-quote-btn,
+body.nebras-quote-staff-only #cart-send-sales-btn,
+body.nebras-quote-staff-only #cart-send-cs-btn,
+body.nebras-quote-staff-only #cart-send-channel-row,
+body.nebras-quote-staff-only #quote-send-pdf-both-btn,
+body.nebras-quote-staff-only #quote-send-sales-btn,
+body.nebras-quote-staff-only #quote-send-cs-btn,
+body.nebras-quote-staff-only #fab-send-sales,
+body.nebras-quote-staff-only #fab-send-cs,
+body.nebras-quote-staff-only .quote-staff-only {
+    display: none !important;
+}
+body.nebras-quote-staff-only .nebras-quote-cta--callback {
+    background: linear-gradient(135deg, #0d2840, #1a6b4a) !important;
+    color: #fff !important;
+    border-color: transparent !important;
+}

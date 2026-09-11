@@ -11880,6 +11880,10 @@
         }
 
         async function downloadQuoteA4Pdf() {
+            if (!canCreateOfficialQuote()) {
+                redirectVisitorQuoteToStaff();
+                return;
+            }
             if (quotePdfSubmitInFlight) return;
             const ui = siteText[currentLang || 'ar'] || siteText.ar;
             if (!nebrasCart.length) {
@@ -11921,6 +11925,10 @@
         }
 
         async function submitQuoteA4Pdf(sendMode) {
+            if (!canCreateOfficialQuote()) {
+                redirectVisitorQuoteToStaff();
+                return;
+            }
             sendMode = sendMode || 'both';
             if (quotePdfSubmitInFlight) return;
             const channels = sendMode === 'both' ? ['sales', 'customer-service'] : [sendMode];
@@ -13225,10 +13233,104 @@
             saveNebrasCart();
             notifyCartAdded(spec);
             openCartDrawer();
-            setTimeout(function() { confirmAndOpenQuote(); }, 400);
+            if (canCreateOfficialQuote()) {
+                setTimeout(function() { confirmAndOpenQuote(); }, 400);
+            }
+        }
+
+        /** عرض السعر الرسمي — للإدارة والموظفين فقط (ليس للزائر/المتصفح) */
+        function canCreateOfficialQuote(admin) {
+            admin = admin || currentAdmin;
+            if (!admin) return false;
+            if (typeof isMainGovernanceAdmin === 'function' && isMainGovernanceAdmin(admin)) return true;
+            if (typeof canManage === 'function') {
+                return canManage('quotes', admin) || canManage('sales', admin) || canManage('aluminum', admin);
+            }
+            return false;
+        }
+
+        function redirectVisitorQuoteToStaff() {
+            const ui = siteText[currentLang || 'ar'] || siteText.ar;
+            const msg = ui.visitorQuoteStaffOnly ||
+                'إنشاء عرض السعر متاح لفريق نبراس فقط (الإدارة والموظفون).\n\nللزوار: اطلبوا اتصال من «نبراس يتصل بك» أو تواصلوا مع الفرع.';
+            alert(msg);
+            if (typeof openNebrasCallbackConcierge === 'function') {
+                try { openNebrasCallbackConcierge(); return; }
+                catch (e) { /* fall through */ }
+            }
+            const cb = document.getElementById('nebras-callback-fab') || document.querySelector('[onclick*="Callback"]');
+            if (cb && typeof cb.click === 'function') cb.click();
+        }
+
+        function applyVisitorQuoteUiLock() {
+            const allow = canCreateOfficialQuote();
+            document.body.classList.toggle('nebras-quote-staff-only', !allow);
+            document.body.classList.toggle('nebras-quote-staff-allowed', !!allow);
+            /* أزرار إنشاء/إرسال عرض السعر الرسمي — للموظفين فقط */
+            const staffOnlyIds = [
+                'cart-request-quote-btn', 'cart-preview-quote-btn', 'cart-download-quote-btn',
+                'cart-send-sales-btn', 'cart-send-cs-btn', 'quote-send-pdf-both-btn',
+                'quote-send-sales-btn', 'quote-send-cs-btn', 'fab-send-sales', 'fab-send-cs',
+                'header-quote-btn', 'workspace-quote-btn'
+            ];
+            staffOnlyIds.forEach(function(id) {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.hidden = !allow;
+                el.setAttribute('aria-hidden', allow ? 'false' : 'true');
+                if (!allow) el.style.display = 'none';
+                else el.style.display = '';
+            });
+            /* أزرار الواجهة العامة: تتحول لـ «نبراس يتصل بك» بدل عرض سعر */
+            const publicSwap = [
+                { id: 'top-quote-btn', label: 'نبراس يتصل بك' },
+                { id: 'hero-mobile-quote', label: 'اطلب اتصال' },
+                { id: 'mob-bar-quote', label: 'اتصلي بي' }
+            ];
+            publicSwap.forEach(function(item) {
+                const el = document.getElementById(item.id);
+                if (!el) return;
+                if (!el.dataset.nebrasOrigLabel) {
+                    el.dataset.nebrasOrigLabel = (el.textContent || '').trim();
+                    el.dataset.nebrasOrigOnclick = el.getAttribute('onclick') || '';
+                }
+                if (!allow) {
+                    el.hidden = false;
+                    el.style.display = '';
+                    el.setAttribute('aria-hidden', 'false');
+                    el.textContent = item.label;
+                    el.setAttribute('onclick', 'typeof openNebrasCallbackConcierge===\'function\'&&openNebrasCallbackConcierge()');
+                    el.classList.add('nebras-quote-cta--callback');
+                } else {
+                    el.textContent = el.dataset.nebrasOrigLabel || el.textContent;
+                    if (el.dataset.nebrasOrigOnclick) el.setAttribute('onclick', el.dataset.nebrasOrigOnclick);
+                    el.classList.remove('nebras-quote-cta--callback');
+                    el.hidden = false;
+                    el.style.display = '';
+                }
+            });
+            const cartSub = document.getElementById('cart-checkout-sub');
+            if (cartSub) {
+                if (!cartSub.dataset.nebrasOrigText) cartSub.dataset.nebrasOrigText = cartSub.textContent || '';
+                cartSub.textContent = allow
+                    ? cartSub.dataset.nebrasOrigText
+                    : 'سلتك للتصفح — لإنشاء عرض سعر رسمي تواصل مع فريق نبراس عبر «نبراس يتصل بك» أو الفرع.';
+            }
+            const channelLabel = document.getElementById('cart-send-channel-label');
+            if (channelLabel) {
+                channelLabel.hidden = !allow;
+            }
+            const visitorRole = document.getElementById('visitor-role-text');
+            if (visitorRole && !allow) {
+                visitorRole.textContent = 'يستطيع الزائر تصفح المنتجات والمعارض وإضافة للسلة وطلب اتصال من نبراس — إنشاء عرض السعر الرسمي للموظفين والإدارة فقط.';
+            }
         }
 
         function confirmAndOpenQuote() {
+            if (!canCreateOfficialQuote()) {
+                redirectVisitorQuoteToStaff();
+                return;
+            }
             const ui = siteText[currentLang || 'ar'] || siteText.ar;
             if (!nebrasCart.length) {
                 alert(ui.cartEmpty || 'أضف منتجات إلى السلة أولاً.');
@@ -13244,6 +13346,10 @@
         }
 
         function openQuotePreview() {
+            if (!canCreateOfficialQuote()) {
+                redirectVisitorQuoteToStaff();
+                return;
+            }
             if (!nebrasCart.length) {
                 const ui = siteText[currentLang || 'ar'] || siteText.ar;
                 alert(ui.cartEmpty || 'أضف منتجات إلى السلة أولاً.');
@@ -15067,13 +15173,20 @@
             } catch (repairErr) {
                 console.error('repairDashboardTilesIntegrity', repairErr);
             }
+            if (isMainGovernanceAdmin(currentAdmin) && typeof forceRestoreHqDashboardTilesFromDefaults === 'function') {
+                forceRestoreHqDashboardTilesFromDefaults();
+            }
             const quick = document.getElementById('dashboard-actions-grid');
             const secondary = document.getElementById('dashboard-secondary-grid');
             const lang = currentLang || 'ar';
+            const hq = isMainGovernanceAdmin(currentAdmin);
             let visible = dashboardTiles.filter(function(t) {
+                if (!t || !t.id) return false;
                 if (t.visible === false) return false;
-                if (t.superadminOnly && !isMainGovernanceAdmin()) return false;
+                if (t.superadminOnly && !hq) return false;
                 if (t.branchCommandOnly && !canAccessBranchCommandCenter()) return false;
+                /* الإدارة الرئيسية ترى كل البلاطات الحية — بدون فلاتر أدوار ضيقة */
+                if (hq) return true;
                 if (t.id === 'dash-wpc-dept' && !canManage('production') && !isMainGovernanceAdmin()) return false;
                 if (t.id === 'dash-wpc-dept' && isAluminumDepartmentAdmin(currentAdmin)) return false;
                 if (t.id === 'dash-wpc-cutting' && !canManage('wpcCutting') && !canManage('production') && !isMainGovernanceAdmin()) return false;
@@ -15082,10 +15195,10 @@
                 if (t.permission && currentAdmin && !dashboardTilePassesPermission(t, currentAdmin)) return false;
                 return true;
             });
-            if (typeof isHrDepartmentAdmin === 'function' && isHrDepartmentAdmin(currentAdmin)) {
+            if (!hq && typeof isHrDepartmentAdmin === 'function' && isHrDepartmentAdmin(currentAdmin)) {
                 visible = visible.filter(function(t) { return t.id === 'dash-hr-platform'; });
             }
-            if (typeof isStrictAluminumUser === 'function' && isStrictAluminumUser(currentAdmin)) {
+            if (!hq && typeof isStrictAluminumUser === 'function' && isStrictAluminumUser(currentAdmin)) {
                 const aluKeep = {
                     'dash-aluminum-cutting': true,
                     'dash-aluminum-dept': true
@@ -15097,7 +15210,7 @@
                     return (a.sortOrder || 0) - (b.sortOrder || 0);
                 });
             }
-            if (isStoreCatalogOnlyAdmin(currentAdmin)) {
+            if (!hq && isStoreCatalogOnlyAdmin(currentAdmin)) {
                 visible = visible.filter(function(t) { return t.id === 'dash-store-catalog'; });
             }
             const tileSeen = {};
@@ -17729,6 +17842,7 @@
             enforceAdminDashboardGate();
             syncMobileCommerceBar();
             applyAdminPermissionsUI();
+            if (typeof applyVisitorQuoteUiLock === 'function') applyVisitorQuoteUiLock();
         }
 
         /** إخفاء أزرار ولوحات الإدارة حسب صلاحية الدور — من أصغر زر إلى أكبر قسم */
@@ -20243,11 +20357,22 @@
                 tile.zone = def.zone || tile.zone;
                 tile.iconClass = def.iconClass || tile.iconClass;
                 tile.dashGroup = def.dashGroup || tile.dashGroup;
-                if (tile.sortOrder == null) tile.sortOrder = def.sortOrder;
+                tile.sortOrder = def.sortOrder;
+                tile.titleAr = def.titleAr || tile.titleAr;
+                tile.titleEn = def.titleEn || tile.titleEn;
+                tile.textAr = def.textAr || tile.textAr;
+                tile.textEn = def.textEn || tile.textEn;
                 if (def.permission) tile.permission = def.permission;
+                if (def.permission === null) tile.permission = null;
                 if (def.superadminOnly != null) tile.superadminOnly = def.superadminOnly;
+                if (def.branchCommandOnly != null) tile.branchCommandOnly = def.branchCommandOnly;
+                if (def.cssClass) tile.cssClass = def.cssClass;
             });
             dashboardTiles.sort(function(a, b) { return (a.sortOrder || 0) - (b.sortOrder || 0); });
+            const dash = document.getElementById('admin-dashboard');
+            if (dash) {
+                dash.classList.remove('dashboard-hr-only', 'dashboard-legal-only', 'dashboard-role-scoped');
+            }
         }
 
         let nebrasDashboardRefreshInFlight = false;
@@ -20353,8 +20478,14 @@
             resetDashboardRolePresentation();
             if (typeof loadAdminPresenceLocal === 'function') loadAdminPresenceLocal();
             const dash = document.getElementById('admin-dashboard');
-            if (dash) revealPlatformLayer('admin-dashboard');
+            if (dash) {
+                dash.classList.remove('dashboard-hr-only', 'dashboard-legal-only', 'dashboard-role-scoped');
+                revealPlatformLayer('admin-dashboard');
+            }
             repairDashboardTilesIntegrity();
+            if (isMainGovernanceAdmin(user)) {
+                forceRestoreHqDashboardTilesFromDefaults();
+            }
             ensureDashboardGovernanceHandlers();
             updateAdminRoleLabel(user);
             applyOccasionTheme();
@@ -20363,23 +20494,25 @@
             if (typeof window.refreshNebrasAppTabBar === 'function') window.refreshNebrasAppTabBar();
             if (typeof renderNebrasLiveCloudRibbon === 'function') renderNebrasLiveCloudRibbon('idle');
             applyRoleDashboardScope(user);
-            if (typeof applyHrStrictDashboardGovernance === 'function') applyHrStrictDashboardGovernance(user);
+            if (typeof applyHrStrictDashboardGovernance === 'function' && !isMainGovernanceAdmin(user)) {
+                applyHrStrictDashboardGovernance(user);
+            }
             bindNebrasHrPlatformGlobals();
-            if (typeof isStrictHrUser === 'function' && isStrictHrUser(user)) {
+            if (typeof isStrictHrUser === 'function' && isStrictHrUser(user) && !isMainGovernanceAdmin(user)) {
                 startDashboardClock();
                 applyStaticUiTranslations(siteText[currentLang || 'ar'] || siteText.ar);
                 if (typeof openHrWhenReady === 'function') openHrWhenReady(0);
                 else if (typeof openHrPlatform === 'function') setTimeout(function() { openHrPlatform(); }, 0);
                 return;
             }
-            if (typeof applyLegalOnlyDashboard === 'function') applyLegalOnlyDashboard(user);
-            if (typeof isStrictLegalUser === 'function' && isStrictLegalUser(user)) {
+            if (typeof applyLegalOnlyDashboard === 'function' && !isMainGovernanceAdmin(user)) applyLegalOnlyDashboard(user);
+            if (typeof isStrictLegalUser === 'function' && isStrictLegalUser(user) && !isMainGovernanceAdmin(user)) {
                 startDashboardClock();
                 applyStaticUiTranslations(siteText[currentLang || 'ar'] || siteText.ar);
                 if (typeof openLegalPlatform === 'function') setTimeout(function() { openLegalPlatform(); }, 0);
                 return;
             }
-            if (typeof isStrictAluminumUser === 'function' && isStrictAluminumUser(user)) {
+            if (typeof isStrictAluminumUser === 'function' && isStrictAluminumUser(user) && !isMainGovernanceAdmin(user)) {
                 startDashboardClock();
                 renderDashboardTiles();
                 applyStaticUiTranslations(siteText[currentLang || 'ar'] || siteText.ar);
@@ -20414,6 +20547,12 @@
                     window.scheduleNebrasLaunchHealth(500);
                 } else if (typeof window.verifyNebrasLaunchHealth === 'function') {
                     setTimeout(window.verifyNebrasLaunchHealth, 500);
+                }
+                /* ادفع بلاطات HQ المستعادة للسحابة حتى لا تختفي على الأجهزة الأخرى */
+                if (typeof persistNebrasCriticalStores === 'function') {
+                    persistNebrasCriticalStores(['dashboard_tiles'], {
+                        silent: true, showToast: false, waitHydrate: true
+                    }).catch(function() { /* ignore */ });
                 }
             }
         }
@@ -32551,6 +32690,9 @@
         window.downloadQuoteA4Pdf = downloadQuoteA4Pdf;
         window.submitCartOrQuote = submitCartOrQuote;
         window.confirmAndOpenQuote = confirmAndOpenQuote;
+        window.canCreateOfficialQuote = canCreateOfficialQuote;
+        window.redirectVisitorQuoteToStaff = redirectVisitorQuoteToStaff;
+        window.applyVisitorQuoteUiLock = applyVisitorQuoteUiLock;
         window.openQuotePreview = openQuotePreview;
         window.closeQuotePreview = closeQuotePreview;
         window.openCartDrawer = openCartDrawer;

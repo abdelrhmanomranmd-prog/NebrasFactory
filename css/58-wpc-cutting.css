@@ -362,6 +362,7 @@ body.wpc-platform-open { overflow: hidden; }
 #wpc-cutting .wpc-3d-toolbar {
     display: flex;
     justify-content: center;
+    align-items: center;
     gap: 8px;
     margin-bottom: 12px;
     flex-wrap: wrap;
@@ -372,18 +373,49 @@ body.wpc-platform-open { overflow: hidden; }
     min-width: auto !important;
 }
 
+#wpc-cutting .wpc-3d-hint {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--wpc-muted);
+    margin-inline-start: 4px;
+}
+
 #wpc-cutting .wpc-3d-stage {
-    perspective: 900px;
-    height: 220px;
+    perspective: 1100px;
+    height: 280px;
     display: flex;
     align-items: center;
     justify-content: center;
-    background: radial-gradient(circle at 50% 40%, rgba(26, 107, 74, 0.08), transparent 70%);
-    border-radius: 12px;
+    position: relative;
+    overflow: hidden;
+    cursor: grab;
+    touch-action: none;
+    background:
+        radial-gradient(ellipse at 50% 78%, rgba(13, 40, 64, 0.12), transparent 55%),
+        linear-gradient(180deg, #eef5f1 0%, #f7faf8 45%, #e8eef2 100%);
+    border-radius: 14px;
+    border: 1px solid rgba(13, 40, 64, 0.08);
+}
+
+#wpc-cutting .wpc-3d-stage.is-dragging {
+    cursor: grabbing;
+}
+
+#wpc-cutting .wpc-3d-floor {
+    position: absolute;
+    bottom: 18px;
+    left: 12%;
+    right: 12%;
+    height: 18px;
+    border-radius: 50%;
+    background: radial-gradient(ellipse, rgba(13, 40, 64, 0.18), transparent 70%);
+    pointer-events: none;
 }
 
 #wpc-cutting .wpc-3d-scene {
     position: relative;
+    width: 1px;
+    height: 1px;
     transform-style: preserve-3d;
     transition: transform 0.35s ease;
 }
@@ -394,33 +426,246 @@ body.wpc-platform-open { overflow: hidden; }
     top: 50%;
     margin-left: -50%;
     margin-top: -50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+    box-sizing: border-box;
     backface-visibility: hidden;
-    border: 2px solid rgba(13, 40, 64, 0.35);
-    font-size: 0.72rem;
-    font-weight: 700;
-    color: var(--wpc-navy);
-    text-align: center;
-    padding: 4px;
+}
+
+#wpc-cutting .wpc-3d-door,
+#wpc-cutting .wpc-3d-cabinet {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform-style: preserve-3d;
+    margin-left: -50%;
+    margin-top: -50%;
+}
+
+#wpc-cutting .wpc-3d-frame-face {
+    position: absolute;
+    left: 0;
+    top: 0;
+    border-radius: 3px;
+    background: linear-gradient(145deg, #d9e4ec 0%, #b8c9d6 48%, #8fa3b5 100%);
+    box-shadow: inset 0 0 0 2px rgba(13, 40, 64, 0.35);
+    transform-style: preserve-3d;
+    overflow: hidden;
+}
+
+#wpc-cutting .wpc-3d-jamb {
+    position: absolute;
+    inset: 0;
+    box-shadow: inset 0 0 0 7px rgba(13, 40, 64, 0.22);
+    pointer-events: none;
+}
+
+#wpc-cutting .wpc-3d-leaf {
+    position: absolute;
+    transform-style: preserve-3d;
+}
+
+#wpc-cutting .wpc-3d-leaf-front {
+    position: absolute;
+    inset: 0;
+    border-radius: 2px;
+    background:
+        linear-gradient(160deg, #f4faf6 0%, #dceee4 40%, #c5dfd0 100%);
+    box-shadow:
+        inset 0 0 0 1px rgba(26, 107, 74, 0.35),
+        0 2px 8px rgba(13, 40, 64, 0.12);
+    overflow: hidden;
+}
+
+#wpc-cutting .wpc-3d-door--u60 .wpc-3d-leaf-front {
+    background: linear-gradient(165deg, #f7f1e4 0%, #e8d7b5 45%, #d4bc8a 100%);
+}
+
+#wpc-cutting .wpc-3d-door--lib .wpc-3d-leaf-front {
+    background: linear-gradient(165deg, #f1f6f3 0%, #d5e6dc 50%, #b9d2c4 100%);
+}
+
+#wpc-cutting .wpc-3d-door--sliding .wpc-3d-leaf-front {
+    background: linear-gradient(180deg, #eef6f2 0%, #cfe3d8 100%);
+}
+
+#wpc-cutting .wpc-3d-leaf-edge {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    margin-left: -50%;
+    margin-top: -50%;
+    background: linear-gradient(180deg, #8aa897, #5f7d6d);
+    border: 1px solid rgba(13, 40, 64, 0.2);
+}
+
+#wpc-cutting .wpc-3d-panel {
+    position: absolute;
+    border-radius: 2px;
     box-sizing: border-box;
 }
 
-#wpc-cutting .wpc-3d-front {
-    background: linear-gradient(145deg, rgba(26, 107, 74, 0.25), rgba(139, 105, 20, 0.15));
+#wpc-cutting .wpc-3d-panel--flat {
+    border: 1px solid rgba(26, 107, 74, 0.28);
+    background: linear-gradient(145deg, rgba(255, 255, 255, 0.35), rgba(26, 107, 74, 0.06));
 }
 
-#wpc-cutting .wpc-3d-back { background: rgba(13, 40, 64, 0.12); }
-#wpc-cutting .wpc-3d-left,
-#wpc-cutting .wpc-3d-right { background: rgba(26, 107, 74, 0.18); }
-#wpc-cutting .wpc-3d-top { background: rgba(201, 162, 39, 0.2); }
-#wpc-cutting .wpc-3d-bottom { background: rgba(13, 40, 64, 0.08); }
+#wpc-cutting .wpc-3d-panel--glass {
+    border: 1px solid rgba(56, 189, 248, 0.55);
+    background: linear-gradient(145deg, rgba(186, 230, 253, 0.55), rgba(125, 211, 252, 0.25));
+    overflow: hidden;
+}
+
+#wpc-cutting .wpc-3d-glass-grid {
+    position: absolute;
+    inset: 4px;
+    background:
+        linear-gradient(rgba(13, 40, 64, 0.18) 1px, transparent 1px) 0 0 / 100% 33%,
+        linear-gradient(90deg, rgba(13, 40, 64, 0.18) 1px, transparent 1px) 0 0 / 50% 100%;
+}
+
+#wpc-cutting .wpc-3d-groove {
+    position: absolute;
+    border-radius: 2px;
+    border: 1px solid rgba(139, 105, 20, 0.45);
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.25), rgba(139, 105, 20, 0.12));
+    box-shadow: inset 0 1px 2px rgba(13, 40, 64, 0.12);
+}
+
+#wpc-cutting .wpc-3d-panel--lib {
+    border: 1px solid rgba(26, 107, 74, 0.3);
+    background: rgba(255, 255, 255, 0.2);
+}
+
+#wpc-cutting .wpc-3d-lib-rail {
+    position: absolute;
+    background: rgba(13, 40, 64, 0.28);
+}
+
+#wpc-cutting .wpc-3d-lib-rail--v {
+    left: 50%;
+    top: 6%;
+    bottom: 6%;
+    width: 3px;
+    margin-left: -1.5px;
+}
+
+#wpc-cutting .wpc-3d-lib-rail--h {
+    top: 42%;
+    left: 8%;
+    right: 8%;
+    height: 3px;
+}
+
+#wpc-cutting .wpc-3d-panel--sliding {
+    border: 1px dashed rgba(26, 107, 74, 0.35);
+}
+
+#wpc-cutting .wpc-3d-sash-line {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    margin-left: -1px;
+    background: rgba(201, 162, 39, 0.7);
+}
+
+#wpc-cutting .wpc-3d-handle {
+    position: absolute;
+    width: 5px;
+    height: 28px;
+    border-radius: 3px;
+    background: linear-gradient(180deg, #0d2840, #1a4a6e);
+    box-shadow: 0 0 0 1px rgba(201, 162, 39, 0.55);
+    transform: translateY(-50%);
+    z-index: 2;
+}
+
+#wpc-cutting .wpc-3d-hinge {
+    position: absolute;
+    width: 7px;
+    height: 14px;
+    border-radius: 1px;
+    background: linear-gradient(180deg, #c9a227, #8b6914);
+    box-shadow: 0 0 0 1px rgba(13, 40, 64, 0.35);
+    z-index: 2;
+}
+
+#wpc-cutting .wpc-3d-threshold {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(180deg, #1a3a52, #0d2840);
+}
+
+#wpc-cutting .wpc-3d-frame-side,
+#wpc-cutting .wpc-3d-cab-side {
+    background: linear-gradient(180deg, #93a9b8, #6d8496);
+    border: 1px solid rgba(13, 40, 64, 0.25);
+}
+
+#wpc-cutting .wpc-3d-frame-top {
+    background: linear-gradient(90deg, #a8bbc8, #7e95a7);
+}
+
+#wpc-cutting .wpc-3d-frame-bot {
+    background: linear-gradient(90deg, #6d8496, #4f6575);
+}
+
+#wpc-cutting .wpc-3d-cab-body {
+    position: absolute;
+    inset: 0;
+    border-radius: 3px;
+    background: linear-gradient(160deg, #f5f8f6, #d8e5de);
+    box-shadow: inset 0 0 0 6px rgba(13, 40, 64, 0.2);
+    overflow: hidden;
+}
+
+#wpc-cutting .wpc-3d-cab-leaf {
+    position: absolute;
+    top: 6%;
+    bottom: 6%;
+    box-sizing: border-box;
+    border: 1px solid rgba(26, 107, 74, 0.35);
+    background: linear-gradient(145deg, rgba(26, 107, 74, 0.12), rgba(201, 162, 39, 0.08));
+}
+
+#wpc-cutting .wpc-3d-handle--cab {
+    left: 70%;
+    top: 50%;
+    height: 22px;
+}
+
+#wpc-cutting .wpc-3d-drawer {
+    position: absolute;
+    left: 8%;
+    right: 8%;
+    border-radius: 2px;
+    border: 1px solid rgba(139, 105, 20, 0.4);
+    background: rgba(139, 105, 20, 0.12);
+}
+
+#wpc-cutting .wpc-3d-drawer::after {
+    content: '';
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    width: 8px;
+    height: 8px;
+    margin-top: -4px;
+    border-radius: 50%;
+    background: #c9a227;
+}
 
 #wpc-cutting .wpc-3d-dims {
     margin: 10px 0 0;
     font-size: 0.85rem;
     color: var(--wpc-muted);
+    line-height: 1.45;
+}
+
+#wpc-cutting .wpc-3d-dims strong {
+    color: var(--wpc-navy);
 }
 
 /* —— استوديو الإدخال الاحترافي —— */
