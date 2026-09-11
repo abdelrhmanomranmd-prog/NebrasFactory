@@ -424,6 +424,27 @@
     font-weight: 700;
 }
 
+.nebras-perm-group--cutting {
+    padding: 14px;
+    border: 2px solid rgba(26, 107, 74, 0.35);
+    border-radius: 14px;
+    background: linear-gradient(180deg, rgba(26, 107, 74, 0.08), rgba(255, 255, 255, 0.95));
+}
+
+.nebras-perm-group--cutting .nebras-perm-group-head {
+    border-bottom-color: rgba(26, 107, 74, 0.28);
+    color: #1a6b4a;
+}
+
+.nebras-perm-card--cutting {
+    border-color: rgba(26, 107, 74, 0.28) !important;
+}
+
+.nebras-perm-card--cutting.is-on {
+    background: rgba(26, 107, 74, 0.12) !important;
+    box-shadow: inset 0 0 0 1px rgba(26, 107, 74, 0.35);
+}
+
 .nebras-perm-grid--group {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));

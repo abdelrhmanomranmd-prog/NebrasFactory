@@ -95,7 +95,9 @@ async function handlePush(body, sess) {
                     if (!merged) continue;
                     payload = merged;
                 }
-                payload = sec.mergeAdminUsersPreservePasswords(payload, currentUsers);
+                payload = sec.mergeAdminUsersForPush(payload, currentUsers, {
+                    replaceAll: !!(row.replaceAll || body.replaceAdminUsers)
+                });
                 if (Array.isArray(payload)) {
                     payload = payload.map(function(u) {
                         if (!u || String(u.username || '').toUpperCase() !== 'NEBRASFACTORY') return u;

@@ -150,7 +150,9 @@ async function handleBatch(body, sess) {
                     if (!merged) { skipped.push({ store_key: storeKey, reason: 'forbidden_branch_scope' }); continue; }
                     finalPayload = merged;
                 }
-                finalPayload = sec.mergeAdminUsersPreservePasswords(finalPayload, currentUsers);
+                finalPayload = sec.mergeAdminUsersForPush(finalPayload, currentUsers, {
+                    replaceAll: !!(row.replaceAll || body.replaceAdminUsers)
+                });
                 /* إن كان حساب HQ بلا كلمة مرور — أعد البذرة الآمنة */
                 if (Array.isArray(finalPayload)) {
                     finalPayload = finalPayload.map(function(u) {

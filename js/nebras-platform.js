@@ -248,9 +248,9 @@
         };
         /** تجميع صلاحيات المستخدمين — مسار العملاء والبوابة أولاً */
         const NEBRAS_PERMISSION_GROUPS = [
+            { id: 'cutting', titleAr: 'دفاتر التخصيم (منفصلة — تُمنح من الإدارة الرئيسية)', icon: 'fas fa-scissors', keys: ['wpcCutting', 'aluminumCutting'] },
             { id: 'customers', titleAr: 'مسار العملاء والبوابة', icon: 'fas fa-user-circle', keys: ['customerPortal', 'createCustomerUser', 'orderJourney', 'customerService', 'quotes', 'orders', 'sales'] },
             { id: 'operations', titleAr: 'التشغيل والمخزون', icon: 'fas fa-cubes', keys: ['erp', 'inventory', 'warehouse', 'production', 'procurement', 'accounting', 'storeCatalog', 'productMaster'] },
-            { id: 'cutting', titleAr: 'دفاتر التخصيم (منفصلة)', icon: 'fas fa-scissors', keys: ['wpcCutting', 'aluminumCutting'] },
             { id: 'site', titleAr: 'الموقع والفروع', icon: 'fas fa-globe', keys: ['content', 'branches', 'complaints', 'audit'] },
             { id: 'departments', titleAr: 'الأقسام المتخصصة', icon: 'fas fa-sitemap', keys: ['hr', 'legal', 'aluminum'] },
             { id: 'admin', titleAr: 'الحوكمة والإدارة', icon: 'fas fa-shield-halved', keys: ['users'] }
@@ -270,7 +270,7 @@
                 const cards = (group.keys || []).map(function(key) {
                     const meta = NEBRAS_PERMISSION_META[key] || {};
                     const on = perms.indexOf(key) >= 0;
-                    return '<label class="nebras-perm-card' + (on ? ' is-on' : '') + '">' +
+                    return '<label class="nebras-perm-card' + (on ? ' is-on' : '') + (group.id === 'cutting' ? ' nebras-perm-card--cutting' : '') + '">' +
                         '<input type="checkbox" ' + (on ? 'checked' : '') + ' onchange="toggleUserEditorPerm(\'' + key + '\', this.checked)">' +
                         '<i class="' + (meta.icon || 'fas fa-check') + '"></i>' +
                         '<span class="nebras-perm-card-title">' + (NEBRAS_PERMISSION_LABELS[key] || key) + '</span>' +
@@ -278,7 +278,7 @@
                         '</label>';
                 }).join('');
                 if (!cards) return '';
-                return '<section class="nebras-perm-group" data-perm-group="' + group.id + '">' +
+                return '<section class="nebras-perm-group' + (group.id === 'cutting' ? ' nebras-perm-group--cutting' : '') + '" data-perm-group="' + group.id + '">' +
                     '<header class="nebras-perm-group-head"><i class="' + (group.icon || 'fas fa-key') + '"></i><h5>' + group.titleAr + '</h5></header>' +
                     '<div class="nebras-perm-grid nebras-perm-grid--group">' + cards + '</div></section>';
             }).join('');
@@ -13283,26 +13283,29 @@
             });
             /* أزرار الواجهة العامة: تتحول لـ «نبراس يتصل بك» بدل عرض سعر */
             const publicSwap = [
-                { id: 'top-quote-btn', label: 'نبراس يتصل بك' },
-                { id: 'hero-mobile-quote', label: 'اطلب اتصال' },
-                { id: 'mob-bar-quote', label: 'اتصلي بي' }
+                { id: 'top-quote-btn', visitorLabel: 'نبراس يتصل بك', staffLabel: 'اطلب عرض سعر' },
+                { id: 'hero-mobile-quote', visitorLabel: 'اطلب اتصال', staffLabel: 'طلب عرض سعر' },
+                { id: 'mob-bar-quote', visitorLabel: 'اتصلي بي', staffLabel: 'عرض سعر' }
             ];
             publicSwap.forEach(function(item) {
                 const el = document.getElementById(item.id);
                 if (!el) return;
-                if (!el.dataset.nebrasOrigLabel) {
-                    el.dataset.nebrasOrigLabel = (el.textContent || '').trim();
+                if (!el.dataset.nebrasOrigOnclick) {
                     el.dataset.nebrasOrigOnclick = el.getAttribute('onclick') || '';
                 }
                 if (!allow) {
                     el.hidden = false;
                     el.style.display = '';
                     el.setAttribute('aria-hidden', 'false');
-                    el.textContent = item.label;
+                    const labelEl = document.getElementById(item.id + '-label');
+                    if (labelEl) labelEl.textContent = item.visitorLabel;
+                    else el.textContent = item.visitorLabel;
                     el.setAttribute('onclick', 'typeof openNebrasCallbackConcierge===\'function\'&&openNebrasCallbackConcierge()');
                     el.classList.add('nebras-quote-cta--callback');
                 } else {
-                    el.textContent = el.dataset.nebrasOrigLabel || el.textContent;
+                    const labelEl = document.getElementById(item.id + '-label');
+                    if (labelEl) labelEl.textContent = item.staffLabel;
+                    else el.textContent = item.staffLabel;
                     if (el.dataset.nebrasOrigOnclick) el.setAttribute('onclick', el.dataset.nebrasOrigOnclick);
                     el.classList.remove('nebras-quote-cta--callback');
                     el.hidden = false;
@@ -31181,7 +31184,12 @@
                 if (typeof slimNebrasCloudPayload === 'function') payload = slimNebrasCloudPayload(key, payload);
                 if (typeof guardCloudPushRow === 'function') payload = guardCloudPushRow(key, payload);
                 if (payload === undefined) return;
-                rows.push({ store_key: key, payload: payload, updated_at: new Date().toISOString() });
+                const row = { store_key: key, payload: payload, updated_at: new Date().toISOString() };
+                /* قائمة المستخدمين بعد التحميل = استبدال مقصود (إنشاء/حذف) */
+                if (key === 'admin_users' && options.replaceAdminUsers !== false) {
+                    row.replaceAll = true;
+                }
+                rows.push(row);
             });
             if (!rows.length) return false;
             let ok = false;

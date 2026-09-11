@@ -1370,6 +1370,7 @@
             inner =
                 '<div class="wpc-3d-door ' + styleClass + '" style="width:' + pw + 'px;height:' + ph + 'px">' +
                 '<div class="wpc-3d-frame-face" style="width:' + pw + 'px;height:' + ph + 'px;transform:translateZ(' + (pd / 2) + 'px)">' +
+                '<div class="wpc-3d-architrave"></div>' +
                 '<div class="wpc-3d-jamb"></div>' +
                 leavesHtml +
                 '<div class="wpc-3d-threshold" style="height:' + thresholdH + 'px"></div>' +

@@ -202,6 +202,71 @@ function mergeAdminUsersPreservePasswords(incoming, existing) {
     });
 }
 
+/**
+ * دمج آمن لمستخدمي الإدارة:
+ * - يحفظ كلمات المرور
+ * - يمنع المسح العرضي (رفع بذرة HQ وحدها فوق قائمة موظفين)
+ * - replaceAll=true يسمح بالاستبدال الكامل بعد تحميل السحابة (إنشاء/حذف مقصود)
+ */
+function mergeAdminUsersForPush(incoming, existing, options) {
+    options = options || {};
+    const prev = Array.isArray(existing) ? existing.slice() : [];
+    let list = mergeAdminUsersPreservePasswords(incoming, prev);
+    if (!Array.isArray(list)) list = [];
+
+    const isHqOnlySeed = list.length <= 1 && list.every(function(u) {
+        return u && String(u.username || '').toUpperCase() === 'NEBRASFACTORY';
+    });
+    if (isHqOnlySeed && prev.length > 1 && !options.replaceAll) {
+        console.warn('admin_users accidental wipe blocked — keeping existing staff');
+        const hqIn = list[0] || null;
+        return prev.map(function(u) {
+            if (!u) return u;
+            if (String(u.username || '').toUpperCase() !== 'NEBRASFACTORY') return u;
+            if (!hqIn) return u;
+            return Object.assign({}, u, hqIn, {
+                password: (hqIn.password && String(hqIn.password).trim()) ? hqIn.password : u.password,
+                isPrimary: true,
+                role: 'superadmin',
+                isActive: true
+            });
+        });
+    }
+
+    if (options.replaceAll) {
+        return list;
+    }
+
+    /* upsert اتحاد — لا نحذف أحداً إلا عبر replaceAll بعد hydrate */
+    const byKey = Object.create(null);
+    function keyOf(u) {
+        if (!u || typeof u !== 'object') return '';
+        const un = String(u.username || '').toUpperCase();
+        if (un) return 'u:' + un;
+        if (u.id) return 'i:' + String(u.id);
+        return '';
+    }
+    prev.forEach(function(u) {
+        const k = keyOf(u);
+        if (k) byKey[k] = u;
+    });
+    list.forEach(function(u) {
+        const k = keyOf(u);
+        if (!k) return;
+        const old = byKey[k];
+        byKey[k] = old ? Object.assign({}, old, u, {
+            password: (u.password && String(u.password).trim()) ? u.password : old.password
+        }) : u;
+    });
+    if (Array.isArray(options.deletedUsernames) && options.deletedUsernames.length) {
+        options.deletedUsernames.forEach(function(name) {
+            const k = 'u:' + String(name || '').toUpperCase();
+            if (k !== 'u:NEBRASFACTORY') delete byKey[k];
+        });
+    }
+    return Object.keys(byKey).map(function(k) { return byKey[k]; });
+}
+
 function normalizeBranchMatchText(v) {
     return String(v || '').trim().toLowerCase().replace(/\s+/g, ' ');
 }
@@ -699,6 +764,7 @@ module.exports = {
     sanitizePortalUser,
     sanitizePayloadForPull,
     mergeAdminUsersPreservePasswords,
+    mergeAdminUsersForPush,
     fetchStoreRow,
     fetchStoreRows,
     upsertStoreRows,
