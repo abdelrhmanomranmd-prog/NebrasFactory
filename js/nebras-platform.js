@@ -4793,7 +4793,7 @@
                     'other-wpc-accessories': OTHER_CATALOG_PHOTOS.accSet,
                     'other-foam': OTHER_CATALOG_PHOTOS.foamXps,
                     'other-silicone': OTHER_CATALOG_PHOTOS.silClear,
-                    'other-color-rolls': OTHER_CATALOG_PHOTOS.rollOak,
+                    'other-color-rolls': 'images/rolls/N-1.jpg',
                     'other-nebras-colors': OTHER_CATALOG_PHOTOS.rollCatalog
                 }
             };
@@ -4827,7 +4827,10 @@
 
         function getOtherSkuImageByCode(sku) {
             const code = String(sku || '').trim().toUpperCase();
-            return code && OTHER_SKU_IMAGES[code] ? OTHER_SKU_IMAGES[code] : '';
+            if (code && OTHER_SKU_IMAGES[code]) return OTHER_SKU_IMAGES[code];
+            const m = code.match(/^OTH-ROLL-N(\d+)$/);
+            if (m) return 'images/rolls/N-' + m[1] + '.jpg';
+            return '';
         }
 
         function getOtherStoreSkuImage(variant) {
@@ -4874,7 +4877,8 @@
                     'OTH-001': 1, 'OTH-002': 1,
                     'OTH-ROLL-NEB1': 1, 'OTH-ROLL-NEB2': 1, 'OTH-ROLL-NEB3': 1,
                     'OTH-ROLL-NEB5': 1, 'OTH-ROLL-NEB7': 1, 'OTH-ROLL-NEB10': 1,
-                    'OTH-ROLL-CATALOG': 1
+                    'OTH-ROLL-CATALOG': 1,
+                    'OTH-ROLL-OAK': 1, 'OTH-ROLL-WALNUT': 1, 'OTH-ROLL-PVC': 1
                 };
                 other.variants = other.variants.filter(function(v) {
                     const sku = String((v && v.sku) || '').toUpperCase();
@@ -5432,7 +5436,7 @@
         }, {});
 
         /** منتجات أخرى — إكسسوارات WPC · فوم · سيليكون · رولات (منتج) · ألوان من كتالوج نبراس · v2 */
-        const OTHER_CATALOG_VERSION = 2;
+        const OTHER_CATALOG_VERSION = 3;
         const OTHER_CATALOG_ROOT = 'images/catalog/other/';
         function otherSkuImg(file) { return OTHER_CATALOG_ROOT + 'by-sku/' + file; }
         const OTHER_CATALOG_PHOTOS = {
@@ -5490,12 +5494,12 @@
         };
         const OTHER_COLOR_ROLLS_SUBCATEGORY = {
             id: 'other-color-rolls',
-            labelAr: 'رولات',
-            labelEn: 'Laminate rolls',
+            labelAr: 'رولات ألوان نبراس',
+            labelEn: 'Nebras color rolls',
             shortLabelAr: 'رولات',
             shortLabelEn: 'Rolls',
-            descAr: 'رولات تكسية مصنع نبراس — منتج رول فعلي. الألوان تُختار من كتالوج ألوان نبراس. الأسعار من الإدارة الرئيسية.',
-            descEn: 'Factory laminate rolls as products. Colors come from the Nebras color catalog. Prices from HQ.',
+            descAr: '20 رول تكسية بأسماء وأكواد كتالوج ألوان نبراس الرسمية — السعر من الإدارة الرئيسية والصلاحيات.',
+            descEn: '20 laminate rolls with official Nebras color catalog names and codes — price from HQ.',
             sortOrder: 4
         };
         const OTHER_NEBRAS_COLORS_SUBCATEGORY = {
@@ -5522,9 +5526,26 @@
             { id: 'oth-sil-clear', sku: 'OTH-SIL-CLEAR', subCategoryId: 'other-silicone', image: OTHER_CATALOG_PHOTOS.silClear, typeAr: 'سيليكون شفاف', typeEn: 'Clear silicone sealant', sizeAr: 'أنبوب قياسي', sizeEn: 'Standard tube', colorAr: 'شفاف', colorEn: 'Clear', price: 0, inStock: true },
             { id: 'oth-sil-pack', sku: 'OTH-SIL-WHITE', subCategoryId: 'other-silicone', image: OTHER_CATALOG_PHOTOS.silPack, typeAr: 'سيليكون أبيض / متعدد', typeEn: 'White / multi silicone', sizeAr: 'أنبوب قياسي', sizeEn: 'Standard tube', colorAr: 'أبيض', colorEn: 'White', price: 0, inStock: true },
             { id: 'oth-sil-black', sku: 'OTH-SIL-BLACK', subCategoryId: 'other-silicone', image: OTHER_CATALOG_PHOTOS.silBlack, typeAr: 'سيليكون أسود مقاوم للطقس', typeEn: 'Black weatherproof silicone', sizeAr: 'أنبوب قياسي', sizeEn: 'Standard tube', colorAr: 'أسود', colorEn: 'Black', price: 0, inStock: true },
-            { id: 'oth-roll-oak', sku: 'OTH-ROLL-OAK', subCategoryId: 'other-color-rolls', image: OTHER_CATALOG_PHOTOS.rollOak, typeAr: 'رول تكسية — بلوط', typeEn: 'Laminate roll — oak', sizeAr: 'رول مصنع', sizeEn: 'Factory roll', colorAr: 'حسب كتالوج نبراس', colorEn: 'Per Nebras color catalog', price: 0, inStock: true },
-            { id: 'oth-roll-walnut', sku: 'OTH-ROLL-WALNUT', subCategoryId: 'other-color-rolls', image: OTHER_CATALOG_PHOTOS.rollWalnut, typeAr: 'رول تكسية — جوز', typeEn: 'Laminate roll — walnut', sizeAr: 'رول مصنع', sizeEn: 'Factory roll', colorAr: 'حسب كتالوج نبراس', colorEn: 'Per Nebras color catalog', price: 0, inStock: true },
-            { id: 'oth-roll-pvc', sku: 'OTH-ROLL-PVC', subCategoryId: 'other-color-rolls', image: OTHER_CATALOG_PHOTOS.rollOak, typeAr: 'رول PVC للتكسية', typeEn: 'PVC cladding laminate roll', sizeAr: 'رول مصنع', sizeEn: 'Factory roll', colorAr: 'حسب كتالوج نبراس', colorEn: 'Per Nebras color catalog', price: 0, inStock: true }
+            { id: 'oth-roll-n1', sku: 'OTH-ROLL-N1', subCategoryId: 'other-color-rolls', image: 'images/rolls/N-1.jpg', typeAr: 'رول تكسية — والنت كلاسيك', typeEn: 'Laminate roll — Classic Walnut', sizeAr: 'رول مصنع', sizeEn: 'Factory roll', colorAr: 'والنت كلاسيك', colorEn: 'Classic Walnut', price: 0, inStock: true, catalogIndex: 0, nebCode: 1 },
+            { id: 'oth-roll-n2', sku: 'OTH-ROLL-N2', subCategoryId: 'other-color-rolls', image: 'images/rolls/N-2.jpg', typeAr: 'رول تكسية — تيك ذهبي', typeEn: 'Laminate roll — Golden Teak', sizeAr: 'رول مصنع', sizeEn: 'Factory roll', colorAr: 'تيك ذهبي', colorEn: 'Golden Teak', price: 0, inStock: true, catalogIndex: 1, nebCode: 2 },
+            { id: 'oth-roll-n3', sku: 'OTH-ROLL-N3', subCategoryId: 'other-color-rolls', image: 'images/rolls/N-3.jpg', typeAr: 'رول تكسية — رمادي بلاتيني', typeEn: 'Laminate roll — Platinum Grey', sizeAr: 'رول مصنع', sizeEn: 'Factory roll', colorAr: 'رمادي بلاتيني', colorEn: 'Platinum Grey', price: 0, inStock: true, catalogIndex: 2, nebCode: 3 },
+            { id: 'oth-roll-n4', sku: 'OTH-ROLL-N4', subCategoryId: 'other-color-rolls', image: 'images/rolls/N-4.jpg', typeAr: 'رول تكسية — أوف وايت', typeEn: 'Laminate roll — Off White', sizeAr: 'رول مصنع', sizeEn: 'Factory roll', colorAr: 'أوف وايت', colorEn: 'Off White', price: 0, inStock: true, catalogIndex: 3, nebCode: 4 },
+            { id: 'oth-roll-n5', sku: 'OTH-ROLL-N5', subCategoryId: 'other-color-rolls', image: 'images/rolls/N-5.jpg', typeAr: 'رول تكسية — أوك رملي', typeEn: 'Laminate roll — Sand Oak', sizeAr: 'رول مصنع', sizeEn: 'Factory roll', colorAr: 'أوك رملي', colorEn: 'Sand Oak', price: 0, inStock: true, catalogIndex: 4, nebCode: 5 },
+            { id: 'oth-roll-n6', sku: 'OTH-ROLL-N6', subCategoryId: 'other-color-rolls', image: 'images/rolls/N-6.jpg', typeAr: 'رول تكسية — رماد دافئ', typeEn: 'Laminate roll — Warm Ash', sizeAr: 'رول مصنع', sizeEn: 'Factory roll', colorAr: 'رماد دافئ', colorEn: 'Warm Ash', price: 0, inStock: true, catalogIndex: 5, nebCode: 6 },
+            { id: 'oth-roll-n7', sku: 'OTH-ROLL-N7', subCategoryId: 'other-color-rolls', image: 'images/rolls/N-7.jpg', typeAr: 'رول تكسية — ماهوجني داكن', typeEn: 'Laminate roll — Dark Mahogany', sizeAr: 'رول مصنع', sizeEn: 'Factory roll', colorAr: 'ماهوجني داكن', colorEn: 'Dark Mahogany', price: 0, inStock: true, catalogIndex: 6, nebCode: 7 },
+            { id: 'oth-roll-n8', sku: 'OTH-ROLL-N8', subCategoryId: 'other-color-rolls', image: 'images/rolls/N-8.jpg', typeAr: 'رول تكسية — أرز فاخر', typeEn: 'Laminate roll — Rich Cedar', sizeAr: 'رول مصنع', sizeEn: 'Factory roll', colorAr: 'أرز فاخر', colorEn: 'Rich Cedar', price: 0, inStock: true, catalogIndex: 7, nebCode: 8 },
+            { id: 'oth-roll-n9', sku: 'OTH-ROLL-N9', subCategoryId: 'other-color-rolls', image: 'images/rolls/N-9.jpg', typeAr: 'رول تكسية — خشب البحر', typeEn: 'Laminate roll — Driftwood', sizeAr: 'رول مصنع', sizeEn: 'Factory roll', colorAr: 'خشب البحر', colorEn: 'Driftwood', price: 0, inStock: true, catalogIndex: 8, nebCode: 9 },
+            { id: 'oth-roll-n10', sku: 'OTH-ROLL-N10', subCategoryId: 'other-color-rolls', image: 'images/rolls/N-10.jpg', typeAr: 'رول تكسية — أوك عتيق', typeEn: 'Laminate roll — Aged Oak', sizeAr: 'رول مصنع', sizeEn: 'Factory roll', colorAr: 'أوك عتيق', colorEn: 'Aged Oak', price: 0, inStock: true, catalogIndex: 9, nebCode: 10 },
+            { id: 'oth-roll-n11', sku: 'OTH-ROLL-N11', subCategoryId: 'other-color-rolls', image: 'images/rolls/N-11.jpg', typeAr: 'رول تكسية — زان عسلي', typeEn: 'Laminate roll — Honey Beech', sizeAr: 'رول مصنع', sizeEn: 'Factory roll', colorAr: 'زان عسلي', colorEn: 'Honey Beech', price: 0, inStock: true, catalogIndex: 10, nebCode: 11 },
+            { id: 'oth-roll-n13', sku: 'OTH-ROLL-N13', subCategoryId: 'other-color-rolls', image: 'images/rolls/N-13.jpg', typeAr: 'رول تكسية — أبنوس أسود', typeEn: 'Laminate roll — Ebony Black', sizeAr: 'رول مصنع', sizeEn: 'Factory roll', colorAr: 'أبنوس أسود', colorEn: 'Ebony Black', price: 0, inStock: true, catalogIndex: 11, nebCode: 13 },
+            { id: 'oth-roll-n14', sku: 'OTH-ROLL-N14', subCategoryId: 'other-color-rolls', image: 'images/rolls/N-14.jpg', typeAr: 'رول تكسية — خشب الورد', typeEn: 'Laminate roll — Rosewood', sizeAr: 'رول مصنع', sizeEn: 'Factory roll', colorAr: 'خشب الورد', colorEn: 'Rosewood', price: 0, inStock: true, catalogIndex: 12, nebCode: 14 },
+            { id: 'oth-roll-n15', sku: 'OTH-ROLL-N15', subCategoryId: 'other-color-rolls', image: 'images/rolls/N-15.jpg', typeAr: 'رول تكسية — رمادي حجري', typeEn: 'Laminate roll — Stone Grey', sizeAr: 'رول مصنع', sizeEn: 'Factory roll', colorAr: 'رمادي حجري', colorEn: 'Stone Grey', price: 0, inStock: true, catalogIndex: 13, nebCode: 15 },
+            { id: 'oth-roll-n16', sku: 'OTH-ROLL-N16', subCategoryId: 'other-color-rolls', image: 'images/rolls/N-16.jpg', typeAr: 'رول تكسية — بني كراميل', typeEn: 'Laminate roll — Toffee Brown', sizeAr: 'رول مصنع', sizeEn: 'Factory roll', colorAr: 'بني كراميل', colorEn: 'Toffee Brown', price: 0, inStock: true, catalogIndex: 14, nebCode: 16 },
+            { id: 'oth-roll-n17', sku: 'OTH-ROLL-N17', subCategoryId: 'other-color-rolls', image: 'images/rolls/N-17.jpg', typeAr: 'رول تكسية — إسبريسو', typeEn: 'Laminate roll — Espresso', sizeAr: 'رول مصنع', sizeEn: 'Factory roll', colorAr: 'إسبريسو', colorEn: 'Espresso', price: 0, inStock: true, catalogIndex: 15, nebCode: 17 },
+            { id: 'oth-roll-n18', sku: 'OTH-ROLL-N18', subCategoryId: 'other-color-rolls', image: 'images/rolls/N-18.jpg', typeAr: 'رول تكسية — أبيض لؤلؤي', typeEn: 'Laminate roll — Pearl White', sizeAr: 'رول مصنع', sizeEn: 'Factory roll', colorAr: 'أبيض لؤلؤي', colorEn: 'Pearl White', price: 0, inStock: true, catalogIndex: 16, nebCode: 18 },
+            { id: 'oth-roll-n19', sku: 'OTH-ROLL-N19', subCategoryId: 'other-color-rolls', image: 'images/rolls/N-19.jpg', typeAr: 'رول تكسية — رماد مدخن', typeEn: 'Laminate roll — Smoked Ash', sizeAr: 'رول مصنع', sizeEn: 'Factory roll', colorAr: 'رماد مدخن', colorEn: 'Smoked Ash', price: 0, inStock: true, catalogIndex: 17, nebCode: 19 },
+            { id: 'oth-roll-n20', sku: 'OTH-ROLL-N20', subCategoryId: 'other-color-rolls', image: 'images/rolls/N-20.jpg', typeAr: 'رول تكسية — أبيض ضبابي', typeEn: 'Laminate roll — Fog White', sizeAr: 'رول مصنع', sizeEn: 'Factory roll', colorAr: 'أبيض ضبابي', colorEn: 'Fog White', price: 0, inStock: true, catalogIndex: 18, nebCode: 20 },
+            { id: 'oth-roll-n21', sku: 'OTH-ROLL-N21', subCategoryId: 'other-color-rolls', image: 'images/rolls/N-21.jpg', typeAr: 'رول تكسية — أوك كراميل', typeEn: 'Laminate roll — Caramel Oak', sizeAr: 'رول مصنع', sizeEn: 'Factory roll', colorAr: 'أوك كراميل', colorEn: 'Caramel Oak', price: 0, inStock: true, catalogIndex: 19, nebCode: 21 }
         ];
         const OTHER_SKU_IMAGES = DEFAULT_OTHER_VARIANTS.reduce(function(acc, def) {
             if (def && def.sku && def.image) acc[String(def.sku).toUpperCase()] = def.image;
