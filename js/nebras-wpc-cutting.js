@@ -256,11 +256,12 @@
     function wpcPrecisionBadges() {
         return '<div class="wpc-precision-strip">' +
             '<span class="wpc-badge"><i class="fas fa-crosshairs"></i> دقة 0.1 مم</span>' +
-            '<span class="wpc-badge"><i class="fas fa-calculator"></i> Stolcad · PowerPVC</span>' +
+            '<span class="wpc-badge"><i class="fas fa-industry"></i> PowerDOOR · OptiCut · Stolcad</span>' +
+            '<span class="wpc-badge"><i class="fas fa-calculator"></i> معادلات حية</span>' +
             '<span class="wpc-badge"><i class="fas fa-shield-halved"></i> تدقيق يمنع الخطأ</span>' +
-            '<span class="wpc-badge"><i class="fas fa-door-open"></i> أبواب + خزائن</span>' +
-            '<span class="wpc-badge"><i class="fas fa-cube"></i> SVG + 3D</span>' +
-            '<span class="wpc-badge"><i class="fas fa-scissors"></i> تخطيط ألواح</span></div>';
+            '<span class="wpc-badge"><i class="fas fa-cube"></i> 3D تفاعلي</span>' +
+            '<span class="wpc-badge"><i class="fas fa-scissors"></i> Nesting ألواح</span>' +
+            '<span class="wpc-badge"><i class="fas fa-cloud"></i> حفظ سيرفر حي</span></div>';
     }
 
     function loadLocal(key, fallback) {
@@ -1057,13 +1058,22 @@
         if (typeof markLocalCloudMutationBatch === 'function') markLocalCloudMutationBatch(keys);
         if (typeof persistNebrasCriticalStores === 'function') {
             try {
-                return await persistNebrasCriticalStores(keys, {
+                var ok = await persistNebrasCriticalStores(keys, {
                     silent: true,
                     showToast: false,
-                    promptReauth: false,
+                    promptReauth: true,
                     waitHydrate: true
                 });
-            } catch (e) { console.warn('wpc cloud persist', e); }
+                if (!ok && typeof showNebrasAdminToast === 'function') {
+                    showNebrasAdminToast('⚠️ تخصيمات WPC لم تُرفع للسيرفر — تحققي من الجلسة واضغطي حفظ', 'error');
+                }
+                return !!ok;
+            } catch (e) {
+                console.warn('wpc cloud persist', e);
+                if (typeof showNebrasAdminToast === 'function') {
+                    showNebrasAdminToast('⚠️ فشل رفع تخصيمات WPC للسحابة', 'error');
+                }
+            }
         }
         return false;
     }
@@ -1265,7 +1275,18 @@
         return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + viewW + ' ' + viewH + '" class="wpc-section-svg" role="img" aria-label="مقطع جانبي">' + inner + '</svg>';
     }
 
-    var wpc3dState = { rotX: -14, rotY: 32, drag: null };
+    var wpc3dState = { rotX: -14, rotY: 32, drag: null, mode: 'solid' };
+
+    function wpcSet3dMode(mode, uid) {
+        wpc3dState.mode = mode || 'solid';
+        var wrap = document.getElementById(uid + '-wrap');
+        if (!wrap) return;
+        wrap.classList.remove('wpc-3d--solid', 'wpc-3d--explode', 'wpc-3d--open', 'wpc-3d--wire');
+        wrap.classList.add('wpc-3d--' + wpc3dState.mode);
+        wrap.querySelectorAll('.wpc-3d-mode-btn').forEach(function(btn) {
+            btn.classList.toggle('is-active', btn.getAttribute('data-mode') === wpc3dState.mode);
+        });
+    }
 
     function wpc3dLeafFaceHtml(shape, leafW, leafH) {
         var style = shape.style || shape.family || 'flat';
@@ -1384,13 +1405,17 @@
 
         setTimeout(function() { wpcBind3dDrag(uid); }, 40);
 
-        return '<div class="wpc-3d-wrap" id="' + uid + '-wrap">' +
+        return '<div class="wpc-3d-wrap wpc-3d--' + (wpc3dState.mode || 'solid') + '" id="' + uid + '-wrap">' +
             '<div class="wpc-3d-toolbar">' +
             '<button type="button" class="nebras-users-btn wpc-3d-btn" onclick="wpcRotate3d(-1,0,\'' + uid + '\')" title="يسار"><i class="fas fa-rotate-left"></i></button>' +
             '<button type="button" class="nebras-users-btn wpc-3d-btn" onclick="wpcRotate3d(1,0,\'' + uid + '\')" title="يمين"><i class="fas fa-rotate-right"></i></button>' +
             '<button type="button" class="nebras-users-btn wpc-3d-btn" onclick="wpcRotate3d(0,-1,\'' + uid + '\')" title="أعلى"><i class="fas fa-arrow-up"></i></button>' +
             '<button type="button" class="nebras-users-btn wpc-3d-btn" onclick="wpcRotate3d(0,1,\'' + uid + '\')" title="أسفل"><i class="fas fa-arrow-down"></i></button>' +
             '<button type="button" class="nebras-users-btn wpc-3d-btn" onclick="wpcReset3d(\'' + uid + '\')" title="إعادة"><i class="fas fa-compress"></i></button>' +
+            '<button type="button" class="nebras-users-btn wpc-3d-btn wpc-3d-mode-btn' + ((wpc3dState.mode || 'solid') === 'solid' ? ' is-active' : '') + '" data-mode="solid" onclick="wpcSet3dMode(\'solid\',\'' + uid + '\')">صلب</button>' +
+            '<button type="button" class="nebras-users-btn wpc-3d-btn wpc-3d-mode-btn' + (wpc3dState.mode === 'explode' ? ' is-active' : '') + '" data-mode="explode" onclick="wpcSet3dMode(\'explode\',\'' + uid + '\')">تفكيك</button>' +
+            '<button type="button" class="nebras-users-btn wpc-3d-btn wpc-3d-mode-btn' + (wpc3dState.mode === 'open' ? ' is-active' : '') + '" data-mode="open" onclick="wpcSet3dMode(\'open\',\'' + uid + '\')">فتح</button>' +
+            '<button type="button" class="nebras-users-btn wpc-3d-btn wpc-3d-mode-btn' + (wpc3dState.mode === 'wire' ? ' is-active' : '') + '" data-mode="wire" onclick="wpcSet3dMode(\'wire\',\'' + uid + '\')">سلك</button>' +
             '<span class="wpc-3d-hint"><i class="fas fa-hand-pointer"></i> اسحبي للدوران</span>' +
             '</div>' +
             '<div class="wpc-3d-stage" id="' + uid + '-stage" data-uid="' + uid + '">' +
@@ -1477,19 +1502,74 @@
         var svg = wpcDrawElevationSvg(item, { viewW: 460, viewH: 420 });
         var section = wpcDrawSectionSideSvg(item, { viewW: 260, viewH: 420 });
         var html3d = wpcDraw3dPreviewHtml(item, { uid: 'wpc3d-main' });
-        return '<div class="wpc-cut-form-card"><h4><i class="fas fa-drafting-compass"></i> رسومات هندسية احترافية + 3D</h4>' +
-            '<p class="wpc-cut-note">ارتفاع · مقطع جانبي · معاينة حية — تتحدث تلقائياً مع كل تغيير مقاس (مثل برامج التخصيم).</p>' +
+        var meta = wpcCutsWithMeta(item, 0);
+        var geo = meta.geometry || {};
+        var formulaHtml = (meta.formulaSteps || []).map(function (s) {
+            return '<li><strong>' + wEsc(s.k) + ':</strong> ' + wEsc(s.v) + '</li>';
+        }).join('') || '<li>لا خطوات بعد — أدخلي المقاسات</li>';
+        var bomHtml = (meta.panels || []).concat(meta.cuts || []).slice(0, 12).map(function (p) {
+            var dim = p.widthMm ? (p.widthMm + '×' + p.heightMm + ' مم') : ((p.lengthMm || '') + ' مم');
+            return '<tr><td>' + wEsc(p.labelAr || p.partName || '') + '</td><td><strong>' + wEsc(dim) + '</strong></td><td>' + (p.qty || 1) + '</td></tr>';
+        }).join('');
+        var nestSvg = '';
+        try {
+            var panels = (meta.panels || []).map(function (p) {
+                return { w: p.widthMm, h: p.heightMm, label: p.labelAr || '', qty: p.qty || 1 };
+            });
+            if (panels.length) {
+                var plan = runWpcSheetPlan(panels, {});
+                nestSvg = wpcDrawNestPreviewSvg(plan);
+            }
+        } catch (nestErr) { nestSvg = ''; }
+        return '<div class="wpc-cut-form-card"><h4><i class="fas fa-drafting-compass"></i> استوديو هندسي احترافي — مثل PowerDOOR / OptiCut</h4>' +
+            '<p class="wpc-cut-note">ارتفاع · مقطع · 3D تفاعلي · معادلات حية · قائمة قص · Nesting — كل تغيير مقاس يُحدَّث فوراً بدقة 0.1مم.</p>' +
+            wpcPrecisionBadges() +
             '<span class="wpc-live-badge" id="wpc-draw-live"><i class="fas fa-bolt"></i> رسم حي</span></div>' +
             '<div class="wpc-draw-grid wpc-draw-grid--pro">' +
             '<section class="wpc-draw-panel wpc-draw-panel--elev"><h5><i class="fas fa-ruler-combined"></i> ارتفاع أمامي</h5>' + svg + '</section>' +
             '<section class="wpc-draw-panel"><h5><i class="fas fa-cut"></i> مقطع جانبي</h5>' + section + '</section>' +
             '<section class="wpc-draw-panel"><h5><i class="fas fa-cube"></i> معاينة 3D</h5>' + html3d + '</section></div>' +
+            '<div class="wpc-draw-grid wpc-draw-grid--pro">' +
+            '<section class="wpc-draw-panel"><h5><i class="fas fa-calculator"></i> معادلات التخصيم الحية</h5><ol class="wpc-formula-live">' + formulaHtml + '</ol>' +
+            '<div class="wpc-geo-summary">' +
+            '<span>لوح: <strong>' + (geo.leafW || '—') + ' × ' + (geo.leafH || '—') + '</strong> مم</span> ' +
+            '<span>حلق: <strong>' + (geo.frameOuterW || '—') + ' × ' + (geo.frameOuterH || '—') + '</strong></span> ' +
+            '<span>صافي: <strong>' + (geo.innerClearW || '—') + ' × ' + (geo.innerClearH || '—') + '</strong></span></div></section>' +
+            '<section class="wpc-draw-panel"><h5><i class="fas fa-list-check"></i> قائمة القص (BOM)</h5>' +
+            '<table class="wpc-bom-mini"><thead><tr><th>القطعة</th><th>المقاس</th><th>الكمية</th></tr></thead><tbody>' +
+            (bomHtml || '<tr><td colspan="3">لا قطع بعد</td></tr>') + '</tbody></table></section>' +
+            (nestSvg ? '<section class="wpc-draw-panel"><h5><i class="fas fa-th"></i> Nesting ألواح</h5>' + nestSvg + '</section>' : '') +
+            '</div>' +
             '<div class="wpc-cut-form-card"><h5>ملخص الهندسة</h5>' +
             '<div class="wpc-geo-summary">' +
             '<span>النوع: <strong>' + wEsc(shape.nameAr) + '</strong></span> ' +
             (shape.family === 'cabinet' ? '<span>عمق: <strong>' + wNum(item.depthMm || DEFAULT_DEDUCTIONS.defaultCabinetDepthMm) + '</strong> مم</span> ' : '') +
             '<span>خارجي: <strong>' + wNum(item.widthMm) + '×' + wNum(item.heightMm) + '</strong></span></div>' +
             '<button type="button" class="nebras-users-btn" onclick="setWpcCutTab(\'estimate\')"><i class="fas fa-edit"></i> تعديل المقاسات</button></div>';
+    }
+
+    function wpcDrawNestPreviewSvg(plan) {
+        if (!plan || !plan.sheets || !plan.sheets.length) return '';
+        var sheet = plan.sheets[0];
+        var sw = plan.sheetW || 2800;
+        var sh = plan.sheetH || 1220;
+        var viewW = 420;
+        var viewH = Math.max(120, Math.round(viewW * (sh / sw)));
+        var sx = viewW / sw;
+        var sy = viewH / sh;
+        var parts = (sheet.placed || sheet.parts || []).map(function (p, i) {
+            var x = (p.x || 0) * sx;
+            var y = (p.y || 0) * sy;
+            var w = (p.w || p.widthMm || 0) * sx;
+            var h = (p.h || p.heightMm || 0) * sy;
+            var hues = ['#1a6b4a', '#0d2840', '#c9a227', '#2aa9c9', '#8b6914'];
+            return '<rect x="' + x + '" y="' + y + '" width="' + Math.max(1, w) + '" height="' + Math.max(1, h) +
+                '" fill="' + hues[i % hues.length] + '" fill-opacity="0.35" stroke="#0d2840" stroke-width="1"/>';
+        }).join('');
+        return '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ' + viewW + ' ' + viewH + '" class="wpc-nest-svg">' +
+            '<rect x="0" y="0" width="' + viewW + '" height="' + viewH + '" fill="#f7faf8" stroke="#0d2840" stroke-width="2"/>' +
+            parts +
+            '<text x="8" y="16" font-size="11" fill="#0d2840">لوح 1/' + plan.sheetCount + ' · هدر ' + plan.wastePct + '%</text></svg>';
     }
 
     /* —— UI —— */
@@ -2047,6 +2127,7 @@
     global.exportWpcCutCsv = exportWpcCutCsv;
     global.wpcRotate3d = wpcRotate3d;
     global.wpcReset3d = wpcReset3d;
+    global.wpcSet3dMode = wpcSet3dMode;
     global.wpcBind3dDrag = wpcBind3dDrag;
     global.wpcDrawElevationSvg = wpcDrawElevationSvg;
     global.wpcDraw3dPreviewHtml = wpcDraw3dPreviewHtml;

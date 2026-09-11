@@ -1055,3 +1055,49 @@ body.wpc-platform-open { overflow: hidden; }
 @media (max-width: 1100px) {
     #wpc-cutting .wpc-draw-grid--est-pro { grid-template-columns: 1fr; }
 }
+
+#wpc-cutting .wpc-3d-mode-btn.is-active {
+    background: #1a6b4a !important;
+    color: #fff !important;
+}
+#wpc-cutting .wpc-3d--explode .wpc-3d-leaf {
+    transform: translateZ(28px) !important;
+}
+#wpc-cutting .wpc-3d--explode .wpc-3d-frame-face {
+    transform: translateZ(0) scale(1.04) !important;
+}
+#wpc-cutting .wpc-3d--open .wpc-3d-leaf {
+    transform-origin: right center;
+    transform: translateZ(8px) rotateY(-42deg) !important;
+}
+#wpc-cutting .wpc-3d--wire .wpc-3d-leaf-front,
+#wpc-cutting .wpc-3d--wire .wpc-3d-frame-face,
+#wpc-cutting .wpc-3d--wire .wpc-3d-cab-body {
+    background: transparent !important;
+    box-shadow: inset 0 0 0 1.5px #0d2840 !important;
+}
+#wpc-cutting .wpc-formula-live {
+    margin: 0;
+    padding-inline-start: 18px;
+    font-size: 0.82rem;
+    line-height: 1.55;
+    color: #0d2840;
+}
+#wpc-cutting .wpc-bom-mini {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8rem;
+}
+#wpc-cutting .wpc-bom-mini th,
+#wpc-cutting .wpc-bom-mini td {
+    border-bottom: 1px solid rgba(13,40,64,0.12);
+    padding: 6px 4px;
+    text-align: start;
+}
+#wpc-cutting .wpc-nest-svg {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
+    display: block;
+    border-radius: 8px;
+}

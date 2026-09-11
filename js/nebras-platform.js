@@ -15996,7 +15996,7 @@
         const NEBRAS_LIVE_CLOUD_PRIORITY_KEYS = [
             'site_products', 'visitor_icons', 'showroom_gallery', 'site_partners', 'branches',
             'site_certifications', 'about_pages', 'system_settings', 'dashboard_tiles', 'site_custom_sections',
-            'admin_users', 'hr_employees', 'crm_customers', 'customer_portal_users'
+            'hr_employees', 'crm_customers', 'customer_portal_users'
         ];
         window.NEBRAS_LIVE_CLOUD_PRIORITY_KEYS = NEBRAS_LIVE_CLOUD_PRIORITY_KEYS;
 
@@ -28717,7 +28717,8 @@
                     showToast: false,
                     promptReauth: options.promptReauth !== false,
                     waitHydrate: !priorityReady,
-                    allowDuringHydrate: true
+                    allowDuringHydrate: true,
+                    replaceAdminUsers: true
                 });
             }
             if (!cloudOk && typeof flushPushToNebrasCloud === 'function') {
@@ -31185,8 +31186,8 @@
                 if (typeof guardCloudPushRow === 'function') payload = guardCloudPushRow(key, payload);
                 if (payload === undefined) return;
                 const row = { store_key: key, payload: payload, updated_at: new Date().toISOString() };
-                /* قائمة المستخدمين بعد التحميل = استبدال مقصود (إنشاء/حذف) */
-                if (key === 'admin_users' && options.replaceAdminUsers !== false) {
+                /* replaceAll فقط عند إنشاء/حذف مستخدم صراحة — لا مع كل حفظ عام */
+                if (key === 'admin_users' && options.replaceAdminUsers === true) {
                     row.replaceAll = true;
                 }
                 rows.push(row);
@@ -31202,7 +31203,11 @@
                     keepalive: !!options.keepalive,
                     promptReauth: options.promptReauth === true
                 });
-                ok = !!(batchResult && batchResult.ok);
+                const savedCount = Number(batchResult && (batchResult.count || (batchResult.keys && batchResult.keys.length) || 0));
+                ok = !!(batchResult && batchResult.ok && savedCount > 0);
+                if (batchResult && batchResult.ok && savedCount === 0) {
+                    console.warn('persistGovernanceBatch empty success:', batchResult);
+                }
                 if (!ok) console.warn('persistGovernanceBatch failed:', batchResult);
             }
             if (!ok && typeof persistGovernanceStore === 'function') {
@@ -31346,10 +31351,8 @@
                 if (options.urgentCloud !== false) options.urgentCloud = true;
                 if (!options.skipMutationMark) {
                     if (typeof markLocalCloudMutationBatch === 'function') {
-                        /* علّم المفاتيح المتأثرة فقط — لا الـ 86 كلها */
-                        markLocalCloudMutationBatch(saveKeys || (options.urgentCloud
-                            ? (typeof NEBRAS_LIVE_CLOUD_PRIORITY_KEYS !== 'undefined' ? NEBRAS_LIVE_CLOUD_PRIORITY_KEYS : ['system_settings'])
-                            : ['system_settings']));
+                        /* علّم المفاتيح المتأثرة فقط — أبداً قائمة الأولوية كاملة (كانت ترفع admin_users وتمسح الموظفين) */
+                        markLocalCloudMutationBatch(saveKeys || ['system_settings']);
                     }
                     if (typeof markGovernanceRevision === 'function') markGovernanceRevision();
                     if (typeof markSensitiveCloudPending === 'function') markSensitiveCloudPending();
@@ -31365,7 +31368,7 @@
             }
             if (!options.skipMutationMark) {
                 if (typeof markLocalCloudMutationBatch === 'function') {
-                    markLocalCloudMutationBatch(saveKeys || NEBRAS_LIVE_CLOUD_PRIORITY_KEYS || ['system_settings']);
+                    markLocalCloudMutationBatch(saveKeys || ['system_settings']);
                 }
                 if (typeof markGovernanceRevision === 'function') markGovernanceRevision();
                 if (typeof markSensitiveCloudPending === 'function') markSensitiveCloudPending();
@@ -31405,7 +31408,10 @@
                 if (currentAdmin) {
                     renderNebrasLiveCloudRibbon('saving');
                     const showToast = options.urgentCloud === true || options.showCloudToast === true;
-                    const priorityKeys = options.storeKeys || NEBRAS_LIVE_CLOUD_PRIORITY_KEYS;
+                    /* لا ترفعي قائمة الأولوية كاملة — خصوصاً admin_users */
+                    const priorityKeys = options.storeKeys && options.storeKeys.length
+                        ? options.storeKeys.filter(function(k) { return k !== 'admin_users' || options.replaceAdminUsers === true; })
+                        : ['system_settings'];
                     let criticalPromise = Promise.resolve(false);
                     if (options.urgentCloud && typeof persistNebrasCriticalStores === 'function') {
                         criticalPromise = persistNebrasCriticalStores(priorityKeys, {
@@ -31420,9 +31426,10 @@
                     }
                     const flushPromise = flushPushToNebrasCloud({ showCloudToast: showToast, silentCloud: !showToast });
                     if (options.urgentCloud && typeof persistNebrasCriticalStores === 'function' &&
-                        typeof hasSensitiveCloudPending === 'function' && hasSensitiveCloudPending()) {
+                        typeof hasSensitiveCloudPending === 'function' && hasSensitiveCloudPending() &&
+                        options.includeSensitiveBundle === true) {
                         persistNebrasCriticalStores([
-                            'admin_users', 'customer_portal_users', 'hr_employees',
+                            'customer_portal_users', 'hr_employees',
                             'crm_customers', 'legal_contracts', 'sales_quotes_inbox',
                             'erp_inventory', 'erp_orders', 'hr_payroll', 'hr_attendance'
                         ], { showToast: showToast, promptReauth: false }).catch(function(e) {

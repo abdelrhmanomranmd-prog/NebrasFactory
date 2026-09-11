@@ -328,22 +328,21 @@
         if (options.storeKeys && options.storeKeys.length) {
             return filterKeysForAdmin(options.storeKeys);
         }
-        /* dirty-key فقط — مثل الأنظمة القوية: ارفع ما تغيّر */
+        /* dirty-key فقط — ارفع ما تغيّر فعلياً */
         if (typeof global.getPendingDirtyStoreKeys === 'function') {
             const dirty = global.getPendingDirtyStoreKeys();
             if (dirty && dirty.length) {
                 const allow = {};
                 ODOO_WRITE_KEYS.forEach(function(k) { allow[k] = true; });
-                const scoped = dirty.filter(function(k) { return allow[k]; });
+                /* لا ترفعي admin_users ضمن الحفظ العام — فقط عبر persistAdminUsersToCloud */
+                const scoped = dirty.filter(function(k) {
+                    return allow[k] && k !== 'admin_users';
+                });
                 if (scoped.length) return filterKeysForAdmin(scoped);
             }
         }
-        /* احتياط: مفاتيح المحتوى ذات الأولوية — لا ترفع ~77 مفتاحاً */
-        const priority = (typeof global.NEBRAS_LIVE_CLOUD_PRIORITY_KEYS !== 'undefined' &&
-            global.NEBRAS_LIVE_CLOUD_PRIORITY_KEYS && global.NEBRAS_LIVE_CLOUD_PRIORITY_KEYS.length)
-            ? global.NEBRAS_LIVE_CLOUD_PRIORITY_KEYS.slice()
-            : ['system_settings', 'site_products', 'branches', 'admin_users'];
-        return filterKeysForAdmin(priority);
+        /* احتياط ضيق: إعدادات فقط — بدون admin_users */
+        return filterKeysForAdmin(['system_settings']);
     }
 
     async function nebrasOdooSaveSystemDataCore(options) {

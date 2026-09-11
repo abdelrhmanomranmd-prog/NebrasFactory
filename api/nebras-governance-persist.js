@@ -21,7 +21,8 @@ function isStoreKeyAllowed(storeKey, sess) {
     return false;
 }
 
-async function persistOne(storeKey, payload, sess) {
+async function persistOne(storeKey, payload, sess, options) {
+    options = options || {};
     if (!isStoreKeyAllowed(storeKey, sess)) {
         return { ok: false, error: 'forbidden_for_role', store_key: storeKey };
     }
@@ -35,7 +36,9 @@ async function persistOne(storeKey, payload, sess) {
             }
             finalPayload = merged;
         }
-        finalPayload = sec.mergeAdminUsersPreservePasswords(finalPayload, currentUsers);
+        finalPayload = sec.mergeAdminUsersForPush(finalPayload, currentUsers, {
+            replaceAll: !!options.replaceAll
+        });
         /* إن كان حساب HQ بلا كلمة مرور — أعد البذرة الآمنة */
         if (Array.isArray(finalPayload)) {
             finalPayload = finalPayload.map(function(u) {
@@ -109,7 +112,9 @@ async function handlePersist(body, sess) {
     if (!storeKey || payload === undefined) {
         return { code: 400, data: { ok: false, error: 'store_key_and_payload_required' } };
     }
-    const result = await persistOne(storeKey, payload, sess);
+    const result = await persistOne(storeKey, payload, sess, {
+        replaceAll: !!(body.replaceAll || body.replaceAdminUsers)
+    });
     if (!result.ok) {
         const code = result.error === 'forbidden_for_role' ? 403 : (result.error === 'service_unavailable' ? 503 : 500);
         return { code: code, data: result };
