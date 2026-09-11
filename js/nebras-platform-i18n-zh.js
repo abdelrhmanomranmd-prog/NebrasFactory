@@ -238,7 +238,7 @@
                 complaintStatusResolved: '已解决',
                 complaintNotFound: '未找到此编号的投诉。',
                 otherProductsTitle: '<i class="fas fa-boxes"></i> 其他产品',
-                otherProductsText: '各种附加产品和创新解决方案的多样化范围。',
+                otherProductsText: 'WPC 门配件、泡沫、硅胶与色卷 — 价格由总部与授权用户设定。',
                 adminAccessMessage: '您必须以管理员身份登录才能访问此部分。',
                 adminComplaintsAlert: '投诉与权限管理部分已打开。在这里，您可以编辑网站和部分。',
                 otherProductsAlert: '其他产品部分已打开。在这里，您可以显示附加产品。',

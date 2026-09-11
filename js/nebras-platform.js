@@ -289,7 +289,7 @@
             { id: 'prod-wpc-raw', labelAr: 'WPC عضم', icon: 'fas fa-door-closed', descAr: 'أبواب وقطع للورش والمصانع', cssClass: 'card-wpc-raw', defaultBg: 'wpc-background', legacyKey: 'wpc-raw' },
             { id: 'prod-wpc', labelAr: 'WPC جاهز', icon: 'fas fa-door-open', descAr: 'أبواب WPC جاهزة للتركيب', cssClass: 'card-wpc', defaultBg: 'wpc-background', legacyKey: 'wpc' },
             { id: 'prod-aluminum', labelAr: 'ألومنيوم', icon: 'fas fa-industry', descAr: 'قطاعات ومقاطع الألومنيوم', cssClass: 'card-aluminum', defaultBg: 'aluminum-background', legacyKey: 'aluminum' },
-            { id: 'prod-other', labelAr: 'منتجات أخرى', icon: 'fas fa-cubes', descAr: 'PVC · إكسسوارات · منتجات متنوعة', cssClass: 'card-other', defaultBg: 'background-other-products', legacyKey: 'other' }
+            { id: 'prod-other', labelAr: 'منتجات أخرى', icon: 'fas fa-cubes', descAr: 'إكسسوارات WPC · فوم · سيليكون · رولات ألوان', cssClass: 'card-other', defaultBg: 'background-other-products', legacyKey: 'other' }
         ];
         /** أيقونات المتجر الأربع (8–11) ↔ فئة الكتالوج */
         const STORE_HUB_ICON_CATEGORIES = { 8: 'prod-wpc-raw', 9: 'prod-wpc', 10: 'prod-aluminum', 11: 'prod-other' };
@@ -3873,6 +3873,10 @@
                 const vars = product.variants || [];
                 return vars.some(function(v) { return v && v.subCategoryId; });
             }
+            if (product.id === 'prod-other') {
+                const vars = product.variants || [];
+                return vars.some(function(v) { return v && v.subCategoryId; });
+            }
             return false;
         }
 
@@ -3886,6 +3890,9 @@
             }
             if (product.id === 'prod-aluminum' && typeof seedAluminumCatalog === 'function') {
                 seedAluminumCatalog();
+            }
+            if (product.id === 'prod-other' && typeof seedOtherCatalog === 'function') {
+                seedOtherCatalog();
             }
         }
 
@@ -3911,6 +3918,12 @@
                 if (subCategoryId === 'alu-facades') sub = ALU_FACADES_SUBCATEGORY;
                 if (subCategoryId === 'alu-kitchens') sub = ALU_KITCHENS_SUBCATEGORY;
                 if (subCategoryId === 'alu-accessories') sub = ALU_ACCESSORIES_SUBCATEGORY;
+            }
+            if (!sub && product.id === 'prod-other') {
+                if (subCategoryId === 'other-wpc-accessories') sub = OTHER_WPC_ACC_SUBCATEGORY;
+                if (subCategoryId === 'other-foam') sub = OTHER_FOAM_SUBCATEGORY;
+                if (subCategoryId === 'other-silicone') sub = OTHER_SILICONE_SUBCATEGORY;
+                if (subCategoryId === 'other-color-rolls') sub = OTHER_COLOR_ROLLS_SUBCATEGORY;
             }
             return sub || null;
         }
@@ -4262,7 +4275,7 @@
             const box = document.getElementById('nebras-store-quick-preview');
             if (!box) return;
             const isWpc = productSupportsWpcRollColorPicker(product);
-            const baseImg = isWpc ? getWpcStoreSkuBaseImage(variant) : (isAluminumProduct(product) ? getAluminumStoreSkuImage(variant) : (variant.image || ''));
+            const baseImg = isWpc ? getWpcStoreSkuBaseImage(variant) : (isAluminumProduct(product) ? getAluminumStoreSkuImage(variant) : (product.id === 'prod-other' ? getOtherStoreSkuImage(variant) : (variant.image || '')));
             const img = baseImg ? resolveDisplayMediaUrl(baseImg) : '';
             const fullSrc = img ? mediaUrlForLightbox(baseImg) : '';
             const isEn = lang === 'en';
@@ -4731,6 +4744,10 @@
                     const p = getAluminumStoreSkuImage(previewVariant);
                     if (p) return p;
                 }
+                if (productId === 'prod-other') {
+                    const p = getOtherStoreSkuImage(previewVariant);
+                    if (p) return p;
+                }
             }
             const banners = {
                 'prod-wpc': {
@@ -4750,10 +4767,133 @@
                     'alu-facades': CLADDING_CATALOG_PHOTOS.plainOak,
                     'alu-kitchens': ALUMINUM_CATALOG_PHOTOS.kitchen1,
                     'alu-accessories': ALUMINUM_CATALOG_PHOTOS.accSet
+                },
+                'prod-other': {
+                    'other-wpc-accessories': OTHER_CATALOG_PHOTOS.accSet,
+                    'other-foam': OTHER_CATALOG_PHOTOS.foamXps,
+                    'other-silicone': OTHER_CATALOG_PHOTOS.silClear,
+                    'other-color-rolls': OTHER_CATALOG_PHOTOS.rollCatalog
                 }
             };
             const map = banners[productId] || {};
             return map[subCategoryId] || resolveWpcSubCategoryHeroImage(productId, subCategoryId) || '';
+        }
+
+        function getOtherCatalogStoredVersion() {
+            if (!systemSettings || typeof systemSettings !== 'object') return 0;
+            return Number(systemSettings.otherCatalogVersion) || 0;
+        }
+
+        function shouldSeedOtherCatalog() {
+            return getOtherCatalogStoredVersion() < OTHER_CATALOG_VERSION;
+        }
+
+        function ensureOtherSubCategoryDefs(other) {
+            if (!other) return;
+            if (!Array.isArray(other.subCategories)) other.subCategories = [];
+            [OTHER_WPC_ACC_SUBCATEGORY, OTHER_FOAM_SUBCATEGORY, OTHER_SILICONE_SUBCATEGORY, OTHER_COLOR_ROLLS_SUBCATEGORY].forEach(function(subDef) {
+                if (!other.subCategories.some(function(s) { return s && s.id === subDef.id; })) {
+                    other.subCategories.push(Object.assign({}, subDef));
+                } else {
+                    other.subCategories.forEach(function(s) {
+                        if (s && s.id === subDef.id) Object.assign(s, subDef);
+                    });
+                }
+            });
+            other.subCategories.sort(function(a, b) { return (a.sortOrder || 0) - (b.sortOrder || 0); });
+        }
+
+        function getOtherSkuImageByCode(sku) {
+            const code = String(sku || '').trim().toUpperCase();
+            return code && OTHER_SKU_IMAGES[code] ? OTHER_SKU_IMAGES[code] : '';
+        }
+
+        function getOtherStoreSkuImage(variant) {
+            if (!variant) return '';
+            const bySku = getOtherSkuImageByCode(variant.sku);
+            if (bySku) return bySku;
+            const img = String(variant.image || '').trim();
+            if (isAdminManagedProductImage(img)) return img;
+            if (img && (img.indexOf('images/catalog/other/') === 0 || img.indexOf('images/rolls/') === 0 || img.indexOf('images/background-Nebras-colour') === 0 || img.indexOf('images/catalog/aluminum/by-sku/ALU-ACC-') === 0)) return img;
+            const sub = String(variant.subCategoryId || '');
+            if (sub === 'other-wpc-accessories') return OTHER_CATALOG_PHOTOS.accSet;
+            if (sub === 'other-foam') return OTHER_CATALOG_PHOTOS.foamXps;
+            if (sub === 'other-silicone') return OTHER_CATALOG_PHOTOS.silClear;
+            if (sub === 'other-color-rolls') return OTHER_CATALOG_PHOTOS.rollCatalog;
+            return OTHER_CATALOG_PHOTOS.accSet;
+        }
+
+        function seedOtherCatalog(force) {
+            const other = (siteProducts || []).find(function(p) { return p && p.id === 'prod-other'; });
+            if (!other) return 0;
+            ensureOtherSubCategoryDefs(other);
+            if (!Array.isArray(other.variants)) other.variants = [];
+            if (!systemSettings || typeof systemSettings !== 'object') {
+                systemSettings = Object.assign({}, DEFAULT_SYSTEM_SETTINGS);
+            }
+            if (force === true) {
+                other.variants = DEFAULT_OTHER_VARIANTS.map(function(def) { return Object.assign({}, def); });
+                other.subCategories = [OTHER_WPC_ACC_SUBCATEGORY, OTHER_FOAM_SUBCATEGORY, OTHER_SILICONE_SUBCATEGORY, OTHER_COLOR_ROLLS_SUBCATEGORY].map(function(s) { return Object.assign({}, s); });
+                other.textAr = 'إكسسوارات أبواب WPC · فوم · سيليكون · رولات ألوان — الأسعار من الإدارة الرئيسية والصلاحيات.';
+                other.textEn = 'WPC door accessories, foam, silicone and color rolls — prices set by HQ.';
+                other.album = [OTHER_CATALOG_PHOTOS.accSet, OTHER_CATALOG_PHOTOS.foamXps, OTHER_CATALOG_PHOTOS.silClear, OTHER_CATALOG_PHOTOS.rollOak, OTHER_CATALOG_PHOTOS.rollCatalog];
+                systemSettings.otherCatalogVersion = OTHER_CATALOG_VERSION;
+                markCatalogSeedNeedsCloudSync();
+                return other.variants.length;
+            }
+            let changed = 0;
+            const bySku = {};
+            other.variants.forEach(function(v) {
+                if (v && v.sku) bySku[String(v.sku).toUpperCase()] = v;
+            });
+            /* Replace legacy stub SKUs OTH-001 / OTH-002 when catalog upgrades */
+            if (shouldSeedOtherCatalog()) {
+                other.variants = other.variants.filter(function(v) {
+                    const sku = String((v && v.sku) || '').toUpperCase();
+                    return sku !== 'OTH-001' && sku !== 'OTH-002';
+                });
+                Object.keys(bySku).forEach(function(k) { delete bySku[k]; });
+                other.variants.forEach(function(v) {
+                    if (v && v.sku) bySku[String(v.sku).toUpperCase()] = v;
+                });
+                other.textAr = 'إكسسوارات أبواب WPC · فوم · سيليكون · رولات ألوان — الأسعار من الإدارة الرئيسية والصلاحيات.';
+                other.textEn = 'WPC door accessories, foam, silicone and color rolls — prices set by HQ.';
+                if (!Array.isArray(other.album) || !other.album.length) {
+                    other.album = [OTHER_CATALOG_PHOTOS.accSet, OTHER_CATALOG_PHOTOS.foamXps, OTHER_CATALOG_PHOTOS.silClear, OTHER_CATALOG_PHOTOS.rollOak];
+                }
+                changed += 1;
+            }
+            DEFAULT_OTHER_VARIANTS.forEach(function(def) {
+                if (!def || !def.sku) return;
+                const sku = String(def.sku).toUpperCase();
+                if (!bySku[sku]) {
+                    other.variants.push(Object.assign({}, def));
+                    bySku[sku] = other.variants[other.variants.length - 1];
+                    changed += 1;
+                    return;
+                }
+                const cur = bySku[sku];
+                if (!cur.subCategoryId && def.subCategoryId) {
+                    cur.subCategoryId = def.subCategoryId;
+                    changed += 1;
+                }
+                const img = String(cur.image || '').trim();
+                if (!isAdminManagedProductImage(img) && def.image && (!img || img !== def.image)) {
+                    /* Keep admin cloud prices; refresh catalog photo when empty/stub */
+                    if (!img) {
+                        cur.image = def.image;
+                        changed += 1;
+                    }
+                }
+                if (!(Number(cur.price) > 0) && def.price === 0) {
+                    /* leave price for HQ — do not invent prices */
+                }
+            });
+            if (getOtherCatalogStoredVersion() < OTHER_CATALOG_VERSION) {
+                systemSettings.otherCatalogVersion = OTHER_CATALOG_VERSION;
+                if (changed > 0) markCatalogSeedNeedsCloudSync();
+            }
+            return changed;
         }
 
         function isAluminumProduct(product) {
@@ -4765,6 +4905,10 @@
             if (isAluminumProduct(product)) {
                 return '<span class="variant-price variant-price--alu-size"><i class="fas fa-ruler-combined"></i> ' +
                     escapeHtmlAttr(ui.storeAluPriceBySize || 'السعر حسب المقاس — يُحدد داخل المنصة') + '</span>';
+            }
+            if (product && product.id === 'prod-other' && !(Number(variant && variant.price) > 0)) {
+                return '<span class="variant-price variant-price--hq"><i class="fas fa-user-shield"></i> ' +
+                    escapeHtmlAttr(ui.storeOtherPriceByHq || 'السعر من الإدارة الرئيسية') + '</span>';
             }
             return formatVariantPriceBlock(variant ? variant.price : 0, lang);
         }
@@ -5261,16 +5405,106 @@
             return acc;
         }, {});
 
+        /** منتجات أخرى — إكسسوارات WPC · فوم · سيليكون · رولات ألوان · v1 */
+        const OTHER_CATALOG_VERSION = 1;
+        const OTHER_CATALOG_ROOT = 'images/catalog/other/';
+        function otherSkuImg(file) { return OTHER_CATALOG_ROOT + 'by-sku/' + file; }
+        const OTHER_CATALOG_PHOTOS = {
+            accSet: otherSkuImg('OTH-ACC-SET.png'),
+            accHandle: otherSkuImg('OTH-ACC-HANDLE.png'),
+            accHinge: otherSkuImg('OTH-ACC-HINGE.png'),
+            accLock: otherSkuImg('OTH-ACC-LOCK.png'),
+            accSeal: otherSkuImg('OTH-ACC-SEAL.png'),
+            accRoller: 'images/catalog/aluminum/by-sku/ALU-ACC-ROLLER.png',
+            foamXps: otherSkuImg('OTH-FOAM-XPS.png'),
+            foamFill: otherSkuImg('OTH-FOAM-FILL.png'),
+            foamSpray: otherSkuImg('OTH-FOAM-SPRAY.png'),
+            silClear: otherSkuImg('OTH-SIL-CLEAR.png'),
+            silPack: otherSkuImg('OTH-SIL-PACK.png'),
+            silBlack: otherSkuImg('OTH-SIL-BLACK.png'),
+            rollOak: otherSkuImg('OTH-ROLL-OAK.png'),
+            rollWalnut: otherSkuImg('OTH-ROLL-WALNUT.png'),
+            rollNeb1: 'images/rolls/NEB-1.jpg',
+            rollNeb2: 'images/rolls/NEB-2.jpg',
+            rollNeb3: 'images/rolls/NEB-3.jpg',
+            rollNeb5: 'images/rolls/NEB-5.jpg',
+            rollNeb7: 'images/rolls/NEB-7.jpg',
+            rollNeb10: 'images/rolls/NEB-10.jpg',
+            rollCatalog: 'images/background-Nebras-colour-catalogue-(rolls).jpeg'
+        };
+        const OTHER_WPC_ACC_SUBCATEGORY = {
+            id: 'other-wpc-accessories',
+            labelAr: 'إكسسوارات أبواب WPC',
+            labelEn: 'WPC door accessories',
+            shortLabelAr: 'إكسسوارات',
+            shortLabelEn: 'Accessories',
+            descAr: 'مقابض · مفصلات · كالون · جوانات · رولات سحاب — لأبواب WPC. الأسعار تُحدد من الإدارة الرئيسية والصلاحيات.',
+            descEn: 'Handles, hinges, locks, seals and rollers for WPC doors. Prices set by HQ and authorized staff.',
+            sortOrder: 1
+        };
+        const OTHER_FOAM_SUBCATEGORY = {
+            id: 'other-foam',
+            labelAr: 'فوم',
+            labelEn: 'Foam',
+            shortLabelAr: 'فوم',
+            shortLabelEn: 'Foam',
+            descAr: 'فوم عزل وحشو ورش — لأبواب WPC والعزل الحراري. الأسعار من الإدارة الرئيسية.',
+            descEn: 'Insulation, fill and spray foam for WPC doors. Prices from HQ.',
+            sortOrder: 2
+        };
+        const OTHER_SILICONE_SUBCATEGORY = {
+            id: 'other-silicone',
+            labelAr: 'سيليكون',
+            labelEn: 'Silicone',
+            shortLabelAr: 'سيليكون',
+            shortLabelEn: 'Silicone',
+            descAr: 'سيليكون شفاف وأبيض وأسود مقاوم للعوامل الجوية — للتثبيت والعزل. الأسعار من الإدارة.',
+            descEn: 'Clear, white and weatherproof silicone. Prices from HQ.',
+            sortOrder: 3
+        };
+        const OTHER_COLOR_ROLLS_SUBCATEGORY = {
+            id: 'other-color-rolls',
+            labelAr: 'رولات الألوان',
+            labelEn: 'Color rolls',
+            shortLabelAr: 'رولات',
+            shortLabelEn: 'Rolls',
+            descAr: 'رولات ألوان مصنع نبراس لتكسية أبواب WPC — عينات حقيقية. الأسعار من الإدارة الرئيسية.',
+            descEn: 'Nebras factory color laminate rolls for WPC doors. Prices from HQ.',
+            sortOrder: 4
+        };
         const DEFAULT_OTHER_VARIANTS = [
-            { id: 'other-sol-1', image: '', colorAr: 'متعدد', colorEn: 'Various', sizeAr: 'حسب الطلب', sizeEn: 'On request', typeAr: 'حلول إضافية', typeEn: 'Additional solution', price: 0, sku: 'OTH-001' },
-            { id: 'other-sol-2', image: '', colorAr: 'مخصص', colorEn: 'Custom', sizeAr: 'حسب المشروع', sizeEn: 'Per project', typeAr: 'منتج مخصص', typeEn: 'Custom product', price: 0, sku: 'OTH-002' }
+            { id: 'oth-acc-set', sku: 'OTH-ACC-SET', subCategoryId: 'other-wpc-accessories', image: OTHER_CATALOG_PHOTOS.accSet, typeAr: 'طقم إكسسوارات أبواب WPC كامل', typeEn: 'Complete WPC door hardware set', sizeAr: 'طقم كامل', sizeEn: 'Full kit', colorAr: 'أسود / ستانلس', colorEn: 'Black / stainless', price: 0, inStock: true },
+            { id: 'oth-acc-handle', sku: 'OTH-ACC-HANDLE', subCategoryId: 'other-wpc-accessories', image: OTHER_CATALOG_PHOTOS.accHandle, typeAr: 'مقبض باب WPC', typeEn: 'WPC door lever handle', sizeAr: 'قياسي', sizeEn: 'Standard', colorAr: 'أسود مطفي', colorEn: 'Matte black', price: 0, inStock: true },
+            { id: 'oth-acc-hinge', sku: 'OTH-ACC-HINGE', subCategoryId: 'other-wpc-accessories', image: OTHER_CATALOG_PHOTOS.accHinge, typeAr: 'مفصلات أبواب WPC', typeEn: 'WPC door hinges', sizeAr: 'طقم 3 قطع', sizeEn: 'Set of 3', colorAr: 'ستانلس', colorEn: 'Stainless', price: 0, inStock: true },
+            { id: 'oth-acc-lock', sku: 'OTH-ACC-LOCK', subCategoryId: 'other-wpc-accessories', image: OTHER_CATALOG_PHOTOS.accLock, typeAr: 'كالون أسطوانة أبواب', typeEn: 'Door cylinder lock', sizeAr: 'قياسي', sizeEn: 'Standard', colorAr: 'نيكل', colorEn: 'Nickel', price: 0, inStock: true },
+            { id: 'oth-acc-seal', sku: 'OTH-ACC-SEAL', subCategoryId: 'other-wpc-accessories', image: OTHER_CATALOG_PHOTOS.accSeal, typeAr: 'جوانات وكاوتش أبواب WPC', typeEn: 'WPC door weather seals', sizeAr: 'حسب المقطع', sizeEn: 'Per profile', colorAr: 'أسود', colorEn: 'Black', price: 0, inStock: true },
+            { id: 'oth-acc-roller', sku: 'OTH-ACC-ROLLER', subCategoryId: 'other-wpc-accessories', image: OTHER_CATALOG_PHOTOS.accRoller, typeAr: 'رولات سحاب أبواب WPC', typeEn: 'WPC sliding door rollers', sizeAr: 'حسب النظام', sizeEn: 'Per system', colorAr: 'فضي', colorEn: 'Silver', price: 0, inStock: true },
+            { id: 'oth-foam-xps', sku: 'OTH-FOAM-XPS', subCategoryId: 'other-foam', image: OTHER_CATALOG_PHOTOS.foamXps, typeAr: 'ألواح فوم XPS عزل', typeEn: 'XPS insulation foam boards', sizeAr: 'حسب السُمك', sizeEn: 'By thickness', colorAr: 'أزرق / أخضر', colorEn: 'Blue / green', price: 0, inStock: true },
+            { id: 'oth-foam-fill', sku: 'OTH-FOAM-FILL', subCategoryId: 'other-foam', image: OTHER_CATALOG_PHOTOS.foamFill, typeAr: 'فوم حشو أبواب WPC', typeEn: 'WPC door fill foam', sizeAr: 'حسب سماكة الباب', sizeEn: 'Per door thickness', colorAr: 'أبيض', colorEn: 'White', price: 0, inStock: true },
+            { id: 'oth-foam-spray', sku: 'OTH-FOAM-SPRAY', subCategoryId: 'other-foam', image: OTHER_CATALOG_PHOTOS.foamSpray, typeAr: 'فوم رش توسعي', typeEn: 'Expanding spray foam', sizeAr: 'علبة قياسية', sizeEn: 'Standard can', colorAr: 'بيج', colorEn: 'Beige', price: 0, inStock: true },
+            { id: 'oth-sil-clear', sku: 'OTH-SIL-CLEAR', subCategoryId: 'other-silicone', image: OTHER_CATALOG_PHOTOS.silClear, typeAr: 'سيليكون شفاف', typeEn: 'Clear silicone sealant', sizeAr: 'أنبوب قياسي', sizeEn: 'Standard tube', colorAr: 'شفاف', colorEn: 'Clear', price: 0, inStock: true },
+            { id: 'oth-sil-pack', sku: 'OTH-SIL-WHITE', subCategoryId: 'other-silicone', image: OTHER_CATALOG_PHOTOS.silPack, typeAr: 'سيليكون أبيض / متعدد', typeEn: 'White / multi silicone', sizeAr: 'أنبوب قياسي', sizeEn: 'Standard tube', colorAr: 'أبيض', colorEn: 'White', price: 0, inStock: true },
+            { id: 'oth-sil-black', sku: 'OTH-SIL-BLACK', subCategoryId: 'other-silicone', image: OTHER_CATALOG_PHOTOS.silBlack, typeAr: 'سيليكون أسود مقاوم للطقس', typeEn: 'Black weatherproof silicone', sizeAr: 'أنبوب قياسي', sizeEn: 'Standard tube', colorAr: 'أسود', colorEn: 'Black', price: 0, inStock: true },
+            { id: 'oth-roll-oak', sku: 'OTH-ROLL-OAK', subCategoryId: 'other-color-rolls', image: OTHER_CATALOG_PHOTOS.rollOak, typeAr: 'رول لون بلوط', typeEn: 'Oak color laminate roll', sizeAr: 'رول مصنع', sizeEn: 'Factory roll', colorAr: 'بلوط', colorEn: 'Oak', price: 0, inStock: true },
+            { id: 'oth-roll-walnut', sku: 'OTH-ROLL-WALNUT', subCategoryId: 'other-color-rolls', image: OTHER_CATALOG_PHOTOS.rollWalnut, typeAr: 'رول لون جوز', typeEn: 'Walnut color laminate roll', sizeAr: 'رول مصنع', sizeEn: 'Factory roll', colorAr: 'جوز', colorEn: 'Walnut', price: 0, inStock: true },
+            { id: 'oth-roll-neb1', sku: 'OTH-ROLL-NEB1', subCategoryId: 'other-color-rolls', image: OTHER_CATALOG_PHOTOS.rollNeb1, typeAr: 'رول نبراس NEB-1', typeEn: 'Nebras roll NEB-1', sizeAr: 'رول مصنع', sizeEn: 'Factory roll', colorAr: 'NEB-1', colorEn: 'NEB-1', price: 0, inStock: true },
+            { id: 'oth-roll-neb2', sku: 'OTH-ROLL-NEB2', subCategoryId: 'other-color-rolls', image: OTHER_CATALOG_PHOTOS.rollNeb2, typeAr: 'رول نبراس NEB-2', typeEn: 'Nebras roll NEB-2', sizeAr: 'رول مصنع', sizeEn: 'Factory roll', colorAr: 'NEB-2', colorEn: 'NEB-2', price: 0, inStock: true },
+            { id: 'oth-roll-neb3', sku: 'OTH-ROLL-NEB3', subCategoryId: 'other-color-rolls', image: OTHER_CATALOG_PHOTOS.rollNeb3, typeAr: 'رول نبراس NEB-3', typeEn: 'Nebras roll NEB-3', sizeAr: 'رول مصنع', sizeEn: 'Factory roll', colorAr: 'NEB-3', colorEn: 'NEB-3', price: 0, inStock: true },
+            { id: 'oth-roll-neb5', sku: 'OTH-ROLL-NEB5', subCategoryId: 'other-color-rolls', image: OTHER_CATALOG_PHOTOS.rollNeb5, typeAr: 'رول نبراس NEB-5', typeEn: 'Nebras roll NEB-5', sizeAr: 'رول مصنع', sizeEn: 'Factory roll', colorAr: 'NEB-5', colorEn: 'NEB-5', price: 0, inStock: true },
+            { id: 'oth-roll-neb7', sku: 'OTH-ROLL-NEB7', subCategoryId: 'other-color-rolls', image: OTHER_CATALOG_PHOTOS.rollNeb7, typeAr: 'رول نبراس NEB-7', typeEn: 'Nebras roll NEB-7', sizeAr: 'رول مصنع', sizeEn: 'Factory roll', colorAr: 'NEB-7', colorEn: 'NEB-7', price: 0, inStock: true },
+            { id: 'oth-roll-neb10', sku: 'OTH-ROLL-NEB10', subCategoryId: 'other-color-rolls', image: OTHER_CATALOG_PHOTOS.rollNeb10, typeAr: 'رول نبراس NEB-10', typeEn: 'Nebras roll NEB-10', sizeAr: 'رول مصنع', sizeEn: 'Factory roll', colorAr: 'NEB-10', colorEn: 'NEB-10', price: 0, inStock: true },
+            { id: 'oth-roll-catalog', sku: 'OTH-ROLL-CATALOG', subCategoryId: 'other-color-rolls', image: OTHER_CATALOG_PHOTOS.rollCatalog, typeAr: 'كتالوج رولات ألوان نبراس', typeEn: 'Nebras color rolls catalogue', sizeAr: 'مجموعة ألوان', sizeEn: 'Color set', colorAr: 'متعدد', colorEn: 'Various', price: 0, inStock: true }
         ];
+        const OTHER_SKU_IMAGES = DEFAULT_OTHER_VARIANTS.reduce(function(acc, def) {
+            if (def && def.sku && def.image) acc[String(def.sku).toUpperCase()] = def.image;
+            return acc;
+        }, {});
 
         const DEFAULT_SITE_PRODUCTS = [
             { id: 'prod-wpc-raw', sortOrder: 1, cssClass: 'card-wpc-raw', iconClass: 'fas fa-door-open', titleIcon: 'fas fa-industry', legacyKey: 'wpc-raw', titleAr: 'أبواب WPC عضم (للورش والمصانع)', titleEn: 'WPC Raw Doors (Workshops)', titleZh: 'WPC 毛坯门', textAr: 'أبواب WPC عضم غير ملبّسة وغير جاهزة — للورش والمصانع التي تكمل التشطيب والتركيب.', textEn: 'Unfinished WPC door leaves for workshops and factories.', textZh: '供车间加工的 WPC 毛坯门。', backgroundImage: 'wpc-background', album: ['images/catalog/wpc-photos/08-bone-profile.png', 'images/catalog/wpc-photos/10-leaf-section.png', 'images/catalog/wpc-photos/09-mdf.png'], target: '#products', action: 'shop', anchorId: 'products', visible: true, shopEnabled: true, variants: DEFAULT_WPC_RAW_VARIANTS },
             { id: 'prod-wpc', sortOrder: 2, cssClass: 'card-wpc', iconClass: 'fas fa-door-closed', titleIcon: 'fas fa-door-open', legacyKey: 'wpc', titleAr: 'أبواب WPC جاهزة للتركيب', titleEn: 'WPC Ready Doors', titleZh: 'WPC 成品门', textAr: 'أبواب WPC جاهزة للتركيب — تجمع بين فخامة المظهر وصمود البلاستيك للمنازل والمشاريع.', textEn: 'Ready-to-install WPC doors for homes and projects.', textZh: '即装型 WPC 门。', backgroundImage: 'wpc-background', album: ['images/catalog/wpc-photos/02-with-accessory.png', 'images/catalog/wpc-photos/07-classic-panel.png', 'images/catalog/wpc-photos/03-glass-leaf-quarter.png', 'images/catalog/wpc-photos/06-sliding-double-decor.png'], target: '#doors', action: 'shop', anchorId: 'doors', visible: true, shopEnabled: true, variants: DEFAULT_WPC_READY_VARIANTS },
             { id: 'prod-aluminum', sortOrder: 3, cssClass: 'card-aluminum', iconClass: 'fas fa-industry', titleIcon: 'fas fa-cog', legacyKey: 'aluminum', titleAr: 'الألومنيوم', titleEn: 'Aluminum', titleZh: '铝制品', textAr: 'منتجات ألومنيوم متينة وتصميمات ذكية تناسب مشاريع البناء والتشطيب.', textEn: 'Durable aluminum for construction and finishing.', textZh: '适用于建筑与装修的耐用铝材。', backgroundImage: 'aluminum-background', album: [aluSkuImg('ALU-PROF-6M.webp'), aluSkuImg('ALU-WIN-SLD2.png'), aluSkuImg('ALU-DOR-FLD.png'), aluSkuImg('ALU-FAC-GRID.png'), aluSkuImg('ALU-KIT-ISD.png')], target: '#aluminum', action: 'shop', anchorId: 'aluminum', visible: true, shopEnabled: true, variants: DEFAULT_ALUMINUM_VARIANTS },
-            { id: 'prod-other', sortOrder: 4, cssClass: 'card-other-products', iconClass: 'fas fa-boxes', titleIcon: 'fas fa-boxes', legacyKey: 'otherProducts', titleAr: 'منتجات أخرى', titleEn: 'Other Products', titleZh: '其他产品', textAr: 'مجموعة متنوعة من المنتجات الإضافية والحلول المبتكرة.', textEn: 'A diverse range of additional products.', textZh: '多样化的附加产品与创新方案。', backgroundImage: 'background-other-products', album: ['images/background-other-products.jpeg'], target: '#products', visitorMode: 'shop', action: 'shop', anchorId: '', visible: true, shopEnabled: true, variants: DEFAULT_OTHER_VARIANTS },
+            { id: 'prod-other', sortOrder: 4, cssClass: 'card-other-products', iconClass: 'fas fa-boxes', titleIcon: 'fas fa-boxes', legacyKey: 'otherProducts', titleAr: 'منتجات أخرى', titleEn: 'Other Products', titleZh: '其他产品', textAr: 'إكسسوارات أبواب WPC · فوم · سيليكون · رولات ألوان — الأسعار من الإدارة الرئيسية والصلاحيات.', textEn: 'WPC door accessories, foam, silicone and color rolls — prices set by HQ.', textZh: 'WPC 门配件、泡沫、硅胶与色卷 — 价格由总部设定。', backgroundImage: 'background-other-products', album: [OTHER_CATALOG_PHOTOS.accSet, OTHER_CATALOG_PHOTOS.foamXps, OTHER_CATALOG_PHOTOS.silClear, OTHER_CATALOG_PHOTOS.rollOak, OTHER_CATALOG_PHOTOS.rollCatalog], target: '#products', visitorMode: 'shop', action: 'shop', anchorId: '', visible: true, shopEnabled: true, subCategories: [OTHER_WPC_ACC_SUBCATEGORY, OTHER_FOAM_SUBCATEGORY, OTHER_SILICONE_SUBCATEGORY, OTHER_COLOR_ROLLS_SUBCATEGORY], variants: DEFAULT_OTHER_VARIANTS },
             { id: 'prod-complaints', sortOrder: 5, cssClass: 'card-customer-complaints', iconClass: 'fas fa-search', titleIcon: 'fas fa-search', legacyKey: 'complaints', titleAr: 'استفسار عن الشكاوى', titleEn: 'Complaint Inquiry', titleZh: '投诉查询', textAr: 'تحقق من حالة شكواك بإدخال رقم الشكوى.', textEn: 'Check your complaint status with the complaint number.', textZh: '输入投诉编号查询处理状态。', backgroundImage: '', album: [], target: '', action: 'complaint', anchorId: '', visible: true }
         ];
 
@@ -6155,6 +6389,7 @@
                 other.visitorMode = 'shop';
                 other.action = 'shop';
                 other.shopEnabled = true;
+                seedOtherCatalog();
             }
             const iconOther = (visitorIcons || []).find(function(i) { return i.id === 11; });
             if (iconOther) {
@@ -6652,12 +6887,14 @@
                 ? getWpcStoreSkuBaseImage(v)
                 : (product.id === 'prod-aluminum'
                     ? getAluminumStoreSkuImage(v)
-                    : (isAdminManagedProductImage(rawImg) ? rawImg : ''));
+                    : (product.id === 'prod-other'
+                        ? getOtherStoreSkuImage(v)
+                        : (isAdminManagedProductImage(rawImg) ? rawImg : '')));
             const baseImg = isWpcReady
                 ? (catalogPath ? resolveDisplayMediaUrl(catalogPath) : '')
                 : (catalogPath ? resolveDisplayMediaUrl(catalogPath) : (isAdminManagedProductImage(rawImg) ? resolveDisplayMediaUrl(rawImg) : ''));
             const img = baseImg;
-            const fullSrc = isWpcReady ? baseImg : ((isAluminumProduct(product) || isAdminManagedProductImage(rawImg)) && catalogPath ? resolveDisplayMediaUrl(catalogPath) : (isAdminManagedProductImage(rawImg) ? mediaUrlForLightbox(rawImg) : ''));
+            const fullSrc = isWpcReady ? baseImg : (((isAluminumProduct(product) || product.id === 'prod-other' || isAdminManagedProductImage(rawImg)) && catalogPath) ? resolveDisplayMediaUrl(catalogPath) : (isAdminManagedProductImage(rawImg) ? mediaUrlForLightbox(rawImg) : ''));
             const isVectorImg = !isWpcReady && /\.svg(\?|$)/i.test(String(baseImg || ''));
             const color = isEn ? (v.colorEn || v.colorAr) : (v.colorAr || v.colorEn);
             const size = isEn ? (v.sizeEn || v.sizeAr) : (v.sizeAr || v.sizeEn);
