@@ -610,3 +610,25 @@ body::before {
         transform: scale(1.04);
     }
 }
+
+
+/* هيدرا في الهيدر — عرض كامل بدون قص Ken Burns */
+.header-cinematic-slide--hydra-full {
+    inset: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: contain !important;
+    object-position: center center !important;
+    background: #06101c;
+}
+
+.header-cinematic-slide--hydra-full.is-active {
+    opacity: 1 !important;
+    animation: none !important;
+    transform: none !important;
+}
+
+.header-cinematic:has(.header-cinematic-slide--hydra-full.is-active) .header-cinematic-veil {
+    opacity: 0.35;
+    background: linear-gradient(180deg, rgba(6, 16, 28, 0.2) 0%, rgba(6, 16, 28, 0.55) 100%);
+}

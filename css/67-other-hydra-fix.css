@@ -1,0 +1,17 @@
+/* منتجات أخرى + هيدرا — صور كاملة بدون قص (hrws350) */
+
+.nebras-store-sku-grid--section .nebras-store-sku-media--other-photo {
+    aspect-ratio: 1 / 1;
+    min-height: 240px;
+}
+
+.nebras-store-sku-grid--section .nebras-store-sku-media--other-photo img {
+    object-fit: contain !important;
+    padding: 10px !important;
+    background: linear-gradient(180deg, #f6f8fb 0%, #e8eef4 100%);
+}
+
+.nebras-store-subhub-card[data-sub-id="other-nebras-colors"] .nebras-store-subhub-card-media img,
+.nebras-store-subhub-card--nebras-colors .nebras-store-subhub-card-media img {
+    object-fit: contain !important;
+}

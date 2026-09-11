@@ -428,6 +428,8 @@
                 catalogHubBrowse: 'Browse',
                 catalogHubPriceOnRequest: 'On request',
                 storeOtherPriceByHq: 'Price set by HQ',
+                storeNebrasColorsCatalog: 'Color catalog',
+                storeNebrasColorsOpen: 'Open Nebras color catalog',
                 catalogHubCount: 'products',
                 storeShoppingOptions: 'Shopping options',
                 storeFilterAvailability: 'Availability',

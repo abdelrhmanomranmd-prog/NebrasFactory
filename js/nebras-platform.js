@@ -289,7 +289,7 @@
             { id: 'prod-wpc-raw', labelAr: 'WPC عضم', icon: 'fas fa-door-closed', descAr: 'أبواب وقطع للورش والمصانع', cssClass: 'card-wpc-raw', defaultBg: 'wpc-background', legacyKey: 'wpc-raw' },
             { id: 'prod-wpc', labelAr: 'WPC جاهز', icon: 'fas fa-door-open', descAr: 'أبواب WPC جاهزة للتركيب', cssClass: 'card-wpc', defaultBg: 'wpc-background', legacyKey: 'wpc' },
             { id: 'prod-aluminum', labelAr: 'ألومنيوم', icon: 'fas fa-industry', descAr: 'قطاعات ومقاطع الألومنيوم', cssClass: 'card-aluminum', defaultBg: 'aluminum-background', legacyKey: 'aluminum' },
-            { id: 'prod-other', labelAr: 'منتجات أخرى', icon: 'fas fa-cubes', descAr: 'إكسسوارات WPC · فوم · سيليكون · رولات ألوان', cssClass: 'card-other', defaultBg: 'background-other-products', legacyKey: 'other' }
+            { id: 'prod-other', labelAr: 'منتجات أخرى', icon: 'fas fa-cubes', descAr: 'إكسسوارات WPC · فوم · سيليكون · رولات · ألوان نبراس', cssClass: 'card-other', defaultBg: 'background-other-products', legacyKey: 'other' }
         ];
         /** أيقونات المتجر الأربع (8–11) ↔ فئة الكتالوج */
         const STORE_HUB_ICON_CATEGORIES = { 8: 'prod-wpc-raw', 9: 'prod-wpc', 10: 'prod-aluminum', 11: 'prod-other' };
@@ -3924,6 +3924,7 @@
                 if (subCategoryId === 'other-foam') sub = OTHER_FOAM_SUBCATEGORY;
                 if (subCategoryId === 'other-silicone') sub = OTHER_SILICONE_SUBCATEGORY;
                 if (subCategoryId === 'other-color-rolls') sub = OTHER_COLOR_ROLLS_SUBCATEGORY;
+                if (subCategoryId === 'other-nebras-colors') sub = OTHER_NEBRAS_COLORS_SUBCATEGORY;
             }
             return sub || null;
         }
@@ -3936,6 +3937,10 @@
         }
 
         function openStoreSubCategory(productId, subCategoryId, iconId) {
+            if (productId === 'prod-other' && subCategoryId === 'other-nebras-colors') {
+                openNebrasWorkspace({ pillar: 'showroom', view: 'color-rolls', iconId: iconId });
+                return;
+            }
             const cur = nebrasWorkspaceState && nebrasWorkspaceState.route ? nebrasWorkspaceState.route : {};
             openNebrasWorkspace({
                 pillar: 'store',
@@ -3963,35 +3968,43 @@
         }
 
         function buildStoreSubCategoryHubCardHtml(product, grp, lang, ui, iconId) {
-            if (!grp || !grp.sub || !grp.items.length) return '';
+            if (!grp || !grp.sub) return '';
+            const allowEmpty = !!(grp.sub.openHandler || grp.sub.id === 'other-nebras-colors');
+            if (!allowEmpty && !(grp.items && grp.items.length)) return '';
             const sub = grp.sub;
+            const itemCount = (grp.items && grp.items.length) || 0;
             const subLabel = lang === 'en' ? (sub.labelEn || sub.labelAr) : (sub.labelAr || sub.labelEn);
             const subDesc = lang === 'en' ? (sub.descEn || sub.descAr) : (sub.descAr || sub.descEn);
-            const countLabel = (ui.storeSubProductCount || '{n} صنف').replace('{n}', String(grp.items.length));
-            const prices = grp.items.map(function(it) { return Number(it.variant.price) || 0; }).filter(function(n) { return n > 0; });
+            const countLabel = allowEmpty && !itemCount
+                ? (ui.storeNebrasColorsCatalog || 'كتالوج الألوان')
+                : (ui.storeSubProductCount || '{n} صنف').replace('{n}', String(itemCount));
+            const prices = (grp.items || []).map(function(it) { return Number(it.variant.price) || 0; }).filter(function(n) { return n > 0; });
             const fromPrice = isAluminumProduct(product)
                 ? (ui.storeAluPriceBySize || 'السعر حسب المقاس — يُحدد داخل المنصة')
-                : (prices.length
-                    ? ((ui.storeSubFromPrice || 'يبدأ من') + ' ' + formatSar(Math.min.apply(null, prices)) + '+')
-                    : (ui.catalogHubPriceOnRequest || 'عند الطلب'));
-            const previewVariant = grp.items[0] && grp.items[0].variant;
+                : (allowEmpty && !itemCount
+                    ? (ui.storeNebrasColorsOpen || 'فتح كتالوج ألوان نبراس')
+                    : (prices.length
+                        ? ((ui.storeSubFromPrice || 'يبدأ من') + ' ' + formatSar(Math.min.apply(null, prices)) + '+')
+                        : (product.id === 'prod-other' ? (ui.storeOtherPriceByHq || 'السعر من الإدارة الرئيسية') : (ui.catalogHubPriceOnRequest || 'عند الطلب'))));
+            const previewVariant = grp.items && grp.items[0] && grp.items[0].variant;
             const previewPath = resolveStoreSubCategoryBannerImage(product.id, sub.id, previewVariant);
             const preview = previewPath ? resolveDisplayMediaUrl(previewPath) : '';
             const pid = String(product.id).replace(/'/g, "\\'");
             const sid = String(sub.id).replace(/'/g, "\\'");
             const iid = iconId != null ? iconId : 'null';
-            return '<article class="nebras-store-subhub-card nebras-store-subhub-card--premium" data-sub-id="' + escapeHtmlAttr(sub.id) + '" role="button" tabindex="0" aria-label="' + escapeHtmlAttr(subLabel) + '" onclick="openStoreSubCategory(\'' + pid + '\',\'' + sid + '\',' + iid + ')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){openStoreSubCategory(\'' + pid + '\',\'' + sid + '\',' + iid + ')}">' +
+            const cardExtra = allowEmpty ? ' nebras-store-subhub-card--nebras-colors' : '';
+            return '<article class="nebras-store-subhub-card nebras-store-subhub-card--premium' + cardExtra + '" data-sub-id="' + escapeHtmlAttr(sub.id) + '" role="button" tabindex="0" aria-label="' + escapeHtmlAttr(subLabel) + '" onclick="openStoreSubCategory(\'' + pid + '\',\'' + sid + '\',' + iid + ')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){openStoreSubCategory(\'' + pid + '\',\'' + sid + '\',' + iid + ')}">' +
                 '<div class="nebras-store-subhub-card-media">' +
-                (preview ? '<img src="' + escapeHtmlAttr(preview) + '" alt="" loading="lazy" decoding="async">' : '<span class="nebras-store-subhub-card-placeholder"><i class="fas fa-door-open"></i></span>') +
+                (preview ? '<img src="' + escapeHtmlAttr(preview) + '" alt="" loading="lazy" decoding="async">' : '<span class="nebras-store-subhub-card-placeholder"><i class="fas fa-swatchbook"></i></span>') +
                 '</div>' +
                 '<div class="nebras-store-subhub-card-body">' +
-                '<span class="nebras-store-subhub-card-badge"><i class="fas fa-boxes-stacked"></i> ' + escapeHtmlAttr(countLabel) + '</span>' +
+                '<span class="nebras-store-subhub-card-badge"><i class="fas ' + (allowEmpty ? 'fa-swatchbook' : 'fa-boxes-stacked') + '"></i> ' + escapeHtmlAttr(countLabel) + '</span>' +
                 '<h3 class="nebras-store-subhub-card-title">' + escapeHtmlAttr(subLabel) + '</h3>' +
                 (subDesc ? '<p class="nebras-store-subhub-card-desc">' + escapeHtmlAttr(subDesc) + '</p>' : '') +
                 '<div class="nebras-store-subhub-card-meta">' +
                 '<span class="nebras-store-subhub-card-price">' + escapeHtmlAttr(fromPrice) + '</span>' +
                 '</div>' +
-                '<span class="nebras-store-subhub-card-cta"><i class="fas fa-arrow-left"></i> ' + escapeHtmlAttr(ui.storeSubHubEnter || 'دخول القسم — عرض المنتجات') + '</span>' +
+                '<span class="nebras-store-subhub-card-cta"><i class="fas fa-arrow-left"></i> ' + escapeHtmlAttr(allowEmpty ? (ui.storeNebrasColorsOpen || 'فتح كتالوج ألوان نبراس') : (ui.storeSubHubEnter || 'دخول القسم — عرض المنتجات')) + '</span>' +
                 '</div></article>';
         }
 
@@ -4333,6 +4346,14 @@
             const iconId = opts.iconId != null ? opts.iconId : null;
             const groups = groupVariantsBySubCategory(product, product.variants || [])
                 .filter(function(g) { return g.sub && g.items.length; });
+            if (product.id === 'prod-other') {
+                ensureOtherSubCategoryDefs(product);
+                const hasColors = groups.some(function(g) { return g.sub && g.sub.id === 'other-nebras-colors'; });
+                if (!hasColors) {
+                    groups.push({ sub: Object.assign({}, OTHER_NEBRAS_COLORS_SUBCATEGORY), items: [] });
+                    groups.sort(function(a, b) { return ((a.sub && a.sub.sortOrder) || 0) - ((b.sub && b.sub.sortOrder) || 0); });
+                }
+            }
             const intro = '<p class="nebras-store-subsections-intro nebras-store-subsections-intro--hub"><i class="fas fa-sitemap"></i> ' +
                 escapeHtmlAttr(ui.storeSubHubIntro || 'اختر القسم الفرعي — كل قسم يعرض منتجاته وأسعارها ووصفها.') + '</p>';
             const cards = groups.map(function(grp) {
@@ -4772,7 +4793,8 @@
                     'other-wpc-accessories': OTHER_CATALOG_PHOTOS.accSet,
                     'other-foam': OTHER_CATALOG_PHOTOS.foamXps,
                     'other-silicone': OTHER_CATALOG_PHOTOS.silClear,
-                    'other-color-rolls': OTHER_CATALOG_PHOTOS.rollCatalog
+                    'other-color-rolls': OTHER_CATALOG_PHOTOS.rollOak,
+                    'other-nebras-colors': OTHER_CATALOG_PHOTOS.rollCatalog
                 }
             };
             const map = banners[productId] || {};
@@ -4791,7 +4813,7 @@
         function ensureOtherSubCategoryDefs(other) {
             if (!other) return;
             if (!Array.isArray(other.subCategories)) other.subCategories = [];
-            [OTHER_WPC_ACC_SUBCATEGORY, OTHER_FOAM_SUBCATEGORY, OTHER_SILICONE_SUBCATEGORY, OTHER_COLOR_ROLLS_SUBCATEGORY].forEach(function(subDef) {
+            [OTHER_WPC_ACC_SUBCATEGORY, OTHER_FOAM_SUBCATEGORY, OTHER_SILICONE_SUBCATEGORY, OTHER_COLOR_ROLLS_SUBCATEGORY, OTHER_NEBRAS_COLORS_SUBCATEGORY].forEach(function(subDef) {
                 if (!other.subCategories.some(function(s) { return s && s.id === subDef.id; })) {
                     other.subCategories.push(Object.assign({}, subDef));
                 } else {
@@ -4833,9 +4855,9 @@
             }
             if (force === true) {
                 other.variants = DEFAULT_OTHER_VARIANTS.map(function(def) { return Object.assign({}, def); });
-                other.subCategories = [OTHER_WPC_ACC_SUBCATEGORY, OTHER_FOAM_SUBCATEGORY, OTHER_SILICONE_SUBCATEGORY, OTHER_COLOR_ROLLS_SUBCATEGORY].map(function(s) { return Object.assign({}, s); });
-                other.textAr = 'إكسسوارات أبواب WPC · فوم · سيليكون · رولات ألوان — الأسعار من الإدارة الرئيسية والصلاحيات.';
-                other.textEn = 'WPC door accessories, foam, silicone and color rolls — prices set by HQ.';
+                other.subCategories = [OTHER_WPC_ACC_SUBCATEGORY, OTHER_FOAM_SUBCATEGORY, OTHER_SILICONE_SUBCATEGORY, OTHER_COLOR_ROLLS_SUBCATEGORY, OTHER_NEBRAS_COLORS_SUBCATEGORY].map(function(s) { return Object.assign({}, s); });
+                other.textAr = 'إكسسوارات أبواب WPC · فوم · سيليكون · رولات — والألوان من كتالوج نبراس. الأسعار من الإدارة.';
+                other.textEn = 'WPC accessories, foam, silicone, rolls — colors from Nebras catalog. Prices from HQ.';
                 other.album = [OTHER_CATALOG_PHOTOS.accSet, OTHER_CATALOG_PHOTOS.foamXps, OTHER_CATALOG_PHOTOS.silClear, OTHER_CATALOG_PHOTOS.rollOak, OTHER_CATALOG_PHOTOS.rollCatalog];
                 systemSettings.otherCatalogVersion = OTHER_CATALOG_VERSION;
                 markCatalogSeedNeedsCloudSync();
@@ -4848,19 +4870,23 @@
             });
             /* Replace legacy stub SKUs OTH-001 / OTH-002 when catalog upgrades */
             if (shouldSeedOtherCatalog()) {
+                const dropSkus = {
+                    'OTH-001': 1, 'OTH-002': 1,
+                    'OTH-ROLL-NEB1': 1, 'OTH-ROLL-NEB2': 1, 'OTH-ROLL-NEB3': 1,
+                    'OTH-ROLL-NEB5': 1, 'OTH-ROLL-NEB7': 1, 'OTH-ROLL-NEB10': 1,
+                    'OTH-ROLL-CATALOG': 1
+                };
                 other.variants = other.variants.filter(function(v) {
                     const sku = String((v && v.sku) || '').toUpperCase();
-                    return sku !== 'OTH-001' && sku !== 'OTH-002';
+                    return !dropSkus[sku];
                 });
                 Object.keys(bySku).forEach(function(k) { delete bySku[k]; });
                 other.variants.forEach(function(v) {
                     if (v && v.sku) bySku[String(v.sku).toUpperCase()] = v;
                 });
-                other.textAr = 'إكسسوارات أبواب WPC · فوم · سيليكون · رولات ألوان — الأسعار من الإدارة الرئيسية والصلاحيات.';
-                other.textEn = 'WPC door accessories, foam, silicone and color rolls — prices set by HQ.';
-                if (!Array.isArray(other.album) || !other.album.length) {
-                    other.album = [OTHER_CATALOG_PHOTOS.accSet, OTHER_CATALOG_PHOTOS.foamXps, OTHER_CATALOG_PHOTOS.silClear, OTHER_CATALOG_PHOTOS.rollOak];
-                }
+                other.textAr = 'إكسسوارات أبواب WPC · فوم · سيليكون · رولات — والألوان من كتالوج نبراس. الأسعار من الإدارة.';
+                other.textEn = 'WPC accessories, foam, silicone, rolls — colors from Nebras catalog. Prices from HQ.';
+                other.album = [OTHER_CATALOG_PHOTOS.accSet, OTHER_CATALOG_PHOTOS.foamXps, OTHER_CATALOG_PHOTOS.silClear, OTHER_CATALOG_PHOTOS.rollOak, OTHER_CATALOG_PHOTOS.rollCatalog];
                 changed += 1;
             }
             DEFAULT_OTHER_VARIANTS.forEach(function(def) {
@@ -5405,8 +5431,8 @@
             return acc;
         }, {});
 
-        /** منتجات أخرى — إكسسوارات WPC · فوم · سيليكون · رولات ألوان · v1 */
-        const OTHER_CATALOG_VERSION = 1;
+        /** منتجات أخرى — إكسسوارات WPC · فوم · سيليكون · رولات (منتج) · ألوان من كتالوج نبراس · v2 */
+        const OTHER_CATALOG_VERSION = 2;
         const OTHER_CATALOG_ROOT = 'images/catalog/other/';
         function otherSkuImg(file) { return OTHER_CATALOG_ROOT + 'by-sku/' + file; }
         const OTHER_CATALOG_PHOTOS = {
@@ -5464,13 +5490,24 @@
         };
         const OTHER_COLOR_ROLLS_SUBCATEGORY = {
             id: 'other-color-rolls',
-            labelAr: 'رولات الألوان',
-            labelEn: 'Color rolls',
+            labelAr: 'رولات',
+            labelEn: 'Laminate rolls',
             shortLabelAr: 'رولات',
             shortLabelEn: 'Rolls',
-            descAr: 'رولات ألوان مصنع نبراس لتكسية أبواب WPC — عينات حقيقية. الأسعار من الإدارة الرئيسية.',
-            descEn: 'Nebras factory color laminate rolls for WPC doors. Prices from HQ.',
+            descAr: 'رولات تكسية مصنع نبراس — منتج رول فعلي. الألوان تُختار من كتالوج ألوان نبراس. الأسعار من الإدارة الرئيسية.',
+            descEn: 'Factory laminate rolls as products. Colors come from the Nebras color catalog. Prices from HQ.',
             sortOrder: 4
+        };
+        const OTHER_NEBRAS_COLORS_SUBCATEGORY = {
+            id: 'other-nebras-colors',
+            labelAr: 'ألوان كتالوج نبراس',
+            labelEn: 'Nebras color catalog',
+            shortLabelAr: 'ألوان',
+            shortLabelEn: 'Colors',
+            descAr: 'ألوان كتالوج نبراس الرسمية — ليست رولات. افتح الكتالوج لاختيار اللون والكود.',
+            descEn: 'Official Nebras color catalog — colors, not rolls. Open the catalog to pick code and shade.',
+            sortOrder: 5,
+            openHandler: 'color-rolls'
         };
         const DEFAULT_OTHER_VARIANTS = [
             { id: 'oth-acc-set', sku: 'OTH-ACC-SET', subCategoryId: 'other-wpc-accessories', image: OTHER_CATALOG_PHOTOS.accSet, typeAr: 'طقم إكسسوارات أبواب WPC كامل', typeEn: 'Complete WPC door hardware set', sizeAr: 'طقم كامل', sizeEn: 'Full kit', colorAr: 'أسود / ستانلس', colorEn: 'Black / stainless', price: 0, inStock: true },
@@ -5485,15 +5522,9 @@
             { id: 'oth-sil-clear', sku: 'OTH-SIL-CLEAR', subCategoryId: 'other-silicone', image: OTHER_CATALOG_PHOTOS.silClear, typeAr: 'سيليكون شفاف', typeEn: 'Clear silicone sealant', sizeAr: 'أنبوب قياسي', sizeEn: 'Standard tube', colorAr: 'شفاف', colorEn: 'Clear', price: 0, inStock: true },
             { id: 'oth-sil-pack', sku: 'OTH-SIL-WHITE', subCategoryId: 'other-silicone', image: OTHER_CATALOG_PHOTOS.silPack, typeAr: 'سيليكون أبيض / متعدد', typeEn: 'White / multi silicone', sizeAr: 'أنبوب قياسي', sizeEn: 'Standard tube', colorAr: 'أبيض', colorEn: 'White', price: 0, inStock: true },
             { id: 'oth-sil-black', sku: 'OTH-SIL-BLACK', subCategoryId: 'other-silicone', image: OTHER_CATALOG_PHOTOS.silBlack, typeAr: 'سيليكون أسود مقاوم للطقس', typeEn: 'Black weatherproof silicone', sizeAr: 'أنبوب قياسي', sizeEn: 'Standard tube', colorAr: 'أسود', colorEn: 'Black', price: 0, inStock: true },
-            { id: 'oth-roll-oak', sku: 'OTH-ROLL-OAK', subCategoryId: 'other-color-rolls', image: OTHER_CATALOG_PHOTOS.rollOak, typeAr: 'رول لون بلوط', typeEn: 'Oak color laminate roll', sizeAr: 'رول مصنع', sizeEn: 'Factory roll', colorAr: 'بلوط', colorEn: 'Oak', price: 0, inStock: true },
-            { id: 'oth-roll-walnut', sku: 'OTH-ROLL-WALNUT', subCategoryId: 'other-color-rolls', image: OTHER_CATALOG_PHOTOS.rollWalnut, typeAr: 'رول لون جوز', typeEn: 'Walnut color laminate roll', sizeAr: 'رول مصنع', sizeEn: 'Factory roll', colorAr: 'جوز', colorEn: 'Walnut', price: 0, inStock: true },
-            { id: 'oth-roll-neb1', sku: 'OTH-ROLL-NEB1', subCategoryId: 'other-color-rolls', image: OTHER_CATALOG_PHOTOS.rollNeb1, typeAr: 'رول نبراس NEB-1', typeEn: 'Nebras roll NEB-1', sizeAr: 'رول مصنع', sizeEn: 'Factory roll', colorAr: 'NEB-1', colorEn: 'NEB-1', price: 0, inStock: true },
-            { id: 'oth-roll-neb2', sku: 'OTH-ROLL-NEB2', subCategoryId: 'other-color-rolls', image: OTHER_CATALOG_PHOTOS.rollNeb2, typeAr: 'رول نبراس NEB-2', typeEn: 'Nebras roll NEB-2', sizeAr: 'رول مصنع', sizeEn: 'Factory roll', colorAr: 'NEB-2', colorEn: 'NEB-2', price: 0, inStock: true },
-            { id: 'oth-roll-neb3', sku: 'OTH-ROLL-NEB3', subCategoryId: 'other-color-rolls', image: OTHER_CATALOG_PHOTOS.rollNeb3, typeAr: 'رول نبراس NEB-3', typeEn: 'Nebras roll NEB-3', sizeAr: 'رول مصنع', sizeEn: 'Factory roll', colorAr: 'NEB-3', colorEn: 'NEB-3', price: 0, inStock: true },
-            { id: 'oth-roll-neb5', sku: 'OTH-ROLL-NEB5', subCategoryId: 'other-color-rolls', image: OTHER_CATALOG_PHOTOS.rollNeb5, typeAr: 'رول نبراس NEB-5', typeEn: 'Nebras roll NEB-5', sizeAr: 'رول مصنع', sizeEn: 'Factory roll', colorAr: 'NEB-5', colorEn: 'NEB-5', price: 0, inStock: true },
-            { id: 'oth-roll-neb7', sku: 'OTH-ROLL-NEB7', subCategoryId: 'other-color-rolls', image: OTHER_CATALOG_PHOTOS.rollNeb7, typeAr: 'رول نبراس NEB-7', typeEn: 'Nebras roll NEB-7', sizeAr: 'رول مصنع', sizeEn: 'Factory roll', colorAr: 'NEB-7', colorEn: 'NEB-7', price: 0, inStock: true },
-            { id: 'oth-roll-neb10', sku: 'OTH-ROLL-NEB10', subCategoryId: 'other-color-rolls', image: OTHER_CATALOG_PHOTOS.rollNeb10, typeAr: 'رول نبراس NEB-10', typeEn: 'Nebras roll NEB-10', sizeAr: 'رول مصنع', sizeEn: 'Factory roll', colorAr: 'NEB-10', colorEn: 'NEB-10', price: 0, inStock: true },
-            { id: 'oth-roll-catalog', sku: 'OTH-ROLL-CATALOG', subCategoryId: 'other-color-rolls', image: OTHER_CATALOG_PHOTOS.rollCatalog, typeAr: 'كتالوج رولات ألوان نبراس', typeEn: 'Nebras color rolls catalogue', sizeAr: 'مجموعة ألوان', sizeEn: 'Color set', colorAr: 'متعدد', colorEn: 'Various', price: 0, inStock: true }
+            { id: 'oth-roll-oak', sku: 'OTH-ROLL-OAK', subCategoryId: 'other-color-rolls', image: OTHER_CATALOG_PHOTOS.rollOak, typeAr: 'رول تكسية — بلوط', typeEn: 'Laminate roll — oak', sizeAr: 'رول مصنع', sizeEn: 'Factory roll', colorAr: 'حسب كتالوج نبراس', colorEn: 'Per Nebras color catalog', price: 0, inStock: true },
+            { id: 'oth-roll-walnut', sku: 'OTH-ROLL-WALNUT', subCategoryId: 'other-color-rolls', image: OTHER_CATALOG_PHOTOS.rollWalnut, typeAr: 'رول تكسية — جوز', typeEn: 'Laminate roll — walnut', sizeAr: 'رول مصنع', sizeEn: 'Factory roll', colorAr: 'حسب كتالوج نبراس', colorEn: 'Per Nebras color catalog', price: 0, inStock: true },
+            { id: 'oth-roll-pvc', sku: 'OTH-ROLL-PVC', subCategoryId: 'other-color-rolls', image: OTHER_CATALOG_PHOTOS.rollOak, typeAr: 'رول PVC للتكسية', typeEn: 'PVC cladding laminate roll', sizeAr: 'رول مصنع', sizeEn: 'Factory roll', colorAr: 'حسب كتالوج نبراس', colorEn: 'Per Nebras color catalog', price: 0, inStock: true }
         ];
         const OTHER_SKU_IMAGES = DEFAULT_OTHER_VARIANTS.reduce(function(acc, def) {
             if (def && def.sku && def.image) acc[String(def.sku).toUpperCase()] = def.image;
@@ -5504,7 +5535,7 @@
             { id: 'prod-wpc-raw', sortOrder: 1, cssClass: 'card-wpc-raw', iconClass: 'fas fa-door-open', titleIcon: 'fas fa-industry', legacyKey: 'wpc-raw', titleAr: 'أبواب WPC عضم (للورش والمصانع)', titleEn: 'WPC Raw Doors (Workshops)', titleZh: 'WPC 毛坯门', textAr: 'أبواب WPC عضم غير ملبّسة وغير جاهزة — للورش والمصانع التي تكمل التشطيب والتركيب.', textEn: 'Unfinished WPC door leaves for workshops and factories.', textZh: '供车间加工的 WPC 毛坯门。', backgroundImage: 'wpc-background', album: ['images/catalog/wpc-photos/08-bone-profile.png', 'images/catalog/wpc-photos/10-leaf-section.png', 'images/catalog/wpc-photos/09-mdf.png'], target: '#products', action: 'shop', anchorId: 'products', visible: true, shopEnabled: true, variants: DEFAULT_WPC_RAW_VARIANTS },
             { id: 'prod-wpc', sortOrder: 2, cssClass: 'card-wpc', iconClass: 'fas fa-door-closed', titleIcon: 'fas fa-door-open', legacyKey: 'wpc', titleAr: 'أبواب WPC جاهزة للتركيب', titleEn: 'WPC Ready Doors', titleZh: 'WPC 成品门', textAr: 'أبواب WPC جاهزة للتركيب — تجمع بين فخامة المظهر وصمود البلاستيك للمنازل والمشاريع.', textEn: 'Ready-to-install WPC doors for homes and projects.', textZh: '即装型 WPC 门。', backgroundImage: 'wpc-background', album: ['images/catalog/wpc-photos/02-with-accessory.png', 'images/catalog/wpc-photos/07-classic-panel.png', 'images/catalog/wpc-photos/03-glass-leaf-quarter.png', 'images/catalog/wpc-photos/06-sliding-double-decor.png'], target: '#doors', action: 'shop', anchorId: 'doors', visible: true, shopEnabled: true, variants: DEFAULT_WPC_READY_VARIANTS },
             { id: 'prod-aluminum', sortOrder: 3, cssClass: 'card-aluminum', iconClass: 'fas fa-industry', titleIcon: 'fas fa-cog', legacyKey: 'aluminum', titleAr: 'الألومنيوم', titleEn: 'Aluminum', titleZh: '铝制品', textAr: 'منتجات ألومنيوم متينة وتصميمات ذكية تناسب مشاريع البناء والتشطيب.', textEn: 'Durable aluminum for construction and finishing.', textZh: '适用于建筑与装修的耐用铝材。', backgroundImage: 'aluminum-background', album: [aluSkuImg('ALU-PROF-6M.webp'), aluSkuImg('ALU-WIN-SLD2.png'), aluSkuImg('ALU-DOR-FLD.png'), aluSkuImg('ALU-FAC-GRID.png'), aluSkuImg('ALU-KIT-ISD.png')], target: '#aluminum', action: 'shop', anchorId: 'aluminum', visible: true, shopEnabled: true, variants: DEFAULT_ALUMINUM_VARIANTS },
-            { id: 'prod-other', sortOrder: 4, cssClass: 'card-other-products', iconClass: 'fas fa-boxes', titleIcon: 'fas fa-boxes', legacyKey: 'otherProducts', titleAr: 'منتجات أخرى', titleEn: 'Other Products', titleZh: '其他产品', textAr: 'إكسسوارات أبواب WPC · فوم · سيليكون · رولات ألوان — الأسعار من الإدارة الرئيسية والصلاحيات.', textEn: 'WPC door accessories, foam, silicone and color rolls — prices set by HQ.', textZh: 'WPC 门配件、泡沫、硅胶与色卷 — 价格由总部设定。', backgroundImage: 'background-other-products', album: [OTHER_CATALOG_PHOTOS.accSet, OTHER_CATALOG_PHOTOS.foamXps, OTHER_CATALOG_PHOTOS.silClear, OTHER_CATALOG_PHOTOS.rollOak, OTHER_CATALOG_PHOTOS.rollCatalog], target: '#products', visitorMode: 'shop', action: 'shop', anchorId: '', visible: true, shopEnabled: true, subCategories: [OTHER_WPC_ACC_SUBCATEGORY, OTHER_FOAM_SUBCATEGORY, OTHER_SILICONE_SUBCATEGORY, OTHER_COLOR_ROLLS_SUBCATEGORY], variants: DEFAULT_OTHER_VARIANTS },
+            { id: 'prod-other', sortOrder: 4, cssClass: 'card-other-products', iconClass: 'fas fa-boxes', titleIcon: 'fas fa-boxes', legacyKey: 'otherProducts', titleAr: 'منتجات أخرى', titleEn: 'Other Products', titleZh: '其他产品', textAr: 'إكسسوارات أبواب WPC · فوم · سيليكون · رولات — والألوان من كتالوج نبراس. الأسعار من الإدارة.', textEn: 'WPC accessories, foam, silicone, rolls — colors from Nebras catalog. Prices from HQ.', textZh: 'WPC 门配件、泡沫、硅胶、色卷 — 颜色来自 نبراس 色卡。', backgroundImage: 'background-other-products', album: [OTHER_CATALOG_PHOTOS.accSet, OTHER_CATALOG_PHOTOS.foamXps, OTHER_CATALOG_PHOTOS.silClear, OTHER_CATALOG_PHOTOS.rollOak, OTHER_CATALOG_PHOTOS.rollCatalog], target: '#products', visitorMode: 'shop', action: 'shop', anchorId: '', visible: true, shopEnabled: true, subCategories: [OTHER_WPC_ACC_SUBCATEGORY, OTHER_FOAM_SUBCATEGORY, OTHER_SILICONE_SUBCATEGORY, OTHER_COLOR_ROLLS_SUBCATEGORY, OTHER_NEBRAS_COLORS_SUBCATEGORY], variants: DEFAULT_OTHER_VARIANTS },
             { id: 'prod-complaints', sortOrder: 5, cssClass: 'card-customer-complaints', iconClass: 'fas fa-search', titleIcon: 'fas fa-search', legacyKey: 'complaints', titleAr: 'استفسار عن الشكاوى', titleEn: 'Complaint Inquiry', titleZh: '投诉查询', textAr: 'تحقق من حالة شكواك بإدخال رقم الشكوى.', textEn: 'Check your complaint status with the complaint number.', textZh: '输入投诉编号查询处理状态。', backgroundImage: '', album: [], target: '', action: 'complaint', anchorId: '', visible: true }
         ];
 
@@ -6909,6 +6940,7 @@
             const mediaClass = 'nebras-store-sku-media' +
                 (isWpcReady ? ' nebras-store-sku-media--wpc-door' : '') +
                 (isAluminumProduct(product) && img ? ' nebras-store-sku-media--alu-photo' : '') +
+                (product.id === 'prod-other' && img ? ' nebras-store-sku-media--other-photo' : '') +
                 (isWpcReady || isVectorImg ? ' nebras-store-sku-media--vector' : '') +
                 (img ? ' nebras-store-sku-media--has-image' : '');
             const imgClass = 'nebras-store-sku-img nebras-clickable-media' + (isWpcReady ? ' nebras-store-sku-img--wpc' : '');
@@ -23152,12 +23184,12 @@
 
         /* ===== الهيدر السينمائي — صور نبراس حية خلف الهيدر ===== */
         const HEADER_CINEMATIC_SLIDES = [
+            'images/hero-slide-11-wpc-guide.png',
             'images/hero-slide-01-factory-banner.png',
             'images/hero-slide-08-doors-trio.png',
             'images/hero-slide-03-premium-wpc.png',
-            'images/hero-slide-05-doors-showcase.png',
-            'images/hero-slide-12-factory-national.png',
-            'images/hero-slide-04-exhibition.png'
+            'images/hero-slide-13-wpc-protection.png',
+            'images/hero-slide-12-factory-national.png'
         ];
         let headerCinematicInited = false;
 
@@ -23171,12 +23203,14 @@
             const list = isMobile ? HEADER_CINEMATIC_SLIDES.slice(0, 3) : HEADER_CINEMATIC_SLIDES;
             list.forEach(function(src, i) {
                 const img = document.createElement('img');
-                img.className = 'header-cinematic-slide';
+                const hydra = isNebrasHydraHeroSlide(src);
+                img.className = 'header-cinematic-slide' + (hydra ? ' header-cinematic-slide--hydra-full' : '');
                 img.src = src;
                 img.alt = '';
                 img.decoding = 'async';
                 img.loading = i === 0 ? 'eager' : 'lazy';
-                img.setAttribute('data-kb', String(i % 3));
+                img.setAttribute('data-kb', hydra ? 'none' : String(i % 3));
+                if (hydra) img.setAttribute('data-hydra', '1');
                 host.appendChild(img);
             });
             const slides = host.children;
@@ -23326,6 +23360,23 @@
             });
         }
 
+
+        function isNebrasHydraHeroSlide(src) {
+            const s = String(src || '').toLowerCase();
+            return s.indexOf('hero-slide-11-wpc-guide') >= 0
+                || s.indexOf('hero-slide-13-wpc-protection') >= 0
+                || s.indexOf('hero-slide-12-factory-national') >= 0
+                || s.indexOf('hero-slide-10-kingdom-map') >= 0;
+        }
+
+        function syncHeroHydraFullMode(slide) {
+            const hero = document.getElementById('site-hero');
+            if (!hero) return;
+            const on = !!(slide && isNebrasHydraHeroSlide(slide.src));
+            hero.classList.toggle('hero--hydra-full', on);
+            document.body.classList.toggle('nebras-hero-hydra-full', on);
+        }
+
         function buildHeroSlideMarkup(slide, idx, isActive) {
             const url = heroSlideAssetUrl(slide.src);
             const fallback = heroSlideAssetUrl(HERO_BANNER_FALLBACKS[0]);
@@ -23338,7 +23389,8 @@
                     '<video class="hero-slide-video" src="' + escapeHtmlAttr(url) + '" muted loop playsinline autoplay preload="' + (idx === 0 ? 'auto' : 'metadata') + '"' +
                     ' aria-hidden="true"></video></div>';
             }
-            return '<div class="hero-slide' + activeClass + '" data-slide="' + idx + '">' +
+            const hydraClass = isNebrasHydraHeroSlide(slide.src) ? ' hero-slide--hydra-full' : '';
+            return '<div class="hero-slide' + activeClass + hydraClass + '" data-slide="' + idx + '" data-hydra="' + (hydraClass ? '1' : '0') + '">' +
                 '<img class="hero-slide-img" src="' + escapeHtmlAttr(url) + '" alt="" decoding="async" loading="' + loadAttr + '"' + priority +
                 ' onerror="this.onerror=null;this.src=\'' + fallback.replace(/'/g, '') + '\'">' +
                 '</div>';
@@ -23798,6 +23850,7 @@
                 dot.classList.toggle('is-active', i === heroSlideshowIndex);
             });
             setHeroDynamicHeadline(slide.headline, animateHeadline !== false);
+            syncHeroHydraFullMode(heroSlideshowSlides[heroSlideshowIndex]);
         }
 
         function syncNebrasChromeHeight() {
@@ -23864,6 +23917,7 @@
 
             heroSlideshowIndex = 0;
             setHeroDynamicHeadline(heroSlideshowSlides[0].headline, false);
+            syncHeroHydraFullMode(heroSlideshowSlides[0]);
             preloadHeroSlideImages(heroSlideshowSlides);
             syncNebrasChromeHeight();
 

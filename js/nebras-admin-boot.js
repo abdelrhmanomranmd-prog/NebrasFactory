@@ -1,11 +1,11 @@
 ﻿/**
- * نبراس hrws349 — boot موحّد للإدارة (Accmaa-style)
+ * نبراس hrws350 — boot موحّد للإدارة (Accmaa-style)
  * CSS · adminCore · portal · ERP UI · inits — ترتيب واحد دقيق
  */
 (function(global) {
     'use strict';
 
-    var VER = 'hrws349';
+    var VER = 'hrws350';
     var inflight = null;
     var inflightPortal = false;
     var inflightErp = false;
