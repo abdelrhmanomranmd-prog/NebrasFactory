@@ -1650,3 +1650,6 @@ body.alu-platform-open #admin-dashboard {
     flex: 1 1 180px;
     min-width: 0;
 }
+
+
+.alu-aaprix-flow{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;margin:12px 0 4px;padding:10px 12px;border-radius:12px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);color:#f5f7fa;font-size:.82rem;font-weight:700}.alu-aaprix-flow span{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:999px;background:rgba(0,168,255,.18)}.alu-aaprix-flow>i.fa-chevron-left{opacity:.55;font-size:.7rem}

@@ -16432,23 +16432,48 @@
             };
         }
 
+        let scmPersistQueue = [];
+        let scmPersistDrainTimer = null;
+
         async function persistScmContentHonest(label, options) {
             options = options || {};
-            if (scmPersistInFlight && !options.force) {
-                return { ok: false, busy: true, cloudOk: false, localOk: false };
+            if (scmPersistInFlight && !options.force && !options._fromQueue) {
+                return await new Promise(function(resolve) {
+                    scmPersistQueue.push({ label: label, options: options, resolve: resolve });
+                    if (options.showToast !== false && typeof showNebrasAdminToast === 'function') {
+                        showNebrasAdminToast('في الانتظار… سيُحفظ بعد العملية الحالية', 'ok');
+                    }
+                });
             }
             scmPersistInFlight = true;
             const keys = options.storeKeys || SCM_CONTENT_CLOUD_KEYS;
             const quiet = !!(typeof window !== 'undefined' && window.NEBRAS_ODOO_QUIET_UI);
-            const result = await persistNebrasLiveNow(label, {
-                storeKeys: keys,
-                showToast: options.showToast === true ? true : (quiet ? false : options.showToast !== false),
-                promptReauth: options.promptReauth === true,
-                requireCloud: true,
-                skipLocal: false
-            });
-            if (typeof refreshPublicSiteFromGovernance === 'function') refreshPublicSiteFromGovernance();
+            let result;
+            try {
+                result = await persistNebrasLiveNow(label, {
+                    storeKeys: keys,
+                    showToast: options.showToast === true ? true : (quiet ? false : options.showToast !== false),
+                    promptReauth: options.promptReauth === true,
+                    requireCloud: true,
+                    skipLocal: false
+                });
+                if (typeof refreshPublicSiteFromGovernance === 'function') refreshPublicSiteFromGovernance();
+            } catch (persistErr) {
+                console.warn('persistScmContentHonest:', persistErr);
+                result = { ok: false, cloudOk: false, localOk: false, error: String(persistErr && persistErr.message || persistErr) };
+            }
             scmPersistInFlight = false;
+            if (scmPersistQueue.length) {
+                clearTimeout(scmPersistDrainTimer);
+                scmPersistDrainTimer = setTimeout(function() {
+                    const next = scmPersistQueue.shift();
+                    if (!next) return;
+                    const nextOpts = Object.assign({}, next.options || {}, { _fromQueue: true });
+                    persistScmContentHonest(next.label, nextOpts).then(function(r) {
+                        if (typeof next.resolve === 'function') next.resolve(r);
+                    });
+                }, 80);
+            }
             return result;
         }
 
@@ -22380,7 +22405,11 @@
                 const price = input ? parseFloat(input.value) : 0;
                 const res = await applyVariantPriceImagePatch(productId, variantIndex, { price: isNaN(price) ? 0 : price }, { showToast: true, refresh: true });
                 const st2 = document.getElementById('pm-status-' + productId + '-' + variantIndex);
-                if (st2) st2.textContent = (res && res.cloudOk !== false && res.ok !== false) ? '✓ محفوظ' : 'تعذّر الحفظ';
+                if (!st2) return;
+                if (res && res.busy) st2.textContent = 'في الانتظار…';
+                else if (res && res.cloudOk) st2.textContent = '✓ محفوظ على السيرفر';
+                else if (res && res.ok) st2.textContent = '✓ محفوظ';
+                else st2.textContent = 'تعذّر الحفظ — أعيدي المحاولة';
             }, 550);
         }
 
@@ -22397,7 +22426,14 @@
             const current = variant ? (variant.image || '') : '';
             const url = await pickMediaPath({ label: 'صورة الصنف', defaultValue: current });
             if (!url) return;
-            await applyVariantPriceImagePatch(productId, variantIndex, { image: url }, { showToast: true, refresh: true });
+            const cleaned = String(url || '').trim();
+            if (/^data:/i.test(cleaned)) {
+                if (typeof showNebrasAdminToast === 'function') {
+                    showNebrasAdminToast('يفضّل رفع الصورة للسحابة (HTTPS) بدل data: حتى لا يثقل التخزين', 'error');
+                }
+                if (!confirm('الصورة محلية (data:) وليست على السحابة. المتابعة قد تبطّئ الحفظ. هل تريدين المتابعة؟')) return;
+            }
+            await applyVariantPriceImagePatch(productId, variantIndex, { image: cleaned }, { showToast: true, refresh: true });
         }
 
         function renderProductMasterPanel() {
@@ -33580,6 +33616,11 @@
         window.filterErpOrders = filterErpOrders;
         window.exportErpOrdersCsv = exportErpOrdersCsv;
         window.openProductMasterHub = openProductMasterHub;
+        window.applyVariantPriceImagePatch = applyVariantPriceImagePatch;
+        window.pmQueuePriceSave = pmQueuePriceSave;
+        window.pmSaveVariantPriceNow = pmSaveVariantPriceNow;
+        window.pmPickVariantImage = pmPickVariantImage;
+        window.setProductMasterFilter = setProductMasterFilter;
         window.syncPlatformFromProductMaster = syncPlatformFromProductMaster;
         window.openAluminumDepartment = openAluminumDepartment;
         window.ensureAluminumManagerIhab = ensureAluminumManagerIhab;

@@ -2240,6 +2240,41 @@
         setAluEstimateStatus(next);
     }
 
+
+    function exportAluBomCsv() {
+        if (!requireAluAccess()) return;
+        const est = aluEstimateDraft || (aluEstimates.length ? aluEstimates[aluEstimates.length - 1] : null);
+        if (!est) { alert('افتحي مقايسة أولاً أو أنشئي مقايسة جديدة.'); return; }
+        const totals = computeEstimateTotals(est);
+        const rows = [['المرجع', 'العميل', 'البند', 'الشكل', 'العرض مم', 'الارتفاع مم', 'الكمية', 'أعواد تقديرية', 'زجاج م²', 'الإجمالي']];
+        (est.items || []).forEach(function(it, idx) {
+            rows.push([
+                est.ref || '', est.customerName || '', String(idx + 1),
+                it.shapeId || it.shape || '',
+                it.widthMm || it.w || '', it.heightMm || it.h || '', it.qty || 1,
+                (totals && totals.barsEstimate) || '',
+                (totals && totals.glassAreaM2) || '',
+                (totals && totals.total) || ''
+            ]);
+        });
+        if (!(est.items || []).length) {
+            rows.push([est.ref || '', est.customerName || '', '', '', '', '', '', '', '', (est.totalsSnapshot && est.totalsSnapshot.total) || '']);
+        }
+        const csv = rows.map(function(r) {
+            return r.map(function(c) {
+                return '"' + String(c == null ? '' : c).replace(/"/g, '""') + '"';
+            }).join(',');
+        }).join('\n');
+        const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'nebras-alu-bom-' + String(est.ref || 'draft').replace(/[^\w\-]+/g, '_') + '.csv';
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function() { try { URL.revokeObjectURL(a.href); a.remove(); } catch (e) {} }, 800);
+        if (typeof showNebrasAdminToast === 'function') showNebrasAdminToast('تم تصدير BOM للمقايسة ' + (est.ref || ''), 'ok');
+    }
+
     function renderAluDashboard() {
         const lastJob = aluCutJobs[aluCutJobs.length - 1];
         const avgWaste = aluCutJobs.length
@@ -2290,14 +2325,22 @@
             '<section class="alu-command-hero">' +
             '<div class="alu-command-hero-bg" aria-hidden="true"></div>' +
             '<div class="alu-command-hero-inner">' +
-            '<p class="alu-cut-kicker"><i class="fas fa-drafting-compass"></i> الأداة الأساسية لمدير القسم ومهندس تصميم الألومنيوم</p>' +
-            '<h2>أقوى محرك تخصيمات لقطاعات الألومنيوم</h2>' +
+            '<p class="alu-cut-kicker"><i class="fas fa-drafting-compass"></i> محرك نبراس لتخصيمات الألومنيوم — أسلوب منصات التخصيم الاحترافية</p>' +
+            '<h2>تخصيمات ألومنيوم نبراس · مقايسة · تقطيع · BOM · عرض سعر</h2>' +
             '<p>منصة تخصيمات كاملة بنفس أساس Ecotal: عرّف <strong>أي قطاع</strong> من السوق (حلوق · ضرف · باكيتات · مرد…) مع تخصيماته، ثم مقايسة بند بند، ثم تقارير تقطيع ومشتريات وتجميع وعرض سعر — للمفصليات والسحاب والواجهات بدون تقييد بنظام واحد.</p>' +
+            '<div class="alu-aaprix-flow" aria-label="workflow">' +
+            '<span>1 أنظمة</span><i class="fas fa-chevron-left"></i>' +
+            '<span>2 تخصيمات</span><i class="fas fa-chevron-left"></i>' +
+            '<span>3 مقايسة</span><i class="fas fa-chevron-left"></i>' +
+            '<span>4 تقطيع</span><i class="fas fa-chevron-left"></i>' +
+            '<span>5 BOM / عرض سعر</span>' +
+            '</div>' +
             '<div class="alu-cut-hero-actions">' +
-            '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="setAluCutTab(\'systems\')"><i class="fas fa-bars-staggered"></i> إعدادات القطاعات</button>' +
+            '<button type="button" class="nebras-users-btn nebras-users-btn--primary" onclick="setAluCutTab(\'systems\')"><i class="fas fa-bars-staggered"></i> مكتبة الأنظمة</button>' +
             '<button type="button" class="nebras-users-btn" onclick="newAluEstimate();setAluCutTab(\'estimate\')"><i class="fas fa-plus"></i> مقايسة جديدة</button>' +
-            '<button type="button" class="nebras-users-btn" onclick="setAluCutTab(\'deductions\')"><i class="fas fa-sliders"></i> التخصيمات</button>' +
-            '<button type="button" class="nebras-users-btn" onclick="setAluCutTab(\'reports\')"><i class="fas fa-file-lines"></i> التقارير</button>' +
+            '<button type="button" class="nebras-users-btn" onclick="setAluCutTab(\'cutting\')"><i class="fas fa-scissors"></i> تقطيع ذكي</button>' +
+            '<button type="button" class="nebras-users-btn" onclick="exportAluBomCsv()"><i class="fas fa-table"></i> تصدير BOM</button>' +
+            '<button type="button" class="nebras-users-btn" onclick="setAluCutTab(\'reports\')"><i class="fas fa-file-invoice-dollar"></i> عرض سعر</button>' +
             '</div></div></section>' +
 
             '<div class="alu-pipe-strip">' + pipeMini + '</div>' +
@@ -3272,17 +3315,25 @@
         renderAluminumCuttingPanel();
     }
 
-    function saveAluEstimate() {
+    async function saveAluEstimate() {
         if (!requireAluAccess() || !aluEstimateDraft) return;
         syncEstimateDraftFields();
         if (!(aluEstimateDraft.items || []).length) { alert('أضف بنداً واحداً على الأقل.'); return; }
         const totals = computeEstimateTotals(aluEstimateDraft);
         aluEstimateDraft.totalsSnapshot = { barsEstimate: totals.barsEstimate, subtotal: totals.subtotal, total: totals.total, glassAreaM2: totals.glassAreaM2 };
+        aluEstimateDraft.updatedAt = new Date().toISOString();
         const copy = JSON.parse(JSON.stringify(aluEstimateDraft));
         const idx = aluEstimates.findIndex(function (e) { return e.id === copy.id; });
         if (idx >= 0) aluEstimates[idx] = copy; else aluEstimates.push(copy);
-        persistAluminumCuttingCloud(['aluminum_estimates']);
-        if (typeof showNebrasAdminToast === 'function') showNebrasAdminToast('تم حفظ المقايسة ' + copy.ref, 'ok');
+        setAluLiveBadge('saving', 'جاري الحفظ على السيرفر…');
+        const ok = await persistAluminumCuttingCloud(['aluminum_estimates']);
+        setAluLiveBadge(ok ? 'ok' : 'warn', ok ? 'محفوظ حي على السيرفر' : 'محلي — أعيدي الحفظ');
+        if (typeof showNebrasAdminToast === 'function') {
+            showNebrasAdminToast(ok
+                ? ('✓ المقايسة ' + copy.ref + ' — حُفظت على السيرفر الحي')
+                : ('✗ المقايسة ' + copy.ref + ' لم تُؤكَّد على السيرفر — أعيدي المحاولة'),
+                ok ? 'ok' : 'error');
+        }
         renderAluminumCuttingPanel();
     }
 
@@ -4885,6 +4936,7 @@
     global.openAluPartKit = openAluPartKit;
     global.scanAluBarcode = scanAluBarcode;
     global.exportAluCutCsv = exportAluCutCsv;
+    global.exportAluBomCsv = exportAluBomCsv;
     global.exportAluCutDxf = exportAluCutDxf;
     global.exportAluCutCnc = exportAluCutCnc;
     global.addAluStockBar = addAluStockBar;
