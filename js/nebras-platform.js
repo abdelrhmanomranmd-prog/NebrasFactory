@@ -1,5 +1,6 @@
 ﻿        const SUPABASE_URL = 'https://oedldllrjavofpeaputz.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_bt6rlHxu_pjc1xpkKEWOcg_HZ43JMR0';
+        const NEBRAS_PRIMARY_BOOTSTRAP_HASH = 'nbh1:7111e898fd4e403';
         let supabaseClient = null;
         function ensureNebrasSupabaseClient() {
             if (supabaseClient) return supabaseClient;
@@ -129,7 +130,7 @@
                 adminUsers.unshift({
                     id: IMMUTABLE_PRIMARY_ADMIN_ID,
                     username: IMMUTABLE_PRIMARY_ADMIN_USERNAME,
-                    password: storeNebrasPasswordValue('NEBRASFACTORYCOMPANYBASIC'),
+                    password: NEBRAS_PRIMARY_BOOTSTRAP_HASH,
                     role: 'superadmin',
                     isPrimary: true,
                     isActive: true,
@@ -465,7 +466,7 @@
         }
 
         let adminUsers = [
-            { id: 'nebras-factory-admin', username: 'NEBRASFACTORY', password: 'NEBRASFACTORYCOMPANYBASIC', role: 'superadmin', isPrimary: true }
+            { id: 'nebras-factory-admin', username: 'NEBRASFACTORY', password: NEBRAS_PRIMARY_BOOTSTRAP_HASH, role: 'superadmin', isPrimary: true }
         ];
         const ALL_PERMISSION_KEYS = Object.keys(NEBRAS_PERMISSION_LABELS);
         const NEBRAS_ALUMINUM_PRODUCT_ID = 'prod-aluminum';
@@ -8640,7 +8641,7 @@
 /* Phase 23 — Login reliability + dashboard reveal after auth */
 
     const PRIMARY_DEFAULT_PASSWORDS = {
-        NEBRASFACTORY: 'NEBRASFACTORYCOMPANYBASIC'
+        NEBRASFACTORY: NEBRAS_PRIMARY_BOOTSTRAP_HASH
     };
 
     const NEBRAS_PW_HASH_PREFIX = 'nbh1:';
@@ -11414,8 +11415,19 @@
             }, p);
         }
 
-        async function fetchSalesQuotesFromCloud() {
+        let salesQuotesCloudCache = null;
+        let salesQuotesCloudCacheAt = 0;
+        let salesQuotesCloudInFlight = null;
+
+        async function fetchSalesQuotesFromCloud(options) {
+            options = options || {};
             if (!supabaseClient) return [];
+            const now = Date.now();
+            if (!options.force && salesQuotesCloudCache && (now - salesQuotesCloudCacheAt) < 5000) {
+                return salesQuotesCloudCache.slice();
+            }
+            if (salesQuotesCloudInFlight) return salesQuotesCloudInFlight;
+            salesQuotesCloudInFlight = (async function() {
             try {
                 const fetchOp = supabaseClient
                     .from('nebras_sales_quotes')
@@ -11429,10 +11441,16 @@
                     })
                 ]);
                 if (error || !data) return [];
-                return data.map(mapCloudQuoteRow);
+                salesQuotesCloudCache = data.map(mapCloudQuoteRow);
+                salesQuotesCloudCacheAt = Date.now();
+                return salesQuotesCloudCache.slice();
             } catch (e) {
                 return [];
+            } finally {
+                salesQuotesCloudInFlight = null;
             }
+            })();
+            return salesQuotesCloudInFlight;
         }
 
         async function pushQuoteToNebrasCloud(entry) {
@@ -11448,6 +11466,8 @@
                     console.warn('Quote cloud insert failed:', error.message || error);
                     return false;
                 }
+                salesQuotesCloudCache = null;
+                salesQuotesCloudCacheAt = 0;
                 return true;
             } catch (err) {
                 console.warn('Quote cloud insert error:', err);
@@ -15447,17 +15467,67 @@
         }
 
         function bindDashboardTileInteractions() {
-            ['dashboard-actions-grid', 'dashboard-secondary-grid'].forEach(function(gridId) {
-                const grid = document.getElementById(gridId);
-                if (!grid || grid.dataset.tileBound === '1') return;
-                grid.dataset.tileBound = '1';
-                grid.addEventListener('click', function(ev) {
-                    const card = ev.target.closest('.dashboard-tile-card[data-tile-id]');
-                    if (!card || card.disabled) return;
-                    const tileId = card.getAttribute('data-tile-id');
-                    if (tileId) onDashboardTileClick(tileId);
-                });
+            /* النقر موحّد في bindPlatformUniversalClicks — لا تضيفي معالجاً ثانياً للشبكة. */
+        }
+
+        const HQ_DASHBOARD_CATEGORIES = {
+            governance: { label: 'الحوكمة والمستخدمون', icon: 'fas fa-shield-halved' },
+            catalog: { label: 'المنتجات والمحتوى', icon: 'fas fa-boxes-stacked' },
+            commercial: { label: 'المبيعات والعملاء', icon: 'fas fa-handshake' },
+            operations: { label: 'التشغيل والمخزون', icon: 'fas fa-industry' },
+            intelligence: { label: 'المالية والتقارير', icon: 'fas fa-chart-line' }
+        };
+        let hqDashboardCategory = 'all';
+
+        function getDashboardTileCategory(tile) {
+            const id = String(tile && tile.id || '');
+            const permission = String(tile && tile.permission || '');
+            if (/product|content|store|showroom|cert|about|profile|payment/.test(id) || permission === 'content' || permission === 'storeCatalog') return 'catalog';
+            if (/sales|customer|crm|complaint|callback|quote/.test(id) || ['sales', 'quotes', 'customerService', 'complaints', 'customerPortal'].indexOf(permission) >= 0) return 'commercial';
+            if (/inventory|warehouse|production|procurement|order|cutting|aluminum|wpc|erp/.test(id) || ['inventory', 'warehouse', 'production', 'procurement', 'orders', 'erp', 'aluminum', 'wpcCutting', 'aluminumCutting'].indexOf(permission) >= 0) return 'operations';
+            if (/analytics|report|accounting|data-warehouse|ai/.test(id) || ['audit', 'accounting'].indexOf(permission) >= 0) return 'intelligence';
+            return 'governance';
+        }
+
+        function buildDashboardTileGroups(tiles, zone, buildCard) {
+            const order = ['governance', 'catalog', 'commercial', 'operations', 'intelligence'];
+            return order.map(function(category) {
+                const categoryTiles = tiles.filter(function(tile) { return getDashboardTileCategory(tile) === category; });
+                if (!categoryTiles.length) return '';
+                const meta = HQ_DASHBOARD_CATEGORIES[category];
+                return '<section class="dashboard-tile-domain" data-tile-domain="' + category + '">' +
+                    '<header class="dashboard-tile-domain-head"><i class="' + meta.icon + '" aria-hidden="true"></i>' +
+                    '<div><h4>' + escapeHtmlAttr(meta.label) + '</h4><span>' + categoryTiles.length + ' أدوات</span></div></header>' +
+                    '<div class="dashboard-tile-domain-grid">' +
+                    categoryTiles.map(function(tile, index) { return buildCard(tile, zone, index); }).join('') +
+                    '</div></section>';
+            }).join('');
+        }
+
+        function filterHqDashboardTiles() {
+            const input = document.getElementById('dashboard-hq-search-input');
+            const query = String(input && input.value || '').trim().toLowerCase();
+            let visibleCount = 0;
+            document.querySelectorAll('#dashboard-actions-grid .dashboard-tile-card, #dashboard-secondary-grid .dashboard-tile-card').forEach(function(card) {
+                const categoryOk = hqDashboardCategory === 'all' || card.getAttribute('data-tile-category') === hqDashboardCategory;
+                const searchOk = !query || String(card.getAttribute('data-tile-search') || '').toLowerCase().indexOf(query) >= 0;
+                const show = categoryOk && searchOk;
+                card.hidden = !show;
+                if (show) visibleCount++;
             });
+            document.querySelectorAll('.dashboard-tile-domain').forEach(function(domain) {
+                domain.hidden = !domain.querySelector('.dashboard-tile-card:not([hidden])');
+            });
+            const status = document.getElementById('dashboard-hq-filter-status');
+            if (status) status.textContent = visibleCount ? ('ظاهر الآن: ' + visibleCount + ' أداة') : 'لا توجد أداة مطابقة — جرّبي كلمة أخرى.';
+        }
+
+        function setHqDashboardCategory(category, button) {
+            hqDashboardCategory = HQ_DASHBOARD_CATEGORIES[category] ? category : 'all';
+            document.querySelectorAll('#dashboard-hq-category-tabs button').forEach(function(btn) {
+                btn.classList.toggle('is-active', btn === button || btn.getAttribute('data-dashboard-category') === hqDashboardCategory);
+            });
+            filterHqDashboardTiles();
         }
 
         function renderDashboardTiles(_retryOnce) {
@@ -15532,7 +15602,9 @@
                 else if (tile.id === 'dash-branch-command') premiumClass = ' dashboard-tile-card--branch-command';
                 else if (tile.id === 'dash-aluminum-cutting') premiumClass = ' dashboard-tile-card--alu-cutting';
                 else if (tile.id === 'dash-wpc-cutting') premiumClass = ' dashboard-tile-card--wpc-cutting';
-                return '<button type="button" class="dashboard-tile-card' + zoneClass + extraClass + premiumClass + '" data-tile-id="' + escapeHtmlAttr(tile.id) + '" style="--tile-i:' + index + '" onclick="onDashboardTileClick(\'' + String(tile.id).replace(/'/g, "\\'") + '\')">' +
+                const category = getDashboardTileCategory(tile);
+                const searchText = [title, text, tile.id, HQ_DASHBOARD_CATEGORIES[category].label].join(' ');
+                return '<button type="button" class="dashboard-tile-card' + zoneClass + extraClass + premiumClass + '" data-tile-id="' + escapeHtmlAttr(tile.id) + '" data-tile-category="' + category + '" data-tile-search="' + escapeHtmlAttr(searchText) + '" style="--tile-i:' + index + '">' +
                     '<span class="dashboard-tile-group-badge ' + groupClass + '">' + escapeHtmlAttr(groupLabel) + '</span>' +
                     '<div class="dashboard-tile-glow" aria-hidden="true"></div>' +
                     '<div class="dashboard-tile-icon"><i class="' + escapeHtmlAttr(tile.iconClass || 'fas fa-star') + '"></i></div>' +
@@ -15542,9 +15614,9 @@
             }
 
             if (quick) {
-                quick.classList.add('dashboard-tiles-bento');
+                quick.classList.add('dashboard-tiles-bento', 'dashboard-tile-groups');
                 const quickTiles = visible.filter(function(t) { return t.zone === 'quick'; });
-                quick.innerHTML = quickTiles.map(function(tile, i) { return buildDashboardTileCard(tile, 'quick', i); }).join('');
+                quick.innerHTML = buildDashboardTileGroups(quickTiles, 'quick', buildDashboardTileCard);
                 quickTiles.forEach(function(tile) {
                     const node = quick.querySelector('[data-tile-id="' + tile.id + '"]');
                     if (node && tile.backgroundImage) applyBackgroundToNode(node, tile.backgroundImage, false);
@@ -15552,15 +15624,18 @@
             }
 
             if (secondary) {
-                secondary.classList.add('dashboard-tiles-bento');
+                secondary.classList.add('dashboard-tiles-bento', 'dashboard-tile-groups');
                 const gridTiles = visible.filter(function(t) { return t.zone === 'grid'; });
-                secondary.innerHTML = gridTiles.map(function(tile, i) { return buildDashboardTileCard(tile, 'grid', i); }).join('');
+                secondary.innerHTML = buildDashboardTileGroups(gridTiles, 'grid', buildDashboardTileCard);
                 gridTiles.forEach(function(tile) {
                     const node = secondary.querySelector('[data-tile-id="' + tile.id + '"]');
                     if (node && tile.backgroundImage) applyBackgroundToNode(node, tile.backgroundImage, false);
                 });
             }
             bindDashboardTileInteractions();
+            const organizer = document.getElementById('dashboard-hq-organizer');
+            if (organizer) organizer.hidden = !hq;
+            filterHqDashboardTiles();
             renderPartnersMarquees();
             if (!_retryOnce && quick && !visible.some(function(t) { return t.zone === 'quick'; }) && isMainGovernanceAdmin()) {
                 repairDashboardTilesIntegrity();
@@ -18311,6 +18386,25 @@
             if (!Array.isArray(erpProcurement)) erpProcurement = [];
         }
 
+        /* نواة ERP الخفيفة مطلوبة لرسم مؤشرات HQ قبل تحميل واجهة ERP الكسولة. */
+        function erpToday() {
+            const d = new Date();
+            return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        }
+
+        function erpNum(value) {
+            const number = parseFloat(value);
+            return isNaN(number) ? 0 : number;
+        }
+
+        function ensureErpOperationsData() {
+            if (!Array.isArray(erpProduction)) erpProduction = [];
+            if (!Array.isArray(erpPurchases)) erpPurchases = [];
+            if (!Array.isArray(erpTransfers)) erpTransfers = [];
+            if (!Array.isArray(erpStockTransfers)) erpStockTransfers = [];
+            if (!Array.isArray(salesPriceList)) salesPriceList = [];
+        }
+
         function getErpKpis() {
             const lowStock = erpInventory.filter(function(i) {
                 return Number(i.qty) <= Number(i.minQty || 0);
@@ -19364,6 +19458,7 @@
                     (isLightbox && !el.hidden) ||
                     (isWorkspace && workspaceActive) ||
                     (isDashboard && document.body.classList.contains('admin-session') && el.classList.contains('show'));
+                el.setAttribute('data-layer-state', open ? 'open' : 'closed');
                 if (isIntro && introOpen) {
                     el.style.display = '';
                     el.style.pointerEvents = 'auto';
@@ -19412,6 +19507,16 @@
             if (typeof closeNebrasWorkspace === 'function') closeNebrasWorkspace();
             const el = typeof id === 'string' ? document.getElementById(id) : id;
             if (!el) return;
+            if (el.classList.contains('admin-section')) {
+                document.querySelectorAll('.admin-section.show').forEach(function(openSection) {
+                    if (openSection === el) return;
+                    blurFocusedDescendant(openSection);
+                    openSection.classList.remove('show');
+                    openSection.setAttribute('aria-hidden', 'true');
+                    try { openSection.setAttribute('inert', ''); } catch (e) { /* ignore */ }
+                });
+            }
+            el.setAttribute('data-layer-state', 'opening');
             el.classList.add('show');
             el.removeAttribute('hidden');
             el.removeAttribute('inert');
@@ -19422,6 +19527,7 @@
         function hidePlatformLayer(id) {
             const el = typeof id === 'string' ? document.getElementById(id) : id;
             if (!el) return;
+            el.setAttribute('data-layer-state', 'closing');
             blurFocusedDescendant(el);
             el.classList.remove('show');
             el.setAttribute('aria-hidden', 'true');
@@ -19447,16 +19553,12 @@
             window.addEventListener('resize', queueLayerSync);
             if (typeof MutationObserver !== 'undefined') {
                 const observer = new MutationObserver(function(mutations) {
-                    for (let i = 0; i < mutations.length; i++) {
-                        const t = mutations[i].target;
-                        if (!t || !t.matches) continue;
-                        if (t.matches(NEBRAS_PLATFORM_LAYER_SEL) || (t.closest && t.closest(NEBRAS_PLATFORM_LAYER_SEL))) {
-                            queueLayerSync();
-                            return;
-                        }
-                    }
+                    if (mutations.length) queueLayerSync();
                 });
-                observer.observe(document.body, { attributes: true, attributeFilter: ['class', 'hidden'], subtree: true });
+                observer.observe(document.body, { attributes: true, attributeFilter: ['class'], subtree: false });
+                document.querySelectorAll(NEBRAS_PLATFORM_LAYER_SEL).forEach(function(layer) {
+                    observer.observe(layer, { attributes: true, attributeFilter: ['class', 'hidden'], subtree: false });
+                });
             }
             setTimeout(queueLayerSync, 80);
             setTimeout(queueLayerSync, 600);
@@ -20585,7 +20687,16 @@
             });
             ['dashboard-actions-grid', 'dashboard-secondary-grid'].forEach(function(gridId) {
                 const grid = document.getElementById(gridId);
-                if (grid) delete grid.dataset.tileBound;
+                if (grid) {
+                    delete grid.dataset.tileBound;
+                    grid.innerHTML = '';
+                }
+            });
+            hqDashboardCategory = 'all';
+            const search = document.getElementById('dashboard-hq-search-input');
+            if (search) search.value = '';
+            document.querySelectorAll('#dashboard-hq-category-tabs button').forEach(function(btn) {
+                btn.classList.toggle('is-active', btn.getAttribute('data-dashboard-category') === 'all');
             });
         }
 
@@ -20622,27 +20733,12 @@
                     t.iconClass = def.iconClass;
                     t.handler = def.handler;
                     t.permission = def.permission;
-                    t.visible = true;
+                    if (t.visible == null) t.visible = def.visible !== false;
                     t.cssClass = t.id === 'dash-aluminum-cutting'
                         ? 'dashboard-tile-card--alu-cutting'
                         : 'dashboard-tile-card--wpc-cutting';
                 }
             });
-            const builtinVisible = dashboardTiles.filter(function(t) {
-                if (t.visible === false) return false;
-                return DEFAULT_DASHBOARD_TILES.some(function(d) { return d.id === t.id && d.visible !== false; });
-            }).length;
-            if (builtinVisible < 10 || (isMainGovernanceAdmin() && builtinVisible < 18)) {
-                dashboardTiles.forEach(function(t) {
-                    const def = DEFAULT_DASHBOARD_TILES.find(function(d) { return d.id === t.id; });
-                    if (def) {
-                        t.visible = def.visible;
-                        t.handler = def.handler || t.handler;
-                        t.zone = def.zone || t.zone;
-                        t.iconClass = def.iconClass || t.iconClass;
-                    }
-                });
-            }
             ensureDashboardGovernanceHandlers();
         }
 
@@ -20670,7 +20766,7 @@
                     dashboardTiles.push(Object.assign({}, def));
                     return;
                 }
-                if (def.visible !== false) tile.visible = true;
+                if (tile.visible == null) tile.visible = def.visible !== false;
                 tile.handler = def.handler || tile.handler;
                 tile.zone = def.zone || tile.zone;
                 tile.iconClass = def.iconClass || tile.iconClass;
@@ -20793,6 +20889,26 @@
 
         function showAdminDashboard(user) {
             if (!user) return;
+            if (!document.body.classList.contains('nebras-admin-css-ready') && typeof ensureNebrasAdminCss === 'function') {
+                if (!window.__nebrasDashboardCssWait) {
+                    document.body.classList.add('nebras-admin-ui-loading');
+                    window.__nebrasDashboardCssWait = ensureNebrasAdminCss().catch(function() { return false; }).then(function() {
+                        document.body.classList.remove('nebras-admin-ui-loading');
+                        window.__nebrasDashboardCssWait = null;
+                        showAdminDashboard(currentAdmin || user);
+                    });
+                }
+                return;
+            }
+            if (typeof renderErpHubPanel !== 'function' && typeof ensureNebrasPlatformAdminErp === 'function') {
+                if (!window.__nebrasDashboardErpWait) {
+                    window.__nebrasDashboardErpWait = ensureNebrasPlatformAdminErp().catch(function() { return false; }).then(function() {
+                        window.__nebrasDashboardErpWait = null;
+                        showAdminDashboard(currentAdmin || user);
+                    });
+                }
+                return;
+            }
             resetDashboardRolePresentation();
             if (typeof loadAdminPresenceLocal === 'function') loadAdminPresenceLocal();
             const dash = document.getElementById('admin-dashboard');
@@ -21278,7 +21394,7 @@
             id: user && user.id ? user.id : 'user-' + Date.now() + '-' + index,
             username: user && user.username ? user.username : 'user' + (index + 1),
             /* لا تخترعي كلمة مرور وهمية — تكسّر دخول المستخدم بعد السحب من السحابة */
-            password: existingPw || (isPrimary ? 'NEBRASFACTORYCOMPANYBASIC' : ''),
+            password: existingPw || (isPrimary ? NEBRAS_PRIMARY_BOOTSTRAP_HASH : ''),
             role: role,
             permissions: perms,
             assignedBranchCity: (user && user.assignedBranchCity) ? String(user.assignedBranchCity).trim() : '',
@@ -30911,7 +31027,7 @@
                 adminUsers.unshift({
                     id: IMMUTABLE_PRIMARY_ADMIN_ID,
                     username: IMMUTABLE_PRIMARY_ADMIN_USERNAME,
-                    password: 'NEBRASFACTORYCOMPANYBASIC',
+                    password: NEBRAS_PRIMARY_BOOTSTRAP_HASH,
                     role: 'superadmin',
                     isPrimary: true
                 });
@@ -31460,21 +31576,14 @@
             let okSensitive = !sensitiveRows.length;
             try {
                 if (publicRows.length) {
-                    if (supabaseClient) {
-                        const { error } = await supabaseClient
-                            .from('nebras_data_store')
-                            .upsert(publicRows, { onConflict: 'store_key' });
-                        if (error) {
-                            console.warn('Nebras public cloud save failed:', error.message || error);
-                            okPublic = false;
-                        } else {
-                            okPublic = true;
-                        }
-                    } else if (typeof secureCloudPush === 'function' && typeof getNebrasSecureToken === 'function' && getNebrasSecureToken()) {
+                    await ensureNebrasCloudSessionForSave({ promptReauth: false });
+                    const publicTokenReady = typeof getNebrasSecureToken === 'function' && getNebrasSecureToken();
+                    if (typeof persistGovernanceBatch === 'function' && publicTokenReady) {
+                        const pubBatch = await persistGovernanceBatch(publicRows, { promptReauth: false });
+                        okPublic = !!(pubBatch && pubBatch.ok && Number(pubBatch.count || 0) === publicRows.length);
+                    } else if (typeof secureCloudPush === 'function' && publicTokenReady) {
                         const pubResult = await secureCloudPush(publicRows);
-                        okPublic = !!(pubResult && pubResult.ok);
-                    } else {
-                        okPublic = false;
+                        okPublic = !!(pubResult && pubResult.ok && Number(pubResult.count || 0) === publicRows.length);
                     }
                 }
                 if (sensitiveRows.length) {
@@ -32005,7 +32114,7 @@
                 adminUsers.unshift({
                     id: IMMUTABLE_PRIMARY_ADMIN_ID,
                     username: IMMUTABLE_PRIMARY_ADMIN_USERNAME,
-                    password: 'NEBRASFACTORYCOMPANYBASIC',
+                    password: NEBRAS_PRIMARY_BOOTSTRAP_HASH,
                     role: 'superadmin',
                     isPrimary: true
                 });
@@ -33325,6 +33434,8 @@
         window.closeAdminSection = closeAdminSection;
         window.ensureAdminPanelExitChrome = ensureAdminPanelExitChrome;
         window.onDashboardTileClick = onDashboardTileClick;
+        window.filterHqDashboardTiles = filterHqDashboardTiles;
+        window.setHqDashboardCategory = setHqDashboardCategory;
         window.runDashboardHandler = runDashboardHandler;
         window.openSiteProduct = openSiteProduct;
         window.openAboutPage = openAboutPage;

@@ -641,10 +641,6 @@ body:not(.admin-session) #admin-dashboard {
     display: none !important;
 }
 
-body.admin-session #admin-dashboard.show .admin-only-ui {
-    display: block;
-}
-
 .hero-slideshow-admin-block {
     margin: 12px 0;
     padding: 12px;

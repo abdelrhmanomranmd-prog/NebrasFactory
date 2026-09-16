@@ -87,6 +87,9 @@
     let odooSaveChain = Promise.resolve();
     let odooDeltaTimer = null;
     let odooDeltaInFlight = null;
+    const odooPanelReads = Object.create(null);
+    const odooPanelReadAt = Object.create(null);
+    const PANEL_READ_TTL_MS = 8000;
 
     function isPublicKey(k) {
         return global.NEBRAS_PUBLIC_STORE_KEYS && global.NEBRAS_PUBLIC_STORE_KEYS.indexOf(k) >= 0;
@@ -224,7 +227,19 @@
         if (typeof global.waitForNebrasCloudHydrate === 'function') {
             await global.waitForNebrasCloudHydrate();
         }
-        return nebrasOdooPullFromServer({ storeKeys: keys, since: '' });
+        const readKey = keys.slice().sort().join('|');
+        if (odooPanelReads[readKey]) return odooPanelReads[readKey];
+        if (odooPanelReadAt[readKey] && Date.now() - odooPanelReadAt[readKey] < PANEL_READ_TTL_MS) return true;
+        odooPanelReads[readKey] = nebrasOdooPullFromServer({
+            storeKeys: keys,
+            since: getSyncCursor()
+        }).then(function(ok) {
+            if (ok) odooPanelReadAt[readKey] = Date.now();
+            return ok;
+        }).finally(function() {
+            delete odooPanelReads[readKey];
+        });
+        return odooPanelReads[readKey];
     }
 
     function startNebrasOdooDeltaSync() {

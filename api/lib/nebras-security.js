@@ -8,7 +8,7 @@ const FALLBACK_HQ_USERS = [
     {
         id: 'nebras-factory-admin',
         username: 'NEBRASFACTORY',
-        password: 'NEBRASFACTORYCOMPANYBASIC',
+        password: process.env.NEBRAS_HQ_BOOTSTRAP_PASSWORD_HASH || 'nbh1:7111e898fd4e403',
         role: 'superadmin',
         isPrimary: true,
         isActive: true
@@ -178,6 +178,23 @@ function sanitizePayloadForPull(storeKey, payload, sess) {
     return filterPayloadForBranchSession(storeKey, payload, sess);
 }
 
+function sessionWithLiveUser(sess, user) {
+    if (!sess || !user) return sess;
+    return Object.assign({}, sess, {
+        sub: user.id,
+        username: user.username,
+        role: user.role,
+        isPrimary: !!user.isPrimary,
+        permissions: Array.isArray(user.permissions) && user.permissions.length ? user.permissions.slice() : null,
+        assignedBranchCity: user.assignedBranchCity || null,
+        assignedBranchId: user.assignedBranchId != null ? user.assignedBranchId : null,
+        hrScopeBranchId: user.hrScopeBranchId || null,
+        hrScopeDepartmentKey: user.hrScopeDepartmentKey || null,
+        hrScopeCompanyId: user.hrScopeCompanyId || null,
+        legalScopeCompanyId: user.legalScopeCompanyId || null
+    });
+}
+
 /** احفظ كلمات المرور الموجودة إن وصل payload بلا password (عملاء قدامى / سحب معلّق) */
 function mergeAdminUsersPreservePasswords(incoming, existing) {
     const list = Array.isArray(incoming) ? incoming.map(function(u) { return u && typeof u === 'object' ? Object.assign({}, u) : u; }) : [];
@@ -295,6 +312,56 @@ function entryMatchesBranchSession(entry, sess) {
     return false;
 }
 
+function entryMatchesDepartmentScope(entry, departmentKey) {
+    const wanted = normalizeBranchMatchText(departmentKey);
+    if (!wanted) return true;
+    const fields = [entry.departmentKey, entry.departmentId, entry.department, entry.departmentName, entry.deptKey, entry.dept];
+    return fields.some(function(value) {
+        return normalizeBranchMatchText(value) === wanted;
+    });
+}
+
+function entryMatchesCompanyScope(entry, companyId) {
+    const wanted = normalizeBranchMatchText(companyId);
+    if (!wanted) return true;
+    const fields = [entry.companyId, entry.legalCompanyId, entry.hrCompanyId, entry.company, entry.companyKey];
+    return fields.some(function(value) {
+        return normalizeBranchMatchText(value) === wanted;
+    });
+}
+
+function entryMatchesSessionScope(storeKey, entry, sess) {
+    if (!entry || !sess) return false;
+    if (storeKey.indexOf('hr_') === 0) {
+        const hrRole = ['hr', 'hr_manager', 'hr_admin'].indexOf(String(sess.role || '')) >= 0;
+        const hasHrScope = String(sess.hrScopeBranchId || '').trim() ||
+            String(sess.hrScopeDepartmentKey || '').trim() ||
+            String(sess.hrScopeCompanyId || '').trim() ||
+            sess.assignedBranchId != null ||
+            normalizeBranchMatchText(sess.assignedBranchCity);
+        if (hrRole && !hasHrScope) return false;
+        const scopedBranch = sess.hrScopeBranchId != null && String(sess.hrScopeBranchId).trim()
+            ? Object.assign({}, sess, { assignedBranchId: sess.hrScopeBranchId })
+            : sess;
+        const hasBranch = scopedBranch.assignedBranchId != null || normalizeBranchMatchText(scopedBranch.assignedBranchCity);
+        if (hasBranch && !entryMatchesBranchSession(entry, scopedBranch)) return false;
+        if (!entryMatchesDepartmentScope(entry, sess.hrScopeDepartmentKey)) return false;
+        if (!entryMatchesCompanyScope(entry, sess.hrScopeCompanyId)) return false;
+        return true;
+    }
+    if (storeKey.indexOf('legal_') === 0) {
+        const legalRole = ['legal', 'legal_manager'].indexOf(String(sess.role || '')) >= 0;
+        const hasLegalScope = String(sess.legalScopeCompanyId || '').trim() ||
+            sess.assignedBranchId != null ||
+            normalizeBranchMatchText(sess.assignedBranchCity);
+        if (legalRole && !hasLegalScope) return false;
+        if (!entryMatchesCompanyScope(entry, sess.legalScopeCompanyId)) return false;
+        const hasBranch = sess.assignedBranchId != null || normalizeBranchMatchText(sess.assignedBranchCity);
+        return !hasBranch || entryMatchesBranchSession(entry, sess);
+    }
+    return entryMatchesBranchSession(entry, sess);
+}
+
 const BRANCH_FILTER_STORE_PREFIXES = ['erp_', 'hr_', 'sales_', 'crm_', 'customer_', 'legal_', 'quote_'];
 const BRANCH_FILTER_STORE_EXACT = [
     'complaints', 'callback_leads', 'sales_quotes_inbox', 'quote_registry',
@@ -314,13 +381,18 @@ function filterPayloadForBranchSession(storeKey, payload, sess) {
     if (!Array.isArray(payload)) return payload;
     const role = String(sess.role || '');
     const hasBranch = sess.assignedBranchId != null || normalizeBranchMatchText(sess.assignedBranchCity);
-    if (!hasBranch && role !== 'sales_rep') return payload;
+    const hasDepartmentScope = storeKey.indexOf('hr_') === 0 &&
+        (String(sess.hrScopeBranchId || '').trim() || String(sess.hrScopeDepartmentKey || '').trim() || String(sess.hrScopeCompanyId || '').trim());
+    const hasLegalScope = storeKey.indexOf('legal_') === 0 && String(sess.legalScopeCompanyId || '').trim();
+    if (storeKey.indexOf('hr_') === 0 && ['hr', 'hr_manager', 'hr_admin'].indexOf(role) >= 0 && !hasBranch && !hasDepartmentScope) return [];
+    if (storeKey.indexOf('legal_') === 0 && ['legal', 'legal_manager'].indexOf(role) >= 0 && !hasBranch && !hasLegalScope) return [];
+    if (!hasBranch && !hasDepartmentScope && !hasLegalScope && role !== 'sales_rep') return payload;
     if (role === 'sales_rep' && storeKey === 'customer_portal_users') {
-        return payload.filter(function(item) { return entryMatchesBranchSession(item, sess); });
+        return payload.filter(function(item) { return entryMatchesSessionScope(storeKey, item, sess); });
     }
     const branchRoles = ['sales_manager', 'branch_manager', 'accountant', 'accounting_manager'];
-    if (branchRoles.indexOf(role) >= 0 || hasBranch) {
-        return payload.filter(function(item) { return entryMatchesBranchSession(item, sess); });
+    if (branchRoles.indexOf(role) >= 0 || hasBranch || hasDepartmentScope || hasLegalScope) {
+        return payload.filter(function(item) { return entryMatchesSessionScope(storeKey, item, sess); });
     }
     return payload;
 }
@@ -329,11 +401,11 @@ function mergeBranchScopedStorePayload(storeKey, incoming, serverPayload, sess) 
     if (!sess || isHqSession(sess) || !Array.isArray(incoming)) return incoming;
     if (!storeKeyIsBranchFilterable(storeKey)) return incoming;
     const server = Array.isArray(serverPayload) ? serverPayload.slice() : [];
-    const incomingScoped = incoming.filter(function(item) { return entryMatchesBranchSession(item, sess); });
+    const incomingScoped = incoming.filter(function(item) { return entryMatchesSessionScope(storeKey, item, sess); });
     if (!incomingScoped.length && incoming.length) {
         return null;
     }
-    const outOfScope = incoming.filter(function(item) { return !entryMatchesBranchSession(item, sess); });
+    const outOfScope = incoming.filter(function(item) { return !entryMatchesSessionScope(storeKey, item, sess); });
     if (outOfScope.length) {
         console.warn('mergeBranchScopedStorePayload: rejected out-of-scope rows for', storeKey, outOfScope.length);
     }
@@ -347,7 +419,7 @@ function mergeBranchScopedStorePayload(storeKey, incoming, serverPayload, sess) 
         if (k) scopedIds[k] = true;
     });
     const kept = server.filter(function(item) {
-        if (!entryMatchesBranchSession(item, sess)) return true;
+        if (!entryMatchesSessionScope(storeKey, item, sess)) return true;
         const k = idKey(item);
         return k && !scopedIds[k];
     });
@@ -783,6 +855,7 @@ module.exports = {
     keysAllowedForSession: keysAllowedForSession,
     keysAllowedByCustomPermissions: keysAllowedByCustomPermissions,
     validateActiveSession: validateActiveSession,
+    sessionWithLiveUser: sessionWithLiveUser,
     mergeBranchTeamAdminUsers: mergeBranchTeamAdminUsers,
     storeKeyIsBranchFilterable: storeKeyIsBranchFilterable,
     filterPayloadForBranchSession: filterPayloadForBranchSession,

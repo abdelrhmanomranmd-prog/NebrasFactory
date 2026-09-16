@@ -1,11 +1,11 @@
 ﻿/**
- * نبراس hrws353 — CSS الإدارة كسول (Accmaa-style)
+ * نبراس hrws354 — CSS الإدارة كسول (Accmaa-style)
  * الزائر: CSS storefront فقط · الإدارة: تحميل عند فتح لوحة الدخول أو الجلسة
  */
 (function(global) {
     'use strict';
 
-    var VER = 'hrws353';
+    var VER = 'hrws354';
     var loaded = false;
     var inflight = null;
 
@@ -43,6 +43,7 @@
         'css/66-nebras-navy-white-artistry.css',
         'css/61-nebras-cloud-safety.css',
         'css/63-nebras-odoo-quiet.css',
+        'css/68-hq-dashboard-organizer.css',
         /* أخيراً: وضوح النص بعد أي إعادة تحميل لثيم السطح الفاتح */
         'css/53-platform-text-readability.css'
     ];
@@ -52,26 +53,45 @@
     }
 
     function loadOne(href) {
-        if (document.querySelector('link[data-nebras-admin-css="' + href + '"]')) return;
+        var existing = Array.prototype.find.call(document.querySelectorAll('link[rel="stylesheet"][href]'), function(link) {
+            var raw = String(link.getAttribute('href') || '').split('?')[0];
+            return raw === href || raw.slice(-(href.length + 1)) === '/' + href;
+        });
+        if (existing) return Promise.resolve(true);
+        var tagged = document.querySelector('link[data-nebras-admin-css="' + href + '"]');
+        if (tagged) return Promise.resolve(true);
         var link = document.createElement('link');
         link.rel = 'stylesheet';
         link.href = withVer(href);
         link.setAttribute('data-nebras-admin-css', href);
-        (document.head || document.documentElement).appendChild(link);
+        return new Promise(function(resolve) {
+            link.onload = function() { resolve(true); };
+            link.onerror = function() {
+                console.warn('[Nebras admin-css] failed:', href);
+                resolve(false);
+            };
+            (document.head || document.documentElement).appendChild(link);
+        });
     }
 
     function ensureNebrasAdminCss() {
         if (loaded) return Promise.resolve(true);
         if (inflight) return inflight;
-        inflight = new Promise(function(resolve) {
+        inflight = Promise.resolve().then(function() {
             try {
-                ADMIN_CSS.forEach(loadOne);
+                return Promise.all(ADMIN_CSS.map(loadOne));
+            } catch (e) {
+                console.warn('[Nebras admin-css]', e);
+                return [];
+            }
+        }).then(function(results) {
+            try {
                 loaded = true;
                 document.body.classList.add('nebras-admin-css-ready');
             } catch (e) {
                 console.warn('[Nebras admin-css]', e);
             }
-            resolve(true);
+            return results.every(function(ok) { return ok !== false; });
         }).finally(function() {
             inflight = null;
         });

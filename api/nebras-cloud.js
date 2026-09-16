@@ -60,8 +60,21 @@ async function handlePush(body, sess) {
         if (sec.PUBLIC_STORE_KEYS.indexOf(r.store_key) >= 0) return true;
         return false;
     });
+    if (safe.length !== rows.length) {
+        return { code: 400, data: { ok: false, error: 'invalid_store_rows' } };
+    }
     const allowed = sec.keysAllowedForSession(sess, safe.map(function(r) { return r.store_key; }));
     const filtered = safe.filter(function(r) { return allowed.indexOf(r.store_key) >= 0; });
+    if (filtered.length !== safe.length) {
+        return {
+            code: 403,
+            data: {
+                ok: false,
+                error: 'forbidden_keys',
+                keys: safe.filter(function(r) { return allowed.indexOf(r.store_key) < 0; }).map(function(r) { return r.store_key; })
+            }
+        };
+    }
     const oversized = filtered.filter(function(r) {
         try {
             return JSON.stringify(r.payload || {}).length > MAX_CLOUD_PAYLOAD_BYTES;
@@ -103,7 +116,7 @@ async function handlePush(body, sess) {
                         if (!u || String(u.username || '').toUpperCase() !== 'NEBRASFACTORY') return u;
                         if (u.password && String(u.password).trim()) return u;
                         return Object.assign({}, u, {
-                            password: sec.hashNebrasPasswordSync('NEBRASFACTORYCOMPANYBASIC'),
+                            password: sec.FALLBACK_HQ_USERS[0].password,
                             isPrimary: true,
                             role: 'superadmin',
                             isActive: true
@@ -112,8 +125,16 @@ async function handlePush(body, sess) {
                 }
             } catch (mergeErr) {
                 console.warn('nebras-cloud admin_users merge:', mergeErr);
-                continue;
+                return { code: 500, data: { ok: false, error: 'admin_users_merge_failed' } };
             }
+        } else if (!hq && sec.storeKeyIsBranchFilterable(row.store_key) && Array.isArray(payload)) {
+            const serverRow = await sec.fetchStoreRow(url, key, row.store_key);
+            const serverPayload = serverRow && Array.isArray(serverRow.payload) ? serverRow.payload : [];
+            const merged = sec.mergeBranchScopedStorePayload(row.store_key, payload, serverPayload, sess);
+            if (merged === null) {
+                return { code: 403, data: { ok: false, error: 'forbidden_branch_scope', store_key: row.store_key } };
+            }
+            payload = merged;
         }
         prepared.push({
             store_key: row.store_key,
@@ -157,16 +178,19 @@ module.exports = async function handler(req, res) {
         }
         const sess = requireSession(req);
         if (!sess) return sec.jsonRes(res, 401, { ok: false, error: 'unauthorized' });
+        const live = await sec.validateActiveSession(sess);
+        if (!live.ok) return sec.jsonRes(res, 401, { ok: false, error: live.error || 'invalid_session' });
+        const activeSess = sec.sessionWithLiveUser(sess, live.user);
 
         const body = sec.parseBody(req);
         const action = String(req.query.action || body.action || '').toLowerCase();
 
         if (action === 'pull' && req.method === 'GET') {
-            const result = await handlePull(req, sess);
+            const result = await handlePull(req, activeSess);
             return sec.jsonRes(res, result.code, result.data);
         }
         if (action === 'push' && req.method === 'POST') {
-            const result = await handlePush(body, sess);
+            const result = await handlePush(body, activeSess);
             return sec.jsonRes(res, result.code, result.data);
         }
         return sec.jsonRes(res, 400, { ok: false, error: 'invalid_action' });

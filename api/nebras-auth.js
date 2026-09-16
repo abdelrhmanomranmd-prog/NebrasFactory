@@ -41,6 +41,10 @@ async function handleLogin(body) {
             permissions: Array.isArray(user.permissions) && user.permissions.length ? user.permissions.slice() : null,
             assignedBranchCity: user.assignedBranchCity || null,
             assignedBranchId: user.assignedBranchId != null ? user.assignedBranchId : null,
+            hrScopeBranchId: user.hrScopeBranchId || null,
+            hrScopeDepartmentKey: user.hrScopeDepartmentKey || null,
+            hrScopeCompanyId: user.hrScopeCompanyId || null,
+            legalScopeCompanyId: user.legalScopeCompanyId || null,
             exp: exp
         });
     } catch (signErr) {
@@ -64,7 +68,9 @@ async function handleLogin(body) {
 async function handleVerify(req) {
     const sess = sec.verifySession(sec.getBearerToken(req));
     if (!sess) return { code: 401, data: { ok: false, error: 'invalid_session' } };
-    return { code: 200, data: { ok: true, session: sess } };
+    const live = await sec.validateActiveSession(sess);
+    if (!live.ok) return { code: 401, data: { ok: false, error: live.error || 'invalid_session' } };
+    return { code: 200, data: { ok: true, session: sec.sessionWithLiveUser(sess, live.user) } };
 }
 
 async function handlePortalLogin(body) {

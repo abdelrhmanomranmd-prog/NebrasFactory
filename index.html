@@ -115,7 +115,7 @@
     })();
     </script>
 </head>
-<body id="nebras-platform" class="platform-storefront nebras-profile-2026-theme" data-platform-layer="storefront" data-nebras-deploy="hrws353">
+<body id="nebras-platform" class="platform-storefront nebras-profile-2026-theme" data-platform-layer="storefront" data-nebras-deploy="hrws354">
 
     <audio id="nebras-brand-intro-audio" class="nebras-brand-intro-audio" src="audio/nebras-welcome.mp3" preload="metadata" playsinline webkit-playsinline="true" hidden></audio>
 
@@ -926,6 +926,28 @@
             <button type="button" class="primary dashboard-channels-edit-btn" id="dashboard-occasion-edit-btn" onclick="openSystemSettingsForOccasion()">تهيئة شكل الاحتفال</button>
             <p id="dashboard-occasion-superadmin-note" class="status" style="display: none;"></p>
         </div>
+        <section class="dashboard-hq-organizer admin-only-ui" id="dashboard-hq-organizer" hidden aria-label="تنظيم مركز قيادة الإدارة">
+            <div class="dashboard-hq-organizer-head">
+                <div>
+                    <span class="dashboard-hq-organizer-kicker">مركز قيادة الإدارة الرئيسية</span>
+                    <h3>كل أنظمة نبراس مرتبة حسب مجال العمل</h3>
+                    <p>ابحثي عن أي وظيفة أو اختاري المجال — بدون اختفاء أقسام أو قوائم مزدحمة.</p>
+                </div>
+                <label class="dashboard-hq-search">
+                    <i class="fas fa-search" aria-hidden="true"></i>
+                    <input type="search" id="dashboard-hq-search-input" placeholder="بحث: سعر، منتج، مستخدم، مخزون…" autocomplete="off" oninput="filterHqDashboardTiles()">
+                </label>
+            </div>
+            <div class="dashboard-hq-category-tabs" id="dashboard-hq-category-tabs" role="toolbar" aria-label="مجالات لوحة الإدارة">
+                <button type="button" class="is-active" data-dashboard-category="all" onclick="setHqDashboardCategory('all', this)">الكل</button>
+                <button type="button" data-dashboard-category="governance" onclick="setHqDashboardCategory('governance', this)">الحوكمة والمستخدمون</button>
+                <button type="button" data-dashboard-category="catalog" onclick="setHqDashboardCategory('catalog', this)">المنتجات والمحتوى</button>
+                <button type="button" data-dashboard-category="commercial" onclick="setHqDashboardCategory('commercial', this)">المبيعات والعملاء</button>
+                <button type="button" data-dashboard-category="operations" onclick="setHqDashboardCategory('operations', this)">التشغيل والمخزون</button>
+                <button type="button" data-dashboard-category="intelligence" onclick="setHqDashboardCategory('intelligence', this)">المالية والتقارير</button>
+            </div>
+            <p class="dashboard-hq-filter-status" id="dashboard-hq-filter-status" aria-live="polite"></p>
+        </section>
         <h3 class="dashboard-zone-label" id="dash-zone-command"><i class="fas fa-sliders"></i> قيادة المحتوى والحوكمة</h3>
         <div class="dashboard-actions" id="dashboard-actions-grid"></div>
         <h3 class="dashboard-zone-label" id="dash-zone-operations"><i class="fas fa-cubes"></i> ERP والعمليات والتحليلات</h3>
@@ -2250,19 +2272,19 @@
     <nav class="nebras-app-tabbar" id="nebras-app-tabbar" hidden aria-label="تنقل تطبيق نبراس"></nav>
 
     <script src="js/nebras-perf.js?v=hrws353"></script>
-    <script src="js/nebras-admin-css-lazy.js?v=hrws353"></script>
+    <script src="js/nebras-admin-css-lazy.js?v=hrws354"></script>
     <script src="js/nebras-admin-boot.js?v=hrws353"></script>
     <script src="js/nebras-profile-2026-seed.js?v=hrws353" defer></script>
     <script src="js/nebras-profile-hub.js" defer></script>
     <script src="js/nebras-callback-concierge.js?v=hrws353" defer></script>
     <script src="js/nebras-secure-cloud.js?v=hrws353" defer></script>
-    <script src="js/nebras-odoo-write.js?v=hrws353" defer></script>
+    <script src="js/nebras-odoo-write.js?v=hrws354" defer></script>
     <script src="js/nebras-realtime-sync.js?v=hrws353" defer></script>
     <script src="js/nebras-storage-guard.js?v=hrws353" defer></script>
     <script src="js/nebras-platform-integrity.js?v=hrws353" defer></script>
-    <script src="js/nebras-platform.js?v=hrws353" defer></script>
+    <script src="js/nebras-platform.js?v=hrws354" defer></script>
     <script src="js/nebras-platform-i18n.js?v=hrws353" defer></script>
-    <script src="js/nebras-dept-lazy.js?v=hrws353" defer></script>
+    <script src="js/nebras-dept-lazy.js?v=hrws354" defer></script>
     <!-- hrws353: customer-portal.js → nebras-dept-lazy portal bundle (كسول) -->
 
 </body>

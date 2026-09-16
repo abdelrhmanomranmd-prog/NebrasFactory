@@ -1,0 +1,181 @@
+/* Nebras HQ — organized command center */
+
+.dashboard-hq-organizer {
+    margin: 18px 20px 8px;
+    padding: 18px;
+    border: 1px solid rgba(56, 189, 248, 0.22);
+    border-radius: 22px;
+    background: linear-gradient(135deg, rgba(6, 46, 68, 0.98), rgba(13, 40, 64, 0.94));
+    color: #fff;
+    box-shadow: 0 18px 48px rgba(6, 46, 68, 0.18);
+}
+
+.dashboard-hq-organizer[hidden] {
+    display: none !important;
+}
+
+.dashboard-hq-organizer-head {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(260px, 390px);
+    gap: 18px;
+    align-items: center;
+}
+
+.dashboard-hq-organizer-kicker {
+    display: block;
+    margin-bottom: 4px;
+    color: #7dd3fc;
+    font-size: .76rem;
+    font-weight: 800;
+    letter-spacing: .04em;
+}
+
+.dashboard-hq-organizer h3,
+.dashboard-hq-organizer p {
+    margin: 0;
+}
+
+.dashboard-hq-organizer h3 {
+    font-size: clamp(1.05rem, 2vw, 1.35rem);
+}
+
+.dashboard-hq-organizer p {
+    margin-top: 5px;
+    color: rgba(255, 255, 255, .72);
+    font-size: .82rem;
+}
+
+.dashboard-hq-search {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 48px;
+    padding: 0 14px;
+    border: 1px solid rgba(255, 255, 255, .18);
+    border-radius: 15px;
+    background: rgba(255, 255, 255, .09);
+}
+
+.dashboard-hq-search i {
+    color: #7dd3fc;
+}
+
+.dashboard-hq-search input {
+    width: 100%;
+    border: 0;
+    outline: 0;
+    background: transparent;
+    color: #fff;
+    font: inherit;
+}
+
+.dashboard-hq-search input::placeholder {
+    color: rgba(255, 255, 255, .58);
+}
+
+.dashboard-hq-category-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 16px;
+}
+
+.dashboard-hq-category-tabs button {
+    padding: 8px 13px;
+    border: 1px solid rgba(255, 255, 255, .15);
+    border-radius: 999px;
+    background: rgba(255, 255, 255, .07);
+    color: rgba(255, 255, 255, .82);
+    font: inherit;
+    font-size: .78rem;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.dashboard-hq-category-tabs button.is-active {
+    border-color: #38bdf8;
+    background: #0ea5e9;
+    color: #062e44;
+    box-shadow: 0 7px 18px rgba(14, 165, 233, .25);
+}
+
+.dashboard-hq-filter-status {
+    min-height: 1.3em;
+    margin-top: 10px !important;
+    font-weight: 700;
+}
+
+#admin-dashboard .dashboard-tile-groups {
+    display: block;
+}
+
+.dashboard-tile-domain {
+    margin: 0 0 20px;
+    padding: 14px;
+    border: 1px solid rgba(13, 40, 64, .1);
+    border-radius: 20px;
+    background: rgba(255, 255, 255, .72);
+    box-shadow: 0 8px 26px rgba(13, 40, 64, .06);
+}
+
+.dashboard-tile-domain[hidden] {
+    display: none !important;
+}
+
+.dashboard-tile-domain-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    padding: 0 3px;
+    color: #0d2840;
+}
+
+.dashboard-tile-domain-head > i {
+    display: grid;
+    place-items: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 12px;
+    background: #e0f2fe;
+    color: #0369a1;
+}
+
+.dashboard-tile-domain-head h4 {
+    margin: 0;
+    font-size: .98rem;
+}
+
+.dashboard-tile-domain-head span {
+    color: #64748b;
+    font-size: .7rem;
+}
+
+.dashboard-tile-domain-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 13px;
+}
+
+.dashboard-tile-domain-grid .dashboard-tile-card[hidden] {
+    display: none !important;
+}
+
+@media (max-width: 760px) {
+    .dashboard-hq-organizer {
+        margin-inline: 10px;
+        padding: 14px;
+    }
+
+    .dashboard-hq-organizer-head {
+        grid-template-columns: 1fr;
+    }
+
+    .dashboard-tile-domain {
+        padding: 10px;
+    }
+
+    .dashboard-tile-domain-grid {
+        grid-template-columns: 1fr;
+    }
+}

@@ -1,11 +1,11 @@
 ﻿/**
- * نبراس — تحميل كسول لوحدات الإدارات (hrws353)
+ * نبراس — تحميل كسول لوحدات الإدارات (hrws354)
  * فتح فوري + prefetch ذكي حسب الدور — بدون إثقال الزائر.
  */
 (function (global) {
     'use strict';
 
-    var VER = 'hrws353';
+    var VER = 'hrws354';
     var loaded = Object.create(null);
     var inflight = Object.create(null);
     var bundleDone = Object.create(null);
@@ -15,7 +15,6 @@
 
     var BUNDLES = {
         adminCore: [
-            'js/nebras-odoo-write.js',
             'js/nebras-cloud-safety.js',
             'js/nebras-cloud-diagnostics.js'
         ],
@@ -207,7 +206,8 @@
             }
         }
         if (role === 'superadmin' || role === 'manager') {
-            return PREFETCH_LIGHT.concat(PREFETCH_HEAVY);
+            /* HQ يحمّل الأدوات العامة فقط؛ الأقسام الثقيلة تُفتح عند الطلب حتى تبقى اللوحة سريعة. */
+            return ['adminTools'];
         }
         return ['wpc', 'crm', 'legal'];
     }

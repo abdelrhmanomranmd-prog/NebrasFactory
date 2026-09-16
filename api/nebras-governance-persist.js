@@ -45,7 +45,7 @@ async function persistOne(storeKey, payload, sess, options) {
                 if (!u || String(u.username || '').toUpperCase() !== 'NEBRASFACTORY') return u;
                 if (u.password && String(u.password).trim()) return u;
                 return Object.assign({}, u, {
-                    password: sec.hashNebrasPasswordSync('NEBRASFACTORYCOMPANYBASIC'),
+                    password: sec.FALLBACK_HQ_USERS[0].password,
                     isPrimary: true,
                     role: 'superadmin',
                     isActive: true
@@ -116,7 +116,9 @@ async function handlePersist(body, sess) {
         replaceAll: !!(body.replaceAll || body.replaceAdminUsers)
     });
     if (!result.ok) {
-        const code = result.error === 'forbidden_for_role' ? 403 : (result.error === 'service_unavailable' ? 503 : 500);
+        const code = (result.error === 'forbidden_for_role' || result.error === 'forbidden_branch_scope') ? 403 :
+            (result.error === 'payload_too_large' ? 413 :
+                (result.error === 'invalid_payload' ? 400 : (result.error === 'service_unavailable' ? 503 : 500)));
         return { code: code, data: result };
     }
     return { code: 200, data: Object.assign({ ok: true, by: sess.username }, result) };
@@ -164,7 +166,7 @@ async function handleBatch(body, sess) {
                         if (!u || String(u.username || '').toUpperCase() !== 'NEBRASFACTORY') return u;
                         if (u.password && String(u.password).trim()) return u;
                         return Object.assign({}, u, {
-                            password: sec.hashNebrasPasswordSync('NEBRASFACTORYCOMPANYBASIC'),
+                            password: sec.FALLBACK_HQ_USERS[0].password,
                             isPrimary: true,
                             role: 'superadmin',
                             isActive: true
@@ -193,8 +195,16 @@ async function handleBatch(body, sess) {
         }
         prepared.push({ store_key: storeKey, payload: finalPayload, updated_at: new Date().toISOString() });
     }
+    if (skipped.length) {
+        return {
+            code: skipped.some(function(item) {
+                return item.reason === 'forbidden_for_role' || item.reason === 'forbidden_branch_scope';
+            }) ? 403 : 400,
+            data: { ok: false, error: 'batch_rejected', count: 0, keys: [], skipped: skipped, by: sess.username }
+        };
+    }
     if (!prepared.length) {
-        return { code: 200, data: { ok: true, count: 0, keys: [], skipped: skipped, by: sess.username } };
+        return { code: 400, data: { ok: false, error: 'no_prepared_rows', count: 0, keys: [], by: sess.username } };
     }
     const CHUNK = 20;
     const savedKeys = [];
@@ -244,9 +254,10 @@ module.exports = async function handler(req, res) {
         if (!sess) return sec.jsonRes(res, 401, { ok: false, error: 'unauthorized' });
         const live = await sec.validateActiveSession(sess);
         if (!live.ok) return sec.jsonRes(res, 401, { ok: false, error: live.error || 'invalid_session' });
+        const activeSess = sec.sessionWithLiveUser(sess, live.user);
         const body = sec.parseBody(req);
         const action = String(body.action || req.query.action || 'persist').toLowerCase();
-        const result = action === 'batch' ? await handleBatch(body, sess) : await handlePersist(body, sess);
+        const result = action === 'batch' ? await handleBatch(body, activeSess) : await handlePersist(body, activeSess);
         return sec.jsonRes(res, result.code, result.data);
     } catch (err) {
         console.error('nebras-governance-persist error:', err);
