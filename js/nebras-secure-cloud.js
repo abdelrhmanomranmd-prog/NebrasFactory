@@ -19,7 +19,8 @@
     const SENSITIVE_STORE_KEYS = [
         'admin_users', 'admin_recovery_otp', 'admin_presence', 'audit_logs', 'analytics_governance',
         'sales_quotes_inbox', 'sales_data', 'quote_registry', 'callback_leads',
-        'customer_portal_users', 'customer_portal_audit', 'customer_order_journeys', 'customer_service',
+        'customer_portal_users', 'customer_portal_audit', 'customer_registration_requests',
+        'customer_order_journeys', 'customer_service',
         'complaints', 'erp_inventory', 'erp_orders', 'erp_production', 'erp_procurement', 'erp_purchases',
         'erp_transfers', 'erp_stock_transfers', 'sales_price_list', 'procurement_custom_depts',
         'hr_employees', 'hr_vehicles', 'hr_leave', 'hr_vehicle_tracking', 'hr_attendance',
@@ -428,9 +429,25 @@
         }
     }
 
+    function filterPersistableCloudRows(rows) {
+        if (!rows || !rows.length) return [];
+        const known = rows.filter(function(r) {
+            if (!r || !r.store_key || r.payload === undefined) return false;
+            return isSensitiveStoreKey(r.store_key) || isPublicStoreKey(r.store_key);
+        });
+        const admin = getCurrentAdminUser();
+        if (admin) return filterCloudRowsForAdminSession(known, admin);
+        return known;
+    }
+
     async function persistGovernanceBatch(rows, options) {
         options = options || {};
         if (!rows || !rows.length) return { ok: false, error: 'no_rows' };
+        const scoped = filterPersistableCloudRows(rows);
+        if (!scoped.length) {
+            /* لا مفاتيح مسموحة لهذا الدور — ليست نجاحاً كاذباً عند طلب حفظ صريح */
+            return { ok: false, error: 'no_allowed_rows', count: 0, keys: [] };
+        }
         const sessionOk = await ensureNebrasCloudSessionReady(options);
         if (!sessionOk) return { ok: false, error: 'no_session' };
         const token = getSecureToken();
@@ -438,8 +455,8 @@
         const chunkSize = 16;
         const saved = [];
         try {
-            for (let i = 0; i < rows.length; i += chunkSize) {
-                const chunk = rows.slice(i, i + chunkSize);
+            for (let i = 0; i < scoped.length; i += chunkSize) {
+                const chunk = scoped.slice(i, i + chunkSize);
                 const res = await fetch(apiBase() + '/api/nebras-governance-persist', {
                     method: 'POST',
                     headers: {
@@ -456,7 +473,8 @@
                         error: data.error || 'batch_failed',
                         detail: data.detail || '',
                         status: res.status,
-                        saved: saved
+                        saved: saved,
+                        skipped: data.skipped || []
                     };
                 }
                 (data.keys || chunk.map(function(r) { return r.store_key; })).forEach(function(k) {

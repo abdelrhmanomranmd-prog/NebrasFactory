@@ -31562,6 +31562,12 @@
                 if (typeof slimNebrasCloudPayload === 'function') payload = slimNebrasCloudPayload(spec.key, payload);
                 if (typeof guardCloudPushRow === 'function') payload = guardCloudPushRow(spec.key, payload);
                 if (payload === undefined) return null;
+                /* لقطات ضخمة (~2MB) — لا تُرفع ضمن الحفظ العام إلا إن وُسمت dirty صراحة */
+                if (spec.key === 'nebras_cloud_snapshots') {
+                    const dirtySnap = typeof getPendingDirtyStoreKeys === 'function' &&
+                        getPendingDirtyStoreKeys().indexOf('nebras_cloud_snapshots') >= 0;
+                    if (!dirtySnap) return null;
+                }
                 return {
                     store_key: spec.key,
                     payload: payload,
@@ -31569,8 +31575,18 @@
                 };
             }).filter(Boolean);
             const sensFn = typeof isSensitiveStoreKey === 'function' ? isSensitiveStoreKey : function() { return false; };
-            const publicRows = rows.filter(function(r) { return r && r.store_key && !sensFn(r.store_key); });
-            const sensitiveRows = rows.filter(function(r) { return r && r.store_key && sensFn(r.store_key); });
+            const pubFn = typeof isPublicStoreKey === 'function' ? isPublicStoreKey : function() { return true; };
+            let publicRows = rows.filter(function(r) {
+                return r && r.store_key && !sensFn(r.store_key) && pubFn(r.store_key);
+            });
+            let sensitiveRows = rows.filter(function(r) {
+                return r && r.store_key && sensFn(r.store_key);
+            });
+            /* صفِّ حسب صلاحية الدور قبل الإرسال — دفعة فيها مفتاح ممنوع كانت تُسقط كل الحفظ */
+            if (typeof filterCloudRowsForAdminSession === 'function' && currentAdmin) {
+                publicRows = filterCloudRowsForAdminSession(publicRows, currentAdmin);
+                sensitiveRows = filterCloudRowsForAdminSession(sensitiveRows, currentAdmin);
+            }
             if (!publicRows.length && !sensitiveRows.length) return true;
             let okPublic = !publicRows.length;
             let okSensitive = !sensitiveRows.length;
@@ -31580,10 +31596,11 @@
                     const publicTokenReady = typeof getNebrasSecureToken === 'function' && getNebrasSecureToken();
                     if (typeof persistGovernanceBatch === 'function' && publicTokenReady) {
                         const pubBatch = await persistGovernanceBatch(publicRows, { promptReauth: false });
-                        okPublic = !!(pubBatch && pubBatch.ok && Number(pubBatch.count || 0) === publicRows.length);
+                        const savedCount = Number(pubBatch && (pubBatch.count || (pubBatch.keys && pubBatch.keys.length) || 0));
+                        okPublic = !!(pubBatch && pubBatch.ok && savedCount > 0);
                     } else if (typeof secureCloudPush === 'function' && publicTokenReady) {
                         const pubResult = await secureCloudPush(publicRows);
-                        okPublic = !!(pubResult && pubResult.ok && Number(pubResult.count || 0) === publicRows.length);
+                        okPublic = !!(pubResult && pubResult.ok && Number(pubResult.count || 0) > 0);
                     }
                 }
                 if (sensitiveRows.length) {
@@ -31938,8 +31955,12 @@
                 if (options.urgentCloud !== false) options.urgentCloud = true;
                 if (!options.skipMutationMark) {
                     if (typeof markLocalCloudMutationBatch === 'function') {
-                        /* علّم المفاتيح المتأثرة فقط — أبداً قائمة الأولوية كاملة (كانت ترفع admin_users وتمسح الموظفين) */
-                        markLocalCloudMutationBatch(saveKeys || ['system_settings']);
+                        /* علّم المفاتيح المتأثرة فقط — أبداً system_settings وحدها عند غياب storeKeys */
+                        if (saveKeys && saveKeys.length) {
+                            markLocalCloudMutationBatch(saveKeys.filter(function(k) {
+                                return k !== 'admin_users' || options.replaceAdminUsers === true;
+                            }));
+                        }
                     }
                     if (typeof markGovernanceRevision === 'function') markGovernanceRevision();
                     if (typeof markSensitiveCloudPending === 'function') markSensitiveCloudPending();
@@ -31955,7 +31976,11 @@
             }
             if (!options.skipMutationMark) {
                 if (typeof markLocalCloudMutationBatch === 'function') {
-                    markLocalCloudMutationBatch(saveKeys || ['system_settings']);
+                    if (saveKeys && saveKeys.length) {
+                        markLocalCloudMutationBatch(saveKeys.filter(function(k) {
+                            return k !== 'admin_users' || options.replaceAdminUsers === true;
+                        }));
+                    }
                 }
                 if (typeof markGovernanceRevision === 'function') markGovernanceRevision();
                 if (typeof markSensitiveCloudPending === 'function') markSensitiveCloudPending();
@@ -31998,7 +32023,11 @@
                     /* لا ترفعي قائمة الأولوية كاملة — خصوصاً admin_users */
                     const priorityKeys = options.storeKeys && options.storeKeys.length
                         ? options.storeKeys.filter(function(k) { return k !== 'admin_users' || options.replaceAdminUsers === true; })
-                        : ['system_settings'];
+                        : (typeof getPendingDirtyStoreKeys === 'function' && getPendingDirtyStoreKeys().length
+                            ? getPendingDirtyStoreKeys().filter(function(k) { return k !== 'admin_users'; })
+                            : ['site_products', 'system_settings', 'showroom_gallery', 'visitor_icons',
+                                'dashboard_tiles', 'site_partners', 'about_pages', 'site_certifications',
+                                'site_custom_sections', 'branches', 'sales_price_list']);
                     let criticalPromise = Promise.resolve(false);
                     if (options.urgentCloud && typeof persistNebrasCriticalStores === 'function') {
                         criticalPromise = persistNebrasCriticalStores(priorityKeys, {

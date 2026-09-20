@@ -195,16 +195,22 @@ async function handleBatch(body, sess) {
         }
         prepared.push({ store_key: storeKey, payload: finalPayload, updated_at: new Date().toISOString() });
     }
-    if (skipped.length) {
-        return {
-            code: skipped.some(function(item) {
-                return item.reason === 'forbidden_for_role' || item.reason === 'forbidden_branch_scope';
-            }) ? 403 : 400,
-            data: { ok: false, error: 'batch_rejected', count: 0, keys: [], skipped: skipped, by: sess.username }
-        };
-    }
+    /* لا ترفض الدفعة كاملة لمفتاح ممنوع — احفظ المسموح وأرجع skipped (كان يُسقط كل حفظ الموظفين) */
     if (!prepared.length) {
-        return { code: 400, data: { ok: false, error: 'no_prepared_rows', count: 0, keys: [], by: sess.username } };
+        const forbiddenOnly = skipped.length > 0 && skipped.every(function(item) {
+            return item.reason === 'forbidden_for_role' || item.reason === 'forbidden_branch_scope';
+        });
+        return {
+            code: forbiddenOnly ? 403 : 400,
+            data: {
+                ok: false,
+                error: forbiddenOnly ? 'forbidden_keys' : 'no_prepared_rows',
+                count: 0,
+                keys: [],
+                skipped: skipped,
+                by: sess.username
+            }
+        };
     }
     const CHUNK = 20;
     const savedKeys = [];

@@ -30,11 +30,12 @@
         'hr_employees', 'hr_vehicles', 'hr_leave', 'hr_vehicle_tracking', 'hr_attendance',
         'hr_documents', 'hr_payroll', 'hr_companies', 'hr_advances', 'hr_vehicle_violations',
         'hr_travel', 'hr_deductions', 'hr_notifications', 'hr_notif_settings', 'hr_email_queue',
-        'hr_shift_roster', 'hr_dept_activity',
+        'hr_shift_roster', 'hr_dept_activity', 'hr_gps_positions', 'hr_gps_settings', 'hr_gps_consents',
         'crm_customers', 'crm_opportunities', 'crm_activities', 'crm_audit',
         'legal_contracts', 'legal_rentals', 'legal_cases', 'legal_compliance', 'legal_policies',
+        'legal_correspondence', 'legal_activity', 'legal_notif_settings',
         'site_products', 'visitor_icons', 'showroom_gallery', 'site_partners',
-        'about_pages', 'dashboard_tiles', 'site_certifications', 'site_custom_sections',
+        'about_pages', 'dashboard_tiles', 'site_certifications', 'site_custom_sections', 'visitor_analytics',
         'aluminum_profiles', 'aluminum_systems', 'aluminum_estimates', 'aluminum_cut_jobs',
         'aluminum_cut_settings', 'aluminum_accessories', 'aluminum_glass', 'aluminum_wire',
         'aluminum_colors', 'aluminum_remnants', 'aluminum_stock', 'aluminum_audit',
@@ -343,21 +344,34 @@
         if (options.storeKeys && options.storeKeys.length) {
             return filterKeysForAdmin(options.storeKeys);
         }
-        /* dirty-key فقط — ارفع ما تغيّر فعلياً */
+        const allow = {};
+        ODOO_WRITE_KEYS.forEach(function(k) { allow[k] = true; });
+        /* dirty-key أولاً — ارفع ما تغيّر فعلياً */
         if (typeof global.getPendingDirtyStoreKeys === 'function') {
             const dirty = global.getPendingDirtyStoreKeys();
             if (dirty && dirty.length) {
-                const allow = {};
-                ODOO_WRITE_KEYS.forEach(function(k) { allow[k] = true; });
                 /* لا ترفعي admin_users ضمن الحفظ العام — فقط عبر persistAdminUsersToCloud */
                 const scoped = dirty.filter(function(k) {
                     return allow[k] && k !== 'admin_users';
                 });
-                if (scoped.length) return filterKeysForAdmin(scoped);
+                const filtered = filterKeysForAdmin(scoped);
+                if (filtered.length) return filtered;
+                /* وُجدت مفاتيح متغيّرة لكن الدور لا يملكها — لا نجاح كاذب */
+                if (scoped.length) return [];
             }
         }
-        /* احتياط ضيق: إعدادات فقط — بدون admin_users */
-        return filterKeysForAdmin(['system_settings']);
+        /*
+         * احتياط الإطلاق: محتوى الموقع الحي + إعدادات — وليس system_settings وحدها.
+         * السابق كان يرفع الإعدادات فقط فيظهر «تم الحفظ» بينما المنتجات/المعرض/الموظفون يبقون محلياً.
+         */
+        const fallback = NEBRAS_LIVE_CONTENT_KEYS.slice();
+        if (fallback.indexOf('system_settings') < 0) fallback.push('system_settings');
+        const roleFallback = filterKeysForAdmin(fallback);
+        if (roleFallback.length) return roleFallback;
+        /* موظف بلا محتوى حي: ارفع كل مفاتيح دوره المسموحة (بدون admin_users) */
+        return filterKeysForAdmin(ODOO_WRITE_KEYS.filter(function(k) {
+            return k !== 'admin_users';
+        }));
     }
 
     async function nebrasOdooSaveSystemDataCore(options) {
@@ -378,7 +392,14 @@
         const keys = resolveOdooSaveKeys(options);
         if (!keys.length) {
             nebrasOdooFlushLocalCache();
-            return true;
+            /* لا تعتبر الحفظ ناجحاً عندما لا يتبقى مفتاح مسموح — كان يخفي فشل الموظفين */
+            if (!options.silentCloudFail && typeof global.showNebrasAdminToast === 'function') {
+                global.showNebrasAdminToast(
+                    '✗ لا صلاحية رفع لهذه البيانات — أو أعيدي تسجيل الدخول ثم احفظي',
+                    'error'
+                );
+            }
+            return false;
         }
         if (!odooQuietOrb('saving')) {
             if (typeof global.renderNebrasLiveCloudRibbon === 'function') global.renderNebrasLiveCloudRibbon('saving');
