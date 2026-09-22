@@ -1,7 +1,7 @@
 /* قسم الترحيب — صورة حقيقية، النص فوق الأبواب (يمين الشاشة في العربية) */
 :root {
     --hero-banner-image: url('/images/hero-nebras-banner.png');
-    --nebras-chrome-h: 420px;
+    --nebras-chrome-h: 360px;
 }
 
 .hero.hero-real {
@@ -337,7 +337,7 @@
 @media (min-width: 769px) {
     .hero-slide-img,
     .hero-slide-video {
-        object-fit: contain;
+        object-fit: cover;
         object-position: center center;
     }
 
@@ -374,8 +374,8 @@
 
     .hero-slide-img,
     .hero-slide-video {
-        object-fit: contain;
-        object-position: center center;
+        object-fit: cover;
+        object-position: center 20%;
     }
 
     .hero.hero-real::before {

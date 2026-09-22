@@ -24,7 +24,7 @@
     margin: 0;
     position: relative;
     height: 100%;
-    min-height: clamp(240px, 40vw, 480px);
+    min-height: clamp(200px, 34vw, 420px);
     border-radius: 14px;
     overflow: hidden;
     background: linear-gradient(180deg, #132536 0%, #0a1520 100%);
@@ -90,8 +90,8 @@
 }
 
 .hero.hero-real.hero--hydra-stage {
-    min-height: clamp(360px, 52vw, 560px);
-    height: clamp(360px, 52vw, 560px);
+    min-height: clamp(320px, 46vw, 500px);
+    height: clamp(320px, 46vw, 500px);
 }
 
 body.nebras-hero-hydra-stage .hero-copy,

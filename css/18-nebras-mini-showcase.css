@@ -9,8 +9,8 @@
 
 .nebras-mini-showcase--hero,
 .header-hero-rail .nebras-mini-showcase--partners {
-    --mini-showcase-w: clamp(92px, 11vw, 112px);
-    --mini-showcase-h: clamp(160px, 20vw, 196px);
+    --mini-showcase-w: clamp(84px, 10vw, 104px);
+    --mini-showcase-h: clamp(146px, 18vw, 178px);
 }
 
 .nebras-mini-showcase--stage {

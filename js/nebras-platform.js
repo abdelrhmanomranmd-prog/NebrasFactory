@@ -23471,17 +23471,13 @@
 
         const HERO_SLIDESHOW_DEFAULT = [
             { stage: 'hydra-products', headline: 0 },
-            { src: 'images/doors/header-showcase/door-01.png', headline: 1 },
-            { src: 'images/doors/header-showcase/door-02.png', headline: 2 },
-            { src: 'images/doors/header-showcase/door-03.png', headline: 3 },
-            { src: 'images/hero-slide-08-doors-trio.png', headline: 4 },
-            { src: 'images/hero-slide-05-doors-showcase.png', headline: 5 },
-            { src: 'images/profile-2026/doors/doors-09.jpg', headline: 6 },
-            { src: 'images/doors/header-showcase/door-05.png', headline: 7 },
-            { src: 'images/doors/header-showcase/door-06.png', headline: 8 },
-            { src: 'images/hero-slide-01-factory-banner.png', headline: 9 },
-            { src: 'images/hero-slide-03-premium-wpc.png', headline: 10 },
-            { src: 'images/hero-slide-09-doors-four.png', headline: 11 }
+            { src: 'images/hero-slide-08-doors-trio.png', headline: 1 },
+            { src: 'images/hero-slide-05-doors-showcase.png', headline: 2 },
+            { src: 'images/hero-slide-09-doors-four.png', headline: 3 },
+            { src: 'images/hero-slide-01-factory-banner.png', headline: 4 },
+            { src: 'images/hero-slide-03-premium-wpc.png', headline: 5 },
+            { src: 'images/profile-2026/doors/doors-03.jpg', headline: 6 },
+            { src: 'images/profile-2026/doors/doors-06.jpg', headline: 7 }
         ];
 
         let heroSlideshowTimer = null;
@@ -23490,11 +23486,11 @@
 
         /* ===== الهيدر السينمائي — أبواب منتجات حقيقية ===== */
         const HEADER_CINEMATIC_SLIDES = [
-            'images/doors/header-showcase/door-01.png',
-            'images/doors/header-showcase/door-02.png',
-            'images/doors/header-showcase/door-03.png',
-            'images/profile-2026/doors/doors-09.jpg',
             'images/hero-slide-08-doors-trio.png',
+            'images/hero-slide-05-doors-showcase.png',
+            'images/profile-2026/doors/doors-03.jpg',
+            'images/hero-slide-09-doors-four.png',
+            'images/doors/header-showcase/door-02.png',
             'images/doors/header-showcase/door-05.png'
         ];
         let headerCinematicInited = false;
@@ -23681,7 +23677,7 @@
         }
 
         function buildNebrasHydraStageHtml() {
-            const deploy = (document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws357';
+            const deploy = (document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws359';
             const doors = (typeof NEBRAS_DOOR_SHOWCASE_URLS !== 'undefined' && NEBRAS_DOOR_SHOWCASE_URLS.length)
                 ? NEBRAS_DOOR_SHOWCASE_URLS
                 : [
@@ -24142,7 +24138,12 @@
             return (sessions || []).filter(function(s) { return adminVisitorSessionVisible(s, admin); });
         }
 
+        function isPortraitDoorCutoutHeroSrc(src) {
+            return /doors\/header-showcase\/door-\d+/i.test(String(src || ''));
+        }
+
         function getHeroSlideshowSlides() {
+            const landscapeFallbacks = HERO_SLIDESHOW_DEFAULT.filter(function(s) { return s && s.src; });
             const custom = systemSettings.heroSlideshowSlides;
             if (Array.isArray(custom) && custom.length) {
                 return custom.map(function(slide, idx) {
@@ -24152,17 +24153,17 @@
                             headline: typeof slide.headline === 'number' ? slide.headline : 0
                         };
                     }
-                    const fallback = HERO_SLIDESHOW_DEFAULT[idx % HERO_SLIDESHOW_DEFAULT.length];
+                    const fallback = landscapeFallbacks[idx % Math.max(landscapeFallbacks.length, 1)] || HERO_SLIDESHOW_DEFAULT[0];
                     let src = slide && (slide.src || slide.image);
                     if (!src && fallback && fallback.src) src = fallback.src;
-                    if (isNebrasHydraHeroSlide(src)) {
+                    if (isNebrasHydraHeroSlide(src) || isPortraitDoorCutoutHeroSrc(src)) {
                         if (idx === 0) {
                             return {
                                 stage: 'hydra-products',
                                 headline: typeof slide.headline === 'number' ? slide.headline : 0
                             };
                         }
-                        src = NEBRAS_DOOR_SHOWCASE_URLS[idx % NEBRAS_DOOR_SHOWCASE_URLS.length];
+                        src = (fallback && fallback.src) || (landscapeFallbacks[0] && landscapeFallbacks[0].src) || HERO_BANNER_FALLBACKS[0];
                     }
                     return {
                         src: normalizeHeroBannerPath(src || HERO_BANNER_FALLBACKS[0]),

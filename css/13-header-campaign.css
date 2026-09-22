@@ -9,13 +9,13 @@
     display: grid;
     grid-template-columns: auto minmax(0, 1fr) auto;
     align-items: center;
-    gap: clamp(12px, 2vw, 20px);
+    gap: clamp(10px, 1.6vw, 16px);
     width: 100%;
-    max-width: 1120px;
+    max-width: 1040px;
     margin-inline: auto;
     min-height: 0;
-    padding: 12px 16px;
-    border-radius: 18px;
+    padding: 10px 14px;
+    border-radius: 16px;
     background:
         linear-gradient(160deg, rgba(255, 255, 255, 0.11) 0%, rgba(255, 255, 255, 0.03) 38%, rgba(8, 28, 48, 0.55) 100%);
     border: 1px solid rgba(255, 255, 255, 0.16);
@@ -226,7 +226,7 @@
 
 .header-hero-rail--doors,
 .header-hero-rail--partners {
-    width: clamp(96px, 14vw, 128px);
+    width: clamp(88px, 12vw, 116px);
 }
 
 .header-hero-rail--doors {
@@ -299,24 +299,45 @@
     }
 }
 
+/* موبايل: شريط حملة مضغوط بدل إخفاء كامل — عنوان + زر فقط */
 @media (max-width: 768px) {
     .header-top-row--campaign {
-        display: none;
+        display: block;
+        padding: 6px 4% 8px;
     }
 
-    .header-campaign-action-strip {
-        gap: 12px;
+    .header-hero-band {
+        grid-template-columns: 1fr;
+        gap: 8px;
+        padding: 10px 12px;
+        max-width: none;
     }
 
-    .header-campaign-door-aside {
-        flex-direction: row;
-        align-items: flex-end;
-        gap: 10px;
+    .header-hero-rail--doors,
+    .header-hero-rail--partners,
+    .header-campaign-tagline,
+    .header-campaign-stats,
+    .header-hero-divider,
+    .header-cta--ghost {
+        display: none !important;
+    }
+
+    .header-hero-core {
+        gap: 6px;
+    }
+
+    .header-brand-row .header-campaign-title {
+        font-size: clamp(0.95rem, 4.2vw, 1.15rem);
+    }
+
+    .header-campaign-headline {
+        font-size: clamp(0.88rem, 3.6vw, 1.05rem);
+        max-width: none;
     }
 
     .header-campaign-cta {
-        flex-direction: column;
         width: 100%;
+        flex-direction: column;
     }
 
     .header-cta {
