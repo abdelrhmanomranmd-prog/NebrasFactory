@@ -1,4 +1,4 @@
-/* hrws357 — هيدرا منتجات: صف أبواب موحّد الارتفاع بدون فراغ كحلي */
+/* hrws360 — هيدرا: أبواب كاملة بدون قص + وضوح أعلى */
 .nebras-hydra-stage {
     position: absolute;
     inset: 0;
@@ -13,9 +13,9 @@
 .nebras-hydra-stage-doors {
     display: grid;
     grid-template-columns: repeat(6, minmax(0, 1fr));
-    gap: clamp(8px, 1.1vw, 16px);
+    gap: clamp(10px, 1.2vw, 18px);
     align-items: stretch;
-    padding: clamp(18px, 3.2vw, 40px) clamp(14px, 2.6vw, 32px) 10px;
+    padding: clamp(14px, 2.4vw, 28px) clamp(14px, 2.6vw, 32px) 6px;
     min-height: 0;
     height: 100%;
 }
@@ -24,38 +24,36 @@
     margin: 0;
     position: relative;
     height: 100%;
-    min-height: clamp(200px, 34vw, 420px);
-    border-radius: 14px;
+    min-height: clamp(220px, 36vw, 460px);
+    border-radius: 12px;
     overflow: hidden;
-    background: linear-gradient(180deg, #132536 0%, #0a1520 100%);
-    box-shadow: 0 14px 28px rgba(0, 0, 0, 0.38);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    background:
+        linear-gradient(180deg, rgba(19, 37, 54, 0.35) 0%, rgba(10, 21, 32, 0.55) 100%);
+    box-shadow: 0 12px 26px rgba(0, 0, 0, 0.34);
 }
 
 .nebras-hydra-stage-door img {
     display: block;
     width: 100%;
     height: 100%;
-    object-fit: cover;
-    object-position: center 18%;
-    transition: transform 0.55s ease, filter 0.55s ease;
-    filter: saturate(1.04) contrast(1.02);
-}
-
-.nebras-hydra-stage-door:nth-child(odd) img {
-    object-position: center 12%;
-}
-
-.nebras-hydra-stage-door:nth-child(even) img {
-    object-position: center 22%;
-}
-
-.nebras-hydra-stage:hover .nebras-hydra-stage-door img {
-    filter: saturate(1.02) contrast(1.01);
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    object-position: bottom center;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: high-quality;
+    -ms-interpolation-mode: bicubic;
+    filter: contrast(1.06) saturate(1.05) brightness(1.02);
+    transition: transform 0.45s ease, filter 0.45s ease;
+    transform-origin: bottom center;
 }
 
 .nebras-hydra-stage-door:hover img {
-    transform: scale(1.05);
-    filter: saturate(1.06) contrast(1.03);
+    transform: scale(1.04);
+    filter: contrast(1.08) saturate(1.07) brightness(1.03);
 }
 
 .nebras-hydra-stage-brand {
@@ -63,7 +61,7 @@
     flex-direction: column;
     align-items: center;
     gap: 4px;
-    padding: 10px 16px 18px;
+    padding: 8px 16px 16px;
     text-align: center;
     background: linear-gradient(180deg, transparent, rgba(4, 10, 18, 0.72));
 }
@@ -90,8 +88,8 @@
 }
 
 .hero.hero-real.hero--hydra-stage {
-    min-height: clamp(320px, 46vw, 500px);
-    height: clamp(320px, 46vw, 500px);
+    min-height: clamp(360px, 50vw, 540px);
+    height: clamp(360px, 50vw, 540px);
 }
 
 body.nebras-hero-hydra-stage .hero-copy,
@@ -105,7 +103,7 @@ body.nebras-hero-hydra-stage .hero-dynamic-headline-wrap {
 }
 
 body.nebras-hero-hydra-stage .hero.hero-real.hero--hydra-stage::before {
-    opacity: 0.12;
+    opacity: 0.1;
 }
 
 /* هيدرا قديمة (كولاج مربع) — غطِّ العرض بدل فراغ contain */
@@ -129,11 +127,11 @@ body.nebras-hero-hydra-stage .hero.hero-real.hero--hydra-stage::before {
         display: none;
     }
     .nebras-hydra-stage-door {
-        min-height: clamp(210px, 50vw, 360px);
+        min-height: clamp(220px, 52vw, 380px);
     }
     .hero.hero-real.hero--hydra-stage {
-        min-height: clamp(320px, 78vw, 480px);
-        height: clamp(320px, 78vw, 480px);
+        min-height: clamp(340px, 82vw, 500px);
+        height: clamp(340px, 82vw, 500px);
     }
 }
 

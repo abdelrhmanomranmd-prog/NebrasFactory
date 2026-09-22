@@ -14647,6 +14647,16 @@
             saveSystemData({ skipCloud: true, skipMutationMark: true });
         }
 
+        /* صور هيدرا عالية الوضوح — أبواب عمودية كاملة بدون قص */
+        const NEBRAS_HYDRA_DOOR_URLS = [
+            'images/profile-2026/doors/doors-03.jpg',
+            'images/profile-2026/doors/doors-06.jpg',
+            'images/profile-2026/doors/doors-09.jpg',
+            'images/profile-2026/doors/doors-11.jpg',
+            'images/profile-2026/doors/doors-02.jpg',
+            'images/profile-2026/doors/doors-05.jpg'
+        ];
+
         /* door-04 أفقي (1024×629) يكسر صف الهيدرا — بديل عمودي من الملف التعريفي */
         const NEBRAS_DOOR_SHOWCASE_URLS = [
             'images/doors/header-showcase/door-01.png',
@@ -23677,24 +23687,26 @@
         }
 
         function buildNebrasHydraStageHtml() {
-            const deploy = (document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws359';
-            const doors = (typeof NEBRAS_DOOR_SHOWCASE_URLS !== 'undefined' && NEBRAS_DOOR_SHOWCASE_URLS.length)
-                ? NEBRAS_DOOR_SHOWCASE_URLS
-                : [
-                    'images/doors/header-showcase/door-01.png',
-                    'images/doors/header-showcase/door-02.png',
-                    'images/doors/header-showcase/door-03.png',
-                    'images/profile-2026/doors/doors-09.jpg',
-                    'images/doors/header-showcase/door-05.png',
-                    'images/doors/header-showcase/door-06.png'
-                ];
+            const deploy = (document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws360';
+            const doors = (typeof NEBRAS_HYDRA_DOOR_URLS !== 'undefined' && NEBRAS_HYDRA_DOOR_URLS.length)
+                ? NEBRAS_HYDRA_DOOR_URLS
+                : (typeof NEBRAS_DOOR_SHOWCASE_URLS !== 'undefined' && NEBRAS_DOOR_SHOWCASE_URLS.length)
+                    ? NEBRAS_DOOR_SHOWCASE_URLS
+                    : [
+                        'images/profile-2026/doors/doors-03.jpg',
+                        'images/profile-2026/doors/doors-06.jpg',
+                        'images/profile-2026/doors/doors-09.jpg',
+                        'images/profile-2026/doors/doors-11.jpg',
+                        'images/profile-2026/doors/doors-02.jpg',
+                        'images/profile-2026/doors/doors-05.jpg'
+                    ];
             const figs = doors.map(function(src, i) {
                 const href = (typeof normalizeMediaPath === 'function' ? normalizeMediaPath(src) : src);
                 const bust = href + (href.indexOf('?') >= 0 ? '&' : '?') + 'v=' + deploy;
                 const loading = i < 3 ? 'eager' : 'lazy';
                 const pri = i === 0 ? ' fetchpriority="high"' : '';
                 return '<figure class="nebras-hydra-stage-door">' +
-                    '<img src="' + escapeHtmlAttr(bust) + '" alt="باب WPC نبراس" width="440" height="760" loading="' + loading + '" decoding="async"' + pri + '>' +
+                    '<img src="' + escapeHtmlAttr(bust) + '" alt="باب WPC نبراس" width="900" height="1280" loading="' + loading + '" decoding="async"' + pri + ' sizes="(max-width: 900px) 33vw, 16vw">' +
                     '</figure>';
             }).join('');
             return '<div class="nebras-hydra-stage" role="img" aria-label="معرض أبواب نبراس الحقيقية">' +
