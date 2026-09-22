@@ -5,7 +5,7 @@
 (function(global) {
     'use strict';
 
-    var VER = 'hrws362';
+    var VER = 'hrws364';
     var loaded = false;
     var inflight = null;
 
@@ -44,6 +44,7 @@
         'css/61-nebras-cloud-safety.css',
         'css/63-nebras-odoo-quiet.css',
         'css/68-hq-dashboard-organizer.css',
+        'css/70-nebras-rawaq-dashboard.css',
         /* أخيراً: وضوح النص بعد أي إعادة تحميل لثيم السطح الفاتح */
         'css/53-platform-text-readability.css'
     ];

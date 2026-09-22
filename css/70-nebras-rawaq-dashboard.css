@@ -1,0 +1,313 @@
+/* hrws364 — رواق نبراس: تنسيق بصري للداشبورد فقط (بدون إخفاء عناصر أو لمس السيستم) */
+
+:root {
+    --rawaq-navy: #062e44;
+    --rawaq-blue: #0a4b6e;
+    --rawaq-ink: #0d2840;
+    --rawaq-muted: #5b6b7c;
+    --rawaq-line: rgba(6, 46, 68, 0.1);
+    --rawaq-paper: #f7f9fc;
+    --rawaq-card: #ffffff;
+    --rawaq-accent: #155e94;
+    --rawaq-sky: #38bdf8;
+    --rawaq-gold: #c9a227;
+    --rawaq-radius: 18px;
+    --rawaq-gap: clamp(14px, 1.8vw, 22px);
+}
+
+/* مساحة الرواق — خلفية هادئة أوضح */
+body.admin-session #admin-dashboard.show {
+    background:
+        linear-gradient(180deg, #ffffff 0%, var(--rawaq-paper) 28%, #eef3f8 100%);
+    padding-inline: clamp(10px, 2vw, 28px);
+    padding-bottom: 36px;
+    box-sizing: border-box;
+}
+
+/* شريط القيادة — أوضح وأخف بصرياً */
+#admin-dashboard .dashboard-command-shell {
+    margin: 12px 0 22px;
+    border-radius: 20px;
+    border: 1px solid var(--rawaq-line);
+    box-shadow: 0 12px 36px rgba(6, 46, 68, 0.08);
+    background: var(--rawaq-card);
+}
+
+#admin-dashboard .dashboard-command-shell-inner {
+    padding: 18px 22px;
+    gap: 14px 20px;
+    background: linear-gradient(118deg, var(--rawaq-navy) 0%, var(--rawaq-blue) 52%, #0d6b9a 100%);
+}
+
+#admin-dashboard .dashboard-command-logo {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+}
+
+#admin-dashboard .dashboard-command-brand strong {
+    font-size: clamp(1.05rem, 2vw, 1.22rem);
+    font-weight: 800;
+}
+
+#admin-dashboard .dashboard-command-brand small {
+    opacity: 0.88;
+    font-size: 0.78rem;
+}
+
+/* شرائط حية وإجراءات سريعة — مسافات أنظف */
+#admin-dashboard .dashboard-live-kpi-strip,
+#admin-dashboard .dashboard-quick-actions {
+    margin-block: 10px 16px;
+    gap: var(--rawaq-gap);
+}
+
+#admin-dashboard .dashboard-quick-action {
+    border-radius: 14px;
+    min-height: 44px;
+    padding: 10px 16px;
+    font-weight: 700;
+    border: 1px solid var(--rawaq-line);
+    background: var(--rawaq-card);
+    color: var(--rawaq-ink);
+    box-shadow: 0 4px 14px rgba(6, 46, 68, 0.05);
+}
+
+#admin-dashboard .dashboard-quick-action:hover {
+    border-color: rgba(21, 94, 148, 0.35);
+    color: var(--rawaq-accent);
+}
+
+/* هوية الشركة — رواق هادئ */
+#admin-dashboard .dashboard-company-identity {
+    margin: 8px 0 20px;
+    padding: 18px 20px;
+    border-radius: var(--rawaq-radius);
+    border: 1px solid var(--rawaq-line);
+    background: rgba(255, 255, 255, 0.92);
+    box-shadow: 0 10px 28px rgba(6, 46, 68, 0.06);
+}
+
+#admin-dashboard .dashboard-identity-kicker {
+    font-size: clamp(1.1rem, 2.2vw, 1.4rem);
+    color: var(--rawaq-navy);
+}
+
+#admin-dashboard .dashboard-hub-intro {
+    margin: 12px 0 18px;
+    padding: 16px 20px;
+    border-radius: var(--rawaq-radius);
+    border: 1px solid var(--rawaq-line);
+    background: linear-gradient(135deg, #ffffff 0%, #f4f8fc 100%);
+    box-shadow: none;
+    color: var(--rawaq-ink);
+}
+
+#admin-dashboard .dashboard-hub-intro p {
+    color: var(--rawaq-muted);
+    opacity: 1;
+}
+
+#admin-dashboard .dashboard-zone-label {
+    margin: 18px 4px 10px;
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.06em;
+    color: var(--rawaq-muted);
+    text-transform: none;
+}
+
+/* منظّم HQ — لوحة رواق فاتحة بدلاً من ثقل كحلي مفرط */
+#admin-dashboard .dashboard-hq-organizer {
+    margin: 14px 0 16px;
+    padding: 16px 18px;
+    border-radius: 20px;
+    border: 1px solid var(--rawaq-line);
+    background: linear-gradient(165deg, #ffffff 0%, #f3f7fb 100%);
+    color: var(--rawaq-ink);
+    box-shadow: 0 10px 28px rgba(6, 46, 68, 0.07);
+}
+
+#admin-dashboard .dashboard-hq-organizer-kicker {
+    color: var(--rawaq-accent);
+}
+
+#admin-dashboard .dashboard-hq-organizer h3 {
+    color: var(--rawaq-navy);
+}
+
+#admin-dashboard .dashboard-hq-organizer p {
+    color: var(--rawaq-muted);
+}
+
+#admin-dashboard .dashboard-hq-search {
+    border: 1px solid var(--rawaq-line);
+    background: #fff;
+    border-radius: 14px;
+}
+
+#admin-dashboard .dashboard-hq-search i {
+    color: var(--rawaq-accent);
+}
+
+#admin-dashboard .dashboard-hq-search input {
+    color: var(--rawaq-ink);
+}
+
+#admin-dashboard .dashboard-hq-search input::placeholder {
+    color: #94a3b8;
+}
+
+#admin-dashboard .dashboard-hq-category-tabs button {
+    border: 1px solid var(--rawaq-line);
+    background: #fff;
+    color: var(--rawaq-ink);
+    border-radius: 12px;
+    padding: 9px 14px;
+    font-size: 0.8rem;
+}
+
+#admin-dashboard .dashboard-hq-category-tabs button.is-active {
+    border-color: rgba(21, 94, 148, 0.45);
+    background: linear-gradient(135deg, var(--rawaq-navy), var(--rawaq-accent));
+    color: #fff;
+    box-shadow: 0 8px 18px rgba(10, 75, 110, 0.22);
+}
+
+#admin-dashboard .dashboard-hq-filter-status {
+    color: var(--rawaq-muted);
+}
+
+/* أروقة الأقسام — قاعات واضحة بمقاس موحّد */
+#admin-dashboard .dashboard-tile-domain {
+    margin: 0 0 18px;
+    padding: 16px 16px 18px;
+    border-radius: 20px;
+    border: 1px solid var(--rawaq-line);
+    background: rgba(255, 255, 255, 0.88);
+    box-shadow: 0 8px 24px rgba(6, 46, 68, 0.05);
+}
+
+#admin-dashboard .dashboard-tile-domain-head {
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(6, 46, 68, 0.06);
+}
+
+#admin-dashboard .dashboard-tile-domain-head > i {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: rgba(14, 165, 233, 0.12);
+    color: var(--rawaq-accent);
+}
+
+#admin-dashboard .dashboard-tile-domain-head h4 {
+    font-size: 1.02rem;
+    font-weight: 800;
+    color: var(--rawaq-navy);
+}
+
+#admin-dashboard .dashboard-tile-domain-grid {
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 14px;
+}
+
+#admin-dashboard .dashboard-actions.dashboard-tiles-bento,
+#admin-dashboard .dashboard-grid.dashboard-tiles-bento {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 14px;
+}
+
+/* بلاطات موحّدة الحجم — أوضح وأهدأ */
+#admin-dashboard .dashboard-tile-card {
+    min-height: 176px;
+    padding: 20px 18px 18px;
+    border-radius: 16px;
+    border: 1px solid var(--rawaq-line);
+    background: #fff;
+    box-shadow: 0 6px 18px rgba(6, 46, 68, 0.05);
+    transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+}
+
+#admin-dashboard .dashboard-tile-card::before {
+    width: 3px;
+    top: 14%;
+    bottom: 14%;
+    background: linear-gradient(180deg, var(--rawaq-sky), var(--rawaq-accent));
+    opacity: 0.9;
+}
+
+#admin-dashboard .dashboard-tile-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(21, 94, 148, 0.32);
+    box-shadow: 0 14px 32px rgba(10, 75, 110, 0.12);
+}
+
+#admin-dashboard .dashboard-tile-card .dashboard-tile-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    font-size: 1.2rem;
+    margin-bottom: 12px;
+    background: linear-gradient(148deg, var(--rawaq-navy) 0%, var(--rawaq-accent) 55%, #2aa3d4 100%);
+    box-shadow: 0 8px 18px rgba(21, 94, 148, 0.28);
+}
+
+#admin-dashboard .dashboard-tile-card h3,
+#admin-dashboard .dashboard-tile-card .dashboard-tile-title {
+    font-size: 1rem;
+    line-height: 1.35;
+    color: var(--rawaq-navy);
+    font-weight: 800;
+}
+
+#admin-dashboard .dashboard-tile-card p,
+#admin-dashboard .dashboard-tile-card .dashboard-tile-text {
+    font-size: 0.78rem;
+    line-height: 1.55;
+    color: var(--rawaq-muted);
+}
+
+#admin-dashboard .dashboard-tile-glow {
+    opacity: 0.35;
+}
+
+#admin-dashboard .dashboard-main-nav {
+    margin: 12px 0 16px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    border: 1px solid var(--rawaq-line);
+    background: rgba(255, 255, 255, 0.9);
+}
+
+#admin-dashboard .dashboard-official-hub {
+    margin-top: 22px;
+    padding: 16px;
+    border-radius: 16px;
+    border: 1px solid var(--rawaq-line);
+    background: #fff;
+}
+
+@media (max-width: 760px) {
+    body.admin-session #admin-dashboard.show {
+        padding-inline: 8px;
+    }
+
+    #admin-dashboard .dashboard-tile-domain-grid,
+    #admin-dashboard .dashboard-actions.dashboard-tiles-bento,
+    #admin-dashboard .dashboard-grid.dashboard-tiles-bento {
+        grid-template-columns: 1fr;
+    }
+
+    #admin-dashboard .dashboard-tile-card {
+        min-height: 150px;
+    }
+}
+
+/* لا تُخفِ عناصر — احترم فقط [hidden] الموجود أصلاً */
+#admin-dashboard .dashboard-hq-organizer[hidden],
+#admin-dashboard .dashboard-tile-domain[hidden],
+#admin-dashboard .dashboard-tile-card[hidden] {
+    display: none !important;
+}
