@@ -1,313 +1,358 @@
-/* hrws364 — رواق نبراس: تنسيق بصري للداشبورد فقط (بدون إخفاء عناصر أو لمس السيستم) */
+/* hrws365 — رواق نبراس: إعادة تنظيم بصري واضحة للداشبورد فقط
+   لا إخفاء عناصر · لا لمس منطق البلاطات/الصلاحيات · يحترم [hidden] فقط */
 
 :root {
     --rawaq-navy: #062e44;
     --rawaq-blue: #0a4b6e;
     --rawaq-ink: #0d2840;
     --rawaq-muted: #5b6b7c;
-    --rawaq-line: rgba(6, 46, 68, 0.1);
-    --rawaq-paper: #f7f9fc;
+    --rawaq-line: rgba(6, 46, 68, 0.11);
+    --rawaq-paper: #f4f7fb;
     --rawaq-card: #ffffff;
     --rawaq-accent: #155e94;
     --rawaq-sky: #38bdf8;
     --rawaq-gold: #c9a227;
-    --rawaq-radius: 18px;
-    --rawaq-gap: clamp(14px, 1.8vw, 22px);
+    --rawaq-radius: 20px;
+    --rawaq-gap: clamp(16px, 2.2vw, 26px);
 }
 
-/* مساحة الرواق — خلفية هادئة أوضح */
+/* مساحة الرواق — أوضح وأقل ازدحاماً */
 body.admin-session #admin-dashboard.show {
     background:
-        linear-gradient(180deg, #ffffff 0%, var(--rawaq-paper) 28%, #eef3f8 100%);
-    padding-inline: clamp(10px, 2vw, 28px);
-    padding-bottom: 36px;
-    box-sizing: border-box;
+        linear-gradient(180deg, #ffffff 0%, #f7fafc 32%, #eef3f8 100%) !important;
+    padding-inline: clamp(14px, 2.6vw, 36px) !important;
+    padding-block: 8px 48px !important;
+    box-sizing: border-box !important;
 }
 
-/* شريط القيادة — أوضح وأخف بصرياً */
+body.admin-session #admin-dashboard.show::before {
+    opacity: 0.55 !important;
+    background:
+        radial-gradient(ellipse 70% 36% at 50% -6%, rgba(201, 162, 39, 0.07), transparent 55%),
+        radial-gradient(ellipse 80% 40% at 50% -8%, rgba(13, 40, 64, 0.05), transparent 58%) !important;
+}
+
+/* شريط القيادة — أنظف: كحلي واضح + لمسة ذهب خفيفة */
 #admin-dashboard .dashboard-command-shell {
-    margin: 12px 0 22px;
-    border-radius: 20px;
-    border: 1px solid var(--rawaq-line);
-    box-shadow: 0 12px 36px rgba(6, 46, 68, 0.08);
-    background: var(--rawaq-card);
+    margin: 14px 0 28px !important;
+    border-radius: 22px !important;
+    border: 1px solid var(--rawaq-line) !important;
+    border-top: 3px solid var(--rawaq-gold) !important;
+    box-shadow: 0 14px 40px rgba(6, 46, 68, 0.09) !important;
+    background: var(--rawaq-card) !important;
+    overflow: hidden !important;
 }
 
 #admin-dashboard .dashboard-command-shell-inner {
-    padding: 18px 22px;
-    gap: 14px 20px;
-    background: linear-gradient(118deg, var(--rawaq-navy) 0%, var(--rawaq-blue) 52%, #0d6b9a 100%);
+    padding: 20px 24px !important;
+    gap: 16px 22px !important;
+    background: linear-gradient(118deg, var(--rawaq-navy) 0%, var(--rawaq-blue) 48%, #0d6b9a 100%) !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
 }
 
 #admin-dashboard .dashboard-command-logo {
-    width: 48px;
-    height: 48px;
-    border-radius: 14px;
+    width: 52px !important;
+    height: 52px !important;
+    border-radius: 15px !important;
+    box-shadow: 0 0 0 2px rgba(201, 162, 39, 0.35) !important;
 }
 
 #admin-dashboard .dashboard-command-brand strong {
-    font-size: clamp(1.05rem, 2vw, 1.22rem);
-    font-weight: 800;
+    font-size: clamp(1.12rem, 2.2vw, 1.32rem) !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.01em !important;
 }
 
 #admin-dashboard .dashboard-command-brand small {
-    opacity: 0.88;
-    font-size: 0.78rem;
+    opacity: 0.9 !important;
+    font-size: 0.8rem !important;
 }
 
-/* شرائط حية وإجراءات سريعة — مسافات أنظف */
 #admin-dashboard .dashboard-live-kpi-strip,
 #admin-dashboard .dashboard-quick-actions {
-    margin-block: 10px 16px;
-    gap: var(--rawaq-gap);
+    margin-block: 12px 18px !important;
+    gap: var(--rawaq-gap) !important;
 }
 
 #admin-dashboard .dashboard-quick-action {
-    border-radius: 14px;
-    min-height: 44px;
-    padding: 10px 16px;
-    font-weight: 700;
-    border: 1px solid var(--rawaq-line);
-    background: var(--rawaq-card);
-    color: var(--rawaq-ink);
-    box-shadow: 0 4px 14px rgba(6, 46, 68, 0.05);
+    border-radius: 14px !important;
+    min-height: 46px !important;
+    padding: 11px 18px !important;
+    font-weight: 700 !important;
+    border: 1px solid var(--rawaq-line) !important;
+    background: var(--rawaq-card) !important;
+    color: var(--rawaq-ink) !important;
+    box-shadow: 0 4px 14px rgba(6, 46, 68, 0.05) !important;
 }
 
 #admin-dashboard .dashboard-quick-action:hover {
-    border-color: rgba(21, 94, 148, 0.35);
-    color: var(--rawaq-accent);
+    border-color: rgba(201, 162, 39, 0.45) !important;
+    color: var(--rawaq-navy) !important;
 }
 
-/* هوية الشركة — رواق هادئ */
+/* هوية + مقدمة — نفس العناصر، مساحة أوضح */
 #admin-dashboard .dashboard-company-identity {
-    margin: 8px 0 20px;
-    padding: 18px 20px;
-    border-radius: var(--rawaq-radius);
-    border: 1px solid var(--rawaq-line);
-    background: rgba(255, 255, 255, 0.92);
-    box-shadow: 0 10px 28px rgba(6, 46, 68, 0.06);
+    margin: 10px 0 24px !important;
+    padding: 20px 22px !important;
+    border-radius: var(--rawaq-radius) !important;
+    border: 1px solid var(--rawaq-line) !important;
+    border-inline-start: 4px solid var(--rawaq-gold) !important;
+    background: rgba(255, 255, 255, 0.96) !important;
+    box-shadow: 0 10px 28px rgba(6, 46, 68, 0.06) !important;
 }
 
 #admin-dashboard .dashboard-identity-kicker {
-    font-size: clamp(1.1rem, 2.2vw, 1.4rem);
-    color: var(--rawaq-navy);
+    font-size: clamp(1.15rem, 2.3vw, 1.45rem) !important;
+    color: var(--rawaq-navy) !important;
 }
 
 #admin-dashboard .dashboard-hub-intro {
-    margin: 12px 0 18px;
-    padding: 16px 20px;
-    border-radius: var(--rawaq-radius);
-    border: 1px solid var(--rawaq-line);
-    background: linear-gradient(135deg, #ffffff 0%, #f4f8fc 100%);
-    box-shadow: none;
-    color: var(--rawaq-ink);
+    margin: 14px 0 22px !important;
+    padding: 18px 22px !important;
+    border-radius: var(--rawaq-radius) !important;
+    border: 1px solid var(--rawaq-line) !important;
+    background: linear-gradient(135deg, #ffffff 0%, #f4f8fc 100%) !important;
+    box-shadow: none !important;
+    color: var(--rawaq-ink) !important;
 }
 
 #admin-dashboard .dashboard-hub-intro p {
-    color: var(--rawaq-muted);
-    opacity: 1;
+    color: var(--rawaq-muted) !important;
+    opacity: 1 !important;
 }
 
 #admin-dashboard .dashboard-zone-label {
-    margin: 18px 4px 10px;
-    font-size: 0.78rem;
-    font-weight: 800;
-    letter-spacing: 0.06em;
-    color: var(--rawaq-muted);
-    text-transform: none;
+    margin: 22px 6px 12px !important;
+    font-size: 0.8rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.08em !important;
+    color: var(--rawaq-muted) !important;
 }
 
-/* منظّم HQ — لوحة رواق فاتحة بدلاً من ثقل كحلي مفرط */
+/* منظّم HQ — رواق فاتح بدل كتلة كحلية ثقيلة */
 #admin-dashboard .dashboard-hq-organizer {
-    margin: 14px 0 16px;
-    padding: 16px 18px;
-    border-radius: 20px;
-    border: 1px solid var(--rawaq-line);
-    background: linear-gradient(165deg, #ffffff 0%, #f3f7fb 100%);
-    color: var(--rawaq-ink);
-    box-shadow: 0 10px 28px rgba(6, 46, 68, 0.07);
+    margin: 16px 0 20px !important;
+    padding: 20px 22px !important;
+    border-radius: 22px !important;
+    border: 1px solid var(--rawaq-line) !important;
+    border-top: 3px solid var(--rawaq-gold) !important;
+    background: linear-gradient(165deg, #ffffff 0%, #f3f7fb 100%) !important;
+    color: var(--rawaq-ink) !important;
+    box-shadow: 0 12px 32px rgba(6, 46, 68, 0.08) !important;
 }
 
 #admin-dashboard .dashboard-hq-organizer-kicker {
-    color: var(--rawaq-accent);
+    color: var(--rawaq-accent) !important;
 }
 
 #admin-dashboard .dashboard-hq-organizer h3 {
-    color: var(--rawaq-navy);
+    color: var(--rawaq-navy) !important;
+    font-size: clamp(1.1rem, 2.1vw, 1.4rem) !important;
 }
 
 #admin-dashboard .dashboard-hq-organizer p {
-    color: var(--rawaq-muted);
+    color: var(--rawaq-muted) !important;
 }
 
 #admin-dashboard .dashboard-hq-search {
-    border: 1px solid var(--rawaq-line);
-    background: #fff;
-    border-radius: 14px;
+    border: 1px solid var(--rawaq-line) !important;
+    background: #fff !important;
+    border-radius: 14px !important;
+    min-height: 50px !important;
 }
 
 #admin-dashboard .dashboard-hq-search i {
-    color: var(--rawaq-accent);
+    color: var(--rawaq-accent) !important;
 }
 
 #admin-dashboard .dashboard-hq-search input {
-    color: var(--rawaq-ink);
+    color: var(--rawaq-ink) !important;
 }
 
 #admin-dashboard .dashboard-hq-search input::placeholder {
-    color: #94a3b8;
+    color: #94a3b8 !important;
+}
+
+#admin-dashboard .dashboard-hq-category-tabs {
+    gap: 10px !important;
+    margin-top: 18px !important;
 }
 
 #admin-dashboard .dashboard-hq-category-tabs button {
-    border: 1px solid var(--rawaq-line);
-    background: #fff;
-    color: var(--rawaq-ink);
-    border-radius: 12px;
-    padding: 9px 14px;
-    font-size: 0.8rem;
+    border: 1px solid var(--rawaq-line) !important;
+    background: #fff !important;
+    color: var(--rawaq-ink) !important;
+    border-radius: 12px !important;
+    padding: 10px 16px !important;
+    font-size: 0.82rem !important;
+    font-weight: 700 !important;
 }
 
 #admin-dashboard .dashboard-hq-category-tabs button.is-active {
-    border-color: rgba(21, 94, 148, 0.45);
-    background: linear-gradient(135deg, var(--rawaq-navy), var(--rawaq-accent));
-    color: #fff;
-    box-shadow: 0 8px 18px rgba(10, 75, 110, 0.22);
+    border-color: rgba(21, 94, 148, 0.4) !important;
+    background: linear-gradient(135deg, var(--rawaq-navy), var(--rawaq-accent)) !important;
+    color: #fff !important;
+    box-shadow: 0 8px 18px rgba(10, 75, 110, 0.22) !important;
 }
 
 #admin-dashboard .dashboard-hq-filter-status {
-    color: var(--rawaq-muted);
+    color: var(--rawaq-muted) !important;
 }
 
-/* أروقة الأقسام — قاعات واضحة بمقاس موحّد */
+/* أروقة الأقسام — قاعات واضحة بدل كروت مكدّسة */
 #admin-dashboard .dashboard-tile-domain {
-    margin: 0 0 18px;
-    padding: 16px 16px 18px;
-    border-radius: 20px;
-    border: 1px solid var(--rawaq-line);
-    background: rgba(255, 255, 255, 0.88);
-    box-shadow: 0 8px 24px rgba(6, 46, 68, 0.05);
+    margin: 0 0 26px !important;
+    padding: 20px 18px 22px !important;
+    border-radius: 22px !important;
+    border: 1px solid var(--rawaq-line) !important;
+    background: rgba(255, 255, 255, 0.94) !important;
+    box-shadow: 0 10px 28px rgba(6, 46, 68, 0.06) !important;
 }
 
 #admin-dashboard .dashboard-tile-domain-head {
-    margin-bottom: 14px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid rgba(6, 46, 68, 0.06);
+    margin-bottom: 16px !important;
+    padding: 0 4px 12px !important;
+    border-bottom: 1px solid rgba(6, 46, 68, 0.08) !important;
+    gap: 12px !important;
 }
 
 #admin-dashboard .dashboard-tile-domain-head > i {
-    width: 40px;
-    height: 40px;
-    border-radius: 12px;
-    background: rgba(14, 165, 233, 0.12);
-    color: var(--rawaq-accent);
+    width: 44px !important;
+    height: 44px !important;
+    border-radius: 13px !important;
+    background: linear-gradient(145deg, rgba(14, 165, 233, 0.14), rgba(201, 162, 39, 0.12)) !important;
+    color: var(--rawaq-accent) !important;
 }
 
 #admin-dashboard .dashboard-tile-domain-head h4 {
-    font-size: 1.02rem;
-    font-weight: 800;
-    color: var(--rawaq-navy);
+    font-size: 1.08rem !important;
+    font-weight: 800 !important;
+    color: var(--rawaq-navy) !important;
 }
 
+#admin-dashboard .dashboard-tile-domain-head span {
+    color: var(--rawaq-muted) !important;
+}
+
+/* شبكة بلاطات أكبر · حجم موحّد */
 #admin-dashboard .dashboard-tile-domain-grid {
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 14px;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
+    gap: 18px !important;
 }
 
 #admin-dashboard .dashboard-actions.dashboard-tiles-bento,
-#admin-dashboard .dashboard-grid.dashboard-tiles-bento {
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-    gap: 14px;
+#admin-dashboard .dashboard-grid.dashboard-tiles-bento,
+#admin-dashboard .dashboard-tile-groups .dashboard-tiles-bento {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)) !important;
+    gap: 18px !important;
 }
 
-/* بلاطات موحّدة الحجم — أوضح وأهدأ */
 #admin-dashboard .dashboard-tile-card {
-    min-height: 176px;
-    padding: 20px 18px 18px;
-    border-radius: 16px;
-    border: 1px solid var(--rawaq-line);
-    background: #fff;
-    box-shadow: 0 6px 18px rgba(6, 46, 68, 0.05);
-    transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+    min-height: 198px !important;
+    height: auto !important;
+    padding: 22px 20px 20px !important;
+    border-radius: 18px !important;
+    border: 1px solid var(--rawaq-line) !important;
+    border-top: 3px solid transparent !important;
+    background: #fff !important;
+    box-shadow: 0 8px 22px rgba(6, 46, 68, 0.055) !important;
+    transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease !important;
 }
 
 #admin-dashboard .dashboard-tile-card::before {
-    width: 3px;
-    top: 14%;
-    bottom: 14%;
-    background: linear-gradient(180deg, var(--rawaq-sky), var(--rawaq-accent));
-    opacity: 0.9;
+    width: 3px !important;
+    top: 16% !important;
+    bottom: 16% !important;
+    background: linear-gradient(180deg, var(--rawaq-gold), var(--rawaq-sky), var(--rawaq-accent)) !important;
+    opacity: 1 !important;
 }
 
 #admin-dashboard .dashboard-tile-card:hover {
-    transform: translateY(-4px);
-    border-color: rgba(21, 94, 148, 0.32);
-    box-shadow: 0 14px 32px rgba(10, 75, 110, 0.12);
+    transform: translateY(-5px) !important;
+    border-color: rgba(21, 94, 148, 0.28) !important;
+    border-top-color: var(--rawaq-gold) !important;
+    box-shadow: 0 16px 36px rgba(10, 75, 110, 0.13) !important;
 }
 
 #admin-dashboard .dashboard-tile-card .dashboard-tile-icon {
-    width: 48px;
-    height: 48px;
-    border-radius: 14px;
-    font-size: 1.2rem;
-    margin-bottom: 12px;
-    background: linear-gradient(148deg, var(--rawaq-navy) 0%, var(--rawaq-accent) 55%, #2aa3d4 100%);
-    box-shadow: 0 8px 18px rgba(21, 94, 148, 0.28);
+    width: 52px !important;
+    height: 52px !important;
+    border-radius: 15px !important;
+    font-size: 1.28rem !important;
+    margin-bottom: 14px !important;
+    background: linear-gradient(148deg, var(--rawaq-navy) 0%, var(--rawaq-accent) 55%, #2aa3d4 100%) !important;
+    box-shadow: 0 8px 18px rgba(21, 94, 148, 0.28) !important;
+    color: #fff !important;
 }
 
 #admin-dashboard .dashboard-tile-card h3,
 #admin-dashboard .dashboard-tile-card .dashboard-tile-title {
-    font-size: 1rem;
-    line-height: 1.35;
-    color: var(--rawaq-navy);
-    font-weight: 800;
+    font-size: 1.05rem !important;
+    line-height: 1.35 !important;
+    color: var(--rawaq-navy) !important;
+    font-weight: 800 !important;
 }
 
 #admin-dashboard .dashboard-tile-card p,
 #admin-dashboard .dashboard-tile-card .dashboard-tile-text {
-    font-size: 0.78rem;
-    line-height: 1.55;
-    color: var(--rawaq-muted);
+    font-size: 0.8rem !important;
+    line-height: 1.55 !important;
+    color: var(--rawaq-muted) !important;
 }
 
 #admin-dashboard .dashboard-tile-glow {
-    opacity: 0.35;
+    opacity: 0.28 !important;
 }
 
 #admin-dashboard .dashboard-main-nav {
-    margin: 12px 0 16px;
-    padding: 10px 12px;
-    border-radius: 14px;
-    border: 1px solid var(--rawaq-line);
-    background: rgba(255, 255, 255, 0.9);
+    margin: 14px 0 20px !important;
+    padding: 12px 14px !important;
+    border-radius: 16px !important;
+    border: 1px solid var(--rawaq-line) !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+    box-shadow: 0 6px 18px rgba(6, 46, 68, 0.05) !important;
+}
+
+#admin-dashboard .dashboard-official-hub,
+#admin-dashboard .dashboard-partners-block,
+#admin-dashboard .dashboard-section-block,
+#admin-dashboard .dashboard-header {
+    margin-block: 14px 20px !important;
+}
+
+#admin-dashboard .dashboard-partners-block {
+    border-top: 3px solid var(--rawaq-gold) !important;
 }
 
 #admin-dashboard .dashboard-official-hub {
-    margin-top: 22px;
-    padding: 16px;
-    border-radius: 16px;
-    border: 1px solid var(--rawaq-line);
-    background: #fff;
+    margin-top: 26px !important;
+    padding: 18px !important;
+    border-radius: 18px !important;
+    border: 1px solid var(--rawaq-line) !important;
+    background: #fff !important;
 }
 
 @media (max-width: 760px) {
     body.admin-session #admin-dashboard.show {
-        padding-inline: 8px;
+        padding-inline: 10px !important;
     }
 
     #admin-dashboard .dashboard-tile-domain-grid,
     #admin-dashboard .dashboard-actions.dashboard-tiles-bento,
     #admin-dashboard .dashboard-grid.dashboard-tiles-bento {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr !important;
     }
 
     #admin-dashboard .dashboard-tile-card {
-        min-height: 150px;
+        min-height: 168px !important;
     }
 }
 
 /* لا تُخفِ عناصر — احترم فقط [hidden] الموجود أصلاً */
 #admin-dashboard .dashboard-hq-organizer[hidden],
 #admin-dashboard .dashboard-tile-domain[hidden],
-#admin-dashboard .dashboard-tile-card[hidden] {
+#admin-dashboard .dashboard-tile-card[hidden],
+#admin-dashboard [hidden] {
     display: none !important;
 }
