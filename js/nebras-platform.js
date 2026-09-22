@@ -14647,11 +14647,12 @@
             saveSystemData({ skipCloud: true, skipMutationMark: true });
         }
 
+        /* door-04 أفقي (1024×629) يكسر صف الهيدرا — بديل عمودي من الملف التعريفي */
         const NEBRAS_DOOR_SHOWCASE_URLS = [
             'images/doors/header-showcase/door-01.png',
             'images/doors/header-showcase/door-02.png',
             'images/doors/header-showcase/door-03.png',
-            'images/doors/header-showcase/door-04.png',
+            'images/profile-2026/doors/doors-09.jpg',
             'images/doors/header-showcase/door-05.png',
             'images/doors/header-showcase/door-06.png'
         ];
@@ -14698,9 +14699,12 @@
         }
 
         function wireHeaderHeroDoorShowcase() {
-            const trigger = document.getElementById('header-campaign-door-aside');
+            const trigger = document.getElementById('header-aside-doors') ||
+                document.getElementById('header-campaign-door-aside');
             if (!trigger || trigger.dataset.nebrasDoorWired === '1') return;
             trigger.dataset.nebrasDoorWired = '1';
+            if (!trigger.getAttribute('role')) trigger.setAttribute('role', 'button');
+            if (!trigger.hasAttribute('tabindex')) trigger.setAttribute('tabindex', '0');
             function openDoorDesigner() {
                 if (typeof openNebrasWorkspace === 'function') {
                     openNebrasWorkspace({ pillar: 'store', view: 'door-designer' });
@@ -23472,7 +23476,7 @@
             { src: 'images/doors/header-showcase/door-03.png', headline: 3 },
             { src: 'images/hero-slide-08-doors-trio.png', headline: 4 },
             { src: 'images/hero-slide-05-doors-showcase.png', headline: 5 },
-            { src: 'images/doors/header-showcase/door-04.png', headline: 6 },
+            { src: 'images/profile-2026/doors/doors-09.jpg', headline: 6 },
             { src: 'images/doors/header-showcase/door-05.png', headline: 7 },
             { src: 'images/doors/header-showcase/door-06.png', headline: 8 },
             { src: 'images/hero-slide-01-factory-banner.png', headline: 9 },
@@ -23489,7 +23493,7 @@
             'images/doors/header-showcase/door-01.png',
             'images/doors/header-showcase/door-02.png',
             'images/doors/header-showcase/door-03.png',
-            'images/doors/header-showcase/door-04.png',
+            'images/profile-2026/doors/doors-09.jpg',
             'images/hero-slide-08-doors-trio.png',
             'images/doors/header-showcase/door-05.png'
         ];
@@ -23677,14 +23681,14 @@
         }
 
         function buildNebrasHydraStageHtml() {
-            const deploy = (document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws356';
+            const deploy = (document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws357';
             const doors = (typeof NEBRAS_DOOR_SHOWCASE_URLS !== 'undefined' && NEBRAS_DOOR_SHOWCASE_URLS.length)
                 ? NEBRAS_DOOR_SHOWCASE_URLS
                 : [
                     'images/doors/header-showcase/door-01.png',
                     'images/doors/header-showcase/door-02.png',
                     'images/doors/header-showcase/door-03.png',
-                    'images/doors/header-showcase/door-04.png',
+                    'images/profile-2026/doors/doors-09.jpg',
                     'images/doors/header-showcase/door-05.png',
                     'images/doors/header-showcase/door-06.png'
                 ];
@@ -23788,6 +23792,9 @@
             const slides = collectHeroSlideshowSlidesFromAdminForm();
             if (!slides.length && !systemSettings.heroSlideshowSlides) {
                 slides.push.apply(slides, HERO_SLIDESHOW_DEFAULT.map(function(s) {
+                    if (s && s.stage === 'hydra-products') {
+                        return { stage: 'hydra-products', headline: s.headline };
+                    }
                     return { src: s.src, headline: s.headline };
                 }));
             }

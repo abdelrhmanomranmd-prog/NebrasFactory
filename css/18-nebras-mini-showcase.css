@@ -9,8 +9,8 @@
 
 .nebras-mini-showcase--hero,
 .header-hero-rail .nebras-mini-showcase--partners {
-    --mini-showcase-w: clamp(88px, 13vw, 118px);
-    --mini-showcase-h: clamp(154px, 23vw, 206px);
+    --mini-showcase-w: clamp(92px, 11vw, 112px);
+    --mini-showcase-h: clamp(160px, 20vw, 196px);
 }
 
 .nebras-mini-showcase--stage {
@@ -89,14 +89,14 @@
     height: 100%;
     max-width: 100%;
     max-height: 100%;
-    object-fit: contain;
-    object-position: center center;
+    object-fit: cover;
+    object-position: center 15%;
     image-rendering: auto;
     -ms-interpolation-mode: bicubic;
-    background: #f4f7fb;
+    background: #0d1a28;
     opacity: 0;
     transform: translateZ(0);
-    padding: 8px 7px;
+    padding: 0;
     box-sizing: border-box;
     animation: nebrasMiniShowcaseFade var(--cycle-duration, 18s) ease-in-out infinite;
     -webkit-backface-visibility: hidden;
