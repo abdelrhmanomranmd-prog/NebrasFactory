@@ -1,0 +1,154 @@
+/* hrws356 — هيدرا منتجات حقيقية: عرض عريض بدون فراغ كحلي */
+.nebras-hydra-stage {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    grid-template-rows: 1fr auto;
+    background:
+        radial-gradient(ellipse 80% 60% at 50% 20%, rgba(28, 58, 92, 0.45), transparent 70%),
+        linear-gradient(180deg, #0b1522 0%, #061018 55%, #040a12 100%);
+    overflow: hidden;
+}
+
+.nebras-hydra-stage-doors {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: clamp(6px, 1vw, 14px);
+    align-items: end;
+    padding: clamp(16px, 3vw, 36px) clamp(12px, 2.5vw, 28px) 8px;
+    min-height: 0;
+}
+
+.nebras-hydra-stage-door {
+    margin: 0;
+    position: relative;
+    height: 100%;
+    min-height: clamp(220px, 38vw, 460px);
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.nebras-hydra-stage-door img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    max-height: clamp(240px, 42vw, 500px);
+    object-fit: contain;
+    object-position: bottom center;
+    filter: drop-shadow(0 18px 28px rgba(0, 0, 0, 0.45));
+    transition: transform 0.55s ease, filter 0.55s ease;
+}
+
+.nebras-hydra-stage-door:nth-child(odd) img {
+    transform: translateY(4px);
+}
+
+.nebras-hydra-stage-door:nth-child(even) img {
+    transform: translateY(-10px);
+}
+
+.nebras-hydra-stage:hover .nebras-hydra-stage-door img {
+    filter: drop-shadow(0 14px 22px rgba(0, 0, 0, 0.4));
+}
+
+.nebras-hydra-stage-door:hover img {
+    transform: translateY(-16px) scale(1.03);
+    filter: drop-shadow(0 22px 34px rgba(0, 0, 0, 0.5));
+}
+
+.nebras-hydra-stage-brand {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 10px 16px 18px;
+    text-align: center;
+    background: linear-gradient(180deg, transparent, rgba(4, 10, 18, 0.72));
+}
+
+.nebras-hydra-brand {
+    margin: 0;
+    font-family: "Cairo", "Tajawal", sans-serif;
+    font-weight: 800;
+    font-size: clamp(1.35rem, 2.6vw, 2rem);
+    letter-spacing: 0.04em;
+    color: #f4f7fb;
+}
+
+.nebras-hydra-line {
+    margin: 0;
+    font-family: "Cairo", "Tajawal", sans-serif;
+    font-size: clamp(0.82rem, 1.5vw, 1.05rem);
+    color: rgba(220, 230, 240, 0.88);
+    max-width: 36rem;
+}
+
+.hero-slide--hydra-stage {
+    background: #061018;
+}
+
+.hero.hero-real.hero--hydra-stage {
+    min-height: clamp(360px, 52vw, 560px);
+    height: clamp(360px, 52vw, 560px);
+}
+
+body.nebras-hero-hydra-stage .hero-copy,
+body.nebras-hero-hydra-stage .hero-mobile-panel {
+    opacity: 0.18;
+    pointer-events: none;
+}
+
+body.nebras-hero-hydra-stage .hero-dynamic-headline-wrap {
+    opacity: 0;
+}
+
+body.nebras-hero-hydra-stage .hero.hero-real.hero--hydra-stage::before {
+    opacity: 0.12;
+}
+
+/* هيدرا قديمة (كولاج مربع) — غطِّ العرض بدل فراغ contain */
+.hero-slide--hydra-full .hero-slide-img {
+    object-fit: cover !important;
+    object-position: center center !important;
+    padding: 0 !important;
+}
+
+.hero.hero-real.hero--hydra-full {
+    min-height: clamp(380px, calc(100dvh - var(--nebras-chrome-h, 420px)), 720px);
+    height: clamp(380px, calc(100dvh - var(--nebras-chrome-h, 420px)), 720px);
+}
+
+@media (max-width: 900px) {
+    .nebras-hydra-stage-doors {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 8px;
+    }
+    .nebras-hydra-stage-door:nth-child(n + 4) {
+        display: none;
+    }
+    .nebras-hydra-stage-door {
+        min-height: clamp(200px, 48vw, 340px);
+    }
+    .hero.hero-real.hero--hydra-stage {
+        min-height: clamp(320px, 78vw, 480px);
+        height: clamp(320px, 78vw, 480px);
+    }
+}
+
+@media (max-width: 520px) {
+    .nebras-hydra-stage-doors {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .nebras-hydra-stage-door:nth-child(n + 3) {
+        display: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .nebras-hydra-stage-door img,
+    .nebras-hydra-stage-door:hover img {
+        transition: none;
+        transform: none;
+    }
+}

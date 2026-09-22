@@ -23466,33 +23466,32 @@
         ];
 
         const HERO_SLIDESHOW_DEFAULT = [
-            { src: 'images/hero-slide-01-factory-banner.png', headline: 0 },
-            { src: 'images/hero-slide-03-premium-wpc.png', headline: 1 },
-            { src: 'images/hero-slide-08-doors-trio.png', headline: 2 },
-            { src: 'images/hero-slide-09-doors-four.png', headline: 3 },
-            { src: 'images/hero-slide-05-doors-showcase.png', headline: 4 },
-            { src: 'images/hero-slide-12-factory-national.png', headline: 5 },
-            { src: 'images/hero-slide-11-wpc-guide.png', headline: 6 },
-            { src: 'images/hero-slide-10-kingdom-map.png', headline: 7 },
-            { src: 'images/hero-slide-13-wpc-protection.png', headline: 8 },
-            { src: 'images/hero-slide-04-exhibition.png', headline: 9 },
-            { src: 'images/nebras-door-designer-icon-bg.png', headline: 10 },
-            { src: 'images/hero-slide-06-color-catalog.png', headline: 11 },
-            { src: 'images/hero-slide-07-quality.png', headline: 12 }
+            { stage: 'hydra-products', headline: 0 },
+            { src: 'images/doors/header-showcase/door-01.png', headline: 1 },
+            { src: 'images/doors/header-showcase/door-02.png', headline: 2 },
+            { src: 'images/doors/header-showcase/door-03.png', headline: 3 },
+            { src: 'images/hero-slide-08-doors-trio.png', headline: 4 },
+            { src: 'images/hero-slide-05-doors-showcase.png', headline: 5 },
+            { src: 'images/doors/header-showcase/door-04.png', headline: 6 },
+            { src: 'images/doors/header-showcase/door-05.png', headline: 7 },
+            { src: 'images/doors/header-showcase/door-06.png', headline: 8 },
+            { src: 'images/hero-slide-01-factory-banner.png', headline: 9 },
+            { src: 'images/hero-slide-03-premium-wpc.png', headline: 10 },
+            { src: 'images/hero-slide-09-doors-four.png', headline: 11 }
         ];
 
         let heroSlideshowTimer = null;
         let heroSlideshowIndex = 0;
         let heroSlideshowSlides = [];
 
-        /* ===== الهيدر السينمائي — صور نبراس حية خلف الهيدر ===== */
+        /* ===== الهيدر السينمائي — أبواب منتجات حقيقية ===== */
         const HEADER_CINEMATIC_SLIDES = [
-            'images/hero-slide-11-wpc-guide.png',
-            'images/hero-slide-01-factory-banner.png',
+            'images/doors/header-showcase/door-01.png',
+            'images/doors/header-showcase/door-02.png',
+            'images/doors/header-showcase/door-03.png',
+            'images/doors/header-showcase/door-04.png',
             'images/hero-slide-08-doors-trio.png',
-            'images/hero-slide-03-premium-wpc.png',
-            'images/hero-slide-13-wpc-protection.png',
-            'images/hero-slide-12-factory-national.png'
+            'images/doors/header-showcase/door-05.png'
         ];
         let headerCinematicInited = false;
 
@@ -23656,6 +23655,7 @@
         function preloadHeroSlideImages(slides) {
             if (!Array.isArray(slides) || !slides.length) return;
             slides.forEach(function(slide) {
+                if (!slide || isNebrasHydraProductStage(slide) || !slide.src) return;
                 const img = new Image();
                 img.decoding = 'async';
                 img.loading = 'eager';
@@ -23672,18 +23672,59 @@
                 || s.indexOf('hero-slide-10-kingdom-map') >= 0;
         }
 
+        function isNebrasHydraProductStage(slide) {
+            return !!(slide && (slide.stage === 'hydra-products' || slide.type === 'hydra-products'));
+        }
+
+        function buildNebrasHydraStageHtml() {
+            const deploy = (document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws356';
+            const doors = (typeof NEBRAS_DOOR_SHOWCASE_URLS !== 'undefined' && NEBRAS_DOOR_SHOWCASE_URLS.length)
+                ? NEBRAS_DOOR_SHOWCASE_URLS
+                : [
+                    'images/doors/header-showcase/door-01.png',
+                    'images/doors/header-showcase/door-02.png',
+                    'images/doors/header-showcase/door-03.png',
+                    'images/doors/header-showcase/door-04.png',
+                    'images/doors/header-showcase/door-05.png',
+                    'images/doors/header-showcase/door-06.png'
+                ];
+            const figs = doors.map(function(src, i) {
+                const href = (typeof normalizeMediaPath === 'function' ? normalizeMediaPath(src) : src);
+                const bust = href + (href.indexOf('?') >= 0 ? '&' : '?') + 'v=' + deploy;
+                const loading = i < 3 ? 'eager' : 'lazy';
+                const pri = i === 0 ? ' fetchpriority="high"' : '';
+                return '<figure class="nebras-hydra-stage-door">' +
+                    '<img src="' + escapeHtmlAttr(bust) + '" alt="باب WPC نبراس" width="440" height="760" loading="' + loading + '" decoding="async"' + pri + '>' +
+                    '</figure>';
+            }).join('');
+            return '<div class="nebras-hydra-stage" role="img" aria-label="معرض أبواب نبراس الحقيقية">' +
+                '<div class="nebras-hydra-stage-doors">' + figs + '</div>' +
+                '<div class="nebras-hydra-stage-brand">' +
+                '<p class="nebras-hydra-brand">نبراس</p>' +
+                '<p class="nebras-hydra-line">أبواب WPC حقيقية من مصنع القصيم — جودة ومظهر متناسق</p>' +
+                '</div></div>';
+        }
+
         function syncHeroHydraFullMode(slide) {
             const hero = document.getElementById('site-hero');
             if (!hero) return;
-            const on = !!(slide && isNebrasHydraHeroSlide(slide.src));
-            hero.classList.toggle('hero--hydra-full', on);
-            document.body.classList.toggle('nebras-hero-hydra-full', on);
+            const stageOn = isNebrasHydraProductStage(slide);
+            const collageOn = !!(!stageOn && slide && isNebrasHydraHeroSlide(slide.src));
+            hero.classList.toggle('hero--hydra-stage', stageOn);
+            hero.classList.toggle('hero--hydra-full', collageOn);
+            document.body.classList.toggle('nebras-hero-hydra-stage', stageOn);
+            document.body.classList.toggle('nebras-hero-hydra-full', collageOn);
         }
 
         function buildHeroSlideMarkup(slide, idx, isActive) {
+            const activeClass = isActive ? ' is-active' : '';
+            if (isNebrasHydraProductStage(slide)) {
+                return '<div class="hero-slide hero-slide--hydra-stage' + activeClass + '" data-slide="' + idx + '" data-hydra-stage="1">' +
+                    buildNebrasHydraStageHtml() +
+                    '</div>';
+            }
             const url = heroSlideAssetUrl(slide.src);
             const fallback = heroSlideAssetUrl(HERO_BANNER_FALLBACKS[0]);
-            const activeClass = isActive ? ' is-active' : '';
             const loadAttr = idx === 0 ? 'eager' : 'lazy';
             const priority = idx === 0 ? ' fetchpriority="high"' : '';
             const isVideo = NEBRAS_VIDEO_EXT_RE.test(String(slide.src || url || ''));
@@ -24098,14 +24139,34 @@
             const custom = systemSettings.heroSlideshowSlides;
             if (Array.isArray(custom) && custom.length) {
                 return custom.map(function(slide, idx) {
+                    if (slide && (slide.stage === 'hydra-products' || slide.type === 'hydra-products')) {
+                        return {
+                            stage: 'hydra-products',
+                            headline: typeof slide.headline === 'number' ? slide.headline : 0
+                        };
+                    }
                     const fallback = HERO_SLIDESHOW_DEFAULT[idx % HERO_SLIDESHOW_DEFAULT.length];
+                    let src = slide && (slide.src || slide.image);
+                    if (!src && fallback && fallback.src) src = fallback.src;
+                    if (isNebrasHydraHeroSlide(src)) {
+                        if (idx === 0) {
+                            return {
+                                stage: 'hydra-products',
+                                headline: typeof slide.headline === 'number' ? slide.headline : 0
+                            };
+                        }
+                        src = NEBRAS_DOOR_SHOWCASE_URLS[idx % NEBRAS_DOOR_SHOWCASE_URLS.length];
+                    }
                     return {
-                        src: normalizeHeroBannerPath(slide.src || slide.image || fallback.src),
+                        src: normalizeHeroBannerPath(src || HERO_BANNER_FALLBACKS[0]),
                         headline: typeof slide.headline === 'number' ? slide.headline : (idx % HERO_SLIDESHOW_DEFAULT.length)
                     };
                 });
             }
             return HERO_SLIDESHOW_DEFAULT.map(function(slide) {
+                if (slide && slide.stage === 'hydra-products') {
+                    return { stage: 'hydra-products', headline: slide.headline };
+                }
                 return { src: normalizeHeroBannerPath(slide.src), headline: slide.headline };
             });
         }

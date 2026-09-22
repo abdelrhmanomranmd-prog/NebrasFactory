@@ -612,12 +612,12 @@ body::before {
 }
 
 
-/* هيدرا في الهيدر — عرض كامل بدون قص Ken Burns */
+/* هيدرا في الهيدر — غطِّ الشريط بدون فراغ جانبي */
 .header-cinematic-slide--hydra-full {
     inset: 0 !important;
     width: 100% !important;
     height: 100% !important;
-    object-fit: contain !important;
+    object-fit: cover !important;
     object-position: center center !important;
     background: #06101c;
 }
@@ -629,6 +629,6 @@ body::before {
 }
 
 .header-cinematic:has(.header-cinematic-slide--hydra-full.is-active) .header-cinematic-veil {
-    opacity: 0.35;
-    background: linear-gradient(180deg, rgba(6, 16, 28, 0.2) 0%, rgba(6, 16, 28, 0.55) 100%);
+    opacity: 0.28;
+    background: linear-gradient(180deg, rgba(6, 16, 28, 0.15) 0%, rgba(6, 16, 28, 0.5) 100%);
 }
