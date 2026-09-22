@@ -32070,6 +32070,7 @@
                 if (typeof markGovernanceRevision === 'function') markGovernanceRevision();
                 if (typeof markSensitiveCloudPending === 'function') markSensitiveCloudPending();
             }
+            options.storeKeys = saveKeys;
             purgeDeprecatedVisitorIcons();
             let localOk = true;
             try {
