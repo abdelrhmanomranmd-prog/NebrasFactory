@@ -300,7 +300,7 @@
         if (!token || !rows || !rows.length) return { ok: false, error: 'no_token_or_rows' };
         const admin = getCurrentAdminUser();
         const scoped = admin ? filterCloudRowsForAdminSession(rows, admin) : rows.slice();
-        if (!scoped.length) return { ok: true, count: 0, note: 'no_allowed_rows' };
+        if (!scoped.length) return { ok: false, error: 'no_allowed_rows', count: 0, note: 'no_allowed_rows' };
         const batchSize = 20;
         let pushed = 0;
         try {

@@ -276,7 +276,7 @@
         options = options || {};
         storeKeys = (storeKeys && storeKeys.length) ? storeKeys : ODOO_WRITE_KEYS.slice();
         storeKeys = filterKeysForAdmin(storeKeys);
-        if (!storeKeys.length) return true;
+        if (!storeKeys.length) return false;
         if (typeof global.isNebrasCloudHydrating === 'function' && global.isNebrasCloudHydrating()) {
             /* حفظ مباشر: انتظر اكتمال التحميل ثم ارفع — لا تؤجّل صامتاً */
             if (typeof global.waitForNebrasCloudHydrate === 'function') {

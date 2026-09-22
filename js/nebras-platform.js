@@ -31668,7 +31668,7 @@
                 publicRows = filterCloudRowsForAdminSession(publicRows, currentAdmin);
                 sensitiveRows = filterCloudRowsForAdminSession(sensitiveRows, currentAdmin);
             }
-            if (!publicRows.length && !sensitiveRows.length) return true;
+            if (!publicRows.length && !sensitiveRows.length) return false;
             let okPublic = !publicRows.length;
             let okSensitive = !sensitiveRows.length;
             try {
@@ -31694,14 +31694,14 @@
                         const tokenReady = typeof getNebrasSecureToken === 'function' && getNebrasSecureToken();
                         if (typeof persistGovernanceBatch === 'function' && tokenReady) {
                             const batchResult = await persistGovernanceBatch(sensitiveRows, { promptReauth: false });
-                            okSensitive = !!(batchResult && batchResult.ok);
+                            okSensitive = !!(batchResult && batchResult.ok && Number(batchResult.count || (batchResult.keys && batchResult.keys.length) || 0) > 0);
                             if (!okSensitive && typeof secureCloudPush === 'function') {
                                 const sensResult = await secureCloudPush(sensitiveRows);
-                                okSensitive = !!(sensResult && sensResult.ok);
+                                okSensitive = !!(sensResult && sensResult.ok && Number(sensResult.count || 0) > 0);
                             }
                         } else if (typeof secureCloudPush === 'function' && tokenReady) {
                             const sensResult = await secureCloudPush(sensitiveRows);
-                            okSensitive = !!(sensResult && sensResult.ok);
+                            okSensitive = !!(sensResult && sensResult.ok && Number(sensResult.count || 0) > 0);
                         } else if (currentAdmin) {
                             okSensitive = false;
                         }
@@ -31845,7 +31845,7 @@
             if (typeof keysAllowedForNebrasAdmin === 'function' && currentAdmin) {
                 storeKeys = keysAllowedForNebrasAdmin(currentAdmin, storeKeys);
             }
-            if (!storeKeys.length) return true;
+            if (!storeKeys.length) return false;
             if (typeof ensureNebrasCloudSessionForSave === 'function') {
                 const wantPrompt = options.promptReauth === true;
                 let sessionOk = await ensureNebrasCloudSessionForSave({ promptReauth: wantPrompt });
@@ -33661,6 +33661,7 @@
         window.onUserEditorLegalCompanyChange = onUserEditorLegalCompanyChange;
         window.saveUserFromEditor = saveUserFromEditor;
         window.persistNebrasCriticalStores = persistNebrasCriticalStores;
+        window.persistErpStoresWithRollback = persistErpStoresWithRollback;
         window.flushPushToNebrasCloud = flushPushToNebrasCloud;
         window.isNebrasCloudHydrating = isNebrasCloudHydrating;
         window.isNebrasHydratePriorityReady = isNebrasHydratePriorityReady;
