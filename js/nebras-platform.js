@@ -14668,7 +14668,7 @@
             const imgH = variant === 'partners' ? 168 : 760;
             const deploy = (document.body && document.body.getAttribute('data-nebras-deploy')) || 'hrws336';
             const slides = urls.map(function(src, i) {
-                const delay = -(cycleSec - 3) + (i * 3);
+                const delay = i * 3;
                 const loading = i === 0 ? 'eager' : 'lazy';
                 const fetchPri = i === 0 && variant === 'doors' ? ' fetchpriority="high"' : '';
                 const href = normalizeMediaPath(src);

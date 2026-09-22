@@ -103,6 +103,10 @@
     backface-visibility: hidden;
 }
 
+.nebras-mini-showcase-slide:first-child {
+    opacity: 1;
+}
+
 .nebras-mini-showcase-slide--logo {
     object-fit: contain;
     object-position: center;
@@ -140,10 +144,7 @@
 }
 
 @keyframes nebrasMiniShowcaseFade {
-    0%, 100% {
-        opacity: 0;
-    }
-    4%, 15% {
+    0%, 14% {
         opacity: 1;
     }
     18%, 100% {
@@ -153,10 +154,7 @@
 
 @media (min-width: 901px) and (prefers-reduced-motion: no-preference) {
     @keyframes nebrasMiniShowcaseFade {
-        0%, 100% {
-            opacity: 0;
-        }
-        4%, 15% {
+        0%, 14% {
             opacity: 1;
         }
         18%, 100% {
