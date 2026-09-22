@@ -83,7 +83,9 @@ async function handlePush(body, sess) {
     if (oversized.length) {
         return { code: 413, data: { ok: false, error: 'payload_too_large', keys: oversized.map(function(r) { return r.store_key; }) } };
     }
-    if (!filtered.length) return { code: 200, data: { ok: true, count: 0, by: sess.username, note: 'no_allowed_keys' } };
+    if (!filtered.length) {
+        return { code: 400, data: { ok: false, error: 'no_allowed_keys', count: 0, by: sess.username } };
+    }
     const { url, key, invalidKey } = sec.supabaseServiceConfig();
     if (!url || !key) {
         return {
@@ -143,7 +145,7 @@ async function handlePush(body, sess) {
         });
     }
     if (!prepared.length) {
-        return { code: 200, data: { ok: true, count: 0, by: sess.username, note: 'no_prepared_rows' } };
+        return { code: 400, data: { ok: false, error: 'no_prepared_rows', count: 0, by: sess.username } };
     }
     let total = 0;
     const batches = chunkRows(prepared, PUSH_BATCH_SIZE);

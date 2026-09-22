@@ -106,8 +106,10 @@
         } catch (e) { customerRegistrationRequests = []; }
     }
 
-    function saveCpRegRequestsLocal() {
+    function saveCpRegRequestsLocal(options) {
+        options = options || {};
         try { localStorage.setItem(CP_REG_REQUESTS_KEY, JSON.stringify(customerRegistrationRequests)); } catch (e) { /* ignore */ }
+        if (options.fromCloud) return;
         if (typeof global.markLocalCloudMutationBatch === 'function') {
             global.markLocalCloudMutationBatch(['customer_registration_requests']);
         }
@@ -115,16 +117,23 @@
 
     function setCustomerRegistrationRequestsFromCloud(v) {
         customerRegistrationRequests = Array.isArray(v) ? v : [];
-        saveCpRegRequestsLocal();
+        saveCpRegRequestsLocal({ fromCloud: true });
     }
 
     async function hydrateCpRegRequestsFromCloud() {
         if (typeof global.secureCloudPull !== 'function' || typeof global.getNebrasSecureToken !== 'function') return false;
         if (!global.getNebrasSecureToken()) return false;
+        if (typeof global.hasLocalCloudMutation === 'function' && global.hasLocalCloudMutation('customer_registration_requests')) {
+            return false;
+        }
         try {
             const rows = await global.secureCloudPull(['customer_registration_requests']);
             const row = (rows || []).find(function(r) { return r && r.store_key === 'customer_registration_requests'; });
             if (row && Array.isArray(row.payload)) {
+                if (typeof global.shouldRejectStaleCloudPull === 'function' &&
+                    global.shouldRejectStaleCloudPull('customer_registration_requests', row.updated_at, row.payload)) {
+                    return false;
+                }
                 setCustomerRegistrationRequestsFromCloud(row.payload);
                 return true;
             }
@@ -534,10 +543,17 @@
         }
         if (typeof global.secureCloudPull !== 'function' || typeof global.getNebrasSecureToken !== 'function') return false;
         if (!global.getNebrasSecureToken()) return false;
+        if (typeof global.hasLocalCloudMutation === 'function' && global.hasLocalCloudMutation('customer_portal_users')) {
+            return false;
+        }
         try {
             const rows = await global.secureCloudPull(['customer_portal_users']);
             const row = (rows || []).find(function(r) { return r && r.store_key === 'customer_portal_users'; });
             if (row && Array.isArray(row.payload)) {
+                if (typeof global.shouldRejectStaleCloudPull === 'function' &&
+                    global.shouldRejectStaleCloudPull('customer_portal_users', row.updated_at, row.payload)) {
+                    return false;
+                }
                 setCustomerPortalUsersFromCloud(row.payload);
                 return true;
             }

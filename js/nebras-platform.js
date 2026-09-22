@@ -31918,7 +31918,10 @@
             }
             if (!ok && typeof secureCloudPush === 'function' && typeof getNebrasSecureToken === 'function' && getNebrasSecureToken()) {
                 const result = await secureCloudPush(rows);
-                ok = !!(result && result.ok);
+                ok = !!(result && result.ok && Number(result.count || 0) > 0);
+                if (result && result.ok && Number(result.count || 0) === 0) {
+                    console.warn('persistNebrasCriticalStores empty success:', result);
+                }
                 if (!ok) console.warn('persistNebrasCriticalStores fallback push failed:', result);
             }
             }

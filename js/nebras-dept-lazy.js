@@ -5,7 +5,7 @@
 (function (global) {
     'use strict';
 
-    var VER = 'hrws354';
+    var VER = 'hrws366';
     var loaded = Object.create(null);
     var inflight = Object.create(null);
     var bundleDone = Object.create(null);

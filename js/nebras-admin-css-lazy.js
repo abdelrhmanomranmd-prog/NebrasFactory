@@ -5,7 +5,7 @@
 (function(global) {
     'use strict';
 
-    var VER = 'hrws365';
+    var VER = 'hrws366';
     var loaded = false;
     var inflight = null;
 
@@ -86,13 +86,16 @@
                 return [];
             }
         }).then(function(results) {
+            var allOk = results.every(function(ok) { return ok !== false; });
             try {
-                loaded = true;
-                document.body.classList.add('nebras-admin-css-ready');
+                if (allOk) {
+                    loaded = true;
+                    document.body.classList.add('nebras-admin-css-ready');
+                }
             } catch (e) {
                 console.warn('[Nebras admin-css]', e);
             }
-            return results.every(function(ok) { return ok !== false; });
+            return allOk;
         }).finally(function() {
             inflight = null;
         });
