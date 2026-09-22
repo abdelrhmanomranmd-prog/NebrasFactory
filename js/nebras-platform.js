@@ -32027,21 +32027,26 @@
 
         function saveSystemData(options) {
             options = options || {};
-            const saveKeys = (options.storeKeys && options.storeKeys.length)
+            let saveKeys = (options.storeKeys && options.storeKeys.length)
                 ? options.storeKeys.slice()
                 : null;
+            /* بدون storeKeys: علّم محتوى الموقع الحي حتى لا يرفع الحفظ «فارغاً» ثم يختفي بعد إعادة الفتح */
+            if (!saveKeys || !saveKeys.length) {
+                saveKeys = [
+                    'site_products', 'visitor_icons', 'showroom_gallery', 'site_partners',
+                    'about_pages', 'dashboard_tiles', 'site_certifications', 'site_custom_sections',
+                    'system_settings', 'sales_price_list', 'branches'
+                ];
+            }
             if (typeof window !== 'undefined' && window.NEBRAS_ODOO_WRITE_MODE &&
                 typeof window.nebrasOdooSaveSystemData === 'function' &&
                 currentAdmin && !options.skipCloud && !options.skipOdooWrite) {
                 if (options.urgentCloud !== false) options.urgentCloud = true;
                 if (!options.skipMutationMark) {
                     if (typeof markLocalCloudMutationBatch === 'function') {
-                        /* علّم المفاتيح المتأثرة فقط — أبداً system_settings وحدها عند غياب storeKeys */
-                        if (saveKeys && saveKeys.length) {
-                            markLocalCloudMutationBatch(saveKeys.filter(function(k) {
-                                return k !== 'admin_users' || options.replaceAdminUsers === true;
-                            }));
-                        }
+                        markLocalCloudMutationBatch(saveKeys.filter(function(k) {
+                            return k !== 'admin_users' || options.replaceAdminUsers === true;
+                        }));
                     }
                     if (typeof markGovernanceRevision === 'function') markGovernanceRevision();
                     if (typeof markSensitiveCloudPending === 'function') markSensitiveCloudPending();
@@ -32049,6 +32054,7 @@
                 if (typeof isNebrasCloudHydrating === 'function' && isNebrasCloudHydrating()) {
                     if (!options.skipMutationMark) queueNebrasCloudSaveAfterHydrate();
                 }
+                options.storeKeys = saveKeys;
                 window.nebrasOdooSaveSystemData(options);
                 return;
             }
@@ -32057,11 +32063,9 @@
             }
             if (!options.skipMutationMark) {
                 if (typeof markLocalCloudMutationBatch === 'function') {
-                    if (saveKeys && saveKeys.length) {
-                        markLocalCloudMutationBatch(saveKeys.filter(function(k) {
-                            return k !== 'admin_users' || options.replaceAdminUsers === true;
-                        }));
-                    }
+                    markLocalCloudMutationBatch(saveKeys.filter(function(k) {
+                        return k !== 'admin_users' || options.replaceAdminUsers === true;
+                    }));
                 }
                 if (typeof markGovernanceRevision === 'function') markGovernanceRevision();
                 if (typeof markSensitiveCloudPending === 'function') markSensitiveCloudPending();
