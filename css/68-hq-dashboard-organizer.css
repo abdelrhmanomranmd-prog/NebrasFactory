@@ -1,13 +1,14 @@
-/* Nebras HQ — organized command center */
+/* Nebras HQ — رواق فاتح منظم (شكل فقط · لا إخفاء عناصر) */
 
 .dashboard-hq-organizer {
-    margin: 18px 20px 8px;
-    padding: 18px;
-    border: 1px solid rgba(56, 189, 248, 0.22);
+    margin: 16px 0 22px;
+    padding: 22px 24px;
+    border: 1px solid rgba(6, 46, 68, 0.1);
+    border-top: 3px solid #c9a227;
     border-radius: 22px;
-    background: linear-gradient(135deg, rgba(6, 46, 68, 0.98), rgba(13, 40, 64, 0.94));
-    color: #fff;
-    box-shadow: 0 18px 48px rgba(6, 46, 68, 0.18);
+    background: linear-gradient(165deg, #ffffff 0%, #f3f7fb 100%);
+    color: #0d2840;
+    box-shadow: 0 12px 32px rgba(6, 46, 68, 0.08);
 }
 
 .dashboard-hq-organizer[hidden] {
@@ -24,7 +25,7 @@
 .dashboard-hq-organizer-kicker {
     display: block;
     margin-bottom: 4px;
-    color: #7dd3fc;
+    color: #155e94;
     font-size: .76rem;
     font-weight: 800;
     letter-spacing: .04em;
@@ -36,12 +37,13 @@
 }
 
 .dashboard-hq-organizer h3 {
-    font-size: clamp(1.05rem, 2vw, 1.35rem);
+    font-size: clamp(1.1rem, 2.1vw, 1.4rem);
+    color: #062e44;
 }
 
 .dashboard-hq-organizer p {
     margin-top: 5px;
-    color: rgba(255, 255, 255, .72);
+    color: #5b6b7c;
     font-size: .82rem;
 }
 
@@ -49,15 +51,15 @@
     display: flex;
     align-items: center;
     gap: 10px;
-    min-height: 48px;
+    min-height: 50px;
     padding: 0 14px;
-    border: 1px solid rgba(255, 255, 255, .18);
-    border-radius: 15px;
-    background: rgba(255, 255, 255, .09);
+    border: 1px solid rgba(6, 46, 68, 0.12);
+    border-radius: 14px;
+    background: #fff;
 }
 
 .dashboard-hq-search i {
-    color: #7dd3fc;
+    color: #155e94;
 }
 
 .dashboard-hq-search input {
@@ -65,44 +67,45 @@
     border: 0;
     outline: 0;
     background: transparent;
-    color: #fff;
+    color: #0d2840;
     font: inherit;
 }
 
 .dashboard-hq-search input::placeholder {
-    color: rgba(255, 255, 255, .58);
+    color: #94a3b8;
 }
 
 .dashboard-hq-category-tabs {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
-    margin-top: 16px;
+    gap: 10px;
+    margin-top: 18px;
 }
 
 .dashboard-hq-category-tabs button {
-    padding: 8px 13px;
-    border: 1px solid rgba(255, 255, 255, .15);
-    border-radius: 999px;
-    background: rgba(255, 255, 255, .07);
-    color: rgba(255, 255, 255, .82);
+    padding: 10px 16px;
+    border: 1px solid rgba(6, 46, 68, 0.12);
+    border-radius: 12px;
+    background: #fff;
+    color: #0d2840;
     font: inherit;
-    font-size: .78rem;
+    font-size: .82rem;
     font-weight: 700;
     cursor: pointer;
 }
 
 .dashboard-hq-category-tabs button.is-active {
-    border-color: #38bdf8;
-    background: #0ea5e9;
-    color: #062e44;
-    box-shadow: 0 7px 18px rgba(14, 165, 233, .25);
+    border-color: rgba(21, 94, 148, 0.4);
+    background: linear-gradient(135deg, #062e44, #155e94);
+    color: #fff;
+    box-shadow: 0 8px 18px rgba(10, 75, 110, 0.22);
 }
 
 .dashboard-hq-filter-status {
     min-height: 1.3em;
     margin-top: 10px !important;
     font-weight: 700;
+    color: #5b6b7c;
 }
 
 #admin-dashboard .dashboard-tile-groups {
@@ -110,12 +113,12 @@
 }
 
 .dashboard-tile-domain {
-    margin: 0 0 20px;
-    padding: 14px;
-    border: 1px solid rgba(13, 40, 64, .1);
-    border-radius: 20px;
-    background: rgba(255, 255, 255, .72);
-    box-shadow: 0 8px 26px rgba(13, 40, 64, .06);
+    margin: 0 0 26px;
+    padding: 20px 18px 22px;
+    border: 1px solid rgba(6, 46, 68, 0.1);
+    border-radius: 22px;
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow: 0 10px 28px rgba(6, 46, 68, 0.06);
 }
 
 .dashboard-tile-domain[hidden] {
@@ -125,36 +128,39 @@
 .dashboard-tile-domain-head {
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin-bottom: 12px;
-    padding: 0 3px;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding: 0 4px 12px;
+    border-bottom: 1px solid rgba(6, 46, 68, 0.08);
     color: #0d2840;
 }
 
 .dashboard-tile-domain-head > i {
     display: grid;
     place-items: center;
-    width: 38px;
-    height: 38px;
-    border-radius: 12px;
-    background: #e0f2fe;
-    color: #0369a1;
+    width: 44px;
+    height: 44px;
+    border-radius: 13px;
+    background: linear-gradient(145deg, rgba(14, 165, 233, 0.14), rgba(201, 162, 39, 0.12));
+    color: #155e94;
 }
 
 .dashboard-tile-domain-head h4 {
     margin: 0;
-    font-size: .98rem;
+    font-size: 1.08rem;
+    font-weight: 800;
+    color: #062e44;
 }
 
 .dashboard-tile-domain-head span {
-    color: #64748b;
+    color: #5b6b7c;
     font-size: .7rem;
 }
 
 .dashboard-tile-domain-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-    gap: 13px;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 18px;
 }
 
 .dashboard-tile-domain-grid .dashboard-tile-card[hidden] {
@@ -164,7 +170,7 @@
 @media (max-width: 760px) {
     .dashboard-hq-organizer {
         margin-inline: 10px;
-        padding: 14px;
+        padding: 16px;
     }
 
     .dashboard-hq-organizer-head {
@@ -172,7 +178,7 @@
     }
 
     .dashboard-tile-domain {
-        padding: 10px;
+        padding: 12px;
     }
 
     .dashboard-tile-domain-grid {

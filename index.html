@@ -98,6 +98,7 @@
     <link rel="stylesheet" href="css/62-official-verified-bar.css?v=hrws353">
     <link rel="stylesheet" href="css/57-mobile-nav-fix.css?v=hrws353">
     <link rel="stylesheet" href="css/54-nebras-mobile-app.css?v=hrws353">
+    <link rel="stylesheet" href="css/70-nebras-rawaq-dashboard.css?v=hrws367">
     <!-- hrws362: door-designer + portal + quote-A4 + dashboard-creative → lazy -->
     <script>
     (function(){
@@ -112,7 +113,7 @@
     })();
     </script>
 </head>
-<body id="nebras-platform" class="platform-storefront nebras-profile-2026-theme" data-platform-layer="storefront" data-nebras-deploy="hrws366">
+<body id="nebras-platform" class="platform-storefront nebras-profile-2026-theme" data-platform-layer="storefront" data-nebras-deploy="hrws367">
 
     <audio id="nebras-brand-intro-audio" class="nebras-brand-intro-audio" src="audio/nebras-welcome.mp3" preload="metadata" playsinline webkit-playsinline="true" hidden></audio>
 
@@ -2263,7 +2264,7 @@
     <nav class="nebras-app-tabbar" id="nebras-app-tabbar" hidden aria-label="تنقل تطبيق نبراس"></nav>
 
     <script src="js/nebras-perf.js?v=hrws353"></script>
-    <script src="js/nebras-admin-css-lazy.js?v=hrws366"></script>
+    <script src="js/nebras-admin-css-lazy.js?v=hrws367"></script>
     <script src="js/nebras-feature-css-lazy.js?v=hrws362"></script>
     <script src="js/nebras-admin-boot.js?v=hrws353"></script>
     <script src="js/nebras-profile-2026-seed.js?v=hrws353" defer></script>
@@ -2278,6 +2279,56 @@
     <script src="js/nebras-platform-i18n.js?v=hrws353" defer></script>
     <script src="js/nebras-dept-lazy.js?v=hrws366" defer></script>
     <!-- hrws353: customer-portal.js → nebras-dept-lazy portal bundle (كسول) -->
+    <style id="nebras-rawaq-hq-live">
+        html body.admin-session #admin-dashboard.show {
+            background: linear-gradient(180deg, #ffffff 0%, #f7fafc 32%, #eef3f8 100%) !important;
+            padding-inline: clamp(14px, 2.6vw, 36px) !important;
+        }
+        html body.admin-session #admin-dashboard.show .dashboard-hq-organizer {
+            background: linear-gradient(165deg, #ffffff 0%, #f3f7fb 100%) !important;
+            color: #0d2840 !important;
+            border: 1px solid rgba(6, 46, 68, 0.1) !important;
+            border-top: 3px solid #c9a227 !important;
+            box-shadow: 0 12px 32px rgba(6, 46, 68, 0.08) !important;
+        }
+        html body.admin-session #admin-dashboard.show .dashboard-hq-organizer h3 { color: #062e44 !important; }
+        html body.admin-session #admin-dashboard.show .dashboard-hq-organizer p,
+        html body.admin-session #admin-dashboard.show .dashboard-hq-filter-status { color: #5b6b7c !important; }
+        html body.admin-session #admin-dashboard.show .dashboard-hq-search {
+            background: #fff !important;
+            border: 1px solid rgba(6, 46, 68, 0.12) !important;
+        }
+        html body.admin-session #admin-dashboard.show .dashboard-hq-search input { color: #0d2840 !important; }
+        html body.admin-session #admin-dashboard.show .dashboard-hq-category-tabs button {
+            background: #fff !important;
+            color: #0d2840 !important;
+            border: 1px solid rgba(6, 46, 68, 0.12) !important;
+        }
+        html body.admin-session #admin-dashboard.show .dashboard-hq-category-tabs button.is-active {
+            background: linear-gradient(135deg, #062e44, #155e94) !important;
+            color: #fff !important;
+        }
+        html body.admin-session #admin-dashboard.show .dashboard-tile-domain {
+            background: rgba(255, 255, 255, 0.94) !important;
+            border: 1px solid rgba(6, 46, 68, 0.1) !important;
+            margin-bottom: 26px !important;
+            padding: 20px 18px 22px !important;
+        }
+        html body.admin-session #admin-dashboard.show .dashboard-tile-domain-grid {
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)) !important;
+            gap: 18px !important;
+        }
+        html body.admin-session #admin-dashboard.show .dashboard-tile-card {
+            min-height: 198px !important;
+            background: #fff !important;
+            border: 1px solid rgba(6, 46, 68, 0.1) !important;
+            box-shadow: 0 8px 22px rgba(6, 46, 68, 0.055) !important;
+        }
+        html body.admin-session #admin-dashboard.show .dashboard-hq-organizer[hidden],
+        html body.admin-session #admin-dashboard.show .dashboard-tile-domain[hidden],
+        html body.admin-session #admin-dashboard.show .dashboard-tile-card[hidden],
+        html body.admin-session #admin-dashboard.show [hidden] { display: none !important; }
+    </style>
 
 </body>
 </html>
