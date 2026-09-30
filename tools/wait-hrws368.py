@@ -1,0 +1,33 @@
+#!/usr/bin/env python3
+import re, sys, time, urllib.request
+SITE = 'https://www.nebrasplasticcompany.com'
+TARGET = 'hrws368'
+
+def current():
+    req = urllib.request.Request(SITE + '/', headers={'User-Agent': 'NebrasWait/1', 'Cache-Control': 'no-cache'})
+    with urllib.request.urlopen(req, timeout=45) as r:
+        html = r.read().decode('utf-8', 'replace')
+    m = re.search(r'data-nebras-deploy="([^"]+)"', html)
+    return m.group(1) if m else 'unknown'
+
+def main():
+    start = time.time()
+    while time.time() - start < 900:
+        try:
+            d = current()
+            print('deploy:', d)
+            if d == TARGET:
+                # verify assets
+                for p in ['/css/71-nebras-partners-marquee.css?v=hrws368', '/css/72-nebras-product-gallery-strength.css?v=hrws368']:
+                    urllib.request.urlopen(SITE + p, timeout=30).read()
+                    print('asset OK', p)
+                print('OK —', TARGET, 'is live')
+                return 0
+        except Exception as e:
+            print('check failed:', e)
+        time.sleep(15)
+    print('TIMEOUT')
+    return 1
+
+if __name__ == '__main__':
+    sys.exit(main())

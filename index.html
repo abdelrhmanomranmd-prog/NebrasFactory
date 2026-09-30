@@ -72,7 +72,7 @@
     <link rel="stylesheet" href="css/05-products-cards.css?v=hrws353">
     <link rel="stylesheet" href="css/06-responsive.css">
     <!-- hrws353: admin CSS → nebras-admin-css-lazy.js · ERP UI → platformAdminErp bundle (كسول) -->
-    <link rel="stylesheet" href="css/14-showroom-hub.css?v=hrws353">
+    <link rel="stylesheet" href="css/14-showroom-hub.css?v=hrws368">
     <link rel="stylesheet" href="css/09-nebras-workspace.css?v=hrws353">
     <link rel="stylesheet" href="css/10-brand-intro.css?v=hrws353">
     <link rel="stylesheet" href="css/11-media-lightbox.css">
@@ -80,7 +80,7 @@
     <link rel="stylesheet" href="css/17-header-door-showcase.css?v=hrws353">
     <link rel="stylesheet" href="css/18-nebras-mini-showcase.css?v=hrws359">
     <link rel="stylesheet" href="css/16-storefront-premium.css?v=hrws353">
-    <link rel="stylesheet" href="css/65-nebras-store-product-cards.css?v=hrws353">
+    <link rel="stylesheet" href="css/65-nebras-store-product-cards.css?v=hrws368">
     <link rel="stylesheet" href="css/67-other-hydra-fix.css?v=hrws356">
     <link rel="stylesheet" href="css/69-nebras-hydra-stage.css?v=hrws360">
     <link rel="stylesheet" href="css/20-profile-2026-theme.css?v=hrws359">
@@ -98,7 +98,9 @@
     <link rel="stylesheet" href="css/62-official-verified-bar.css?v=hrws353">
     <link rel="stylesheet" href="css/57-mobile-nav-fix.css?v=hrws353">
     <link rel="stylesheet" href="css/54-nebras-mobile-app.css?v=hrws353">
-    <link rel="stylesheet" href="css/70-nebras-rawaq-dashboard.css?v=hrws367">
+    <link rel="stylesheet" href="css/70-nebras-rawaq-dashboard.css?v=hrws368">
+    <link rel="stylesheet" href="css/71-nebras-partners-marquee.css?v=hrws368">
+    <link rel="stylesheet" href="css/72-nebras-product-gallery-strength.css?v=hrws368">
     <!-- hrws362: door-designer + portal + quote-A4 + dashboard-creative → lazy -->
     <script>
     (function(){
@@ -113,7 +115,7 @@
     })();
     </script>
 </head>
-<body id="nebras-platform" class="platform-storefront nebras-profile-2026-theme" data-platform-layer="storefront" data-nebras-deploy="hrws367">
+<body id="nebras-platform" class="platform-storefront nebras-profile-2026-theme" data-platform-layer="storefront" data-nebras-deploy="hrws368">
 
     <audio id="nebras-brand-intro-audio" class="nebras-brand-intro-audio" src="audio/nebras-welcome.mp3" preload="metadata" playsinline webkit-playsinline="true" hidden></audio>
 
@@ -2264,7 +2266,7 @@
     <nav class="nebras-app-tabbar" id="nebras-app-tabbar" hidden aria-label="تنقل تطبيق نبراس"></nav>
 
     <script src="js/nebras-perf.js?v=hrws353"></script>
-    <script src="js/nebras-admin-css-lazy.js?v=hrws367"></script>
+    <script src="js/nebras-admin-css-lazy.js?v=hrws368"></script>
     <script src="js/nebras-feature-css-lazy.js?v=hrws362"></script>
     <script src="js/nebras-admin-boot.js?v=hrws353"></script>
     <script src="js/nebras-profile-2026-seed.js?v=hrws353" defer></script>
@@ -2326,8 +2328,24 @@
         }
         html body.admin-session #admin-dashboard.show .dashboard-hq-organizer[hidden],
         html body.admin-session #admin-dashboard.show .dashboard-tile-domain[hidden],
-        html body.admin-session #admin-dashboard.show .dashboard-tile-card[hidden],
-        html body.admin-session #admin-dashboard.show [hidden] { display: none !important; }
+        html body.admin-session #admin-dashboard.show .dashboard-tile-card[hidden] { display: none !important; }
+        /* شريط الشركاء — تأكيد الحركة حتى لو تأخر CSS الكسول */
+        html body.admin-session #admin-dashboard.show .nebras-partners-track:not(.nebras-partners-track--static) {
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            width: max-content !important;
+            animation: nebras-partners-scroll 28s linear infinite !important;
+        }
+        html body.admin-session #admin-dashboard.show .dashboard-partners-block {
+            overflow: hidden !important;
+            background: linear-gradient(145deg, rgba(13, 40, 64, 0.96) 0%, rgba(21, 94, 148, 0.9) 55%, rgba(56, 189, 248, 0.2) 100%) !important;
+            border-top: 3px solid #c9a227 !important;
+        }
+        html body.admin-session #admin-dashboard.show .dashboard-partners-block h3,
+        html body.admin-session #admin-dashboard.show .dashboard-partners-block .dashboard-partners-subtitle {
+            color: #fff !important;
+        }
     </style>
 
 </body>

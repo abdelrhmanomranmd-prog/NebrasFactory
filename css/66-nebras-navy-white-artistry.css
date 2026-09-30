@@ -39,21 +39,7 @@ body.admin-session #admin-dashboard.show > *:not(.celebration-deco-layer) {
 }
 
 /* ── داشبورد: كحلي + أبيض بدل الكحلي الكامل ── */
-.admin-dashboard .dashboard-partners-block {
-    background: var(--nb-surface) !important;
-    border: 1px solid rgba(13, 40, 64, 0.12) !important;
-    box-shadow: 0 18px 48px rgba(13, 40, 64, 0.08) !important;
-    border-top: 4px solid var(--nb-navy) !important;
-}
-
-.admin-dashboard .dashboard-partners-block h3,
-.admin-dashboard .dashboard-partners-block .dashboard-partners-subtitle {
-    color: var(--nb-navy) !important;
-}
-
-.admin-dashboard .dashboard-partners-block .scm-hint {
-    color: #64748b !important;
-}
+/* شركاؤنا: الشريط الكحلي المتحرّك من 71-nebras-partners-marquee (لا تُبيَّض هنا) */
 
 .dashboard-command-shell {
     background: linear-gradient(145deg, #ffffff 0%, #f8fbff 55%, #ffffff 100%) !important;

@@ -315,15 +315,12 @@ body.admin-session #admin-dashboard.show::before {
 }
 
 #admin-dashboard .dashboard-official-hub,
-#admin-dashboard .dashboard-partners-block,
 #admin-dashboard .dashboard-section-block,
 #admin-dashboard .dashboard-header {
     margin-block: 14px 20px !important;
 }
 
-#admin-dashboard .dashboard-partners-block {
-    border-top: 3px solid var(--rawaq-gold) !important;
-}
+/* شركاؤنا: شكل الشريط الكحلي المتحرّك من 71-nebras-partners-marquee — لا تُغطَّى هنا */
 
 #admin-dashboard .dashboard-official-hub {
     margin-top: 26px !important;

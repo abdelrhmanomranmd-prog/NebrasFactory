@@ -1,0 +1,114 @@
+/* hrws368 — عرض منتجات ومعرض أقوى (رواق-ستايل): صورة ممتلئة · إطار عمودي للأبواب · بدون فراغات contain */
+
+/* متجر — صورة المنتج تملأ الكرت بدل contain الضعيف */
+.nebras-store-card-media {
+    aspect-ratio: 3 / 4 !important;
+    overflow: hidden !important;
+    background: linear-gradient(160deg, #f4f7fb 0%, #e8eef5 100%) !important;
+}
+
+.nebras-store-card-media img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: center center !important;
+    padding: 0 !important;
+    display: block !important;
+    transition: transform 0.45s ease;
+}
+
+.nebras-store-card--shop:hover .nebras-store-card-media img {
+    transform: scale(1.06);
+}
+
+/* بطاقات أبواب المتجر — إطار أطول أوضح */
+.nebras-store-card--shop .nebras-store-card-media {
+    min-height: 280px;
+}
+
+/* معرض الصور — cover بدل contain الفاتح */
+.showroom-gallery-card {
+    border-radius: 18px;
+    overflow: hidden;
+    background: #fff;
+    box-shadow: 0 14px 36px rgba(13, 40, 64, 0.1);
+    border: 1px solid rgba(13, 40, 64, 0.08);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.showroom-gallery-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 22px 48px rgba(21, 94, 148, 0.18);
+}
+
+.showroom-gallery-card-media {
+    aspect-ratio: 3 / 4 !important;
+    overflow: hidden !important;
+    background: #0d2840 !important;
+    min-height: 260px;
+}
+
+.showroom-gallery-card-media img,
+.showroom-gallery-card-media video {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: center center !important;
+    display: block !important;
+    background: transparent !important;
+    transition: transform 0.5s ease;
+}
+
+.showroom-gallery-card:hover .showroom-gallery-card-media img {
+    transform: scale(1.05);
+}
+
+/* مشاريع — أفقية أنسب */
+.showroom-hub-section--projects .showroom-gallery-card-media {
+    aspect-ratio: 16 / 10 !important;
+    min-height: 200px;
+}
+
+.showroom-hub-section--projects .showroom-gallery-card-media img {
+    object-fit: cover !important;
+}
+
+/* شبكة منتجات الصفحة الرئيسية — صورة أوضح */
+#site-products-grid .product-card,
+.products-grid .product-card {
+    box-shadow: 0 18px 42px rgba(13, 40, 64, 0.14);
+}
+
+.product-card::before {
+    background-size: cover !important;
+    background-position: center center !important;
+}
+
+/* هيدرا / واجهة أبواب — صورة كاملة حادة */
+.nebras-mini-showcase-slide:not(.nebras-mini-showcase-slide--logo) {
+    object-fit: contain !important;
+    object-position: center bottom !important;
+    image-rendering: auto;
+    filter: contrast(1.04) saturate(1.06);
+}
+
+.nebras-hydra-stage img,
+.nebras-hydra-door img {
+    object-fit: contain !important;
+    filter: contrast(1.05) saturate(1.05);
+}
+
+/* كتالوج داخل مساحة العمل */
+.nebras-store-catalog-media img,
+.nebras-store-sku-media img {
+    object-fit: cover !important;
+    width: 100%;
+    height: 100%;
+}
+
+@media (max-width: 760px) {
+    .nebras-store-card-media,
+    .showroom-gallery-card-media {
+        min-height: 220px;
+    }
+}
