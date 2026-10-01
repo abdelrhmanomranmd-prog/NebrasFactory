@@ -1,5 +1,6 @@
 {
-  "wpcMapped": 17,
+  "restoredFromBySku": 86,
+  "wpcTrueMatched": 10,
   "aluMapped": 7,
   "cladMapped": 1,
   "showcase": [
@@ -8,12 +9,13 @@
     "images/riwaq-import/nebras-showcase/wpc-glass-single-walnut.png",
     "images/riwaq-import/nebras-showcase/wpc-flat-quarter-walnut.png",
     "images/riwaq-import/nebras-showcase/wpc-flat-double-walnut.png",
-    "images/riwaq-import/nebras-showcase/upvc-flat-single-anthracite.png",
-    "images/riwaq-import/nebras-showcase/upvc-glass-single-white.png",
+    "images/riwaq-import/nebras-showcase/wpc-flat-single-white.png",
+    "images/riwaq-import/nebras-showcase/wpc-classic-single-white.png",
     "images/riwaq-import/nebras-showcase/hero-doors-hall.png",
     "images/riwaq-import/nebras-showcase/aluminum-sliding-window-bronze.png",
     "images/riwaq-import/nebras-showcase/aluminum-sliding-door-bronze.png",
     "images/riwaq-import/nebras-showcase/aluminum-curtain-wall.png",
     "images/riwaq-import/nebras-showcase/aluminum-cladding-champagne.png"
-  ]
+  ],
+  "rule": "uPVC/double/groove never overwrite U/Lib/SLD/steel Nebras photos"
 }

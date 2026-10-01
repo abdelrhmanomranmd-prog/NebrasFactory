@@ -5,7 +5,7 @@
 (function(global) {
     'use strict';
 
-    var VER = 'hrws370';
+    var VER = 'hrws371';
     var loaded = false;
     var inflight = null;
 

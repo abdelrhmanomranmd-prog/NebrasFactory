@@ -3112,7 +3112,7 @@
                 'images/riwaq-import/doors/wpc-glass-single-walnut.png',
                 'images/riwaq-import/doors/hero-doors-hall.png',
                 'images/riwaq-import/doors/wpc-flat-quarter-walnut.png',
-                'images/riwaq-import/doors/upvc-flat-single-anthracite.png'
+                'images/riwaq-import/doors/wpc-flat-double-walnut.png'
             ],
             'prod-wpc-raw': [
                 'images/catalog/wpc-photos/08-bone-profile.png',
@@ -14631,23 +14631,23 @@
             saveSystemData({ skipCloud: true, skipMutationMark: true });
         }
 
-        /* صور هيدرا عالية الوضوح — من رواق نبراس (أبواب عمودية كاملة) */
+        /* صور هيدرا عالية الوضوح — من رواق نبراس (أبواب WPC مطابقة للنوع) */
         const NEBRAS_HYDRA_DOOR_URLS = [
             'images/riwaq-import/doors/wpc-flat-single-walnut.png',
             'images/riwaq-import/doors/wpc-classic-single-walnut.png',
             'images/riwaq-import/doors/wpc-glass-single-walnut.png',
             'images/riwaq-import/doors/wpc-flat-quarter-walnut.png',
-            'images/riwaq-import/doors/upvc-flat-single-anthracite.png',
+            'images/riwaq-import/doors/wpc-flat-single-white.png',
             'images/riwaq-import/doors/wpc-flat-double-walnut.png'
         ];
 
-        /* واجهة أبواب الهيدر — صور رواق بجودة المعرض */
+        /* واجهة أبواب الهيدر — صور رواق بجودة المعرض (WPC فقط) */
         const NEBRAS_DOOR_SHOWCASE_URLS = [
             'images/riwaq-import/doors/wpc-flat-single-walnut.png',
             'images/riwaq-import/doors/wpc-classic-single-walnut.png',
             'images/riwaq-import/doors/wpc-glass-single-walnut.png',
             'images/riwaq-import/doors/hero-doors-hall.png',
-            'images/riwaq-import/doors/upvc-glass-single-white.png',
+            'images/riwaq-import/doors/wpc-flat-half-white.png',
             'images/riwaq-import/doors/wpc-flat-double-walnut.png'
         ];
 

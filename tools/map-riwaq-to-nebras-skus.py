@@ -1,35 +1,41 @@
 # -*- coding: utf-8 -*-
-"""Map imported Riwaq images onto Nebras catalog SKU paths + write showcase list."""
+"""Map Riwaq door images onto Nebras SKUs — ONLY when type/finish/leaf truly match.
+
+Rules (from Riwaq DOOR_LOOKS vs Nebras industrial SKUs):
+- WPC flat / classic / glass / leaf&quarter ← Riwaq wpc-* images of the same finish+leaf
+- NEVER map uPVC → WPC-U (U-channel ≠ uPVC)
+- NEVER map double-leaf → sliding
+- NEVER map groove/line → stainless steel decor
+- U / Lib / Sliding / Steel keep authentic Nebras factory photos from by-sku
+"""
 import json
 import shutil
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 IMP = ROOT / "images" / "riwaq-import"
-WPC = ROOT / "images" / "catalog" / "wpc-photos" / "by-sku-clean"
+BY_SKU = ROOT / "images" / "catalog" / "wpc-photos" / "by-sku"
+CLEAN = ROOT / "images" / "catalog" / "wpc-photos" / "by-sku-clean"
 ALU = ROOT / "images" / "catalog" / "aluminum" / "by-sku"
 CLAD = ROOT / "images" / "catalog" / "cladding"
 SHOW = ROOT / "images" / "riwaq-import" / "nebras-showcase"
 
-# Nebras SKU <- Riwaq relative under riwaq-import
-WPC_MAP = {
+# True type matches only — Riwaq family+finish+leaf ↔ Nebras SKU meaning
+WPC_TRUE_MATCH = {
+    # Flat plain — single leaf
     "WPC-RDY-FLAT-45-STD.png": "doors/wpc-flat-single-walnut.png",
-    "WPC-RDY-FLAT-STEEL.png": "doors/wpc-flat-single-groove.png",
-    "WPC-RDY-FLAT-GLASS.png": "doors/wpc-glass-single-walnut.png",
-    "WPC-RDY-FLAT-CLS.png": "doors/wpc-classic-single-walnut.png",
-    "WPC-RDY-U45-STD.png": "doors/upvc-flat-single-anthracite.png",
-    "WPC-RDY-U45-STEEL.png": "doors/upvc-flat-single-groove.png",
-    "WPC-RDY-U60-STD.png": "doors/upvc-classic-single-anthracite.png",
-    "WPC-RDY-U60-GLASS.png": "doors/upvc-glass-single-white.png",
-    "WPC-RDY-LIB40-STD.png": "doors/wpc-classic-single-white.png",
-    "WPC-RDY-LIB40-STEEL.png": "doors/wpc-flat-single-white.png",
-    "WPC-RDY-LIB40-GLASS.png": "doors/wpc-glass-single-twolite.png",
-    "WPC-RDY-LQ-FLAT.png": "doors/wpc-flat-quarter-walnut.png",
-    "WPC-RDY-LQ-U.png": "doors/upvc-flat-single-cream.png",
-    "WPC-RDY-SLD-FLAT.png": "doors/wpc-flat-double-walnut.png",
-    "WPC-RDY-SLD-U.png": "doors/upvc-flat-double-anthracite.png",
+    "WPC-RDY-FLAT-45-N110.png": "doors/wpc-flat-single-white.png",
     "WPC-SUP-FLAT-45-STD.png": "doors/wpc-flat-single-walnut.png",
-    "WPC-SUP-U45-STD.png": "doors/upvc-flat-single-anthracite.png",
+    "WPC-SUP-FLAT-45-N110.png": "doors/wpc-flat-single-white.png",
+    # Classic decor — single leaf
+    "WPC-RDY-FLAT-CLS.png": "doors/wpc-classic-single-walnut.png",
+    "WPC-SUP-FLAT-CLS.png": "doors/wpc-classic-single-walnut.png",
+    # Glass decor — single leaf
+    "WPC-RDY-FLAT-GLASS.png": "doors/wpc-glass-single-walnut.png",
+    "WPC-SUP-FLAT-GLASS.png": "doors/wpc-glass-single-walnut.png",
+    # Leaf & quarter — flat
+    "WPC-RDY-LQ-FLAT.png": "doors/wpc-flat-quarter-walnut.png",
+    "WPC-SUP-LQ-FLAT.png": "doors/wpc-flat-quarter-walnut.png",
 }
 
 ALU_MAP = {
@@ -46,20 +52,33 @@ CLAD_MAP = {
     "CLAD-PLN-OAK.png": "cladding/aluminum-cladding-champagne.png",
 }
 
+# Showcase / hydra — WPC looks only (no uPVC mixed into WPC galleries)
 SHOWCASE = [
     "doors/wpc-flat-single-walnut.png",
     "doors/wpc-classic-single-walnut.png",
     "doors/wpc-glass-single-walnut.png",
     "doors/wpc-flat-quarter-walnut.png",
     "doors/wpc-flat-double-walnut.png",
-    "doors/upvc-flat-single-anthracite.png",
-    "doors/upvc-glass-single-white.png",
+    "doors/wpc-flat-single-white.png",
+    "doors/wpc-classic-single-white.png",
     "doors/hero-doors-hall.png",
     "aluminum/aluminum-sliding-window-bronze.png",
     "aluminum/aluminum-sliding-door-bronze.png",
     "aluminum/aluminum-curtain-wall.png",
     "cladding/aluminum-cladding-champagne.png",
 ]
+
+
+def restore_clean_from_bysku():
+    """Put authentic Nebras photos back into by-sku-clean before selective Riwaq overlay."""
+    CLEAN.mkdir(parents=True, exist_ok=True)
+    n = 0
+    for src in BY_SKU.glob("WPC-*.png"):
+        dest = CLEAN / src.name
+        shutil.copy2(src, dest)
+        n += 1
+        print("RESTORE", src.name, src.stat().st_size)
+    return n
 
 
 def copy_map(mapping, dest_dir, label):
@@ -78,10 +97,11 @@ def copy_map(mapping, dest_dir, label):
 
 
 def main():
-    SHOW.mkdir(parents=True, exist_ok=True)
-    n1 = copy_map(WPC_MAP, WPC, "wpc")
+    restored = restore_clean_from_bysku()
+    n1 = copy_map(WPC_TRUE_MATCH, CLEAN, "wpc-true")
     n2 = copy_map(ALU_MAP, ALU, "alu")
     n3 = copy_map(CLAD_MAP, CLAD, "clad")
+    SHOW.mkdir(parents=True, exist_ok=True)
     show_paths = []
     for rel in SHOWCASE:
         src = IMP / rel
@@ -92,10 +112,12 @@ def main():
         shutil.copy2(src, dest)
         show_paths.append("images/riwaq-import/nebras-showcase/" + src.name)
     meta = {
-        "wpcMapped": n1,
+        "restoredFromBySku": restored,
+        "wpcTrueMatched": n1,
         "aluMapped": n2,
         "cladMapped": n3,
         "showcase": show_paths,
+        "rule": "uPVC/double/groove never overwrite U/Lib/SLD/steel Nebras photos",
     }
     (ROOT / "tools" / "riwaq-nebras-showcase.json").write_text(
         json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8"
