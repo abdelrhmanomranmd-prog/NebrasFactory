@@ -3107,10 +3107,12 @@
 
         const STORE_WELCOME_REAL_PHOTOS = {
             'prod-wpc': [
-                'images/catalog/wpc-photos/by-sku-clean/WPC-RDY-FLAT-45-STD.png',
-                'images/catalog/wpc-photos/by-sku-clean/WPC-RDY-U45-STD.png',
-                'images/catalog/wpc-photos/by-sku-clean/WPC-RDY-FLAT-STEEL.png',
-                'images/catalog/wpc-photos/by-sku-clean/WPC-RDY-FLAT-GLASS.png'
+                'images/riwaq-import/doors/wpc-flat-single-walnut.png',
+                'images/riwaq-import/doors/wpc-classic-single-walnut.png',
+                'images/riwaq-import/doors/wpc-glass-single-walnut.png',
+                'images/riwaq-import/doors/hero-doors-hall.png',
+                'images/riwaq-import/doors/wpc-flat-quarter-walnut.png',
+                'images/riwaq-import/doors/upvc-flat-single-anthracite.png'
             ],
             'prod-wpc-raw': [
                 'images/catalog/wpc-photos/08-bone-profile.png',
@@ -3122,9 +3124,9 @@
 
         /** عوالم المتجر — تنقل داخلي بين الأبواب والألومنيوم وWPC عضم */
         const NEBRAS_STORE_WORLDS = [
-            { productId: 'prod-wpc', labelAr: 'عالم الأبواب', labelEn: 'Doors World', icon: 'fa-door-open', banner: 'images/catalog/wpc-photos/by-sku-clean/WPC-RDY-FLAT-45-STD.png' },
-            { productId: 'prod-aluminum', labelAr: 'عالم الألومنيوم', labelEn: 'Aluminum World', icon: 'fa-industry', banner: 'images/catalog/aluminum/by-sku/ALU-PROF-6M.webp' },
-            { productId: 'prod-aluminum', subCategoryId: 'alu-facades', labelAr: 'عالم التكسيات', labelEn: 'Cladding World', icon: 'fa-border-all', banner: 'images/catalog/cladding/CLAD-PLN-OAK.png' },
+            { productId: 'prod-wpc', labelAr: 'عالم الأبواب', labelEn: 'Doors World', icon: 'fa-door-open', banner: 'images/riwaq-import/doors/wpc-flat-single-walnut.png' },
+            { productId: 'prod-aluminum', labelAr: 'عالم الألومنيوم', labelEn: 'Aluminum World', icon: 'fa-industry', banner: 'images/riwaq-import/aluminum/aluminum-curtain-wall.png' },
+            { productId: 'prod-aluminum', subCategoryId: 'alu-facades', labelAr: 'عالم التكسيات', labelEn: 'Cladding World', icon: 'fa-border-all', banner: 'images/riwaq-import/cladding/aluminum-cladding-champagne.png' },
             { productId: 'prod-wpc-raw', labelAr: 'WPC عضم', labelEn: 'WPC Raw', icon: 'fa-door-closed', banner: 'images/catalog/wpc-photos/08-bone-profile.png' }
         ];
 
@@ -4100,6 +4102,7 @@
 
         function buildStoreCladdingWelcomeHeroHtml(lang, ui) {
             const photos = [
+                'images/riwaq-import/cladding/aluminum-cladding-champagne.png',
                 CLADDING_CATALOG_PHOTOS.plainOak,
                 CLADDING_CATALOG_PHOTOS.ribbedCocoa,
                 CLADDING_CATALOG_PHOTOS.claySand,
@@ -5015,6 +5018,15 @@
             cutting: aluSkuImg('ALU-CUT.png')
         };
         const STORE_ALUMINUM_REAL_PHOTOS = [
+            'images/riwaq-import/aluminum/aluminum-sliding-window-bronze.png',
+            'images/riwaq-import/aluminum/aluminum-sliding-window-white.png',
+            'images/riwaq-import/aluminum/aluminum-sliding-door-bronze.png',
+            'images/riwaq-import/aluminum/aluminum-curtain-wall.png',
+            'images/riwaq-import/cladding/aluminum-cladding-champagne.png',
+            'images/riwaq-import/aluminum/hero-reel-alu-windows.png',
+            'images/riwaq-import/aluminum/hero-reel-alu-doors.png',
+            'images/riwaq-import/aluminum/hero-reel-alu-folding.png',
+            'images/riwaq-import/aluminum/hero-reel-aluminum.png',
             ALUMINUM_CATALOG_PHOTOS.profile1,
             ALUMINUM_CATALOG_PHOTOS.profile2,
             ALUMINUM_CATALOG_PHOTOS.window1,
@@ -5031,38 +5043,10 @@
             ALUMINUM_CATALOG_PHOTOS.facade1,
             ALUMINUM_CATALOG_PHOTOS.kitchen1,
             ALUMINUM_CATALOG_PHOTOS.kitchen2,
-            ALUMINUM_CATALOG_PHOTOS.kitchen3,
-            ALUMINUM_CATALOG_PHOTOS.kitchenPen,
-            ALUMINUM_CATALOG_PHOTOS.kitchenGal,
-            ALUMINUM_CATALOG_PHOTOS.kitchenLsh,
-            ALUMINUM_CATALOG_PHOTOS.kitchenGls,
-            ALUMINUM_CATALOG_PHOTOS.kitchenIsd,
-            ALUMINUM_CATALOG_PHOTOS.kitchenPan,
-            ALUMINUM_CATALOG_PHOTOS.kitchenUop,
-            ALUMINUM_CATALOG_PHOTOS.kitchenUpg,
             ALUMINUM_CATALOG_PHOTOS.windowSld2,
-            ALUMINUM_CATALOG_PHOTOS.windowBay,
-            ALUMINUM_CATALOG_PHOTOS.windowFix,
-            ALUMINUM_CATALOG_PHOTOS.windowCor,
             ALUMINUM_CATALOG_PHOTOS.doorFld,
-            ALUMINUM_CATALOG_PHOTOS.doorEnt,
-            ALUMINUM_CATALOG_PHOTOS.doorOff,
-            ALUMINUM_CATALOG_PHOTOS.doorPat,
             ALUMINUM_CATALOG_PHOTOS.facadeGrid,
-            ALUMINUM_CATALOG_PHOTOS.facadeSun,
-            ALUMINUM_CATALOG_PHOTOS.facadePer,
-            ALUMINUM_CATALOG_PHOTOS.kitchenBar,
-            ALUMINUM_CATALOG_PHOTOS.kitchenMin,
-            ALUMINUM_CATALOG_PHOTOS.kitchenOut,
-            ALUMINUM_CATALOG_PHOTOS.kitchenCur,
-            ALUMINUM_CATALOG_PHOTOS.windowTil,
-            ALUMINUM_CATALOG_PHOTOS.windowArc,
-            ALUMINUM_CATALOG_PHOTOS.windowMul,
-            ALUMINUM_CATALOG_PHOTOS.doorFrn,
-            ALUMINUM_CATALOG_PHOTOS.doorHid,
-            ALUMINUM_CATALOG_PHOTOS.doorTel,
-            ALUMINUM_CATALOG_PHOTOS.facadeVer,
-            ALUMINUM_CATALOG_PHOTOS.facadeHex
+            ALUMINUM_CATALOG_PHOTOS.facadeSun
         ];
 
         /** ألوان تشطيب الألومنيوم — معاينة حية على الأبواب · الشبابيك · المطابخ · الواجهات */

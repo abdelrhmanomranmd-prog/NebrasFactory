@@ -1,0 +1,248 @@
+/* hrws370 — صيغة عرض نبراس بقوة رواق: متجر + معرض + بطاقات منتجات
+   صورة كبيرة ممتلئة · شبكة كثيفة · إطار عمودي للأبواب · بدون فراغات contain الضعيفة */
+
+/* ── متجر: شبكة أقوى مثل rn-shop-grid ── */
+.nebras-store-sku-grid,
+.nebras-store-sku-grid--section {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 18px !important;
+}
+
+@media (max-width: 1100px) {
+    .nebras-store-sku-grid,
+    .nebras-store-sku-grid--section {
+        grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+    }
+}
+
+@media (max-width: 760px) {
+    .nebras-store-sku-grid,
+    .nebras-store-sku-grid--section {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+        gap: 12px !important;
+    }
+}
+
+/* ── بطاقة المنتج: حضور رواق ── */
+.nebras-store-sku-card,
+.nebras-store-card--shop {
+    border-radius: 18px !important;
+    border: 1px solid rgba(13, 40, 64, 0.1) !important;
+    box-shadow: 0 14px 36px rgba(13, 40, 64, 0.1) !important;
+    overflow: hidden !important;
+    background: #fff !important;
+}
+
+.nebras-store-sku-card:hover,
+.nebras-store-card--shop:hover {
+    transform: translateY(-5px) !important;
+    box-shadow: 0 22px 48px rgba(21, 94, 148, 0.16) !important;
+    border-color: rgba(201, 162, 39, 0.35) !important;
+}
+
+/* أبواب: إطار 3/4 ممتلئ — زي cards-doors في رواق */
+.nebras-store-sku-media,
+.nebras-store-sku-grid--section .nebras-store-sku-media,
+.nebras-store-sku-media--wpc-door,
+.nebras-store-sku-media--wpc-photo,
+.nebras-store-card-media {
+    aspect-ratio: 3 / 4 !important;
+    min-height: 280px !important;
+    background: #0c2344 !important;
+    overflow: hidden !important;
+}
+
+.nebras-store-sku-media img,
+.nebras-store-sku-grid--section .nebras-store-sku-media img,
+.nebras-store-sku-grid--section .nebras-store-sku-media--vector img,
+.nebras-store-sku-grid--section .nebras-store-sku-media--wpc-door img,
+.nebras-store-sku-media--wpc-photo img.nebras-store-sku-img--wpc,
+.nebras-store-sku-media--wpc-door img.nebras-store-sku-img--wpc,
+.nebras-store-sku-media--vector img,
+.nebras-store-card-media img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: center center !important;
+    padding: 0 !important;
+    background: transparent !important;
+    filter: contrast(1.04) saturate(1.05) !important;
+}
+
+.nebras-store-sku-card:hover .nebras-store-sku-media img,
+.nebras-store-card--shop:hover .nebras-store-card-media img {
+    transform: scale(1.06) !important;
+}
+
+/* ألومنيوم / تكسيات: أفقية أقوى لكن بلا فراغات contain الضعيفة */
+.nebras-store-sku-grid--section .nebras-store-sku-media--alu-photo,
+.nebras-store-sku-media--alu-photo {
+    aspect-ratio: 4 / 3 !important;
+    min-height: 240px !important;
+    background: linear-gradient(180deg, #0d2840 0%, #155e94 100%) !important;
+}
+
+.nebras-store-sku-grid--section .nebras-store-sku-media--alu-photo img,
+.nebras-store-sku-media--alu-photo img {
+    object-fit: cover !important;
+    padding: 0 !important;
+    max-height: none !important;
+    background: transparent !important;
+    filter: contrast(1.05) saturate(1.06) !important;
+}
+
+.nebras-store-sku-card:hover .nebras-store-sku-media--alu-photo img {
+    transform: scale(1.04) !important;
+}
+
+/* جسم البطاقة أوضح */
+.nebras-store-sku-body {
+    padding: 16px 16px 18px !important;
+    gap: 10px !important;
+}
+
+.nebras-store-sku-name {
+    font-size: 1rem !important;
+    font-weight: 800 !important;
+    color: #0d2840 !important;
+    line-height: 1.35 !important;
+}
+
+.nebras-store-sku-add-btn,
+.nebras-store-card-cart,
+.nebras-store-card--shop .nebras-store-sku-add-btn {
+    border-radius: 12px !important;
+    font-weight: 800 !important;
+    min-height: 44px !important;
+}
+
+/* ترحيب المتجر — فسيفساء صور أقوى */
+.nebras-store-welcome-hero--real {
+    border-radius: 22px !important;
+    overflow: hidden !important;
+    border: 1px solid rgba(13, 40, 64, 0.1) !important;
+    box-shadow: 0 18px 48px rgba(13, 40, 64, 0.12) !important;
+}
+
+.nebras-store-welcome-hero-mosaic-item img {
+    object-fit: cover !important;
+    width: 100% !important;
+    height: 100% !important;
+    filter: contrast(1.05) saturate(1.06);
+}
+
+.nebras-store-worlds-nav-media {
+    aspect-ratio: 3 / 4 !important;
+    overflow: hidden !important;
+    background: #0c2344 !important;
+}
+
+.nebras-store-worlds-nav-media img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+}
+
+.nebras-store-subhub-card-media {
+    aspect-ratio: 3 / 4 !important;
+    min-height: 200px !important;
+    overflow: hidden !important;
+    background: #0c2344 !important;
+}
+
+.nebras-store-subhub-card-media img {
+    object-fit: cover !important;
+    width: 100% !important;
+    height: 100% !important;
+    padding: 0 !important;
+}
+
+/* ── معرض نبراس: شبكة gallery-grid بقوة رواق ── */
+.showroom-gallery-grid {
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 16px !important;
+}
+
+@media (max-width: 980px) {
+    .showroom-gallery-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    }
+}
+
+.showroom-gallery-card {
+    border-radius: 18px !important;
+    overflow: hidden !important;
+    background: #fff !important;
+    border: 1px solid rgba(13, 40, 64, 0.08) !important;
+    box-shadow: 0 14px 36px rgba(13, 40, 64, 0.1) !important;
+}
+
+.showroom-gallery-card:hover {
+    transform: translateY(-5px) !important;
+    box-shadow: 0 22px 48px rgba(21, 94, 148, 0.18) !important;
+}
+
+.showroom-gallery-card-media {
+    aspect-ratio: 3 / 4 !important;
+    min-height: 260px !important;
+    background: #0c2344 !important;
+    overflow: hidden !important;
+}
+
+.showroom-gallery-card-media img,
+.showroom-gallery-card-media video {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: center center !important;
+    background: transparent !important;
+    filter: contrast(1.04) saturate(1.05);
+    transition: transform 0.45s ease;
+}
+
+.showroom-gallery-card:hover .showroom-gallery-card-media img {
+    transform: scale(1.06);
+}
+
+.showroom-hub-section--projects .showroom-gallery-card-media {
+    aspect-ratio: 16 / 10 !important;
+    min-height: 200px !important;
+}
+
+.showroom-gallery-card-body {
+    padding: 14px 16px 16px !important;
+}
+
+.showroom-gallery-card-body h4 {
+    font-size: 0.95rem !important;
+    font-weight: 800 !important;
+    color: #0d2840 !important;
+}
+
+.showroom-hub-section-banner {
+    min-height: 200px !important;
+    max-height: 280px !important;
+}
+
+.showroom-hub-section-banner img {
+    object-fit: cover !important;
+    min-height: 200px !important;
+    max-height: 280px !important;
+}
+
+/* بطاقات منتجات الصفحة الرئيسية */
+#site-products-grid .product-card,
+.products-grid .product-card {
+    border-radius: 22px !important;
+    box-shadow: 0 18px 44px rgba(13, 40, 64, 0.14) !important;
+}
+
+@media (max-width: 760px) {
+    .nebras-store-sku-media,
+    .nebras-store-card-media,
+    .showroom-gallery-card-media {
+        min-height: 210px !important;
+    }
+}
