@@ -5555,8 +5555,8 @@
 
         const DEFAULT_SITE_PRODUCTS = [
             { id: 'prod-wpc-raw', sortOrder: 1, cssClass: 'card-wpc-raw', iconClass: 'fas fa-door-open', titleIcon: 'fas fa-industry', legacyKey: 'wpc-raw', titleAr: 'أبواب WPC عضم (للورش والمصانع)', titleEn: 'WPC Raw Doors (Workshops)', titleZh: 'WPC 毛坯门', textAr: 'أبواب WPC عضم غير ملبّسة وغير جاهزة — للورش والمصانع التي تكمل التشطيب والتركيب.', textEn: 'Unfinished WPC door leaves for workshops and factories.', textZh: '供车间加工的 WPC 毛坯门。', backgroundImage: 'wpc-background', album: ['images/catalog/wpc-photos/08-bone-profile.png', 'images/catalog/wpc-photos/10-leaf-section.png', 'images/catalog/wpc-photos/09-mdf.png'], target: '#products', action: 'shop', anchorId: 'products', visible: true, shopEnabled: true, variants: DEFAULT_WPC_RAW_VARIANTS },
-            { id: 'prod-wpc', sortOrder: 2, cssClass: 'card-wpc', iconClass: 'fas fa-door-closed', titleIcon: 'fas fa-door-open', legacyKey: 'wpc', titleAr: 'أبواب WPC جاهزة للتركيب', titleEn: 'WPC Ready Doors', titleZh: 'WPC 成品门', textAr: 'أبواب WPC جاهزة للتركيب — تجمع بين فخامة المظهر وصمود البلاستيك للمنازل والمشاريع.', textEn: 'Ready-to-install WPC doors for homes and projects.', textZh: '即装型 WPC 门。', backgroundImage: 'wpc-background', album: ['images/catalog/wpc-photos/02-with-accessory.png', 'images/catalog/wpc-photos/07-classic-panel.png', 'images/catalog/wpc-photos/03-glass-leaf-quarter.png', 'images/catalog/wpc-photos/06-sliding-double-decor.png'], target: '#doors', action: 'shop', anchorId: 'doors', visible: true, shopEnabled: true, variants: DEFAULT_WPC_READY_VARIANTS },
-            { id: 'prod-aluminum', sortOrder: 3, cssClass: 'card-aluminum', iconClass: 'fas fa-industry', titleIcon: 'fas fa-cog', legacyKey: 'aluminum', titleAr: 'الألومنيوم', titleEn: 'Aluminum', titleZh: '铝制品', textAr: 'منتجات ألومنيوم متينة وتصميمات ذكية تناسب مشاريع البناء والتشطيب.', textEn: 'Durable aluminum for construction and finishing.', textZh: '适用于建筑与装修的耐用铝材。', backgroundImage: 'aluminum-background', album: [aluSkuImg('ALU-PROF-6M.webp'), aluSkuImg('ALU-WIN-SLD2.png'), aluSkuImg('ALU-DOR-FLD.png'), aluSkuImg('ALU-FAC-GRID.png'), aluSkuImg('ALU-KIT-ISD.png')], target: '#aluminum', action: 'shop', anchorId: 'aluminum', visible: true, shopEnabled: true, variants: DEFAULT_ALUMINUM_VARIANTS },
+            { id: 'prod-wpc', sortOrder: 2, cssClass: 'card-wpc', iconClass: 'fas fa-door-closed', titleIcon: 'fas fa-door-open', legacyKey: 'wpc', titleAr: 'أبواب WPC جاهزة للتركيب', titleEn: 'WPC Ready Doors', titleZh: 'WPC 成品门', textAr: 'أبواب WPC جاهزة للتركيب — تجمع بين فخامة المظهر وصمود البلاستيك للمنازل والمشاريع.', textEn: 'Ready-to-install WPC doors for homes and projects.', textZh: '即装型 WPC 门。', backgroundImage: 'wpc-background', album: ['images/riwaq-import/doors/wpc-flat-single-walnut.png', 'images/riwaq-import/doors/wpc-classic-single-walnut.png', 'images/riwaq-import/doors/wpc-glass-single-walnut.png', 'images/riwaq-import/doors/wpc-flat-quarter-walnut.png', 'images/riwaq-import/doors/wpc-flat-double-walnut.png', 'images/riwaq-import/doors/hero-doors-hall.png'], target: '#doors', action: 'shop', anchorId: 'doors', visible: true, shopEnabled: true, variants: DEFAULT_WPC_READY_VARIANTS },
+            { id: 'prod-aluminum', sortOrder: 3, cssClass: 'card-aluminum', iconClass: 'fas fa-industry', titleIcon: 'fas fa-cog', legacyKey: 'aluminum', titleAr: 'الألومنيوم', titleEn: 'Aluminum', titleZh: '铝制品', textAr: 'منتجات ألومنيوم متينة وتصميمات ذكية تناسب مشاريع البناء والتشطيب.', textEn: 'Durable aluminum for construction and finishing.', textZh: '适用于建筑与装修的耐用铝材。', backgroundImage: 'aluminum-background', album: ['images/riwaq-import/aluminum/aluminum-sliding-window-bronze.png', 'images/riwaq-import/aluminum/aluminum-sliding-door-bronze.png', 'images/riwaq-import/aluminum/aluminum-curtain-wall.png', 'images/riwaq-import/cladding/aluminum-cladding-champagne.png', 'images/riwaq-import/aluminum/hero-reel-alu-windows.png'], target: '#aluminum', action: 'shop', anchorId: 'aluminum', visible: true, shopEnabled: true, variants: DEFAULT_ALUMINUM_VARIANTS },
             { id: 'prod-other', sortOrder: 4, cssClass: 'card-other-products', iconClass: 'fas fa-boxes', titleIcon: 'fas fa-boxes', legacyKey: 'otherProducts', titleAr: 'منتجات أخرى', titleEn: 'Other Products', titleZh: '其他产品', textAr: 'إكسسوارات أبواب WPC · فوم · سيليكون · رولات — والألوان من كتالوج نبراس. الأسعار من الإدارة.', textEn: 'WPC accessories, foam, silicone, rolls — colors from Nebras catalog. Prices from HQ.', textZh: 'WPC 门配件、泡沫、硅胶、色卷 — 颜色来自 نبراس 色卡。', backgroundImage: 'background-other-products', album: [OTHER_CATALOG_PHOTOS.accSet, OTHER_CATALOG_PHOTOS.foamXps, OTHER_CATALOG_PHOTOS.silClear, OTHER_CATALOG_PHOTOS.rollOak, OTHER_CATALOG_PHOTOS.rollCatalog], target: '#products', visitorMode: 'shop', action: 'shop', anchorId: '', visible: true, shopEnabled: true, subCategories: [OTHER_WPC_ACC_SUBCATEGORY, OTHER_FOAM_SUBCATEGORY, OTHER_SILICONE_SUBCATEGORY, OTHER_COLOR_ROLLS_SUBCATEGORY, OTHER_NEBRAS_COLORS_SUBCATEGORY], variants: DEFAULT_OTHER_VARIANTS },
             { id: 'prod-complaints', sortOrder: 5, cssClass: 'card-customer-complaints', iconClass: 'fas fa-search', titleIcon: 'fas fa-search', legacyKey: 'complaints', titleAr: 'استفسار عن الشكاوى', titleEn: 'Complaint Inquiry', titleZh: '投诉查询', textAr: 'تحقق من حالة شكواك بإدخال رقم الشكوى.', textEn: 'Check your complaint status with the complaint number.', textZh: '输入投诉编号查询处理状态。', backgroundImage: '', album: [], target: '', action: 'complaint', anchorId: '', visible: true }
         ];
@@ -14647,24 +14647,24 @@
             saveSystemData({ skipCloud: true, skipMutationMark: true });
         }
 
-        /* صور هيدرا عالية الوضوح — أبواب عمودية كاملة بدون قص */
+        /* صور هيدرا عالية الوضوح — من رواق نبراس (أبواب عمودية كاملة) */
         const NEBRAS_HYDRA_DOOR_URLS = [
-            'images/profile-2026/doors/doors-03.jpg',
-            'images/profile-2026/doors/doors-06.jpg',
-            'images/profile-2026/doors/doors-09.jpg',
-            'images/profile-2026/doors/doors-11.jpg',
-            'images/profile-2026/doors/doors-02.jpg',
-            'images/profile-2026/doors/doors-05.jpg'
+            'images/riwaq-import/doors/wpc-flat-single-walnut.png',
+            'images/riwaq-import/doors/wpc-classic-single-walnut.png',
+            'images/riwaq-import/doors/wpc-glass-single-walnut.png',
+            'images/riwaq-import/doors/wpc-flat-quarter-walnut.png',
+            'images/riwaq-import/doors/upvc-flat-single-anthracite.png',
+            'images/riwaq-import/doors/wpc-flat-double-walnut.png'
         ];
 
-        /* door-04 أفقي (1024×629) يكسر صف الهيدرا — بديل عمودي من الملف التعريفي */
+        /* واجهة أبواب الهيدر — صور رواق بجودة المعرض */
         const NEBRAS_DOOR_SHOWCASE_URLS = [
-            'images/doors/header-showcase/door-01.png',
-            'images/doors/header-showcase/door-02.png',
-            'images/doors/header-showcase/door-03.png',
-            'images/profile-2026/doors/doors-09.jpg',
-            'images/doors/header-showcase/door-05.png',
-            'images/doors/header-showcase/door-06.png'
+            'images/riwaq-import/doors/wpc-flat-single-walnut.png',
+            'images/riwaq-import/doors/wpc-classic-single-walnut.png',
+            'images/riwaq-import/doors/wpc-glass-single-walnut.png',
+            'images/riwaq-import/doors/hero-doors-hall.png',
+            'images/riwaq-import/doors/upvc-glass-single-white.png',
+            'images/riwaq-import/doors/wpc-flat-double-walnut.png'
         ];
 
         function buildMiniShowcaseInnerHtml(imageUrls, variant) {

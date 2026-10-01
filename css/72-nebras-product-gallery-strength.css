@@ -106,6 +106,20 @@
     height: 100%;
 }
 
+/* صور رواق المستوردة — إطار عمودي حاد في المتجر والمعرض */
+.nebras-store-card-media img[src*="riwaq-import"],
+.showroom-gallery-card-media img[src*="riwaq-import"],
+.nebras-store-card-media img[src*="by-sku-clean"],
+.showroom-gallery-card-media img[src*="by-sku-clean"] {
+    object-fit: cover !important;
+    object-position: center center !important;
+}
+
+.nebras-mini-showcase-slide[src*="riwaq-import"] {
+    object-fit: contain !important;
+    filter: contrast(1.06) saturate(1.08);
+}
+
 @media (max-width: 760px) {
     .nebras-store-card-media,
     .showroom-gallery-card-media {

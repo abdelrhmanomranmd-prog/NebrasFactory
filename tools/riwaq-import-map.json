@@ -1,0 +1,525 @@
+{
+  "doors": [
+    {
+      "src": "assets/images/hero-doors-hall.png",
+      "dest": "images/riwaq-import/doors/hero-doors-hall.png",
+      "bytes": 288666
+    },
+    {
+      "src": "assets/images/hero-reel-wpc-flat.png",
+      "dest": "images/riwaq-import/doors/hero-reel-wpc-flat.png",
+      "bytes": 275790
+    },
+    {
+      "src": "assets/images/hero-reel-doors-1.png",
+      "dest": "images/riwaq-import/doors/hero-reel-doors-1.png",
+      "bytes": 260397
+    },
+    {
+      "src": "assets/images/hero-reel-wpc-classic.png",
+      "dest": "images/riwaq-import/doors/hero-reel-wpc-classic.png",
+      "bytes": 286238
+    },
+    {
+      "src": "assets/images/hero-reel-wpc-glass.png",
+      "dest": "images/riwaq-import/doors/hero-reel-wpc-glass.png",
+      "bytes": 229649
+    },
+    {
+      "src": "assets/images/hero-reel-doors-2.png",
+      "dest": "images/riwaq-import/doors/hero-reel-doors-2.png",
+      "bytes": 262573
+    },
+    {
+      "src": "assets/images/hero-reel-doors-3.png",
+      "dest": "images/riwaq-import/doors/hero-reel-doors-3.png",
+      "bytes": 272394
+    },
+    {
+      "src": "assets/images/doors/wpc-flat-single-walnut.png",
+      "dest": "images/riwaq-import/doors/wpc-flat-single-walnut.png",
+      "bytes": 223172
+    },
+    {
+      "src": "assets/images/doors/wpc-flat-single-white.png",
+      "dest": "images/riwaq-import/doors/wpc-flat-single-white.png",
+      "bytes": 221214
+    },
+    {
+      "src": "assets/images/doors/wpc-flat-single-groove.png",
+      "dest": "images/riwaq-import/doors/wpc-flat-single-groove.png",
+      "bytes": 214691
+    },
+    {
+      "src": "assets/images/doors/wpc-flat-quarter-walnut.png",
+      "dest": "images/riwaq-import/doors/wpc-flat-quarter-walnut.png",
+      "bytes": 264956
+    },
+    {
+      "src": "assets/images/doors/wpc-flat-half-white.png",
+      "dest": "images/riwaq-import/doors/wpc-flat-half-white.png",
+      "bytes": 171938
+    },
+    {
+      "src": "assets/images/doors/wpc-flat-double-walnut.png",
+      "dest": "images/riwaq-import/doors/wpc-flat-double-walnut.png",
+      "bytes": 234290
+    },
+    {
+      "src": "assets/images/doors/wpc-classic-single-walnut.png",
+      "dest": "images/riwaq-import/doors/wpc-classic-single-walnut.png",
+      "bytes": 231808
+    },
+    {
+      "src": "assets/images/doors/wpc-classic-single-white.png",
+      "dest": "images/riwaq-import/doors/wpc-classic-single-white.png",
+      "bytes": 166151
+    },
+    {
+      "src": "assets/images/doors/wpc-glass-single-walnut.png",
+      "dest": "images/riwaq-import/doors/wpc-glass-single-walnut.png",
+      "bytes": 199604
+    },
+    {
+      "src": "assets/images/doors/wpc-glass-single-twolite.png",
+      "dest": "images/riwaq-import/doors/wpc-glass-single-twolite.png",
+      "bytes": 204383
+    },
+    {
+      "src": "assets/images/doors/upvc-flat-single-anthracite.png",
+      "dest": "images/riwaq-import/doors/upvc-flat-single-anthracite.png",
+      "bytes": 190647
+    },
+    {
+      "src": "assets/images/doors/upvc-flat-single-cream.png",
+      "dest": "images/riwaq-import/doors/upvc-flat-single-cream.png",
+      "bytes": 229282
+    },
+    {
+      "src": "assets/images/doors/upvc-flat-single-groove.png",
+      "dest": "images/riwaq-import/doors/upvc-flat-single-groove.png",
+      "bytes": 241968
+    },
+    {
+      "src": "assets/images/doors/upvc-flat-double-anthracite.png",
+      "dest": "images/riwaq-import/doors/upvc-flat-double-anthracite.png",
+      "bytes": 274008
+    },
+    {
+      "src": "assets/images/doors/upvc-classic-single-anthracite.png",
+      "dest": "images/riwaq-import/doors/upvc-classic-single-anthracite.png",
+      "bytes": 213407
+    },
+    {
+      "src": "assets/images/doors/upvc-glass-single-white.png",
+      "dest": "images/riwaq-import/doors/upvc-glass-single-white.png",
+      "bytes": 190486
+    },
+    {
+      "src": "assets/images/doors/wpc-classic-single.png",
+      "dest": "images/riwaq-import/doors/wpc-classic-single.png",
+      "bytes": 272081
+    },
+    {
+      "src": "assets/images/doors/upvc-glass-single.png",
+      "dest": "images/riwaq-import/doors/upvc-glass-single.png",
+      "bytes": 267979
+    },
+    {
+      "src": "assets/images/doors/wpc-flat-single.png",
+      "dest": "images/riwaq-import/doors/wpc-flat-single.png",
+      "bytes": 244194
+    },
+    {
+      "src": "assets/images/doors/wpc-flat-quarter.png",
+      "dest": "images/riwaq-import/doors/wpc-flat-quarter.png",
+      "bytes": 232346
+    },
+    {
+      "src": "assets/images/doors/wpc-flat-half.png",
+      "dest": "images/riwaq-import/doors/wpc-flat-half.png",
+      "bytes": 254434
+    },
+    {
+      "src": "assets/images/doors/wpc-flat-double.png",
+      "dest": "images/riwaq-import/doors/wpc-flat-double.png",
+      "bytes": 240416
+    },
+    {
+      "src": "assets/images/doors/wpc-classic-quarter.png",
+      "dest": "images/riwaq-import/doors/wpc-classic-quarter.png",
+      "bytes": 305260
+    },
+    {
+      "src": "assets/images/doors/wpc-classic-half.png",
+      "dest": "images/riwaq-import/doors/wpc-classic-half.png",
+      "bytes": 274903
+    },
+    {
+      "src": "assets/images/doors/wpc-classic-double.png",
+      "dest": "images/riwaq-import/doors/wpc-classic-double.png",
+      "bytes": 296099
+    },
+    {
+      "src": "assets/images/doors/wpc-glass-single.png",
+      "dest": "images/riwaq-import/doors/wpc-glass-single.png",
+      "bytes": 240061
+    },
+    {
+      "src": "assets/images/doors/wpc-glass-quarter.png",
+      "dest": "images/riwaq-import/doors/wpc-glass-quarter.png",
+      "bytes": 263745
+    },
+    {
+      "src": "assets/images/doors/wpc-glass-half.png",
+      "dest": "images/riwaq-import/doors/wpc-glass-half.png",
+      "bytes": 270944
+    },
+    {
+      "src": "assets/images/doors/wpc-glass-double.png",
+      "dest": "images/riwaq-import/doors/wpc-glass-double.png",
+      "bytes": 251360
+    },
+    {
+      "src": "assets/images/doors/upvc-flat-single.png",
+      "dest": "images/riwaq-import/doors/upvc-flat-single.png",
+      "bytes": 289881
+    },
+    {
+      "src": "assets/images/doors/upvc-flat-quarter.png",
+      "dest": "images/riwaq-import/doors/upvc-flat-quarter.png",
+      "bytes": 214026
+    },
+    {
+      "src": "assets/images/doors/upvc-flat-half.png",
+      "dest": "images/riwaq-import/doors/upvc-flat-half.png",
+      "bytes": 186387
+    },
+    {
+      "src": "assets/images/doors/upvc-flat-double.png",
+      "dest": "images/riwaq-import/doors/upvc-flat-double.png",
+      "bytes": 257636
+    },
+    {
+      "src": "assets/images/doors/upvc-classic-single.png",
+      "dest": "images/riwaq-import/doors/upvc-classic-single.png",
+      "bytes": 240193
+    },
+    {
+      "src": "assets/images/doors/upvc-classic-quarter.png",
+      "dest": "images/riwaq-import/doors/upvc-classic-quarter.png",
+      "bytes": 196859
+    },
+    {
+      "src": "assets/images/doors/upvc-classic-half.png",
+      "dest": "images/riwaq-import/doors/upvc-classic-half.png",
+      "bytes": 216748
+    },
+    {
+      "src": "assets/images/doors/upvc-classic-double.png",
+      "dest": "images/riwaq-import/doors/upvc-classic-double.png",
+      "bytes": 216448
+    },
+    {
+      "src": "assets/images/doors/upvc-glass-quarter.png",
+      "dest": "images/riwaq-import/doors/upvc-glass-quarter.png",
+      "bytes": 297804
+    },
+    {
+      "src": "assets/images/doors/upvc-glass-half.png",
+      "dest": "images/riwaq-import/doors/upvc-glass-half.png",
+      "bytes": 266743
+    },
+    {
+      "src": "assets/images/doors/upvc-glass-double.png",
+      "dest": "images/riwaq-import/doors/upvc-glass-double.png",
+      "bytes": 306253
+    }
+  ],
+  "aluminum": [
+    {
+      "src": "assets/images/hero-reel-alu-windows.png",
+      "dest": "images/riwaq-import/aluminum/hero-reel-alu-windows.png",
+      "bytes": 475262
+    },
+    {
+      "src": "assets/images/hero-reel-aluminum.png",
+      "dest": "images/riwaq-import/aluminum/hero-reel-aluminum.png",
+      "bytes": 438859
+    },
+    {
+      "src": "assets/images/hero-reel-alu-doors.png",
+      "dest": "images/riwaq-import/aluminum/hero-reel-alu-doors.png",
+      "bytes": 421902
+    },
+    {
+      "src": "assets/images/hero-reel-alu-folding.png",
+      "dest": "images/riwaq-import/aluminum/hero-reel-alu-folding.png",
+      "bytes": 460080
+    },
+    {
+      "src": "assets/images/hero-reel-aluminum-2.png",
+      "dest": "images/riwaq-import/aluminum/hero-reel-aluminum-2.png",
+      "bytes": 453730
+    },
+    {
+      "src": "assets/images/catalog/aluminum-sliding-window-bronze.png",
+      "dest": "images/riwaq-import/aluminum/aluminum-sliding-window-bronze.png",
+      "bytes": 330657
+    },
+    {
+      "src": "assets/images/catalog/aluminum-sliding-window-white.png",
+      "dest": "images/riwaq-import/aluminum/aluminum-sliding-window-white.png",
+      "bytes": 312056
+    },
+    {
+      "src": "assets/images/catalog/aluminum-sliding-door-bronze.png",
+      "dest": "images/riwaq-import/aluminum/aluminum-sliding-door-bronze.png",
+      "bytes": 395876
+    },
+    {
+      "src": "assets/images/catalog/aluminum-curtain-wall.png",
+      "dest": "images/riwaq-import/aluminum/aluminum-curtain-wall.png",
+      "bytes": 224305
+    },
+    {
+      "src": "assets/images/catalog/aluminum-sliding-window.png",
+      "dest": "images/riwaq-import/aluminum/aluminum-sliding-window.png",
+      "bytes": 292646
+    },
+    {
+      "src": "assets/images/catalog/aluminum-sliding-door.png",
+      "dest": "images/riwaq-import/aluminum/aluminum-sliding-door.png",
+      "bytes": 393287
+    }
+  ],
+  "cladding": [
+    {
+      "src": "assets/images/catalog/aluminum-cladding-champagne.png",
+      "dest": "images/riwaq-import/cladding/aluminum-cladding-champagne.png",
+      "bytes": 327380
+    },
+    {
+      "src": "assets/images/catalog/aluminum-cladding.png",
+      "dest": "images/riwaq-import/cladding/aluminum-cladding.png",
+      "bytes": 266180
+    }
+  ],
+  "catalog": [
+    {
+      "src": "assets/images/catalog/kitchens-modern-walnut.png",
+      "dest": "images/riwaq-import/catalog/kitchens-modern-walnut.png",
+      "bytes": 284248
+    },
+    {
+      "src": "assets/images/catalog/kitchens-modern-white.png",
+      "dest": "images/riwaq-import/catalog/kitchens-modern-white.png",
+      "bytes": 186476
+    },
+    {
+      "src": "assets/images/catalog/kitchens-classic-navy.png",
+      "dest": "images/riwaq-import/catalog/kitchens-classic-navy.png",
+      "bytes": 257705
+    },
+    {
+      "src": "assets/images/catalog/kitchens-island-dark.png",
+      "dest": "images/riwaq-import/catalog/kitchens-island-dark.png",
+      "bytes": 313999
+    },
+    {
+      "src": "assets/images/catalog/marble-natural-calacatta-bookmatch.png",
+      "dest": "images/riwaq-import/catalog/marble-natural-calacatta-bookmatch.png",
+      "bytes": 402649
+    },
+    {
+      "src": "assets/images/catalog/marble-engineered-top-black.png",
+      "dest": "images/riwaq-import/catalog/marble-engineered-top-black.png",
+      "bytes": 391839
+    },
+    {
+      "src": "assets/images/catalog/rooms-master-cream.png",
+      "dest": "images/riwaq-import/catalog/rooms-master-cream.png",
+      "bytes": 274438
+    },
+    {
+      "src": "assets/images/catalog/rooms-master-dark.png",
+      "dest": "images/riwaq-import/catalog/rooms-master-dark.png",
+      "bytes": 294133
+    },
+    {
+      "src": "assets/images/catalog/rooms-majlis-floor-gold.png",
+      "dest": "images/riwaq-import/catalog/rooms-majlis-floor-gold.png",
+      "bytes": 325840
+    },
+    {
+      "src": "assets/images/catalog/cabinets-hinged-walnut.png",
+      "dest": "images/riwaq-import/catalog/cabinets-hinged-walnut.png",
+      "bytes": 254334
+    },
+    {
+      "src": "assets/images/catalog/cabinets-hinged-white.png",
+      "dest": "images/riwaq-import/catalog/cabinets-hinged-white.png",
+      "bytes": 148360
+    },
+    {
+      "src": "assets/images/catalog/cabinets-dressing-dark.png",
+      "dest": "images/riwaq-import/catalog/cabinets-dressing-dark.png",
+      "bytes": 260608
+    },
+    {
+      "src": "assets/images/catalog/kitchens-modern.png",
+      "dest": "images/riwaq-import/catalog/kitchens-modern.png",
+      "bytes": 205618
+    },
+    {
+      "src": "assets/images/catalog/marble-natural-calacatta.png",
+      "dest": "images/riwaq-import/catalog/marble-natural-calacatta.png",
+      "bytes": 388482
+    },
+    {
+      "src": "assets/images/catalog/marble-engineered-top.png",
+      "dest": "images/riwaq-import/catalog/marble-engineered-top.png",
+      "bytes": 189967
+    },
+    {
+      "src": "assets/images/catalog/rooms-master.png",
+      "dest": "images/riwaq-import/catalog/rooms-master.png",
+      "bytes": 344317
+    },
+    {
+      "src": "assets/images/catalog/cabinets-dressing.png",
+      "dest": "images/riwaq-import/catalog/cabinets-dressing.png",
+      "bytes": 294122
+    }
+  ],
+  "failed": [
+    "assets/images/doors/wpc-flat-single-anthracite.png",
+    "assets/images/doors/wpc-flat-single-cream.png",
+    "assets/images/doors/wpc-flat-single-twolite.png",
+    "assets/images/doors/wpc-flat-quarter-white.png",
+    "assets/images/doors/wpc-flat-quarter-groove.png",
+    "assets/images/doors/wpc-flat-quarter-anthracite.png",
+    "assets/images/doors/wpc-flat-quarter-cream.png",
+    "assets/images/doors/wpc-flat-quarter-twolite.png",
+    "assets/images/doors/wpc-flat-half-walnut.png",
+    "assets/images/doors/wpc-flat-half-groove.png",
+    "assets/images/doors/wpc-flat-half-anthracite.png",
+    "assets/images/doors/wpc-flat-half-cream.png",
+    "assets/images/doors/wpc-flat-half-twolite.png",
+    "assets/images/doors/wpc-flat-double-white.png",
+    "assets/images/doors/wpc-flat-double-groove.png",
+    "assets/images/doors/wpc-flat-double-anthracite.png",
+    "assets/images/doors/wpc-flat-double-cream.png",
+    "assets/images/doors/wpc-flat-double-twolite.png",
+    "assets/images/doors/wpc-classic-single-groove.png",
+    "assets/images/doors/wpc-classic-single-anthracite.png",
+    "assets/images/doors/wpc-classic-single-cream.png",
+    "assets/images/doors/wpc-classic-single-twolite.png",
+    "assets/images/doors/wpc-classic-quarter-walnut.png",
+    "assets/images/doors/wpc-classic-quarter-white.png",
+    "assets/images/doors/wpc-classic-quarter-groove.png",
+    "assets/images/doors/wpc-classic-quarter-anthracite.png",
+    "assets/images/doors/wpc-classic-quarter-cream.png",
+    "assets/images/doors/wpc-classic-quarter-twolite.png",
+    "assets/images/doors/wpc-classic-half-walnut.png",
+    "assets/images/doors/wpc-classic-half-white.png",
+    "assets/images/doors/wpc-classic-half-groove.png",
+    "assets/images/doors/wpc-classic-half-anthracite.png",
+    "assets/images/doors/wpc-classic-half-cream.png",
+    "assets/images/doors/wpc-classic-half-twolite.png",
+    "assets/images/doors/wpc-classic-double-walnut.png",
+    "assets/images/doors/wpc-classic-double-white.png",
+    "assets/images/doors/wpc-classic-double-groove.png",
+    "assets/images/doors/wpc-classic-double-anthracite.png",
+    "assets/images/doors/wpc-classic-double-cream.png",
+    "assets/images/doors/wpc-classic-double-twolite.png",
+    "assets/images/doors/wpc-glass-single-white.png",
+    "assets/images/doors/wpc-glass-single-groove.png",
+    "assets/images/doors/wpc-glass-single-anthracite.png",
+    "assets/images/doors/wpc-glass-single-cream.png",
+    "assets/images/doors/wpc-glass-quarter-walnut.png",
+    "assets/images/doors/wpc-glass-quarter-white.png",
+    "assets/images/doors/wpc-glass-quarter-groove.png",
+    "assets/images/doors/wpc-glass-quarter-anthracite.png",
+    "assets/images/doors/wpc-glass-quarter-cream.png",
+    "assets/images/doors/wpc-glass-quarter-twolite.png",
+    "assets/images/doors/wpc-glass-half-walnut.png",
+    "assets/images/doors/wpc-glass-half-white.png",
+    "assets/images/doors/wpc-glass-half-groove.png",
+    "assets/images/doors/wpc-glass-half-anthracite.png",
+    "assets/images/doors/wpc-glass-half-cream.png",
+    "assets/images/doors/wpc-glass-half-twolite.png",
+    "assets/images/doors/wpc-glass-double-walnut.png",
+    "assets/images/doors/wpc-glass-double-white.png",
+    "assets/images/doors/wpc-glass-double-groove.png",
+    "assets/images/doors/wpc-glass-double-anthracite.png",
+    "assets/images/doors/wpc-glass-double-cream.png",
+    "assets/images/doors/wpc-glass-double-twolite.png",
+    "assets/images/doors/upvc-flat-single-walnut.png",
+    "assets/images/doors/upvc-flat-single-white.png",
+    "assets/images/doors/upvc-flat-single-twolite.png",
+    "assets/images/doors/upvc-flat-quarter-walnut.png",
+    "assets/images/doors/upvc-flat-quarter-white.png",
+    "assets/images/doors/upvc-flat-quarter-groove.png",
+    "assets/images/doors/upvc-flat-quarter-anthracite.png",
+    "assets/images/doors/upvc-flat-quarter-cream.png",
+    "assets/images/doors/upvc-flat-quarter-twolite.png",
+    "assets/images/doors/upvc-flat-half-walnut.png",
+    "assets/images/doors/upvc-flat-half-white.png",
+    "assets/images/doors/upvc-flat-half-groove.png",
+    "assets/images/doors/upvc-flat-half-anthracite.png",
+    "assets/images/doors/upvc-flat-half-cream.png",
+    "assets/images/doors/upvc-flat-half-twolite.png",
+    "assets/images/doors/upvc-flat-double-walnut.png",
+    "assets/images/doors/upvc-flat-double-white.png",
+    "assets/images/doors/upvc-flat-double-groove.png",
+    "assets/images/doors/upvc-flat-double-cream.png",
+    "assets/images/doors/upvc-flat-double-twolite.png",
+    "assets/images/doors/upvc-classic-single-walnut.png",
+    "assets/images/doors/upvc-classic-single-white.png",
+    "assets/images/doors/upvc-classic-single-groove.png",
+    "assets/images/doors/upvc-classic-single-cream.png",
+    "assets/images/doors/upvc-classic-single-twolite.png",
+    "assets/images/doors/upvc-classic-quarter-walnut.png",
+    "assets/images/doors/upvc-classic-quarter-white.png",
+    "assets/images/doors/upvc-classic-quarter-groove.png",
+    "assets/images/doors/upvc-classic-quarter-anthracite.png",
+    "assets/images/doors/upvc-classic-quarter-cream.png",
+    "assets/images/doors/upvc-classic-quarter-twolite.png",
+    "assets/images/doors/upvc-classic-half-walnut.png",
+    "assets/images/doors/upvc-classic-half-white.png",
+    "assets/images/doors/upvc-classic-half-groove.png",
+    "assets/images/doors/upvc-classic-half-anthracite.png",
+    "assets/images/doors/upvc-classic-half-cream.png",
+    "assets/images/doors/upvc-classic-half-twolite.png",
+    "assets/images/doors/upvc-classic-double-walnut.png",
+    "assets/images/doors/upvc-classic-double-white.png",
+    "assets/images/doors/upvc-classic-double-groove.png",
+    "assets/images/doors/upvc-classic-double-anthracite.png",
+    "assets/images/doors/upvc-classic-double-cream.png",
+    "assets/images/doors/upvc-classic-double-twolite.png",
+    "assets/images/doors/upvc-glass-single-walnut.png",
+    "assets/images/doors/upvc-glass-single-groove.png",
+    "assets/images/doors/upvc-glass-single-anthracite.png",
+    "assets/images/doors/upvc-glass-single-cream.png",
+    "assets/images/doors/upvc-glass-single-twolite.png",
+    "assets/images/doors/upvc-glass-quarter-walnut.png",
+    "assets/images/doors/upvc-glass-quarter-white.png",
+    "assets/images/doors/upvc-glass-quarter-groove.png",
+    "assets/images/doors/upvc-glass-quarter-anthracite.png",
+    "assets/images/doors/upvc-glass-quarter-cream.png",
+    "assets/images/doors/upvc-glass-quarter-twolite.png",
+    "assets/images/doors/upvc-glass-half-walnut.png",
+    "assets/images/doors/upvc-glass-half-white.png",
+    "assets/images/doors/upvc-glass-half-groove.png",
+    "assets/images/doors/upvc-glass-half-anthracite.png",
+    "assets/images/doors/upvc-glass-half-cream.png",
+    "assets/images/doors/upvc-glass-half-twolite.png",
+    "assets/images/doors/upvc-glass-double-walnut.png",
+    "assets/images/doors/upvc-glass-double-white.png",
+    "assets/images/doors/upvc-glass-double-groove.png",
+    "assets/images/doors/upvc-glass-double-anthracite.png",
+    "assets/images/doors/upvc-glass-double-cream.png",
+    "assets/images/doors/upvc-glass-double-twolite.png"
+  ]
+}

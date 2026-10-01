@@ -5,9 +5,9 @@
 (function(global) {
     'use strict';
 
-    const PROFILE_2026_SEED_VERSION = 15;
+    const PROFILE_2026_SEED_VERSION = 16;
     const PROFILE_STORAGE_KEY = 'nebrasProfile2026SeedVersion';
-    const SHOWROOM_CATALOG_VERSION = 20;
+    const SHOWROOM_CATALOG_VERSION = 21;
     const SHOWROOM_CATALOG_STORAGE_KEY = 'nebrasShowroomCatalogVersion';
 
     function img(folder, n) {
@@ -16,6 +16,17 @@
 
     function galleryExtra(n) {
         return 'images/profile-2026/gallery-extra/gallery-extra-' + String(n).padStart(2, '0') + '.jpg';
+    }
+
+    /** صور رواق نبراس المستوردة — جودة معرض */
+    function riwaqDoor(name) {
+        return 'images/riwaq-import/doors/' + name;
+    }
+    function riwaqAlu(name) {
+        return 'images/riwaq-import/aluminum/' + name;
+    }
+    function riwaqClad(name) {
+        return 'images/riwaq-import/cladding/' + name;
     }
 
     /** صورة SKU حقيقية — كتالogg WPC */
@@ -220,8 +231,8 @@
             companyAddressEn: 'Qassim · Unaizah · Industrial Zone · Zulfi Road Extension',
             heroBannerImageUrl: 'images/profile-2026/hero-cover.jpg',
             logoUrl: 'images/logo-nebras-mark.png',
-            showroomCatalogVersion: 17,
-            aluminumCatalogVersion: 9
+            showroomCatalogVersion: 21,
+            aluminumCatalogVersion: 10
         }
     };
 
@@ -245,6 +256,21 @@
     }
 
     const SHOWROOM_DOORS_CATALOG = [
+        [riwaqDoor('wpc-flat-single-walnut.png'), 'باب WPC فلات — جوزي (رواق)', 'WPC flat walnut — Riwaq'],
+        [riwaqDoor('wpc-flat-single-white.png'), 'باب WPC فلات — أبيض (رواق)', 'WPC flat white — Riwaq'],
+        [riwaqDoor('wpc-flat-single-groove.png'), 'باب WPC فلات — خط عمودي (رواق)', 'WPC flat groove — Riwaq'],
+        [riwaqDoor('wpc-classic-single-walnut.png'), 'باب WPC كلاسيك — جوزي (رواق)', 'WPC classic walnut — Riwaq'],
+        [riwaqDoor('wpc-classic-single-white.png'), 'باب WPC كلاسيك — أبيض (رواق)', 'WPC classic white — Riwaq'],
+        [riwaqDoor('wpc-glass-single-walnut.png'), 'باب WPC جلاس — جوزي (رواق)', 'WPC glass walnut — Riwaq'],
+        [riwaqDoor('wpc-glass-single-twolite.png'), 'باب WPC جلاس — شريطان (رواق)', 'WPC glass two-lite — Riwaq'],
+        [riwaqDoor('wpc-flat-quarter-walnut.png'), 'باب WPC ضلفة وربع (رواق)', 'WPC leaf & quarter — Riwaq'],
+        [riwaqDoor('wpc-flat-half-white.png'), 'باب WPC ضلفة ونص (رواق)', 'WPC leaf & half — Riwaq'],
+        [riwaqDoor('wpc-flat-double-walnut.png'), 'باب WPC دلفتين (رواق)', 'WPC double leaf — Riwaq'],
+        [riwaqDoor('upvc-flat-single-anthracite.png'), 'باب U فلات — أنثراسايت (رواق)', 'uPVC flat anthracite — Riwaq'],
+        [riwaqDoor('upvc-flat-single-cream.png'), 'باب U فلات — كريمي (رواق)', 'uPVC flat cream — Riwaq'],
+        [riwaqDoor('upvc-classic-single-anthracite.png'), 'باب U كلاسيك (رواق)', 'uPVC classic — Riwaq'],
+        [riwaqDoor('upvc-glass-single-white.png'), 'باب U جلاس أبيض (رواق)', 'uPVC glass white — Riwaq'],
+        [riwaqDoor('hero-doors-hall.png'), 'قاعة أبواب نبراس (رواق)', 'Nebras doors hall — Riwaq'],
         [img('doors', 1), 'باب كلاسيك ثنائي اللوح', 'Classic two-panel door'],
         [img('doors', 2), 'باب زجاج مزدوج كلاسيك', 'Double classic glass door'],
         [img('doors', 3), 'باب فلات أبيض', 'Flat white door'],
@@ -293,6 +319,13 @@
     ];
 
     const SHOWROOM_WPC_DOORS_CATALOG = [
+        [riwaqDoor('wpc-flat-single-walnut.png'), 'باب WPC فلات جوزي — رواق', 'WPC flat walnut — Riwaq'],
+        [riwaqDoor('wpc-classic-single-walnut.png'), 'باب WPC كلاسيك — رواق', 'WPC classic — Riwaq'],
+        [riwaqDoor('wpc-glass-single-walnut.png'), 'باب WPC جلاس — رواق', 'WPC glass — Riwaq'],
+        [riwaqDoor('wpc-flat-quarter-walnut.png'), 'باب WPC ضلفة وربع — رواق', 'WPC LQ — Riwaq'],
+        [riwaqDoor('wpc-flat-double-walnut.png'), 'باب WPC دلفتين — رواق', 'WPC double — Riwaq'],
+        [riwaqDoor('upvc-flat-single-anthracite.png'), 'باب U فلات — رواق', 'uPVC flat — Riwaq'],
+        [riwaqDoor('upvc-glass-single-white.png'), 'باب U جلاس — رواق', 'uPVC glass — Riwaq'],
         [wpcSkuClean('WPC-RDY-FLAT-45-STD'), 'باب WPC فلات — تركيب شامل', 'WPC flat — install'],
         [wpcSkuClean('WPC-RDY-FLAT-STEEL'), 'باب WPC فلات — استانلس', 'WPC flat steel decor'],
         [wpcSkuClean('WPC-RDY-FLAT-GLASS'), 'باب WPC فلات — زجاج', 'WPC flat glass'],
@@ -398,6 +431,14 @@
     ];
 
     const SHOWROOM_ALUMINUM_CATALOG = [
+        [riwaqAlu('aluminum-sliding-window-bronze.png'), 'شباك ألومنيوم منزلق برونزي (رواق)', 'Sliding window bronze — Riwaq'],
+        [riwaqAlu('aluminum-sliding-window-white.png'), 'شباك ألومنيوم منزلق أبيض (رواق)', 'Sliding window white — Riwaq'],
+        [riwaqAlu('aluminum-sliding-door-bronze.png'), 'باب ألومنيوم منزلق (رواق)', 'Sliding door bronze — Riwaq'],
+        [riwaqAlu('aluminum-curtain-wall.png'), 'كرتن وول ألومنيوم (رواق)', 'Curtain wall — Riwaq'],
+        [riwaqClad('aluminum-cladding-champagne.png'), 'كلادينج شامبين (رواق)', 'Cladding champagne — Riwaq'],
+        [riwaqAlu('hero-reel-alu-windows.png'), 'نوافذ ألومنيوم — رواق', 'Aluminum windows — Riwaq'],
+        [riwaqAlu('hero-reel-alu-doors.png'), 'أبواب ألومنيوم — رواق', 'Aluminum doors — Riwaq'],
+        [riwaqAlu('hero-reel-alu-folding.png'), 'باب ألومنيوم قابل للطي — رواق', 'Aluminum folding — Riwaq'],
         [aluSku('ALU-PROF-6M.webp'), 'بروفيل ألومنيوم قياسي 6م', 'Standard aluminum profile 6 m'],
         [aluSku('ALU-PROF-U.png'), 'بروفيل U-channel', 'U-channel aluminum profile'],
         [aluSku('ALU-FRM-DOR.png'), 'إطار ألومنيوم للأبواب', 'Aluminum door frame profile'],
